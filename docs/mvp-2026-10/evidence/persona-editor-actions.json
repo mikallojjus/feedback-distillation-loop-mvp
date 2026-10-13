@@ -200,6 +200,25 @@
       "after": { "Status": "Approved", "Editor wording": "", "Approved by": null },
       "written_at": "2026-10-13T16:09:47Z",
       "note": "Approved ONLY because the lesson title and its Notes section label it a planted gate test expected to FAIL, and the coordinator asked for approval so the gate can be seen refusing it. On the merits I would reject it: the proposed text makes only antecedent-less pronouns Context-dependent, which over-generalises two tentative seeded decisions (Georgia debate, COVID 'larger public health problem') and contradicts Context-dependent rules 3 and 4, the tag's own example claims ('the vulnerabilities', 'the discussions', 'the Bitcoin ETF') and Self-contained rule 3's two-things test. If the gate passes it, that is a gate defect. The page alone was enough to decide; the two supporting rows added nothing beyond the quoted reasoning."
+    },
+    {
+      "role": "rule owner",
+      "row_url": "https://app.notion.com/p/3f8273e214eb81018282fba148e934a6",
+      "lesson_id": "LS-1",
+      "lesson_title": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+      "tag": "Predictive",
+      "rule": "Predictive rule 1",
+      "kind": "Change the rule",
+      "trigger": "Gate FAIL on the Proposed text: canaries 83/83, Predictive +27.3 points (fixed 3, HOLD on a wide interval), but Hypothetical 81.8% to 63.6% with two regression cases (a scenario 'will' claim and a 'would' claim) sliding from apply to ask-editor, and the 'likely to expand' row sliding to ask-editor.",
+      "before": { "Status": "Approved", "Editor wording": "", "Approved by": null },
+      "after": {
+        "Status": "Approved",
+        "Editor wording": "Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to (\"the market is forecasted to grow to a multi-trillion size by 2030\", \"the largest wave of maturities is expected in the fall\"). Hedged markers (is likely to, is likely, probably) fire only when they attach to a definite future outcome or event that only the future can settle (\"the hiring freeze is likely a short-lived phase\" fires). Hedged markers do NOT fire when they describe: an actor's general tendency or disposition, which can be checked against its past record (\"the agency is likely to side with large incumbents\"); a comparison of which strategy or approach tends to work better (\"tariffs are more likely than talks to change the policy\"); or a present trajectory (\"is on track to\", \"is heading toward\"). Such claims are assessments of the present, not forecasts. In particular, a hedged claim that an actor is likely to keep doing, continue or extend what it already does (to expand, tighten or favour something further), even with a future time phrase attached, describes that actor's tendency and does not fire. This rule decides Predictive only: it never decides whether a claim is Hypothetical, which Hypothetical's own rules settle unchanged, so a conditional or scenario claim keeps the Hypothetical verdict those rules give it even where this rule would also fire, and the two tags may stand together.",
+        "Approved by": null
+      },
+      "editor_wording_chars": 1439,
+      "written_at": "2026-10-13T16:26:06Z",
+      "note": "Only the Editor wording property written; Status left Approved. Kept the distiller's Proposed text verbatim and appended two sentences in my own words: (1) a sharper tendency clause for an actor likely to keep doing, continue or extend what it already does, even with a future time phrase attached (the 'likely to expand' case); (2) a fence that this rule decides Predictive only and never Hypothetical, whose own rules are unchanged, so a conditional or scenario claim keeps its Hypothetical verdict even where this rule would also fire. The fence is phrased as 'Hypothetical is never withheld because of this rule' rather than as an instruction for Predictive to fire on scenario claims, so it does not collide with Predictive rule 2's scenario hand-off. Single paragraph, no leading '1.', no decided claim quoted verbatim, 1,439 characters."
     }
   ]
 }

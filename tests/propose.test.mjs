@@ -997,7 +997,7 @@ test('end to end: real pull -> propose with the real plan builder -> plan check 
   await w.pull('p2');
   const claim = w.fake.find('claims', 'g1').props;
   assert.equal(claim.Readiness, 'Fix needed');
-  assert.match(claim['Last judged'], /^2026-10-13\.1 · j1$/);
+  assert.equal(claim['Last judged'], `${rubric.rubric_version} · j1`);
 
   const second = await runPropose('p2', 'prop2');
   assert.equal(second.code, EXIT.OK, second.err.join('\n'));

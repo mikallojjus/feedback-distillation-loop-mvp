@@ -29,6 +29,8 @@ function setup() {
 }
 
 const readNorm = (s, pullId, name) => (name.endsWith('.jsonl') ? readJsonl(join(s.root, 'runs', 'pull', pullId, 'norm', name)).rows : JSON.parse(readFileSync(join(s.root, 'runs', 'pull', pullId, 'norm', name), 'utf8')));
+/** The version of the rubric.json the test root holds (a copy of the agent's): what the Rulebook rows and the Agent settings are seeded with. */
+const rubricVersion = (s) => JSON.parse(readFileSync(join(s.root, 'rubric', 'rubric.json'), 'utf8')).rubric_version;
 
 test('--all writes schema, raw and norm files, id-map, snapshot, manifest and LATEST; prints one summary line', async () => {
   const s = setup();
@@ -133,7 +135,7 @@ test('lessons.jsonl, runs.jsonl and settings.json', async () => {
   assert.equal(run.verdict, 'n/a');
   const settings = readNorm(s, 'p1', 'settings.json');
   assert.deepEqual(settings, {
-    page_id: s.ids.settings, name: 'claim-tagger', paused: false, paused_by: [], reason: null, weekly_cap: 40, owner: [], rubric_in_force: '2026-10-13.1', last_run_at: null, last_run_summary: null,
+    page_id: s.ids.settings, name: 'claim-tagger', paused: false, paused_by: [], reason: null, weekly_cap: 40, owner: [], rubric_in_force: rubricVersion(s), last_run_at: null, last_run_summary: null,
   });
 });
 
@@ -153,7 +155,7 @@ test('rulebook.json: 14 rows with the fields the contract names; no drift when N
   assert.equal(predictive.counterpart, null);
   assert.equal(predictive.judged, true);
   assert.equal(predictive.human_only, false);
-  assert.equal(predictive.rule_version, '2026-10-13.1');
+  assert.equal(predictive.rule_version, rubricVersion(s));
   assert.match(predictive.tag_hash, /^sha256:[0-9a-f]{16}$/);
   assert.deepEqual(predictive.changed_by, []);
   assert.match(predictive.when_to_use, /^.*\n?1\./s);

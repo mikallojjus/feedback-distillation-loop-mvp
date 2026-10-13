@@ -1,87 +1,106 @@
 ---
 name: claim-tagger
-description: Run the claim tagger's editor feedback loop against the Notion page "Editorial feedback loop" - tag claims, distill editor decisions into proposed rule changes, gate and promote approved changes, follow up, or show status. Use when an editor or engineer asks to run the tagging loop, check what is waiting, tag claims, distill feedback, promote or roll back a lesson, or asks about the agent's state. Subcommands - setup, status, tag, distill, promote, follow-up.
+description: Run the claim tagger's editor feedback loop against the Notion page "Editorial feedback loop" - tag claims, distill editor decisions into proposed rule changes, gate and promote approved changes, follow up, or show status. Use when an editor or engineer asks to run the tagging loop, check what is waiting, tag claims, distill feedback, promote or roll back a lesson, or asks about the agent's state. Subcommands - status, tag, distill, promote, follow-up, setup.
 ---
 
 # /claim-tagger
 
-The editor-facing entry point of the claim tagger (`agents/claim-tagger/`). Every subcommand is a sequence of scripts plus a plan apply. The scripts are deterministic and do all Notion reads and writes themselves through the integration token (`.env`); you run them, read their one-line summaries and exit codes, and report in plain words. You never write a Notion field by hand, never edit a plan file, and never touch an editor-owned field (Tag outcome, Why wrong, Your reasoning, Decided by, Decided at, Editor wording, Approved by, Status Approved/Rejected, Paused, Paused by, Reason, Weekly cap, Owner).
+The editor-facing entry point of the claim tagger (`agents/claim-tagger/`). Every subcommand is a fixed sequence of scripts. The scripts are deterministic and do all Notion reads and writes themselves through the integration token in `.env`; you run them in order, read their one-line summaries and exit codes, and report in plain words. You never write a Notion field by hand, never edit a plan file, and never touch an editor-owned field (Tag outcome, Why wrong, Your reasoning, Decided by, Decided at, Editor wording, Approved by, Status Approved/Rejected, Paused, Paused by, Reason, Weekly cap, Owner).
 
-Read `agents/claim-tagger/AGENT.md` once per session before the first subcommand.
+Read `agents/claim-tagger/AGENT.md` once per session before the first subcommand. Run every command from the repository root. `S` below means `agents/claim-tagger/scripts`.
 
-## Exit codes you will see
+## Exit codes
 
-0 ok · 1 error (read the message, fix, retry once) · 2 invalid input (stop and report) · 3 paused (stop: a person must untick Paused or delete `runs/PAUSED`) · 4 rubric drift or model mismatch (stop and report; `status` explains) · 5 trust breaker (stop; report the changed editor field) · 10 gate HOLD · 11 gate FAIL (both are results, not errors) · 75 usage window (tell the user when to resume; `--resume <run-id>`).
+0 ok · 1 error (read the message; retry once if it looks transient) · 2 invalid input or nothing to do (report it; a `plan.mjs check` on a run with no plan is "nothing to do") · 3 paused (stop: a person must untick Paused in Agent settings or run `status.mjs --unpause --confirm`) · 4 rubric drift or model mismatch (stop and report; `status.mjs` explains) · 5 trust breaker (stop; report the changed editor field from `runs/PAUSED`) · 10 gate HOLD · 11 gate FAIL (both are results, not errors) · 75 usage window (tell the user when to resume with `--resume <run-id>`).
 
 ## Preflight (every subcommand)
 
 ```
-node agents/claim-tagger/scripts/status.mjs --check
+node S/status.mjs --check
 ```
 
-Stops on PAUSED, lock mismatch or an unfinished promote. If `.env` has no `NOTION_TOKEN`, say so: the fallback is to apply plans through the Notion connector by hand (see "No token" below).
+Stops on PAUSED, lock mismatch, drift or an unfinished promote. If `.env` has no `NOTION_TOKEN`, say so and stop: every write goes through the token in this version.
+
+## The apply step (used below as "A")
+
+```
+node S/plan.mjs check --run <run-id>
+node S/apply.mjs --run <run-id>
+```
+
+`apply.mjs` pulls the touched databases before and after, writes, reads back and verifies; its summary line ends with "verify clean" and "editor fields changed: 0". On exit 1 run `apply.mjs --run <run-id> --retry` once; on exit 5 stop and report the trust breaker.
 
 ## Subcommands
 
-### `status [--refresh]`
+### `status`
 
 ```
-node agents/claim-tagger/scripts/pull.mjs --dbs agent_settings,tag_decisions,rule_changes,runs   (only with --refresh)
-node agents/claim-tagger/scripts/status.mjs
+node S/pull.mjs --all
+node S/status.mjs
 ```
 
-Report: rubric version and hash and whether the Rulebook matches; paused or not; queue counts (To review, Needs your note); lessons by status; the last run cards; anything unfinished and its resume command.
+Report: rubric version and hash and whether the Rulebook matches; paused or not; queue counts by stage and the Needs-your-note count; lessons by status; the last run cards; anything unfinished and its resume command.
 
 ### `tag [--limit n] [--runs 1|3] [--dry-run] [--resume <run-id>]`
 
 ```
-node agents/claim-tagger/scripts/pull.mjs --dbs agent_settings,rulebook,claims,tag_decisions
-node agents/claim-tagger/scripts/judge.mjs --items claims [--limit n] [--runs n] [--resume <run-id>]
-node agents/claim-tagger/scripts/propose.mjs --run <run-id>
-node agents/claim-tagger/scripts/apply.mjs --run <run-id>        (skipped with --dry-run)
+node S/pull.mjs --all
+node S/judge.mjs --items claims [--limit n] [--runs n] [--run-id <id>] [--resume]     (background; poll `status.mjs --run <id>`)
+node S/propose.mjs --run <judge-run-id> --pull <pull-id> --out-run <id>-propose
+A on <id>-propose                                                                 (skipped with --dry-run)
+node S/run-card.mjs --tag <judge-run-id> --propose <id>-propose --run-id <id>-card
+A on <id>-card
+node S/pull.mjs --all
+node S/cases-sync.mjs --run-id <id>-cases          (then A on <id>-cases when it wrote a plan)
 ```
 
-`judge.mjs` can take minutes: run it in the background and poll `status.mjs --run <run-id>` every minute or so; never start a second judge on the same run. After apply, report the summary line it prints (claims judged, rows queued, held by cap, cost, editor fields changed: 0) and link "Your queue" on the hub page.
+`judge.mjs` takes minutes (about 50 seconds per 8 claims); never start a second judge on the same run. Report the propose summary (claims judged, rows queued, held by cap, readiness counts, cost) and link "Your queue" on the hub page.
 
 ### `distill`
 
 ```
-node agents/claim-tagger/scripts/pull.mjs --dbs rulebook,tag_decisions,rule_changes
-node agents/claim-tagger/scripts/distill.mjs
-node agents/claim-tagger/scripts/apply.mjs --run <run-id>
+node S/pull.mjs --all
+node S/distill.mjs --run-id <id>
+A on <id>
+node S/pull.mjs --all
+node S/distill.mjs --link --run <id>
+A on <id>-link
+node S/pull.mjs --all
+node S/cases-sync.mjs --run-id <id>-cases          (then A on <id>-cases when it wrote a plan)
 ```
 
-Report each proposed lesson (title, tag, rule, supporting rows) and say: "rule owner: set Status = Approved or Rejected in Lessons waiting".
+Report each proposed lesson (title, tag, rule, supporting rows) and say: "rule owner: set Status = Approved or Rejected in Lessons waiting, or rewrite the text in Editor wording".
 
-### `promote <lesson-key> [--smoke] [--resume <run-id>] | promote --rollback <lesson-key>`
-
-```
-node agents/claim-tagger/scripts/pull.mjs --dbs rulebook,tag_decisions,rule_changes,runs,agent_settings
-node agents/claim-tagger/scripts/promote.mjs --lesson <lesson-key>        (background; exit 0 PASS, 10 HOLD, 11 FAIL)
-node agents/claim-tagger/scripts/apply.mjs --run <run-id>
-node agents/claim-tagger/scripts/promote.mjs --finalize <run-id>          (only after a PASS apply verified)
-git add agents/claim-tagger/rubric agents/claim-tagger/evals && git commit -m "rubric <version>: <lesson> (gate PASS, <card-id>)"
-```
-
-On HOLD or FAIL only the card plan is applied; the Rulebook is untouched and the lesson stays Approved with its Gate result filled in. Print `runs/<run-id>/card.md` verbatim.
-
-### `follow-up <lesson-key>`
+### `promote <lesson>` (a Lesson ID such as LS-1, or the lesson title)
 
 ```
-node agents/claim-tagger/scripts/pull.mjs --dbs rulebook,claims,tag_decisions,rule_changes
-node agents/claim-tagger/scripts/followup.mjs --lesson <lesson-key>
-node agents/claim-tagger/scripts/apply.mjs --run <run-id>
+node S/pull.mjs --all
+node S/promote.mjs --lesson <lesson> --run-id <id>        (background; exit 0 PASS, 10 HOLD, 11 FAIL)
+A on <id>
+node S/promote.mjs --finalize <id>                        (PASS only, after A verified clean)
+A on <id>-cases                                           (PASS only: activates the lesson's cases)
+git add agents/claim-tagger/rubric agents/claim-tagger/evals && git commit -m "rubric <version>: <lesson> (gate PASS, <id>)"
+```
+
+On HOLD or FAIL only the card plan is applied; the Rulebook is untouched and the lesson stays Approved with its Gate result filled in (a planted demo lesson is marked Rolled back). Print `runs/<id>/card.md` verbatim. Other forms: `promote.mjs --abort <id>` after a failed apply; `promote.mjs --rollback <lesson> --confirm` restores the previous version of the most recent Live lesson (then A on its run and a commit).
+
+### `follow-up <lesson>`
+
+```
+node S/pull.mjs --all
+node S/followup.mjs --lesson <lesson> --run-id <id>
+A on <id>
 ```
 
 Report the Fixed and Still wrong counts.
 
-### `setup` (engineer, one-time)
+### `setup` (engineer, one-time; already done for the trial page)
 
-Creates the databases and seeds them. The schema was created by hand in October 2026 (ids in `config.json`); the seed is `node agents/claim-tagger/scripts/seed.mjs --phase 1|2|3` followed by `apply.mjs` for each phase. See `docs/mvp-2026-10/plan.md`.
+The six databases, formulas and views were created through the connector on 13 October 2026 (ids in `config.json`). Seeding: `node S/pull.mjs --all`, then for phase 1, 2 and 3: `node S/seed.mjs --phase <n>`, A on the phase run, `node S/pull.mjs --all`. Then `node S/rubric-init.mjs` if `rubric/rubric.json` does not exist, and `cases-sync.mjs`.
 
-## No token (connector fallback)
+## Evidence
 
-If `.env` has no token, `apply.mjs` writes `runs/<run-id>/batches/*.json` and exits 2 with "apply by connector". Then, for each batch file in order: creates go to `notion-create-pages` with the batch's `parent` and `pages` exactly as written (at most 100 per call); updates go to `notion-update-page` with `update_properties` and the properties exactly as written. Copy values verbatim; never add, drop or rename a property. Afterwards run `pull.mjs` for the touched databases and `verify.mjs --run <run-id>`.
+After each step of a demo or review run: `node S/snapshot.mjs --step <n> --label <text>` copies the latest pull into `docs/mvp-2026-10/evidence/notion/`.
 
 ## Reporting style
 
