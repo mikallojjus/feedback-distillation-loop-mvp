@@ -82,7 +82,7 @@ A on <id>-cases                                           (PASS only: activates 
 git add agents/claim-tagger/rubric agents/claim-tagger/evals && git commit -m "rubric <version>: <lesson> (gate PASS, <id>)"
 ```
 
-On HOLD or FAIL only the card plan is applied; the Rulebook is untouched and the lesson stays Approved with its Gate result filled in (a planted demo lesson is marked Rolled back). Print `runs/<id>/card.md` verbatim. Other forms: `promote.mjs --abort <id>` after a failed apply; `promote.mjs --rollback <lesson> --confirm` restores the previous version of the most recent Live lesson (then A on its run and a commit).
+A regression case that flips between the baseline and the candidate (broken or fixed) is judged again with `gate.reconfirm_runs` extra runs per rubric before it counts; the card lists each reconfirmed case as confirmed or noise, and the verdict after reconfirmation is the one that counts. On HOLD or FAIL only the card plan is applied; the Rulebook is untouched and the lesson stays Approved with its Gate result filled in (a planted demo lesson is marked Rolled back). Print `runs/<id>/card.md` verbatim. Other forms: `promote.mjs --abort <id>` after a failed apply; `promote.mjs --rollback <lesson> --confirm` restores the previous version of the most recent Live lesson (then A on its run and a commit).
 
 ### `follow-up <lesson>`
 
