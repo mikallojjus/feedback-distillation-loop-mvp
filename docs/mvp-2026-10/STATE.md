@@ -4,7 +4,7 @@
 - Orchestrator: Claude Code session in `X:\work\research\overnight-feedback-loop-research`, folder `X:\work\geo-agents` added to the session
 - Notion hub page: https://app.notion.com/p/3da273e214eb80c180d5fd0894bc2db8 (writes only inside it)
 - Identities: integration token (bot "claude") in `X:\work\geo-agents\.env` for scripts; the connector (Mika) for the interactive skill and persona decisions
-- Current phase: **Review and hardening** (demo done: LS-1 gated five times, honest FAIL each time; LS-2 planted gate FAIL and rolled back; persona reviews round 1 done; engineer must-fixes landing in code; round 2, artifact and final report pending)
+- Current phase: **Handed over** (13 to 14 Oct 2026): demo done (LS-1 gated five times, honest FAIL each time; LS-2 planted gate FAIL and rolled back); both persona reviews closed in round 2; engineer must-fixes in code (commits 9d66fab, 860246d; 856 tests); artifact published at https://claude.ai/artifact/U88vn7nPeaRufmrMVXwjB1; actions left for Mika listed under Handover
 
 ## Phase plan
 | Phase | Status |
@@ -19,12 +19,11 @@
 | 7 eval, distill, promote, followup, status, cases-sync, snapshot, run-card | done (690 tests) |
 | 8 SKILL.md, README, headless tests | done (status and tag dry-run transcripts in evidence/headless; guard-hook headless test left as a manual step, see evidence/README.md) |
 | 9 Demo storyline | done: steps 0-7 (LS-1 FAIL x5 with reconfirmation, LS-2 FAIL and rolled back); steps 8-9 skipped because nothing went live; step 10 covered by the verify tests |
-| 10 Persona reviews, dispositions | round 1 done for both personas, cross-questions answered, review/dispositions.md written; engineer fixes EN-1/2/5/6/8/12/13/16 in code; round 2 acceptance pending |
-| 11 Artifact | frame built; content agent running; review fragment, build, preview and publish pending |
+| 10 Persona reviews, dispositions | done: round 1 and 2 for both personas (review/), dispositions.md final; open musts are decisions for Mika (EN-3 token and page connections, EN-4 remote, ED-8 names) |
+| 11 Artifact | done: built with `build.mjs --strict` from report/parts and data/counts.json (collect-evidence.mjs); published: https://claude.ai/artifact/U88vn7nPeaRufmrMVXwjB1 (republish by publishing the same file path) |
 
 ## Subagents
-- running: three Sonnet coding agents (gate evidence; resume, retry, suite, lock; contract check, texts, probe), one Opus artifact content agent
-- done: Editor persona (Fable) r1 + answers, Engineer persona (Opus) r1 + answers, test-fix agent
+- none running; every report is in 01-log.md and under review/
 
 ## Known problems
 - Bash heredocs with apostrophes fail in this Git Bash: write files with the Write tool.
@@ -38,3 +37,12 @@
 - Rule changes db 833efad0634f43608ca18e4f7291cc02 / ds e1836e35-d614-4434-ab34-a0ddeaa1842c
 - Runs db 0c397590fb154ddb98010830faaa159b / ds e1f2103e-6233-468c-91b4-2c2382e86d1b
 - Agent settings db 43c8a1c3a8d44a7f824698b4789cffe6 / ds 5de4f0e4-21ab-417c-b9a5-06bbc6c143eb
+
+
+## Handover (actions for Mika, in order)
+1. Disconnect the integration "claude" from the four real databases the probe can read (U.S. Politics debate claims, Claims to review, the taxonomy Claim Tags, World affairs debate claims (1)), rotate the temporary token, put the new one in `.env`, run `node agents/claim-tagger/scripts/probe.mjs` until it exits 0, and record the date here.
+2. Add a private remote and push: the rubric, its lock and history, and the cases live on one disk.
+3. Name in the hub callout who reads sources (Needs evidence) and who gives second opinions (Ask another editor); set Owner in Agent settings.
+4. Decide: promote refusing an empty Approved by (ED-13); pinning the Claude Code version on the runner (EN-9); the weekly expectation per editor (Q-E4).
+5. Run the guard-hook headless test once (evidence/README.md) and keep its transcript under evidence/headless/.
+6. Next engineering step: a per-tag judge, then LS-1 through the gate again with the attempt-4 wording; a Context-dependent boundary lesson; more Predictive and Hypothetical labels.
