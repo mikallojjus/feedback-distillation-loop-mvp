@@ -3,12 +3,15 @@
 // item per run so later steps (propose, eval, promote) can read them and a stopped run can be resumed.
 //
 //   node agents/claim-tagger/scripts/judge.mjs --items claims|eval|<path.jsonl> [--rubric <path>] [--runs N] [--limit N]
-//        [--ids a,b] [--run-id <id>] [--resume] [--smoke] [--pull <pull-id>] [--model <id>] [--driver cli|fake]
+//        [--ids a,b] [--run-id <id>] [--resume] [--smoke] [--pull <pull-id>] [--model <id>] [--driver cli|fake] [--parent <run-id>]
+//   node agents/claim-tagger/scripts/judge.mjs --resume [--run-id <id>]
 //
 // Items: "claims" is runs/pull/<pull-id or the latest pull>/norm/claims.jsonl; "eval" is the claims behind the active cases plus the
 // distinct texts of the active canaries (canary ids are "canary-<8 hex of sha256 of the normalised text>"); a path is a JSONL file
 // of { id, claim, sources_count }. --ids keeps the named items; --limit N keeps the first N that still have a run to do, so repeating
 // "--limit 10" moves on to new claims. --smoke is one run on the cheap model, never usable for a plan. --runs overrides config.judge.runs.
+// --parent <run-id> names the promote run a judge run belongs to (promote passes it for its baseline, candidate and reconfirmation runs);
+// it is only recorded, so that status.mjs can print the promote command to resume instead of this one.
 //
 // Output (all under runs/): judgments/<config16>/system-prompt.md (rendered once, byte-identical for every call so the prompt cache
 // hits), judgments/<config16>/run-<n>/<item>.<text8>.json, judgments/<config16>/ledger.jsonl, <run-id>/run.json (which also lists the
@@ -16,16 +19,26 @@
 // CLI version), so a judgment is only ever reused for exactly the same setup: that is what makes the baseline of a promote free.
 // A cell (item, run) whose file is valid is never judged again, by any run id. Cells that failed are tried again by the next run.
 //
+// run.json records how the run was started, so that it can be continued without repeating anything: `args` (the options as given: items, rubric
+// as an absolute path, runs, limit, ids, pull, model, driver, smoke, parent), `pull` (the pull folder the claims were read from), `parent`, and
+// `resume`, the command that continues the run: "node agents/claim-tagger/scripts/judge.mjs --resume --run-id <id>".
+//
 // A batch that is not answered with valid JSON, the right ids, every tag once and consistent counterpart pairs gets one retry with the
-// problems quoted; then its items are errors. The usage window stops the run (exit 75): the finished cells are kept and
-// "--run-id <id> --resume" does the rest, with the same items.
+// problems quoted; then its items are errors. The usage window stops the run (exit 75): the finished cells are kept and the resume command
+// above does the rest, with the same items.
+//
+// --resume takes every option it is not given from run.json (items source, rubric path, runs, model, driver, effort, pull, smoke, ids, limit,
+// parent; the items themselves are the ones the run listed); without --run-id it picks the newest unfinished judge run. An option that IS given
+// must agree with the run: --items, --runs and --smoke that differ are refused, and anything that changes the configuration (a --model, --driver
+// or --rubric that differs, and what the prompt, the scope and the CLI version give) is refused with both configuration ids. Runs written before
+// run.json had `args` resume from the fields they do have.
 //
 // Exit codes: 0 ok, 1 error (too many items failed, or the CLI cannot be started), 2 invalid input, 4 rubric drift or the wrong model
 // answered, 75 the usage window ran out (the resume command is printed).
 
 import { randomBytes } from 'node:crypto';
 import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { basename, isAbsolute, join, relative, resolve } from 'node:path';
 import { FAKE_CLAUDE_SCRIPT, claudeVersion, extractJson, findClaudeBin, runClaude, usageResetHint } from './lib/claude.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { configId, h16, promptVersion, ruleHash, sha256Hex } from './lib/hash.mjs';
@@ -36,7 +49,7 @@ import { mulberry32, seedFromString, shuffle } from './lib/rng.mjs';
 import { checkHashes, normaliseText } from './lib/rubric-build.mjs';
 import { validate } from './lib/validate.mjs';
 
-export const USAGE = 'usage: node agents/claim-tagger/scripts/judge.mjs --items claims|eval|<path.jsonl> [--rubric <path>] [--runs N] [--limit N] [--ids a,b] [--run-id <id>] [--resume] [--smoke] [--pull <pull-id>] [--model <id>] [--driver cli|fake]';
+export const USAGE = 'usage: node agents/claim-tagger/scripts/judge.mjs --items claims|eval|<path.jsonl> [--rubric <path>] [--runs N] [--limit N] [--ids a,b] [--run-id <id>] [--resume] [--smoke] [--pull <pull-id>] [--model <id>] [--driver cli|fake] [--parent <run-id>]\n       node agents/claim-tagger/scripts/judge.mjs --resume [--run-id <id>]   (continues an unfinished run with the arguments recorded in its run.json)';
 
 const ID_RE = /^[A-Za-z0-9._-]+$/;
 const MAX_LISTED_ERRORS = 12;
@@ -87,11 +100,16 @@ export function parseArgs(argv) {
         if (!['cli', 'fake'].includes(opts.driver)) throw new UsageError(`--driver must be cli or fake, got "${opts.driver}"`);
         break;
       }
+      case '--parent': {
+        opts.parent = value();
+        if (!ID_RE.test(opts.parent)) throw new UsageError(`--parent may only use letters, digits, '.', '_' and '-', got "${opts.parent}"`);
+        break;
+      }
       case '--help': case '-h': opts.help = true; break;
       default: throw new UsageError(`unknown argument ${arg}`);
     }
   }
-  if (!opts.help && !opts.items) throw new UsageError('--items is required');
+  if (!opts.help && !opts.items && !opts.resume) throw new UsageError('--items is required (only --resume can do without it: it takes the items from the run it continues)');
   return opts;
 }
 
@@ -515,18 +533,82 @@ function findUnfinishedRun(runsDir) {
   return null;
 }
 
-function resumeCommand(opts, runId) {
-  const parts = ['node agents/claim-tagger/scripts/judge.mjs', '--items', opts.items];
-  if (opts.pull) parts.push('--pull', opts.pull);
-  if (opts.rubric) parts.push('--rubric', opts.rubric);
-  if (opts.runs && !opts.smoke) parts.push('--runs', String(opts.runs));
-  if (opts.limit) parts.push('--limit', String(opts.limit));
-  if (opts.ids) parts.push('--ids', opts.ids.join(','));
-  if (opts.model) parts.push('--model', opts.model);
-  if (opts.driver) parts.push('--driver', opts.driver);
-  if (opts.smoke) parts.push('--smoke');
-  parts.push('--run-id', runId, '--resume');
-  return parts.join(' ');
+/** The command that continues a run with nothing to repeat: everything else is in its run.json (also recorded there as `resume`). */
+const resumeCommand = (runId) => `node agents/claim-tagger/scripts/judge.mjs --resume --run-id ${runId}`;
+
+const KEYWORD_SOURCES = new Set(['claims', 'eval']);
+/** An items source in a form that can be compared: "claims" and "eval" as they are, a file as its absolute path. */
+const sourceKey = (source) => (KEYWORD_SOURCES.has(source) ? source : resolve(String(source)));
+
+/** The options of a command line as run.json keeps them (`args`): what was given, the rubric and the items file as absolute paths. */
+function recordedArgs(opts) {
+  const given = {
+    items: opts.items === undefined ? undefined : sourceKey(opts.items),
+    rubric: opts.rubric ? resolve(opts.rubric) : undefined,
+    runs: opts.runs, limit: opts.limit, ids: opts.ids, pull: opts.pull, model: opts.model, driver: opts.driver, smoke: opts.smoke ? true : undefined, parent: opts.parent,
+  };
+  return Object.fromEntries(Object.entries(given).filter(([, value]) => value !== undefined));
+}
+
+/** The run that --resume continues (the one named, else the newest unfinished one) and its run.json. */
+function loadRunToResume(runsDir, requestedId) {
+  const runId = requestedId ?? findUnfinishedRun(runsDir);
+  if (!runId) throw new ExitError(EXIT.INVALID, '--resume found no unfinished judge run; pass --run-id');
+  const file = join(runsDir, runId, 'run.json');
+  if (!existsSync(file)) throw new ExitError(EXIT.INVALID, `--resume: ${file} does not exist`);
+  let previous;
+  try {
+    previous = readJson(file);
+  } catch (e) {
+    throw new ExitError(EXIT.INVALID, `--resume: ${e.message}`);
+  }
+  if (!previous || previous.kind !== 'judge') throw new ExitError(EXIT.INVALID, `--resume: ${file} is not a judge run`);
+  return { runId, previous };
+}
+
+/**
+ * --resume: every option the command line leaves out comes from the run's run.json (`args`, and for a run written before `args` existed the fields it
+ * does have: items_source, rubric_path, runs, model, driver, smoke). An option that is given must agree with the run: --items, --runs and --smoke that
+ * differ are refused here, the rest (model, driver, rubric, and the prompt, the scope and the CLI version no flag can name) is judged by the
+ * configuration id in run().
+ */
+function withRecordedOptions(opts, rec, { runId, agentDir }) {
+  const a = rec.args && typeof rec.args === 'object' ? rec.args : null;
+  const defaultRubric = resolve(join(agentDir, 'rubric', 'rubric.json'));
+  const recorded = {
+    items: a?.items ?? rec.items_source,
+    rubric: a ? a.rubric : (rec.rubric_path && resolve(rec.rubric_path) !== defaultRubric ? rec.rubric_path : undefined),
+    runs: rec.runs,
+    limit: a?.limit,
+    ids: a?.ids,
+    pull: rec.pull ?? a?.pull,
+    model: rec.model,
+    driver: rec.driver,
+    smoke: rec.smoke === true,
+    parent: rec.parent ?? a?.parent,
+  };
+  const differs = [];
+  if (opts.items !== undefined && typeof recorded.items === 'string' && sourceKey(opts.items) !== sourceKey(recorded.items)) differs.push(`--items ${opts.items} (the run judged ${recorded.items})`);
+  if (opts.smoke && !recorded.smoke) differs.push('--smoke (the run is not a smoke run)');
+  if (opts.runs !== undefined && !opts.smoke && !recorded.smoke && Number.isInteger(recorded.runs) && opts.runs !== recorded.runs) differs.push(`--runs ${opts.runs} (the run has ${recorded.runs})`);
+  if (differs.length) {
+    throw new ExitError(EXIT.INVALID, `--resume: run ${runId} was started differently: ${differs.join('; ')}. Leave the flag out to continue the run as it started, or start a new run`);
+  }
+  const merged = {
+    ...opts,
+    items: opts.items ?? recorded.items,
+    rubric: opts.rubric ?? recorded.rubric,
+    runs: opts.runs ?? recorded.runs,
+    limit: opts.limit ?? recorded.limit,
+    ids: opts.ids ?? recorded.ids,
+    pull: opts.pull ?? recorded.pull,
+    model: opts.model ?? recorded.model,
+    driver: opts.driver ?? recorded.driver,
+    smoke: opts.smoke || recorded.smoke,
+    parent: opts.parent ?? recorded.parent,
+  };
+  if (typeof merged.items !== 'string' || merged.items === '') throw new ExitError(EXIT.INVALID, `--resume: run ${runId} has no items_source in its run.json; pass --items`);
+  return merged;
 }
 
 /**
@@ -564,6 +646,14 @@ async function run(opts, io, deps) {
   const env = deps.env ?? process.env;
   const now = deps.now ?? (() => new Date());
 
+  // --resume starts from the run itself: its run.json says what it was started with, so the command line need not repeat any of it
+  let runId = opts.runId;
+  let previous = null;
+  if (opts.resume) {
+    ({ runId, previous } = loadRunToResume(runsDir, runId));
+    opts = withRecordedOptions(opts, previous, { runId, agentDir });
+  }
+
   const config = readJson(join(agentDir, 'config.json'));
   const judgeCfg = config.judge ?? {};
   const { rubric, path: rubricPath } = loadRubric(opts, { agentDir, runsDir });
@@ -572,15 +662,21 @@ async function run(opts, io, deps) {
 
   const driver = opts.driver ?? 'cli';
   const model = opts.model ?? (opts.smoke ? config.models.cheap : config.models.judge);
+  const effort = previous && previous.effort !== undefined ? previous.effort : judgeCfg.effort; // a resumed run keeps the effort it started with
   const bin = driver === 'fake' ? FAKE_CLAUDE_SCRIPT : (deps.bin ?? findClaudeBin(judgeCfg.claude_bin ?? 'claude'));
   const cliVersion = driver === 'fake' ? 'unknown' : (deps.cliVersion ?? claudeVersion(bin, { env }));
   const promptPath = join(agentDir, judgeCfg.prompt ?? 'prompts/judge.md');
   if (!existsSync(promptPath)) throw new ExitError(EXIT.INVALID, `the judge prompt ${promptPath} does not exist`);
   const promptBytes = readFileSync(promptPath);
   const template = promptBytes.toString('utf8');
-  const { config: configBlock, id: cfgId, config16 } = computeConfig({ driver, model, effort: judgeCfg.effort, promptBytes, rubric, cliVersion });
+  const { config: configBlock, id: cfgId, config16 } = computeConfig({ driver, model, effort, promptBytes, rubric, cliVersion });
+  if (previous && previous.config_id !== cfgId) {
+    throw new ExitError(EXIT.INVALID, `--resume: run ${runId} used configuration ${previous.config_id} but these arguments give ${cfgId}. Either a --model, --driver or --rubric differs from the run's (leave those flags out to continue it as it started), or the prompt, the rubric's content or scope, or the CLI version is not what it was when the run started. Judgments already made under the same configuration are reused by any run, so a new run does not start from nothing`);
+  }
 
-  const allItems = loadItems(opts, { agentDir, runsDir });
+  // the claims of a pull are read from one named folder, which run.json keeps, so that a resume reads the same claims even if a newer pull exists
+  const pullId = opts.items === 'claims' ? basename(resolvePullDir(runsDir, opts.pull)) : null;
+  const allItems = loadItems({ ...opts, pull: pullId ?? opts.pull }, { agentDir, runsDir });
   const schemas = {
     output: readJson(join(agentDir, 'schemas', 'judge-output.schema.json')),
     judgment: readJson(join(agentDir, 'schemas', 'judgment.schema.json')),
@@ -593,26 +689,15 @@ async function run(opts, io, deps) {
     renderSystemPrompt(template, { ...rubric, rubric_version: '<version>' }, scope.model),
   );
 
-  // the run folder: a new id, or the unfinished run that is being resumed
-  let runId = opts.runId;
-  let previous = null;
-  if (opts.resume) {
-    runId ??= findUnfinishedRun(runsDir);
-    if (!runId) throw new ExitError(EXIT.INVALID, '--resume found no unfinished judge run; pass --run-id');
-    const file = join(runsDir, runId, 'run.json');
-    if (!existsSync(file)) throw new ExitError(EXIT.INVALID, `--resume: ${file} does not exist`);
-    previous = readJson(file);
-    if (previous.kind !== 'judge') throw new ExitError(EXIT.INVALID, `--resume: ${file} is not a judge run`);
-    if (previous.config_id !== cfgId) {
-      throw new ExitError(EXIT.INVALID, `--resume: run ${runId} used configuration ${previous.config_id} but these arguments give ${cfgId}; repeat the original arguments (finished judgments of the same configuration are reused by any run)`);
-    }
-  } else if (runId) {
+  // the run folder: the unfinished run that is being resumed, or a new id
+  if (!previous && runId) {
     if (existsSync(join(runsDir, runId, 'run.json'))) throw new ExitError(EXIT.INVALID, `run id ${runId} already exists; use --resume to continue it or pick another id`);
-  } else {
+  } else if (!previous) {
     const stamp = makeRunId('judge', now());
     runId = existsSync(join(runsDir, stamp)) ? `${stamp}-${randomBytes(2).toString('hex')}` : stamp;
   }
   const runDir = ensureDir(join(runsDir, runId));
+  const argsRecord = previous?.args && typeof previous.args === 'object' ? previous.args : recordedArgs(opts);
 
   // Which items this run covers. A resumed run keeps the items it started with. Otherwise all of them, or with --limit the first N that
   // still have a run to do (so that repeating "--limit 10" moves on to new claims instead of meeting the same finished ones).
@@ -631,7 +716,7 @@ async function run(opts, io, deps) {
   try {
     return await execute({
       opts, io, deps, env, now, scope, rubric, rubricPath, driver, model, bin, configBlock, cfgId, config16, cfgDir, items, systemPromptFile, runId, runDir, previous,
-      runs,
+      runs, argsRecord, pullId,
       batchSize: judgeCfg.batch_size ?? 8,
       concurrency: Math.max(1, judgeCfg.concurrency ?? 2),
       timeoutMs: judgeCfg.timeout_ms ?? 300000,
@@ -671,7 +756,7 @@ async function execute(S) {
     const meta = {
       run_id: runId,
       kind: 'judge',
-      items_source: opts.items,
+      items_source: previous?.items_source ?? opts.items,
       config_id: cfgId,
       rubric_version: rubric.rubric_version,
       runs,
@@ -691,6 +776,10 @@ async function execute(S) {
       config16,
       system_prompt: S.systemPromptFile,
       invocations: (previous?.invocations ?? 0) + 1,
+      args: S.argsRecord, // how the run was started: --resume reads it back, so nothing has to be repeated
+      ...(S.pullId ? { pull: S.pullId } : {}),
+      ...(opts.parent ? { parent: opts.parent } : {}),
+      resume: resumeCommand(runId),
       items: items.map((it) => ({ id: it.id, text_hash: it.text_hash })),
       ...(retries.length ? { retries: retries.slice(0, 30) } : {}),
       ...extra,
@@ -835,7 +924,7 @@ async function execute(S) {
   const status = stop ? 'stopped' : errorShare > S.maxErrorShare ? 'failed' : 'done';
   const meta = writeMeta(status, {
     error_share: round(errorShare, 4),
-    ...(stop ? { stop: { kind: stop.kind, message: stop.message, reset_hint: usageResetHint(stop.message) }, resume: resumeCommand(opts, runId) } : {}),
+    ...(stop ? { stop: { kind: stop.kind, message: stop.message, reset_hint: usageResetHint(stop.message) } } : {}),
   });
 
   io.out(`judge: items=${opts.items} runs=${runs} model=${model} config=${config16} cells=${totalCells} done=${counts.done} skipped=${counts.skipped} error=${counts.error} stopped=${counts.stopped} cost=$${round(cost, 4)} status=${status}${opts.smoke ? ' smoke=yes' : ''} run=${runId}`);

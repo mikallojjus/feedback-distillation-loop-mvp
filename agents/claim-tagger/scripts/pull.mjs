@@ -10,7 +10,8 @@
 // id-map.carried) so names still resolve; their norm files are simply absent.
 //
 // Exit codes: 0 ok, 1 Notion or unexpected error, 2 duplicate keys (files are written) or a setup problem or broken cursor chain,
-// 3 the Agent settings Paused box is ticked (files are written), 4 a property is missing or has a different type than the scripts expect.
+// 3 the Agent settings Paused box is ticked (files are written), 4 a property is missing or has a different type than the scripts expect,
+// or a select property lacks an option the scripts or the Notion formulas name (lib/notion-contract.mjs REQUIRED_OPTIONS; extra options pass).
 //
 // In drift entries ({ tag, part, a, b }) a is the Notion side and b the rubric/rubric.json side; part "added" is a tag that is only in
 // rubric.json (deleted, renamed or no longer Verified in Notion) and "missing" one that is only in Notion.
@@ -25,6 +26,7 @@ import { EXIT } from './lib/exit-codes.mjs';
 import { h16 } from './lib/hash.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { agentRoot, isMain, repoRoot as defaultRepoRoot, runId, safeName } from './lib/paths.mjs';
+import { checkOptions } from './lib/notion-contract.mjs';
 import { clientFromConfig } from './lib/notion-rest.mjs';
 import { decodePage, normId, normaliseText } from './lib/notion-values.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
@@ -109,7 +111,10 @@ export function findSchema(root, db, preferredPullId = null) {
 
 // ---- checking the schema ------------------------------------------------------------------------------------------
 
-/** Problems between a live database object and what the scripts expect (names and types from allowlist.PROPERTY_TYPES, minus the computed ones nobody reads). */
+/**
+ * Problems between a live database object and what the scripts expect: names and types from allowlist.PROPERTY_TYPES (minus the computed
+ * ones nobody reads) and, for the select properties, the option names of lib/notion-contract.mjs REQUIRED_OPTIONS (extra options pass).
+ */
 export function schemaProblems(db, schema, config = null) {
   const props = schema?.properties;
   if (!props || typeof props !== 'object' || Array.isArray(props)) return [`${db}: the database object has no properties`];
@@ -123,7 +128,20 @@ export function schemaProblems(db, schema, config = null) {
     if (!def) problems.push(`${db}: property "${name}" is missing (renamed or deleted?)`);
     else if (def.type !== type) problems.push(`${db}: property "${name}" is ${def.type}, the scripts expect ${type}`);
   }
+  for (const { property, option } of checkOptions(db, props).missing) {
+    if (OPTIONAL_PROPERTIES[db].includes(property)) continue;
+    problems.push(`${db}: property "${property}" has no option "${option}" (renamed or deleted?)`);
+  }
   return problems;
+}
+
+/** Warnings for what the option check could not look at: a select property whose option list the API did not return (the allowlist then refuses every write to it). */
+export function schemaWarnings(db, schema) {
+  const props = schema?.properties;
+  if (!props || typeof props !== 'object' || Array.isArray(props)) return [];
+  return checkOptions(db, props).unreadable
+    .filter((property) => !OPTIONAL_PROPERTIES[db].includes(property))
+    .map((property) => `${db}: property "${property}" has no readable option list, so its options were not checked`);
 }
 
 // ---- normalising --------------------------------------------------------------------------------------------------
@@ -249,6 +267,7 @@ export async function pull({ root = agentRoot(), config = loadConfig(root), clie
   const schemas = {};
   const decoded = {};
   const problems = [];
+  const schemaNotes = [];
   const pageSize = config.notion.page_size ?? 100;
   for (const db of want) {
     const databaseId = config.notion.databases[db].database_id;
@@ -257,6 +276,7 @@ export async function pull({ root = agentRoot(), config = loadConfig(root), clie
     writeJsonAtomic(join(dir, 'schema', `${db}.json`), schema);
     const found = schemaProblems(db, schema, config);
     problems.push(...found);
+    schemaNotes.push(...schemaWarnings(db, schema));
     const pages = await client.queryAll(databaseId, { pageSize });
     for (const page of pages) {
       for (const value of Object.values(page.properties ?? {})) {
@@ -279,7 +299,7 @@ export async function pull({ root = agentRoot(), config = loadConfig(root), clie
   const idMap = { pull_id: id };
   const carried = {};
   const duplicates = [];
-  const warnings = [];
+  const warnings = [...schemaNotes];
   const counts = {};
   for (const db of DATABASES) {
     if (decoded[db]) {
@@ -421,7 +441,7 @@ export async function main(argv, io = defaultIo, env = {}) {
     for (const w of result.warnings) io.err(`pull: warning: ${w}`);
     if (result.code === EXIT.DRIFT) {
       for (const p of result.problems) io.err(`pull: ${p}`);
-      io.err('pull: the Notion schema no longer matches what the scripts expect; fix the property or update allowlist.mjs PROPERTY_TYPES');
+      io.err('pull: the Notion schema no longer matches what the scripts expect; fix the property or option in Notion, or update allowlist.mjs PROPERTY_TYPES or lib/notion-contract.mjs REQUIRED_OPTIONS');
     } else if (result.paused) {
       io.err('pull: the agent is paused (Agent settings -> Paused); a person must untick it');
     } else if (result.duplicates.length) {

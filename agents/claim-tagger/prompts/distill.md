@@ -14,7 +14,7 @@ Reply with a JSON object only, no prose, no code fences:
 {
   "kind": "Clarify wording" | "Add boundary example" | "Change the rule",
   "target": { "rule_n": <number or null>, "part": "rule" | "note" | "preamble" },
-  "title": "<the lesson in one sentence, at most 12 words>",
+  "title": "<the lesson in one sentence, at most 20 words>",
   "statement": "<the principle in one or two sentences, in the editors' terms>",
   "proposed_text": "<the full new text of the targeted rule (or note), ready to replace the current one>",
   "boundary_examples": [ { "claim": "<a short invented example, not a decided claim>", "applies": true|false } ],

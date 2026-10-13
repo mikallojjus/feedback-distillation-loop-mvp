@@ -4,7 +4,6 @@
       "Read(agents/**)",
       "Read(docs/**)",
       "Read(tests/**)",
-      "Write(agents/claim-tagger/runs/**)",
       "mcp__claude_ai_notion__notion-fetch",
       "mcp__claude_ai_notion__notion-query-data-sources",
       "mcp__claude_ai_notion__notion-create-pages",
@@ -35,7 +34,8 @@
       "Bash(node agents/claim-tagger/scripts/snapshot.mjs:*)",
       "Bash(node agents/claim-tagger/scripts/status.mjs:*)",
       "Bash(node agents/claim-tagger/scripts/transcript-check.mjs:*)",
-      "Bash(node agents/claim-tagger/scripts/verify.mjs:*)"
+      "Bash(node agents/claim-tagger/scripts/verify.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/probe.mjs:*)"
     ],
     "ask": [
       "mcp__claude_ai_notion__notion-create-database",
@@ -46,6 +46,8 @@
     "deny": [
       "Read(**/.env*)",
       "Read(.env)",
+      "Write(agents/claim-tagger/runs/**)",
+      "Edit(agents/claim-tagger/runs/**)",
       "mcp__claude_ai_notion__notion-move-pages",
       "mcp__claude_ai_notion__notion-duplicate-page",
       "mcp__claude_ai_notion__notion-restore-pages",

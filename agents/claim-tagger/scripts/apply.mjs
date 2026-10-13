@@ -5,7 +5,9 @@
 //
 // Preconditions: no runs/PAUSED; runs/APPLYING.json armed for this run and its plan_sha equal to the plan file's (a plan edited after
 // `plan.mjs check` is refused); Agent settings not paused; a token in .env (without one the connector batch files are written and the
-// exit code is 2, "apply by connector").
+// exit code is 2, "apply by connector"). Whatever the arming says, a plan that claims a gate PASS, a restore or a seed, writes a Rulebook
+// rule or sets a lesson Live is proven from files first (lib/gate-evidence.mjs): on every start, also --retry and --dry-run, before the
+// first request (against the pull the plan was checked with) and again against the pull the ops are resolved with, before the first write.
 // Flow: pre-snapshot pull of the touched databases (the plan's source pull is reused when it is under 10 minutes old and the run is
 // fresh; a resumed run always pulls again, so a create that did land becomes an update), ops in seq order (create -> createPage with its
 // page content in the same request, update -> updatePage), every result in runs/<id>/applied.jsonl { seq, page_id, status, error, ... }, a
@@ -20,6 +22,7 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { controlPaths, isProtectedDatabase } from './allowlist.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
+import { checkGateEvidence, evidenceNeeded } from './lib/gate-evidence.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic } from './lib/jsonl.mjs';
 import { clientFromConfig, splitRichText } from './lib/notion-rest.mjs';
 import { encodeProperties } from './lib/notion-values.mjs';
@@ -94,6 +97,26 @@ const fail = (code, ...errors) => ({ code, line: null, errors });
 const retryable = (e) => e?.retryable === true;
 const isAuthError = (e) => e?.status === 401 || e?.status === 403;
 
+export const EVIDENCE_REFUSAL = 'the plan claims a gate PASS (or a seed/restore) without evidence; nothing was sent';
+
+/** The refusal (exit 2) when the plan's gate claims are not backed by files, else null. `pull` may be null when none can be read. */
+function evidenceRefusal({ root, config, plan, pull }) {
+  const gate = checkGateEvidence({ root, plan, pull, config });
+  return gate.ok ? null : fail(EXIT.INVALID, EVIDENCE_REFUSAL, ...gate.problems.map((p) => `gate evidence: ${p}`));
+}
+
+/** The pull a plan was checked with (check.json), else the newest pull, else the one the plan was built from. */
+function checkedPullId(root, plan) {
+  let fromCheck = null;
+  try {
+    const checkFile = join(plan.dir, 'check.json');
+    fromCheck = existsSync(checkFile) ? readJson(checkFile).pull_id : null;
+  } catch {
+    fromCheck = null;
+  }
+  return fromCheck ?? latestPullId(root) ?? plan.header.source_pull;
+}
+
 function readPaused(root) {
   try {
     const p = readJson(controlPaths(root).paused);
@@ -121,17 +144,27 @@ export async function apply({ root = agentRoot(), config = loadConfig(root), cli
     const cfg = config.notion.databases[db];
     if (!cfg || isProtectedDatabase(config, cfg.database_id) || isProtectedDatabase(config, cfg.data_source_id)) return fail(EXIT.INVALID, `${db} is not a configured trial database (or is protected); nothing was sent`);
   }
+  // ---- gate evidence, first look: before a dry run, the paused and armed checks, a retry and any request. The header and the arming are claims
+  // a file can forge; the proof is in other files. (A pull that cannot be read is passed on as null: only a lesson check needs one.)
+  if (evidenceNeeded(plan)) {
+    let checked = null;
+    try {
+      checked = loadPull(root, checkedPullId(root, plan), { config });
+    } catch {
+      checked = null;
+    }
+    const refusal = evidenceRefusal({ root, config, plan, pull: checked });
+    if (refusal) return refusal;
+  }
   const needs = [...new Set([...touched, 'agent_settings'])]; // agent_settings: the Paused switch is read on every apply
   const retrySeqs = retry ? retrySet(plan.dir) : null;
   if (retry && !retrySeqs) return fail(EXIT.INVALID, `--retry needs ${join(plan.dir, 'plan.retry.jsonl')}, which apply or verify writes when ops did not land`);
 
   // ---- dry run: judge the plan against the pull it was checked with, send nothing
   if (dryRun) {
-    const checkFile = join(plan.dir, 'check.json');
-    const id = (existsSync(checkFile) ? readJson(checkFile).pull_id : null) ?? latestPullId(root) ?? plan.header.source_pull;
     let dry;
     try {
-      dry = loadPull(root, id, { config });
+      dry = loadPull(root, checkedPullId(root, plan), { config });
     } catch (e) {
       return fail(EXIT.INVALID, e.message);
     }
@@ -156,10 +189,8 @@ export async function apply({ root = agentRoot(), config = loadConfig(root), cli
 
   // ---- no token: hand over the batch files
   if (!client) {
-    const checkFile = join(plan.dir, 'check.json');
-    const id = (existsSync(checkFile) ? readJson(checkFile).pull_id : null) ?? latestPullId(root) ?? plan.header.source_pull;
     try {
-      const fallback = loadPull(root, id, { config });
+      const fallback = loadPull(root, checkedPullId(root, plan), { config });
       const { ops } = resolveOps(plan, fallback, { config });
       const files = writeBatches({ dir: plan.dir, ops, config, pull: fallback });
       return fail(EXIT.INVALID, `there is no NOTION_TOKEN in .env, so this cannot be applied by script: apply by connector. ${files.length} batch file(s) are in ${join(plan.dir, 'batches')} (SKILL.md, "No token (connector fallback)"); afterwards pull and run verify.mjs --run ${runId}`);
@@ -200,6 +231,9 @@ export async function apply({ root = agentRoot(), config = loadConfig(root), cli
 
   const { ops, skipped, violations } = resolveOps(plan, current, { config });
   if (violations.length) return fail(EXIT.INVALID, ...violations.map((v) => `op ${v.seq} (${v.database} "${v.key}"): ${v.message}`));
+  // the allowlist first, then the evidence once more against the pull the ops were just resolved with (a lesson may have left Approved since the check)
+  const refusal = evidenceRefusal({ root, config, plan, pull: current });
+  if (refusal) return refusal;
 
   // ---- send
   const ledgerFile = join(plan.dir, 'applied.jsonl');

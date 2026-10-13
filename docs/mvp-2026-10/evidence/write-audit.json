@@ -1,0 +1,22 @@
+{
+  "at": "2026-10-13T18:43:59.698Z",
+  "method": "every row of runs/<run>/applied.jsonl with status ok, its page_id checked against the id-maps of every pull of the six trial databases",
+  "applied_files": 17,
+  "writes_ok": 304,
+  "by_kind": {
+    "create": 177,
+    "update": 127
+  },
+  "by_database": {
+    "rulebook": 14,
+    "agent_settings": 1,
+    "claims": 120,
+    "tag_decisions": 151,
+    "runs": 10,
+    "rule_changes": 8
+  },
+  "trial_row_ids": 177,
+  "pulls": 45,
+  "outside_trial_databases": [],
+  "ok": true
+}

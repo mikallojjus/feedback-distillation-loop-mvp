@@ -6,7 +6,8 @@
 //   NEVER[db]      editor-owned and computed properties: no script ever writes them (one seed exception: Weekly cap on create)
 //
 // assertWritable(db, prop, value, { schema, ctx }) throws an Error with .code = 'ALLOWLIST' and a .reason, or returns.
-// ctx: { op: 'create' | 'update', key, seed, promote, gate, decidedKeys }.
+// ctx: { op: 'create' | 'update', key, seed, promote, gate, restore, confirm, decidedKeys }. The ctx of a plan is its header's claim; whether the
+// claim is true (a PASS card, the live rubric's text, the setup marker) is checked from files by lib/gate-evidence.mjs.
 
 import { join } from 'node:path';
 import { h16 } from './lib/hash.mjs';
@@ -50,11 +51,14 @@ export const PROPERTY_TYPES = deepFreeze({
   },
 });
 
-/** Computed properties no script reads: pull.mjs does not fail when one of them is renamed or retyped. */
+/**
+ * Computed properties no script reads: pull.mjs does not fail when one of them is renamed or retyped. (Lesson status is not one of them: the
+ * Stage formula is built on it, so a renamed Lesson status silently changes every row's Stage and pull has to stop.)
+ */
 export const OPTIONAL_PROPERTIES = deepFreeze({
   rulebook: [],
   claims: ['Tag decisions', 'Decided applies', 'Decided does not apply'],
-  tag_decisions: ['Applied tag', 'Rejected tag', 'Lesson status'],
+  tag_decisions: ['Applied tag', 'Rejected tag'],
   rule_changes: [],
   runs: [],
   agent_settings: [],
@@ -223,6 +227,7 @@ export function assertWritable(db, prop, value, { schema = null, ctx = {} } = {}
   }
   // The one engineer-only exception: `status.mjs --restore-rulebook --confirm` writes the live rubric's own text back
   // into a drifted Rulebook row (ctx.restore with ctx.confirm). It never introduces new text; it restores the file's.
+  // This rule reads the header's ctx and nothing else: plan.mjs check and apply.mjs also prove the claim from files (lib/gate-evidence.mjs).
   const restore = ctx.restore === true && ctx.confirm === true;
   if (db === 'rulebook' && prop === 'When to use' && !(ctx.promote === true && ctx.gate === 'PASS') && !seedCreate && !restore) {
     refuse(db, prop, 'promote-only', 'the rule text changes only through promote with a gate PASS (or a confirmed restore of the live rubric text)');

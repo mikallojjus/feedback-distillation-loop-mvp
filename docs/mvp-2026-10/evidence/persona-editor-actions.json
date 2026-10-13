@@ -10,7 +10,12 @@
       "claim": "The Supreme Court is likely to uphold executive actions that exceed the authority granted by Congress",
       "tag": "Predictive",
       "agent_proposal": "Add tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Does not apply",
         "Why wrong": "Rule should change",
@@ -27,7 +32,12 @@
       "claim": "The current trend of cognitive offloading to AI is likely a temporary phase while people learn to use the technology correctly",
       "tag": "Predictive",
       "agent_proposal": "Add tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Applies",
         "Why wrong": null,
@@ -44,7 +54,12 @@
       "claim": "AI and robotics are increasingly replacing low-level jobs, a trend that is expected to continue",
       "tag": "Predictive",
       "agent_proposal": "Add tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Applies",
         "Why wrong": null,
@@ -61,7 +76,12 @@
       "claim": "The 2026 midterm elections will result in a Democratic wave",
       "tag": "Predictive",
       "agent_proposal": "Add tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Applies",
         "Why wrong": null,
@@ -78,7 +98,12 @@
       "claim": "A ceasefire in Ukraine will increase the military threat to the Baltic states",
       "tag": "Hypothetical",
       "agent_proposal": "Add tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Applies",
         "Why wrong": null,
@@ -95,7 +120,12 @@
       "claim": "The U.S. Constitution permits the president to restrict birthright citizenship",
       "tag": "Improperly sourced",
       "agent_proposal": "Read source first",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Needs evidence",
         "Why wrong": null,
@@ -112,7 +142,12 @@
       "claim": "The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign",
       "tag": "Debate",
       "agent_proposal": "Do not add tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Applies",
         "Why wrong": "Rule unclear",
@@ -129,7 +164,12 @@
       "claim": "Allowing Boulder’s lawsuit would increase uncertainty for national energy companies",
       "tag": "Context-dependent",
       "agent_proposal": "Remove tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Applies",
         "Why wrong": "Agent slip",
@@ -146,7 +186,12 @@
       "claim": "Federal Medicaid whistleblower rules would weaken state control over program enforcement",
       "tag": "Hypothetical",
       "agent_proposal": "Add tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Applies",
         "Why wrong": null,
@@ -163,7 +208,12 @@
       "claim": "Military pressure is more likely than diplomatic restraint to produce an Iran settlement",
       "tag": "Predictive",
       "agent_proposal": "Do not add tag",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Does not apply",
         "Why wrong": "Rule should change",
@@ -182,8 +232,16 @@
       "rule": "Predictive rule 1",
       "kind": "Change the rule",
       "supporting_rows": 4,
-      "before": { "Status": "Proposed", "Editor wording": "", "Approved by": null },
-      "after": { "Status": "Approved", "Editor wording": "", "Approved by": null },
+      "before": {
+        "Status": "Proposed",
+        "Editor wording": "",
+        "Approved by": null
+      },
+      "after": {
+        "Status": "Approved",
+        "Editor wording": "",
+        "Approved by": null
+      },
       "written_at": "2026-10-13T16:09:47Z",
       "note": "Approved on the merits. All four supporting decisions (two mine, two seeded from the 9 Oct audit) withhold Predictive from a hedged marker describing a tendency, a strategy comparison or an 'on track to' trajectory; the proposed text keeps hedged forecasts of a definite outcome (consistent with the cognitive-offloading Applies row), its five boundary examples match the decided rows, and the Predictive example claims use no hedged marker, so the canaries are untouched. Editor wording left empty: no substantive change wanted; only nit is that the Proposed text drops the '1.' numbering prefix, which the splice should restore. The lesson page alone (statement, supporting decisions with editor quotes, boundary examples, counter-evidence) was enough to decide; opening the two seeded rows only confirmed the quoted reasoning and showed that both audit editors were tentative."
     },
@@ -196,8 +254,16 @@
       "rule": "Context-dependent rule 2",
       "kind": "Change the rule",
       "supporting_rows": 2,
-      "before": { "Status": "Proposed", "Editor wording": "", "Approved by": null },
-      "after": { "Status": "Approved", "Editor wording": "", "Approved by": null },
+      "before": {
+        "Status": "Proposed",
+        "Editor wording": "",
+        "Approved by": null
+      },
+      "after": {
+        "Status": "Approved",
+        "Editor wording": "",
+        "Approved by": null
+      },
       "written_at": "2026-10-13T16:09:47Z",
       "note": "Approved ONLY because the lesson title and its Notes section label it a planted gate test expected to FAIL, and the coordinator asked for approval so the gate can be seen refusing it. On the merits I would reject it: the proposed text makes only antecedent-less pronouns Context-dependent, which over-generalises two tentative seeded decisions (Georgia debate, COVID 'larger public health problem') and contradicts Context-dependent rules 3 and 4, the tag's own example claims ('the vulnerabilities', 'the discussions', 'the Bitcoin ETF') and Self-contained rule 3's two-things test. If the gate passes it, that is a gate defect. The page alone was enough to decide; the two supporting rows added nothing beyond the quoted reasoning."
     },
@@ -210,7 +276,11 @@
       "rule": "Predictive rule 1",
       "kind": "Change the rule",
       "trigger": "Gate FAIL on the Proposed text: canaries 83/83, Predictive +27.3 points (fixed 3, HOLD on a wide interval), but Hypothetical 81.8% to 63.6% with two regression cases (a scenario 'will' claim and a 'would' claim) sliding from apply to ask-editor, and the 'likely to expand' row sliding to ask-editor.",
-      "before": { "Status": "Approved", "Editor wording": "", "Approved by": null },
+      "before": {
+        "Status": "Approved",
+        "Editor wording": "",
+        "Approved by": null
+      },
       "after": {
         "Status": "Approved",
         "Editor wording": "Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to (\"the market is forecasted to grow to a multi-trillion size by 2030\", \"the largest wave of maturities is expected in the fall\"). Hedged markers (is likely to, is likely, probably) fire only when they attach to a definite future outcome or event that only the future can settle (\"the hiring freeze is likely a short-lived phase\" fires). Hedged markers do NOT fire when they describe: an actor's general tendency or disposition, which can be checked against its past record (\"the agency is likely to side with large incumbents\"); a comparison of which strategy or approach tends to work better (\"tariffs are more likely than talks to change the policy\"); or a present trajectory (\"is on track to\", \"is heading toward\"). Such claims are assessments of the present, not forecasts. In particular, a hedged claim that an actor is likely to keep doing, continue or extend what it already does (to expand, tighten or favour something further), even with a future time phrase attached, describes that actor's tendency and does not fire. This rule decides Predictive only: it never decides whether a claim is Hypothetical, which Hypothetical's own rules settle unchanged, so a conditional or scenario claim keeps the Hypothetical verdict those rules give it even where this rule would also fire, and the two tags may stand together.",
@@ -276,7 +346,12 @@
       "agent_proposal": "Do not add tag",
       "seeded_outcome": "Applies",
       "trigger": "Confirmed flip blocking LS-1's gate: current rulebook applies Context-dependent 8/8 (rule 3, the initiative is not identified); the LS-1 candidate says Self-contained 8/8 (Self-contained rule 2, 'her' resolves to Melania Trump).",
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
       "after": {
         "Tag outcome": "Applies",
         "Why wrong": null,
@@ -333,6 +408,60 @@
       "editor_wording_chars": 1439,
       "written_at": "2026-10-13T17:53:07Z",
       "note": "Only the Editor wording property written; Status left Approved. Copied verbatim from the before-value of the previous edit (same text as the attempt-4 scratch file, re-measured at 1,439 characters). Reading of the two failures: the minimal text lost the worked example of a hedged definite outcome, and that example is what kept the 'temporary phase' row firing, so the examples carry meaning for the judge and length alone does not explain attempt 4's Context-dependent side effect; the engineer's per-tag judge is the right fix for that."
+    },
+    {
+      "role": "editor reviewer",
+      "row_url": "https://app.notion.com/p/3f8273e214eb819d8df0e2b395fbc70b",
+      "key": "f4d50e38cfc4794d985d619c072d508b::Predictive",
+      "claim": "The Trump administration will find another route to restrict mail voting before November",
+      "tag": "Predictive",
+      "agent_proposal": "Add tag",
+      "why_in_queue": "Auditor flag",
+      "priority": "Medium",
+      "agent_confidence": 0.92,
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "A flat, unattributed 'will' forecast that a named actor will do a specific thing before a date, with no scenario wrapper: Predictive rule 1, and none of rules 2 to 5 blocks it.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T17:48:35Z",
+      "time_taken": "about 1 minute",
+      "looked_up": "Opened the claim page to read the claim text (the row shows the claim only as a link); nothing else.",
+      "note": "Fresh-eyes editor review, round 1. Agreed with the agent, so no Why wrong. Only Tag outcome, Your reasoning and Decided at written; Decided by left empty."
+    },
+    {
+      "role": "editor reviewer",
+      "row_url": "https://app.notion.com/p/3f8273e214eb81bfabb9ded1c570c9fe",
+      "key": "fbd881e9ff2b4f64991acd03ae177ef5::Context-dependent",
+      "claim": "Keeping the Camp David meeting secret shields Iran-Yemen policy from public accountability",
+      "tag": "Context-dependent",
+      "agent_proposal": "Keep tag",
+      "why_in_queue": "Low confidence",
+      "priority": "High",
+      "agent_confidence": 0.65,
+      "before": {
+        "Tag outcome": null,
+        "Why wrong": null,
+        "Your reasoning": "",
+        "Decided at": null
+      },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "'The Camp David meeting' names a kind of meeting at a named place but not which one; more than one fits, so Self-contained rule 3 fails and Context-dependent rule 3 applies.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T17:48:35Z",
+      "time_taken": "about 2 to 3 minutes",
+      "looked_up": "Opened the claim page to read the claim text; re-read Context-dependent rule 3 and Self-contained rule 3 in the Rulebook to confirm the could-two-things-fit test; had to infer that agreeing with 'Keep tag' means Tag outcome = Applies.",
+      "note": "Fresh-eyes editor review, round 1. Agreed with the agent's Keep tag, so no Why wrong. Only Tag outcome, Your reasoning and Decided at written; Decided by left empty."
     }
   ]
 }

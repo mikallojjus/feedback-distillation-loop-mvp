@@ -736,7 +736,7 @@ test('--smoke: one run, the same verdict logic, incomplete items are listed and 
   const fail = scenario({ cand: { wrong: ['can-ctx-2'] } }).run({ smoke: true });
   assert.equal(fail.card.verdict, 'FAIL');
   assert.equal(fail.exitCode, EXIT.FAIL);
-  assert.match(fail.md.split('\n')[0], /^For editors: nothing changed; the change would make /);
+  assert.match(fail.md.split(String.fromCharCode(10))[0], /^For editors: a rehearsal [(]smoke[)] run; nothing changes/);
   assert.match(fail.md.split('\n')[1], /^Verdict: FAIL - smoke: not a gate verdict/);
 });
 
@@ -937,7 +937,7 @@ test('reconfirmed: an id that is not an evaluated case is refused; card.md keeps
   assert.ok(md.length <= CARD_MD_LIMIT, `${md.length}`);
   assert.match(md.split('\n')[0], /^For editors: nothing changed; the change would make /);
   assert.match(md.split('\n')[1], /^Verdict: FAIL/);
-  assert.match(md, /Rollback: /);
+  assert.doesNotMatch(md, /Rollback: /, "a FAIL card has no rollback line: nothing went live");
   assert.match(md, /FAIL: reason 3 /, 'the reasons rank above the reconfirmed lines');
   assert.ok(reconfirmLines(md).length < 10 && /more line\(s\) in card\.json/.test(md), 'what does not fit is announced, and it is the reconfirmed lines that go');
 });
@@ -1082,7 +1082,7 @@ test('config.json drives the gate: a stricter tolerance turns a PASS into a FAIL
 
 // ---- card output ----
 
-test('card.md stays within 1,900 characters in the worst case and keeps verdict, canaries and rollback', () => {
+test('card.md stays within 1,900 characters in the worst case and keeps verdict and canaries; a FAIL card has no rollback line', () => {
   // everything wrong under the candidate on the real data: every canary and every case fails
   const worst = realWorld({ cand: { allWrong: true }, lesson: 'L-1' });
   const result = worst.run();
@@ -1094,7 +1094,7 @@ test('card.md stays within 1,900 characters in the worst case and keeps verdict,
   assert.match(lines[1], /^Verdict: FAIL/);
   assert.ok(lines.some((l) => l.startsWith('Canaries: ')));
   assert.ok(lines.some((l) => l.startsWith('Cases newly failing: ')));
-  assert.equal(lines.at(-1), 'Rollback: /claim-tagger promote --rollback L-1');
+  assert.match(lines.at(-1), /^Baseline /, 'the last line is the configuration line: nothing went live, so there is no rollback line');
   assert.ok(lines.some((l) => l.startsWith('FAIL: ')));
   assertCardSound(result);
   // renderCardMd copes with a card of any size
@@ -1106,7 +1106,7 @@ test('card.md stays within 1,900 characters in the worst case and keeps verdict,
   assert.ok(md.length <= CARD_MD_LIMIT, `${md.length}`);
   assert.match(md.split('\n')[0], /^For editors: nothing changed; the change would make /);
   assert.match(md.split('\n')[1], /^Verdict: FAIL/);
-  assert.match(md, /Rollback: /);
+  assert.doesNotMatch(md, /Rollback: /, "a FAIL card has no rollback line: nothing went live");
   assert.match(md, /more line\(s\) in card\.json/);
 });
 
@@ -1348,7 +1348,7 @@ test('the incomplete card says so in plain words and has no target or FAIL lines
   assert.equal(lines[0], 'Verdict: n/a - no gate verdict: the judgments are incomplete');
   assert.match(lines[1], /^Incomplete: 2 gating items without complete judgments, for example c-act-2 \(candidate run-2: g-ctx-2\.[0-9a-f]{8}\.json is missing\)$/);
   assert.ok(!/Target|FAIL|Canaries/.test(result.md));
-  assert.equal(lines.at(-1), 'Rollback: /claim-tagger promote --rollback L-1');
+  assert.match(lines.at(-1), /^Baseline /, 'no rollback line on an incomplete card');
   assert.equal(scenario({ cand: { skip: ['g-ctx-2#2'] } }).run().md.split('\n')[1].slice(0, 36), 'Incomplete: 1 gating item without co');
 });
 

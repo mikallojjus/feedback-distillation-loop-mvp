@@ -1,56 +1,56 @@
-<!-- Two sample rows from each of the six Notion databases, long cells shortened with an ellipsis.
-     Values come from plan.md ("Sample rows"). Two cells were taken from the data instead of the plan: Predictive has polarity Issue in
-     rubric.json (the plan says Classification), and the seeded Texas row is Do not add tag with priority Medium in decisions.seed.jsonl
-     (the plan says Keep tag and High). Replace these rows with rows read from docs/mvp-2026-10/evidence/notion once the demo has run. -->
-<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
-  <caption><strong>Rulebook</strong> · the rules the agent tags by (2 of {{count:rulebookTags}} rows). R1 and R2 are rubric versions.</caption>
-  <thead><tr><th>Tag title</th><th>Polarity</th><th>Counterpart</th><th>Judged</th><th>Rule version</th><th>Changed by</th><th>When to use (start)</th></tr></thead>
+<!-- Real rows from the six Notion databases, as the end-state snapshot holds them
+     (docs/mvp-2026-10/evidence/notion/08-end-state-gate-held: rulebook.json, claims.jsonl, queue.jsonl, lessons.jsonl, runs.jsonl, settings.json).
+     Long cells are shortened with an ellipsis; claim texts and rule texts are quoted, not edited. Figures that counts.json also holds are
+     filled from it. Included by parts/04-notion.html. -->
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock">
+  <caption><strong>Rulebook</strong> · the rules the agent tags by (2 of {{count:rulebookTags}} rows)</caption>
+  <thead><tr><th>Tag title</th><th>Polarity</th><th>Counterpart</th><th>Judged</th><th>Rule version</th><th>Changed by</th><th>When to use (one rule)</th></tr></thead>
   <tbody>
-    <tr><td><strong>Predictive</strong></td><td>Issue</td><td>none</td><td>yes</td><td>R2</td><td>L-1</td><td>1. Fires on an unconditional future marker … a hedged tendency such as 'is likely to' does not fire this rule</td></tr>
-    <tr><td><strong>Context-dependent</strong></td><td>Issue</td><td>Self-contained</td><td>yes</td><td>R1</td><td>none</td><td>5. A generic or indefinite reference does not make a claim context-dependent</td></tr>
+    <tr><td><strong>Predictive</strong></td><td>Issue</td><td>none</td><td>yes</td><td>{{count:rubricVersion}}</td><td>empty</td><td>1. Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to, is likely to (…)</td></tr>
+    <tr><td><strong>Context-dependent</strong></td><td>Issue</td><td>Self-contained</td><td>yes</td><td>{{count:rubricVersion}}</td><td>empty</td><td>3. A descriptive definite that names a kind of thing but not which one ("the Bitcoin ETF", …) makes the claim Context-dependent: the reader must already know which … is meant.</td></tr>
   </tbody>
 </table></div>
 
-<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
-  <caption><strong>Claims</strong> · the claims in the trial (2 of {{count:claims}} rows).</caption>
-  <thead><tr><th>Claim title</th><th>Geo ID</th><th>Sample</th><th>Agent tags</th><th>Readiness</th><th>Tag confidence</th><th>Last judged</th></tr></thead>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock">
+  <caption><strong>Claims</strong> · the claims in the trial (2 of {{count:claims}} rows)</caption>
+  <thead><tr><th>Claim title</th><th>Sample</th><th>Agent tags</th><th>Readiness</th><th>Tag confidence (the Predictive line)</th><th>Last judged</th></tr></thead>
   <tbody>
-    <tr><td>Texas is on track to become a competitive swing state</td><td><code>f376c2cc…</code></td><td>Forecast</td><td>Debate, Opinion, Self-contained</td><td>Ready</td><td>Predictive · editor: does not apply (kept)</td><td>R2</td></tr>
-    <tr><td>The Supreme Court is likely to uphold executive actions…</td><td><code>6e820a8a…</code></td><td>Forecast</td><td>none</td><td>Needs editor</td><td>Predictive · ask editor · 0.62 · 2/3 · rule 1 · 'is likely to'</td><td>R1</td></tr>
+    <tr><td>Texas is on track to become a competitive swing state</td><td>Decided</td><td>Opinion, Self-contained, Single core statement</td><td>Needs editor</td><td>Predictive · apply · 0.62 · 3/3 runs · Predictive rule 1 · editor: Does not apply (kept)</td><td>{{count:rubricVersion}} · tag run</td></tr>
+    <tr><td>The Supreme Court is likely to uphold executive actions that exceed the authority granted by Congress</td><td>Forecast</td><td>Debate, Opinion, Predictive, Self-contained, Single core statement</td><td>Fix needed</td><td>Predictive · apply · 0.88 · 3/3 runs · Predictive rule 1</td><td>{{count:rubricVersion}} · tag run</td></tr>
   </tbody>
 </table></div>
 
-<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
-  <caption><strong>Tag decisions</strong> · the queue, one row per claim and tag (2 of {{count:queueRows}} rows).</caption>
-  <thead><tr><th>Key</th><th>Agent proposal</th><th>Agent confidence</th><th>Why in queue</th><th>Priority</th><th>Tag outcome</th><th>Why wrong</th><th>Your reasoning</th><th>Stage</th></tr></thead>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock">
+  <caption><strong>Tag decisions</strong> · the queue, one row per claim and tag (2 of {{count:queueRowsNow}} rows)</caption>
+  <thead><tr><th>Key</th><th>Agent proposal</th><th>Agent confidence</th><th>Why in queue</th><th>Priority</th><th>Outcome</th><th>Why wrong</th><th>Reasoning</th><th>Stage</th><th>Direction</th></tr></thead>
   <tbody>
-    <tr><td><code>6e820a8a…::Predictive</code></td><td>Add tag</td><td class="num">0.62</td><td>Low confidence</td><td>High</td><td>Does not apply</td><td>Rule should change</td><td>'A likely outcome is a tendency, not a forecast'</td><td>Lesson proposed</td></tr>
-    <tr><td><code>f376c2cc…::Predictive</code></td><td>Do not add tag</td><td class="num">none</td><td>Seeded decision</td><td>Medium</td><td>Does not apply (seeded)</td><td>Rule should change (seeded)</td><td>none</td><td>Regression case</td></tr>
+    <tr><td><code>6e820a8a…::Predictive</code></td><td>Add tag</td><td class="num">0.88</td><td>Auditor flag</td><td>Medium</td><td>Tag outcome: Does not apply</td><td>Rule should change</td><td>"The agent followed rule 1, but a hedged 'likely to' about the Court's general tendency is an assessment checkable against its record, not a forecast…"</td><td>Lesson proposed</td><td>Wrongly applied</td></tr>
+    <tr><td><code>f376c2cc…::Predictive</code></td><td>Do not add tag</td><td class="num">none</td><td>Seeded decision</td><td>Medium</td><td>Seeded outcome: Does not apply</td><td>empty (the seeded reasoning starts "Rule should change:")</td><td>"… It is not saying in absolute terms that it will become a competitive swing state …"</td><td>Lesson proposed</td><td>Agent right</td></tr>
   </tbody>
 </table></div>
 
-<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
-  <caption><strong>Rule changes</strong> · lessons drafted from decisions (2 rows).</caption>
-  <thead><tr><th>Lesson</th><th>Rule</th><th>Status</th><th>Supporting rows</th><th>Rubric version</th><th>Gate result</th></tr></thead>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock">
+  <caption><strong>Rule changes</strong> · lessons drafted from decisions ({{count:end.lessons}} rows)</caption>
+  <thead><tr><th>Lesson</th><th>Rule</th><th>Kind</th><th>Status</th><th class="num">Supporting rows</th><th>Rubric version</th><th>Gate result (start)</th></tr></thead>
   <tbody>
-    <tr><td><strong>L-1</strong> Hedged trajectories are not forecasts</td><td>Predictive rule 1</td><td>Live</td><td class="num">4</td><td>R2</td><td>PASS (small sample) · 83/83 · 0 newly failing</td></tr>
-    <tr><td><strong>L-2</strong> Gate test (deliberately bad): only pronouns make a claim Context-dependent</td><td>Context-dependent rule 2</td><td>Rolled back</td><td>Georgia and COVID decisions</td><td>none</td><td>FAIL · 10 canaries failed · Rulebook untouched</td></tr>
+    <tr><td><strong>LS-1</strong> Hedged 'likely to' needs a definite future outcome, not a tendency</td><td>Predictive rule 1</td><td>Change the rule</td><td>Approved</td><td class="num">{{count:end.ls1Supporting}}</td><td>{{count:rubricVersion}}</td><td>Verdict: FAIL - small sample … Canaries: 83/83 … Cases newly failing: 1 …</td></tr>
+    <tr><td><strong>LS-2</strong> Gate test (deliberately bad): only pronouns make a claim Context-dependent</td><td>Context-dependent rule 2</td><td>Change the rule</td><td>Rolled back</td><td class="num">{{count:end.ls2Supporting}}</td><td>{{count:rubricVersion}}</td><td>Verdict: FAIL … Context-dependent: no improvement (upper bound 0.0 points)</td></tr>
   </tbody>
 </table></div>
 
-<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
-  <caption><strong>Runs</strong> · one row per agent step; a Gate row carries the result card (2 rows).</caption>
-  <thead><tr><th>Run title</th><th>Kind</th><th>Rubric version</th><th>Claims judged</th><th>Canaries</th><th>Newly failing</th><th>Verdict</th><th>Summary</th><th>Cost</th></tr></thead>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock">
+  <caption><strong>Runs</strong> · one row per agent step; a Gate row carries the result card (2 of {{count:end.runsRows}} rows)</caption>
+  <thead><tr><th>Run title</th><th>Kind</th><th>Rubric version</th><th class="num">Claims judged</th><th>Canaries</th><th>Verdict</th><th>Summary (start)</th><th class="num">Cost USD</th></tr></thead>
   <tbody>
-    <tr><td><strong>Tag R1 · 14 Oct</strong></td><td>Tag</td><td>R1</td><td class="num">60</td><td class="num">83 of 83</td><td class="num">none</td><td>n/a</td><td>23 rows queued (8 High), editor fields changed: 0</td><td class="num">$2.10</td></tr>
-    <tr><td><strong>Gate R2 · L-1</strong></td><td>Gate</td><td>R1 → R2</td><td class="num">86</td><td class="num">83 of 83</td><td class="num">0</td><td>PASS</td><td>none</td><td class="num">$1.70</td></tr>
+    <tr><td><strong>Tag 2026-10-13.1 · 20261013T1800Z-tag-r1</strong></td><td>Tag</td><td>{{count:rubricVersion}}</td><td class="num">{{count:tagRun.claims}}</td><td>empty</td><td>n/a</td><td>Queue: {{count:tagRun.rowsCreated}} rows created, {{count:tagRun.rowsUpdated}} updated, {{count:tagRun.heldByCap}} held back by the weekly cap of {{count:tagRun.weeklyCap}} … Editor fields changed by the agent: 0 (verified by read-back).</td><td class="num">{{count:cost.tagRun}}</td></tr>
+    <tr><td><strong>Gate 2026-10-13.2 · LS-1 (4)</strong></td><td>Gate</td><td>{{count:rubricVersion}} → {{count:candidateVersion}}</td><td class="num">71</td><td>{{count:gate.ls1a4.canaries}}</td><td>FAIL</td><td>Verdict: FAIL - small sample: a gated tag has under 30 labelled positives …</td><td class="num">{{count:gate.ls1a4.cost}}</td></tr>
   </tbody>
 </table></div>
 
-<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
-  <caption><strong>Agent settings</strong> · the agent's switches; the database has one row by design.</caption>
-  <thead><tr><th>Name</th><th>Paused</th><th>Weekly cap</th><th>Rubric in force</th><th>Last run summary</th></tr></thead>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock">
+  <caption><strong>Agent settings</strong> · the agent's switches; the database has one row by design</caption>
+  <thead><tr><th>Name</th><th>Paused</th><th class="num">Weekly cap</th><th>Rubric in force</th><th>Last run at</th><th>Last run summary</th></tr></thead>
   <tbody>
-    <tr><td><strong>claim-tagger</strong></td><td>no</td><td class="num">40</td><td>R2</td><td>Follow-up R2: 4 rows Fixed, 0 Still wrong</td></tr>
+    <tr><td><strong>claim-tagger</strong></td><td>{{count:end.paused}}</td><td class="num">{{count:end.weeklyCap}}</td><td>{{count:rubricVersion}}</td><td>empty</td><td>empty</td></tr>
   </tbody>
 </table></div>

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // cases-sync: every decision becomes a permanent regression case. Rebuilds evals/cases.jsonl from the decisions of a pull plus the research
-// cases already in the file, and plans the Tag decisions column "In regression suite" for the rows that became active cases.
+// cases already in the file, and plans the Tag decisions column "In regression suite" (set on the rows that became active cases, cleared on the
+// rows whose case stopped being one).
 //
 //   node agents/claim-tagger/scripts/cases-sync.mjs [--pull <id>] [--run-id <id>]
 //
@@ -20,7 +21,11 @@
 //                rubric_version (the version the hashes were stamped against), source "queue".
 // Research cases without a decided queue row stay in the file (source "research", hashes re-stamped); the research file's old source text moves to
 // research_source, on those and on the cases a queue row took over.
-// The plan sets "In regression suite" (today) on the rows whose case is active and whose date is still empty, never on contested ones.
+// The plan sets "In regression suite" (today) on the rows whose case is active and whose date is still empty, never on contested ones. It also
+// clears the date (writes null) on the rows whose case is no longer active (contested again, or withdrawn) but still carry one: the column says
+// "this decision is a test today", so it follows the case in both directions. A lesson that goes Live makes the case active again, and the next
+// sync stamps the row afresh. A row linked to a lesson the pull cannot resolve (the pull lacks Rule changes) is left alone: whether its case is
+// contested is not known. The summary line counts the cleared rows ("cleared N") when there are any.
 // Claim texts come from the pull when it holds the Claims, else from an older pull, the cases already in the file or the seed.
 //
 // Library: syncCases() does the work (distill --link and promote --finalize call it); main() is the command line.
@@ -219,6 +224,7 @@ function buildCase({ row, existing, rubric, claim, lessons, url, today, sourceRe
  * Options: root, config, pull (a loaded pull), rubric (default rubric/rubric.json), now, links (Map row key -> [lesson key]), lessonStatus (Map lesson key ->
  * status that replaces the pulled one, for a change that is planned but not applied yet), casesPath, write.
  * regression = the rows that need "In regression suite": [{ key, page_id }].
+ * clearing = the rows that carry the date although their case is not an active test (contested again, withdrawn): [{ key, page_id, why }], in key order.
  */
 export function syncCases({ root = agentRoot(), config = loadConfig(root), pull, rubric = readJson(join(root, 'rubric', 'rubric.json')), now = () => new Date(), links = new Map(), lessonStatus = new Map(), casesPath = join(root, 'evals', 'cases.jsonl'), write = true }) {
   if (!pull.covers('tag_decisions')) throw new Error(`pull ${pull.id} does not include Tag decisions: run pull.mjs --dbs tag_decisions,rule_changes first`);
@@ -240,8 +246,9 @@ export function syncCases({ root = agentRoot(), config = loadConfig(root), pull,
   const next = existing.map((c) => ({ ...c }));
   const handled = new Set();
   const regression = [];
+  const clearing = new Map(); // row key -> { key, page_id, why }: the date is set, the case is not an active test
   const additions = [];
-  const counts = { total: 0, from_queue: 0, kept_research: 0, added: 0, updated: 0, unchanged: 0, restamped: 0, withdrawn: 0, no_case: 0, skipped_no_claim: 0, active: 0, contested: 0, not_run: 0, inactive: 0 };
+  const counts = { total: 0, from_queue: 0, kept_research: 0, added: 0, updated: 0, unchanged: 0, restamped: 0, withdrawn: 0, no_case: 0, skipped_no_claim: 0, active: 0, contested: 0, not_run: 0, inactive: 0, cleared: 0 };
 
   const rowsByKey = new Map(queue.map((r) => [r.key, r]));
   const noCaseKeys = new Set(queue.filter((r) => r.tag_outcome && NO_CASE_WHY.includes(r.why_wrong) && ['Applies', 'Does not apply'].includes(r.effective_outcome)).map((r) => r.key));
@@ -273,6 +280,7 @@ export function syncCases({ root = agentRoot(), config = loadConfig(root), pull,
     }
     counts.from_queue += 1;
     if (built.active && !row.in_regression_suite) regression.push({ key: row.key, page_id: row.page_id });
+    else if (!built.active && row.in_regression_suite && !lessons.unknown) clearing.set(row.key, { key: row.key, page_id: row.page_id, why: built.contested ? 'contested' : 'inactive' });
   }
 
   // decisions that are no longer a case: No tag fits / Other, or a decision that was withdrawn
@@ -287,6 +295,7 @@ export function syncCases({ root = agentRoot(), config = loadConfig(root), pull,
         next[i] = { ...c, active: false, contested: false, withdrawn: reason };
         counts.withdrawn += 1;
       }
+      if (row?.in_regression_suite) clearing.set(row.key, { key: row.key, page_id: row.page_id, why: 'withdrawn' }); // whether the case was withdrawn now or earlier
       return;
     }
     // a research case with no decided row: kept, hashes re-stamped against the live rubric
@@ -326,10 +335,11 @@ export function syncCases({ root = agentRoot(), config = loadConfig(root), pull,
     else counts.inactive += 1;
   }
 
+  counts.cleared = clearing.size;
   const text = cases.length ? `${cases.map((c) => JSON.stringify(c)).join('\n')}\n` : '';
   const before = existing.length ? `${existing.map((c) => JSON.stringify(c)).join('\n')}\n` : '';
   const changed = text !== before;
-  const result = { cases, counts, regression, notes, changed, today, casesPath, text };
+  const result = { cases, counts, regression, clearing: [...clearing.values()].sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)), notes, changed, today, casesPath, text };
   if (write) writeCases(result);
   return result;
 }
@@ -339,12 +349,16 @@ export function writeCases(result) {
   if (result.changed) writeTextAtomic(result.casesPath, result.text);
 }
 
-/** The plan that sets "In regression suite" on the given rows. Returns { runId, written, ops } or null when there is nothing to set. */
-export function planRegression({ root, config, pull, rows, runId, now, today }) {
-  if (!rows.length) return null;
+/**
+ * The plan that sets "In regression suite" (today) on `rows` and clears it (null) on `clear`, the rows whose case is no longer an active test.
+ * Returns { runId, written, ops, set, cleared } or null when there is nothing to set or clear.
+ */
+export function planRegression({ root, config, pull, rows, clear = [], runId, now, today }) {
+  if (!rows.length && !clear.length) return null;
   const plan = openPlan({ runId, sourcePull: pull.id, root, config, pull, now });
   for (const r of rows) plan.update('tag_decisions', r.key, r.page_id, { 'In regression suite': today }, { note: 'decision became an active regression case' });
-  return { runId, written: plan.write(), ops: plan.ops.length };
+  for (const r of clear) plan.update('tag_decisions', r.key, r.page_id, { 'In regression suite': null }, { note: `no longer an active regression case (${r.why ?? 'inactive'}): the date is cleared` });
+  return { runId, written: plan.write(), ops: plan.ops.length, set: rows.length, cleared: clear.length };
 }
 
 // ---- command line --------------------------------------------------------------------------------------------------------------
@@ -353,7 +367,7 @@ const defaultIo = { out: (s) => console.log(s), err: (s) => console.error(s) };
 
 export function summaryLine(result, pullId, planned) {
   const c = result.counts;
-  return `cases-sync: pull ${pullId}: ${c.total} case(s) (${c.from_queue} from decisions, ${c.kept_research} kept from research), active ${c.active} (${c.not_run} not_run), contested ${c.contested}, inactive ${c.inactive}; added ${c.added}, updated ${c.updated} (hash re-stamped ${c.restamped}), withdrawn ${c.withdrawn}; In regression suite: ${planned ? `${planned.ops} row(s) in plan ${planned.runId}` : 'nothing to set'}${result.changed ? '' : ' (cases.jsonl unchanged)'}`;
+  return `cases-sync: pull ${pullId}: ${c.total} case(s) (${c.from_queue} from decisions, ${c.kept_research} kept from research), active ${c.active} (${c.not_run} not_run), contested ${c.contested}, inactive ${c.inactive}; added ${c.added}, updated ${c.updated} (hash re-stamped ${c.restamped}), withdrawn ${c.withdrawn}; In regression suite: ${planned ? `${planned.ops} row(s) in plan ${planned.runId}${planned.cleared ? ` (cleared ${planned.cleared})` : ''}` : 'nothing to set'}${result.changed ? '' : ' (cases.jsonl unchanged)'}`;
 }
 
 /** Run the script; returns the exit code. env (tests): { root, now, config }. */
@@ -390,9 +404,9 @@ export async function main(argv, io = defaultIo, env = {}) {
     }
     const result = syncCases({ root, config, pull, now, write: false });
     const runId = args['run-id'] ?? makeRunId('cases-sync', now());
-    const planned = planRegression({ root, config, pull, rows: result.regression, runId, now, today: result.today });
+    const planned = planRegression({ root, config, pull, rows: result.regression, clear: result.clearing, runId, now, today: result.today });
     writeCases(result);
-    if (planned || args['run-id']) writeJsonAtomic(join(controlPaths(root).runs, runId, 'cases-sync.json'), { run_id: runId, pull: pullId, counts: result.counts, regression_rows: result.regression.map((r) => r.key), notes: result.notes, created_at: now().toISOString() });
+    if (planned || args['run-id']) writeJsonAtomic(join(controlPaths(root).runs, runId, 'cases-sync.json'), { run_id: runId, pull: pullId, counts: result.counts, regression_rows: result.regression.map((r) => r.key), cleared_rows: result.clearing.map((r) => r.key), notes: result.notes, created_at: now().toISOString() });
     io.out(`${summaryLine(result, pullId, planned)}${planned ? `; next: node agents/claim-tagger/scripts/plan.mjs check --run ${runId}, then apply.mjs --run ${runId}` : ''}`);
     for (const n of result.notes) io.err(`cases-sync: ${n}`);
     return EXIT.OK;

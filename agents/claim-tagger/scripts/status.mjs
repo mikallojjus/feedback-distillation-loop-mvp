@@ -6,8 +6,9 @@
 //
 //   (no flag)            the report: rubric version and hash and whether rubric.lock and the Rulebook agree, drift, PAUSED (with the trust-breaker
 //                        details) and Paused in Agent settings, a promote or an apply in flight, the age of the pull, queue counts by stage and
-//                        the Needs-your-note count, lessons by status, the last three run cards, unfinished judge runs with the command to resume
-//                        them, and the total cost of the run folders.
+//                        the Needs-your-note count, lessons by status, the last three run cards, unfinished judge and promote runs with the
+//                        command to resume them (judge.mjs --resume --run-id <id>; promote.mjs --lesson "<lesson>" --resume --run-id <id> for a
+//                        promote run and for the judge runs that belong to it), and the total cost of the run folders.
 //   --check              one line and an exit code, for the skill's preflight: 3 PAUSED (the file or the Agent settings box), 4 rubric.lock does
 //                        not match rubric.json or the Rulebook differs from the rubric (drift), 2 a promote is in flight (runs/PROMOTING.json),
 //                        else 0. Checks that need the pull (Paused in Notion, drift) are reported as "not checked" when there is no pull.
@@ -144,12 +145,28 @@ function runFolders(root) {
   return readdirSync(runs, { withFileTypes: true }).filter((d) => d.isDirectory() && !NOT_RUN_DIRS.has(d.name)).map((d) => d.name).sort();
 }
 
-function resumeCommand(meta, id) {
-  if (meta.resume) return meta.resume;
-  const parts = ['node agents/claim-tagger/scripts/judge.mjs', '--items', meta.items_source ?? 'claims'];
-  if (meta.driver && meta.driver !== 'cli') parts.push('--driver', meta.driver);
-  parts.push('--run-id', id, '--resume');
-  return parts.join(' ');
+const RUN_ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+// A promote run in one of these states has nothing left to resume: done (HOLD, FAIL, smoke), planned (a PASS waiting for apply and finalize, which
+// PROMOTING.json lists), finalized, aborted.
+const PROMOTE_FINISHED = new Set(['done', 'planned', 'finalized', 'aborted']);
+
+/** A promote run that stopped before it had a verdict (usage window, error, incomplete judgments): it can be resumed, and it has a lesson to say so with. */
+const isUnfinishedPromote = (meta) => meta?.kind === 'promote' && typeof meta.lesson_key === 'string' && meta.lesson_key !== '' && !PROMOTE_FINISHED.has(meta.status);
+
+/** The command that continues a promote run. A smoke run needs --smoke again: it decides how many runs are judged and what is written. */
+const promoteResumeCommand = (promote, runId) => `node agents/claim-tagger/scripts/promote.mjs --lesson ${JSON.stringify(promote.lesson_key)} --resume --run-id ${runId}${promote.smoke === true ? ' --smoke' : ''}`;
+
+/**
+ * The command that continues an unfinished judge run. judge.mjs --resume needs nothing but the run id (everything else is in run.json). A judge run
+ * that belongs to a promote run (its baseline, candidate or reconfirmation side: run.json says `parent`) is continued through promote, which also
+ * has the lesson, the cases and the plan to finish; judge.mjs alone would complete the judgments and leave the promote where it stopped.
+ */
+function resumeCommand(meta, id, root) {
+  if (typeof meta.parent === 'string' && RUN_ID_RE.test(meta.parent)) {
+    const parent = safeJson(join(controlPaths(root).runs, meta.parent, 'run.json'));
+    if (isUnfinishedPromote(parent)) return promoteResumeCommand(parent, meta.parent);
+  }
+  return `node agents/claim-tagger/scripts/judge.mjs --resume --run-id ${id}`;
 }
 
 /**
@@ -229,7 +246,8 @@ export function inspect({ root = agentRoot(), config = loadConfig(root), now = (
         cost += meta.cost_usd;
         counted += 1;
       }
-      if (meta.kind === 'judge' && meta.status !== 'done') unfinished.push({ run_id: name, kind: 'judge', status: meta.status ?? 'unknown', resume: resumeCommand(meta, name) });
+      if (meta.kind === 'judge' && meta.status !== 'done') unfinished.push({ run_id: name, kind: 'judge', status: meta.status ?? 'unknown', resume: resumeCommand(meta, name, root) });
+      else if (isUnfinishedPromote(meta)) unfinished.push({ run_id: name, kind: 'promote', status: meta.status ?? 'unknown', resume: promoteResumeCommand(meta, name) });
     }
     const card = safeJson(join(dir, 'card.json'));
     if (card && card.verdict) localCards.push({ title: card.card_id ?? name, kind: card.kind ?? null, verdict: card.verdict, started: meta?.started ?? null, cost_usd: meta?.cost_usd ?? null });
@@ -371,8 +389,9 @@ export function runProgress(root, id) {
         }
       }
       const cells = (meta.items?.length ?? 0) * (meta.runs ?? 0);
-      out.judge = { cells, cells_done: valid, ledger: tally, counts: meta.counts ?? null, status: meta.status, cost_usd: meta.cost_usd ?? null, resume: meta.status === 'done' ? null : resumeCommand(meta, id) };
+      out.judge = { cells, cells_done: valid, ledger: tally, counts: meta.counts ?? null, status: meta.status, cost_usd: meta.cost_usd ?? null, resume: meta.status === 'done' ? null : resumeCommand(meta, id, root) };
     }
+    if (isUnfinishedPromote(meta)) out.resume = promoteResumeCommand(meta, id);
   }
   const plan = existsSync(join(dir, 'plan.jsonl')) ? readJsonl(join(dir, 'plan.jsonl')).rows : null;
   if (plan) out.plan = { ops: plan.length - 1, counts: plan[0]?.counts ?? null, source_pull: plan[0]?.source_pull ?? null };
@@ -398,6 +417,7 @@ function renderRun(p) {
     lines.push(`  judgments: ${j.cells_done} of ${j.cells} cells done; ledger ${JSON.stringify(j.ledger)}; counts ${JSON.stringify(j.counts)}; cost ${typeof j.cost_usd === 'number' ? `$${j.cost_usd.toFixed(4)}` : 'unknown'}`);
     if (j.resume) lines.push(`  resume: ${j.resume}`);
   }
+  if (p.resume) lines.push(`  resume: ${p.resume}`);
   if (p.plan) lines.push(`  plan: ${p.plan.ops} op(s) from pull ${p.plan.source_pull ?? '?'}${p.check ? `; checked: ${p.check.to_apply} to apply (${p.check.creates} create, ${p.check.updates} update), ${p.check.skipped} skipped` : '; not checked yet'}`);
   if (p.applied) lines.push(`  applied: ${JSON.stringify(p.applied)}`);
   if (p.verify) lines.push(`  verify: ${p.verify.result} (${p.verify.landed} landed, ${p.verify.missing} missing, ${p.verify.editor_changes} editor field change(s))`);

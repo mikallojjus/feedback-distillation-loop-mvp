@@ -36,4 +36,14 @@ Judge: `claude-sonnet-5-5`, three runs per rubric version, majority verdict per 
 
 ## Exit codes
 
-0 ok · 1 error · 2 invalid or incomplete input · 3 paused · 4 rubric drift or model mismatch · 5 trust breaker (an editor field changed under the agent) · 10 gate HOLD · 11 gate FAIL · 75 usage window hit, resume later.
+0 ok · 1 error · 2 invalid or incomplete input · 3 paused · 4 rubric drift or model mismatch · 5 trust breaker (an editor field changed under the agent) · 10 gate HOLD · 11 gate FAIL · 75 usage window hit, resume later. Exit 2 also when another promote holds `runs/PROMOTE.lock`; exit 4 also when a select option the scripts rely on is missing in Notion (`lib/notion-contract.mjs`).
+
+## Safety checks as built (13 October 2026, after the engineer review)
+
+- **Gate evidence** (`scripts/lib/gate-evidence.mjs`, run by `plan.mjs check` and `apply.mjs`): a plan may write Rulebook "When to use" only when `runs/PROMOTING.json` names the run, `runs/<run>/card.json` is a non-smoke PASS card whose candidate hash equals the candidate rubric in `runs/<run>/candidate/` and whose baseline hash equals the live `rubric/rubric.json`, the text written equals the candidate text, and the lesson is Approved in the pull. A restore writes only the locked text. A seed plan needs the marker `runs/SETUP`, created by an engineer from a terminal. Claude Code has no Write or Edit permission under `runs/` (`.claude/settings.json`).
+- **Allowlist** (`scripts/allowlist.mjs`): editor-owned fields are never written; unknown select options are refused; decided rows accept follow-up fields only.
+- **Protected ids** (`config.json`, `notion.protected_database_ids`): the real Geo databases and the taxonomy, both database and data-source ids; `apply.mjs` sends writes only to the six configured databases. `scripts/probe.mjs` checks with the token that every protected database answers 404 and every configured one 200 (exit 4 otherwise); `docs/mvp-2026-10/evidence/token-access-probe.json` holds the last recorded run.
+- **Contract** (`scripts/lib/notion-contract.mjs`): `pull.mjs` exits 4 when a property, its type or a select option the scripts or the Notion formulas rely on is missing; the live schema, formulas and views are recorded in `schemas/notion/as-built.md`.
+- **One promote at a time** (`runs/PROMOTE.lock`): taken after validation, released on every exit; `promote.mjs --abort <id>` frees a dead one. `runs/PROMOTING.json` is re-read before a plan is written.
+- **Never twice**: a page create whose response was lost is not retried by the REST client; `apply.mjs --retry` reads Notion again and updates by key.
+- **Trust breaker**: editor fields are snapshotted before and after every apply; a change on a touched row writes `runs/PAUSED` (exit 5) until a person runs `status.mjs --unpause --confirm`.

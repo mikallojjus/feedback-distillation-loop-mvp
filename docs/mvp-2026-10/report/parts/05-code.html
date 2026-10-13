@@ -5,56 +5,208 @@
   <div class="plain">
     <p class="geo-eyebrow plain-label">In short</p>
     <ul>
-      <li>TODO: the one sentence an editor types into Claude Code to run the week's loop, and what comes back.</li>
-      <li>TODO: how to pause the agent with one checkbox, and how to resume it.</li>
-      <li>TODO: the subcommands in one line each: setup, status, tag, distill, promote, follow-up.</li>
-      <li>TODO: which identity each step uses (the integration token for scripts, the connector for the interactive skill and the Editor persona).</li>
+      <li>Open Claude Code in the <code>geo-agents</code> folder and ask in plain words, for example "run this week's tagging loop, keep it small, tell me what's waiting for me". The skill <code>/claim-tagger</code> picks the steps and answers in a short paragraph.</li>
+      <li>Six subcommands do the work: <strong>status</strong> (which <dfn data-t="rulebook">rulebook</dfn> is in force, what waits for whom), <strong>tag</strong> (judge claims, fill the queue), <strong>distill</strong> (turn decisions into proposed <dfn data-t="lesson">lessons</dfn>), <strong><dfn data-t="promote">promote</dfn></strong> (put an approved lesson through the <dfn data-t="gate">gate</dfn>), <strong><dfn data-t="follow-up">follow-up</dfn></strong> (re-check the claims behind a live lesson) and <strong>setup</strong> (once).</li>
+      <li>Every subcommand is a fixed sequence of scripts. The scripts do every Notion read and write; Claude Code runs them in order, reads their one-line summaries and reports.</li>
+      <li>In this version every write goes through the integration token in <code>.env</code>, so the loop runs where the token is configured; without it the skill stops and says so.</li>
+      <li>The headless test, a fresh session as on an editor's machine, found four things such a machine needs. They are now in the README and the skill.</li>
     </ul>
   </div>
 
   <div class="sub" id="code-ask" data-title="One ask in plain words">
     <h3>One ask in plain words</h3>
-    <p>TODO: the sentence an editor types into Claude Code (the editor-phrased prompt from the plan's headless test) and what the answer looks like.</p>
+    <p>The short form an editor can type, from the README:</p>
+    <blockquote><p>Run this week's tagging loop, keep it small, tell me what's waiting for me.</p></blockquote>
+    <p>The plan's longer test prompt spells out what the skill is expected to do with it:</p>
+    <blockquote><p>Hi, I'm one of the Geo editors. Please run this week's claim-tagging loop for our Editorial feedback loop page in Notion. Keep it small today: tag at most 10 claims not yet judged with the current rulebook. Check first that the agent isn't paused. Put anything you're unsure about in my queue, turn new editor decisions into proposed rule changes, and if the rule owner has approved a change, test it and only make it live if it passes. Then re-check the claims behind any change that went live. Don't touch anything editors wrote. At the end, tell me in plain words what changed and what's waiting for me.</p></blockquote>
+    <p>What comes back is one short paragraph and a table. The passing headless status run opened with:</p>
+    <blockquote><p>The claim tagger is healthy. It is not paused, the rubric lock matches, and the Rulebook has no drift.</p><cite>Headless session, <code>/claim-tagger status</code>, run {{count:headless.statusPassedOn}}</cite></blockquote>
+    <p>It went on with the rulebook version in force, the queue by Stage, the Needs your note count, the lessons by status, the last three cards and what waits for whom. The two headless tests covered status and a tag dry run; the full plain-words request above has not been run headless yet.</p>
   </div>
 
-  <div class="sub" id="code-pause" data-title="The pause switch">
-    <h3>The pause switch</h3>
-    <p>TODO: where the Paused checkbox is (Agent settings), what the agent does when it is ticked (it refuses to start and exits with code 3), and how to resume.</p>
+  <div class="sub" id="code-commands" data-title="The subcommands">
+    <h3>The subcommands</h3>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Subcommand</th><th>What it does</th><th>Writes to Notion</th><th>In the trial</th></tr></thead>
+      <tbody>
+        <tr><td><code>status</code></td><td>The rulebook version in force and whether Notion matches it; paused or not; the queue by Stage; lessons by status; the last result cards; anything unfinished with its resume command.</td><td>Nothing</td><td>Cents per headless session</td></tr>
+        <tr><td><code>tag</code></td><td>Judges the claims not yet judged under the current rules, {{count:config.judgeRuns}} runs each, and puts the uncertain tags in the queue, at most {{count:config.weeklyCap}} new rows a week. Options: <code>--limit n</code>, <code>--runs 1|3</code>, <code>--dry-run</code>, <code>--resume</code>.</td><td>Claims' agent columns, new and updated queue rows, a Runs row</td><td>${{count:cost.tagRun}} for {{count:tagRun.claims}} claims</td></tr>
+        <tr><td><code>distill</code></td><td>Turns decisions that blame a rule into proposed lessons and links their rows.</td><td>Rule changes (Proposed), the queue's Lesson column, a Runs row</td><td>${{count:cost.distill}}</td></tr>
+        <tr><td><code>promote LS-n</code></td><td>Puts an Approved lesson through the gate. PASS goes live and is committed; HOLD and FAIL change nothing.</td><td>A Gate row with the card, the lesson's Gate result; on PASS the Rulebook row and Live</td><td>${{count:gate.ls1a2.cost}} for a new wording; ${{count:gate.ls1a3.cost}} when everything is cached</td></tr>
+        <tr><td><code>follow-up LS-n</code></td><td>Judges the claims behind a live lesson again and marks its rows Fixed or Still wrong.</td><td>Agent follow-up, Follow-up run, Claims' agent columns</td><td>Not reached</td></tr>
+        <tr><td><code>setup</code></td><td>One-time: the six databases, the seed. Engineer only.</td><td>The structure and the seed rows</td><td>Done on 13 October</td></tr>
+      </tbody>
+    </table></div>
   </div>
 
-  <div class="sub" id="code-tree" data-title="Folder tree" data-layer="tech">
-    <h3>Folder tree</h3>
-    <p>TODO: the folder tree of agents/claim-tagger as a code block (rubric, prompts, schemas, evals, scripts, runs) with one line per folder.</p>
+  <div class="sub" id="code-pause" data-title="Pause and resume">
+    <h3>Pause and resume</h3>
+    <ul>
+      <li><strong>To pause:</strong> tick Paused in Agent settings (one row) and, if you like, say why in Reason. Every subcommand starts with a check that stops when Paused is ticked.</li>
+      <li><strong>When the agent pauses itself:</strong> the <dfn data-t="trust-breaker">trust breaker</dfn> writes a pause file when an editor field changed on a row the agent was writing, and names the field with its value before and after. A person looks at it, then clears it with <code>status.mjs --unpause --confirm</code>, which records who cleared it and when.</li>
+      <li><strong>To resume:</strong> untick Paused. A run that stopped half way, for a pause or for the subscription's usage window, picks up where it left off and keeps the work already finished.</li>
+    </ul>
+    <p>Neither the pause drill nor the trust-breaker drill was run in this trial; both are covered by unit tests.</p>
   </div>
 
-  <div class="sub" id="code-commands" data-title="Commands" data-layer="tech">
-    <h3>Commands</h3>
-    <p>TODO: a table of the /claim-tagger subcommands (setup, status, tag, distill, promote, follow-up): the script each one runs and what it writes.</p>
+  <div class="sub" id="code-tree" data-title="Repository tree" data-layer="tech">
+    <h3>Repository tree</h3>
+    <div class="geo-code"><pre>geo-agents/
+  CLAUDE.md                       ten hard rules for every agent and session
+  README.md                       install, the daily loop, headless use
+  package.json                    npm test runs node --test tests/ (Node 22 or later, no dependencies)
+  .claude/settings.json           allow rules (one per script), ask and deny rules, the guard hook
+  .claude/skills/claim-tagger/    SKILL.md: the /claim-tagger skill and its fixed command sequences
+  .claude/agents/                 fallback judge and distiller subagents (file tools only; not wired in the MVP)
+  agents/claim-tagger/
+    AGENT.md                      the run loop, the file contracts, the exit codes
+    config.json                   Notion ids, protected databases, models, judge, thresholds, gate, distill
+    rubric/                       rubric.json, rubric.lock, CHANGELOG.md, history/&lt;version&gt;.json
+    prompts/                      judge.md, distill.md
+    schemas/                      card, judge-output, judgment, lesson, plan-op, rubric (JSON Schema)
+    evals/                        canaries.jsonl, cases.jsonl, seed/ (claims, decisions, check-by-hand, planted lesson)
+    scripts/                      pull, plan, apply, verify, judge, propose, cases-sync, distill, eval, promote,
+                                  followup, status, run-card, snapshot, seed, seed-build, rubric-init, transcript-check
+    scripts/lib/                  claude, notion-rest, notion-values, rubric-build, hash, pyjson, stats, rng,
+                                  jsonl, validate, paths, exit-codes
+    scripts/hooks/guard.mjs       PreToolUse guard on Notion connector writes
+    runs/                         git-ignored: pulls, judgments, plans, ledgers, cards
+  docs/mvp-2026-10/               plan, state, log, decisions, evidence, review, this report
+  tests/                          {{count:testFiles}} test files and fixtures (a fake Notion, a fake claude)</pre></div>
+  </div>
+
+  <div class="sub" id="code-sequences" data-title="Command sequences" data-layer="tech">
+    <h3>Command sequences</h3>
+    <p>From <code>SKILL.md</code>; <code>S</code> stands for <code>agents/claim-tagger/scripts</code>, and every command runs from the repository root. The skill never writes a field by hand and never edits a plan file.</p>
+    <div class="geo-code"><pre>Preflight, before every subcommand
+  node S/status.mjs --check
+
+Apply step "A", used below
+  node S/plan.mjs check --run &lt;run-id&gt;
+  node S/apply.mjs --run &lt;run-id&gt;
+
+status
+  node S/pull.mjs --all
+  node S/status.mjs
+
+tag [--limit n] [--runs 1|3] [--dry-run] [--resume &lt;run-id&gt;]
+  node S/pull.mjs --all
+  node S/judge.mjs --items claims [--limit n] [--runs n] [--run-id &lt;id&gt;] [--resume]
+  node S/propose.mjs --run &lt;judge-run-id&gt; --pull &lt;pull-id&gt; --out-run &lt;id&gt;-propose
+  A on &lt;id&gt;-propose                                  (skipped with --dry-run)
+  node S/run-card.mjs --tag &lt;judge-run-id&gt; --propose &lt;id&gt;-propose --run-id &lt;id&gt;-card
+  A on &lt;id&gt;-card
+  node S/pull.mjs --all
+  node S/cases-sync.mjs --run-id &lt;id&gt;-cases          (then A when it wrote a plan)
+
+distill
+  node S/pull.mjs --all
+  node S/distill.mjs --run-id &lt;id&gt;
+  A on &lt;id&gt;
+  node S/pull.mjs --all
+  node S/distill.mjs --link --run &lt;id&gt;
+  A on &lt;id&gt;-link
+  node S/pull.mjs --all
+  node S/cases-sync.mjs --run-id &lt;id&gt;-cases          (then A when it wrote a plan)
+
+promote &lt;lesson&gt;
+  node S/pull.mjs --all
+  node S/promote.mjs --lesson &lt;lesson&gt; --run-id &lt;id&gt;  (exit 0 PASS, 10 HOLD, 11 FAIL)
+  A on &lt;id&gt;
+  node S/promote.mjs --finalize &lt;id&gt;                 (PASS only, after A verified clean)
+  A on &lt;id&gt;-cases                                    (PASS only)
+  git add agents/claim-tagger/rubric agents/claim-tagger/evals
+  git commit -m "rubric &lt;version&gt;: &lt;lesson&gt; (gate PASS, &lt;id&gt;)"
+
+follow-up &lt;lesson&gt;
+  node S/pull.mjs --all
+  node S/followup.mjs --lesson &lt;lesson&gt; --run-id &lt;id&gt;
+  A on &lt;id&gt;</pre></div>
+    <p>A judge run takes minutes (about 50 seconds per batch of {{count:config.batchSize}} claims) and runs in the background; the skill polls <code>status.mjs --run &lt;id&gt;</code> and never starts a second judge on the same run.</p>
   </div>
 
   <div class="sub" id="code-resume" data-title="Resume and exit codes" data-layer="tech">
     <h3>Resume and exit codes</h3>
-    <p>TODO: how a stopped run resumes (the ledger and --resume) and the exit codes in plain words: 0 ok, 2 invalid or incomplete, 3 paused, 5 trust breaker, 10 HOLD, 11 FAIL, 75 usage window.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th class="num">Code</th><th>Meaning</th><th>What to do</th></tr></thead>
+      <tbody>
+        <tr><td class="num">0</td><td>Done; for promote, PASS</td><td>Read the summary line; success counts only after the <dfn data-t="read-back">read-back</dfn>.</td></tr>
+        <tr><td class="num">1</td><td>Error, or writes that did not land</td><td>Read the message. After an apply: <code>apply.mjs --run &lt;id&gt; --retry</code> sends only the ops listed in <code>plan.retry.jsonl</code>.</td></tr>
+        <tr><td class="num">2</td><td>Invalid input or nothing to do</td><td>Report it; a plan check on a run with no plan means nothing to do. Another promote holding <code>runs/PROMOTE.lock</code> also answers 2: resume it or abort it.</td></tr>
+        <tr><td class="num">3</td><td>Paused</td><td>Stop. A person unticks Paused, or clears the pause file with <code>status.mjs --unpause --confirm</code>.</td></tr>
+        <tr><td class="num">4</td><td>Rulebook drift, lock mismatch, a missing Notion property or select option, or the wrong model answered</td><td>Stop; <code>status.mjs</code> explains. The engineer restores Notion from the file with <code>status.mjs --restore-rulebook --confirm</code>; a direct edit is never adopted.</td></tr>
+        <tr><td class="num">5</td><td>Trust breaker</td><td>Stop; <code>runs/PAUSED</code> names the row, the field, before and after.</td></tr>
+        <tr><td class="num">10</td><td>Gate HOLD</td><td>A result, not an error: the card says what is missing.</td></tr>
+        <tr><td class="num">11</td><td>Gate FAIL</td><td>A result, not an error: the card says what broke.</td></tr>
+        <tr><td class="num">75</td><td>The subscription's usage window ran out</td><td>Wait for the reset and run the same command with <code>--resume</code>; finished work is kept.</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li><strong>Judge.</strong> Every finished cell is a file and a ledger row; <code>judge.mjs --resume --run-id &lt;id&gt;</code> reads the run's own recorded options and judges only what is missing. For the judge runs inside a promote, <code>status.mjs</code> prints the promote command to resume instead.</li>
+      <li><strong>Apply.</strong> An armed run can be started again: ops already recorded as written are skipped, and a resumed run pulls first, so a create that did land becomes an update instead of a duplicate. A create whose answer was lost is never re-sent blindly; <code>--retry</code> looks the row up by key first.</li>
+      <li><strong>Promote.</strong> <code>--resume --run-id &lt;id&gt;</code> continues phase 1; <code>--finalize &lt;id&gt;</code> completes a verified PASS; <code>--abort &lt;id&gt;</code> clears a promote whose apply failed and plans a restore if Notion already changed.</li>
+      <li><strong>Ledgers</strong> are append-only with one writer each; a torn last line from a crash is ignored and cut off before the next write.</li>
+    </ul>
   </div>
 
-  <div class="sub" id="code-rubric" data-title="Rubric sync" data-layer="tech">
-    <h3>Rubric sync</h3>
-    <p>TODO: how the rulebook in Notion and rubric.json stay in step: the drift check, the hashes, the lock file, and what happens when someone edits a rule directly in Notion.</p>
+  <div class="sub" id="code-headless" data-title="Headless use" data-layer="tech">
+    <h3>Headless use: what an editor's machine needs</h3>
+    <div class="geo-code"><pre>MSYS_NO_PATHCONV=1 claude -p "/claim-tagger status" --settings .claude/settings.json --permission-mode acceptEdits --output-format stream-json --verbose</pre></div>
+    <ol>
+      <li><strong>Pass the settings.</strong> A folder never opened interactively is untrusted, and Claude Code ignores its <code>.claude/settings.json</code> allow rules (the session's own warning: "this workspace has not been trusted"). Passing <code>--settings .claude/settings.json</code> brings them back.</li>
+      <li><strong>One Bash rule per script.</strong> Bash permission rules match whole words, so a directory prefix such as <code>node agents/claim-tagger/scripts/*</code> never matched. The settings now list one rule per script, for example <code>Bash(node agents/claim-tagger/scripts/status.mjs:*)</code>. A command chained with <code>;</code> or <code>&amp;&amp;</code> is denied, by design.</li>
+      <li><strong>Stop Git Bash rewriting the slash.</strong> In Git Bash, <code>/claim-tagger status</code> arrived as a path under the Git installation folder. Set <code>MSYS_NO_PATHCONV=1</code>, or start from PowerShell.</li>
+      <li><strong>Never inspect <code>.env</code>.</strong> The first session tried to grep <code>.env</code> to see whether a token was set. The skill now forbids reading, grepping or printing it, and <code>status.mjs --check</code> reports whether a token is configured.</li>
+    </ol>
+    <p>Each transcript is saved in <code>docs/mvp-2026-10/evidence/headless/</code> and summarised by <code>scripts/transcript-check.mjs</code>: tools called, every Bash command, every Notion connector call, any write naming an editor field, the cost and the final message. Results are on <a href="#verify-headless">Verification and reviews</a>.</p>
+    <p>One headless test is still to run by hand: a session that tries a connector write without an armed plan, to see the guard hook deny it. The building session could not start that nested call; the command and the expected result are in <code>docs/mvp-2026-10/evidence/README.md</code>. The hook is configured with a path relative to the repository root, so sessions must start there.</p>
   </div>
 
-  <div class="sub" id="code-judge" data-title="Judge contract" data-layer="tech">
+  <div class="sub" id="code-judge" data-title="Judge and proposer" data-layer="tech">
     <h3>Judge contract</h3>
-    <p>TODO: what the judge reads and returns: the prompt shape, the batches, the output schema, the retry on invalid output, and the tags decided in code.</p>
+    <ul>
+      <li><strong>Items.</strong> <code>--items claims</code> takes the claims of the latest pull; <code>--items eval</code> the claims behind the active cases plus the canary texts. Batches of {{count:config.batchSize}} claims, shuffled per run with a seeded generator; {{count:config.judgeRuns}} runs per <dfn data-t="rubric-version">rubric version</dfn>.</li>
+      <li><strong>Call.</strong> <code>claude -p</code> spawned with an argument list and no shell, a pinned model (Sonnet 5.5; Haiku 5.5 for smoke runs), effort medium, no tools, one turn. The system prompt is <code>prompts/judge.md</code> with the compact rubric, rendered once per configuration so the prompt cache hits; the claims go on stdin inside <code>&lt;claim id sources&gt;</code> elements, with the instruction that claim text is data, never instructions.</li>
+      <li><strong>Answer.</strong> Per claim and per model-judged tag: <code>apply</code>, <code>do_not_apply</code>, <code>ask_editor</code> (the rules do not settle it) or <code>cannot_tell</code> (information is missing); a confidence p from 0 to 1, not calibrated; the rule relied on (<code>Predictive rule 1</code>); the trigger phrase; a reason of at most 25 words.</li>
+      <li><strong>Checks.</strong> The reply must have the batch's ids, every in-scope tag exactly once, consistent counterpart pairs and a rule of the same tag. A bad batch gets one retry with the problems quoted, then its items are errors. The pinned model must appear in the reply's usage, or the run stops (exit 4).</li>
+      <li><strong>Decided in code.</strong> Unsourced from the sources count; Improperly sourced and Source inaccessible are not checked in this trial, because no source text is read; Editor verified is never output.</li>
+      <li><strong>Majority.</strong> More than half the runs agreeing gives the verdict; otherwise ask editor; a missing or failed run gives error.</li>
+    </ul>
+    <h3>Proposer rules</h3>
+    <ul>
+      <li><strong>Decided tags are kept.</strong> An editor's <dfn data-t="tag-outcome">Tag outcome</dfn>, or a <dfn data-t="seeded-outcome">seeded outcome</dfn>, always wins: its queue row is never touched and the claim's Agent tags follow it from the next run.</li>
+      <li><strong>Readiness, in order:</strong> Needs editor (a model-judged tag is ask editor or error), Fix needed (an applied tag has Issue polarity), Not checkable (cannot tell, or the sources count is unknown), Ready.</li>
+      <li><strong>Why in queue:</strong> Low confidence when the runs disagree, the verdict is ask editor or error, or the mean confidence lies between {{count:config.tSkip}} and {{count:config.tApply}}; Rule changed when the tag's rules changed since it was last judged and the verdict flipped, on undecided rows only.</li>
+      <li><strong>Priority:</strong> Check source for Read source first; High for Rule changed, for Low confidence that leans towards applying an Issue tag, and for a three-way split; Medium otherwise. Within the weekly cap new rows are taken by priority, then lowest confidence; the rest are held back until the cap allows ({{count:tagRun.heldByCap}} in the first run).</li>
+      <li><strong>Idempotent.</strong> A plan carries only values that differ from the pull, so running propose twice on the same inputs gives an empty plan.</li>
+    </ul>
   </div>
 
-  <div class="sub" id="code-harness" data-title="Evaluation harness" data-layer="tech">
-    <h3>Evaluation harness</h3>
-    <p>TODO: how the harness compares the old and the new rules on the same claims (paired bootstrap, canaries, regression cases) and how it reaches PASS, HOLD or FAIL.</p>
+  <div class="sub" id="code-distill" data-title="Distiller" data-layer="tech">
+    <h3>Distiller</h3>
+    <ul>
+      <li><strong>Input.</strong> Decided rows whose <dfn data-t="why-wrong">Why wrong</dfn> is Rule unclear or Rule should change, plus seeded rows whose reasoning starts "Rule should change:".</li>
+      <li><strong>Groups.</strong> By tag, Why wrong and the rule the agent cited, counting distinct claims. A group becomes a lesson at {{count:config.minClaims}} claims for Rule unclear and {{count:config.minClaimsRuleChange}} for Rule should change. A tag that already has a Proposed, Approved or Live lesson only gains supporting rows.</li>
+      <li><strong>One model call per group</strong> (Opus 5.5, <code>prompts/distill.md</code>) with the tag's rulebook entry, the group's rows and other decided rows on the tag as counter-evidence. It returns the kind of change, the target rule, a title, a statement, the proposed text, invented boundary examples and the counter-evidence it would flip.</li>
+      <li><strong>Current text</strong> always comes from the rubric file, never from the model, so a later rollback is exact.</li>
+      <li><strong>Overfit check.</strong> A proposed text that repeats {{count:config.overfitWords}} consecutive words of a supporting claim gets one retry, then an overfit-risk flag. A rule written around one claim is not a rule.</li>
+      <li><strong>Linking</strong> is a second plan: rows can only point at a lesson that exists, so <code>distill.mjs --link</code> runs after the lesson rows are written, and turns the linked rows' cases into <dfn data-t="contested-case">contested cases</dfn>.</li>
+    </ul>
+    <p>In the trial one group qualified: Predictive, Rule should change, rule 1, {{count:end.ls1Supporting}} claims. A Debate group with one Rule unclear claim was skipped.</p>
   </div>
 
-  <div class="sub" id="code-headless" data-title="The headless command" data-layer="tech">
-    <h3>The headless command</h3>
-    <p>TODO: the claude -p command that tests the loop the way an editor's machine would run it, its allowed tools, and where the transcript is saved.</p>
+  <div class="sub" id="code-promote" data-title="Promote and rollback" data-layer="tech">
+    <h3>Promote, in two phases</h3>
+    <ol>
+      <li><strong>Preconditions.</strong> The lesson is Approved; its Current text still equals the live text (otherwise it is stale); the effective text, Editor wording if filled, is at most {{count:config.maxText}} characters; no other promote is in flight.</li>
+      <li><strong>Candidate.</strong> The rule is replaced in a copy of the rubric, every hash is recomputed and the next version is assigned, under <code>runs/&lt;id&gt;/candidate/</code>.</li>
+      <li><strong>Judge and decide.</strong> The claims behind every gate case plus the <dfn data-t="canary">canaries</dfn>, judged under both rulebooks; <code>eval.mjs</code> applies the five conditions and writes the card.</li>
+      <li><strong>Reconfirm.</strong> Every case that flipped, for better or worse, on a tag both rulebooks judge, is judged {{count:config.reconfirmRuns}} more times under each; the verdict after this <dfn data-t="reconfirmation">reconfirmation</dfn> is the one that counts.</li>
+      <li><strong>PASS:</strong> a plan with the Rulebook row (When to use, Rule version, Tag hash, Changed by), the lesson Live, the card and Rubric in force; plan check and apply accept the Rulebook write only with the evidence of that PASS (decision M14); it is applied and read back; then <code>--finalize</code> copies the candidate to <code>rubric.json</code> and <code>history/</code>, updates the lock and the changelog, activates the lesson's contested cases, and the skill commits. <strong>HOLD or FAIL:</strong> only the card and the Gate result are written; the candidate folder is marked rolled back.</li>
+    </ol>
+    <p><strong>Rollback</strong> (<code>promote.mjs --rollback &lt;lesson&gt; --confirm</code>) is the one path that bypasses the gate, and only for the most recent Live lesson: it restores the previous rubric from <code>history/</code> byte for byte, checks that the hash matches, and writes a restore plan. It was not exercised in the trial, because nothing went live.</p>
+    <h3>Reconfirmation</h3>
+    <p>Decision M11. With {{count:config.judgeRuns}} runs per rulebook a borderline claim is often decided 2 to 1, and such a claim can flip on noise alone: attempts 1 to 3 were each blocked by borderline cases decided 2 to 1 at confidence 0.5 to 0.65. So a flipped case is judged {{count:config.reconfirmRuns}} more times under each rulebook ({{count:config.reconfirmTotal}} runs in all) and decided again; the card lists every reconfirmed case as confirmed or noise. Fixes and breaks get the same treatment, so a lesson cannot win on noise either. Canaries are not reconfirmed: a canary must pass outright.</p>
   </div>
 
   <aside class="terms" data-strip></aside>

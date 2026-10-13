@@ -11,6 +11,10 @@
 //   1. Preconditions (exit 2): the lesson is in the pull with Status Approved; its Current text still equals the live rubric's composed text for the
 //      target (otherwise it is stale); the effective text (Editor wording if filled, else Proposed text) is at most 1,900 characters; the Kind is not
 //      "New or promoted tag"; no runs/PROMOTING.json belongs to another run. The pull must be fresh enough to show no Paused, no drift (exit 3, 4).
+//      Then runs/PROMOTE.lock ({ run_id, lesson, started_at }) is created exclusively, before anything of this run is written or judged, and removed
+//      when promote() ends on every path (PASS, HOLD, FAIL, an error, exit 75; a smoke run takes it too). A second promote that finds it held by
+//      another run exits 2 with "run <id> holds the promote lock since <time>; resume it with --resume --run-id <id>, or if it is dead remove
+//      runs/PROMOTE.lock". Only a killed process leaves it behind; --resume --run-id <same id> takes over its own lock, --abort <id> removes it.
 //   2. The candidate: rubric-build.applyLesson on the live rubric (the rule named in the Rule column, "<Tag> rule <n>", or the tag's whole When to use
 //      for "<Tag> when to use"), the next free version, a changelog entry naming the lesson; runs/<run-id>/candidate/rubric.json with its hashes checked.
 //   3. The items: the claims behind every gate case (active, or contested for THIS lesson) plus the active canaries, runs/<run-id>/items.jsonl. judge.mjs
@@ -25,15 +29,20 @@
 //      (the run log says so); the card lists each reconfirmed case with its flip (broken or fixed), what each rubric decided over how many runs, and
 //      whether the flip stayed ("confirmed") or went away ("noise").
 //   5. PASS: a plan with the Rulebook row (When to use, Rule version, Tag hash, Changed by) under ctx { promote, gate: "PASS" }, the lesson Live with its
-//      Gate result, a Runs row "Gate <version> · <lesson>" carrying the card, In regression suite on the supporting rows, and the Agent settings
-//      "Rubric in force". runs/PROMOTING.json is written. Then: plan.mjs check, apply.mjs, and --finalize.
+//      Gate result, a Runs row "Gate <version> · <lesson>" carrying the card (its Per-tag summary starts with the candidate's rubric version and
+//      hash: a candidate that was never promoted gives its version label to the next one), In regression suite on the supporting rows, and the Agent
+//      settings "Rubric in force". runs/PROMOTING.json is written, after it has been read again right before the plan: if another run has written it
+//      meanwhile, this run exits 2 without a plan. Then: plan.mjs check, apply.mjs, and --finalize.
 //      HOLD or FAIL: a plan with only the Runs row and the lesson's Gate result (and Status "Rolled back" on a FAIL of a demo lesson or with
 //      --mark-rolled-back; otherwise the lesson stays Approved). The Rulebook is untouched and the candidate folder is marked rolled_back in run.json.
-//      --smoke (one run): the same card, never a Rulebook change, never PROMOTING, never finalized.
+//      --smoke (one run): the same card, never a Rulebook change, never PROMOTING, never finalized. Its Runs row (Kind Smoke) has Verdict n/a: only
+//      a Gate row carries PASS, HOLD or FAIL.
 // --finalize <run-id> (phase 2): needs verify.json clean (the plan was applied and read back), the Rulebook row and the lesson in Notion as the plan wrote
 //   them; copies the candidate to rubric/rubric.json, rubric/history/<version>.json, rubric.lock and CHANGELOG.md, activates the lesson's contested cases
 //   and re-stamps their hashes (cases-sync), removes PROMOTING.json. Committing is the skill's job.
 // --abort <run-id>: removes PROMOTING.json; if the plan had been applied and Notion's Rulebook text differs from the live rubric, writes a restore plan.
+//   A run that was killed while it judged (it holds runs/PROMOTE.lock, PROMOTING.json was never written) is aborted too: the lock goes, the run is marked
+//   aborted, nothing in Notion needs restoring.
 // --rollback <lesson> --confirm: THE ONE PATH THAT IS NOT A GATE. Only for the most recent Live lesson: restores the previous rubric from
 //   rubric/history/ byte for byte (its rubric_hash must equal the history file's), updates lock and changelog, and writes a restore plan (Rulebook text,
 //   Rule version and Tag hash back, Changed by cleared, the lesson Rolled back, a Runs row, Rubric in force). The plan's ctx is the engineer-only
@@ -42,7 +51,7 @@
 // Exit codes: 0 PASS (or done), 1 error, 2 invalid or incomplete (preconditions, no complete judgments), 3 paused, 4 drift / model mismatch,
 // 10 HOLD, 11 FAIL, 75 the usage window ran out (promote.mjs --lesson ... --resume --run-id <id> continues).
 
-import { existsSync, readFileSync, readdirSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, unlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { controlPaths } from './allowlist.mjs';
@@ -92,7 +101,7 @@ const round6 = (x) => Math.round(x * 1e6) / 1e6;
 const locations = (root) => {
   const p = controlPaths(root);
   return {
-    runs: p.runs, promoting: join(p.runs, 'PROMOTING.json'), rubric: join(root, 'rubric', 'rubric.json'), lock: join(root, 'rubric', 'rubric.lock'),
+    runs: p.runs, promoting: join(p.runs, 'PROMOTING.json'), promoteLock: join(p.runs, 'PROMOTE.lock'), rubric: join(root, 'rubric', 'rubric.json'), lock: join(root, 'rubric', 'rubric.lock'),
     history: join(root, 'rubric', 'history'), changelog: join(root, 'rubric', 'CHANGELOG.md'), cases: join(root, 'evals', 'cases.jsonl'), canaries: join(root, 'evals', 'canaries.jsonl'),
   };
 };
@@ -106,6 +115,55 @@ const readPromoting = (root) => {
     return { run_id: null, unreadable: true };
   }
 };
+
+// ---- the promote lock ----------------------------------------------------------------------------------------------------------------------
+// runs/PROMOTING.json only exists from a PASS on, and a promote judges for minutes before that, so two promotes could both judge, both PASS and
+// both write it. runs/PROMOTE.lock closes that gap: { run_id, lesson, started_at }, created exclusively once the lesson has been validated and
+// before anything is judged or written, removed when promote() ends on every path (PASS, HOLD, FAIL, an error, exit 75). It is only left behind by a
+// process that was killed. Then the run itself takes it over with --resume --run-id <id>; a person removes it, or promote.mjs --abort <id> does.
+
+/** The lock as written, null without one, { run_id: null, unreadable: true } for a file that is not JSON. */
+function readPromoteLock(loc) {
+  if (!existsSync(loc.promoteLock)) return null;
+  try {
+    const held = readJson(loc.promoteLock);
+    return held && typeof held === 'object' ? held : { run_id: null, unreadable: true };
+  } catch {
+    return { run_id: null, unreadable: true };
+  }
+}
+
+/** Take the lock for a run, or throw ExitError(2) naming the run that holds it. The run that holds it may take it over (a resume after a kill). */
+function takePromoteLock(loc, { runId, lesson, now }) {
+  const body = `${JSON.stringify({ run_id: runId, lesson: lesson.lesson_key, started_at: now().toISOString() }, null, 2)}\n`;
+  ensureDir(loc.runs);
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      writeFileSync(loc.promoteLock, body, { flag: 'wx' }); // exclusive: fails when the file exists, so two promotes cannot both get in
+      return;
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+    }
+    const held = readPromoteLock(loc);
+    if (held === null) continue; // it was removed between the two calls: try again
+    if (held.run_id === runId) {
+      writeTextAtomic(loc.promoteLock, body);
+      return;
+    }
+    if (held.unreadable || typeof held.run_id !== 'string') throw new ExitError(EXIT.INVALID, 'runs/PROMOTE.lock exists but cannot be read; if no promote is running, remove it');
+    throw new ExitError(EXIT.INVALID, `run ${held.run_id} holds the promote lock since ${held.started_at ?? 'an unknown time'}; resume it with --resume --run-id ${held.run_id}, or if it is dead remove runs/PROMOTE.lock (promote.mjs --abort ${held.run_id} does that too)`);
+  }
+  throw new ExitError(EXIT.ERROR, 'could not take runs/PROMOTE.lock');
+}
+
+/** Remove the lock if it is still this run's. A lock that names another run (a person removed ours and another promote took it) is left alone. */
+function releasePromoteLock(loc, runId) {
+  try {
+    if (readPromoteLock(loc)?.run_id === runId) unlinkSync(loc.promoteLock);
+  } catch {
+    // a lock that cannot be removed must not hide what the promote itself ended with
+  }
+}
 
 // ---- versions, the lesson, its text ---------------------------------------------------------------------------------------------------
 
@@ -173,6 +231,12 @@ export function perTagSummary(card) {
   return text || 'no tag had labelled items';
 }
 
+/** The Runs row's Per-tag summary: a first line naming the candidate rubric by version and hash, then perTagSummary(card), all within the 1,900 characters of a Notion text. */
+export function perTagSummaryWithHash(card, candidate) {
+  const text = `Candidate rubric ${candidate.rubric_version} (${candidate.rubric_hash})\n${perTagSummary(card)}`;
+  return text.length <= MAX_TEXT ? text : `${text.slice(0, MAX_TEXT - 4)}...`;
+}
+
 export function canariesText(card) {
   const c = card.canaries?.candidate;
   if (!c) return 'not evaluated';
@@ -216,7 +280,7 @@ async function judgeSide({ side, runId, itemsFile, runs, args, root, deps, now, 
   const id = reconfirm ? `${runId}-reconfirm-${side}` : `${runId}-${side}`;
   const label = reconfirm ? `reconfirm ${side}` : side;
   const runsDir = locations(root).runs;
-  const argv = ['--items', itemsFile, '--runs', String(runs), '--run-id', id];
+  const argv = ['--items', itemsFile, '--runs', String(runs), '--run-id', id, '--parent', runId]; // --parent: status.mjs resumes a stopped side through this promote run
   if (side === 'candidate') argv.push('--rubric', candidatePath);
   if (args.driver) argv.push('--driver', args.driver);
   if (args.model) argv.push('--model', args.model);
@@ -368,12 +432,24 @@ async function promote({ args, io, root, config, deps, now }) {
   const runDir = join(loc.runs, runId);
   const recordFile = join(runDir, 'run.json');
   if (existsSync(recordFile) && !args.resume) throw new ExitError(EXIT.INVALID, `run id ${runId} already exists; use --resume to continue it or pick another id`);
-  ensureDir(runDir);
-
   const previous = existsSync(recordFile) ? readJson(recordFile) : null;
   if (previous && (previous.lesson_key !== lesson.lesson_key || previous.previous_hash !== rubric.rubric_hash)) {
     throw new ExitError(EXIT.INVALID, `run ${runId} was for another lesson or another live rubric; start a new promote run`);
   }
+
+  // The lesson is valid and the run id is free: from here nothing else may promote. The lock is taken before the first file of this run is written and
+  // released when this function ends, whatever happens (a smoke run judges too, so it takes it as well).
+  takePromoteLock(loc, { runId, lesson, now });
+  try {
+    return await gate({ args, io, root, config, deps, now, loc, pull, rubric, lesson, target, text, reconfirmation, runId, runDir, recordFile, previous });
+  } finally {
+    releasePromoteLock(loc, runId);
+  }
+}
+
+/** Everything promote does while it holds the lock: the candidate, the items, the two judge runs, the verdict, and the plan with PROMOTING.json. */
+async function gate({ args, io, root, config, deps, now, loc, pull, rubric, lesson, target, text, reconfirmation, runId, runDir, recordFile, previous }) {
+  ensureDir(runDir);
   const version = previous?.version ?? candidateVersion(root, rubric.rubric_version, now());
   const candidate = buildCandidate({ rubric, lesson, target, text, version });
   const problems = [...checkHashes(candidate).mismatches.map((m) => `hash ${m.kind} ${m.where}`), ...validate(readJson(join(root, 'schemas', 'rubric.schema.json')), candidate).errors];
@@ -448,6 +524,14 @@ async function promote({ args, io, root, config, deps, now }) {
     return EXIT.INVALID;
   }
 
+  // PROMOTING.json was checked when this run started, which was minutes ago: another promote may have written it since (the lock makes that unusual,
+  // not impossible: a person can remove a lock). This run's judgments stay in the cache; its plan is not written.
+  const meanwhile = readPromoting(root);
+  if (meanwhile && meanwhile.run_id !== runId) {
+    writeJsonAtomic(recordFile, { ...readJson(recordFile), status: 'aborted', aborted_at: now().toISOString(), rolled_back: true, rolled_back_reason: `run ${meanwhile.run_id ?? '(unreadable PROMOTING.json)'} started promoting meanwhile` });
+    throw new ExitError(EXIT.INVALID, `run ${meanwhile.run_id ?? '(unreadable PROMOTING.json)'} started promoting while this run was judging, so no plan was written for ${runId}; finish it (apply.mjs, then promote.mjs --finalize) or promote.mjs --abort it, then promote this lesson again (the judgments are kept)`);
+  }
+
   const today = now().toISOString().slice(0, 10);
   const lessonRef = lesson.lesson_id ?? lesson.lesson_key;
   const demo = DEMO_TITLE.test(lesson.lesson_key) || localDemoFlag(root, lesson.lesson_key);
@@ -471,9 +555,12 @@ async function promote({ args, io, root, config, deps, now }) {
     plan.update('rule_changes', lesson.lesson_key, lesson.page_id, lessonProps, { ...(live || markRolledBack ? { expect: { Status: 'Approved' } } : {}), note: live ? 'gate PASS: the lesson goes live' : `gate ${verdict}: the Rulebook is untouched` });
   }
   const runTitle = uniqueRunTitle(`${smoke ? 'Smoke' : 'Gate'} ${candidate.rubric_version} · ${lessonRef}`, pull);
+  // Verdict PASS, HOLD or FAIL belongs to a Gate row; a smoke verdict is a rehearsal's, not the gate's, so a Smoke row says n/a (the card in Summary and in
+  // the page still says what the rehearsal found). The version label of a candidate that was never promoted comes back with the next candidate, so the
+  // row carries the candidate's rubric hash as well: two rows with the same label are told apart by it.
   plan.create('runs', runTitle, {
-    Kind: smoke ? 'Smoke' : 'Gate', Verdict: verdict, 'Rubric version': `${rubric.rubric_version} → ${candidate.rubric_version}`, Started: now().toISOString(), 'Claims judged': items.size,
-    Canaries: canariesText(result.card), 'Newly failing': result.card.cases?.newly_failing.length ?? 0, 'Per-tag summary': perTagSummary(result.card), Summary: gateResult, Model: model,
+    Kind: smoke ? 'Smoke' : 'Gate', Verdict: smoke ? 'n/a' : verdict, 'Rubric version': `${rubric.rubric_version} → ${candidate.rubric_version}`, Started: now().toISOString(), 'Claims judged': items.size,
+    Canaries: canariesText(result.card), 'Newly failing': result.card.cases?.newly_failing.length ?? 0, 'Per-tag summary': perTagSummaryWithHash(result.card, candidate), Summary: gateResult, Model: model,
     'Cost USD': cost, Lesson: [{ rule_changes: lesson.lesson_key }],
   }, { content_md: cardMarkdown(result.card, cardMd, { cost, model }) });
   const notes = [];
@@ -646,7 +733,16 @@ async function abort({ args, io, root, config, now }) {
   const runId = args.abort;
   const runDir = join(loc.runs, runId);
   const promoting = readPromoting(root);
-  if (!promoting || promoting.run_id !== runId) throw new ExitError(EXIT.INVALID, `runs/PROMOTING.json ${promoting ? `belongs to run ${promoting.run_id ?? '(unreadable)'}` : 'does not exist'}: nothing to abort for run ${runId}`);
+  const holdsLock = readPromoteLock(loc)?.run_id === runId;
+  if (!promoting || promoting.run_id !== runId) {
+    if (!holdsLock) throw new ExitError(EXIT.INVALID, `runs/PROMOTING.json ${promoting ? `belongs to run ${promoting.run_id ?? '(unreadable)'}` : 'does not exist'}: nothing to abort for run ${runId}`);
+    // A promote that was killed while it judged: it still holds runs/PROMOTE.lock, but PROMOTING.json is written only after a PASS, so nothing was applied.
+    const recordFile = join(runDir, 'run.json');
+    unlinkSync(loc.promoteLock);
+    if (existsSync(recordFile)) writeJsonAtomic(recordFile, { ...readJson(recordFile), status: 'aborted', aborted_at: now().toISOString(), rolled_back: true, rolled_back_reason: 'aborted while judging' });
+    io.out(`promote: aborted run ${runId}: it still held runs/PROMOTE.lock (a promote that was killed while judging); the lock is removed. PROMOTING.json was never written, so nothing was applied and Notion was never changed`);
+    return EXIT.OK;
+  }
   const record = existsSync(join(runDir, 'run.json')) ? readJson(join(runDir, 'run.json')) : {};
   const live = readJson(loc.rubric);
   const applied = existsSync(join(runDir, 'applied.jsonl'));
@@ -677,6 +773,7 @@ async function abort({ args, io, root, config, now }) {
     planned = { id: planId, path: plan.write().path };
   }
   unlinkSync(loc.promoting);
+  if (holdsLock) unlinkSync(loc.promoteLock); // only after a stop between writing PROMOTING.json and letting go of the lock
   writeJsonAtomic(join(runDir, 'run.json'), { ...record, status: 'aborted', aborted_at: now().toISOString(), rolled_back: true, rolled_back_reason: 'aborted' });
   io.out(`promote: aborted run ${runId}: PROMOTING.json removed; ${planned ? `Notion's Rulebook still carried the candidate text, so a restore plan was written (${planned.id}): plan.mjs check --run ${planned.id}; apply.mjs --run ${planned.id}` : applied ? 'Notion\'s Rulebook already matches the live rubric, no restore needed' : 'the plan had not been applied, so Notion was never changed'}`);
   return EXIT.OK;

@@ -5,10 +5,12 @@ The Geo-themed artifact for the MVP (plan: `../plan.md`, section "Deliverables")
 ## Folder
 
 ```
+collect-evidence.mjs             read the evidence and write data/evidence.json and data/counts.json (run it before every build)
 build.mjs                        assemble editor-feedback-loop-mvp.html and run the checks
 preview.mjs                      build a single-tab preview into preview/
 editor-feedback-loop-mvp.html    the built page (generated; this is the file to publish)
-data/counts.json                 numbers used as {{count:key}} in the text
+data/counts.json                 numbers used as {{count:key}} in the text (generated)
+data/evidence.json               everything collect-evidence.mjs read, aggregated (generated; for checking a figure)
 design-system/                   the Geo design system (tokens.json, bundle.css, fonts/); do not edit
 parts/01-header.html             page header, Plain / Technical switch, theme toggle, tab rail (opens div.wrap and main)
 parts/02-glance.html ... 07-decide.html   the six content tabs: glance, loop, notion, code, verify, decide
@@ -16,13 +18,15 @@ parts/08-glossary.html           the Glossary tab (dt id="g-slug" entries)
 parts/99-footer.html             closes main and div.wrap, footer text
 parts/page.css                   page styles (layout, prose width, code, tables)
 parts/script.js                  tabs, pages, switch, term strips, theme toggle
-parts/fragments/                 pieces included into parts: structure-figure.html, sample-tables.html
+parts/fragments/                 pieces included into parts: structure-figure.html (the loop and Notion tabs), sample-tables.html
+                                 (real rows from the end-state snapshot), review-findings.html (the engineer review and the dispositions)
 preview/                         generated previews (git-ignored)
 ```
 
 ## Build
 
 ```
+node collect-evidence.mjs        refresh data/evidence.json and data/counts.json from the evidence (stops if a figure is missing)
 node build.mjs                   writes editor-feedback-loop-mvp.html, prints the checks, exits 0
 node build.mjs --strict          the publish gate: any failed check exits 1 and the file is NOT written
 node build.mjs --standalone      the whole page inside a full HTML document (doctype, head, body), written to preview/full.html
@@ -30,7 +34,7 @@ node build.mjs --standalone      the whole page inside a full HTML document (doc
 node build.mjs --out some.html   write somewhere else
 ```
 
-The default file has the shape the Artifact tool expects: `<title>`, one `<style>` (tokens, fonts, components, page styles), the page content, one `<script>`. It has no doctype, html, head, body or meta tags, because the tool wraps the file in its own skeleton at publish time (a second wrapper, or a viewport meta without `viewport-fit=cover`, would switch off the safe-area padding that skeleton adds). The file is about 260 KB, of which 175 KB are the four inlined Calibre fonts; the page itself starts after `</style>`.
+The default file has the shape the Artifact tool expects: `<title>`, one `<style>` (tokens, fonts, components, page styles), the page content, one `<script>`. It has no doctype, html, head, body or meta tags, because the tool wraps the file in its own skeleton at publish time (a second wrapper, or a viewport meta without `viewport-fit=cover`, would switch off the safe-area padding that skeleton adds). The file is about 385 KB, of which 175 KB are the four inlined Calibre fonts and about 160 KB the page content; the page itself starts after `</style>`.
 
 What the build does, in order: compiles `design-system/tokens.json` to CSS variables (light on `:root`, dark under `prefers-color-scheme` guarded by `:root:not([data-theme="light"])`, and again under `:root[data-theme="dark"]`; byte for byte what the research page's `build.py` produced), inlines the four `woff2` fonts as base64 `@font-face` rules, adds `design-system/bundle.css` and `parts/page.css`, concatenates `parts/NN-*.html` in name order, replaces `<!-- include: fragments/x.html -->` with that file (nested includes work), fills `{{count:key}}`, removes HTML comments from the page content, and appends `parts/script.js`.
 
@@ -68,32 +72,38 @@ Printed after every build. Without `--strict` they only report. With `--strict`,
 
 ## Numbers
 
-Write `{{count:claims}}` anywhere in a part or fragment. `data/counts.json` maps keys to values:
+Write `{{count:claims}}` anywhere in a part or fragment. `data/counts.json` maps keys to values; `collect-evidence.mjs` writes it, so never edit it by hand:
 
 ```json
 {
-  "claims":   { "value": 60, "source": "agents/claim-tagger/evals/seed/seed-report.json: claims_total" },
-  "decisions": { "value": 27, "source": "...", "pending": true },
-  "seed": { "claims": 60 }
+  "claims": { "value": 60, "source": "docs/mvp-2026-10/evidence/notion/00-seeded/claims.jsonl: rows" },
+  "tagRun": { "rowsCreated": { "value": 40, "source": "docs/mvp-2026-10/evidence/notion/02-tag-r1/propose.json: rows_created" } },
+  "cost": { "tagRun": { "value": "2.06", "source": "agents/claim-tagger/runs/20261013T1800Z-tag-r1/run.json: cost_usd" } }
 }
 ```
 
-A key is a plain value or `{ value, source, pending }`; groups nest and are addressed with dots (`{{count:seed.claims}}`); keys starting with `_` are ignored. `pending: true` marks a figure that is not measured yet: the build says so, and `--strict` refuses to build while a page uses it. Integers of 1,000 or more get thousands separators. Values are HTML-escaped.
+A key is a plain value or `{ value, source, pending }`; groups nest and are addressed with dots (`{{count:tagRun.rowsCreated}}`); keys starting with `_` are ignored. `pending: true` marks a figure that is not measured yet: the build says so, and `--strict` refuses to build while a page uses it. Integers of 1,000 or more get thousands separators. Values are HTML-escaped. Money is written as a string with two decimals and accuracy changes as signed strings in points ("+36.4"), so the page shows them as the cards do. Every figure carries its `source`; a figure the collector cannot find stops it with a message instead of a guess. One figure is recorded rather than derived: the unit-test count, with the commit it was measured on (`UNIT_TESTS` at the top of `collect-evidence.mjs`); after a new `node --test tests/` run on a clean copy of a commit, update both fields.
 
-Where the figures come from (replace the example values with these as the work completes):
+The groups: top-level figures (claims, decisions, canaries, cases, gate runs, applies, judgments, unit tests), `tagRun`, `baseline`, `gate.<card>` (one per gate card: `ls1a1` to `ls1a5`, `ls2`), `best` (the LS-1 card with the most confirmed fixes), `wording`, `cost`, `headless`, `seed`, `stage.<snapshot>`, `direction.end`, `end` (the end-state snapshot), `review` and `config` (the settings in `agents/claim-tagger/config.json`).
+
+Where the figures come from:
 
 | Figure | Source |
 |---|---|
-| tags in the rulebook, judged tags | `agents/claim-tagger/rubric/rubric.json` (`tag_count`, `judged_count`) |
-| claims, queue rows, seeded decisions, excluded rows | `agents/claim-tagger/evals/seed/seed-report.json` |
-| canaries total and active | `agents/claim-tagger/evals/canaries.jsonl` |
-| Notion state after each demo step (rows per view, Stage counts, Rule version) | `docs/mvp-2026-10/evidence/notion/<step>-<view>.json` |
-| editor fields touched, persona actions | `docs/mvp-2026-10/evidence/persona-editor-actions.json` and the verify output |
-| headless run | `docs/mvp-2026-10/evidence/headless/` (transcripts and `run-<date>.summary.md`) |
-| findings and decisions | `docs/mvp-2026-10/review/` (`dispositions.md`, `persona-*-r1/r2.md`) |
-| result cards | `agents/claim-tagger/evals/cards/` and the Runs rows in Notion |
+| tags in the rulebook, judged tags, the live version | `agents/claim-tagger/rubric/rubric.json` (`tag_count`, `judged_count`, `rubric_version`) |
+| seed strata, seeded decisions, excluded rows, check-by-hand rows | `agents/claim-tagger/evals/seed/seed-report.json` |
+| canaries and regression cases | `agents/claim-tagger/evals/canaries.jsonl`, `cases.jsonl` |
+| Notion state after each step (Stage, Direction, lessons, runs, rulebook, settings) | `docs/mvp-2026-10/evidence/notion/<nn>-<label>/` (the queue, claims, lessons, runs, rulebook and settings files) |
+| the tag run's queue figures | `docs/mvp-2026-10/evidence/notion/02-tag-r1/propose.json` |
+| gate verdicts, intervals, fixes, reconfirmation, costs | `docs/mvp-2026-10/evidence/cards/<card>/card.json` |
+| judgments, errors, model costs | `agents/claim-tagger/runs/*/run.json` (git-ignored, on the machine that ran the trial) |
+| applies, writes landed, editor fields touched | `agents/claim-tagger/runs/*/verify.json` (git-ignored) |
+| headless sessions | `docs/mvp-2026-10/evidence/headless/*.summary.md` |
+| persona writes, Editor wording lengths | `docs/mvp-2026-10/evidence/persona-editor-actions.json` |
+| editor review severities | `docs/mvp-2026-10/review/persona-editor-r1.md` (the findings table) |
+| gate, judge, queue and distill settings | `agents/claim-tagger/config.json` |
 
-To keep tables from drifting, write a small script that reads an evidence file and writes `parts/fragments/<name>.html`, then include it from a part. Run it before `node build.mjs`. The sample rows in `parts/fragments/sample-tables.html` are the plan's expected rows (two cells corrected from the data, see the comment at the top of that file); replace them with rows read from the evidence once the demo has run.
+Long verbatim records (the sample rows in `parts/fragments/sample-tables.html`, the result card on the Notion walkthrough, claim and rule texts) are quoted from the evidence files named in their comments; figures inside them that `counts.json` also holds are filled from it.
 
 ## Publish
 

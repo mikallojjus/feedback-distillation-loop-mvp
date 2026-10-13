@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import { FRESH_MS, apply, main, markdownToBlocks } from '../agents/claim-tagger/scripts/apply.mjs';
 import { EXIT } from '../agents/claim-tagger/scripts/lib/exit-codes.mjs';
 import { readJsonl } from '../agents/claim-tagger/scripts/lib/jsonl.mjs';
-import { NotionError } from '../agents/claim-tagger/scripts/lib/notion-rest.mjs';
-import { armedState, check, openPlan } from '../agents/claim-tagger/scripts/plan.mjs';
+import { NotionError, createClient } from '../agents/claim-tagger/scripts/lib/notion-rest.mjs';
+import { armedState, check, disarm, openPlan, readPlan } from '../agents/claim-tagger/scripts/plan.mjs';
 import { USER, captureIo, cleanupRoots, makeWorld } from './fixtures/notion/helpers.mjs';
 
 after(cleanupRoots);
@@ -172,6 +172,59 @@ test('a create whose key appeared in Notion since the plan was checked becomes a
   assert.equal(ledger(w)[0].kind, 'update');
   assert.equal(w.fake.find('runs', 'Tag R1').props.Kind, 'Tag');
   assert.match(result.out[0], /created 0, updated 1/);
+});
+
+test('a create that failed with create_uncertain while the row exists in Notion: --retry reads Notion again, updates the row by its key and makes no second one', async () => {
+  const w = await armed((p) => p.create('runs', 'Tag R1', { Kind: 'Tag', 'Claims judged': 3, Verdict: 'n/a' }));
+  // the REST client does not know whether the create landed, so it reports create_uncertain instead of sending it again
+  w.fake.failNext('createPage', new NotionError('Notion POST /pages: no answer (network failure: ECONNRESET). The row may exist in Notion already, so the create was not sent again; apply.mjs --run <id> --retry reads Notion again before it sends anything', { code: 'create_uncertain', retryable: true }));
+  const first = await run(w);
+  assert.equal(first.code, EXIT.ERROR, first.err.join('\n'));
+  assert.match(first.err.join('\n'), /op 1 \(runs "Tag R1"\) failed: Notion POST \/pages: no answer .*apply\.mjs --run <id> --retry/);
+  assert.match(first.out[0], /created 0, updated 0, skipped 0, failed 1; verify: run run-1: 1 of 1 op\(s\) did not land \(1 missing/);
+  assert.deepEqual(ledger(w).map((r) => [r.seq, r.kind, r.status, r.retryable]), [[1, 'create', 'failed', true]]);
+  assert.equal(w.fake.writes().length, 1, 'one create was attempted, none was repeated');
+  assert.deepEqual(readJsonl(join(w.root, 'runs', 'run-1', 'plan.retry.jsonl')).rows.filter((r) => r.op !== 'header').map((r) => [r.seq, r.op, r.key]), [[1, 'create', 'Tag R1']]);
+  assert.ok(armedState(w.root), 'a run that did not finish stays armed');
+
+  // the create had landed after all (or somebody made the row): Notion has it, with other values
+  const landed = w.fake.add('runs', { 'Run title': 'Tag R1', Kind: 'Smoke' });
+  const second = await run(w, ['--run', 'run-1', '--retry']);
+  assert.equal(second.code, EXIT.OK, second.err.join('\n'));
+  assert.match(second.out[0], /created 0, updated 1, skipped 0, failed 0; verify clean \(pre p1, post run-1-post\)/);
+  assert.deepEqual(w.fake.writes().map((x) => x.method), ['createPage', 'updatePage'], 'the retry updated the row; no second create');
+  assert.equal(w.fake.rows('runs').filter((r) => r.props['Run title'] === 'Tag R1').length, 1, 'no duplicate key');
+  assert.equal(w.fake.count('runs'), 2, 'the world had one run row, plus this one');
+  assert.equal(w.fake.find('runs', 'Tag R1').page_id, landed);
+  assert.equal(w.fake.find('runs', 'Tag R1').props.Kind, 'Tag');
+  assert.equal(w.fake.find('runs', 'Tag R1').props['Claims judged'], 3);
+  assert.deepEqual(ledger(w).map((r) => [r.seq, r.kind, r.status]), [[1, 'create', 'failed'], [1, 'update', 'ok']]);
+  assert.equal(readJsonFile(w, 'runs', 'run-1', 'apply.json').invocations, 2);
+  assert.equal(readJsonFile(w, 'runs', 'run-1', 'apply.json').resolved_from, 'run-1-r2', 'the second start resolved the plan against a fresh pull');
+  assert.equal(existsSync(join(w.root, 'runs', 'run-1', 'plan.retry.jsonl')), false);
+  assert.equal(armedState(w.root), null);
+});
+
+test('through the real REST client: a create whose answer is lost is posted once and never lands twice; the run ends clean because verify finds the row', async () => {
+  const w = await armed((p) => p.create('runs', 'Tag R1', { Kind: 'Tag', 'Claims judged': 3, Verdict: 'n/a' }));
+  const posts = [];
+  const lossy = async (url, init) => {
+    const answer = await w.fake.fetch(url, init); // Notion processes the request ...
+    if (init.method === 'POST' && new URL(url).pathname === '/v1/pages') {
+      posts.push(url);
+      throw new TypeError('fetch failed'); // ... and the answer never arrives
+    }
+    return answer;
+  };
+  const client = createClient({ token: 'ntn_FAKE_TOKEN_FOR_TESTS_0123456789abcdef', fetchImpl: lossy, requestsPerSecond: 1000 });
+  const result = await run(w, ['--run', 'run-1'], { client });
+  assert.equal(posts.length, 1, 'one POST /pages, no automatic retry');
+  assert.equal(w.fake.count('runs'), 2, 'the world had one run row; the create landed once');
+  assert.equal(result.code, EXIT.OK, result.err.join('\n'));
+  assert.match(result.err.join('\n'), /op 1 \(runs "Tag R1"\) failed: Notion POST \/pages: no answer/);
+  assert.match(result.out[0], /created 0, updated 0, skipped 0, failed 1; verify clean/);
+  assert.deepEqual(ledger(w).map((r) => [r.kind, r.status, r.retryable]), [['create', 'failed', true]]);
+  assert.equal(w.fake.find('runs', 'Tag R1').props.Kind, 'Tag');
 });
 
 test('--retry sends only the ops in plan.retry.jsonl, even ones the ledger calls ok', async () => {
@@ -423,6 +476,18 @@ test('a seed plan creates Rulebook-style rows with page ids that later plans can
   p.create('agent_settings', 'claim-tagger', { Name: 'claim-tagger', 'Weekly cap': 40, 'Rubric in force': '2026-10-13.1' });
   p.create('rulebook', 'Debate', { Status: 'Verified', Category: 'Usage', Polarity: 'Classification', 'When to use': 'Use when ...\n1. Rule.', 'Human only': false, Judged: true });
   p.write();
+  // a seed needs the marker an engineer creates by hand (runs/SETUP): check refuses without it, and so does apply, even for a plan armed by hand
+  assert.equal(check({ root: w.root, runId: 'seed-1', now: w.clock.now }).code, EXIT.INVALID);
+  const sha = readPlan(w.root, 'seed-1').sha;
+  writeFileSync(join(w.root, 'runs', 'APPLYING.json'), JSON.stringify({ run_id: 'seed-1', plan_sha: sha, armed_at: w.clock.now().toISOString() }));
+  const requests = w.fake.requests.length;
+  const unmarked = await run(w, ['--run', 'seed-1']);
+  assert.equal(unmarked.code, EXIT.INVALID);
+  assert.match(unmarked.err.join('\n'), /the plan claims a gate PASS \(or a seed\/restore\) without evidence; nothing was sent/);
+  assert.match(unmarked.err.join('\n'), /gate evidence: runs\/SETUP does not exist/);
+  assert.equal(w.fake.requests.length, requests, 'not a single request');
+  assert.equal(disarm(w.root), 'seed-1');
+  writeFileSync(join(w.root, 'runs', 'SETUP'), 'engineer, test\n');
   assert.equal(check({ root: w.root, runId: 'seed-1', now: w.clock.now }).code, EXIT.OK);
   const result = await run(w, ['--run', 'seed-1']);
   assert.equal(result.code, EXIT.OK, result.err.join('\n'));

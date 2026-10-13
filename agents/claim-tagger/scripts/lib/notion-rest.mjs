@@ -9,6 +9,12 @@
 // Pacing is a token bucket (default 3 requests per second, Notion's average limit). A 429 sleeps for Retry-After seconds and
 // retries (at most 5 times); a 5xx, a 409 or a network failure retries with 0.5, 1 and 2 s of backoff (at most 3 times);
 // any other 4xx throws a NotionError carrying status, code and Notion's message.
+//
+// One exception: a page create (POST /pages, createPage) is never sent twice. When its answer is lost (a network failure, a 5xx, a 409,
+// or a 2xx whose body cannot be read) the page may exist already, and a second POST would add a copy that no script may delete. It throws
+// a NotionError with code 'create_uncertain' (retryable: true) instead; apply.mjs --run <id> --retry reads Notion again before it sends
+// anything, so a row that did land is updated by its key and one that did not is created then. A 429 is still retried: Notion did not
+// process that request.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -105,8 +111,15 @@ export function createClient({
   const headers = { Authorization: `Bearer ${token}`, 'Notion-Version': apiVersion, 'Content-Type': 'application/json' };
   const scrub = (text) => String(text ?? '').split(token).join('[token]');
 
+  // The error of a page create whose answer was lost: the row may exist, so it is not sent again (see the header of this file).
+  const createUncertain = (why, status = null) => new NotionError(
+    `Notion POST /pages: ${why}. The row may exist in Notion already, so the create was not sent again; apply.mjs --run <id> --retry reads Notion again before it sends anything, and a row that did land is updated, not created twice`,
+    { status, code: 'create_uncertain', retryable: true },
+  );
+
   async function request(method, path, body) {
     const init = { method, headers, ...(body === undefined ? {} : { body: JSON.stringify(body) }) };
+    const isCreate = method === 'POST' && path === '/pages';
     let rateLimited = 0;
     let failed = 0;
     let attempt = 0;
@@ -118,15 +131,21 @@ export function createClient({
         res = await fetchImpl(`${API_BASE}${path}`, init);
       } catch (cause) {
         log?.({ method, path, status: null, attempt });
+        const reason = scrub(cause?.cause?.code ?? cause?.code ?? cause?.message ?? 'unknown');
+        if (isCreate) throw createUncertain(`no answer (network failure: ${reason})`);
         if (failed >= MAX_SERVER_RETRIES) {
-          throw new NotionError(`Notion ${method} ${path}: network failure (${scrub(cause?.cause?.code ?? cause?.code ?? cause?.message ?? 'unknown')})`, { code: 'network_error', retryable: true });
+          throw new NotionError(`Notion ${method} ${path}: network failure (${reason})`, { code: 'network_error', retryable: true });
         }
         await sleep(BACKOFF_MS[failed++]);
         continue;
       }
       log?.({ method, path, status: res.status, attempt });
       let data = null;
-      const text = await res.text().catch(() => ''); // always drain the body so the connection is released
+      let unreadable = false;
+      const text = await res.text().catch(() => { // always drain the body so the connection is released
+        unreadable = true;
+        return '';
+      });
       if (text) {
         try {
           data = JSON.parse(text);
@@ -140,9 +159,14 @@ export function createClient({
         await sleep(retryAfterMs(res));
         continue;
       }
-      if (res.ok) return data ?? {};
+      if (res.ok) {
+        // a create that Notion accepted but whose page object did not arrive: the row exists and its id is unknown
+        if (isCreate && (unreadable || typeof data?.id !== 'string')) throw createUncertain(`Notion answered ${res.status}, but the answer could not be read`, res.status);
+        return data ?? {};
+      }
       const code = typeof data?.code === 'string' ? data.code : null;
       if (res.status >= 500 || res.status === 409) {
+        if (isCreate) throw createUncertain(`Notion answered ${res.status}${code ? ` ${code}` : ''}: ${scrub(data?.message ?? res.statusText)}`, res.status);
         if (failed >= MAX_SERVER_RETRIES) {
           throw new NotionError(`Notion ${method} ${path} -> ${res.status}${code ? ` ${code}` : ''}: ${scrub(data?.message ?? res.statusText)} (gave up after ${MAX_SERVER_RETRIES} retries)`, { status: res.status, code, retryable: true });
         }

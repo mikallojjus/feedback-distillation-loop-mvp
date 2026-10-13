@@ -5,37 +5,126 @@
   <div class="plain">
     <p class="geo-eyebrow plain-label">In short</p>
     <ul>
-      <li>TODO: what was checked and by whom: unit tests, model-backed checks, the demo end to end, two persona reviews, the headless run.</li>
-      <li>TODO: the results in one table: check, who ran it, result, evidence file.</li>
-      <li>TODO: what the Editor persona found hard to understand, and what changed because of it.</li>
-      <li>TODO: what the Engineer persona checked in the code, and what changed because of it.</li>
-      <li>TODO: what was not checked, and why.</li>
+      <li>{{count:unitTests}} unit tests pass; the real run made {{count:judgments}} model judgments with {{count:judgeErrors}} errors; every <dfn data-t="canary">canary</dfn> passed under the current rules and in every <dfn data-t="gate">gate</dfn> run.</li>
+      <li>The gate refused all {{count:gateRuns}} candidates, each for a reason written on its card; <dfn data-t="reconfirmation">reconfirmation</dfn> showed that the best candidate's four fixes and its one regression are all real, not noise.</li>
+      <li>The agent wrote no editor field: {{count:editorFieldsTouched}} changes in {{count:applies}} applies, each checked by <dfn data-t="read-back">read-back</dfn>; the <dfn data-t="rulebook">rulebook</dfn> is identical in every snapshot.</li>
+      <li>On an editor's machine the status command passed on run {{count:headless.statusPassedOn}} of {{count:headless.statusRuns}}, after four fixes the earlier runs exposed; a tag dry run correctly found nothing left to judge.</li>
+      <li>The editor review found the core job clear and {{count:review.editorMust}} must-fix gaps around it, all addressed after round 1; the engineer review and the decision on every finding follow below.</li>
+      <li>Not checked yet: the PASS path in real Notion (finalize, <dfn data-t="follow-up">follow-up</dfn>, rollback), the pause and <dfn data-t="trust-breaker">trust breaker</dfn> drills on the live page, the guard hook firing in a headless session, the full plain-words request on an editor's machine, and real editors rather than personas.</li>
     </ul>
   </div>
 
-  <div class="sub" id="verify-who" data-title="What was checked, by whom">
-    <h3>What was checked, by whom</h3>
-    <p>TODO: a table of the checks (unit tests, model-backed checks, the demo end to end, the Editor persona, the Engineer persona, the headless run): who ran each one and what it covers.</p>
+  <div class="sub" id="verify-layers" data-title="What was checked">
+    <h3>What was checked, and what each check found</h3>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Layer</th><th>What it checks</th><th>Result</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Unit tests</strong></td><td>Hash recipes against the research vectors, the allowlist in every database, the guard hook, pull, plan, apply, verify, judge parsing, the ledger and resume, propose, distill, the gate's verdicts, <dfn data-t="promote">promote</dfn> and rollback, follow-up, status. No model calls.</td><td>{{count:unitTests}} tests in {{count:testFiles}} files, all passing at commit <code>{{count:testCommit}}</code> of 13 October</td><td><code>tests/</code></td></tr>
+        <tr><td><strong>Real judge runs</strong></td><td>Every reply checked: the batch's ids, every tag once, consistent counterpart pairs, a rule of the same tag, the pinned model.</td><td>{{count:judgments}} judgments in {{count:judgeRuns}} runs, {{count:judgeErrors}} errors</td><td><code>runs/*/run.json</code></td></tr>
+        <tr><td><strong>Canary baseline</strong></td><td>The current rules on every canary and active <dfn data-t="regression-case">regression case</dfn>.</td><td>Canaries {{count:baseline.canaries}}; {{count:baseline.newlyFailing}} of {{count:baseline.casesActive}} cases failing</td><td><code>cards/baseline-r1</code></td></tr>
+        <tr><td><strong>Gate runs</strong></td><td>The five conditions on each candidate.</td><td>{{count:gateRuns}} runs, all FAIL; {{count:canaries}} of {{count:canaries}} canaries in every one</td><td><code>cards/gate-*</code></td></tr>
+        <tr><td><strong>Reconfirmation</strong></td><td>Every flipped case judged {{count:best.runsEach}} times under each rulebook.</td><td>Attempt 4: {{count:gate.ls1a4.fixesConfirmed}} fixes and {{count:gate.ls1a4.breaksConfirmed}} regression confirmed. Attempt 5: {{count:gate.ls1a5.fixesConfirmed}} fix and {{count:gate.ls1a5.breaksConfirmed}} regression confirmed, {{count:gate.ls1a5.fixesNoise}} fix and {{count:gate.ls1a5.breaksNoise}} regression were noise.</td><td><code>cards/gate-ls1-attempt4</code>, <code>5</code></td></tr>
+        <tr><td><strong>Headless tests</strong></td><td>The skill in a fresh Claude Code session, as on an editor's machine.</td><td>Status passed on run {{count:headless.statusPassedOn}} of {{count:headless.statusRuns}}; the dry run found nothing left to judge and said so</td><td><code>headless/</code></td></tr>
+        <tr><td><strong>Persona reviews</strong></td><td>An editor and an engineer, each with fresh context, round 1.</td><td>Editor: {{count:review.editorTotal}} findings, {{count:review.editorMust}} must. Engineer: below.</td><td><code>review/</code></td></tr>
+        <tr><td><strong>Trust check</strong></td><td>Editor-owned fields before and after every write; the rulebook in every snapshot.</td><td>{{count:editorFieldsTouched}} editor fields changed in {{count:applies}} applies ({{count:opsLanded}} writes); rulebook identical in {{count:end.rulebookIdentical}} of {{count:end.snapshots}} snapshots</td><td><code>runs/*/verify.json</code>, <code>notion/*/rulebook.json</code></td></tr>
+      </tbody>
+    </table></div>
+    <p>Evidence paths are under <code>docs/mvp-2026-10/evidence/</code>, except <code>tests/</code>, <code>review/</code> and the git-ignored <code>agents/claim-tagger/runs/</code>. The unit-test figure is from a run on a clean copy of that commit; edits made after it are not covered by it.</p>
   </div>
 
-  <div class="sub" id="verify-results" data-title="Results">
-    <h3>Results</h3>
-    <p>TODO: one results table: check, result, evidence file. Take every number from data/counts.json or the evidence files.</p>
+  <div class="sub" id="verify-gate" data-title="Gate attempts">
+    <h3>The gate attempts</h3>
+    <p>Every run judged a <dfn data-t="lesson">lesson</dfn>'s candidate rulebook and the current one {{count:config.judgeRuns}} times each, on the claims behind the active gate cases plus all canaries. Canaries passed {{count:canaries}} of {{count:canaries}} every time, so no example claim broke. Points are percentage points of correctly tagged labelled claims; the bracket is the 95% interval.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+      <thead><tr><th>Attempt</th><th>Wording tested</th><th>Target: Predictive</th><th>Other tags</th><th>Verdict and reason</th><th class="num">Cost</th></tr></thead>
+      <tbody>
+        <tr><td><strong>LS-1, 1</strong></td><td>The distiller's proposed text</td><td>{{count:gate.ls1a1.targetDelta}} ({{count:gate.ls1a1.targetCiLow}} to {{count:gate.ls1a1.targetCiHigh}}); {{count:gate.ls1a1.targetFixed}} fixed, {{count:gate.ls1a1.targetBroken}} broken</td><td>Hypothetical {{count:gate.ls1a1.hypotheticalDelta}}: the Ukraine ceasefire and Medicaid "would weaken" rows lost</td><td><strong>FAIL</strong>: {{count:gate.ls1a1.newlyFailing}} saved decisions lost; Hypothetical lower bound {{count:gate.ls1a1.hypotheticalCiLow}}. The target alone would have been a HOLD.</td><td class="num">${{count:gate.ls1a1.cost}}</td></tr>
+        <tr><td><strong>LS-1, 2</strong></td><td>The rule owner's Editor wording: a clause for actors likely to keep doing what they do, and a fence saying the rule never decides Hypothetical ({{count:wording.long}} characters)</td><td>{{count:gate.ls1a2.targetDelta}} ({{count:gate.ls1a2.targetCiLow}} to {{count:gate.ls1a2.targetCiHigh}}); {{count:gate.ls1a2.targetFixed}} fixed, {{count:gate.ls1a2.targetBroken}} broken</td><td>Hypothetical {{count:gate.ls1a2.hypotheticalDelta}}, the same two rows; Context-dependent {{count:gate.ls1a2.contextDelta}}: the Melania Trump row</td><td><strong>FAIL</strong>: {{count:gate.ls1a2.newlyFailing}} saved decisions lost; Hypothetical lower bound {{count:gate.ls1a2.hypotheticalCiLow}}</td><td class="num">${{count:gate.ls1a2.cost}}</td></tr>
+        <tr><td><strong>LS-1, 3</strong></td><td>The same, every judgment reused, after the two Hypothetical decisions were re-marked Rule unclear</td><td>{{count:gate.ls1a3.targetDelta}}; {{count:gate.ls1a3.targetFixed}} fixed, {{count:gate.ls1a3.targetBroken}} broken</td><td>Hypothetical {{count:gate.ls1a3.hypotheticalDelta}}; Context-dependent {{count:gate.ls1a3.contextDelta}}</td><td><strong>FAIL</strong>: {{count:gate.ls1a3.newlyFailing}} saved decision lost, the Melania Trump row</td><td class="num">${{count:gate.ls1a3.cost}}</td></tr>
+        <tr><td><strong>LS-1, 4</strong></td><td>The same, with reconfirmation</td><td>{{count:gate.ls1a4.targetDelta}} ({{count:gate.ls1a4.targetCiLow}} to {{count:gate.ls1a4.targetCiHigh}}); all {{count:gate.ls1a4.fixesConfirmed}} fixes confirmed</td><td>The Melania Trump row lost, confirmed</td><td><strong>FAIL</strong>: {{count:gate.ls1a4.newlyFailing}} saved decision lost, confirmed over {{count:best.runsEach}} runs. The rule owner then ruled that decision right.</td><td class="num">${{count:gate.ls1a4.cost}}</td></tr>
+        <tr><td><strong>LS-1, 5</strong></td><td>A minimal wording ({{count:wording.minimal}} characters): rule 1 kept, two sentences added, no examples</td><td>{{count:gate.ls1a5.targetDelta}} ({{count:gate.ls1a5.targetCiLow}} to {{count:gate.ls1a5.targetCiHigh}}); {{count:gate.ls1a5.fixesConfirmed}} fix and {{count:gate.ls1a5.breaksConfirmed}} regression confirmed</td><td>Hypothetical and Context-dependent unchanged</td><td><strong>FAIL</strong>: the cognitive-offloading row lost; Predictive lower bound {{count:gate.ls1a5.predictiveCiLow}}</td><td class="num">${{count:gate.ls1a5.cost}}</td></tr>
+        <tr><td><strong>LS-2, planted</strong></td><td>Only a bare pronoun makes a claim Context-dependent</td><td>Target is Context-dependent: {{count:gate.ls2.targetDelta}}, nothing fixed</td><td>Hypothetical {{count:gate.ls2.hypotheticalDelta}}: one borderline row lost</td><td><strong>FAIL</strong>, Rolled back: no improvement on its own tag (upper bound {{count:gate.ls2.targetCiHigh}}); also {{count:gate.ls2.newlyFailing}} saved decision lost and Hypothetical lower bound {{count:gate.ls2.hypotheticalCiLow}}</td><td class="num">${{count:gate.ls2.cost}}</td></tr>
+      </tbody>
+    </table></div>
+    <ul>
+      <li><strong>Attempt {{count:best.attempt}} is the best candidate.</strong> Its gain on Predictive holds over {{count:best.runsEach}} runs per claim, Hypothetical is untouched, and it loses exactly one decision, on another tag. The minimal wording of attempt 5 did worse: without the worked example of a hedged definite outcome the judge became unsure about "likely a temporary phase", so the examples carry meaning for the judge, not only length. The rule owner restored the attempt-4 wording.</li>
+      <li><strong>The re-labelled Hypothetical decisions.</strong> Asked whether Hypothetical rule 1 settles the Ukraine and Medicaid claims, the editor persona found that the rule names only explicit wrappers such as "under" and marked both decisions Rule unclear, which makes them <dfn data-t="contested-case">contested cases</dfn>: kept, but not binding until a lesson fixes that rule. That re-label, not a new wording, is why attempt 3 no longer failed on Hypothetical. Re-labelling a decision after a gate failed on it is a judgment a real editor should make; in the trial the persona made it at the coordinator's request, and both changes are logged with their old values.</li>
+      <li><strong>The planted lesson</strong> was expected to break about ten canaries and broke none: the judge weighed the tag's example claims and its rules 3 and 4 against the bad text. It still failed where a useless change must fail: no improvement on its own tag.</li>
+    </ul>
   </div>
 
-  <div class="sub" id="verify-personas" data-title="Persona rounds">
-    <h3>Persona rounds</h3>
-    <p>TODO: for each persona review: what it found hard, what changed because of it, and the closing statement of round 2 (clear or not clear).</p>
+  <div class="sub" id="verify-headless" data-title="Headless tests">
+    <h3>Headless tests: the editor's machine</h3>
+    <p>Each test is a fresh <code>claude -p</code> session started in the <code>geo-agents</code> folder, with the transcript saved and summarised. None of the {{count:headless.sessions}} sessions called the Notion connector or wrote an editor field ({{count:headless.editorWrites}}).</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Session</th><th>Result</th><th>Why, and what changed next</th></tr></thead>
+      <tbody>
+        <tr><td>Status, run 1</td><td>Blocked</td><td>The folder was never opened interactively, so Claude Code ignored its allow rules; the session also chained a grep of <code>.env</code> to look for the token. Next: the skill forbids touching <code>.env</code>, and the preflight reports whether a token is configured.</td></tr>
+        <tr><td>Status, run 2</td><td>Blocked</td><td>Still untrusted; and Git Bash had rewritten <code>/claim-tagger</code> into a path under its own install folder. Next: <code>MSYS_NO_PATHCONV=1</code>.</td></tr>
+        <tr><td>Status, run 3</td><td>Blocked</td><td>Still untrusted; and the folder rule for the scripts turned out never to match, because Bash rules match whole words. Next: one rule per script.</td></tr>
+        <tr><td>Status, run 4</td><td>Blocked</td><td>The per-script rules exist but an untrusted folder ignores them. Next: pass <code>--settings .claude/settings.json</code>.</td></tr>
+        <tr><td>Status, run 5</td><td>Passed</td><td>Preflight, pull and status ran and the session reported in plain words: not paused, lock and rulebook match, the queue by Stage, the lessons, the last cards and an unfinished judge run with its resume command. One chained command was denied, by design.</td></tr>
+        <tr><td>Tag dry run</td><td>Ran, judged nothing</td><td>Every claim already had its judgments under the current rules, so the judge had no cells to do and spent nothing. The session noticed the empty run from its files rather than its exit code, did not run propose on it, and asked how to go on.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The {{count:headless.sessions}} sessions cost ${{count:cost.headless}} together. Three of the four fixes are about the environment (trust, Bash rules, Git Bash), one about the skill (<code>.env</code>); all are in the README and <code>SKILL.md</code> (see <a href="#code-headless">Headless use</a>).</p>
   </div>
 
-  <div class="sub" id="verify-headless" data-title="Headless result" data-layer="tech">
-    <h3>Headless result</h3>
-    <p>TODO: the summary of the headless run: tool calls by name and mode, writes checked against the allowlist, cost, the final message, and the comparison of the editor-field snapshots before and after.</p>
+  <div class="sub" id="verify-personas" data-title="Persona reviews">
+    <h3>Persona reviews</h3>
+    <p>Two reviewers with fresh context read the MVP after the run: an editor persona (Fable 5.1) that sees only what an editor sees in Notion and writes only editor fields, and an engineer persona (Opus 5.5) that reads the repository, the evidence and the Engineer notes. Each writes findings and questions for the other; every finding then gets a decision.</p>
+    <h4>Editor review, round 1</h4>
+    <p><strong>Verdict: mostly clear.</strong> The one job the callout describes, open Your queue, read the claim and the reason, set <dfn data-t="tag-outcome">Tag outcome</dfn>, add <dfn data-t="why-wrong">Why wrong</dfn> only when overruling, is clear, and a plain case takes about a minute. The reviewer decided {{count:reviewerDecisions}} rows in one to three minutes each, and spent longer finding decidable rows than deciding them. Everything around that job is unclear: what Stage and Direction mean, whether to fill Decided at, what follows Needs evidence or Ask another editor, and what the FAIL cards on the hub mean for an editor.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <caption><strong>Findings</strong> · {{count:review.editorTotal}} in all: {{count:review.editorMust}} must, {{count:review.editorShould}} should, {{count:review.editorNice}} nice; the ones that matter most</caption>
+      <thead><tr><th>ID</th><th>Severity</th><th>Finding</th></tr></thead>
+      <tbody>
+        <tr><td>ED-1</td><td><span class="mark mark-no">must</span></td><td>The callout does not say whether editors fill Decided at and Decided by.</td></tr>
+        <tr><td>ED-2</td><td><span class="mark mark-no">must</span></td><td>Stage and Direction, the main status signals, have no description and no list of values.</td></tr>
+        <tr><td>ED-3</td><td><span class="mark mark-no">must</span></td><td>Status promises "Rolled back after a FAIL", yet LS-1 stays Approved after its FAILs while LS-2 was Rolled back after one.</td></tr>
+        <tr><td>ED-4</td><td><span class="mark mark-no">must</span></td><td>The FAIL card is written for engineers: case ids, statistics, a command line, and no line on what it means for editors.</td></tr>
+        <tr><td>ED-5</td><td><span class="mark mark-part">should</span></td><td>A queue row's title is a hash and the claim only a link; a row shows 25 or more mostly agent-internal properties.</td></tr>
+        <tr><td>ED-6</td><td><span class="mark mark-part">should</span></td><td>Sorting by priority scatters a claim's sibling rows (Predictive and Hypothetical, Simple and Debate).</td></tr>
+        <tr><td>ED-7</td><td><span class="mark mark-part">should</span></td><td>Nothing says that agreeing with Keep tag means Applies, or with Remove tag Does not apply.</td></tr>
+        <tr><td>ED-8</td><td><span class="mark mark-part">should</span></td><td>Needs evidence and Ask another editor lead nowhere visible, and Check source rows sit in a queue nobody can clear.</td></tr>
+        <tr><td>ED-10</td><td><span class="mark mark-part">should</span></td><td>An overrule without a Why wrong goes unflagged, as on the Melania Trump row.</td></tr>
+        <tr><td>ED-13</td><td><span class="mark mark-part">should</span></td><td>LS-1 is Approved with Approved by empty, and its Editor wording carries no author or date.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The full list, the reviewer's six questions for the engineer and five for whoever runs the trial are in <code>docs/mvp-2026-10/review/persona-editor-r1.md</code>.</p>
+    <h4>Engineer review and dispositions</h4>
+    <!-- include: fragments/review-findings.html -->
   </div>
 
-  <div class="sub" id="verify-dispositions" data-title="Dispositions" data-layer="tech">
-    <h3>Dispositions</h3>
-    <p>TODO: the table of findings from docs/mvp-2026-10/review/dispositions.md: id, source, severity, finding, decision, change made, where.</p>
+  <div class="sub" id="verify-reconfirm" data-title="Reconfirmation detail" data-layer="tech">
+    <h3>Reconfirmation, case by case</h3>
+    <p>Each flipped case was judged {{count:config.reconfirmRuns}} more times under each rulebook; the verdict over all {{count:best.runsEach}} runs decides. Case ids are <code>ctr-</code>, the last 12 hex digits of the source row, and the tag's first letters.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Attempt</th><th>Case</th><th>Claim</th><th>Expected</th><th>Current rules</th><th>Candidate</th><th>Flip</th><th>Outcome</th></tr></thead>
+      <tbody>
+        <tr><td>4</td><td><code>ctr-ec6e3f00cf08-contex</code></td><td>Melania Trump should not host her initiative's G20 event…</td><td>apply</td><td>apply</td><td>do_not_apply</td><td>broken</td><td>confirmed</td></tr>
+        <tr><td>4</td><td><code>ctr-c78bac8861c7-predic</code></td><td>Texas is on track to become a competitive swing state</td><td>do_not_apply</td><td>apply</td><td>do_not_apply</td><td>fixed</td><td>confirmed</td></tr>
+        <tr><td>4</td><td><code>ctr-c7c20ae98de9-predic</code></td><td>The Supreme Court is likely to uphold executive actions…</td><td>do_not_apply</td><td>apply</td><td>do_not_apply</td><td>fixed</td><td>confirmed</td></tr>
+        <tr><td>4</td><td><code>ctr-c968f9819580-predic</code></td><td>The Supreme Court is likely to expand executive power…</td><td>do_not_apply</td><td>apply</td><td>do_not_apply</td><td>fixed</td><td>confirmed</td></tr>
+        <tr><td>4</td><td><code>ctr-c9b46cfbd720-predic</code></td><td>Military pressure is more likely than diplomatic restraint…</td><td>do_not_apply</td><td>apply</td><td>do_not_apply</td><td>fixed</td><td>confirmed</td></tr>
+        <tr><td>5</td><td><code>ctr-c59c5313859e-contex</code></td><td>Georgia's gubernatorial debate should be moderated…</td><td>do_not_apply</td><td>undecided</td><td>undecided</td><td>broken</td><td>noise</td></tr>
+        <tr><td>5</td><td><code>ctr-f2cc9025f0f5-predic</code></td><td>The current trend of cognitive offloading to AI is likely a temporary phase…</td><td>apply</td><td>apply</td><td>ask_editor</td><td>broken</td><td>confirmed</td></tr>
+        <tr><td>5</td><td><code>ctr-c7c20ae98de9-predic</code></td><td>The Supreme Court is likely to uphold executive actions…</td><td>do_not_apply</td><td>apply</td><td>undecided</td><td>fixed</td><td>noise</td></tr>
+        <tr><td>5</td><td><code>ctr-c9b46cfbd720-predic</code></td><td>Military pressure is more likely than diplomatic restraint…</td><td>do_not_apply</td><td>apply</td><td>do_not_apply</td><td>fixed</td><td>confirmed</td></tr>
+      </tbody>
+    </table></div>
+    <p>Reconfirmation cost ${{count:gate.ls1a4.cost}} for attempt 4, where every other judgment was cached. The Melania Trump flip is <dfn data-t="interference">interference</dfn>: the candidate's reasons cite Self-contained rule 2, never Predictive, and the rule owner ruled the saved decision right (Context-dependent rule 3; the canary "Open AI's initiative").</p>
+  </div>
+
+  <div class="sub" id="verify-trust" data-title="Trust check" data-layer="tech">
+    <h3>The trust check</h3>
+    <ul>
+      <li><strong>Scripts:</strong> {{count:applies}} applies wrote {{count:opsLanded}} ops; {{count:appliesClean}} of {{count:applies}} were verified clean by read-back, none had a missing op, and the editor-owned fields of every touched row matched their values before the write ({{count:editorFieldsTouched}} differences). The summaries are <code>agents/claim-tagger/runs/&lt;run-id&gt;/verify.json</code>.</li>
+      <li><strong>Token reach and the write audit:</strong> a read-only probe with the token (<code>probe.mjs</code>) found it can read four real databases (U.S. Politics debate claims, Claims to review, the taxonomy and World affairs debate claims), because the integration is connected well beyond the hub; the write audit over all 17 apply ledgers shows that every one of the 304 recorded writes landed on a row of the six trial databases and none anywhere else (<code>evidence/write-audit.json</code>). Disconnecting the integration from those pages is the first item of the next steps.</li>
+      <li><strong>Rulebook:</strong> the tag hash, When to use and Rule version of all {{count:rulebookTags}} rows are identical in {{count:end.rulebookIdentical}} of {{count:end.snapshots}} snapshots, from the seed to the end; Changed by is empty and the drift check finds nothing.</li>
+      <li><strong>Headless sessions:</strong> no connector call and no editor-field write in {{count:headless.sessions}} sessions.</li>
+      <li><strong>People and personas:</strong> the editor persona's and the rule owner's writes, decisions, re-checks, approvals and Editor wording, are logged with their before and after values in <code>evidence/persona-editor-actions.json</code>; the reviewer's two decisions are listed in its review file and show in the end-state snapshot. The <dfn data-t="seeded-outcome">seeded outcomes</dfn> sit in agent-owned columns, so the seed wrote no editor field either.</li>
+    </ul>
   </div>
 
   <aside class="terms" data-strip></aside>

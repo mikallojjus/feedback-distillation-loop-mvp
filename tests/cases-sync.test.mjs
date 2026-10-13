@@ -8,7 +8,7 @@ import {
 } from '../agents/claim-tagger/scripts/cases-sync.mjs';
 import { EXIT } from '../agents/claim-tagger/scripts/lib/exit-codes.mjs';
 import { ruleHash } from '../agents/claim-tagger/scripts/lib/hash.mjs';
-import { readJsonl } from '../agents/claim-tagger/scripts/lib/jsonl.mjs';
+import { readJson, readJsonl } from '../agents/claim-tagger/scripts/lib/jsonl.mjs';
 import { applyLesson } from '../agents/claim-tagger/scripts/lib/rubric-build.mjs';
 import { check as planCheck, readPlan } from '../agents/claim-tagger/scripts/plan.mjs';
 import { loadPull } from '../agents/claim-tagger/scripts/pull.mjs';
@@ -197,6 +197,147 @@ test('a case is switched off when its decision becomes No tag fits or is withdra
   assert.equal(byKey(w).get(a).active, true);
   assert.equal('withdrawn' in byKey(w).get(a), false);
   assert.equal(byKey(w).get(b).active, true);
+});
+
+// ---- In regression suite follows the case, both ways -------------------------------------------------------------------------------------------
+
+/** Check and apply the plan of a cases-sync run, then pull again (the way the loop goes on). */
+async function settle(w, runId, nextPull) {
+  assert.equal(planCheck({ root: w.root, runId, now: w.clock.now }).code, EXIT.OK);
+  const cap = captureIo();
+  assert.equal(await applyMain(['--run', runId], cap.io, w.env()), EXIT.OK, cap.err.join('\n'));
+  await w.pull(nextPull);
+}
+const dateOf = (w, key) => w.fake.find('tag_decisions', key).props['In regression suite'];
+const planned = (w, runId) => planOf(w, runId).ops.map((o) => [o.key, o.properties['In regression suite']]).sort((a, b) => (a[0] < b[0] ? -1 : 1));
+
+test('a case that turns contested loses its In regression suite date, an active one keeps it, and when the lesson goes Live the row is stamped again', async () => {
+  const w = makeMiniWorld({ rows: [
+    { id: 'hedge', claim: 'Seeded hedge that a lesson will contest', tag: 'Predictive', outcome: 'Does not apply', seeded: true, seededReasoning: 'Rule should change: it is a tendency.' },
+    { id: 'steady', claim: 'Plain decision that stays a test', tag: 'Hypothetical', outcome: 'Applies', why: 'Agent slip', reasoning: 'x' },
+  ] });
+  const [hedge, steady] = w.keys;
+  await w.pull('p1');
+  await sync(w, ['--run-id', 'cs1']);
+  await settle(w, 'cs1', 'p2');
+  assert.deepEqual([dateOf(w, hedge), dateOf(w, steady)], ['2026-10-13', '2026-10-13'], 'both rows are tests and carry the date');
+
+  // a lesson that is not Live yet is linked to the hedge: its case is contested, so the row is no test for now
+  const lesson = w.lesson({ title: 'Seeded hedges', tag: 'Predictive', status: 'Proposed', supporting: [hedge] });
+  await w.pull('p3');
+  const r = await sync(w, ['--run-id', 'cs2']);
+  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
+  assert.equal(byKey(w).get(hedge).contested, true);
+  assert.equal(byKey(w).get(hedge).active, false);
+  assert.equal(byKey(w).get(steady).active, true);
+  assert.deepEqual(planned(w, 'cs2'), [[hedge, null]], 'only the contested row, and the date is cleared; the active row gets no op');
+  assert.deepEqual(planOf(w, 'cs2').ops[0].properties, { 'In regression suite': null });
+  assert.match(planOf(w, 'cs2').ops[0].note, /no longer an active regression case \(contested\)/);
+  assert.match(r.out[0], /active 1 \(0 not_run\), contested 1, inactive 0; .*In regression suite: 1 row\(s\) in plan cs2 \(cleared 1\); next: node agents\/claim-tagger\/scripts\/plan\.mjs check --run cs2/);
+  assert.deepEqual(readJson(join(w.root, 'runs', 'cs2', 'cases-sync.json')).cleared_rows, [hedge]);
+  await settle(w, 'cs2', 'p4');
+  assert.equal(dateOf(w, hedge), null, 'the date is empty in Notion now');
+  assert.equal(dateOf(w, steady), '2026-10-13');
+
+  // nothing left to do while the lesson is open
+  const quiet = await sync(w, ['--run-id', 'cs3']);
+  assert.match(quiet.out[0], /In regression suite: nothing to set \(cases\.jsonl unchanged\)$/);
+  assert.equal(existsSync(join(w.root, 'runs', 'cs3', 'plan.jsonl')), false);
+
+  // the lesson goes Live on another day: the case is a test again and the row is stamped afresh
+  w.setLessonStatus(lesson, 'Live');
+  w.clock.set('2026-10-14T09:00:00.000Z');
+  await w.pull('p5');
+  const live = await sync(w, ['--run-id', 'cs4']);
+  assert.equal(byKey(w).get(hedge).active, true);
+  assert.deepEqual(planned(w, 'cs4'), [[hedge, '2026-10-14']], 're-activation stamps today, as it always did; nothing is cleared');
+  assert.doesNotMatch(live.out[0], /cleared/);
+  await settle(w, 'cs4', 'p6');
+  assert.equal(dateOf(w, hedge), '2026-10-14');
+  assert.equal(dateOf(w, steady), '2026-10-13', 'the other row was never touched');
+});
+
+test('a case that is withdrawn (No tag fits, or the decision taken back) loses its date; the decision coming back stamps it again', async () => {
+  const w = makeMiniWorld({ rows: [
+    { id: 'a', claim: 'First claim for the cleared-date test', tag: 'Predictive', outcome: 'Applies', why: 'Agent slip', reasoning: 'x' },
+    { id: 'b', claim: 'Second claim for the cleared-date test', tag: 'Debate', outcome: 'Does not apply' },
+    { id: 'c', claim: 'Third claim that stays a test', tag: 'Opinion', outcome: 'Applies', why: 'Agent slip', reasoning: 'y' },
+  ] });
+  const [a, b, c] = w.keys;
+  await w.pull('p1');
+  await sync(w, ['--run-id', 'cs1']);
+  await settle(w, 'cs1', 'p2');
+  for (const k of [a, b, c]) assert.equal(dateOf(w, k), '2026-10-13', k);
+
+  w.fake.editorSet(w.ids.decisions[a], { 'Why wrong': 'No tag fits' });
+  w.fake.editorSet(w.ids.decisions[b], { 'Tag outcome': null });
+  await w.pull('p3');
+  const r = await sync(w, ['--run-id', 'cs2']);
+  assert.match(r.out[0], /inactive 2.*withdrawn 2; In regression suite: 2 row\(s\) in plan cs2 \(cleared 2\)/);
+  assert.deepEqual(planned(w, 'cs2'), [[a, null], [b, null]].sort((x, y) => (x[0] < y[0] ? -1 : 1)), 'both withdrawn rows are cleared, the third is not mentioned');
+  await settle(w, 'cs2', 'p4');
+  assert.deepEqual([dateOf(w, a), dateOf(w, b), dateOf(w, c)], [null, null, '2026-10-13']);
+
+  // a case that stays withdrawn is not cleared again, and the file says nothing new
+  const quiet = await sync(w, ['--run-id', 'cs3']);
+  assert.match(quiet.out[0], /In regression suite: nothing to set \(cases\.jsonl unchanged\)$/);
+
+  // both decisions come back: the cases are active again and the rows are stamped again
+  w.fake.editorSet(w.ids.decisions[a], { 'Why wrong': 'Agent slip' });
+  w.fake.editorSet(w.ids.decisions[b], { 'Tag outcome': 'Does not apply' });
+  w.clock.set('2026-10-15T09:00:00.000Z');
+  await w.pull('p5');
+  await sync(w, ['--run-id', 'cs4']);
+  assert.deepEqual(planned(w, 'cs4'), [[a, '2026-10-15'], [b, '2026-10-15']].sort((x, y) => (x[0] < y[0] ? -1 : 1)));
+  await settle(w, 'cs4', 'p6');
+  assert.deepEqual([dateOf(w, a), dateOf(w, b), dateOf(w, c)], ['2026-10-15', '2026-10-15', '2026-10-13']);
+});
+
+test('a withdrawn case whose row still carries the date is cleared even when the file already says withdrawn; a rolled-back lesson contests its cases and clears their dates', async () => {
+  const w = makeMiniWorld({ rows: [
+    { id: 'w1', claim: 'Withdrawn long ago, date left behind', tag: 'Predictive', outcome: 'Applies', why: 'Agent slip', reasoning: 'x' },
+    { id: 'r1', claim: 'Rule should change, lesson goes live and is rolled back', tag: 'Debate', outcome: 'Does not apply', why: 'Rule should change', reasoning: 'y' },
+  ] });
+  const [w1, r1] = w.keys;
+  const lesson = w.lesson({ title: 'Debate wording', tag: 'Debate', status: 'Live', supporting: [r1] });
+  await w.pull('p1');
+  await sync(w, ['--run-id', 'cs1']);
+  await settle(w, 'cs1', 'p2');
+  assert.equal(byKey(w).get(r1).active, true, 'its lesson is Live');
+  assert.deepEqual([dateOf(w, w1), dateOf(w, r1)], ['2026-10-13', '2026-10-13']);
+
+  // the first row is withdrawn, and the sync that notices it is one whose plan was never applied (the date stays in Notion)
+  w.fake.editorSet(w.ids.decisions[w1], { 'Tag outcome': null });
+  await w.pull('p3');
+  await sync(w, ['--run-id', 'cs2']);
+  assert.equal(byKey(w).get(w1).withdrawn, 'the decision was withdrawn');
+  const again = await sync(w, ['--run-id', 'cs2b']);
+  assert.match(again.out[0], /withdrawn 0; In regression suite: 1 row\(s\) in plan cs2b \(cleared 1\)/, 'the file was already updated, the date was not: the next sync still clears it');
+  assert.deepEqual(planned(w, 'cs2b'), [[w1, null]]);
+
+  w.setLessonStatus(lesson, 'Rolled back');
+  await w.pull('p4');
+  const rolled = await sync(w, ['--run-id', 'cs3']);
+  assert.equal(byKey(w).get(r1).contested, true);
+  assert.deepEqual(planned(w, 'cs3'), [[r1, null], [w1, null]].sort((x, y) => (x[0] < y[0] ? -1 : 1)));
+  assert.match(rolled.out[0], /In regression suite: 2 row\(s\) in plan cs3 \(cleared 2\)/);
+});
+
+test('a row linked to a lesson the pull cannot resolve keeps its date: whether its case is contested is not known', async () => {
+  const w = makeMiniWorld({ rows: [{ id: 'l1', claim: 'Rule should change, lesson is Live', tag: 'Debate', outcome: 'Does not apply', why: 'Rule should change', reasoning: 'y' }] });
+  const [l1] = w.keys;
+  w.lesson({ title: 'Debate wording', tag: 'Debate', status: 'Live', supporting: [l1] });
+  await w.pull('p1');
+  await sync(w, ['--run-id', 'cs1']);
+  await settle(w, 'cs1', 'p2');
+  assert.equal(dateOf(w, l1), '2026-10-13');
+  await w.pull('p3', ['tag_decisions', 'rulebook', 'claims']); // no Rule changes in this pull
+  const r = await sync(w, ['--run-id', 'cs2']);
+  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
+  assert.equal(byKey(w).get(l1).contested, true, 'the file cannot tell the lesson is Live (existing behaviour of a pull without Rule changes)');
+  assert.match(r.out[0], /In regression suite: nothing to set/);
+  assert.doesNotMatch(r.out[0], /cleared/);
+  assert.equal(existsSync(join(w.root, 'runs', 'cs2', 'plan.jsonl')), false, 'no plan: the date is left alone');
 });
 
 // ---- lessons and contested cases ------------------------------------------------------------------------------------------------------------

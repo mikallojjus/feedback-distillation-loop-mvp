@@ -807,7 +807,8 @@ export function renderCardMd(card) {
   } else {
     // One plain-words line first, for editors (the rest of the card is for the engineer and the rule owner).
     const worse = unique([...(card.cases?.newly_failing ?? []).map((id) => (card.cases?.items ?? []).find((i) => i.case_id === id)?.tag).filter(Boolean), ...card.per_tag.filter((t) => t.broken.length).map((t) => t.tag)]);
-    if (card.verdict === 'PASS') add(`For editors: the change is live; the rows behind it are re-checked and marked Fixed or Still wrong.`);
+    if (card.smoke) add(`For editors: a rehearsal (smoke) run; nothing changes whatever the verdict says.`);
+    else if (card.verdict === 'PASS') add(`For editors: the change is live; the rows behind it are re-checked and marked Fixed or Still wrong.`);
     else if (card.verdict === 'HOLD') add(`For editors: nothing changed; the gate needs more decided examples${card.target ? ` on ${card.target}` : ''} before it can tell whether the change helps.`);
     else add(`For editors: nothing changed; the change would make ${worse.length ? worse.join(' and ') : 'another tag'} worse on claims you already decided, so the rule owner can reword or reject it.`);
     add(`Verdict: ${card.verdict}${card.smoke ? ' - smoke: not a gate verdict' : ''}${card.small_sample ? ` - ${small}` : ''}`);
@@ -837,7 +838,7 @@ export function renderCardMd(card) {
   }
   if (card.not_run.length) add(`Not run: ${card.not_run.length} cases on source-reading tags (${unique(card.not_run.map((r) => r.tag)).join(', ')})`, 3);
   add(`Baseline ${card.configs.baseline.config16} (rubric ${card.configs.baseline.rubric_version}) vs candidate ${card.configs.candidate.config16} (rubric ${card.configs.candidate.rubric_version}), ${card.stats.runs} run(s)`, 4);
-  if (card.rollback) add(`Rollback: ${card.rollback.command}`);
+  if (card.rollback && card.verdict === 'PASS' && !card.smoke) add(`Rollback: ${card.rollback.command}`); // only a live change can be rolled back
 
   const render = (ls, omitted) => `${[...ls.map((l) => l.text), ...(omitted ? [`(${omitted} more line(s) in card.json)`] : [])].join('\n')}\n`;
   let kept = lines.slice();

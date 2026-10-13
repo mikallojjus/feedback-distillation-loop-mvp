@@ -195,6 +195,85 @@ test('a network failure is retried, then reported as retryable without the token
   assert.equal(r.calls.length, MAX_SERVER_RETRIES + 1);
 });
 
+// ---- a page create is never sent twice ----
+
+const createArgs = { parentDatabaseId: 'db-1', properties: { Name: { title: [] } } };
+
+test('a create whose answer is lost to a network failure is sent once: create_uncertain, retryable, the token scrubbed, the way out in the message', async () => {
+  const r = rig([new TypeError(`fetch failed for ${TOKEN}`), json({ object: 'page', id: 'late' })]);
+  await assert.rejects(
+    () => r.client.createPage(createArgs),
+    (e) => e instanceof NotionError && e.name === 'NotionError' && e.code === 'create_uncertain' && e.retryable === true && e.status === null
+      && !e.message.includes(TOKEN) && /\[token\]/.test(e.message)
+      && /may exist in Notion already/.test(e.message) && /apply\.mjs --run <id> --retry/.test(e.message),
+  );
+  assert.equal(r.calls.length, 1, 'exactly one POST /pages');
+  assert.equal(r.calls[0].method, 'POST');
+  assert.equal(r.calls[0].url, `${API_BASE}/pages`);
+  assert.deepEqual(r.sleeps, [], 'no backoff and no second try');
+  assert.deepEqual(r.events.map((e) => e.status), [null]);
+});
+
+test('a create that gets a 5xx or a 409 is not retried either: the page may exist, so create_uncertain with the status and Notion\'s message', async () => {
+  for (const [status, code] of [[500, 'internal_server_error'], [502, 'bad_gateway'], [503, 'service_unavailable'], [409, 'conflict_error']]) {
+    const r = rig([json({ code, message: `Notion said ${status}` }, { status }), json({ object: 'page', id: 'second-copy' })]);
+    await assert.rejects(
+      () => r.client.createPage(createArgs),
+      (e) => e instanceof NotionError && e.code === 'create_uncertain' && e.retryable === true && e.status === status
+        && e.message.includes(`${status} ${code}`) && e.message.includes(`Notion said ${status}`) && /apply\.mjs --run <id> --retry/.test(e.message),
+      String(status),
+    );
+    assert.equal(r.calls.length, 1, `${status}: exactly one POST /pages`);
+    assert.deepEqual(r.sleeps, [], `${status}: no backoff`);
+  }
+});
+
+test('a create that gets a 429 is still retried (Notion did not process it); a 2xx whose page cannot be read is uncertain, because the row exists and its id does not arrive', async () => {
+  const limited = rig([json({ code: 'rate_limited', message: 'slow down' }, { status: 429, headers: { 'Retry-After': '2' } }), json({ object: 'page', id: 'made' })]);
+  assert.equal((await limited.client.createPage(createArgs)).id, 'made');
+  assert.equal(limited.calls.length, 2);
+  assert.deepEqual(limited.sleeps, [2000]);
+
+  const empty = rig([new Response('', { status: 200 }), json({ object: 'page', id: 'second-copy' })]);
+  await assert.rejects(() => empty.client.createPage(createArgs), (e) => e.code === 'create_uncertain' && e.retryable === true && e.status === 200 && /could not be read/.test(e.message));
+  assert.equal(empty.calls.length, 1);
+
+  const cut = rig([{ ok: true, status: 200, statusText: 'OK', headers: new Headers(), text: async () => { throw new TypeError('terminated'); } }, json({ object: 'page', id: 'second-copy' })]);
+  await assert.rejects(() => cut.client.createPage(createArgs), (e) => e.code === 'create_uncertain' && e.status === 200);
+  assert.equal(cut.calls.length, 1);
+
+  const bad = rig([json({ code: 'validation_error', message: 'Name is expected to be title.' }, { status: 400 })]);
+  await assert.rejects(() => bad.client.createPage(createArgs), (e) => e.code === 'validation_error' && e.retryable === false, 'a 4xx is what it always was');
+  assert.equal(bad.calls.length, 1);
+});
+
+test('only page creates are protected: a database query (also a POST), a page update, an append and a read keep their retries', async () => {
+  const boom = json({ code: 'internal_server_error', message: 'boom' }, { status: 500 });
+  const query = rig([boom, json({ results: [{ id: 'a' }], has_more: false })]);
+  assert.deepEqual((await query.client.queryAll('db')).map((p) => p.id), ['a']);
+  assert.equal(query.calls.length, 2);
+  assert.equal(query.calls[0].method, 'POST', 'a POST, but not to /pages');
+
+  const update = rig([boom, new TypeError('reset'), json({ object: 'page', id: 'p' })]);
+  assert.equal((await update.client.updatePage('p', { properties: {} })).id, 'p');
+  assert.equal(update.calls.length, 3);
+  assert.deepEqual(update.sleeps, [BACKOFF_MS[0], BACKOFF_MS[1]]);
+
+  const append = rig([new TypeError('reset'), json({ results: [] })]);
+  await append.client.appendBlocks('blk', [{ type: 'divider', divider: {} }]);
+  assert.equal(append.calls.length, 2);
+
+  const read = rig([boom, json({ object: 'page', id: 'p' })]);
+  assert.equal((await read.client.retrievePage('p')).id, 'p');
+  assert.equal(read.calls.length, 2);
+
+  // the blocks after the first hundred go in a PATCH, which keeps its retries: the row exists by then
+  const blocks = Array.from({ length: 120 }, () => ({ object: 'block', type: 'divider', divider: {} }));
+  const long = rig([json({ object: 'page', id: 'new-page' }), boom, json({ results: [] })]);
+  assert.equal((await long.client.createPage({ ...createArgs, children: blocks })).id, 'new-page');
+  assert.deepEqual(long.calls.map((c) => c.method), ['POST', 'PATCH', 'PATCH']);
+});
+
 // ---- errors ----
 
 test('4xx: one attempt, an error with status, code and Notion message', async () => {

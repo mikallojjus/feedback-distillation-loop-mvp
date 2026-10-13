@@ -1,0 +1,137 @@
+{
+  "at": "2026-10-13T18:56:05.073Z",
+  "results": [
+    {
+      "id": "d1307596-e531-420f-8688-2485f3ef28ab",
+      "kind": "protected",
+      "status": 404,
+      "code": "object_not_found",
+      "ok": true
+    },
+    {
+      "id": "9e979fe1-e03d-45cd-b9b1-d971dc3d90a2",
+      "kind": "protected",
+      "status": 404,
+      "code": "object_not_found",
+      "ok": true
+    },
+    {
+      "id": "7219756338b2416f8fa8af83d75ec47d",
+      "kind": "protected",
+      "status": 200,
+      "code": null,
+      "ok": false,
+      "failure": "reachable",
+      "reason": "REACHABLE: this token can read a database that must be invisible to it"
+    },
+    {
+      "id": "9e111d22c14e4344bb90072606036942",
+      "kind": "protected",
+      "status": 200,
+      "code": null,
+      "ok": false,
+      "failure": "reachable",
+      "reason": "REACHABLE: this token can read a database that must be invisible to it"
+    },
+    {
+      "id": "f05273e214eb8353b0a981544507de32",
+      "kind": "protected",
+      "status": 200,
+      "code": null,
+      "ok": false,
+      "failure": "reachable",
+      "reason": "REACHABLE: this token can read a database that must be invisible to it"
+    },
+    {
+      "id": "b65273e2-14eb-8362-86a6-870ea8d632f4",
+      "kind": "protected",
+      "status": 404,
+      "code": "object_not_found",
+      "ok": true
+    },
+    {
+      "id": "0e2273e214eb83b0a2b1013e7d0958fc",
+      "kind": "protected",
+      "status": 200,
+      "code": null,
+      "ok": false,
+      "failure": "reachable",
+      "reason": "REACHABLE: this token can read a database that must be invisible to it"
+    },
+    {
+      "id": "eec273e2-14eb-8349-a416-074a30396303",
+      "kind": "protected",
+      "status": 404,
+      "code": "object_not_found",
+      "ok": true
+    },
+    {
+      "id": "67a1940f-db0d-477a-9737-0a9eb01a5eac",
+      "kind": "protected",
+      "status": 404,
+      "code": "object_not_found",
+      "ok": true
+    },
+    {
+      "id": "89043d4a749041ffb834f96a5239e148",
+      "kind": "configured",
+      "db": "rulebook",
+      "status": 200,
+      "code": null,
+      "ok": true,
+      "title": "Rulebook",
+      "expected_title": "Rulebook"
+    },
+    {
+      "id": "9418c3f625d24b439539f381b7ff03c2",
+      "kind": "configured",
+      "db": "claims",
+      "status": 200,
+      "code": null,
+      "ok": true,
+      "title": "Claims",
+      "expected_title": "Claims"
+    },
+    {
+      "id": "de7a08f6d3ae4c08b9387e6d762d79f2",
+      "kind": "configured",
+      "db": "tag_decisions",
+      "status": 200,
+      "code": null,
+      "ok": true,
+      "title": "Tag decisions",
+      "expected_title": "Tag decisions"
+    },
+    {
+      "id": "833efad0634f43608ca18e4f7291cc02",
+      "kind": "configured",
+      "db": "rule_changes",
+      "status": 200,
+      "code": null,
+      "ok": true,
+      "title": "Rule changes",
+      "expected_title": "Rule changes"
+    },
+    {
+      "id": "0c397590fb154ddb98010830faaa159b",
+      "kind": "configured",
+      "db": "runs",
+      "status": 200,
+      "code": null,
+      "ok": true,
+      "title": "Runs",
+      "expected_title": "Runs"
+    },
+    {
+      "id": "43c8a1c3a8d44a7f824698b4789cffe6",
+      "kind": "configured",
+      "db": "agent_settings",
+      "status": 200,
+      "code": null,
+      "ok": true,
+      "title": "Agent settings",
+      "expected_title": "Agent settings"
+    }
+  ],
+  "ok": false
+}

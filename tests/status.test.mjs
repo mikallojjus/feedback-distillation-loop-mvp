@@ -215,6 +215,7 @@ test('report: every stage is counted, also the ones the fake Notion does not com
 
 test('unfinished work and cost: stopped and crashed judge runs get their resume command, a promote in flight is listed', async () => {
   const w = makeLoopWorld({ seed: false });
+  // a run from before judge.mjs could resume by its id alone has the long command in its record: status prints the one that works now
   writeRunJson(w, 'j-stopped', { run_id: 'j-stopped', kind: 'judge', status: 'stopped', items_source: 'claims', cost_usd: 0.5, resume: 'node agents/claim-tagger/scripts/judge.mjs --items claims --run-id j-stopped --resume' });
   writeRunJson(w, 'j-crashed', { run_id: 'j-crashed', kind: 'judge', status: 'running', items_source: 'eval', driver: 'fake', cost_usd: 0.25 });
   writeRunJson(w, 'j-done', { run_id: 'j-done', kind: 'judge', status: 'done', cost_usd: 1 });
@@ -222,12 +223,111 @@ test('unfinished work and cost: stopped and crashed judge runs get their resume 
   writeFileSync(rootFile(w, 'runs', 'PROMOTING.json'), JSON.stringify({ run_id: 'pr1', lesson: 'Some lesson' }));
   const state = inspect({ root: w.root, now: w.clock.now });
   assert.deepEqual(state.unfinished.map((u) => u.run_id).sort(), ['j-crashed', 'j-stopped', 'pr1']);
-  assert.equal(state.unfinished.find((u) => u.run_id === 'j-stopped').resume, 'node agents/claim-tagger/scripts/judge.mjs --items claims --run-id j-stopped --resume');
-  assert.equal(state.unfinished.find((u) => u.run_id === 'j-crashed').resume, 'node agents/claim-tagger/scripts/judge.mjs --items eval --driver fake --run-id j-crashed --resume');
+  assert.equal(state.unfinished.find((u) => u.run_id === 'j-stopped').resume, 'node agents/claim-tagger/scripts/judge.mjs --resume --run-id j-stopped');
+  assert.equal(state.unfinished.find((u) => u.run_id === 'j-crashed').resume, 'node agents/claim-tagger/scripts/judge.mjs --resume --run-id j-crashed');
   assert.match(state.unfinished.find((u) => u.run_id === 'pr1').resume, /promote\.mjs --finalize pr1/);
   assert.equal(state.cost.total_usd, 1.75);
   assert.equal(state.cost.runs_counted, 3);
   assert.match(run(w, []).out[0], /Unfinished:\n  - judge j-crashed \(running\): node agents/);
+});
+
+const LESSON = 'Hedged \'likely to\' needs a definite future outcome, not a tendency';
+const promoteJson = (id, extra = {}) => ({ run_id: id, kind: 'promote', status: 'judging', lesson_key: LESSON, lesson_id: 'LS-1', tag: 'Predictive', smoke: false, ...extra });
+const promoteCommand = (id, tail = '') => `node agents/claim-tagger/scripts/promote.mjs --lesson ${JSON.stringify(LESSON)} --resume --run-id ${id}${tail}`;
+
+test('unfinished: a judge run that belongs to a promote run is resumed through promote, with the lesson key, never with judge.mjs alone', () => {
+  const w = makeLoopWorld({ seed: false });
+  writeRunJson(w, 'pr1', promoteJson('pr1'));
+  writeRunJson(w, 'pr1-baseline', { run_id: 'pr1-baseline', kind: 'judge', status: 'done', parent: 'pr1', cost_usd: 1 });
+  writeRunJson(w, 'pr1-candidate', { run_id: 'pr1-candidate', kind: 'judge', status: 'stopped', parent: 'pr1', items_source: 'x', driver: 'cli', cost_usd: 0.5, resume: 'node agents/claim-tagger/scripts/judge.mjs --resume --run-id pr1-candidate' });
+  writeRunJson(w, 'pr1-reconfirm-candidate', { run_id: 'pr1-reconfirm-candidate', kind: 'judge', status: 'running', parent: 'pr1' });
+  const state = inspect({ root: w.root, now: w.clock.now });
+  assert.deepEqual(state.unfinished.map((u) => [u.kind, u.run_id, u.status]), [['promote', 'pr1', 'judging'], ['judge', 'pr1-candidate', 'stopped'], ['judge', 'pr1-reconfirm-candidate', 'running']]);
+  for (const u of state.unfinished) assert.equal(u.resume, promoteCommand('pr1'), `${u.run_id}: the same promote command, for the parent run`);
+  assert.equal(promoteCommand('pr1'), 'node agents/claim-tagger/scripts/promote.mjs --lesson "Hedged \'likely to\' needs a definite future outcome, not a tendency" --resume --run-id pr1', 'the shape: --lesson "<lesson key>" --resume --run-id <parent>');
+  const text = run(w, []).out[0];
+  assert.match(text, /Unfinished:\n  - promote pr1 \(judging\): node agents\/claim-tagger\/scripts\/promote\.mjs --lesson "Hedged/);
+  assert.match(text, /  - judge pr1-candidate \(stopped\): node agents\/claim-tagger\/scripts\/promote\.mjs --lesson "Hedged .* --resume --run-id pr1\n/);
+  assert.doesNotMatch(text, /judge\.mjs/);
+});
+
+test('unfinished: a smoke promote run is resumed with --smoke; a parent that is finished, missing, unreadable or not a promote run leaves the judge command', () => {
+  const w = makeLoopWorld({ seed: false });
+  writeRunJson(w, 'ps1', promoteJson('ps1', { smoke: true, status: 'evaluating' }));
+  writeRunJson(w, 'ps1-baseline', { run_id: 'ps1-baseline', kind: 'judge', status: 'stopped', parent: 'ps1' });
+  writeRunJson(w, 'pdone', promoteJson('pdone', { status: 'done' }));
+  writeRunJson(w, 'pdone-baseline', { run_id: 'pdone-baseline', kind: 'judge', status: 'failed', parent: 'pdone' });
+  writeRunJson(w, 'pplanned', promoteJson('pplanned', { status: 'planned' }));
+  writeRunJson(w, 'pplanned-baseline', { run_id: 'pplanned-baseline', kind: 'judge', status: 'stopped', parent: 'pplanned' });
+  writeRunJson(w, 'orphan', { run_id: 'orphan', kind: 'judge', status: 'stopped', parent: 'nowhere' });
+  writeRunJson(w, 'a-distill', { run_id: 'a-distill', kind: 'distill', status: 'running' });
+  writeRunJson(w, 'child-of-distill', { run_id: 'child-of-distill', kind: 'judge', status: 'stopped', parent: 'a-distill' });
+  writeRunJson(w, 'sneaky', { run_id: 'sneaky', kind: 'judge', status: 'stopped', parent: '../pr1' });
+  mkdirSync(rootFile(w, 'runs', 'broken'), { recursive: true });
+  writeFileSync(rootFile(w, 'runs', 'broken', 'run.json'), '{ not json');
+  writeRunJson(w, 'child-of-broken', { run_id: 'child-of-broken', kind: 'judge', status: 'stopped', parent: 'broken' });
+  const byId = Object.fromEntries(inspect({ root: w.root, now: w.clock.now }).unfinished.map((u) => [u.run_id, u.resume]));
+  assert.equal(byId.ps1, promoteCommand('ps1', ' --smoke'));
+  assert.equal(byId['ps1-baseline'], promoteCommand('ps1', ' --smoke'));
+  const plain = (id) => `node agents/claim-tagger/scripts/judge.mjs --resume --run-id ${id}`;
+  for (const id of ['pdone-baseline', 'pplanned-baseline', 'orphan', 'child-of-distill', 'sneaky', 'child-of-broken']) assert.equal(byId[id], plain(id), id);
+  assert.deepEqual(Object.keys(byId).sort(), ['child-of-broken', 'child-of-distill', 'orphan', 'pdone-baseline', 'pplanned-baseline', 'ps1', 'ps1-baseline', 'sneaky'], 'a finished promote run is not listed');
+});
+
+test('unfinished: a promote run that stopped before its verdict is listed with its resume command; one with a verdict, a plan waiting, an end, or no lesson key is not', () => {
+  const w = makeLoopWorld({ seed: false });
+  for (const status of ['judging', 'evaluating', 'incomplete']) writeRunJson(w, `p-${status}`, promoteJson(`p-${status}`, { status }));
+  for (const status of ['done', 'planned', 'finalized', 'aborted']) writeRunJson(w, `q-${status}`, promoteJson(`q-${status}`, { status }));
+  writeRunJson(w, 'no-lesson', { run_id: 'no-lesson', kind: 'promote', status: 'judging' });
+  writeFileSync(rootFile(w, 'runs', 'PROMOTING.json'), JSON.stringify({ run_id: 'q-planned', lesson: LESSON }));
+  const state = inspect({ root: w.root, now: w.clock.now });
+  assert.deepEqual(state.unfinished.map((u) => [u.kind, u.run_id, u.status, u.resume]), [
+    ['promote', 'p-evaluating', 'evaluating', promoteCommand('p-evaluating')],
+    ['promote', 'p-incomplete', 'incomplete', promoteCommand('p-incomplete')],
+    ['promote', 'p-judging', 'judging', promoteCommand('p-judging')],
+    ['promote', 'q-planned', 'waiting for apply and finalize', 'node agents/claim-tagger/scripts/promote.mjs --finalize q-planned  (or --abort q-planned)'],
+  ], 'PROMOTING.json still says finalize or abort, once');
+  assert.equal(run(w, ['--check']).code, EXIT.INVALID, 'and a promote in flight is still exit 2');
+});
+
+test('--run on a promote run that stopped shows the command to resume it, and on a judge run of a promote the same one', () => {
+  const w = makeLoopWorld({ seed: false });
+  writeRunJson(w, 'pr1', promoteJson('pr1', { started: '2026-10-13T12:00:00.000Z' }));
+  writeRunJson(w, 'pr1-baseline', { run_id: 'pr1-baseline', kind: 'judge', status: 'stopped', parent: 'pr1', config16: 'abc', runs: 1, items: [] });
+  const p = runProgress(w.root, 'pr1');
+  assert.equal(p.resume, promoteCommand('pr1'));
+  assert.match(run(w, ['--run', 'pr1']).out[0], new RegExp(`^run pr1:\\n  promote, status judging.*\\n  resume: ${promoteCommand('pr1').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`));
+  assert.equal(runProgress(w.root, 'pr1-baseline').judge.resume, promoteCommand('pr1'));
+  writeRunJson(w, 'pr2', promoteJson('pr2', { status: 'done' }));
+  assert.equal(runProgress(w.root, 'pr2').resume, undefined);
+});
+
+test('unfinished, through the real judge: --parent and the resume command are recorded, status agrees with them, and typing the command finishes the run', async () => {
+  const w = makeLoopWorld({ seed: false });
+  const items = rootFile(w, 'items.jsonl');
+  writeFileSync(items, ['c1', 'c2'].map((id) => JSON.stringify({ id, claim: `Claim ${id} says the budget will pass`, sources_count: 1 })).join('\n') + '\n');
+  const out = [];
+  const stop = makeJudgeStub({ failWith: 'usage_window', failAfter: 0 });
+  const code = await judgeMain(['--items', items, '--runs', '1', '--run-id', 'jr1', '--driver', 'fake', '--parent', 'pr7'], { out: (s) => out.push(s), err: (s) => out.push(s) }, { agentDir: w.root, runClaude: stop, now: w.clock.now });
+  assert.equal(code, EXIT.USAGE_WINDOW, out.join('\n'));
+  const meta = readJson(rootFile(w, 'runs', 'jr1', 'run.json'));
+  assert.equal(meta.parent, 'pr7');
+  assert.equal(meta.resume, 'node agents/claim-tagger/scripts/judge.mjs --resume --run-id jr1');
+  // parent unknown (no runs/pr7): the judge command, the one the judge printed
+  assert.equal(inspect({ root: w.root, now: w.clock.now }).unfinished[0].resume, meta.resume);
+  // the promote run it belongs to appears: the promote command
+  writeRunJson(w, 'pr7', promoteJson('pr7'));
+  assert.equal(inspect({ root: w.root, now: w.clock.now }).unfinished.find((u) => u.run_id === 'jr1').resume, promoteCommand('pr7'));
+  // and the command status printed for a plain run does what it says
+  const fresh = makeLoopWorld({ seed: false });
+  writeFileSync(rootFile(fresh, 'items.jsonl'), readFileSync(items));
+  const first = await judgeMain(['--items', rootFile(fresh, 'items.jsonl'), '--runs', '1', '--run-id', 'jr2', '--driver', 'fake'], { out: () => {}, err: () => {} }, { agentDir: fresh.root, runClaude: makeJudgeStub({ failWith: 'usage_window', failAfter: 0 }), now: fresh.clock.now });
+  assert.equal(first, EXIT.USAGE_WINDOW);
+  const listed = inspect({ root: fresh.root, now: fresh.clock.now }).unfinished[0];
+  assert.equal(listed.resume, 'node agents/claim-tagger/scripts/judge.mjs --resume --run-id jr2');
+  const again = await judgeMain(listed.resume.split(' ').slice(2), { out: (s) => out.push(s), err: (s) => out.push(s) }, { agentDir: fresh.root, runClaude: makeJudgeStub(), now: fresh.clock.now });
+  assert.equal(again, EXIT.OK, out.join('\n'));
+  assert.equal(inspect({ root: fresh.root, now: fresh.clock.now }).unfinished.length, 0);
 });
 
 // ---- --run <id> ----------------------------------------------------------------------------------------------------------------------------

@@ -61,6 +61,11 @@
             "id": "oru14xxx",
             "name": "Smoke",
             "color": "green"
+          },
+          {
+            "id": "oru15xxx",
+            "name": "Baseline",
+            "color": "gray"
           }
         ]
       }

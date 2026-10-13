@@ -12,9 +12,9 @@ import { checkHashes, composeWhenToUse } from '../agents/claim-tagger/scripts/li
 import { validate } from '../agents/claim-tagger/scripts/lib/validate.mjs';
 import { check as planCheck, readPlan } from '../agents/claim-tagger/scripts/plan.mjs';
 import { canaryItemId, judgmentFileName } from '../agents/claim-tagger/scripts/eval.mjs';
-import { candidateVersion, canariesText, cardMarkdown, checkLesson, effectiveText, main, perTagSummary, reconfirmCandidates, reconfirmSettings, resolveLesson } from '../agents/claim-tagger/scripts/promote.mjs';
+import { candidateVersion, canariesText, cardMarkdown, checkLesson, effectiveText, main, perTagSummary, perTagSummaryWithHash, reconfirmCandidates, reconfirmSettings, resolveLesson } from '../agents/claim-tagger/scripts/promote.mjs';
 import { loadPull } from '../agents/claim-tagger/scripts/pull.mjs';
-import { main as statusMain } from '../agents/claim-tagger/scripts/status.mjs';
+import { inspect, main as statusMain } from '../agents/claim-tagger/scripts/status.mjs';
 import { makeJudgeStub, labelMap, labelOf, normClaim, opposite } from './fixtures/loop/judge-stub.mjs';
 import { AGENT, LESSON_RULE_TEXT, LESSON_TITLE, captureIo, cleanupLoop, liveRubric, makePromoteWorld } from './fixtures/loop/world.mjs';
 
@@ -245,6 +245,10 @@ test('PASS: candidate, items, two judge runs, the card, a plan with exactly the 
   assert.deepEqual(runOp.properties.Lesson, [lessonPage]);
   assert.match(runOp.properties['Per-tag summary'], /^Hypothetical: 100\.0% -> 100\.0%/m);
   assert.match(runOp.properties['Per-tag summary'], /Predictive: 60\.0% -> 100\.0% \(\+40\.0 points\), fixed 4, broken 0, n 10, 6 positives/);
+  assert.equal(runOp.properties['Per-tag summary'].split('\n')[0], `Candidate rubric 2026-10-13.2 (${candidate.rubric_hash})`, 'the first line names the candidate by version and hash');
+  assert.equal(readJson(rootFile(w, 'runs', 'pr1-baseline', 'run.json')).parent, 'pr1', 'the judge runs know the promote run they belong to');
+  assert.equal(readJson(rootFile(w, 'runs', 'pr1-candidate', 'run.json')).parent, 'pr1');
+  assert.equal(existsSync(rootFile(w, 'runs', 'PROMOTE.lock')), false, 'the promote lock is let go; PROMOTING.json takes over');
   assert.match(runOp.content_md, /^## Verdict: PASS - small sample/);
   assert.match(runOp.content_md, /## The five conditions\n1\. PASS: every active canary passes/);
   const rows = opsFor(w, 'pr1', 'tag_decisions');
@@ -455,6 +459,7 @@ test('--smoke judges once, writes a Smoke row, and can never go live or be final
   assert.equal(existsSync(rootFile(w, 'runs', 'PROMOTING.json')), false);
   const [run] = opsFor(w, 'pr1', 'runs');
   assert.equal(run.properties.Kind, 'Smoke');
+  assert.equal(run.properties.Verdict, 'n/a', 'a smoke verdict is not a gate verdict');
   assert.equal(run.key, 'Smoke 2026-10-13.2 · LS-1');
   assert.deepEqual(writtenFields(w, 'pr1').rulebook, undefined, 'no Rulebook op');
   assert.deepEqual(opsFor(w, 'pr1', 'rule_changes'), [], 'a rehearsal does not touch the lesson row');
@@ -568,10 +573,12 @@ test('the usage window stops the run with exit 75 and the resume command; --resu
   assert.match(r.err.join('\n'), /the usage window ran out while judging the baseline; the finished judgments are kept\. Resume when it reopens: node agents\/claim-tagger\/scripts\/promote\.mjs --lesson "Hedged trajectories are not forecasts" --resume --run-id pr1 --driver fake/);
   assert.equal(existsSync(rootFile(w, 'runs', 'pr1', 'plan.jsonl')), false);
   assert.equal(readJson(rootFile(w, 'runs', 'pr1', 'run.json')).status, 'judging');
+  assert.equal(existsSync(rootFile(w, 'runs', 'PROMOTE.lock')), false, 'a stop with exit 75 lets go of the promote lock');
   const healthy = scenario(w);
   const done = await promote(w, ['--lesson', LESSON_TITLE, '--driver', 'fake', '--resume'], healthy);
   assert.equal(done.code, EXIT.OK, done.err.join('\n'));
   assert.equal(readJson(rootFile(w, 'runs', 'pr1', 'run.json')).status, 'planned', '--resume found the unfinished run of this lesson without a run id');
+  assert.equal(existsSync(rootFile(w, 'runs', 'PROMOTE.lock')), false);
   assert.ok(healthy.calls.length > 0 && healthy.calls.length < 2 * Math.ceil(readJsonl(rootFile(w, 'runs', 'pr1', 'items.jsonl')).rows.length / 8) * 3, 'the cells that were done were not judged again');
   assert.ok(existsSync(rootFile(w, 'runs', 'PROMOTING.json')));
 });
@@ -582,6 +589,206 @@ test('the wrong model answering stops the run with exit 4', async () => {
   const r = await promote(w, lessonArgs('pr1'), wrong);
   assert.equal(r.code, EXIT.DRIFT);
   assert.match(r.err.join('\n'), /the baseline judge stopped: the rubric or the model did not match/);
+});
+
+// ---- one promote at a time: the lock, PROMOTING.json read again, and what a stopped promote tells status ------------------------------------------------------
+
+const lockPath = (w) => rootFile(w, 'runs', 'PROMOTE.lock');
+const writeLock = (w, run_id, started_at = '2026-10-12T08:00:00.000Z') => writeFileSync(lockPath(w), JSON.stringify({ run_id, lesson: LESSON_TITLE, started_at }));
+/** A stub that runs `before(opts)` on its first call and then answers like `stub`. */
+const onFirstCall = (stub, before) => {
+  let done = false;
+  return Object.assign(async (opts) => {
+    if (!done) {
+      done = true;
+      await before(opts);
+    }
+    return stub(opts);
+  }, { calls: stub.calls, options: stub.options });
+};
+
+test('promote lock: held while judging, so a second promote is refused with the holder named and writes nothing; let go after the PASS', async () => {
+  const { w } = await reconfirmWorld(0);
+  const stub = scenario(w);
+  const idle = scenario(w);
+  let seen = null;
+  let second = null;
+  const first = await promote(w, lessonArgs('pr1'), onFirstCall(stub, async () => {
+    seen = readJson(lockPath(w));
+    second = await promote(w, lessonArgs('pr2'), idle);
+  }));
+  assert.equal(first.code, EXIT.OK, first.err.join('\n'));
+  assert.deepEqual(seen, { run_id: 'pr1', lesson: LESSON_TITLE, started_at: '2026-10-13T12:00:00.000Z' }, 'created before the first judge call, with who, what and when');
+  assert.equal(second.code, EXIT.INVALID);
+  assert.match(second.err.join('\n'), /run pr1 holds the promote lock since 2026-10-13T12:00:00\.000Z; resume it with --resume --run-id pr1, or if it is dead remove runs\/PROMOTE\.lock/);
+  assert.equal(idle.calls.length, 0, 'the refused promote judged nothing');
+  assert.equal(existsSync(rootFile(w, 'runs', 'pr2')), false, 'and wrote nothing');
+  assert.equal(existsSync(lockPath(w)), false, 'the PASS let go of the lock; PROMOTING.json is what blocks the next promote now');
+  assert.equal(readJson(rootFile(w, 'runs', 'PROMOTING.json')).run_id, 'pr1');
+  const next = await promote(w, lessonArgs('pr3'), idle);
+  assert.equal(next.code, EXIT.INVALID);
+  assert.match(next.err.join('\n'), /run pr1 is still promoting/);
+});
+
+test('promote lock: let go on every end (exit 75, HOLD, FAIL, the wrong model, an error before judging); a lock of another run or an unreadable one blocks; the run itself takes its own over on --resume', async () => {
+  const { w } = await reconfirmWorld(0);
+  // exit 75
+  const limited = await promote(w, lessonArgs('pr1'), scenario(w, { breakCanaries: 2, failWith: 'usage_window', failAfter: 2 }));
+  assert.equal(limited.code, EXIT.USAGE_WINDOW, limited.err.join('\n'));
+  assert.equal(existsSync(lockPath(w)), false);
+  assert.equal(readJson(rootFile(w, 'runs', 'pr1', 'run.json')).status, 'judging');
+
+  // a lock left behind by somebody else stops a new run and the resume alike, and is not touched
+  const idle = scenario(w);
+  writeLock(w, 'dead-run');
+  for (const argv of [lessonArgs('pr2'), lessonArgs('pr1', '--resume')]) {
+    const blocked = await promote(w, argv, idle);
+    assert.equal(blocked.code, EXIT.INVALID, argv.join(' '));
+    assert.match(blocked.err.join('\n'), /run dead-run holds the promote lock since 2026-10-12T08:00:00\.000Z; resume it with --resume --run-id dead-run, or if it is dead remove runs\/PROMOTE\.lock \(promote\.mjs --abort dead-run does that too\)/);
+  }
+  assert.equal(idle.calls.length, 0);
+  assert.equal(existsSync(rootFile(w, 'runs', 'pr2')), false);
+  assert.equal(readJson(lockPath(w)).run_id, 'dead-run');
+  writeFileSync(lockPath(w), 'garbage, not json');
+  const unreadable = await promote(w, lessonArgs('pr2'), idle);
+  assert.equal(unreadable.code, EXIT.INVALID);
+  assert.match(unreadable.err.join('\n'), /runs\/PROMOTE\.lock exists but cannot be read; if no promote is running, remove it/);
+  assert.equal(readFileSync(lockPath(w), 'utf8'), 'garbage, not json');
+
+  // the run that was killed finds its own lock and goes on, to a FAIL (two Context-dependent canaries and their twins break under the candidate)
+  writeLock(w, 'pr1');
+  const resumed = await promote(w, lessonArgs('pr1', '--resume'), scenario(w, { breakCanaries: 2 }));
+  assert.equal(resumed.code, EXIT.FAIL, resumed.err.join('\n'));
+  assert.equal(existsSync(lockPath(w)), false);
+  assert.equal(readJson(rootFile(w, 'runs', 'pr1', 'run.json')).status, 'done');
+
+  // an error before anything is judged never takes the lock, or the folder of the run
+  const unknown = await promote(w, ['--lesson', 'LS-42', '--driver', 'fake', '--run-id', 'pr3'], idle);
+  assert.equal(unknown.code, EXIT.INVALID);
+  assert.equal(existsSync(lockPath(w)), false);
+  assert.equal(existsSync(rootFile(w, 'runs', 'pr3')), false);
+
+  // HOLD, and an error after the lock was taken (the wrong model answers): in worlds of their own, because the judgments above are cached
+  const { w: held } = await reconfirmWorld(0);
+  assert.equal((await promote(held, lessonArgs('pr1'), scenario(held, { fixed: 2 }))).code, EXIT.HOLD);
+  assert.equal(existsSync(lockPath(held)), false);
+  const { w: wrongWorld } = await reconfirmWorld(0);
+  const wrong = async () => ({ ok: false, errorKind: 'model_mismatch', message: 'asked for the pinned model but modelUsage lists another', text: '', costUsd: 0, durationMs: 1, modelUsage: null });
+  assert.equal((await promote(wrongWorld, lessonArgs('pr1'), wrong)).code, EXIT.DRIFT);
+  assert.equal(existsSync(lockPath(wrongWorld)), false);
+});
+
+test('--abort frees the lock of a promote that was killed while judging, and only that run\'s: the run is marked aborted and no longer offered by --resume', async () => {
+  const { w } = await reconfirmWorld(0);
+  const limited = await promote(w, lessonArgs('pr1'), scenario(w, { failWith: 'usage_window', failAfter: 2 }));
+  assert.equal(limited.code, EXIT.USAGE_WINDOW);
+  writeLock(w, 'pr1'); // what a kill leaves behind
+  const other = await promote(w, ['--abort', 'pr9']);
+  assert.equal(other.code, EXIT.INVALID);
+  assert.match(other.err.join('\n'), /nothing to abort for run pr9/);
+  assert.equal(readJson(lockPath(w)).run_id, 'pr1', 'another run\'s abort leaves the lock alone');
+
+  const r = await promote(w, ['--abort', 'pr1']);
+  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
+  assert.match(r.out[0], /^promote: aborted run pr1: it still held runs\/PROMOTE\.lock .*the lock is removed\. PROMOTING\.json was never written, so nothing was applied and Notion was never changed$/);
+  assert.equal(existsSync(lockPath(w)), false);
+  const record = readJson(rootFile(w, 'runs', 'pr1', 'run.json'));
+  assert.deepEqual([record.status, record.rolled_back, record.rolled_back_reason], ['aborted', true, 'aborted while judging']);
+  const again = await promote(w, ['--abort', 'pr1']);
+  assert.equal(again.code, EXIT.INVALID, 'nothing left to abort');
+  const resume = await promote(w, ['--lesson', LESSON_TITLE, '--driver', 'fake', '--resume'], scenario(w));
+  assert.equal(resume.code, EXIT.INVALID);
+  assert.match(resume.err.join('\n'), /--resume found no unfinished promote run/);
+  const fresh = await promote(w, lessonArgs('pr2'), scenario(w));
+  assert.equal(fresh.code, EXIT.OK, fresh.err.join('\n'));
+
+  // after a PASS the lock and PROMOTING.json can both be there only if the process died between the two; abort clears both
+  writeLock(w, 'pr2');
+  const both = await promote(w, ['--abort', 'pr2']);
+  assert.equal(both.code, EXIT.OK, both.err.join('\n'));
+  assert.deepEqual([existsSync(lockPath(w)), existsSync(rootFile(w, 'runs', 'PROMOTING.json'))], [false, false]);
+});
+
+test('a PROMOTING.json that another run writes while this one is judging stops it before the plan; its judgments are kept for the next try', async () => {
+  const { w } = await reconfirmWorld(0);
+  const stub = scenario(w);
+  const r = await promote(w, lessonArgs('pr1'), onFirstCall(stub, () => writeFileSync(rootFile(w, 'runs', 'PROMOTING.json'), JSON.stringify({ run_id: 'other-run' }))));
+  assert.equal(r.code, EXIT.INVALID, r.err.join('\n'));
+  assert.match(r.err.join('\n'), /promote: run other-run started promoting while this run was judging, so no plan was written for pr1; finish it \(apply\.mjs, then promote\.mjs --finalize\) or promote\.mjs --abort it, then promote this lesson again/);
+  assert.equal(existsSync(rootFile(w, 'runs', 'pr1', 'plan.jsonl')), false, 'no plan');
+  assert.equal(readJson(rootFile(w, 'runs', 'PROMOTING.json')).run_id, 'other-run', 'the other run keeps its file');
+  assert.equal(existsSync(lockPath(w)), false);
+  assert.deepEqual([readJson(rootFile(w, 'runs', 'pr1', 'run.json')).status, readJson(rootFile(w, 'runs', 'pr1', 'run.json')).rolled_back], ['aborted', true]);
+  assert.ok(existsSync(rootFile(w, 'runs', 'pr1', 'card.json')), 'what the gate found is still there to read');
+  unlinkSync(rootFile(w, 'runs', 'PROMOTING.json'));
+  const calls = stub.calls.length;
+  const again = await promote(w, lessonArgs('pr2'), stub);
+  assert.equal(again.code, EXIT.OK, again.err.join('\n'));
+  assert.equal(stub.calls.length, calls, 'every judgment was a cache hit');
+  assert.equal(readJson(rootFile(w, 'runs', 'PROMOTING.json')).run_id, 'pr2');
+});
+
+test('a smoke run\'s Runs row says Verdict n/a (only a Gate row carries PASS, HOLD or FAIL), also after the apply; the card still says what the rehearsal found', async () => {
+  const { w } = await reconfirmWorld(0);
+  const stub = scenario(w);
+  const r = await promote(w, lessonArgs('pr1', '--smoke'), stub);
+  assert.ok([EXIT.OK, EXIT.HOLD].includes(r.code), r.err.join('\n'));
+  const [run] = opsFor(w, 'pr1', 'runs');
+  assert.equal(run.properties.Kind, 'Smoke');
+  assert.equal(run.properties.Verdict, 'n/a');
+  assert.match(run.properties.Summary, /Verdict: (PASS|HOLD|FAIL)/, 'the card text keeps the rehearsal\'s own verdict');
+  assert.match(run.content_md, /^## Verdict: (PASS|HOLD|FAIL) \(smoke: not a gate verdict\)/);
+  await applyPlan(w, 'pr1', 'p2');
+  assert.equal(w.fake.find('runs', 'Smoke 2026-10-13.2 · LS-1').props.Verdict, 'n/a');
+  assert.deepEqual(w.fake.createdOptions, []);
+  // a Gate row of the same candidate keeps its verdict
+  const gate = await promote(w, lessonArgs('pr2'), stub);
+  assert.equal(gate.code, EXIT.OK, gate.err.join('\n'));
+  assert.deepEqual([opsFor(w, 'pr2', 'runs')[0].properties.Kind, opsFor(w, 'pr2', 'runs')[0].properties.Verdict], ['Gate', 'PASS']);
+});
+
+test('the Runs row carries the candidate\'s rubric hash, so two candidates with the same version label can be told apart', async () => {
+  const { w, lessonPage } = await makePromoteWorld();
+  const stub = scenario(w, { fixed: 2 });
+  assert.equal((await promote(w, lessonArgs('pr1'), stub)).code, EXIT.HOLD);
+  w.fake.editorSet(lessonPage, { 'Editor wording': 'Fires only on a flat marker: will, is expected to. A hedge never fires it.' });
+  await w.pull('p2');
+  assert.equal((await promote(w, lessonArgs('pr2'), stub)).code, EXIT.HOLD);
+  const [one, two] = ['pr1', 'pr2'].map((id) => ({ row: opsFor(w, id, 'runs')[0], candidate: readJson(rootFile(w, 'runs', id, 'candidate', 'rubric.json')) }));
+  assert.equal(one.candidate.rubric_version, two.candidate.rubric_version, 'the same label: a candidate that was never promoted does not use up its version');
+  assert.notEqual(one.candidate.rubric_hash, two.candidate.rubric_hash);
+  assert.equal(one.row.properties['Rubric version'], two.row.properties['Rubric version']);
+  for (const { row, candidate } of [one, two]) {
+    const summary = row.properties['Per-tag summary'];
+    assert.equal(summary.split('\n')[0], `Candidate rubric ${candidate.rubric_version} (${candidate.rubric_hash})`);
+    assert.match(summary, /\nPredictive: \d+\.\d% -> \d+\.\d% /, 'the per-tag lines follow');
+    assert.ok(summary.length <= 1900);
+  }
+  assert.notEqual(one.row.properties['Per-tag summary'].split('\n')[0], two.row.properties['Per-tag summary'].split('\n')[0]);
+  assert.match(one.row.content_md, new RegExp(`Candidate [0-9a-f]{16}, rubric 2026-10-13\\.2 \\(${one.candidate.rubric_hash}\\)`), 'and the page of the row has it in its Configurations');
+  assert.equal(perTagSummaryWithHash({ per_tag: [] }, { rubric_version: 'v', rubric_hash: 'sha256:abc' }), 'Candidate rubric v (sha256:abc)\nno tag had labelled items');
+  const long = perTagSummaryWithHash({ per_tag: Array.from({ length: 40 }, (_, i) => ({ tag: `Tag ${i} with a long name to fill the room`, n: 5, positives: 2, acc_base: 0.5, acc_cand: 0.6, delta: 0.1, fixed: [], broken: [], gated: true })) }, { rubric_version: 'v', rubric_hash: 'sha256:abc' });
+  assert.ok(long.length <= 1900 && long.endsWith('...') && long.startsWith('Candidate rubric v (sha256:abc)\nTag 0'));
+});
+
+test('a stopped promote tells status what to type: the promote command for the run and for the judge side that stopped; typing it finishes the run', async () => {
+  const { w } = await reconfirmWorld(0);
+  const limited = await promote(w, lessonArgs('pr1'), scenario(w, { failWith: 'usage_window', failAfter: 2 }));
+  assert.equal(limited.code, EXIT.USAGE_WINDOW, limited.err.join('\n'));
+  assert.equal(readJson(rootFile(w, 'runs', 'pr1-baseline', 'run.json')).parent, 'pr1', 'promote hands its run id to the judge runs');
+  const command = `node agents/claim-tagger/scripts/promote.mjs --lesson ${JSON.stringify(LESSON_TITLE)} --resume --run-id pr1`;
+  const unfinished = inspect({ root: w.root, now: w.clock.now }).unfinished;
+  assert.deepEqual(unfinished.map((u) => [u.kind, u.run_id, u.status, u.resume]), [['promote', 'pr1', 'judging', command], ['judge', 'pr1-baseline', 'stopped', command]]);
+  const report = captureIo();
+  assert.equal(statusMain([], report.io, { root: w.root, now: w.clock.now }), EXIT.OK);
+  assert.match(report.out[0], /Unfinished:\n  - promote pr1 \(judging\): node agents\/claim-tagger\/scripts\/promote\.mjs --lesson "Hedged trajectories are not forecasts" --resume --run-id pr1\n  - judge pr1-baseline \(stopped\): node agents\/claim-tagger\/scripts\/promote\.mjs/);
+  // typing the command (split the way a shell does: the double-quoted lesson stays one word; the fake driver is the test's own addition)
+  const typed = [...command.matchAll(/"((?:[^"\\]|\\.)*)"|(\S+)/g)].map((m) => (m[1] !== undefined ? JSON.parse(`"${m[1]}"`) : m[2]));
+  assert.deepEqual(typed.slice(0, 3), ['node', 'agents/claim-tagger/scripts/promote.mjs', '--lesson']);
+  const done = await promote(w, [...typed.slice(2), '--driver', 'fake'], scenario(w));
+  assert.equal(done.code, EXIT.OK, done.err.join('\n'));
+  assert.equal(readJson(rootFile(w, 'runs', 'pr1', 'run.json')).status, 'planned');
+  assert.deepEqual(inspect({ root: w.root, now: w.clock.now }).unfinished.map((u) => u.kind), ['promote'], 'only the PASS that waits for apply and finalize is left');
 });
 
 // ---- reconfirmation of flipped cases ------------------------------------------------------------------------------------------------------------------

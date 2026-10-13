@@ -203,9 +203,9 @@ test('a property that belongs to the editors is denied in a create and in an upd
 });
 
 test('Status Approved and Rejected are denied; the agent values go through the plan match like anything else', async () => {
+  // Rolled back is an agent value that needs no gate evidence (a plan that sets a lesson Live is only armed behind a PASS card: see gate-evidence.test.mjs)
   const a = await armed({
-    build: (p) => p.update('rule_changes', 'Hedged trajectories are not forecasts', null, { Status: 'Live', 'Gate result': 'PASS (small sample)' }),
-    ctx: { promote: true, gate: 'PASS' },
+    build: (p) => p.update('rule_changes', 'Hedged trajectories are not forecasts', null, { Status: 'Rolled back', 'Gate result': 'FAIL (small sample)' }),
   });
   const line = readJsonl(join(a.w.root, 'runs', 'run-1', 'batches', '001-update-rule_changes.jsonl')).rows[0];
   assert.equal(verdict(a.d(a.updateInput(line))), 'allow');

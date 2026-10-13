@@ -18,7 +18,9 @@
 // `check` also: turns creates whose key already exists into updates, skips ops whose expectation fails, whose row was decided since,
 // or that would change nothing, writes runs/<id>/batches/NNN-create-<db>.json (at most 100 pages, connector shape) and
 // NNN-update-<db>.jsonl for the no-token fallback, writes check.json, and arms runs/APPLYING.json { run_id, plan_sha, armed_at }.
-// Exit codes: 0 ok, 2 invalid (allowlist refusal, hand-edited or malformed plan, pull does not cover the plan, another run armed).
+// The header's ctx is only a claim: after the allowlist, `check` proves a Rulebook text change, a lesson set Live, a restore and a seed from
+// other files (lib/gate-evidence.mjs: PROMOTING.json and a PASS card, the live rubric, runs/SETUP) and arms nothing without that proof.
+// Exit codes: 0 ok, 2 invalid (allowlist refusal, gate evidence missing, hand-edited or malformed plan, pull does not cover the plan, another run armed).
 
 import { existsSync, mkdirSync, rmSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
@@ -27,6 +29,7 @@ import {
   DATABASES, FOLLOW_UP_FIELDS, PROPERTY_TYPES, allowlistSha, assertOpWritable, controlPaths,
 } from './allowlist.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
+import { checkGateEvidence } from './lib/gate-evidence.mjs';
 import { fileSha256 } from './lib/hash.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { agentRoot, isMain } from './lib/paths.mjs';
@@ -404,6 +407,12 @@ export function check({ root = agentRoot(), config = loadConfig(root), runId, pu
 
   const { ops, skipped, violations } = resolveOps(plan, pull, { config });
   if (violations.length) return { code: EXIT.INVALID, line: null, problems: violations.map((v) => `op ${v.seq} (${v.database} "${v.key}"): ${v.message}`), violations };
+  // the allowlist trusts the header; the evidence does not (a forged ctx passes the allowlist and stops here)
+  const gate = checkGateEvidence({ root, plan, pull, config });
+  if (!gate.ok) {
+    if (armed) disarm(root); // armed for this very run by an earlier check (any other run returned above): a plan that lost its proof is not armed any longer
+    return { code: EXIT.INVALID, line: null, problems: gate.problems.map((p) => `gate evidence: ${p}`), gate };
+  }
 
   const batches = writeBatches({ dir: plan.dir, ops, config, pull });
   const checkedAt = now().toISOString();
@@ -411,6 +420,7 @@ export function check({ root = agentRoot(), config = loadConfig(root), runId, pu
     run_id: runId, plan_sha: plan.sha, checked_at: checkedAt, pull_id: pull.id, ops_total: plan.ops.length, to_apply: ops.length,
     creates: ops.filter((o) => o.kind === 'create').length, updates: ops.filter((o) => o.kind === 'update').length,
     converted: ops.filter((o) => o.converted).map((o) => ({ seq: o.seq, database: o.database, key: o.key, ...(o.dropped ? { dropped: o.dropped } : {}) })), skipped, batches, allowlist_sha: allowlistSha(),
+    ...(gate.evidence.modes.length ? { gate_evidence: gate.evidence } : {}),
   };
   writeJsonAtomic(join(plan.dir, 'check.json'), summary);
   rmSync(join(plan.dir, 'guard-ledger.jsonl'), { force: true });

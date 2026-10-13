@@ -5,66 +5,242 @@
   <div class="plain">
     <p class="geo-eyebrow plain-label">In short</p>
     <ul>
-      <li>TODO: where editors work: the hub page "Editorial feedback loop", its four views, and what each one shows.</li>
-      <li>TODO: the queue in one picture: the same row before and after an editor decides it.</li>
-      <li>TODO: how to decide a row: Tag outcome first, Why wrong only when overruling, one sentence when the reason asks for it.</li>
-      <li>TODO: where a lesson shows up, who approves it, and what a live rule looks like.</li>
-      <li>TODO: how to read a result card in under a minute.</li>
+      <li>Everything lives on one Notion page, "Editorial feedback loop". At the top a callout says what the trial is, where editors work, that nothing is written to Geo, and how to pause the agent. Below it sit the views Your queue, Needs your note, Lessons waiting for the rule owner and Latest runs, and since the editor review one for rows handed on to someone else.</li>
+      <li>An editor works in Your queue: read the claim and the agent's reason, set the <dfn data-t="tag-outcome">Tag outcome</dfn>, and add a <dfn data-t="why-wrong">Why wrong</dfn> value with one sentence only when overruling the agent or the written rule. Each decision that settles a tag is kept as a <dfn data-t="regression-case">regression case</dfn>, a test for every later rule change.</li>
+      <li>The rule owner works in Lessons waiting: approve or reject each <dfn data-t="lesson">lesson</dfn>, and rewrite its text if needed.</li>
+      <li>Everyone can read Latest runs: one row per agent step, and for every <dfn data-t="gate">gate</dfn> a result card that says what was tested, what changed and why it was or was not adopted.</li>
+      <li>At the end of the trial: {{count:stage.end.toReview}} rows wait in Your queue, LS-1 is Approved but held at the gate, the planted LS-2 is Rolled back, and the <dfn data-t="rulebook">rulebook</dfn> is unchanged, still at <dfn data-t="rubric-version">rubric version</dfn> {{count:rubricVersion}}.</li>
     </ul>
   </div>
 
   <div class="sub" id="notion-structure" data-title="The six databases">
     <h3>The six databases</h3>
-    <p>TODO: one paragraph per database in the figure: what a row is, who writes it, and where an editor meets it.</p>
     <figure class="geo-figure">
       <div class="geo-figure-frame">
-        <!-- include:fragments/structure-figure.html -->
+        <!-- include: fragments/structure-figure.html -->
       </div>
-      <figcaption class="geo-figure-caption">The six databases inside the page "Editorial feedback loop". Arrows show the order of work: the agent judges claims against the rulebook, sends uncertain tags to the queue, drafts lessons from decided rows, tests a rule change at the gate, and writes the rulebook only after a PASS. Box outlines show who writes: the agent, people, or neither (a record or a switch).</figcaption>
+      <figcaption class="geo-figure-caption">The six databases on the sub-page "Databases" of "Editorial feedback loop", in the order the work flows. Box outlines show who writes: the agent, people, or neither (a record or a switch).</figcaption>
     </figure>
-    <h3>One row each</h3>
-    <p>TODO: say what to notice in each sample row, for example how a row's Stage follows from the editor's decision.</p>
-    <!-- include:fragments/sample-tables.html -->
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Database</th><th>A row is</th><th>Who writes it</th><th>Where an editor meets it</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Rulebook</strong></td><td>One tag ({{count:rulebookTags}} in all): its description, numbered "When to use" rules and example claims. The examples are the <dfn data-t="canary">canaries</dfn>.</td><td>The agent, and only after a lesson passes the gate. Nobody edits it by hand.</td><td>Read it to check a rule the agent cites, such as "Predictive rule 1".</td></tr>
+        <tr><td><strong>Claims</strong></td><td>One claim ({{count:claims}}), copied from Geo's U.S. Politics table for the trial, with the agent's tags, a Readiness status and one confidence line per tag.</td><td>The agent; a decision an editor made always wins over its own verdict.</td><td>Through the Claim link on each queue row.</td></tr>
+        <tr><td><strong>Tag decisions</strong></td><td>One claim and one tag the agent could not settle, or one decided in the 9 October audit ({{count:queueRowsNow}} rows at the end).</td><td>The agent writes its proposal and reason; editors write the decision. Stage and Direction compute themselves.</td><td>Your queue and Needs your note.</td></tr>
+        <tr><td><strong>Rule changes</strong></td><td>One lesson: the rule, its current text, the proposed text, the decisions behind it.</td><td>The agent drafts it; the rule owner approves or rejects and may rewrite it; the agent records the gate result.</td><td>Lessons waiting for the rule owner.</td></tr>
+        <tr><td><strong>Runs</strong></td><td>One agent step: a tag run, a distill, a gate. A Gate row carries the result card.</td><td>The agent.</td><td>Latest runs.</td></tr>
+        <tr><td><strong>Agent settings</strong></td><td>One row: the Paused switch, the weekly cap on new queue rows, the rulebook version in force.</td><td>People set Paused and the cap; the agent records the version in force.</td><td>To pause the agent at once.</td></tr>
+      </tbody>
+    </table></div>
+    <h3>Real rows from the trial</h3>
+    <p>Two rows of each database as the end-state snapshot holds them, long cells shortened. Notice how the same claim travels: the Texas claim keeps its <dfn data-t="seeded-outcome">seeded outcome</dfn> from the audit on Predictive, so the agent leaves Predictive off its tags ("editor: Does not apply (kept)"); the Supreme Court row was decided by the persona after the tag run, so its Agent tags still show Predictive until the next run. Both rows now support lesson LS-1.</p>
+    <!-- include: fragments/sample-tables.html -->
   </div>
 
-  <div class="sub" id="notion-queue" data-title="Queue before and after">
+  <div class="sub" id="notion-queue" data-title="Your queue">
     <h3>Your queue, before and after</h3>
-    <p>TODO: the same queue rows before and after an editor decides them (a table or screenshots), and what changes in Stage and Direction.</p>
+    <p>Your queue shows the rows whose Stage is To review, grouped by tag, highest priority first and least confident first within a priority. Each row shows the claim, the agent's proposal and confidence, "Why I recommend this", why the row is in the queue, and the editor's three fields. The tag run left {{count:stage.afterTag.toReview}} rows there; the editor persona's decisions took it to {{count:stage.afterDecisions.toReview}}, the reviewer's to {{count:stage.end.toReview}}.</p>
+    <p>Before a decision every row below read Stage To review and Direction Open. After it:</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Claim · tag</th><th>Agent proposal</th><th>Decision</th><th>Stage right after</th><th>Stage at the end</th><th>Direction</th></tr></thead>
+      <tbody>
+        <tr><td>The Supreme Court is likely to uphold executive actions that exceed… · Predictive</td><td>Add tag, 0.88</td><td>Does not apply · Rule should change</td><td>Decided</td><td>Lesson proposed</td><td>Wrongly applied</td></tr>
+        <tr><td>Military pressure is more likely than diplomatic restraint to produce an Iran settlement · Predictive</td><td>Do not add tag, 0.55</td><td>Does not apply · Rule should change</td><td>Decided</td><td>Lesson proposed</td><td>Agent right</td></tr>
+        <tr><td>The current trend of cognitive offloading to AI is likely a temporary phase… · Predictive</td><td>Add tag, 0.73</td><td>Applies</td><td>Closed</td><td>Closed</td><td>Agent right</td></tr>
+        <tr><td>Allowing Boulder's lawsuit would increase uncertainty for national energy companies · Context-dependent</td><td>Remove tag, 0.57</td><td>Applies · Agent slip</td><td>Decided</td><td>Regression case</td><td>Missed</td></tr>
+        <tr><td>The Dallas convention is the unofficial launch of JD Vance's 2028 presidential campaign · Debate</td><td>Do not add tag, 0.55</td><td>Applies · Rule unclear</td><td>Decided</td><td>Decided</td><td>Missed</td></tr>
+        <tr><td>The U.S. Constitution permits the president to restrict birthright citizenship · Improperly sourced</td><td>Read source first</td><td>Needs evidence</td><td>Waiting for evidence</td><td>Waiting for evidence</td><td>Open</td></tr>
+        <tr><td>A ceasefire in Ukraine will increase the military threat to the Baltic states · Hypothetical</td><td>Add tag, 0.60</td><td>Applies; Rule unclear added on a re-check</td><td>Closed</td><td>Regression case</td><td>Agent right</td></tr>
+      </tbody>
+    </table></div>
+    <p>What to notice: agreeing with the agent closes a row; an Agent slip becomes a regression case; the two "Rule should change" rows wait as Lesson proposed once a lesson links them; the Debate row stays Decided because one claim is not enough for a lesson (the distiller needs {{count:config.minClaims}} for Rule unclear); Needs evidence waits for someone to read the source, which nobody does in this trial.</p>
   </div>
 
   <div class="sub" id="notion-decide" data-title="How to decide a row">
     <h3>How to decide a row</h3>
-    <p>TODO: the steps in order: read the claim and the agent's reason, set Tag outcome, pick Why wrong only when overruling, add one sentence when it is asked for. Use the column descriptions as the wording.</p>
+    <ol>
+      <li><strong>Read</strong> the claim (the row links to it) and "Why I recommend this". Agent confidence runs from 0 to 1 and is not calibrated: it sorts the queue, it is not a probability.</li>
+      <li><strong>Set Tag outcome</strong> yourself, whatever the agent proposed: Applies, Does not apply, Needs evidence (a source must be read first) or Ask another editor. Agreeing with Add tag or Keep tag means Applies; agreeing with Do not add tag or Remove tag means Does not apply.</li>
+      <li><strong>Only when you overrule</strong> the agent or decide against the written rule, pick one Why wrong value:
+        <ul>
+          <li>Agent slip: the rule settles it, the agent did not follow it.</li>
+          <li>Rule unclear: the rule does not settle it.</li>
+          <li>Rule should change: the rule settles it but is wrong.</li>
+          <li>No tag fits: no rulebook tag names the problem.</li>
+          <li>Other: none of these.</li>
+        </ul>
+      </li>
+      <li><strong>Write one sentence</strong> in Your reasoning for every Why wrong value except Agent slip. Lessons are drafted from these sentences; Needs your note lists the rows that still lack one.</li>
+    </ol>
+    <p>That is all: Stage and Direction update themselves, the agent never changes these fields, and a decided tag is never overwritten on its claim.</p>
+    <div class="geo-callout geo-callout-neutral"><div class="geo-callout-body">
+      <p><strong>Changed after the editor review.</strong> The first reviewer could not tell whether to fill Decided at and Decided by, or what each Stage and Direction value means. The column descriptions and the hub's callout now say it: Tag outcome alone moves the row, the two Decided fields are optional, every Stage and Direction value has a one-line meaning, and the callout states how a proposal maps to an outcome (<a href="#verify-personas">Verification and reviews</a>).</p>
+    </div></div>
   </div>
 
-  <div class="sub" id="notion-lessons" data-title="Lessons and live rules">
-    <h3>Lessons waiting and live rules</h3>
-    <p>TODO: the view Lessons waiting for the rule owner (Status = Proposed), what the rule owner sets, and the Live rules view with L-1 as the example.</p>
+  <div class="sub" id="notion-lessons" data-title="Lessons waiting">
+    <h3>Lessons waiting for the rule owner</h3>
+    <p>After the distill step the view showed two lessons. This is what the rule owner read for LS-1 (the plan called it L-1; Notion's lesson ids need a two-letter prefix):</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <tbody>
+        <tr><th>Lesson</th><td><strong>LS-1</strong> · Hedged 'likely to' needs a definite future outcome, not a tendency</td></tr>
+        <tr><th>Rule</th><td>Predictive rule 1 · Change the rule</td></tr>
+        <tr><th>Supporting rows</th><td>{{count:end.ls1Supporting}}: Texas "on track to" and Supreme Court "likely to expand" (9 October audit); Supreme Court "likely to uphold" and the Iran "more likely than" comparison (editor persona)</td></tr>
+        <tr><th>Current text</th><td>1. Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to, is likely to ("the market is forecasted to grow to a multi-trillion size by 2030", "the largest wave of maturities is expected in the fall").</td></tr>
+        <tr><th>Proposed text</th><td>Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to ("the market is forecasted to grow to a multi-trillion size by 2030", "the largest wave of maturities is expected in the fall"). Hedged markers (is likely to, is likely, probably) fire only when they attach to a definite future outcome or event that only the future can settle ("the hiring freeze is likely a short-lived phase" fires). Hedged markers do NOT fire when they describe: an actor's general tendency or disposition, which can be checked against its past record ("the agency is likely to side with large incumbents"); a comparison of which strategy or approach tends to work better ("tariffs are more likely than talks to change the policy"); or a present trajectory ("is on track to", "is heading toward"). Such claims are assessments of the present, not forecasts.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The rule owner approved it on the merits: all four decisions withhold Predictive from a hedged tendency, comparison or trajectory, and the tag's example claims use no hedged marker, so the canaries are untouched. After the first gate attempt the rule owner wrote an Editor wording ({{count:wording.long}} characters) that adds two sentences: one for an actor likely to keep doing what it already does, and one fence saying the rule never decides Hypothetical. A minimal wording ({{count:wording.minimal}} characters) was tried once and did worse; the longer one is back in place. LS-1 ends Approved, held at the gate, with the last card in Gate result. Because Lessons waiting shows only Proposed lessons, a held lesson dropped out of the rule owner's view; since the review a computed Owner action column keeps a failed or held lesson in front of the rule owner with the next step spelled out (decision M13).</p>
+    <p>The second row was the planted test, <strong>LS-2</strong> · "Gate test (deliberately bad): only pronouns make a claim Context-dependent", on Context-dependent rule 2. It would have replaced the rule about definite references ("the vulnerabilities", "the discussions") with "Only a pronoun without an antecedent inside the claim makes it Context-dependent", resting on {{count:end.ls2Supporting}} real seeded decisions it over-generalises. The rule owner approved it only because it is labelled a planted test, noting that on the merits it would be rejected. The gate refused it and the agent marked it Rolled back.</p>
+    <p>Live rules, the view of lessons that went live, is empty: nothing passed.</p>
   </div>
 
   <div class="sub" id="notion-card" data-title="A result card">
     <h3>A result card</h3>
-    <p>TODO: one gate result card (Runs, kind Gate) read line by line: verdict, canaries, newly failing cases, per-tag summary, and the words small sample.</p>
+    <p>The card of LS-1's attempt {{count:best.attempt}}, as it stands in the Summary of its Gate row in Latest runs:</p>
+    <div class="geo-code"><pre>Verdict: FAIL - small sample: a gated tag has under 30 labelled positives, read the numbers and not only the word
+Canaries: 83/83 pass under the candidate; baseline 83/83
+Cases newly failing: 1 (ctr-ec6e3f00cf08-contex) of 27 active; newly passing 0; rule changed 11
+Target Predictive: +36.4 points (95% CI +9.1 to +63.6), fixed 4, broken 0, n 11, 7 positives
+Hypothetical: 77.8% -&gt; 77.8% (0.0 points, CI 0.0 to 0.0), fixed 0, broken 0, n 9
+FAIL: 1 regression cases newly failing: ctr-ec6e3f00cf08-contex
+Reconfirmed ctr-ec6e3f00cf08-contex (Context-dependent, expected apply): baseline apply over 8 runs, candidate do_not_apply over 8 runs: broken flip confirmed
+Reconfirmed ctr-c78bac8861c7-predic (Predictive, expected do_not_apply): baseline apply over 8 runs, candidate do_not_apply over 8 runs: fixed flip confirmed
+Reconfirmed ctr-c7c20ae98de9-predic (Predictive, expected do_not_apply): baseline apply over 8 runs, candidate do_not_apply over 8 runs: fixed flip confirmed
+Reconfirmed ctr-c968f9819580-predic (Predictive, expected do_not_apply): baseline apply over 8 runs, candidate do_not_apply over 8 runs: fixed flip confirmed
+Reconfirmed ctr-c9b46cfbd720-predic (Predictive, expected do_not_apply): baseline apply over 8 runs, candidate do_not_apply over 8 runs: fixed flip confirmed
+Not gated (under 5 positives): Context-dependent (4 positives of 11)
+Not run: 9 cases on source-reading tags (Source inaccessible, Improperly sourced)
+Baseline f0b5d66f0b36f8e5 (rubric 2026-10-13.1) vs candidate 038f96ade2a80e70 (rubric 2026-10-13.2), 3 run(s)
+Rollback: /claim-tagger promote --rollback Hedged 'likely to' needs a definite future outcome, not a tendency</pre></div>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <caption><strong>Reading it line by line</strong></caption>
+      <thead><tr><th>Line</th><th>Means</th></tr></thead>
+      <tbody>
+        <tr><td>Verdict</td><td>FAIL, with the <dfn data-t="small-sample">small sample</dfn> warning: read the numbers, not only the word.</td></tr>
+        <tr><td>Canaries</td><td>Every example claim comes out right under both rulebooks.</td></tr>
+        <tr><td>Cases newly failing</td><td>One saved decision is lost. Case ids end in the tag's first letters; this one is the Melania Trump row on Context-dependent.</td></tr>
+        <tr><td>Target Predictive</td><td>The lesson works on its own tag: {{count:gate.ls1a4.targetFixed}} rows fixed, {{count:gate.ls1a4.targetBroken}} broken, among {{count:gate.ls1a4.targetN}} labelled Predictive claims.</td></tr>
+        <tr><td>Hypothetical</td><td>The sibling tag is unchanged.</td></tr>
+        <tr><td>FAIL</td><td>The reason for the verdict: gate condition 2.</td></tr>
+        <tr><td>Reconfirmed</td><td>Each flipped case judged {{count:best.runsEach}} times under each rulebook: the loss and all four fixes hold, so none of them is noise.</td></tr>
+        <tr><td>Not gated, Not run</td><td>Context-dependent has too few labelled positives to gate its accuracy; cases on the source-reading tags need sources nobody reads in this trial.</td></tr>
+        <tr><td>Baseline vs candidate</td><td>The two configurations compared, by <dfn data-t="config-id">config id</dfn> and rubric version.</td></tr>
+        <tr><td>Rollback</td><td>The command that would undo the change had it gone live. It never did.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The editor review found this card written for engineers: case ids instead of claims, statistics, a command line, and no sentence on what it means for an editor. Since then every new card opens with a "For editors:" line that says whether anything went live and why not, and the rollback command appears only on a PASS card. The cards of this trial were written before that change.</p>
+  </div>
+
+  <div class="sub" id="notion-end" data-title="End state">
+    <h3>The state at the end of the trial</h3>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <caption><strong>Tag decisions by Stage</strong>, from the snapshots after each step</caption>
+      <thead><tr><th>Stage</th><th class="num">Seeded</th><th class="num">After the tag run</th><th class="num">After the persona's decisions</th><th class="num">End</th></tr></thead>
+      <tbody>
+        <tr><td>To review</td><td class="num">{{count:stage.seeded.toReview}}</td><td class="num">{{count:stage.afterTag.toReview}}</td><td class="num">{{count:stage.afterDecisions.toReview}}</td><td class="num">{{count:stage.end.toReview}}</td></tr>
+        <tr><td>Waiting for evidence</td><td class="num">{{count:stage.seeded.waitingForEvidence}}</td><td class="num">{{count:stage.afterTag.waitingForEvidence}}</td><td class="num">{{count:stage.afterDecisions.waitingForEvidence}}</td><td class="num">{{count:stage.end.waitingForEvidence}}</td></tr>
+        <tr><td>Second opinion</td><td class="num">{{count:stage.seeded.secondOpinion}}</td><td class="num">{{count:stage.afterTag.secondOpinion}}</td><td class="num">{{count:stage.afterDecisions.secondOpinion}}</td><td class="num">{{count:stage.end.secondOpinion}}</td></tr>
+        <tr><td>Lesson proposed</td><td class="num">{{count:stage.seeded.lessonProposed}}</td><td class="num">{{count:stage.afterTag.lessonProposed}}</td><td class="num">{{count:stage.afterDecisions.lessonProposed}}</td><td class="num">{{count:stage.end.lessonProposed}}</td></tr>
+        <tr><td>Regression case</td><td class="num">{{count:stage.seeded.regressionCase}}</td><td class="num">{{count:stage.afterTag.regressionCase}}</td><td class="num">{{count:stage.afterDecisions.regressionCase}}</td><td class="num">{{count:stage.end.regressionCase}}</td></tr>
+        <tr><td>Decided</td><td class="num">{{count:stage.seeded.decided}}</td><td class="num">{{count:stage.afterTag.decided}}</td><td class="num">{{count:stage.afterDecisions.decided}}</td><td class="num">{{count:stage.end.decided}}</td></tr>
+        <tr><td>Closed</td><td class="num">{{count:stage.seeded.closed}}</td><td class="num">{{count:stage.afterTag.closed}}</td><td class="num">{{count:stage.afterDecisions.closed}}</td><td class="num">{{count:stage.end.closed}}</td></tr>
+        <tr><td><strong>Rows</strong></td><td class="num">{{count:stage.seeded.rows}}</td><td class="num">{{count:stage.afterTag.rows}}</td><td class="num">{{count:stage.afterDecisions.rows}}</td><td class="num">{{count:stage.end.rows}}</td></tr>
+      </tbody>
+    </table></div>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Database</th><th>At the end</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Rulebook</strong></td><td>{{count:end.rulebookAtVersion}} of {{count:rulebookTags}} rows at {{count:rubricVersion}}, Changed by empty on all, no drift; identical in all {{count:end.snapshots}} snapshots.</td></tr>
+        <tr><td><strong>Claims</strong></td><td>{{count:claims}} claims: Needs editor {{count:end.claimsNeedsEditor}}, Fix needed {{count:end.claimsFixNeeded}}, Ready {{count:end.claimsReady}}.</td></tr>
+        <tr><td><strong>Rule changes</strong></td><td>{{count:end.lessons}} lessons: LS-1 Approved, held at the gate with {{count:end.ls1Cards}} result cards; LS-2 Rolled back.</td></tr>
+        <tr><td><strong>Runs</strong></td><td>{{count:end.runsRows}} rows: one tag run, one baseline, two distills and {{count:end.gateRows}} gates, every gate FAIL.</td></tr>
+        <tr><td><strong>Agent settings</strong></td><td>Paused: {{count:end.paused}}. Rubric in force {{count:rubricVersion}}. Last run at and Last run summary were still empty in this snapshot; every run card now fills them.</td></tr>
+      </tbody>
+    </table></div>
   </div>
 
   <div class="sub" id="notion-ddl" data-title="Database definitions" data-layer="tech">
     <h3>Database definitions</h3>
-    <p>TODO: the six CREATE TABLE statements from agents/claim-tagger/schemas/notion as code blocks, with the owner of each column (editor, agent, computed).</p>
+    <p>The databases were created through the connector with Notion's SQL-like DDL, in the order Rulebook, Claims, Rule changes, Tag decisions, Runs, Agent settings, so each relation points at a database that already exists; the formulas and the late relations came after. Every statement Notion accepted, with the formulas and views, is recorded in <code>agents/claim-tagger/schemas/notion/as-built.md</code>; the appendix of <code>plan.md</code> holds the earlier draft. Owners: <strong>A</strong> agent, <strong>E</strong> editor or rule owner, <strong>C</strong> computed.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+      <thead><tr><th>Database</th><th>Key</th><th>A</th><th>E</th><th>C</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Rulebook</strong></td><td>Tag title</td><td>When to use, Rule version, Tag hash, Changed by (relation to Rule changes); the rest written once at seed time</td><td>none</td><td>none</td></tr>
+        <tr><td><strong>Claims</strong></td><td>Geo ID</td><td>Agent tags (relation to Rulebook), Readiness, Tag confidence, Last judged; Claim title, Geo link, Sources count, Source URLs, Table, Sample at seed time</td><td>none</td><td>Tag decisions (two-way), Decided applies, Decided does not apply</td></tr>
+        <tr><td><strong>Tag decisions</strong></td><td>Key (<code>geoId::Tag</code>)</td><td>Claim, Tag, Agent proposal, Agent confidence, Why I recommend this, Agent full note, Why in queue, Priority, Rubric version, Lesson, In regression suite, Agent follow-up, Follow-up run; Seeded outcome, Seeded reasoning, Seeded at at seed time</td><td>Tag outcome, Why wrong, Your reasoning, Decided by, Decided at</td><td>Effective outcome, Direction, Stage, Applied tag, Rejected tag, Tag name, Lesson status; Claim text (added after the review)</td></tr>
+        <tr><td><strong>Rule changes</strong></td><td>Lesson title</td><td>Tag, Rule, Kind, Current text, Proposed text, Rubric version, Gate result, Status (Proposed, Live, Rolled back)</td><td>Editor wording, Approved by, Status (Approved, Rejected)</td><td>Lesson ID (unique id, prefix LS), Created, Supporting rows, Result card; Owner action (added after the review)</td></tr>
+        <tr><td><strong>Runs</strong></td><td>Run title</td><td>Kind, Verdict, Rubric version, Started, Claims judged, Canaries, Newly failing, Per-tag summary, Summary, Lesson, Cost USD, Model</td><td>none</td><td>none</td></tr>
+        <tr><td><strong>Agent settings</strong></td><td>Name</td><td>Rubric in force, Last run at, Last run summary</td><td>Paused, Paused by, Reason, Weekly cap, Owner</td><td>none</td></tr>
+      </tbody>
+    </table></div>
+    <h4>What the connector's DDL taught</h4>
+    <ul>
+      <li>A <code>RELATION</code> takes the bare data-source UUID, not a <code>collection://</code> link.</li>
+      <li>A unique-id prefix needs at least two characters, so lessons are LS-1, LS-2 rather than L-1.</li>
+      <li>The DDL parser splits formula text at a quote, comma, space, quote sequence: write <code>","</code> inside a formula without the space after the comma.</li>
+      <li>A formula cannot read a property through a relation (<code>current.prop()</code> is a type error). Tag name and Lesson status are therefore rollups, and the two Claims columns roll up the Applied tag and Rejected tag formulas of the queue rows.</li>
+      <li>Column names avoid apostrophes ("Editor wording", not "Editor's wording"); editor guidance lives in the column descriptions, since there is no start page.</li>
+    </ul>
   </div>
 
   <div class="sub" id="notion-views" data-title="Views" data-layer="tech">
     <h3>Views</h3>
-    <p>TODO: a table of the views (database, view, filter, sort, columns shown) from the plan's Views table, and the hub page layout.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Database</th><th>View</th><th>Shows</th></tr></thead>
+      <tbody>
+        <tr><td>Tag decisions</td><td>My queue</td><td>Stage = To review; sorted by Priority, then Agent confidence; grouped by Tag name. On the hub page as Your queue.</td></tr>
+        <tr><td>Tag decisions</td><td>Needs your note</td><td>Why wrong is Rule unclear, Rule should change, No tag fits or Other, and Your reasoning is empty.</td></tr>
+        <tr><td>Tag decisions</td><td>Decided</td><td>Effective outcome Applies or Does not apply, newest decision first, quick filters on Stage, Direction and Agent follow-up.</td></tr>
+        <tr><td>Rule changes</td><td>Lessons waiting</td><td>Status = Proposed, oldest first, with the current, proposed and editor texts side by side.</td></tr>
+        <tr><td>Rule changes</td><td>Live rules</td><td>Status = Live, with the rubric version, gate result and result card.</td></tr>
+        <tr><td>Runs</td><td>Latest runs</td><td>Newest first: kind, verdict, rubric version, claims judged, canaries, newly failing, summary, cost.</td></tr>
+        <tr><td>Rulebook</td><td>All tags</td><td>Every tag with its polarity, counterpart, judged flag, rule version and When to use.</td></tr>
+        <tr><td>Claims</td><td>All claims</td><td>Quick filters on Sample and Readiness.</td></tr>
+        <tr><td>Claims</td><td>Needs editor</td><td>Readiness = Needs editor.</td></tr>
+        <tr><td>Tag decisions</td><td>Added after the editor review</td><td>By claim (a claim's rows together), Easy rows first (surest proposals first), Overruled without a note (Missed or Wrongly applied with Why wrong empty), Waiting for evidence, Second opinion. The editor views now show the claim's text first, through a Claim text rollup.</td></tr>
+      </tbody>
+    </table></div>
+    <p>The hub page holds the callout, the linked views Your queue, Needs your note, Lessons waiting for the rule owner and Latest runs, since the review also a view of rows handed on (Needs evidence, Ask another editor), and two sub-pages: Databases and Engineer notes.</p>
   </div>
 
-  <div class="sub" id="notion-seed" data-title="Seed strata" data-layer="tech">
-    <h3>Seed strata</h3>
-    <p>TODO: how the {{count:claims}} claims and {{count:queueRows}} queue rows were seeded: by sample (Decided, Forecast, Random), by seeded outcome and by why in queue. Read the numbers from agents/claim-tagger/evals/seed/seed-report.json.</p>
+  <div class="sub" id="notion-seed" data-title="Seed" data-layer="tech">
+    <h3>How the trial was seeded</h3>
+    <p><code>seed-build.mjs</code> builds the seed files from the research exports deterministically (no network, a seeded shuffle); <code>seed.mjs</code> turns them into three plans, each applied and read back.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>What</th><th class="num">Rows</th><th>How chosen</th></tr></thead>
+      <tbody>
+        <tr><td>Claims, sample Decided</td><td class="num">{{count:seed.decided}}</td><td>Every claim with a decided audit row on a rulebook tag</td></tr>
+        <tr><td>Claims, sample Forecast</td><td class="num">{{count:seed.forecast}}</td><td>Forecast and boundary claims ("likely to", "on track to", "expected to", "will") named in the plan</td></tr>
+        <tr><td>Claims, sample Random</td><td class="num">{{count:seed.random}}</td><td>Drawn from the rest of the 13 October sample with a seeded shuffle</td></tr>
+        <tr><td>Queue rows</td><td class="num">{{count:seed.rows}}</td><td>{{count:seed.seededDecision}} rows from decided audit rows (Why in queue: Seeded decision) and {{count:seed.auditorFlag}} open rows for the forecast claims (Auditor flag)</td></tr>
+        <tr><td>Rows with a seeded outcome</td><td class="num">{{count:seed.withOutcome}}</td><td>{{count:seed.applies}} Applies, {{count:seed.doesNotApply}} Does not apply, mapped from the audit's flag and the editor's agree or disagree; {{count:seed.open}} rows left open</td></tr>
+        <tr><td>Audit decisions set aside</td><td class="num">{{count:seed.excluded}}</td><td>On tags outside the rulebook; kept in <code>excluded-decisions.jsonl</code></td></tr>
+        <tr><td>Sources counts fetched</td><td class="num">{{count:seed.sourcesFetched}}</td><td>Claims whose count was not in the exports, read from their Notion claim pages, read-only</td></tr>
+      </tbody>
+    </table></div>
+    <p>On seeded rows the Agent proposal is the old tagger's position, so Direction measures against the tagger being replaced. Names in notes and reasoning were replaced by roles, and the auditor's inferred predictions of what the editor would answer were never seeded, because they would steer editors.</p>
   </div>
 
   <div class="sub" id="notion-check" data-title="Check by hand" data-layer="tech">
-    <h3>Check-by-hand rows</h3>
-    <p>TODO: the table of audit rows the seed did not turn into a decision, from agents/claim-tagger/evals/seed/check-by-hand.md, with the reason for each.</p>
+    <h3>Rows the seed did not map mechanically</h3>
+    <p>From <code>agents/claim-tagger/evals/seed/check-by-hand.md</code>: the {{count:seed.checkByHand}} audit rows that the mapping could not or should not turn into a seeded outcome as is.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Claim</th><th>Tag</th><th>Seeded as</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>A ceasefire in Ukraine will increase the military threat to the Baltic…</td><td>Hypothetical</td><td>Open, High</td><td>Settled in chat as Predictive only; the old Agree cannot stand for this tag</td></tr>
+        <tr><td>The U.S. Constitution permits the president to restrict birthright citi…</td><td>Improperly sourced</td><td>Open, Check source</td><td>Mixed sources, one unreadable; a person must read them</td></tr>
+        <tr><td>The House of Representatives has the constitutional authority to exclud…</td><td>Improperly sourced</td><td>Open, Check source</td><td>Every source blocked; the old Agree recorded the access failure, not a verdict</td></tr>
+        <tr><td>Federal law authorizes mandatory detention for long-term undocumented r…</td><td>Improperly sourced</td><td>Open, Check source</td><td>The same</td></tr>
+        <tr><td>Trump agencies violated administrative law by skipping public comment p…</td><td>Improperly sourced</td><td>Open, Check source</td><td>The same</td></tr>
+        <tr><td>Permanent standard time is healthier for the public than permanent dayl…</td><td>Improperly sourced</td><td>Open, Check source</td><td>The same</td></tr>
+        <tr><td>A better strategy than requiring content removal is to inform the publi…</td><td>Wordy</td><td>Excluded</td><td>The Agree contradicts the note; the tag is outside the rulebook</td></tr>
+        <tr><td>The Supreme Court is likely to expand executive power further in the fu…</td><td>Predictive</td><td>Does not apply</td><td>Hedged forecast the editor rejected; Seeded reasoning starts "Rule should change"</td></tr>
+        <tr><td>Texas is on track to become a competitive swing state</td><td>Predictive</td><td>Does not apply</td><td>The same</td></tr>
+        <tr><td>California's Proposition 40 will do more harm than good to the state's…</td><td>Predictive</td><td>Applies</td><td>A Calibration row, but the note says add Predictive to a definite "will"</td></tr>
+        <tr><td>Ending DEI programs will reduce minority enrollment and graduation rates</td><td>Predictive</td><td>Applies</td><td>The same</td></tr>
+      </tbody>
+    </table></div>
   </div>
 
   <aside class="terms" data-strip></aside>

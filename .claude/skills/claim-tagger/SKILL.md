@@ -11,7 +11,7 @@ Read `agents/claim-tagger/AGENT.md` once per session before the first subcommand
 
 ## Exit codes
 
-0 ok · 1 error (read the message; retry once if it looks transient) · 2 invalid input or nothing to do (report it; a `plan.mjs check` on a run with no plan is "nothing to do") · 3 paused (stop: a person must untick Paused in Agent settings or run `status.mjs --unpause --confirm`) · 4 rubric drift or model mismatch (stop and report; `status.mjs` explains) · 5 trust breaker (stop; report the changed editor field from `runs/PAUSED`) · 10 gate HOLD · 11 gate FAIL (both are results, not errors) · 75 usage window (tell the user when to resume with `--resume <run-id>`).
+0 ok · 1 error (read the message; retry once if it looks transient) · 2 invalid input or nothing to do (report it; a `plan.mjs check` on a run with no plan is "nothing to do") · 3 paused (stop: a person must untick Paused in Agent settings or run `status.mjs --unpause --confirm`) · 4 rubric drift or model mismatch (stop and report; `status.mjs` explains) · 5 trust breaker (stop; report the changed editor field from `runs/PAUSED`) · 10 gate HOLD · 11 gate FAIL (both are results, not errors) · 75 usage window (tell the user when to resume: `node S/judge.mjs --resume --run-id <id>` or `node S/promote.mjs --lesson <lesson> --resume --run-id <id>`; a run remembers its own arguments) · 2 also when `runs/PROMOTE.lock` belongs to another promote (continue it with `--resume --run-id <id>` or `node S/promote.mjs --abort <id>`) · 4 also when a select option the scripts rely on is missing in Notion.
 
 ## Preflight (every subcommand)
 
@@ -54,7 +54,7 @@ node S/pull.mjs --all
 node S/cases-sync.mjs --run-id <id>-cases          (then A on <id>-cases when it wrote a plan)
 ```
 
-`judge.mjs` takes minutes (about 50 seconds per 8 claims); never start a second judge on the same run. If its summary says `cells=0`, every claim already has its judgments under the current rubric (judgments are cached by rubric and model): say so, and run `propose.mjs` against the latest tag run listed by `status.mjs` instead of judging again. Report the propose summary (claims judged, rows queued, held by cap, readiness counts, cost) and link "Your queue" on the hub page.
+To continue a stopped judge run: `node S/judge.mjs --resume --run-id <id>` with no other arguments (the run remembers them; a gate run is continued through `promote.mjs --resume` instead). `judge.mjs` takes minutes (about 50 seconds per 8 claims); never start a second judge on the same run. If its summary says `cells=0`, every claim already has its judgments under the current rubric (judgments are cached by rubric and model): say so, and run `propose.mjs` against the latest tag run listed by `status.mjs` instead of judging again. Report the propose summary (claims judged, rows queued, held by cap, readiness counts, cost) and link "Your queue" on the hub page.
 
 ### `distill`
 
@@ -82,7 +82,7 @@ A on <id>-cases                                           (PASS only: activates 
 git add agents/claim-tagger/rubric agents/claim-tagger/evals && git commit -m "rubric <version>: <lesson> (gate PASS, <id>)"
 ```
 
-A regression case that flips between the baseline and the candidate (broken or fixed) is judged again with `gate.reconfirm_runs` extra runs per rubric before it counts; the card lists each reconfirmed case as confirmed or noise, and the verdict after reconfirmation is the one that counts. On HOLD or FAIL only the card plan is applied; the Rulebook is untouched and the lesson stays Approved with its Gate result filled in (a planted demo lesson is marked Rolled back). Print `runs/<id>/card.md` verbatim. Other forms: `promote.mjs --abort <id>` after a failed apply; `promote.mjs --rollback <lesson> --confirm` restores the previous version of the most recent Live lesson (then A on its run and a commit).
+A regression case that flips between the baseline and the candidate (broken or fixed) is judged again with `gate.reconfirm_runs` extra runs per rubric before it counts; the card lists each reconfirmed case as confirmed or noise, and the verdict after reconfirmation is the one that counts. On HOLD or FAIL only the card plan is applied; the Rulebook is untouched and the lesson stays Approved with its Gate result filled in (a planted demo lesson is marked Rolled back). Print `runs/<id>/card.md` verbatim. Only one promote runs at a time (`runs/PROMOTE.lock`); a stopped gate run continues with `node S/promote.mjs --lesson <lesson> --resume --run-id <id>`. A PASS plan is accepted by `plan.mjs check` and `apply.mjs` only with its evidence on disk (runs/PROMOTING.json, a non-smoke PASS card and the candidate rubric whose hashes match the card and the live rubric); a plan file is never edited by hand. Other forms: `promote.mjs --abort <id>` after a failed apply; `promote.mjs --rollback <lesson> --confirm` restores the previous version of the most recent Live lesson (then A on its run and a commit).
 
 ### `follow-up <lesson>`
 
@@ -96,7 +96,7 @@ Report the Fixed and Still wrong counts.
 
 ### `setup` (engineer, one-time; already done for the trial page)
 
-The six databases, formulas and views were created through the connector on 13 October 2026 (ids in `config.json`). Seeding: `node S/pull.mjs --all`, then for phase 1, 2 and 3: `node S/seed.mjs --phase <n>`, A on the phase run, `node S/pull.mjs --all`. Then `node S/rubric-init.mjs` if `rubric/rubric.json` does not exist, and `cases-sync.mjs`.
+The six databases, formulas and views were created through the connector on 13 October 2026 (ids in `config.json`; the as-built statements are in `schemas/notion/as-built.md`). Before anything else, `node S/probe.mjs` must report every protected real database as not reachable (exit 4 names one the token can reach: stop and tell the engineer to disconnect the integration from that page). Seeding needs the marker file `agents/claim-tagger/runs/SETUP`, which the engineer creates from a terminal (Claude Code cannot write under runs/) and deletes afterwards. Seeding: `node S/pull.mjs --all`, then for phase 1, 2 and 3: `node S/seed.mjs --phase <n>`, A on the phase run, `node S/pull.mjs --all`. Then `node S/rubric-init.mjs` if `rubric/rubric.json` does not exist, and `cases-sync.mjs`.
 
 ## Evidence
 

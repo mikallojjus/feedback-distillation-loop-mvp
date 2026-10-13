@@ -2,10 +2,11 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import {
-  DATABASES, EDITOR_NAMES, EDITOR_OWNED, FOLLOW_UP_FIELDS, NEVER, PROPERTY_TYPES, SEED_CREATE_ONLY, SEED_ONLY, STATUS_VALUES, WRITABLE,
+  DATABASES, EDITOR_NAMES, EDITOR_OWNED, FOLLOW_UP_FIELDS, NEVER, OPTIONAL_PROPERTIES, PROPERTY_TYPES, SEED_CREATE_ONLY, SEED_ONLY, STATUS_VALUES, WRITABLE,
   allowlistSha, assertOpWritable, assertWritable, controlPaths, editorValue, isProtectedDatabase,
 } from '../agents/claim-tagger/scripts/allowlist.mjs';
 import { WRITABLE_TYPES } from '../agents/claim-tagger/scripts/lib/notion-values.mjs';
+import { schemaProblems } from '../agents/claim-tagger/scripts/pull.mjs';
 import { fixtureSchemas, realConfig } from './fixtures/notion/fake-notion.mjs';
 
 const schemas = fixtureSchemas();
@@ -261,6 +262,44 @@ test('isProtectedDatabase: the real databases are protected in any id format; th
   assert.equal(isProtectedDatabase(config, ''), false);
   assert.equal(isProtectedDatabase(config, null), false);
   assert.equal(isProtectedDatabase({}, 'd1307596-e531-420f-8688-2485f3ef28ab'), false, 'no list, nothing protected');
+});
+
+test('isProtectedDatabase: every real Geo database and data source id is on the list, in any dash form and any case (EN-12)', () => {
+  const real = [
+    '7219756338b2416f8fa8af83d75ec47d', '9e979fe1-e03d-45cd-b9b1-d971dc3d90a2', '9e111d22c14e4344bb90072606036942', // U.S. Politics debate claims, its data source (also Claims to review), Claims to review
+    'd1307596-e531-420f-8688-2485f3ef28ab', 'f05273e214eb8353b0a981544507de32', 'b65273e2-14eb-8362-86a6-870ea8d632f4', // U.S. Politics data source; the taxonomy Claim Tags - verified (database, data source)
+    '0e2273e214eb83b0a2b1013e7d0958fc', 'eec273e2-14eb-8349-a416-074a30396303', '67a1940f-db0d-477a-9737-0a9eb01a5eac', // World affairs debate claims (1) database and data source; World affairs debate claims data source
+  ];
+  const dashed = (id) => id.replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5');
+  for (const id of real) {
+    const bare = id.replace(/-/g, '');
+    for (const form of [id, bare, dashed(bare), bare.toUpperCase(), dashed(bare).toUpperCase()]) assert.equal(isProtectedDatabase(config, form), true, form);
+  }
+  // the list is compared after both sides are normalised: a list written in one form protects the other form
+  const spelled = { notion: { protected_database_ids: ['D1307596-E531-420F-8688-2485F3EF28AB', '9E979FE1E03D45CDB9B1D971DC3D90A2'] } };
+  assert.equal(isProtectedDatabase(spelled, 'd1307596e531420f86882485f3ef28ab'), true);
+  assert.equal(isProtectedDatabase(spelled, '9e979fe1-e03d-45cd-b9b1-d971dc3d90a2'), true);
+  assert.deepEqual(config.notion.protected_database_ids.map((id) => id.replace(/-/g, '').toLowerCase()).sort(), real.map((id) => id.replace(/-/g, '')).sort(), 'config.json lists exactly these nine');
+  for (const db of DATABASES) {
+    assert.equal(isProtectedDatabase(config, config.notion.databases[db].database_id), false, `${db} database`);
+    assert.equal(isProtectedDatabase(config, config.notion.databases[db].data_source_id), false, `${db} data source`);
+  }
+  assert.equal(isProtectedDatabase(config, 'b65273e2-14eb-8362-86a6-870ea8d632f5'), false, 'one digit off is another database');
+});
+
+test('Lesson status is not optional: the Stage formula is built on it, so a pull of a schema without it fails (EN-13)', () => {
+  assert.equal(OPTIONAL_PROPERTIES.tag_decisions.includes('Lesson status'), false);
+  assert.deepEqual([...OPTIONAL_PROPERTIES.tag_decisions].sort(), ['Applied tag', 'Rejected tag'], 'the computed columns no script reads');
+  const schema = structuredClone(schemas.tag_decisions);
+  assert.deepEqual(schemaProblems('tag_decisions', schema), [], 'the fixture schema has it');
+  delete schema.properties['Lesson status'];
+  assert.deepEqual(schemaProblems('tag_decisions', schema), ['tag_decisions: property "Lesson status" is missing (renamed or deleted?)']);
+  schema.properties['Lesson status'] = { ...schemas.tag_decisions.properties['Lesson status'], type: 'formula' };
+  assert.deepEqual(schemaProblems('tag_decisions', schema), ['tag_decisions: property "Lesson status" is formula, the scripts expect rollup']);
+  const optional = structuredClone(schemas.tag_decisions);
+  delete optional.properties['Applied tag'];
+  delete optional.properties['Rejected tag'];
+  assert.deepEqual(schemaProblems('tag_decisions', optional), [], 'Applied tag and Rejected tag may still go');
 });
 
 test('allowlistSha is a stable h16 and controlPaths names the control files', () => {

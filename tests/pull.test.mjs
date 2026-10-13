@@ -2,13 +2,13 @@ import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { DATABASES } from '../agents/claim-tagger/scripts/allowlist.mjs';
+import { DATABASES, OPTIONAL_PROPERTIES } from '../agents/claim-tagger/scripts/allowlist.mjs';
 import { EXIT } from '../agents/claim-tagger/scripts/lib/exit-codes.mjs';
 import { h16 } from '../agents/claim-tagger/scripts/lib/hash.mjs';
 import { readJsonl } from '../agents/claim-tagger/scripts/lib/jsonl.mjs';
 import { NotionError } from '../agents/claim-tagger/scripts/lib/notion-rest.mjs';
 import { normaliseText } from '../agents/claim-tagger/scripts/lib/notion-values.mjs';
-import { findSchema, isDecided, latestPullId, loadPull, main, pull, schemaProblems } from '../agents/claim-tagger/scripts/pull.mjs';
+import { findSchema, isDecided, latestPullId, loadPull, main, pull, schemaProblems, schemaWarnings } from '../agents/claim-tagger/scripts/pull.mjs';
 import { createFakeNotion } from './fixtures/notion/fake-notion.mjs';
 import { USER, buildWorld, captureIo, cleanupRoots, clockAt, makeRoot } from './fixtures/notion/helpers.mjs';
 
@@ -449,10 +449,124 @@ test('over HTTP through the REST client: a relation cut at 25 references is comp
   assert.equal(new Set(lesson.supporting_page_ids).size, 61);
 });
 
-test('computed properties no script reads may be renamed without failing the pull', async () => {
+test('computed properties no script reads (allowlist.OPTIONAL_PROPERTIES) may be renamed without failing the pull', async () => {
   const s = setup();
-  delete s.fake.schemas.tag_decisions.properties['Applied tag'];
-  delete s.fake.schemas.claims.properties['Decided applies'];
-  delete s.fake.schemas.tag_decisions.properties['Lesson status'];
+  // The list is read from the allowlist, not copied here: the formulas read the others (Lesson status feeds Stage), so those must stay required.
+  const optional = Object.entries(OPTIONAL_PROPERTIES).flatMap(([db, names]) => names.map((name) => [db, name]));
+  assert.ok(optional.length >= 1, 'some computed properties are optional');
+  for (const [db, name] of optional) delete s.fake.schemas[db].properties[name];
   assert.equal(await s.run(['--dbs', 'tag_decisions,claims', '--pull-id', 'p1']), EXIT.OK, s.cap.err.join('\n'));
+});
+
+// ---- the option contract (EN-13): lib/notion-contract.mjs REQUIRED_OPTIONS, checked by schemaProblems ----------------------
+
+/** Take the option `name` out of the select `prop` of a fake schema (the fake hands out copies of this object). */
+function removeOption(schemas, db, prop, name) {
+  const options = schemas[db].properties[prop].select.options;
+  const i = options.findIndex((o) => o.name === name);
+  assert.ok(i >= 0, `${db}.${prop} has no option "${name}" to remove`);
+  options.splice(i, 1);
+}
+
+const sorted = (list) => [...list].sort();
+
+test('schemaProblems: a select that lacks a required option is reported with database, property and option name', () => {
+  const { config, schemas } = createFakeNotion();
+  assert.deepEqual(schemaProblems('tag_decisions', schemas.tag_decisions, config), []);
+  removeOption(schemas, 'tag_decisions', 'Why wrong', 'Rule unclear');
+  const problems = schemaProblems('tag_decisions', schemas.tag_decisions, config);
+  assert.equal(problems.length, 1);
+  assert.match(problems[0], /tag_decisions/);
+  assert.match(problems[0], /"Why wrong"/);
+  assert.match(problems[0], /"Rule unclear"/);
+  assert.equal(problems[0], 'tag_decisions: property "Why wrong" has no option "Rule unclear" (renamed or deleted?)');
+});
+
+test('schemaProblems: a renamed option counts as missing, and names are matched exactly (case and spaces)', () => {
+  const { config, schemas } = createFakeNotion();
+  schemas.tag_decisions.properties['Why wrong'].select.options.find((o) => o.name === 'Rule unclear').name = 'Rule is unclear';
+  schemas.tag_decisions.properties['Agent follow-up'].select.options.find((o) => o.name === 'Fixed').name = 'Fixed ';
+  schemas.runs.properties.Verdict.select.options.find((o) => o.name === 'PASS').name = 'pass';
+  assert.deepEqual(sorted(schemaProblems('tag_decisions', schemas.tag_decisions, config)), sorted([
+    'tag_decisions: property "Why wrong" has no option "Rule unclear" (renamed or deleted?)',
+    'tag_decisions: property "Agent follow-up" has no option "Fixed" (renamed or deleted?)',
+  ]));
+  assert.deepEqual(schemaProblems('runs', schemas.runs, config), ['runs: property "Verdict" has no option "PASS" (renamed or deleted?)']);
+});
+
+test('schemaProblems: extra options are fine, in every select of every database', () => {
+  const { config, schemas } = createFakeNotion();
+  for (const [db, schema] of Object.entries(schemas)) {
+    for (const def of Object.values(schema.properties)) {
+      if (def.type === 'select') def.select.options.push({ id: 'extra-1', name: 'Brand new option', color: 'gray' }, { id: 'extra-2', name: 'Rollback', color: 'red' });
+    }
+    assert.deepEqual(schemaProblems(db, schema, config), [], db);
+  }
+});
+
+test('schemaProblems: every missing option is reported once, across properties and databases', () => {
+  const { config, schemas } = createFakeNotion();
+  removeOption(schemas, 'rulebook', 'Status', 'Verified');
+  removeOption(schemas, 'claims', 'Readiness', 'Ready');
+  removeOption(schemas, 'claims', 'Readiness', 'Fix needed');
+  removeOption(schemas, 'rule_changes', 'Status', 'Rolled back');
+  assert.deepEqual(schemaProblems('rulebook', schemas.rulebook, config), ['rulebook: property "Status" has no option "Verified" (renamed or deleted?)']);
+  assert.deepEqual(sorted(schemaProblems('claims', schemas.claims, config)), sorted([
+    'claims: property "Readiness" has no option "Fix needed" (renamed or deleted?)',
+    'claims: property "Readiness" has no option "Ready" (renamed or deleted?)',
+  ]));
+  assert.deepEqual(schemaProblems('rule_changes', schemas.rule_changes, config), ['rule_changes: property "Status" has no option "Rolled back" (renamed or deleted?)']);
+});
+
+test('schemaProblems: a select that is missing or has another type is reported once as a property, not once per option', () => {
+  const { config, schemas } = createFakeNotion();
+  delete schemas.tag_decisions.properties['Why wrong'];
+  schemas.claims.properties.Readiness.type = 'rich_text';
+  assert.deepEqual(schemaProblems('tag_decisions', schemas.tag_decisions, config), ['tag_decisions: property "Why wrong" is missing (renamed or deleted?)']);
+  assert.deepEqual(schemaProblems('claims', schemas.claims, config), ['claims: property "Readiness" is rich_text, the scripts expect select']);
+});
+
+test('schemaProblems: an option that is live but optional (Runs Kind Rollback) may be absent', () => {
+  const { config, schemas } = createFakeNotion();
+  assert.equal(schemas.runs.properties.Kind.select.options.some((o) => o.name === 'Rollback'), false, 'the fixture has no Rollback option');
+  assert.deepEqual(schemaProblems('runs', schemas.runs, config), []);
+});
+
+test('an option list the API did not return is a warning, not a schema problem (the allowlist then refuses every write to that select)', async () => {
+  const s = setup();
+  delete s.fake.schemas.rulebook.properties.Category.select.options;
+  assert.deepEqual(schemaProblems('rulebook', s.fake.schemas.rulebook, s.fake.config), []);
+  assert.deepEqual(schemaWarnings('rulebook', s.fake.schemas.rulebook), ['rulebook: property "Category" has no readable option list, so its options were not checked']);
+  assert.deepEqual(schemaWarnings('claims', s.fake.schemas.claims), []);
+  assert.deepEqual(schemaWarnings('claims', {}), []);
+  assert.equal(await s.run(['--dbs', 'rulebook', '--pull-id', 'p1']), EXIT.OK);
+  assert.match(s.cap.err.join('\n'), /pull: warning: rulebook: property "Category" has no readable option list/);
+  const info = JSON.parse(readFileSync(join(s.root, 'runs', 'pull', 'p1', 'pull.json'), 'utf8'));
+  assert.equal(info.warnings.length, 1, 'recorded in the manifest too');
+});
+
+test('a missing option exits 4 like a missing property: schema_problems in pull.json, nothing normalised, LATEST not moved', async () => {
+  const s = setup();
+  await s.run(['--all', '--pull-id', 'p1']);
+  removeOption(s.fake.schemas, 'tag_decisions', 'Why wrong', 'Rule unclear');
+  removeOption(s.fake.schemas, 'runs', 'Verdict', 'PASS');
+  assert.equal(await s.run(['--dbs', 'tag_decisions,runs', '--pull-id', 'p2']), EXIT.DRIFT);
+  const err = s.cap.err.join('\n');
+  assert.match(err, /tag_decisions: property "Why wrong" has no option "Rule unclear"/);
+  assert.match(err, /runs: property "Verdict" has no option "PASS"/);
+  assert.match(err, /fix the property or option in Notion/);
+  assert.match(s.cap.out[0], /^pull p2: 2 schema problem\(s\), nothing normalised$/);
+  assert.equal(existsSync(join(s.root, 'runs', 'pull', 'p2', 'norm', 'queue.jsonl')), false);
+  assert.equal(existsSync(join(s.root, 'runs', 'pull', 'p2', 'id-map.json')), false);
+  assert.equal(latestPullId(s.root), 'p1');
+  const info = JSON.parse(readFileSync(join(s.root, 'runs', 'pull', 'p2', 'pull.json'), 'utf8'));
+  assert.equal(info.schema_problems.length, 2);
+});
+
+test('only the databases being pulled are checked for options', async () => {
+  const s = setup();
+  removeOption(s.fake.schemas, 'claims', 'Readiness', 'Not checkable');
+  assert.equal(await s.run(['--dbs', 'agent_settings,runs', '--pull-id', 'p1']), EXIT.OK, s.cap.err.join('\n'));
+  assert.equal(await s.run(['--dbs', 'claims', '--pull-id', 'p2']), EXIT.DRIFT);
+  assert.match(s.cap.err.join('\n'), /claims: property "Readiness" has no option "Not checkable"/);
 });

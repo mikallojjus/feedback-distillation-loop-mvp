@@ -247,6 +247,8 @@ test('phase 3 stops and lists what it cannot link instead of writing a partial p
 // ---- the whole seed, through check and apply against the fake ----
 
 async function applyPlan(w, runId, nextPullId) {
+  // a seed plan is only checked and applied while the setup marker exists: an engineer creates runs/SETUP by hand before the seed and deletes it afterwards
+  writeFileSync(join(w.root, 'runs', 'SETUP'), 'engineer, 13 Oct 2026\n');
   const c = check({ root: w.root, runId, now: w.clock.now });
   assert.equal(c.code, EXIT.OK, (c.problems ?? []).join('; '));
   const cap = captureIo();
@@ -310,6 +312,24 @@ test('end to end: three phases, each checked, applied, verified and pulled; the 
     assert.equal(again.code, EXIT.OK);
     assert.match(again.out[0], /nothing to do/, `phase ${phase}`);
   }
+});
+
+test('the seed plans are not checked and not applied without runs/SETUP: the header says seed, and only an engineer\'s marker makes that true', async () => {
+  const w = await empty();
+  const r = seed(w, 1, {}, 'seed-1');
+  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
+  const refused = check({ root: w.root, runId: 'seed-1', now: w.clock.now });
+  assert.equal(refused.code, EXIT.INVALID);
+  assert.match(refused.problems[0], /^gate evidence: runs\/SETUP does not exist: a seed plan needs the setup marker/);
+  assert.equal(existsSync(join(w.root, 'runs', 'APPLYING.json')), false, 'nothing is armed');
+  writeFileSync(join(w.root, 'runs', 'SETUP'), 'engineer\n');
+  const ok = check({ root: w.root, runId: 'seed-1', now: w.clock.now });
+  assert.equal(ok.code, EXIT.OK, (ok.problems ?? []).join('; '));
+  rmSync(join(w.root, 'runs', 'SETUP')); // the engineer deletes it afterwards: an armed seed plan is refused by apply too
+  const cap = captureIo();
+  assert.equal(await applyMain(['--run', 'seed-1'], cap.io, w.env()), EXIT.INVALID);
+  assert.match(cap.err.join('\n'), /the plan claims a gate PASS \(or a seed\/restore\) without evidence; nothing was sent/);
+  assert.equal(w.fake.count('rulebook'), 0, 'nothing was written');
 });
 
 // ---- arguments and failures ----

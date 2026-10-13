@@ -251,7 +251,7 @@ export function checkReply(value, { rubric, group }) {
   const current = target.part === 'rule' ? targetCurrentText(rubric, group.tag, target) : null;
   if (current && stripRuleNumber(current) === proposed) problems.push('proposed_text is the same as the current rule');
   const title = oneLine(value.title);
-  if (title.split(' ').length > 20) problems.push('title is too long: at most 12 words');
+  if (title.split(' ').length > 20) problems.push('title is too long: at most 20 words');
   if (problems.length) return { problems, reply: null };
   return {
     problems,

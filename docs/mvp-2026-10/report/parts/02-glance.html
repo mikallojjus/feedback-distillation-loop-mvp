@@ -4,29 +4,83 @@
 
   <div class="plain">
     <p class="geo-eyebrow plain-label">In short</p>
+    <p class="lede">The claim tagger now learns from editor decisions through a written <dfn data-t="rulebook">rulebook</dfn> instead of a growing prompt. Its first real <dfn data-t="lesson">lesson</dfn> was measured, approved and then refused by the <dfn data-t="gate">gate</dfn>, for exactly the kind of side effect the gate is there to catch. The live rulebook is unchanged.</p>
     <ul>
-      <li>TODO: two sentences on what was built: a <dfn data-t="rulebook">rulebook</dfn> in Notion, an editor queue, and an agent that changes a rule only after a lesson passes the <dfn data-t="gate">gate</dfn>.</li>
-      <li>TODO: the headline result: the verdict of the demo lesson and the verdict of the deliberately bad one (<dfn data-t="pass-hold-fail">PASS, HOLD or FAIL</dfn>), both labelled <dfn data-t="small-sample">small sample</dfn>.</li>
-      <li>TODO: what an editor does now: decide the <dfn data-t="tag-outcome">Tag outcome</dfn> and, only when overruling the agent or the written rule, pick a <dfn data-t="why-wrong">Why wrong</dfn> reason.</li>
-      <li>TODO: what editors get back: Fixed or Still wrong on the rows behind a <dfn data-t="lesson">lesson</dfn>, after a <dfn data-t="follow-up">follow-up</dfn>.</li>
-      <li>TODO: what is not finished yet and who decides next, with a link to the tab "Decisions and next steps".</li>
+      <li><strong>What exists now.</strong> A Notion page, "Editorial feedback loop", with six databases, the views editors and the rule owner work in, and a callout. A repository, <code>geo-agents</code>, with the agent (judge, proposer, distiller, gate, <dfn data-t="promote">promote</dfn>, <dfn data-t="follow-up">follow-up</dfn>, status), one skill, <code>/claim-tagger</code>, and {{count:unitTests}} unit tests. A real run on {{count:claims}} claims.</li>
+      <li><strong>What happened.</strong> The judge tagged every claim {{count:tagRun.runs}} times ({{count:tagRun.judgments}} judgments, {{count:tagRun.errors}} errors, ${{count:cost.tagRun}}), and {{count:tagRun.rowsCreated}} uncertain tags went to the editors' queue. An AI persona standing in for an editor decided {{count:personaDecisions}} rows and a reviewer persona {{count:reviewerDecisions}} more. The distiller turned the {{count:end.ls1Supporting}} "Rule should change" decisions on Predictive rule 1 into one lesson with a proposed rule text, and the rule owner approved it.</li>
+      <li><strong>What the gate did.</strong> It judged the candidate rulebook against the current one on the saved <dfn data-t="regression-case">regression cases</dfn> and all {{count:canaries}} <dfn data-t="canary">canaries</dfn>, {{count:gateAttemptsLs1}} times with {{count:gateWordingsLs1}} wordings, and refused every time. A planted bad lesson was refused for the right reason, no improvement on its own tag, and rolled back.</li>
+      <li><strong>The learning is real and measurable.</strong> Under the best wording all four hedged rows flip to the editors' answer, each confirmed over {{count:best.runsEach}} runs: Predictive gains {{count:best.delta}} points, with a lower bound of {{count:best.ciLow}}. It did not go live because the same wording, also confirmed over {{count:best.runsEach}} runs, moves one Context-dependent decision on an unrelated claim, and the rule owner ruled that decision right: a real regression.</li>
+      <li><strong>Where that leaves the team.</strong> The rulebook is still at <dfn data-t="rubric-version">rubric version</dfn> {{count:rubricVersion}}, every refusal has a result card, and the next engineering step is known: a <dfn data-t="per-tag-judge">per-tag judge</dfn>, the item the research kept for <dfn data-t="interference">interference</dfn>. See <a href="#decide">Decisions and next steps</a>.</li>
+      <li><strong>Against the forecast.</strong> The research predicted a HOLD for the first lesson, because a handful of hedged forecasts cannot prove a gain. The gain turned out to be measurable; a side effect on another tag is what stopped it.</li>
     </ul>
   </div>
 
-  <div class="sub" id="glance-built" data-title="What was built">
-    <h3>What was built</h3>
+  <div class="sub" id="glance-built" data-title="What exists">
+    <h3>What exists now</h3>
     <div class="geo-stat-grid">
       <div class="geo-card"><div class="geo-stat-value">{{count:claims}}</div><div class="geo-stat-label">claims in the trial</div></div>
-      <div class="geo-card"><div class="geo-stat-value">{{count:decisions}}</div><div class="geo-stat-label">editor decisions recorded</div></div>
-      <div class="geo-card"><div class="geo-stat-value">{{count:canariesActive}}</div><div class="geo-stat-label">canaries that must always pass</div></div>
-      <div class="geo-card"><div class="geo-stat-value">{{count:editorFieldsTouched}}</div><div class="geo-stat-label">editor fields touched by the agent</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:tagRun.judgments}}</div><div class="geo-stat-label">judgments in the tag run, {{count:tagRun.errors}} errors</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:tagRun.rowsCreated}}</div><div class="geo-stat-label">uncertain tags sent to the editors' queue</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:decisions}}</div><div class="geo-stat-label">decisions entered in the queue, besides {{count:seed.withOutcome}} seeded from the audit</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:canaries}}</div><div class="geo-stat-label">canaries, all passing in every gate run</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:gateRuns}}</div><div class="geo-stat-label">gate runs, each refused with a result card</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:editorFieldsTouched}}</div><div class="geo-stat-label">editor fields touched by the agent, checked after every write</div></div>
+      <div class="geo-card"><div class="geo-stat-value">${{count:cost.total}}</div><div class="geo-stat-label">model cost of the whole run</div></div>
     </div>
-    <p>TODO: list what exists at the end of the trial: the six Notion databases, the rulebook at <dfn data-t="rubric-version">rubric version</dfn> R1, the <dfn data-t="canary">canaries</dfn> and <dfn data-t="regression-case">regression cases</dfn> kept as tests, and the <code>/claim-tagger</code> skill with its subcommands. Check the four numbers above against data/counts.json.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <caption><strong>The pieces</strong> · what a team member can open today</caption>
+      <thead><tr><th>Piece</th><th>What it is</th><th>Where</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Notion page</strong></td><td>"Editorial feedback loop": six databases (Rulebook, Claims, Tag decisions, Rule changes, Runs, Agent settings), the queue and lesson views, a callout that says where editors work and how to pause the agent. Nothing is written to Geo.</td><td>Notion, private until shared</td></tr>
+        <tr><td><strong>Rulebook</strong></td><td>{{count:rulebookTags}} Verified tags with numbered "When to use" rules; {{count:judgedTags}} are judged by the model, the rest are decided in code or by people.</td><td>Notion, and <code>rubric/rubric.json</code> on disk</td></tr>
+        <tr><td><strong>The agent</strong></td><td>Plain Node scripts: judge, proposer, distiller, gate, promote, follow-up and status, plus the pull, plan, apply and <dfn data-t="read-back">read-back</dfn> steps that alone touch Notion.</td><td><code>agents/claim-tagger/</code></td></tr>
+        <tr><td><strong>The skill</strong></td><td><code>/claim-tagger</code> with the subcommands status, tag, distill, promote, follow-up and setup; plain words work too.</td><td><code>.claude/skills/claim-tagger/</code></td></tr>
+        <tr><td><strong>Tests</strong></td><td>{{count:unitTests}} unit tests in {{count:testFiles}} files, no model calls; plus {{count:canariesTotal}} canaries ({{count:canaries}} active) and {{count:casesTotal}} regression cases ({{count:casesActive}} active, {{count:casesContested}} contested) that every gate runs.</td><td><code>tests/</code>, <code>evals/</code></td></tr>
+        <tr><td><strong>Evidence</strong></td><td>A snapshot of every database after each step, every result card, the headless transcripts and every write the personas made.</td><td><code>docs/mvp-2026-10/evidence/</code></td></tr>
+      </tbody>
+    </table></div>
   </div>
 
-  <div class="sub" id="glance-results" data-title="Demo results">
-    <h3>Demo results</h3>
-    <p>TODO: one row per demo step (tag run, distill, <dfn data-t="promote">promote</dfn> L-1, promote of the bad lesson, follow-up, <dfn data-t="trust-breaker">trust breaker</dfn> drill) with its verdict and a link to the evidence file in docs/mvp-2026-10/evidence.</p>
+  <div class="sub" id="glance-results" data-title="What happened">
+    <h3>What happened, step by step</h3>
+    <p>One run on 13 October 2026, in the order of the plan's storyline. Evidence paths are under <code>docs/mvp-2026-10/evidence/</code>.</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Step</th><th>What happened</th><th>Result</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Setup and seed</strong></td><td>The six databases, formulas and views created inside the hub page; then {{count:rulebookTags}} rulebook rows, {{count:claims}} claims, {{count:queueRowsSeeded}} queue rows ({{count:seed.withOutcome}} carrying a decision from the 9 October audit) and the settings row written.</td><td>Every write read back clean</td><td><code>notion/00-seeded</code></td></tr>
+        <tr><td><strong>Baseline</strong></td><td>The current rules judged on every canary and every active regression case.</td><td>Canaries {{count:baseline.canaries}}, {{count:baseline.newlyFailing}} cases failing</td><td><code>cards/baseline-r1</code></td></tr>
+        <tr><td><strong>Tag run</strong></td><td>{{count:tagRun.claims}} claims, {{count:tagRun.runs}} runs each, majority verdict per claim and tag.</td><td>{{count:tagRun.candidates}} uncertain tags found; {{count:tagRun.rowsCreated}} queued under the weekly cap of {{count:tagRun.weeklyCap}}, {{count:tagRun.heldByCap}} held back; {{count:tagRun.keptByDecision}} decided tags kept as decided</td><td><code>notion/02-tag-r1</code></td></tr>
+        <tr><td><strong>Editor decisions</strong></td><td>The editor persona decided {{count:personaDecisions}} rows in Your queue, including two hedged "likely" forecasts marked Rule should change.</td><td>Your queue down from {{count:stage.afterTag.toReview}} to {{count:stage.afterDecisions.toReview}} rows</td><td><code>notion/03-editor-decisions</code></td></tr>
+        <tr><td><strong>Distill</strong></td><td>The distiller grouped the decisions that blame a rule and drafted lesson LS-1 on Predictive rule 1 (${{count:cost.distill}}). The planted gate test LS-2 was added beside it.</td><td>Two lessons in Lessons waiting</td><td><code>notion/04-distilled</code></td></tr>
+        <tr><td><strong>Approval</strong></td><td>The rule owner (a persona) approved LS-1 on the merits, and LS-2 only because it is labelled a planted test.</td><td>Both Approved</td><td><code>notion/05-approved</code></td></tr>
+        <tr><td><strong>Gate on LS-1</strong></td><td>{{count:gateAttemptsLs1}} attempts with {{count:gateWordingsLs1}} wordings, the later ones after the rule owner rewrote the text.</td><td>FAIL each time; Rulebook untouched; LS-1 stays Approved</td><td><code>cards/gate-ls1-attempt1</code> to <code>5</code></td></tr>
+        <tr><td><strong>Gate on LS-2</strong></td><td>The planted lesson, which would make only bare pronouns Context-dependent.</td><td>FAIL, no improvement on its own tag; Rolled back</td><td><code>cards/gate-ls2-planted</code></td></tr>
+        <tr><td><strong>Review and ruling</strong></td><td>A fresh-eyes editor reviewer decided {{count:reviewerDecisions}} rows; the rule owner confirmed {{count:seededConfirmed}} seeded decision that the gate had flagged.</td><td>{{count:decisions}} decisions entered in the trial</td><td><code>notion/08-end-state-gate-held</code></td></tr>
+        <tr><td><strong>Editor's machine</strong></td><td>Fresh headless Claude Code sessions ran <code>/claim-tagger status</code> and a tag dry run.</td><td>Status passed on run {{count:headless.statusPassedOn}}; the dry run found nothing left to judge</td><td><code>headless/</code></td></tr>
+      </tbody>
+    </table></div>
+    <p>Not reached in this run: a PASS with its finalize step, the follow-up of a live lesson and a tag run under a new rubric version, which all need a lesson that goes live; and the pause and <dfn data-t="trust-breaker">trust breaker</dfn> drills on the live page, which only unit tests cover so far.</p>
+  </div>
+
+  <div class="sub" id="glance-learned" data-title="What it learned">
+    <h3>What the agent learned, and why it is not live</h3>
+    <p>Four decisions say the same thing about Predictive rule 1, which lists "is likely to" as a forecast marker: a hedged claim about a tendency, a comparison of strategies or a trajectory is an assessment of the present, not a forecast. Two came from the 9 October audit, two from the editor persona. The lesson rewrites rule 1 so that a hedged marker fires only on a definite future outcome.</p>
+    <p>The gate then judged each claim {{count:best.runsEach}} times under the current rules and under the best candidate wording (attempt {{count:best.attempt}}):</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Claim</th><th>Tag</th><th>Decided by</th><th>Answer</th><th>Current rules</th><th>Best candidate</th></tr></thead>
+      <tbody>
+        <tr><td>Texas is on track to become a competitive swing state</td><td>Predictive</td><td>9 Oct audit</td><td>Does not apply</td><td>applies</td><td>does not apply</td></tr>
+        <tr><td>The Supreme Court is likely to expand executive power further in the future</td><td>Predictive</td><td>9 Oct audit</td><td>Does not apply</td><td>applies</td><td>does not apply</td></tr>
+        <tr><td>The Supreme Court is likely to uphold executive actions that exceed the authority granted by Congress</td><td>Predictive</td><td>editor persona</td><td>Does not apply</td><td>applies</td><td>does not apply</td></tr>
+        <tr><td>Military pressure is more likely than diplomatic restraint to produce an Iran settlement</td><td>Predictive</td><td>editor persona</td><td>Does not apply</td><td>applies</td><td>does not apply</td></tr>
+        <tr><td><strong>Melania Trump should not host her initiative's G20 event at President Trump's golf resort</strong></td><td>Context-dependent</td><td>9 Oct audit, confirmed by the rule owner</td><td>Applies</td><td>applies</td><td><strong>does not apply</strong></td></tr>
+      </tbody>
+    </table></div>
+    <p>In attempt {{count:best.attempt}}, Predictive accuracy on its labelled claims rises from {{count:best.baseAccuracy}}% to {{count:best.candAccuracy}}%: {{count:best.delta}} points, with a 95% interval from {{count:best.ciLow}} to {{count:best.ciHigh}}. That is a real gain, though on a <dfn data-t="small-sample">small sample</dfn>.</p>
+    <p>The last row is the problem. The lesson is about forecasts; the Melania Trump claim has nothing to do with them. Yet under the new wording the judge reads Self-contained rule 2 (a pronoun resolved by a name in the same claim keeps it Self-contained) as settling the claim, and stops tagging it Context-dependent. The rule owner ruled that the decision stands: "her initiative" names a kind of thing, not which one, exactly like the rulebook's own example "Open AI's initiative". A change to one rule that moves a decision on another tag is the regression the gate's second condition exists to stop, so the refusal is correct.</p>
+    <div class="geo-callout geo-callout-neutral"><div class="geo-callout-body">
+      <p><strong>What this means.</strong> The loop did what it should: editors' reasoning became a rule text, the rule text fixed the rows it was meant to fix, and the gate refused it for a confirmed side effect instead of letting it through. The fix is structural, not more wording: a judge that sees one tag's rules at a time cannot carry a Predictive change into a Context-dependent answer.</p>
+    </div></div>
   </div>
 
   <aside class="terms" data-strip></aside>

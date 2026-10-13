@@ -39,7 +39,14 @@
     },
     "protected_database_ids": [
       "d1307596-e531-420f-8688-2485f3ef28ab",
-      "9e979fe1-e03d-45cd-b9b1-d971dc3d90a2"
+      "9e979fe1-e03d-45cd-b9b1-d971dc3d90a2",
+      "7219756338b2416f8fa8af83d75ec47d",
+      "9e111d22c14e4344bb90072606036942",
+      "f05273e214eb8353b0a981544507de32",
+      "b65273e2-14eb-8362-86a6-870ea8d632f4",
+      "0e2273e214eb83b0a2b1013e7d0958fc",
+      "eec273e2-14eb-8349-a416-074a30396303",
+      "67a1940f-db0d-477a-9737-0a9eb01a5eac"
     ],
     "requests_per_second": 3,
     "page_size": 100,

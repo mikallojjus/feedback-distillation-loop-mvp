@@ -5,6 +5,8 @@
 //   node run-card.mjs --card <dir-with-card.json> --kind Baseline|Gate|Smoke|Follow-up|Rollback --title "<title>" [--lesson <key>] [--pull <id>]
 //
 // Produces runs/<run-id>/plan.jsonl with one Runs create; then `plan.mjs check --run <id>` and `apply.mjs --run <id>`.
+// The Verdict column is the gate verdict, so only --kind Gate fills it from the card; a Baseline, Smoke, Follow-up or Rollback row says
+// n/a there and keeps the card's own verdict word in its Summary text.
 // The agent-owned Runs database has no editor fields, so this is the simplest plan in the repository.
 
 import { existsSync, readFileSync } from 'node:fs';
@@ -65,6 +67,11 @@ export function buildEvalCard(root, cardDir, kind, title, lesson) {
   const canText = can.candidate ? `${can.candidate.passed} of ${can.candidate.active}` : (can.passed !== undefined ? `${can.passed} of ${can.active}` : '');
   const cases = card.cases || {};
   const perTag = (card.per_tag || []).map((t) => `${t.tag}: ${t.acc_base == null ? '-' : Math.round(t.acc_base * 100) + '%'} -> ${t.acc_cand == null ? '-' : Math.round(t.acc_cand * 100) + '%'} (n ${t.n}${t.gated ? '' : ', not gated'})`).join(' · ');
+  // Only a Gate row carries the gate verdict. A Baseline, Smoke, Follow-up or Rollback row is not a gate result, so its Verdict column
+  // is n/a; the card's own verdict word stays in the Summary text (the card.md line "Verdict: ...", or one added here when that line is missing).
+  const verdictWord = typeof card.verdict === 'string' && card.verdict !== '' ? card.verdict : null;
+  const hasVerdictLine = verdictWord !== null && md.split('\n').some((l) => l.startsWith(`Verdict: ${verdictWord}`));
+  const summary = kind !== 'Gate' && verdictWord !== null && !hasVerdictLine ? `Verdict: ${verdictWord}\n${md}` : md;
   const props = {
     'Run title': title,
     Kind: kind,
@@ -74,8 +81,8 @@ export function buildEvalCard(root, cardDir, kind, title, lesson) {
     Canaries: canText,
     'Newly failing': Array.isArray(cases.newly_failing) ? cases.newly_failing.length : (cases.newly_failing ?? null),
     'Per-tag summary': perTag.slice(0, 1900),
-    Verdict: card.verdict,
-    Summary: md.slice(0, 1900),
+    Verdict: kind === 'Gate' ? card.verdict : 'n/a',
+    Summary: summary.slice(0, 1900),
     'Cost USD': card.cost && card.cost.usd != null ? Number(card.cost.usd) : null,
     Model: card.configs && card.configs.candidate && card.configs.candidate.model ? card.configs.candidate.model : '',
   };

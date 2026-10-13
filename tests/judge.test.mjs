@@ -436,13 +436,13 @@ test('usage window: exit 75 with a resume command, ledger rows stopped, then --r
   const text = first.out.join('\n');
   assert.match(text, /status=stopped/);
   assert.match(text, /the usage window ran out \(reset at 3am\)/);
-  assert.match(text, /Resume when it reopens with: node agents\/claim-tagger\/scripts\/judge\.mjs --items claims --pull p1 --driver fake --run-id r1 --resume/);
+  assert.match(text, /Resume when it reopens with: node agents\/claim-tagger\/scripts\/judge\.mjs --resume --run-id r1$/m, 'nothing to repeat: the arguments are in run.json');
 
   const meta = runMeta(agent, 'r1');
   assert.equal(meta.status, 'stopped');
   assert.equal(meta.stop.kind, 'usage_window');
   assert.match(meta.stop.reset_hint, /reset at 3am/);
-  assert.match(meta.resume, /--run-id r1 --resume$/);
+  assert.equal(meta.resume, 'node agents/claim-tagger/scripts/judge.mjs --resume --run-id r1');
   assert.equal(meta.counts.done + meta.counts.stopped + meta.counts.error, 57);
   assert.ok(meta.counts.done > 0 && meta.counts.stopped > 0);
   assert.equal(meta.counts.error, 0);
@@ -496,6 +496,166 @@ test('--resume without an id finds the newest unfinished judge run; with other a
   const none = await judge(agent, [...claimsArgs, '--runs', '1', '--resume']);
   assert.equal(none.code, EXIT.INVALID);
   assert.match(none.err.join('\n'), /no unfinished judge run/);
+});
+
+// ---- resuming without repeating anything ---------------------------------------------------------------------------------------------------------------
+
+const bareResume = (agent, args = ['--resume'], more = {}) => judge(agent, args, { driver: false, ...more });
+const stopWithUsageWindow = { env: { FAKE_CLAUDE_MODE: 'usage_limit', FAKE_CLAUDE_LIMIT_AFTER: '1' } };
+
+test('arguments for resume: --items may be left out with --resume only, and --parent is a safe run id', () => {
+  const bare = parseArgs(['--resume']);
+  assert.deepEqual([bare.resume, bare.items, bare.runId], [true, undefined, undefined]);
+  assert.deepEqual([parseArgs(['--resume', '--run-id', 'r1']).runId, parseArgs(['--items', 'claims', '--parent', 'promote-1.x']).parent], ['r1', 'promote-1.x']);
+  assert.throws(() => parseArgs(['--run-id', 'r1']), /--items is required/);
+  assert.throws(() => parseArgs(['--items', 'claims', '--parent', 'a:b']), /--parent may only use letters/);
+  assert.throws(() => parseArgs(['--items', 'claims', '--parent']), /needs a value/);
+});
+
+test('run.json records how the run was started and how to continue it, whatever its outcome: args, pull, parent, resume', async () => {
+  const agent = makeAgent({ n: 6 });
+  const file = join(tmp(), 'items.jsonl');
+  writeFileSync(file, `${JSON.stringify({ id: 'x1', claim: 'The bridge opens in May', sources_count: 2 })}\n`);
+  const done = await judge(agent, [...claimsArgs, '--runs', '2', '--limit', '5', '--ids', 'c001,c002', '--model', 'claude-opus-5-5', '--parent', 'promote-9', '--run-id', 'r1']);
+  assert.equal(done.code, EXIT.OK, done.err.join('\n'));
+  const meta = runMeta(agent, 'r1');
+  assert.equal(meta.status, 'done');
+  assert.equal(meta.resume, 'node agents/claim-tagger/scripts/judge.mjs --resume --run-id r1', 'also on a run that finished');
+  assert.deepEqual(meta.args, { items: 'claims', runs: 2, limit: 5, ids: ['c001', 'c002'], pull: 'p1', model: 'claude-opus-5-5', driver: 'fake', parent: 'promote-9' }, 'only what was given');
+  assert.equal(meta.pull, 'p1', 'the pull folder the claims were read from');
+  assert.equal(meta.parent, 'promote-9');
+  assert.equal(meta.items_source, 'claims');
+
+  const plain = await judge(agent, [...claimsArgs, '--runs', '1', '--run-id', 'r2']);
+  assert.equal(plain.code, EXIT.OK);
+  assert.equal('parent' in runMeta(agent, 'r2'), false);
+  assert.equal('rubric' in runMeta(agent, 'r2').args, false);
+
+  const rubricPath = join(agent.runsDir, 'promote-1', 'candidate', 'rubric.json');
+  const candidate = fixtureRubric();
+  candidate.rubric_version = '2026-10-14.1';
+  rehash(candidate);
+  candidate.rubric_version = '2026-10-14.1';
+  writeJson(rubricPath, candidate);
+  const smoke = await judge(agent, ['--items', file, '--smoke', '--rubric', rubricPath, '--run-id', 'r3']);
+  assert.equal(smoke.code, EXIT.OK, smoke.err.join('\n'));
+  assert.deepEqual(runMeta(agent, 'r3').args, { items: file, rubric: rubricPath, smoke: true, driver: 'fake' }, 'the items file and the rubric as absolute paths');
+  assert.equal(runMeta(agent, 'r3').items_source, file);
+  assert.equal('pull' in runMeta(agent, 'r3'), false, 'no pull for a file of items');
+});
+
+test('--resume --run-id <id> alone: items, pull, runs, model, driver and effort all come from run.json', async () => {
+  const agent = makeAgent({ n: 12 });
+  const first = await judge(agent, ['--items', 'claims', '--pull', 'p1', '--runs', '2', '--model', 'claude-opus-5-5', '--run-id', 'r1'], stopWithUsageWindow);
+  assert.equal(first.code, EXIT.USAGE_WINDOW);
+  const stopped = runMeta(agent, 'r1');
+  assert.ok(stopped.counts.done > 0 && stopped.counts.stopped > 0);
+  assert.equal(stopped.effort, 'medium');
+
+  // meanwhile a newer pull exists and the configured effort changed: neither may change what the resume does
+  const newer = join(agent.runsDir, 'pull', 'p2', 'norm');
+  mkdirSync(newer, { recursive: true });
+  writeFileSync(join(newer, 'claims.jsonl'), `${JSON.stringify({ geo_id: 'zzz', claim: 'A claim that only the newer pull knows', sources_count: 1 })}\n`);
+  utimesSync(join(newer, 'claims.jsonl'), new Date(Date.now() + 60000), new Date(Date.now() + 60000));
+  const cfg = readJson(join(agent.dir, 'config.json'));
+  cfg.judge.effort = 'high';
+  writeJson(join(agent.dir, 'config.json'), cfg);
+
+  const resumed = await bareResume(agent, ['--resume', '--run-id', 'r1']);
+  assert.equal(resumed.code, EXIT.OK, resumed.err.join('\n'));
+  const meta = runMeta(agent, 'r1');
+  assert.equal(meta.status, 'done');
+  assert.equal(meta.invocations, 2);
+  assert.equal(meta.config_id, stopped.config_id, 'the same configuration, so the judgments of the first start count');
+  assert.deepEqual([meta.model, meta.runs, meta.driver, meta.effort, meta.pull, meta.items_source], ['claude-opus-5-5', 2, 'fake', 'medium', 'p1', 'claims']);
+  assert.deepEqual(meta.args, stopped.args, 'the record of how it started is kept');
+  assert.deepEqual(meta.items, stopped.items);
+  assert.equal(meta.counts.done, stopped.counts.stopped, 'it did exactly the missing cells');
+  assert.ok(resumed.fakeState.log.length > 0 && resumed.fakeState.log.every((e) => e.model === 'claude-opus-5-5' && !e.ids.includes('zzz')));
+  const effortArg = (e) => e.args[e.args.indexOf('--effort') + 1];
+  assert.ok(resumed.fakeState.log.every((e) => effortArg(e) === 'medium'));
+  for (const run of [1, 2]) assert.equal(readRun(agent, meta.config16, run).length, 12);
+});
+
+test('--resume alone finds the newest unfinished run and its record is enough: a smoke run stays a smoke run, a candidate rubric under runs/ is read again', async () => {
+  const smokeAgent = makeAgent({ n: 6 });
+  const stopped = await judge(smokeAgent, [...claimsArgs, '--smoke', '--run-id', 's1'], { env: { FAKE_CLAUDE_MODE: 'usage_limit', FAKE_CLAUDE_LIMIT_AFTER: '0' } });
+  assert.equal(stopped.code, EXIT.USAGE_WINDOW);
+  const done = await bareResume(smokeAgent);
+  assert.equal(done.code, EXIT.OK, done.err.join('\n'));
+  const smoke = runMeta(smokeAgent, 's1');
+  assert.deepEqual([smoke.status, smoke.smoke, smoke.runs, smoke.model], ['done', true, 1, 'claude-haiku-5-5']);
+  assert.ok(done.fakeState.log.every((e) => e.model === 'claude-haiku-5-5'));
+
+  const agent = makeAgent({ n: 6 });
+  const candidate = fixtureRubric();
+  candidate.tags.find((t) => t.name === 'Predictive').when_to_use.rules[0].text += ' Hedged tendencies do not count.';
+  candidate.rubric_version = '2026-10-14.1';
+  rehash(candidate);
+  candidate.rubric_version = '2026-10-14.1';
+  const path = join(agent.runsDir, 'promote-1', 'candidate', 'rubric.json');
+  writeJson(path, candidate);
+  const first = await judge(agent, [...claimsArgs, '--runs', '1', '--rubric', path, '--run-id', 'cand'], { env: { FAKE_CLAUDE_MODE: 'usage_limit', FAKE_CLAUDE_LIMIT_AFTER: '0' } });
+  assert.equal(first.code, EXIT.USAGE_WINDOW);
+  const resumed = await bareResume(agent, ['--resume', '--run-id', 'cand']);
+  assert.equal(resumed.code, EXIT.OK, resumed.err.join('\n'));
+  assert.equal(runMeta(agent, 'cand').rubric_path, path);
+  assert.equal(runMeta(agent, 'cand').rubric_version, '2026-10-14.1');
+  assert.equal(runMeta(agent, 'cand').status, 'done');
+});
+
+test('--resume with a flag that contradicts the run is refused (exit 2) and judges nothing: a different source, run count, smoke or model; the same values are fine', async () => {
+  const agent = makeAgent({ n: 8 });
+  const first = await judge(agent, [...claimsArgs, '--run-id', 'r1'], { env: { FAKE_CLAUDE_MODE: 'usage_limit', FAKE_CLAUDE_LIMIT_AFTER: '0' } });
+  assert.equal(first.code, EXIT.USAGE_WINDOW);
+  const refuse = async (flags, pattern) => {
+    const r = await bareResume(agent, ['--resume', '--run-id', 'r1', ...flags]);
+    assert.equal(r.code, EXIT.INVALID, flags.join(' '));
+    assert.match(r.err.join('\n'), pattern, flags.join(' '));
+    assert.equal(r.fakeState.calls, 0, 'nothing was judged');
+    assert.equal(runMeta(agent, 'r1').status, 'stopped', 'and the record was left as it was');
+  };
+  await refuse(['--items', 'eval'], /was started differently: --items eval \(the run judged claims\)/);
+  await refuse(['--runs', '2'], /was started differently: --runs 2 \(the run has 3\)/);
+  await refuse(['--smoke'], /was started differently: --smoke \(the run is not a smoke run\)/);
+  await refuse(['--runs', '1', '--smoke'], /was started differently: --smoke/);
+  await refuse(['--model', 'claude-opus-5-5'], /used configuration sha256:[0-9a-f]{16} but these arguments give sha256:[0-9a-f]{16}.*leave those flags out/);
+  await refuse(['--items', 'eval', '--runs', '1'], /--items eval .*; --runs 1 \(the run has 3\)/);
+  // the same values are not a conflict, and a path to the same file is the same source
+  const same = await bareResume(agent, ['--resume', '--run-id', 'r1', '--items', 'claims', '--runs', '3', '--driver', 'fake', '--model', 'claude-sonnet-5-5']);
+  assert.equal(same.code, EXIT.OK, same.err.join('\n'));
+  assert.equal(runMeta(agent, 'r1').status, 'done');
+});
+
+test('--resume when the configuration changed since the run started (the prompt, the scope): refused with both ids, nothing mixed into the old judgments', async () => {
+  const agent = makeAgent({ n: 6 });
+  const first = await judge(agent, [...claimsArgs, '--runs', '1', '--run-id', 'r1'], { env: { FAKE_CLAUDE_MODE: 'usage_limit', FAKE_CLAUDE_LIMIT_AFTER: '0' } });
+  assert.equal(first.code, EXIT.USAGE_WINDOW);
+  const before = runMeta(agent, 'r1');
+  writeFileSync(join(agent.dir, 'prompts', 'judge.md'), `${template}\nOne more instruction.\n`);
+  const r = await bareResume(agent, ['--resume', '--run-id', 'r1']);
+  assert.equal(r.code, EXIT.INVALID);
+  assert.match(r.err.join('\n'), new RegExp(`run r1 used configuration ${before.config_id} but these arguments give sha256:[0-9a-f]{16}\\. .*prompt, the rubric's content or scope, or the CLI version`));
+  assert.equal(r.fakeState.calls, 0);
+  assert.equal(configDirs(agent).length, 1, 'no folder was made for the new configuration');
+  assert.equal(runMeta(agent, 'r1').status, 'stopped');
+});
+
+test('a run written before run.json kept its arguments resumes from the fields it has', async () => {
+  const agent = makeAgent({ n: 8 });
+  const first = await judge(agent, [...claimsArgs, '--runs', '2', '--model', 'claude-opus-5-5', '--run-id', 'old'], stopWithUsageWindow);
+  assert.equal(first.code, EXIT.USAGE_WINDOW);
+  const meta = runMeta(agent, 'old');
+  const { args, pull, resume, ...legacy } = meta;
+  writeJson(join(agent.runsDir, 'old', 'run.json'), legacy);
+  const done = await bareResume(agent);
+  assert.equal(done.code, EXIT.OK, done.err.join('\n'));
+  const after = runMeta(agent, 'old');
+  assert.equal(after.status, 'done');
+  assert.deepEqual([after.model, after.runs, after.items_source, after.config_id], ['claude-opus-5-5', 2, 'claims', meta.config_id]);
+  assert.equal(after.resume, 'node agents/claim-tagger/scripts/judge.mjs --resume --run-id old', 'the record gets what it lacked');
+  assert.deepEqual(after.args, { items: 'claims', runs: 2, model: 'claude-opus-5-5', driver: 'fake' });
+  assert.equal(after.pull, 'p1');
 });
 
 // ---- the model ------------------------------------------------------------------------------------------------------------------------------------

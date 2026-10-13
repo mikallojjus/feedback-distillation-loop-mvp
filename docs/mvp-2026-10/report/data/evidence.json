@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-13T17:56:04.191Z",
+  "generated_at": "2026-10-13T18:38:44.013Z",
   "rubric": {
     "version": "2026-10-13.1",
     "hash": "sha256:63f085c84a038df8",
@@ -342,6 +342,7 @@
       },
       "newly_failing": [],
       "newly_passing": [],
+      "gating": 23,
       "target_stats": null,
       "per_tag": [
         {
@@ -390,6 +391,28 @@
           "broken": 0
         }
       ],
+      "conditions": [
+        {
+          "n": 1,
+          "status": "pass"
+        },
+        {
+          "n": 2,
+          "status": "pass"
+        },
+        {
+          "n": 3,
+          "status": "pass"
+        },
+        {
+          "n": 4,
+          "status": "not_applicable"
+        },
+        {
+          "n": 5,
+          "status": "pass"
+        }
+      ],
       "reconfirmed": [],
       "reasons": [],
       "holds": [],
@@ -435,6 +458,7 @@
         "ctr-dacb1fb93fb3-hypoth"
       ],
       "newly_passing": [],
+      "gating": 29,
       "target_stats": {
         "n": 11,
         "positives": 7,
@@ -499,6 +523,28 @@
           "broken": 0
         }
       ],
+      "conditions": [
+        {
+          "n": 1,
+          "status": "pass"
+        },
+        {
+          "n": 2,
+          "status": "fail"
+        },
+        {
+          "n": 3,
+          "status": "fail"
+        },
+        {
+          "n": 4,
+          "status": "hold"
+        },
+        {
+          "n": 5,
+          "status": "pass"
+        }
+      ],
       "reconfirmed": [],
       "reasons": [
         "2 regression cases newly failing: ctr-e05138dd8e72-hypoth, ctr-dacb1fb93fb3-hypoth",
@@ -555,6 +601,7 @@
         "ctr-dacb1fb93fb3-hypoth"
       ],
       "newly_passing": [],
+      "gating": 29,
       "target_stats": {
         "n": 11,
         "positives": 7,
@@ -620,6 +667,28 @@
           "broken": 0
         }
       ],
+      "conditions": [
+        {
+          "n": 1,
+          "status": "pass"
+        },
+        {
+          "n": 2,
+          "status": "fail"
+        },
+        {
+          "n": 3,
+          "status": "fail"
+        },
+        {
+          "n": 4,
+          "status": "pass"
+        },
+        {
+          "n": 5,
+          "status": "pass"
+        }
+      ],
       "reconfirmed": [],
       "reasons": [
         "3 regression cases newly failing: ctr-ec6e3f00cf08-contex, ctr-e05138dd8e72-hypoth, ctr-dacb1fb93fb3-hypoth",
@@ -672,6 +741,7 @@
         "ctr-ec6e3f00cf08-contex"
       ],
       "newly_passing": [],
+      "gating": 27,
       "target_stats": {
         "n": 11,
         "positives": 7,
@@ -735,6 +805,28 @@
           "gated": true,
           "fixed": 4,
           "broken": 0
+        }
+      ],
+      "conditions": [
+        {
+          "n": 1,
+          "status": "pass"
+        },
+        {
+          "n": 2,
+          "status": "fail"
+        },
+        {
+          "n": 3,
+          "status": "pass"
+        },
+        {
+          "n": 4,
+          "status": "pass"
+        },
+        {
+          "n": 5,
+          "status": "pass"
         }
       ],
       "reconfirmed": [],
@@ -788,6 +880,7 @@
         "ctr-ec6e3f00cf08-contex"
       ],
       "newly_passing": [],
+      "gating": 27,
       "target_stats": {
         "n": 11,
         "positives": 7,
@@ -851,6 +944,28 @@
           "gated": true,
           "fixed": 4,
           "broken": 0
+        }
+      ],
+      "conditions": [
+        {
+          "n": 1,
+          "status": "pass"
+        },
+        {
+          "n": 2,
+          "status": "fail"
+        },
+        {
+          "n": 3,
+          "status": "pass"
+        },
+        {
+          "n": 4,
+          "status": "pass"
+        },
+        {
+          "n": 5,
+          "status": "pass"
         }
       ],
       "reconfirmed": [
@@ -976,6 +1091,7 @@
         "ctr-f2cc9025f0f5-predic"
       ],
       "newly_passing": [],
+      "gating": 27,
       "target_stats": {
         "n": 11,
         "positives": 7,
@@ -1038,6 +1154,28 @@
           "gated": true,
           "fixed": 1,
           "broken": 1
+        }
+      ],
+      "conditions": [
+        {
+          "n": 1,
+          "status": "pass"
+        },
+        {
+          "n": 2,
+          "status": "fail"
+        },
+        {
+          "n": 3,
+          "status": "fail"
+        },
+        {
+          "n": 4,
+          "status": "hold"
+        },
+        {
+          "n": 5,
+          "status": "pass"
         }
       ],
       "reconfirmed": [
@@ -1152,6 +1290,7 @@
         "ctr-ef04483dc87e-hypoth"
       ],
       "newly_passing": [],
+      "gating": 27,
       "target_stats": {
         "n": 11,
         "positives": 4,
@@ -1212,6 +1351,28 @@
           "broken": 0
         }
       ],
+      "conditions": [
+        {
+          "n": 1,
+          "status": "pass"
+        },
+        {
+          "n": 2,
+          "status": "fail"
+        },
+        {
+          "n": 3,
+          "status": "fail"
+        },
+        {
+          "n": 4,
+          "status": "fail"
+        },
+        {
+          "n": 5,
+          "status": "pass"
+        }
+      ],
       "reconfirmed": [],
       "reasons": [
         "1 regression cases newly failing: ctr-ef04483dc87e-hypoth",
@@ -1262,7 +1423,8 @@
           "Auditor flag": 17,
           "Seeded decision": 33
         },
-        "editor_decided": 0
+        "editor_decided": 0,
+        "effective": 27
       },
       "lessons": [],
       "claims": {
@@ -1270,6 +1432,24 @@
         "readiness": {
           "(none)": 60
         }
+      },
+      "runs": {
+        "rows": 0,
+        "kind": {},
+        "verdict": {}
+      },
+      "rulebook": {
+        "rows": 14,
+        "drift": 0,
+        "versions": {
+          "2026-10-13.1": 14
+        },
+        "changed_by": 0
+      },
+      "settings": {
+        "paused": false,
+        "weekly_cap": 40,
+        "rubric_in_force": "2026-10-13.1"
       }
     },
     {
@@ -1292,7 +1472,8 @@
           "Seeded decision": 32,
           "Auditor flag": 8
         },
-        "editor_decided": 0
+        "editor_decided": 0,
+        "effective": 27
       },
       "lessons": [],
       "claims": {
@@ -1302,6 +1483,56 @@
           "Ready": 11,
           "Fix needed": 35
         }
+      },
+      "runs": {
+        "rows": 0,
+        "kind": {},
+        "verdict": {}
+      },
+      "rulebook": {
+        "rows": 14,
+        "drift": 0,
+        "versions": {
+          "2026-10-13.1": 14
+        },
+        "changed_by": 0
+      },
+      "settings": {
+        "paused": false,
+        "weekly_cap": 40,
+        "rubric_in_force": "2026-10-13.1"
+      },
+      "propose": {
+        "run_id": "20261013T1805Z-propose-r1",
+        "judge_run": "20261013T1800Z-tag-r1",
+        "pull": "20261013T144637Z-pull",
+        "rubric_version": "2026-10-13.1",
+        "runs": 3,
+        "claims_judged": 60,
+        "claims_updated": 60,
+        "claims_unchanged": 0,
+        "rows_created": 40,
+        "rows_updated": 23,
+        "held_by_cap": 67,
+        "weekly_cap": 40,
+        "readiness_counts": {
+          "Needs editor": 14,
+          "Fix needed": 35,
+          "Not checkable": 0,
+          "Ready": 11
+        },
+        "by_why_in_queue": {
+          "Low confidence": 117,
+          "Seeded decision": 5,
+          "Auditor flag": 8
+        },
+        "created_by_why": {
+          "Low confidence": 107
+        },
+        "kept_by_decision": 27,
+        "stale_claims": 0,
+        "refused": [],
+        "created_at": "2026-10-13T15:05:14.873Z"
       }
     },
     {
@@ -1325,7 +1556,8 @@
           "Seeded decision": 32,
           "Auditor flag": 8
         },
-        "editor_decided": 10
+        "editor_decided": 10,
+        "effective": 37
       },
       "lessons": [],
       "claims": {
@@ -1335,6 +1567,30 @@
           "Ready": 11,
           "Fix needed": 35
         }
+      },
+      "runs": {
+        "rows": 2,
+        "kind": {
+          "Tag": 1,
+          "Baseline": 1
+        },
+        "verdict": {
+          "n/a": 1,
+          "PASS": 1
+        }
+      },
+      "rulebook": {
+        "rows": 14,
+        "drift": 0,
+        "versions": {
+          "2026-10-13.1": 14
+        },
+        "changed_by": 0
+      },
+      "settings": {
+        "paused": false,
+        "weekly_cap": 40,
+        "rubric_in_force": "2026-10-13.1"
       }
     },
     {
@@ -1486,7 +1742,8 @@
           "Seeded decision": 32,
           "Auditor flag": 8
         },
-        "editor_decided": 10
+        "editor_decided": 10,
+        "effective": 37
       },
       "lessons": [
         {
@@ -1494,14 +1751,20 @@
           "id": "LS-2",
           "status": "Proposed",
           "tag": "Context-dependent",
-          "rule": "Context-dependent rule 2"
+          "rule": "Context-dependent rule 2",
+          "supporting": 2,
+          "cards": 0,
+          "editor_wording_chars": 0
         },
         {
           "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
           "id": "LS-1",
           "status": "Proposed",
           "tag": "Predictive",
-          "rule": "Predictive rule 1"
+          "rule": "Predictive rule 1",
+          "supporting": 4,
+          "cards": 0,
+          "editor_wording_chars": 0
         }
       ],
       "claims": {
@@ -1511,6 +1774,31 @@
           "Ready": 11,
           "Fix needed": 35
         }
+      },
+      "runs": {
+        "rows": 4,
+        "kind": {
+          "Tag": 1,
+          "Baseline": 1,
+          "Distill": 2
+        },
+        "verdict": {
+          "n/a": 3,
+          "PASS": 1
+        }
+      },
+      "rulebook": {
+        "rows": 14,
+        "drift": 0,
+        "versions": {
+          "2026-10-13.1": 14
+        },
+        "changed_by": 0
+      },
+      "settings": {
+        "paused": false,
+        "weekly_cap": 40,
+        "rubric_in_force": "2026-10-13.1"
       }
     },
     {
@@ -1662,7 +1950,8 @@
           "Seeded decision": 32,
           "Auditor flag": 8
         },
-        "editor_decided": 10
+        "editor_decided": 10,
+        "effective": 37
       },
       "lessons": [
         {
@@ -1670,14 +1959,20 @@
           "id": "LS-2",
           "status": "Proposed",
           "tag": "Context-dependent",
-          "rule": "Context-dependent rule 2"
+          "rule": "Context-dependent rule 2",
+          "supporting": 2,
+          "cards": 0,
+          "editor_wording_chars": 0
         },
         {
           "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
           "id": "LS-1",
           "status": "Proposed",
           "tag": "Predictive",
-          "rule": "Predictive rule 1"
+          "rule": "Predictive rule 1",
+          "supporting": 4,
+          "cards": 0,
+          "editor_wording_chars": 0
         }
       ],
       "claims": {
@@ -1687,6 +1982,31 @@
           "Ready": 11,
           "Fix needed": 35
         }
+      },
+      "runs": {
+        "rows": 4,
+        "kind": {
+          "Tag": 1,
+          "Baseline": 1,
+          "Distill": 2
+        },
+        "verdict": {
+          "n/a": 3,
+          "PASS": 1
+        }
+      },
+      "rulebook": {
+        "rows": 14,
+        "drift": 0,
+        "versions": {
+          "2026-10-13.1": 14
+        },
+        "changed_by": 0
+      },
+      "settings": {
+        "paused": false,
+        "weekly_cap": 40,
+        "rubric_in_force": "2026-10-13.1"
       }
     },
     {
@@ -1840,7 +2160,8 @@
           "Seeded decision": 32,
           "Auditor flag": 8
         },
-        "editor_decided": 10
+        "editor_decided": 10,
+        "effective": 37
       },
       "lessons": [
         {
@@ -1848,14 +2169,20 @@
           "id": "LS-2",
           "status": "Approved",
           "tag": "Context-dependent",
-          "rule": "Context-dependent rule 2"
+          "rule": "Context-dependent rule 2",
+          "supporting": 2,
+          "cards": 0,
+          "editor_wording_chars": 0
         },
         {
           "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
           "id": "LS-1",
           "status": "Approved",
           "tag": "Predictive",
-          "rule": "Predictive rule 1"
+          "rule": "Predictive rule 1",
+          "supporting": 4,
+          "cards": 1,
+          "editor_wording_chars": 0
         }
       ],
       "claims": {
@@ -1865,6 +2192,33 @@
           "Ready": 11,
           "Fix needed": 35
         }
+      },
+      "runs": {
+        "rows": 5,
+        "kind": {
+          "Tag": 1,
+          "Baseline": 1,
+          "Distill": 2,
+          "Gate": 1
+        },
+        "verdict": {
+          "n/a": 3,
+          "PASS": 1,
+          "FAIL": 1
+        }
+      },
+      "rulebook": {
+        "rows": 14,
+        "drift": 0,
+        "versions": {
+          "2026-10-13.1": 14
+        },
+        "changed_by": 0
+      },
+      "settings": {
+        "paused": false,
+        "weekly_cap": 40,
+        "rubric_in_force": "2026-10-13.1"
       }
     },
     {
@@ -2019,7 +2373,8 @@
           "Seeded decision": 32,
           "Auditor flag": 8
         },
-        "editor_decided": 10
+        "editor_decided": 10,
+        "effective": 37
       },
       "lessons": [
         {
@@ -2027,14 +2382,20 @@
           "id": "LS-2",
           "status": "Rolled back",
           "tag": "Context-dependent",
-          "rule": "Context-dependent rule 2"
+          "rule": "Context-dependent rule 2",
+          "supporting": 2,
+          "cards": 1,
+          "editor_wording_chars": 0
         },
         {
           "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
           "id": "LS-1",
           "status": "Approved",
           "tag": "Predictive",
-          "rule": "Predictive rule 1"
+          "rule": "Predictive rule 1",
+          "supporting": 4,
+          "cards": 3,
+          "editor_wording_chars": 1439
         }
       ],
       "claims": {
@@ -2044,6 +2405,33 @@
           "Ready": 11,
           "Fix needed": 35
         }
+      },
+      "runs": {
+        "rows": 8,
+        "kind": {
+          "Tag": 1,
+          "Baseline": 1,
+          "Distill": 2,
+          "Gate": 4
+        },
+        "verdict": {
+          "n/a": 3,
+          "PASS": 1,
+          "FAIL": 4
+        }
+      },
+      "rulebook": {
+        "rows": 14,
+        "drift": 0,
+        "versions": {
+          "2026-10-13.1": 14
+        },
+        "changed_by": 0
+      },
+      "settings": {
+        "paused": false,
+        "weekly_cap": 40,
+        "rubric_in_force": "2026-10-13.1"
       }
     },
     {
@@ -2198,7 +2586,8 @@
           "Seeded decision": 32,
           "Auditor flag": 8
         },
-        "editor_decided": 13
+        "editor_decided": 13,
+        "effective": 39
       },
       "lessons": [
         {
@@ -2206,14 +2595,20 @@
           "id": "LS-2",
           "status": "Rolled back",
           "tag": "Context-dependent",
-          "rule": "Context-dependent rule 2"
+          "rule": "Context-dependent rule 2",
+          "supporting": 2,
+          "cards": 1,
+          "editor_wording_chars": 0
         },
         {
           "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
           "id": "LS-1",
           "status": "Approved",
           "tag": "Predictive",
-          "rule": "Predictive rule 1"
+          "rule": "Predictive rule 1",
+          "supporting": 4,
+          "cards": 5,
+          "editor_wording_chars": 1439
         }
       ],
       "claims": {
@@ -2223,6 +2618,33 @@
           "Ready": 11,
           "Fix needed": 35
         }
+      },
+      "runs": {
+        "rows": 10,
+        "kind": {
+          "Tag": 1,
+          "Baseline": 1,
+          "Distill": 2,
+          "Gate": 6
+        },
+        "verdict": {
+          "n/a": 3,
+          "PASS": 1,
+          "FAIL": 6
+        }
+      },
+      "rulebook": {
+        "rows": 14,
+        "drift": 0,
+        "versions": {
+          "2026-10-13.1": 14
+        },
+        "changed_by": 0
+      },
+      "settings": {
+        "paused": false,
+        "weekly_cap": 40,
+        "rubric_in_force": "2026-10-13.1"
       }
     }
   ],
@@ -2656,6 +3078,161 @@
       "smoke": false
     }
   ],
+  "verifies": [
+    {
+      "run_id": "20261013T144455Z-seed-phase1",
+      "result": "clean",
+      "ops": 15,
+      "landed": 15,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T144531Z-seed-phase2",
+      "result": "clean",
+      "ops": 60,
+      "landed": 60,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T144609Z-seed-phase3",
+      "result": "clean",
+      "ops": 50,
+      "landed": 50,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1805Z-propose-r1",
+      "result": "clean",
+      "ops": 123,
+      "landed": 123,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1810Z-card-tag-r1",
+      "result": "clean",
+      "ops": 1,
+      "landed": 1,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1811Z-card-baseline-r1",
+      "result": "clean",
+      "ops": 1,
+      "landed": 1,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1840Z-cases-sync-1",
+      "result": "clean",
+      "ops": 32,
+      "landed": 32,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1845Z-distill-1",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1845Z-distill-1-link",
+      "result": "clean",
+      "ops": 4,
+      "landed": 4,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1850Z-distill-demo",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1850Z-distill-demo-link",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T1920Z-promote-ls1",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T2000Z-promote-ls1-b",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T2030Z-promote-ls2-demo",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T2045Z-promote-ls1-c",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T2110Z-promote-ls1-d",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    },
+    {
+      "run_id": "20261013T2150Z-promote-ls1-e",
+      "result": "clean",
+      "ops": 2,
+      "landed": 2,
+      "missing": 0,
+      "mismatched": 0,
+      "editor_changes": 0
+    }
+  ],
   "persona": {
     "total": 18,
     "by_role": {
@@ -2670,60 +3247,214 @@
       "Status",
       "Editor wording",
       "Approved by"
+    ],
+    "approvals": 2,
+    "amendments": 2,
+    "wording_chars": [
+      1439,
+      562,
+      1439
     ]
   },
   "headless": [
     {
-      "file": "status-run-2.summary.md",
-      "is_error": "false",
-      "turns": "6",
-      "cost": "0.107",
-      "denials": "2",
-      "editor_writes": "0"
-    },
-    {
-      "file": "status-run-3.summary.md",
-      "is_error": "false",
-      "turns": "4",
-      "cost": "0.100",
-      "denials": "2",
-      "editor_writes": "0"
-    },
-    {
-      "file": "status-run-4.summary.md",
-      "is_error": "false",
-      "turns": "4",
-      "cost": "0.086",
-      "denials": "2",
-      "editor_writes": "0"
-    },
-    {
-      "file": "status-run-5.summary.md",
-      "is_error": "false",
-      "turns": "6",
-      "cost": "0.120",
-      "denials": "1",
-      "editor_writes": "0"
-    },
-    {
       "file": "status-run.summary.md",
+      "test": "status-run",
+      "attempt": 1,
       "is_error": "false",
       "turns": "6",
       "cost": "0.210",
-      "denials": "2",
-      "editor_writes": "0"
+      "denials": 2,
+      "bash": 2,
+      "ran": false,
+      "editor_writes": "0",
+      "connector_calls": 0
+    },
+    {
+      "file": "status-run-2.summary.md",
+      "test": "status-run",
+      "attempt": 2,
+      "is_error": "false",
+      "turns": "6",
+      "cost": "0.107",
+      "denials": 2,
+      "bash": 2,
+      "ran": false,
+      "editor_writes": "0",
+      "connector_calls": 0
+    },
+    {
+      "file": "status-run-3.summary.md",
+      "test": "status-run",
+      "attempt": 3,
+      "is_error": "false",
+      "turns": "4",
+      "cost": "0.100",
+      "denials": 2,
+      "bash": 2,
+      "ran": false,
+      "editor_writes": "0",
+      "connector_calls": 0
+    },
+    {
+      "file": "status-run-4.summary.md",
+      "test": "status-run",
+      "attempt": 4,
+      "is_error": "false",
+      "turns": "4",
+      "cost": "0.086",
+      "denials": 2,
+      "bash": 2,
+      "ran": false,
+      "editor_writes": "0",
+      "connector_calls": 0
+    },
+    {
+      "file": "status-run-5.summary.md",
+      "test": "status-run",
+      "attempt": 5,
+      "is_error": "false",
+      "turns": "6",
+      "cost": "0.120",
+      "denials": 1,
+      "bash": 4,
+      "ran": true,
+      "editor_writes": "0",
+      "connector_calls": 0
     },
     {
       "file": "tag-dry-run.summary.md",
+      "test": "tag-dry-run",
+      "attempt": 1,
       "is_error": "false",
       "turns": "8",
       "cost": "0.191",
-      "denials": "2",
-      "editor_writes": "0"
+      "denials": 2,
+      "bash": 7,
+      "ran": true,
+      "editor_writes": "0",
+      "connector_calls": 0
     }
   ],
   "tests": {
-    "files": 29
+    "files": 32,
+    "files_at_commit": 29,
+    "commit": "86ef650"
+  },
+  "config": {
+    "agent": "claim-tagger",
+    "notion": {
+      "api_version": "2022-06-28",
+      "hub_page_id": "3da273e214eb80c180d5fd0894bc2db8",
+      "databases_page_id": "3f8273e214eb81c59b0cc7576b1bb62f",
+      "engineer_notes_page_id": "3f8273e214eb8137a13cd8d4d483b936",
+      "databases": {
+        "rulebook": {
+          "database_id": "89043d4a749041ffb834f96a5239e148",
+          "data_source_id": "319e6022-0b6a-4068-b560-99c83fae5bdf",
+          "key": "Tag title"
+        },
+        "claims": {
+          "database_id": "9418c3f625d24b439539f381b7ff03c2",
+          "data_source_id": "506dddee-af6e-4cbe-980f-a1ef1564d9bd",
+          "key": "Geo ID"
+        },
+        "tag_decisions": {
+          "database_id": "de7a08f6d3ae4c08b9387e6d762d79f2",
+          "data_source_id": "92c9f4a9-f729-447b-88b9-982ff0e97074",
+          "key": "Key"
+        },
+        "rule_changes": {
+          "database_id": "833efad0634f43608ca18e4f7291cc02",
+          "data_source_id": "e1836e35-d614-4434-ab34-a0ddeaa1842c",
+          "key": "Lesson title"
+        },
+        "runs": {
+          "database_id": "0c397590fb154ddb98010830faaa159b",
+          "data_source_id": "e1f2103e-6233-468c-91b4-2c2382e86d1b",
+          "key": "Run title"
+        },
+        "agent_settings": {
+          "database_id": "43c8a1c3a8d44a7f824698b4789cffe6",
+          "data_source_id": "5de4f0e4-21ab-417c-b9a5-06bbc6c143eb",
+          "key": "Name"
+        }
+      },
+      "protected_database_ids": [
+        "d1307596-e531-420f-8688-2485f3ef28ab",
+        "9e979fe1-e03d-45cd-b9b1-d971dc3d90a2",
+        "7219756338b2416f8fa8af83d75ec47d",
+        "9e111d22c14e4344bb90072606036942",
+        "b65273e214eb836c8e7c816e810d3ba1",
+        "b65273e2-14eb-8362-86a6-870ea8d632f4"
+      ],
+      "requests_per_second": 3,
+      "page_size": 100,
+      "max_creates_per_call": 100,
+      "max_text": 1900
+    },
+    "models": {
+      "judge": "claude-sonnet-5-5",
+      "cheap": "claude-haiku-5-5",
+      "distill": "claude-opus-5-5"
+    },
+    "judge": {
+      "runs": 3,
+      "smoke_runs": 1,
+      "batch_size": 8,
+      "concurrency": 2,
+      "effort": "medium",
+      "max_turns": 1,
+      "timeout_ms": 300000,
+      "claude_bin": "claude",
+      "max_error_share": 0.1,
+      "prompt": "prompts/judge.md"
+    },
+    "thresholds": {
+      "t_apply": 0.75,
+      "t_skip": 0.25
+    },
+    "readiness": {
+      "fix_polarities": [
+        "Issue"
+      ]
+    },
+    "queue": {
+      "weekly_cap_default": 40,
+      "why_max_words": 40
+    },
+    "distill": {
+      "min_claims": 2,
+      "min_claims_rule_change": 3,
+      "owner_ruling_at": 2,
+      "overfit_ngram": 8
+    },
+    "gate": {
+      "tolerance": 0.05,
+      "min_positives": 5,
+      "bootstrap": 1000,
+      "ci": [
+        0.025,
+        0.975
+      ],
+      "ungated_flips_hold": 1,
+      "ungated_flips_fail": 3,
+      "reconfirm_runs": 5
+    },
+    "scope": {
+      "code_decided_tags": [
+        "Unsourced",
+        "Improperly sourced",
+        "Source inaccessible"
+      ],
+      "human_only_tags": [
+        "Editor verified"
+      ],
+      "source_reading_tags": [
+        "Improperly sourced",
+        "Source inaccessible"
+      ]
+    }
   },
   "total_cost_usd": 13.88
 }

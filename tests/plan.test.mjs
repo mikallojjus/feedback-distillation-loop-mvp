@@ -13,9 +13,11 @@ import { USER, captureIo, cleanupRoots, makeWorld } from './fixtures/notion/help
 
 after(cleanupRoots);
 
-async function ready() {
+/** A pulled world. { setup: true } adds runs/SETUP, the marker an engineer creates by hand before a seed: `check` refuses a plan whose header says seed without it. */
+async function ready({ setup = false } = {}) {
   const w = makeWorld();
   await w.pull('p1');
+  if (setup) writeFileSync(join(w.root, 'runs', 'SETUP'), 'engineer, test\n');
   return w;
 }
 const planOf = (w, runId = 'run-1', opts = {}) => openPlan({ runId, root: w.root, ...opts });
@@ -170,7 +172,7 @@ test('an unresolved reference, a reference outside a relation, and a malformed r
 // ---- check: re-validation, upsert, skips, batches, arming ----
 
 test('check: a create whose key exists becomes an update, a new key stays a create; batches and check.json are written; the plan is armed', async () => {
-  const w = await ready();
+  const w = await ready({ setup: true });
   const p = planOf(w, 'run-1', { ctx: { seed: true } });
   p.create('claims', 'g1', { 'Claim title': 'Texas is on track to become a competitive swing state', Table: 'U.S. Politics', Readiness: 'Ready' });
   p.create('claims', 'fresh-1', { 'Claim title': 'A fresh claim', 'Sources count': 4, Table: 'U.S. Politics', 'Source URLs': 'u1\nu2' }, { content_md: '# Heading\n\ntext' });
@@ -197,7 +199,7 @@ test('check: a create whose key exists becomes an update, a new key stays a crea
 });
 
 test('check: batches hold at most 100 pages each, grouped by kind and database, in the order the ops first appear', async () => {
-  const w = await ready();
+  const w = await ready({ setup: true });
   const p = planOf(w, 'big', { ctx: { seed: true } });
   for (let i = 0; i < 250; i++) p.create('claims', `bulk-${String(i).padStart(3, '0')}`, { 'Claim title': `Bulk ${i}`, Table: 'U.S. Politics' });
   p.create('runs', 'Run X', { Kind: 'Tag' });
@@ -264,7 +266,7 @@ test('check: a row decided between build and check is skipped (decided rule or g
 });
 
 test('check: an update that would change nothing is skipped as already up to date', async () => {
-  const w = await ready();
+  const w = await ready({ setup: true });
   const p = planOf(w, 'run-1', { ctx: { seed: true } });
   p.update('claims', 'g1', null, { 'Sources count': 2, 'Table': 'U.S. Politics', 'Source URLs': 'https://geo.test/s1-g1\r\nhttps://geo.test/s2-g1' }); // equal after normalisation
   p.update('claims', 'g2', null, { 'Sources count': 3 });
@@ -321,6 +323,39 @@ test('check: a plan edited by hand into something the allowlist refuses is rejec
   ops2[1] = { ...ops2[1], database: 'claims', key: 'g1', page_id: w.ids.claims.g1, properties: { 'Geo link': 'https://evil.test' } };
   writeFileSync(join(w.root, 'runs', 'run-1', 'plan.jsonl'), ops2.map((o) => JSON.stringify(o)).join('\n') + '\n');
   assert.match(runCheck(w).problems[0], /seed/);
+});
+
+test('check: a header that claims a gate PASS is not believed on its own: no PROMOTING.json and card, exit 2, "plan: gate evidence:" lines, nothing armed or written', async () => {
+  const w = await ready();
+  const p = planOf(w, 'forged-1', { ctx: { promote: true, gate: 'PASS' } }); // the builder and the allowlist take the header at its word
+  p.update('rulebook', 'Predictive', null, { 'When to use': '1. A text no gate ever saw.', 'Rule version': '2026-10-14.1', 'Tag hash': 'sha256:feedfacefeedface', 'Changed by': [{ rule_changes: 'Hedged trajectories are not forecasts' }] });
+  p.update('rule_changes', 'Hedged trajectories are not forecasts', null, { Status: 'Live', 'Gate result': 'PASS (small sample)' });
+  p.write();
+  const result = runCheck(w, 'forged-1');
+  assert.equal(result.code, EXIT.INVALID);
+  assert.match(result.problems[0], /^gate evidence: runs\/PROMOTING\.json does not exist/);
+  const cap = captureIo();
+  assert.equal(main(['check', '--run', 'forged-1'], cap.io, { root: w.root, now: w.clock.now }), EXIT.INVALID);
+  assert.deepEqual(cap.out, []);
+  assert.match(cap.err.join('\n'), /^plan: gate evidence: runs\/PROMOTING\.json does not exist/);
+  assert.equal(armedState(w.root), null);
+  assert.equal(existsSync(join(w.root, 'runs', 'forged-1', 'check.json')), false);
+  assert.equal(existsSync(join(w.root, 'runs', 'forged-1', 'batches')), false);
+});
+
+test('check: a seed plan is refused without the runs/SETUP marker, and goes on with it', async () => {
+  const w = await ready();
+  const p = planOf(w, 'seed-1', { ctx: { seed: true } });
+  p.create('claims', 'geo-77', { 'Claim title': 'Seed claim', Sample: 'Random' });
+  p.write();
+  const refused = runCheck(w, 'seed-1');
+  assert.equal(refused.code, EXIT.INVALID);
+  assert.match(refused.problems[0], /^gate evidence: runs\/SETUP does not exist/);
+  assert.equal(armedState(w.root), null);
+  writeFileSync(join(w.root, 'runs', 'SETUP'), 'engineer, test\n');
+  assert.equal(runCheck(w, 'seed-1').code, EXIT.OK);
+  assert.equal(armedState(w.root).run_id, 'seed-1');
+  assert.deepEqual(JSON.parse(readFileSync(join(w.root, 'runs', 'seed-1', 'check.json'), 'utf8')).gate_evidence, { modes: ['seed'], setup_marker: 'runs/SETUP' });
 });
 
 test('check: malformed plans are rejected with every problem named', async () => {
@@ -479,7 +514,7 @@ test('command line: check prints one line, lists skips on stderr; disarm; usage 
 // ---- upsert details ----
 
 test('a create that becomes an update never applies what only a create may write (Status Proposed, the seeded Weekly cap and Name)', async () => {
-  const w = await ready();
+  const w = await ready({ setup: true });
   const p = planOf(w, 'run-1', { ctx: { seed: true } });
   p.create('rule_changes', 'Hedged trajectories are not forecasts', { Status: 'Proposed', Kind: 'Clarify wording', 'Proposed text': 'new proposal' }); // exists, and an editor has Approved it
   p.create('agent_settings', 'claim-tagger', { Name: 'claim-tagger', 'Weekly cap': 99, 'Rubric in force': '2026-10-14.1' });
@@ -495,7 +530,7 @@ test('a create that becomes an update never applies what only a create may write
 });
 
 test('a converted create with nothing left to write is skipped', async () => {
-  const w = await ready();
+  const w = await ready({ setup: true });
   const p = planOf(w, 'run-1', { ctx: { seed: true } });
   p.create('rule_changes', 'Hedged trajectories are not forecasts', { Status: 'Proposed' });
   p.write();

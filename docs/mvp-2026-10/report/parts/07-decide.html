@@ -5,31 +5,98 @@
   <div class="plain">
     <p class="geo-eyebrow plain-label">In short</p>
     <ul>
-      <li>TODO: the decisions the team owes, who decides each, and by when.</li>
-      <li>TODO: the steps for the second week, in order.</li>
-      <li>TODO: what could go wrong, and what is already in place against it (the top three risks).</li>
-      <li>TODO: what moving from the trial copy to the real Claims to review database takes.</li>
+      <li>Fourteen decisions shaped the MVP: eleven while building it, from where the code lives to the extra runs that separate a real flip from noise, and three from the persona reviews. Each is one line below.</li>
+      <li>The MVP built the core of the research's proposed path and left out what needs editors' time or more data: the gold set, blind labels, tuned caps, source reading, a second editor's approval, and the <dfn data-t="per-tag-judge">per-tag judge</dfn>.</li>
+      <li>Next, in order: close the review round (the queue and the cards were made clearer after round 1), build the per-tag judge and put LS-1 through the <dfn data-t="gate">gate</dfn> again, then grow the labelled data before moving to the real database.</li>
+      <li>The risks that matter: <dfn data-t="interference">interference</dfn> between tags (seen in the trial), tiny samples, a model or Claude Code update changing the answers, and renamed Notion columns.</li>
     </ul>
   </div>
 
-  <div class="sub" id="decide-owed" data-title="Decisions owed">
-    <h3>Decisions owed</h3>
-    <p>TODO: a table of the decisions: the decision, who decides, by when, and what changes under each answer.</p>
+  <div class="sub" id="decide-taken" data-title="Decisions taken">
+    <h3>Decisions taken</h3>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>#</th><th>Decision</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>M1</td><td>The code lives in a new repository, <code>geo-agents</code>, one folder per agent as in the migration plan; local git, no remote yet.</td><td>The future home of the team's agents; an editor opens Claude Code there.</td></tr>
+        <tr><td>M2</td><td>Scripts write Notion through an integration token; the connector serves the interactive skill and the personas.</td><td>The connector writes one page per call, about 50 minutes for 482 rows; the token's REST path took about 3 minutes.</td></tr>
+        <tr><td>M3</td><td>All {{count:rulebookTags}} Verified tags are in the <dfn data-t="rulebook">rulebook</dfn>, {{count:judgedTags}} judged by the model; the two source-reading tags are decided in code, because no source is read.</td><td>The research's scope, at a bearable cost.</td></tr>
+        <tr><td>M4</td><td>The trial uses real claims and the audit's decisions with names replaced by roles; the audit's decisions sit in agent-owned columns as <dfn data-t="seeded-outcome">seeded outcomes</dfn>.</td><td>No script ever writes an editor field.</td></tr>
+        <tr><td>M5</td><td>The gate keeps the research's rules, with {{count:config.minPositives}} labelled positives per tag instead of 30; every card says <dfn data-t="small-sample">small sample</dfn>; the demo is one real <dfn data-t="lesson">lesson</dfn> and one planted bad one.</td><td>Little data; show both kinds of verdict.</td></tr>
+        <tr><td>M6</td><td>Judge: Sonnet 5.5, {{count:config.judgeRuns}} runs, majority verdict. Distiller: Opus 5.5. Personas: Fable 5.1 for the editor, Opus 5.5 for the engineer.</td><td>The model split the team asked for.</td></tr>
+        <tr><td>M7</td><td>One skill with subcommands; queue views; Agent settings with a pause switch; an Engineer notes page; editor guidance in the column descriptions, no start page.</td><td>The team's choices.</td></tr>
+        <tr><td>M8</td><td>The editor's-machine test is a fresh headless Claude Code session in the repository, its transcript kept as evidence.</td><td>No remote repository needed.</td></tr>
+        <tr><td>M9</td><td>This report: seven tabs, a Plain and a Technical layer, a wider reading column, a diagram and sample tables.</td><td>The research page's column was too narrow to read.</td></tr>
+        <tr><td>M10</td><td>Writes only inside the hub page; the real databases are listed as protected; nothing is deleted or archived.</td><td>The brief.</td></tr>
+        <tr><td>M11</td><td>A <dfn data-t="regression-case">regression case</dfn> that flips is judged {{count:config.reconfirmRuns}} more times under each rulebook before it counts; the card lists each one (<dfn data-t="reconfirmation">reconfirmation</dfn>).</td><td>Three gate attempts were blocked by borderline cases decided 2 to 1; the research measured that noise but never applied it to cases.</td></tr>
+        <tr><td>M12</td><td>A decided row stays a permanent test and is never sent back to the queue after a rule change; the <dfn data-t="follow-up">follow-up</dfn> marks it Fixed or Still wrong. Undecided rows whose proposal flips come back as Rule changed.</td><td>The two reviewers disagreed; the gate relies on decided rows staying fixed.</td></tr>
+        <tr><td>M13</td><td>A lesson that fails or holds at the gate stays Approved with its Gate result, and a computed Owner action column keeps it in front of the rule owner; the agent never rejects a lesson on its own.</td><td>After five FAILs an Approved lesson had dropped out of the rule owner's view.</td></tr>
+        <tr><td>M14</td><td>A Rulebook write needs evidence, not a flag: the run's <dfn data-t="promote">promote</dfn> record, a PASS card whose hashes match, the candidate's exact text and an Approved lesson. Restore writes only the locked text; seeding needs a marker an engineer creates by hand; the model may not write run files.</td><td>The engineer review got a rule replaced with a plan whose header merely claimed a PASS.</td></tr>
+      </tbody>
+    </table></div>
+    <p>M12 to M14 came out of the persona reviews. The full table, with dates, is <code>docs/mvp-2026-10/decisions.md</code>.</p>
   </div>
 
-  <div class="sub" id="decide-week2" data-title="Week-2 steps">
-    <h3>Week-2 steps</h3>
-    <p>TODO: the steps for the second week in order, each with an owner and a way to tell it is done.</p>
+  <div class="sub" id="decide-left" data-title="Left out from the research">
+    <h3>What the MVP took from the research, and what it left out</h3>
+    <p>Taken: one queue where editors set the <dfn data-t="tag-outcome">Tag outcome</dfn> of each tag; <dfn data-t="why-wrong">Why wrong</dfn> when overruling; every decision that settles a tag kept as a test; lessons that edit the "When to use" rules, approved by the rule owner and written only after one gate passes; a candidate rulebook with a fingerprint; a three-way verdict per tag rolled up into a Readiness status per claim; nothing ever appended to the prompt. Left out:</p>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Research item</th><th>In the MVP</th><th>When</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Gold set</strong>: about 150 claims labelled by two editors with sources unopened</td><td>Not built; the gate runs on the audit's and the persona's decisions</td><td>Package B, week 3</td></tr>
+        <tr><td><strong>Blind labels</strong>: a weekly slice of 10 to 20 claims labelled without the agent's answer in view</td><td>Not built, so the loop is not yet measured independently of the agent</td><td>Package B, week 3</td></tr>
+        <tr><td><strong>Readiness switch</strong>: the status per claim switched on once inflow is measured</td><td>Readiness is written from the first run, on the trial copy only</td><td>With the move to the real database</td></tr>
+        <tr><td><strong>Weekly cap</strong> tuned to the editors, with rows expiring after four weeks</td><td>A fixed cap of {{count:config.weeklyCap}} new rows a week, no expiry</td><td>After a few weeks of real inflow</td></tr>
+        <tr><td><strong>Source reading</strong></td><td>None: Improperly sourced and Source inaccessible show "not checked in this trial"</td><td>Not planned yet</td></tr>
+        <tr><td><strong>A second editor</strong> approving a rule change that changes meaning</td><td>The rule owner alone</td><td>When a second editor joins</td></tr>
+        <tr><td><strong>30 labelled positives</strong> before a tag is gated</td><td>{{count:config.minPositives}}, with the small-sample label</td><td>As labels grow</td></tr>
+        <tr><td><strong>One judge per tag</strong> if tests show interference (package C)</td><td>Not built; the trial showed the interference</td><td>Next engineering step</td></tr>
+      </tbody>
+    </table></div>
   </div>
 
-  <div class="sub" id="decide-risks" data-title="Risk register" data-layer="tech">
-    <h3>Risk register</h3>
-    <p>TODO: the risks from the plan as a table: risk, what is in place against it, what is left, owner.</p>
+  <div class="sub" id="decide-next" data-title="Next steps">
+    <h3>Next steps, in order</h3>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>#</th><th>Step</th><th>Owner</th><th>Done when</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td><strong>Close the review round.</strong> The editor review's four must findings were fixed after round 1: a Stage and Direction legend, Status wording that says a lesson stays Approved after a FAIL, a "For editors:" line opening every card, and guidance on Decided at and Decided by. Round 2 of both personas checks those fixes and the engineer's (<a href="#verify-personas">Verification</a>).</td><td>The engineer; the lead editor reads</td><td>Both round-2 statements say clear</td></tr>
+        <tr><td class="num">2</td><td><strong>A per-tag judge,</strong> so a change to one tag's rules cannot move another tag's answer; then put LS-1 through the gate again with the attempt-{{count:best.attempt}} wording. The first lesson that passes is also the first real run of finalize, follow-up and rollback: an engineer watches it with the rollback commands ready.</td><td>The engineer</td><td>LS-1 has a new card, and the Context-dependent flip is gone or explained</td></tr>
+        <tr><td class="num">3</td><td><strong>A Context-dependent boundary lesson</strong> for the Melania case: a possessed noun such as "her initiative" names a kind of thing, not which one, even when the pronoun resolves.</td><td>The rule owner, with the lead editor</td><td>The lesson is drafted from decisions or a ruling and passes the gate</td></tr>
+        <tr><td class="num">4</td><td><strong>More labelled Predictive and Hypothetical claims.</strong> The gate needs them: Predictive had {{count:gate.ls1a4.targetPositives}} positives among {{count:gate.ls1a4.targetN}} labelled claims, and Context-dependent too few to be gated at all.</td><td>The lead editor</td><td>Each forecast tag has enough positives to be gated with room to spare</td></tr>
+        <tr><td class="num">5</td><td><strong>Tune the weekly cap and the confidence thresholds</strong> on real inflow: the first tag run found {{count:tagRun.candidates}} uncertain tags for {{count:tagRun.weeklyCap}} places.</td><td>The lead editor, with the engineer</td><td>The cap matches what editors decide in a week</td></tr>
+        <tr><td class="num">6</td><td><strong>Move to the real Claims to review database,</strong> with the allowlist and the protected list (<a href="#decide-migration">Moving to the real database</a>).</td><td>The engineer; the product owner approves</td><td>A small tag run on the real database passes its <dfn data-t="read-back">read-back</dfn></td></tr>
+        <tr><td class="num">7</td><td><strong>Disconnect the integration from the four real databases the probe found it can read</strong> (U.S. Politics debate claims, Claims to review, the taxonomy and World affairs debate claims; nothing was written there, see the trust check), <strong>replace the temporary token</strong>, connect the new one only to the hub page and run <code>probe.mjs</code> until it exits 0; <strong>add a private remote</strong> for the repository, so the rubric, its history and the cases do not live on one disk. Both are the engineer review's open must findings.</td><td>The product owner decides; the engineer does it</td><td>The new token works, the old one is revoked, and the repository is pushed</td></tr>
+        <tr><td class="num">8</td><td><strong>The gold set and blind labels</strong> (research package B, week 3).</td><td>The lead editor and a second editor</td><td>A first blind slice is labelled and scored</td></tr>
+        <tr><td class="num">9</td><td><strong>Decide the package C items</strong>: weekly digest, second-editor checks, drift charts, shadow runs of new rules, calibrated confidence.</td><td>The product owner</td><td>Each item is in or out, with a date</td></tr>
+      </tbody>
+    </table></div>
   </div>
 
-  <div class="sub" id="decide-migration" data-title="Migration to the real database" data-layer="tech">
-    <h3>Migration to the real Claims to review database</h3>
-    <p>TODO: what it takes to move the loop from the trial copy to the real Claims to review database: the columns to map, the protected databases, the identity each step uses, and the order of steps.</p>
+  <div class="sub" id="decide-risks" data-title="Risks">
+    <h3>Risks</h3>
+    <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+      <thead><tr><th>Risk</th><th>In place</th><th>Left to do</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Interference</strong>: a change to one tag moves another (seen in the trial)</td><td>Gate condition 2, reconfirmation, a result card for every refusal</td><td>The per-tag judge</td></tr>
+        <tr><td><strong>Tiny samples</strong>: a handful of labelled claims per tag</td><td>The small-sample label on every card; the {{count:config.minPositives}}-positive minimum; reconfirmation; the canaries</td><td>More labels; the gold set</td></tr>
+        <tr><td><strong>Model drift</strong>: a model or Claude Code update changes the answers</td><td>The <dfn data-t="config-id">config id</dfn> pins the model, effort, prompt version, rubric and Claude Code version; a judgment is reused only under the same id; the pinned model must answer or the run stops</td><td>An update re-judges everything at full cost; plan a fresh baseline whenever the model or the CLI changes</td></tr>
+        <tr><td><strong>Notion renames</strong>: a renamed column or option silently changes Stage or a view</td><td>Every pull checks each expected property's name and type, and since the engineer review the select options the scripts and formulas rely on, and stops on a mismatch; the rulebook text is compared with the file before every step; the formulas as built are in the repository</td><td>Keep <code>as-built.md</code> current with every change made in Notion</td></tr>
+        <tr><td><strong>A rule written without a real PASS</strong> (shown possible by the engineer review)</td><td>The Rulebook write is checked against the evidence of a PASS, not a flag (M14); the model may not write run files</td><td>Run the headless guard-hook test once by hand</td></tr>
+        <tr><td><strong>The usage window</strong></td><td>Every step stops cleanly and resumes, with cached judgments</td><td>Nothing</td></tr>
+        <tr><td><strong>The temporary token</strong></td><td>Kept only in <code>.env</code>, git-ignored, never read into a prompt, log or transcript</td><td>Disconnect it from the four real databases it can read, then replace it; the probe must exit 0</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="sub" id="decide-migration" data-title="Moving to the real database" data-layer="tech">
+    <h3>Moving to the real Claims to review database</h3>
+    <ol>
+      <li><strong>Map the columns.</strong> The real queue's columns onto Tag decisions: the editor fields (Tag outcome, Why wrong, Your reasoning, Decided by, Decided at), the agent columns to add, the formulas for Effective outcome, Direction and Stage, and the rollups the connector needs instead of formulas through relations.</li>
+      <li><strong>Re-point the configuration.</strong> The real database becomes a configured data source in <code>config.json</code>; U.S. Politics and the taxonomy stay protected; <code>pull.mjs</code> checks every property name and type against the real schema, and the allowlist is checked against its select options.</li>
+      <li><strong>Identity.</strong> A new integration token, shared only with the pages the agent writes. The connector stays with people.</li>
+      <li><strong>The rulebook.</strong> Copy the Verified tags of the day into the Rulebook again, or decide that the taxonomy itself becomes the rulebook; either way the file stays the source of truth and Notion is checked against it.</li>
+      <li><strong>Order.</strong> A tag dry run, then a small tag run with read-back, then the editors' queue, then distill and the gate as in the trial; each step checked before the next.</li>
+    </ol>
   </div>
 
   <aside class="terms" data-strip></aside>

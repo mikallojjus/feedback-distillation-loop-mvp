@@ -124,9 +124,9 @@ test('editor fields changed on pages the plan did not touch are ignored: editors
   assert.equal(existsSync(join(w.root, 'runs', 'PAUSED')), false);
 });
 
-test('a write the plan made itself is not a trust breaker: Status Approved -> Live, but an outside change of Status is', async () => {
-  const build = (p) => p.update('rule_changes', 'Hedged trajectories are not forecasts', null, { Status: 'Live', 'Gate result': 'PASS (small sample)', 'Rubric version': '2026-10-14.1' });
-  const ok = await scenario(build, (x) => x.fake.editorSet(x.ids.lesson, { Status: 'Live', 'Gate result': 'PASS (small sample)', 'Rubric version': '2026-10-14.1' }), { ctx: { promote: true, gate: 'PASS' } });
+test('a write the plan made itself is not a trust breaker: Status Approved -> Rolled back, but an outside change of Status is', async () => {
+  const build = (p) => p.update('rule_changes', 'Hedged trajectories are not forecasts', null, { Status: 'Rolled back', 'Gate result': 'FAIL (small sample)', 'Rubric version': '2026-10-14.1' });
+  const ok = await scenario(build, (x) => x.fake.editorSet(x.ids.lesson, { Status: 'Rolled back', 'Gate result': 'FAIL (small sample)', 'Rubric version': '2026-10-14.1' })); // a Live write needs gate evidence, so the self-made write here is a rollback
   const first = doVerify(ok);
   assert.equal(first.code, EXIT.OK, first.line);
   // the plan writes only the gate result; the status changes under it
