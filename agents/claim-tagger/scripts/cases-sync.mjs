@@ -18,7 +18,8 @@
 //                that sits in another suite (mirror-freshness) keeps its suite and its flags.
 //   other        key, claim, geo_id, outcome_source (editor | seeded), why_wrong, reasoning, decided_at, source_row (the queue row's page url),
 //                rubric_version (the version the hashes were stamped against), source "queue".
-// Research cases without a decided queue row stay in the file untouched (source "research"; the old source text moves to research_source).
+// Research cases without a decided queue row stay in the file (source "research", hashes re-stamped); the research file's old source text moves to
+// research_source, on those and on the cases a queue row took over.
 // The plan sets "In regression suite" (today) on the rows whose case is active and whose date is still empty, never on contested ones.
 // Claim texts come from the pull when it holds the Claims, else from an older pull, the cases already in the file or the seed.
 //
@@ -34,7 +35,6 @@ import { ruleHash } from './lib/hash.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { normId } from './lib/notion-values.mjs';
 import { agentRoot, isMain, runId as makeRunId } from './lib/paths.mjs';
-import { normaliseText } from './lib/rubric-build.mjs';
 import { openPlan } from './plan.mjs';
 import { latestPullId, loadConfig, loadPull } from './pull.mjs';
 import { checkVerdict, inspect } from './status.mjs';
@@ -137,7 +137,7 @@ export function claimTexts(root, pull, casesRows = []) {
  * but not in Notion yet. `best` is the Live lesson when there is one, else the in-flight one that ranks highest (Approved, Proposed, Rolled back,
  * Rejected). `unknown` means the row has links the pull cannot resolve (it holds no Rule changes).
  */
-export function linkedLessons(row, index, links = new Map()) {
+export function linkedLessons(row, index, links = new Map(), statusOverride = new Map()) {
   const list = [];
   let unknown = false;
   for (const pageId of row.lesson_page_ids ?? []) {
@@ -149,6 +149,7 @@ export function linkedLessons(row, index, links = new Map()) {
     const l = index.byKey.get(key);
     if (!list.some((x) => x.lesson_key === key)) list.push(l ?? { lesson_key: key, status: 'Proposed' });
   }
+  for (let i = 0; i < list.length; i++) if (statusOverride.has(list[i].lesson_key)) list[i] = { ...list[i], status: statusOverride.get(list[i].lesson_key) };
   const live = list.find((l) => l.status === 'Live') ?? null;
   const best = live ?? [...list].sort((a, b) => (LESSON_RANK[b.status] ?? 0) - (LESSON_RANK[a.status] ?? 0) || String(b.created ?? '').localeCompare(String(a.created ?? '')))[0] ?? null;
   return { list, live: live !== null, best, unknown };
@@ -197,6 +198,7 @@ function buildCase({ row, existing, rubric, claim, lessons, url, today, sourceRe
     contested_why: contestedWhy,
     suite,
     source: 'queue',
+    ...(existing?.source && existing.source !== 'queue' && existing.source !== 'research' && !existing.research_source ? { research_source: existing.source } : {}),
     outcome_source: source,
     why_wrong: source === 'editor' ? (row.why_wrong ?? null) : (rw?.why ?? null),
     reasoning: reasoningOf(row),
@@ -214,10 +216,11 @@ function buildCase({ row, existing, rubric, claim, lessons, url, today, sourceRe
 
 /**
  * Compute the new cases and (unless write is false) write evals/cases.jsonl. Returns { cases, counts, regression, notes, changed }.
- * Options: root, config, pull (a loaded pull), rubric (default rubric/rubric.json), now, links (Map row key -> [lesson key]), casesPath, write.
+ * Options: root, config, pull (a loaded pull), rubric (default rubric/rubric.json), now, links (Map row key -> [lesson key]), lessonStatus (Map lesson key ->
+ * status that replaces the pulled one, for a change that is planned but not applied yet), casesPath, write.
  * regression = the rows that need "In regression suite": [{ key, page_id }].
  */
-export function syncCases({ root = agentRoot(), config = loadConfig(root), pull, rubric = readJson(join(root, 'rubric', 'rubric.json')), now = () => new Date(), links = new Map(), casesPath = join(root, 'evals', 'cases.jsonl'), write = true }) {
+export function syncCases({ root = agentRoot(), config = loadConfig(root), pull, rubric = readJson(join(root, 'rubric', 'rubric.json')), now = () => new Date(), links = new Map(), lessonStatus = new Map(), casesPath = join(root, 'evals', 'cases.jsonl'), write = true }) {
   if (!pull.covers('tag_decisions')) throw new Error(`pull ${pull.id} does not include Tag decisions: run pull.mjs --dbs tag_decisions,rule_changes first`);
   const today = now().toISOString().slice(0, 10);
   const sourceReadingTags = new Set(config.scope?.source_reading_tags ?? []);
@@ -255,7 +258,7 @@ export function syncCases({ root = agentRoot(), config = loadConfig(root), pull,
       notes.push(`no claim text for ${row.key}: pull the Claims too (no case was made for it)`);
       continue;
     }
-    const lessons = linkedLessons(row, index, links);
+    const lessons = linkedLessons(row, index, links, lessonStatus);
     const built = buildCase({ row, existing: old, rubric, claim: text, lessons, url: urls.get(normId(row.page_id)) ?? null, today, sourceReadingTags });
     handled.add(k);
     if (old) {
@@ -326,8 +329,14 @@ export function syncCases({ root = agentRoot(), config = loadConfig(root), pull,
   const text = cases.length ? `${cases.map((c) => JSON.stringify(c)).join('\n')}\n` : '';
   const before = existing.length ? `${existing.map((c) => JSON.stringify(c)).join('\n')}\n` : '';
   const changed = text !== before;
-  if (write && changed) writeTextAtomic(casesPath, text);
-  return { cases, counts, regression, notes, changed, today, casesPath };
+  const result = { cases, counts, regression, notes, changed, today, casesPath, text };
+  if (write) writeCases(result);
+  return result;
+}
+
+/** Write evals/cases.jsonl from a syncCases result (when it changed). Callers that also build a plan write the file after the plan, so a refused plan leaves the file as it was. */
+export function writeCases(result) {
+  if (result.changed) writeTextAtomic(result.casesPath, result.text);
 }
 
 /** The plan that sets "In regression suite" on the given rows. Returns { runId, written, ops } or null when there is nothing to set. */
@@ -379,12 +388,12 @@ export async function main(argv, io = defaultIo, env = {}) {
       io.err(`cases-sync: pull ${pullId} does not include Tag decisions: run pull.mjs --dbs tag_decisions,rule_changes first`);
       return EXIT.INVALID;
     }
-    const result = syncCases({ root, config, pull, now });
+    const result = syncCases({ root, config, pull, now, write: false });
     const runId = args['run-id'] ?? makeRunId('cases-sync', now());
     const planned = planRegression({ root, config, pull, rows: result.regression, runId, now, today: result.today });
+    writeCases(result);
     if (planned || args['run-id']) writeJsonAtomic(join(controlPaths(root).runs, runId, 'cases-sync.json'), { run_id: runId, pull: pullId, counts: result.counts, regression_rows: result.regression.map((r) => r.key), notes: result.notes, created_at: now().toISOString() });
-    io.out(summaryLine(result, pullId, planned));
-    if (planned) io.out(`cases-sync: next: node agents/claim-tagger/scripts/plan.mjs check --run ${runId}, then apply.mjs --run ${runId}`);
+    io.out(`${summaryLine(result, pullId, planned)}${planned ? `; next: node agents/claim-tagger/scripts/plan.mjs check --run ${runId}, then apply.mjs --run ${runId}` : ''}`);
     for (const n of result.notes) io.err(`cases-sync: ${n}`);
     return EXIT.OK;
   } catch (e) {

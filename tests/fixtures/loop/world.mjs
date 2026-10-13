@@ -1,12 +1,18 @@
 // A world for the loop tests (not a test file): a temporary agent root with everything the scripts read (config, rubric and lock, prompts, schemas,
-// evals, seed), a fake Notion filled from the real seed files (14 Rulebook rows, 60 claims, 50 queue rows, 27 of them decided through the seeded
-// outcome), a settable clock and helpers that do what an editor, the rule owner or an apply would do. Nothing here reaches a network or a model.
+// evals, seed), a fake Notion, a settable clock and helpers that do what an editor, the rule owner or an apply would do. Nothing here reaches a network
+// or a model.
+//   makeLoopWorld()      the fake filled from the real seed files (14 Rulebook rows, 60 claims, 50 queue rows, 27 of them decided through the seeded outcome)
+//   makeMiniWorld(rows)  the 14 Rulebook rows and the Agent settings row, plus exactly the claims and queue rows the test describes
+//   makePromoteWorld()   the seeded world after the demo's step 5: decisions, one Approved lesson with supporting rows, the real cases-sync run
 
+import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DATABASES } from '../../../agents/claim-tagger/scripts/allowlist.mjs';
 import { readJsonl } from '../../../agents/claim-tagger/scripts/lib/jsonl.mjs';
+import { composeWhenToUse } from '../../../agents/claim-tagger/scripts/lib/rubric-build.mjs';
+import { main as casesSyncMain } from '../../../agents/claim-tagger/scripts/cases-sync.mjs';
 import { claimProps, decisionProps, mergeClaims, readSourcesFill, rulebookProps } from '../../../agents/claim-tagger/scripts/seed.mjs';
 import { pull as pullLib } from '../../../agents/claim-tagger/scripts/pull.mjs';
 import { AGENT, createFakeNotion, realConfig } from '../notion/fake-notion.mjs';
@@ -21,6 +27,8 @@ export function cleanupLoop() {
 }
 
 export const liveRubric = () => JSON.parse(readFileSync(join(AGENT, 'rubric', 'rubric.json'), 'utf8'));
+/** A stable 32-hex Geo id for a short test name. */
+export const geoId = (name) => createHash('sha256').update(String(name)).digest('hex').slice(0, 32);
 
 const writeJsonl = (path, rows) => {
   mkdirSync(join(path, '..'), { recursive: true });
@@ -52,42 +60,44 @@ export function makeLoopRoot({ cases = 'empty', canaries = 'empty', config } = {
   return { dir, root, repo, config: cfg };
 }
 
-/** Fill a fake Notion from the seed files the way seed.mjs phases 1 to 3 do. Returns the page ids by name / geo id / key. */
-export function seedFake(fake, { rubric = liveRubric(), seedDir = join(AGENT, 'evals', 'seed') } = {}) {
-  const ids = { rulebook: {}, claims: {}, decisions: {}, settings: null };
+/** Rulebook rows (all 14 tags of the live rubric) and the Agent settings row. */
+function seedRulebook(fake, ids, rubric) {
   for (const tag of rubric.tags) ids.rulebook[tag.name] = fake.add('rulebook', rulebookProps(tag, rubric));
   ids.settings = fake.add('agent_settings', { Name: 'claim-tagger', 'Weekly cap': 40, 'Rubric in force': rubric.rubric_version });
+}
+
+/** Fill a fake Notion from the seed files the way seed.mjs phases 1 to 3 do. */
+export function seedFake(fake, ids, { rubric = liveRubric(), seedDir = join(AGENT, 'evals', 'seed') } = {}) {
+  seedRulebook(fake, ids, rubric);
   const claims = mergeClaims(readJsonl(join(seedDir, 'claims.seed.jsonl')).rows, readSourcesFill(seedDir)).claims;
   for (const c of claims) ids.claims[c.geo_id] = fake.add('claims', claimProps(c, (c.agent_tags ?? []).map((n) => ids.rulebook[n]).filter(Boolean)));
   for (const r of readJsonl(join(seedDir, 'decisions.seed.jsonl')).rows) ids.decisions[r.key] = fake.add('tag_decisions', decisionProps(r, { claim: ids.claims[r.geo_id], tag: ids.rulebook[r.tag] }));
-  return ids;
 }
 
 /**
  * The whole world. Options: start (ISO time of the clock), seed (fill the fake from the seed files), cases and canaries (see makeLoopRoot), config.
- * w.pull(id, dbs) pulls the fake into the root; w.env(extra) is the env object the scripts' main() take; w.editor* helpers act as people.
+ * w.pull(id, dbs) pulls the fake into the root; w.env(extra) is the env object the scripts' main() take; w.decide / w.lesson act as people.
  */
 export function makeLoopWorld({ start = '2026-10-13T12:00:00.000Z', seed = true, cases = 'empty', canaries = 'empty', config } = {}) {
   const time = { t: Date.parse(start) };
   const clock = { now: () => new Date(time.t), set: (iso) => { time.t = Date.parse(iso); }, advance: (ms) => { time.t += ms; } };
   const fake = createFakeNotion({ now: () => new Date(time.t) });
   const r = makeLoopRoot({ cases, canaries, config });
-  const ids = seed ? seedFake(fake) : null;
+  const ids = { rulebook: {}, claims: {}, decisions: {}, settings: null };
+  if (seed) seedFake(fake, ids);
+  const pageOf = (key) => ids.decisions[key] ?? fake.find('tag_decisions', key)?.page_id;
   const w = {
     fake, ids, clock, ...r,
-    pull: async (id, dbs = DATABASES) => {
-      const result = await pullLib({ root: r.root, client: fake.client, dbs, pullId: id, now: clock.now });
-      return result;
-    },
+    pull: async (id, dbs = DATABASES) => pullLib({ root: r.root, client: fake.client, dbs, pullId: id, now: clock.now }),
     env: (extra = {}) => ({ root: r.root, repoRoot: r.repo, client: fake.client, now: clock.now, ...extra }),
-    /** An editor decides a queue row (editor-owned fields, written the way a person would: through the fake's editorSet). */
+    /** An editor decides a queue row (the editor-owned fields, written the way a person would: through the fake's editorSet). */
     decide(key, { outcome, why = null, reasoning = null, at = '2026-10-13', by = USER } = {}) {
-      const pageId = ids.decisions[key] ?? fake.find('tag_decisions', key)?.page_id;
+      const pageId = pageOf(key);
       if (!pageId) throw new Error(`no queue row ${key}`);
       fake.editorSet(pageId, { 'Tag outcome': outcome, ...(why ? { 'Why wrong': why } : {}), ...(reasoning ? { 'Your reasoning': reasoning } : {}), 'Decided by': [by], 'Decided at': at });
       return pageId;
     },
-    /** A lesson row in Rule changes with supporting rows linked; returns its page id. */
+    /** A lesson row in Rule changes with the supporting rows linked; returns its page id. */
     lesson({ title, tag, rule, kind = 'Change the rule', current, proposed, status = 'Proposed', supporting = [], editorWording, rubricVersion, gateResult, approvedBy }) {
       const id = fake.add('rule_changes', {
         'Lesson title': title, Tag: [ids.rulebook[tag]], ...(rule ? { Rule: rule } : {}), Kind: kind, 'Current text': current ?? '', 'Proposed text': proposed ?? '', Status: status,
@@ -95,16 +105,52 @@ export function makeLoopWorld({ start = '2026-10-13T12:00:00.000Z', seed = true,
         ...(approvedBy ? { 'Approved by': approvedBy } : status === 'Approved' || status === 'Live' ? { 'Approved by': [OWNER] } : {}),
       });
       for (const key of supporting) {
-        const rowId = ids.decisions[key] ?? fake.find('tag_decisions', key)?.page_id;
-        const current = fake.get(rowId).props.Lesson;
-        fake.editorSet(rowId, { Lesson: [...current, id] });
+        const rowId = pageOf(key);
+        fake.editorSet(rowId, { Lesson: [...fake.get(rowId).props.Lesson, id] });
       }
       return id;
     },
     setLessonStatus(pageId, status, extra = {}) {
       fake.editorSet(pageId, { Status: status, ...extra });
     },
+    /**
+     * Add claims and queue rows. A spec: { id (short name), claim, tag, outcome (Applies | Does not apply | other | null), why, reasoning, at,
+     * seeded (true: the outcome goes in the Seeded columns), seededReasoning, proposal, note, agentReason, sources }. Returns the keys in order.
+     */
+    addRows(specs) {
+      const keys = [];
+      for (const s of specs) {
+        const geo = s.geo ?? geoId(s.id);
+        if (!ids.claims[geo]) {
+          ids.claims[geo] = fake.add('claims', {
+            'Claim title': s.claim, 'Geo ID': geo, 'Geo link': `https://geo.test/${geo}`, 'Sources count': s.sources ?? 2, 'Source URLs': 'https://geo.test/s1\nhttps://geo.test/s2', Table: 'U.S. Politics', Sample: 'Forecast',
+          });
+        }
+        const key = `${geo}::${s.tag}`;
+        const props = {
+          Key: key, Claim: [ids.claims[geo]], Tag: [ids.rulebook[s.tag]], 'Agent proposal': s.proposal ?? 'Do not add tag', 'Why I recommend this': s.agentReason ?? 'The agent saw no rule fire.',
+          ...(s.note ? { 'Agent full note': s.note } : {}), 'Why in queue': 'Low confidence', Priority: 'Medium', 'Rubric version': '2026-10-13.1',
+        };
+        const decided = ['Applies', 'Does not apply'].includes(s.outcome) || s.outcome === 'Needs evidence' || s.outcome === 'Ask another editor';
+        if (decided && s.seeded) {
+          Object.assign(props, { 'Seeded outcome': s.outcome, ...(s.seededReasoning ? { 'Seeded reasoning': s.seededReasoning } : {}), 'Seeded at': s.at ?? '2026-10-09' });
+        } else if (decided) {
+          Object.assign(props, { 'Tag outcome': s.outcome, ...(s.why ? { 'Why wrong': s.why } : {}), ...(s.reasoning ? { 'Your reasoning': s.reasoning } : {}), 'Decided by': [USER], 'Decided at': s.at ?? '2026-10-13' });
+        }
+        ids.decisions[key] = fake.add('tag_decisions', props);
+        keys.push(key);
+      }
+      return keys;
+    },
   };
+  return w;
+}
+
+/** The 14 Rulebook rows and the Agent settings row, plus the claims and queue rows the test describes (see addRows). */
+export function makeMiniWorld({ rows = [], ...opts } = {}) {
+  const w = makeLoopWorld({ ...opts, seed: false });
+  seedRulebook(w.fake, w.ids, liveRubric());
+  w.keys = w.addRows(rows);
   return w;
 }
 
@@ -115,3 +161,36 @@ export function captureIo() {
 }
 
 export const readJsonlFile = (path) => (existsSync(path) ? readJsonl(path).rows : []);
+
+// ---- a world with one Approved lesson, ready to promote ----------------------------------------------------------------------------------
+
+export const LESSON_TITLE = 'Hedged trajectories are not forecasts';
+export const LESSON_RULE_TEXT = 'Fires on an unconditional future marker: will, is expected to, is forecasted to, is projected to, is set to. A hedged tendency ("is likely to", "is on track to") does not fire this rule.';
+
+/** Full key of a seeded queue row from its first characters, e.g. rowKey(w, 'f376c2cc') (Texas, Predictive). */
+export const rowKey = (w, prefix, tag = 'Predictive') => Object.keys(w.ids.decisions).find((k) => k.startsWith(prefix) && k.endsWith(`::${tag}`));
+
+/**
+ * The seeded world plus what the demo's storyline has by step 5: two hedged forecasts the editor decided Does not apply / Rule should change, two flat
+ * forecasts decided Applies, and the lesson LESSON_TITLE (Predictive rule 1, Change the rule) in the given Status, supported by those two rows and by
+ * the two seeded hedged rows (Texas, Supreme Court). The pull p1 is taken and the REAL cases-sync has written evals/cases.jsonl, so the four supporting
+ * rows are contested cases of the lesson and six Predictive positives are active. Options: canaryTags (which of the real canaries to copy), research.
+ */
+export async function makePromoteWorld({ lessonStatus = 'Approved', canaryTags = ['Predictive', 'Hypothetical', 'Context-dependent', 'Self-contained'], research = false, lessonOptions = {} } = {}) {
+  const real = readJsonl(join(AGENT, 'evals', 'canaries.jsonl')).rows.filter((x) => x.active === true && x.contested !== true && canaryTags.includes(x.tag));
+  const w = makeLoopWorld({ cases: research ? 'research' : 'empty', canaries: research ? 'research' : real });
+  const hedged = [rowKey(w, '6e820a8a'), rowKey(w, '8172f325')];
+  for (const key of hedged) w.decide(key, { outcome: 'Does not apply', why: 'Rule should change', reasoning: 'A hedged tendency is not a forecast.' });
+  for (const key of [rowKey(w, 'f4d50e38'), rowKey(w, '8b17d6ea')]) w.decide(key, { outcome: 'Applies', why: 'Agent slip', reasoning: 'A flat will is a forecast.' });
+  const rubric = liveRubric();
+  const rule1 = rubric.tags.find((t) => t.name === 'Predictive').when_to_use.rules.find((x) => x.n === 1);
+  const supporting = [rowKey(w, 'f376c2cc'), rowKey(w, '6aa014be'), ...hedged];
+  const lessonPage = w.lesson({
+    title: LESSON_TITLE, tag: 'Predictive', rule: 'Predictive rule 1', kind: 'Change the rule', current: composeWhenToUse({ rules: [rule1] }), proposed: LESSON_RULE_TEXT, status: lessonStatus, supporting, ...lessonOptions,
+  });
+  await w.pull('p1');
+  const sync = captureIo();
+  const code = await casesSyncMain([], sync.io, w.env());
+  if (code !== 0) throw new Error(`cases-sync failed in the fixture: ${sync.err.join(' ')}`);
+  return { w, lessonPage, supporting, hedged, rubric };
+}

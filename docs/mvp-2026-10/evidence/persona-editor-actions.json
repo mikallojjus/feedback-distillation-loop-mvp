@@ -1,0 +1,167 @@
+{
+  "persona": "editor",
+  "model": "claude-fable-5-1",
+  "session": "2026-10-13 round 1 decisions",
+  "actions": [
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb81cb9835c7c20ae98de9",
+      "key": "6e820a8a97c5496fb3125ba3317facb6::Predictive",
+      "claim": "The Supreme Court is likely to uphold executive actions that exceed the authority granted by Congress",
+      "tag": "Predictive",
+      "agent_proposal": "Add tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Does not apply",
+        "Why wrong": "Rule should change",
+        "Your reasoning": "The agent followed rule 1, but a hedged 'likely to' about the Court's general tendency is an assessment checkable against its record, not a forecast of a future event.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Overruled the written rule, not the agent: rule 1 lists 'is likely to' as a marker, but a hedged generalization about a standing tendency is an assessment, not a forecast."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb81a3b6e9f2cc9025f0f5",
+      "key": "8172f325d9944eb0937dcd1945f55598::Predictive",
+      "claim": "The current trend of cognitive offloading to AI is likely a temporary phase while people learn to use the technology correctly",
+      "tag": "Predictive",
+      "agent_proposal": "Add tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "Unlike a tendency, 'likely a temporary phase' asserts the current trend will end, which only the future can verify; hedging does not make it a present fact.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Agreed with the agent: hedged like row 1, but the assertion is about a specific trend's future course, not a standing disposition, so it is a forecast."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb8166b30ee4fed14cbb0d",
+      "key": "f06b756f64bb5061ba6c9e1271af19d1::Predictive",
+      "claim": "AI and robotics are increasingly replacing low-level jobs, a trend that is expected to continue",
+      "tag": "Predictive",
+      "agent_proposal": "Add tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "Unattributed 'is expected to continue' forecasts the trend's future course with no scenario wrapper, and that forecast is part of the claim's own assertion.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Agreed with the agent and rule 1: unattributed 'is expected to' marker, no scenario wrapper, no attribution (rule 3 does not bite)."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb812b8fcad8f24707806b",
+      "key": "3764186f5a834c8180ea144dddb08add::Predictive",
+      "claim": "The 2026 midterm elections will result in a Democratic wave",
+      "tag": "Predictive",
+      "agent_proposal": "Add tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "A flat, unattributed 'will' forecast of a specific future event with no scenario wrapper; the clearest Predictive case.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Agreed with the agent: textbook rule 1 case."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb810ba7bec40b9bad1b9b",
+      "key": "8114bb424fb742f59bc263eb83fd3998::Hypothetical",
+      "claim": "A ceasefire in Ukraine will increase the military threat to the Baltic states",
+      "tag": "Hypothetical",
+      "agent_proposal": "Add tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "The indefinite 'A ceasefire' is an unrealized event the claim does not predict; the effect is conditional on it, so scenario framing beats the 'will'.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Agreed with the agent's majority runs: an indefinite-subject conditional with no explicit 'if' is still scenario framing (Hypothetical rule 1, Predictive rule 2); the rule could name this pattern."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb81ffad03c8acc2487a0b",
+      "key": "1a4c000846f04c889e3032b443cbbf4c::Improperly sourced",
+      "claim": "The U.S. Constitution permits the president to restrict birthright citizenship",
+      "tag": "Improperly sourced",
+      "agent_proposal": "Read source first",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Needs evidence",
+        "Why wrong": null,
+        "Your reasoning": "Cannot be decided without reading the two attached sources, which I could not open here; access failure alone never justifies the tag (rule 3).",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Source-reading tag; the two Geo sources could not be opened in this trial, so neither Applies nor Does not apply is honest."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb8111a00bd0557ac1e6fc",
+      "key": "1bff859247ecdb618af41a397d2eb6ba::Debate",
+      "claim": "The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign",
+      "tag": "Debate",
+      "agent_proposal": "Do not add tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": "Rule unclear",
+        "Your reasoning": "'Unofficial launch' is an interpretation no fact can settle, so Debate; Simple rule 5 and Debate's 'interpretation' pull apart on a single-event characterization and nothing says which wins.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Overruled the agent: Simple's description requires something checkable, and Debate's description names interpretation, but Simple rule 5 (one specific event) pulls the other way; the rules do not settle single-event interpretive characterizations."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb81e99425e25cad5cf816",
+      "key": "54d1fc34f5c7645cd28e433a65a554e5::Context-dependent",
+      "claim": "Allowing Boulder’s lawsuit would increase uncertainty for national energy companies",
+      "tag": "Context-dependent",
+      "agent_proposal": "Remove tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": "Agent slip",
+        "Your reasoning": "Self-contained rule 3's own test fails: more than one Boulder lawsuit could fit the phrase, and the sentence never says which, so the proper name does not pin it.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Overruled the agent's Remove tag: Self-contained rule 3's 'could two different things fit this phrase?' test, Context-dependent rule 2 ('even when other entities are named') and rule 4 all say the lawsuit is unresolved; the agent weighted the proper name over the test."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb815dbc10dacb1fb93fb3",
+      "key": "c8b676c3cce79edaec871afd1633ac2f::Hypothetical",
+      "claim": "Federal Medicaid whistleblower rules would weaken state control over program enforcement",
+      "tag": "Hypothetical",
+      "agent_proposal": "Add tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "'Would weaken' describes the effect of rules not yet in force, an assumed scenario the claim does not predict, so Hypothetical rather than Predictive.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:17:41Z",
+      "note": "Agreed with the agent: 'would' is in the Hypothetical description and the rules are plainly not yet in force; no explicit 'proposed' wrapper is needed."
+    },
+    {
+      "row_url": "https://app.notion.com/p/3f8273e214eb8179bb79c9b46cfbd720",
+      "key": "157d1128ad4277bef5ee4926b49c4690::Predictive",
+      "claim": "Military pressure is more likely than diplomatic restraint to produce an Iran settlement",
+      "tag": "Predictive",
+      "agent_proposal": "Do not add tag",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Does not apply",
+        "Why wrong": "Rule should change",
+        "Your reasoning": "A comparative 'more likely than' weighs two strategies' tendency to work, predicting neither that pressure will be used nor that a settlement will come; rule 1's 'likely to' marker over-fires.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T15:22:38Z",
+      "note": "Added on the coordinator's request after the first nine. Agreed with the agent's proposal but decided against the written rule: the claim is a comparative tendency assessment (the agent itself tagged it Debate under rule 3's comparative-superiority stance), and rule 1's literal 'is likely to' marker is what pulled one of three runs toward Apply; same rule fault as row 1."
+    }
+  ]
+}

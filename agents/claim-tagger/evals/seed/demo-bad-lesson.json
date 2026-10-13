@@ -1,0 +1,20 @@
+{
+  "demo": true,
+  "title": "Gate test (deliberately bad): only pronouns make a claim Context-dependent",
+  "tag": "Context-dependent",
+  "rule_n": 2,
+  "kind": "Change the rule",
+  "target_rule_text_at_authoring": "A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.",
+  "proposed_text": "Only a pronoun without an antecedent inside the claim makes it Context-dependent; a definite description never does if the sentence reads well on its own.",
+  "statement": "Editors decided that a claim which reads well on its own is not Context-dependent, even when it contains a definite phrase ('Georgia's gubernatorial debate', 'the larger public health problem'). The rule should say so in general: only a pronoun with no antecedent inside the claim makes a claim Context-dependent, and a definite description never does when the sentence reads well on its own.",
+  "supporting_keys": [
+    "8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent",
+    "78dd775028795b65bb5c4945eda1c3bb::Context-dependent"
+  ],
+  "boundary_examples": [
+    { "claim": "He said the plan would fail.", "applies": true },
+    { "claim": "The ruling on the new tariff schedule was announced yesterday.", "applies": false }
+  ],
+  "counter_evidence": [],
+  "note": "A planted test, not a real lesson, and expected to FAIL the gate. It rewrites rule 2 of Context-dependent so that only a bare pronoun counts. That over-generalises the two real decisions behind it (Georgia, COVID) and contradicts the tag's own example claims ('the target group', 'the launch', 'the vulnerabilities', 'the discussions', 'the Bitcoin ETF') and rules 3 and 4, so the canaries of Context-dependent and of its counterpart Self-contained are expected to fail. After a FAIL the Rulebook stays untouched and the lesson ends Rolled back."
+}

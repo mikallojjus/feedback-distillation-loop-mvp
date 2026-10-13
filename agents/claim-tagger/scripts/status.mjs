@@ -32,9 +32,9 @@ import { parseArgs } from 'node:util';
 import { controlPaths } from './allowlist.mjs';
 import { EXIT, describeExit } from './lib/exit-codes.mjs';
 import { fileSha256 } from './lib/hash.mjs';
-import { appendJsonl, readJson, readJsonl, writeJsonAtomic } from './lib/jsonl.mjs';
+import { appendJsonl, readJson, readJsonl } from './lib/jsonl.mjs';
 import { agentRoot, isMain, runId as makeRunId } from './lib/paths.mjs';
-import { checkHashes, composeWhenToUse, normaliseText } from './lib/rubric-build.mjs';
+import { checkHashes, composeWhenToUse } from './lib/rubric-build.mjs';
 import { openPlan } from './plan.mjs';
 import { computeDrift, latestPullId, loadConfig, loadPull } from './pull.mjs';
 
@@ -275,9 +275,12 @@ export function checkVerdict(state, { ignore = [] } = {}) {
     if (state.paused.settings?.paused) return { code: EXIT.PAUSED, label: 'PAUSED', text: `Paused is ticked in Agent settings${state.paused.settings.reason ? ` (${state.paused.settings.reason})` : ''}; a person has to untick it` };
   }
   if (!skip.has('lock') && !state.rubric.ok) return { code: EXIT.DRIFT, label: 'DRIFT', text: `the rubric does not match its lock: ${state.rubric.mismatches[0]}` };
-  if (!skip.has('drift') && state.drift.count > 0) {
-    const d = state.drift.items[0];
-    return { code: EXIT.DRIFT, label: 'DRIFT', text: `the Rulebook in Notion differs from rubric.json in ${state.drift.count} place(s), first: ${d.tag ?? '(rubric)'} ${d.part}; status.mjs --restore-rulebook --confirm writes the file's text back` };
+  // While a promote is in flight Notion carries the candidate's text for the promoted tag until finalize puts the file right: that difference is expected
+  const expected = state.promoting?.tag ? state.drift.items.filter((d) => d.tag === state.promoting.tag) : [];
+  const unexpected = state.drift.items.filter((d) => !expected.includes(d));
+  if (!skip.has('drift') && unexpected.length > 0) {
+    const d = unexpected[0];
+    return { code: EXIT.DRIFT, label: 'DRIFT', text: `the Rulebook in Notion differs from rubric.json in ${unexpected.length} place(s), first: ${d.tag ?? '(rubric)'} ${d.part}; status.mjs --restore-rulebook --confirm writes the file's text back` };
   }
   if (!skip.has('promoting') && state.promoting) return { code: EXIT.INVALID, label: 'PROMOTING', text: `run ${state.promoting.run_id ?? '(unreadable PROMOTING.json)'} is waiting for apply.mjs and promote.mjs --finalize (or --abort)` };
   return { code: EXIT.OK, label: 'ok', text: '' };
