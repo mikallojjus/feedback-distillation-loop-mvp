@@ -6,8 +6,6 @@
       "Read(tests/**)",
       "mcp__claude_ai_notion__notion-fetch",
       "mcp__claude_ai_notion__notion-query-data-sources",
-      "mcp__claude_ai_notion__notion-create-pages",
-      "mcp__claude_ai_notion__notion-update-page",
       "mcp__claude_ai_notion__notion-get-async-task",
       "Bash(node --test:*)",
       "Bash(npm test:*)",
@@ -38,6 +36,8 @@
       "Bash(node agents/claim-tagger/scripts/probe.mjs:*)"
     ],
     "ask": [
+      "mcp__claude_ai_notion__notion-update-page",
+      "mcp__claude_ai_notion__notion-create-pages",
       "mcp__claude_ai_notion__notion-create-database",
       "mcp__claude_ai_notion__notion-update-data-source",
       "mcp__claude_ai_notion__notion-create-view",
@@ -65,7 +65,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node agents/claim-tagger/scripts/hooks/guard.mjs"
+            "command": "node \"$CLAUDE_PROJECT_DIR/agents/claim-tagger/scripts/hooks/guard.mjs\""
           }
         ]
       }

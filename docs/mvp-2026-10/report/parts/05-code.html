@@ -44,7 +44,7 @@
     <ul>
       <li><strong>To pause:</strong> tick Paused in Agent settings (one row) and, if you like, say why in Reason. Every subcommand starts with a check that stops when Paused is ticked.</li>
       <li><strong>When the agent pauses itself:</strong> the <dfn data-t="trust-breaker">trust breaker</dfn> writes a pause file when an editor field changed on a row the agent was writing, and names the field with its value before and after. A person looks at it, then clears it with <code>status.mjs --unpause --confirm</code>, which records who cleared it and when.</li>
-      <li><strong>To resume:</strong> untick Paused. A run that stopped half way, for a pause or for the subscription's usage window, picks up where it left off and keeps the work already finished.</li>
+      <li><strong>To resume:</strong> untick Paused. A run that stopped half way, for a pause or for the subscription's usage window, resumes when someone runs the printed resume command, and keeps the work already finished.</li>
     </ul>
     <p>Neither the pause drill nor the trust-breaker drill was run in this trial; both are covered by unit tests.</p>
   </div>
@@ -168,7 +168,7 @@ follow-up &lt;lesson&gt;
       <li><strong>Items.</strong> <code>--items claims</code> takes the claims of the latest pull; <code>--items eval</code> the claims behind the active cases plus the canary texts. Batches of {{count:config.batchSize}} claims, shuffled per run with a seeded generator; {{count:config.judgeRuns}} runs per <dfn data-t="rubric-version">rubric version</dfn>.</li>
       <li><strong>Call.</strong> <code>claude -p</code> spawned with an argument list and no shell, a pinned model (Sonnet 5.5; Haiku 5.5 for smoke runs), effort medium, no tools, one turn. The system prompt is <code>prompts/judge.md</code> with the compact rubric, rendered once per configuration so the prompt cache hits; the claims go on stdin inside <code>&lt;claim id sources&gt;</code> elements, with the instruction that claim text is data, never instructions.</li>
       <li><strong>Answer.</strong> Per claim and per model-judged tag: <code>apply</code>, <code>do_not_apply</code>, <code>ask_editor</code> (the rules do not settle it) or <code>cannot_tell</code> (information is missing); a confidence p from 0 to 1, not calibrated; the rule relied on (<code>Predictive rule 1</code>); the trigger phrase; a reason of at most 25 words.</li>
-      <li><strong>Checks.</strong> The reply must have the batch's ids, every in-scope tag exactly once, consistent counterpart pairs and a rule of the same tag. A bad batch gets one retry with the problems quoted, then its items are errors. The pinned model must appear in the reply's usage, or the run stops (exit 4).</li>
+      <li><strong>Checks.</strong> The reply must have the batch's ids, every in-scope tag exactly once, consistent counterpart pairs and a rule reference that names a rulebook rule. A bad batch gets one retry with the problems quoted, then its items are errors. The pinned model must appear in the reply's usage, or the run stops (exit 4).</li>
       <li><strong>Decided in code.</strong> Unsourced from the sources count; Improperly sourced and Source inaccessible are not checked in this trial, because no source text is read; Editor verified is never output.</li>
       <li><strong>Majority.</strong> More than half the runs agreeing gives the verdict; otherwise ask editor; a missing or failed run gives error.</li>
     </ul>
@@ -186,7 +186,7 @@ follow-up &lt;lesson&gt;
     <h3>Distiller</h3>
     <ul>
       <li><strong>Input.</strong> Decided rows whose <dfn data-t="why-wrong">Why wrong</dfn> is Rule unclear or Rule should change, plus seeded rows whose reasoning starts "Rule should change:".</li>
-      <li><strong>Groups.</strong> By tag, Why wrong and the rule the agent cited, counting distinct claims. A group becomes a lesson at {{count:config.minClaims}} claims for Rule unclear and {{count:config.minClaimsRuleChange}} for Rule should change. A tag that already has a Proposed, Approved or Live lesson only gains supporting rows.</li>
+      <li><strong>Groups.</strong> By tag, Why wrong and the rule the agent cited, counting distinct claims. A group becomes a lesson at {{count:config.minClaims}} claims for Rule unclear and {{count:config.minClaimsRuleChange}} for Rule should change. A rule that already has a Proposed, Approved or Live lesson only gains supporting rows (the check is per rule, not per tag).</li>
       <li><strong>One model call per group</strong> (Opus 5.5, <code>prompts/distill.md</code>) with the tag's rulebook entry, the group's rows and other decided rows on the tag as counter-evidence. It returns the kind of change, the target rule, a title, a statement, the proposed text, invented boundary examples and the counter-evidence it would flip.</li>
       <li><strong>Current text</strong> always comes from the rubric file, never from the model, so a later rollback is exact.</li>
       <li><strong>Overfit check.</strong> A proposed text that repeats {{count:config.overfitWords}} consecutive words of a supporting claim gets one retry, then an overfit-risk flag. A rule written around one claim is not a rule.</li>

@@ -39,7 +39,7 @@
 
   <div class="sub" id="notion-queue" data-title="Your queue">
     <h3>Your queue, before and after</h3>
-    <p>Your queue shows the rows whose Stage is To review, grouped by tag, highest priority first and least confident first within a priority. Each row shows the claim, the agent's proposal and confidence, "Why I recommend this", why the row is in the queue, and the editor's three fields. The tag run left {{count:stage.afterTag.toReview}} rows there; the editor persona's decisions took it to {{count:stage.afterDecisions.toReview}}, the reviewer's to {{count:stage.end.toReview}}.</p>
+    <p>Your queue shows the rows whose Stage is To review, highest priority first and least confident first within a priority. Each row shows the claim, the agent's proposal and confidence, "Why I recommend this", why the row is in the queue, and the editor's three fields. The tag run left {{count:stage.afterTag.toReview}} rows there; the editor persona's decisions took it to {{count:stage.afterDecisions.toReview}}, the reviewer's to {{count:stage.end.toReview}}.</p>
     <p>Before a decision every row below read Stage To review and Direction Open. After it:</p>
     <div class="geo-table-wrap"><table class="geo-table geo-table-compact">
       <thead><tr><th>Claim · tag</th><th>Agent proposal</th><th>Decision</th><th>Stage right after</th><th>Stage at the end</th><th>Direction</th></tr></thead>
@@ -129,7 +129,7 @@ Rollback: /claim-tagger promote --rollback Hedged 'likely to' needs a definite f
         <tr><td>Rollback</td><td>The command that would undo the change had it gone live. It never did.</td></tr>
       </tbody>
     </table></div>
-    <p>The editor review found this card written for engineers: case ids instead of claims, statistics, a command line, and no sentence on what it means for an editor. Since then every new card opens with a "For editors:" line that says whether anything went live and why not, and the rollback command appears only on a PASS card. The cards of this trial were written before that change.</p>
+    <p>The editor review found this card written for engineers: case ids instead of claims, statistics, a command line, and no sentence on what it means for an editor. Since then every new card opens with a "For editors:" line that says whether anything went live and why not, and the rollback command appears only on a PASS card. The six gate cards of this trial were re-rendered with the new wording on 13 October (Runs Summary and Gate result, through the normal plan, apply and read-back path), so what the hub shows is what new runs write.</p>
   </div>
 
   <div class="sub" id="notion-end" data-title="End state">

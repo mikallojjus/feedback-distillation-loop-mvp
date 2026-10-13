@@ -22,6 +22,6 @@ IDs: ED-n editor findings, EN-n engineer findings, Q-n questions, HL-n headless-
 
 1. No must-fix finding open; every finding has a decision.
 2. Both round-2 statements say "clear" for their audience; the editor's one-line meanings of every Stage and Why wrong value match the column comments; the engineer can resume and roll back from Engineer notes alone (dry run).
-3. The headless test passes.
+3. The headless test passes (the status and tag dry-run sessions of 13 October did; the guard-hook headless test is a manual step recorded in ../evidence/README.md).
 4. The artifact build checks are clean.
 5. The demo end state holds (see `../plan.md`, "The demo storyline").

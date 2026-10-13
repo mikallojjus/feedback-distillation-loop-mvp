@@ -1,0 +1,66 @@
+{
+  "step": 9,
+  "label": "review-end-state",
+  "folder": "09-review-end-state",
+  "files": [
+    "lessons.jsonl",
+    "runs.jsonl",
+    "settings.json"
+  ],
+  "pull_id": "20261013T190740Z-recard-post",
+  "taken_at": "2026-10-13T19:08:34.306Z",
+  "databases": [
+    "rule_changes",
+    "runs",
+    "agent_settings"
+  ],
+  "counts": {
+    "rule_changes": 2,
+    "runs": 10,
+    "agent_settings": 1
+  },
+  "queue": null,
+  "claims": null,
+  "lessons": {
+    "total": 2,
+    "by_status": {
+      "Approved": 1,
+      "Rolled back": 1
+    },
+    "list": [
+      {
+        "id": "LS-2",
+        "key": "Gate test (deliberately bad): only pronouns make a claim Context-dependent",
+        "tag": "Context-dependent",
+        "status": "Rolled back",
+        "rubric_version": "2026-10-13.1"
+      },
+      {
+        "id": "LS-1",
+        "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+        "tag": "Predictive",
+        "status": "Approved",
+        "rubric_version": "2026-10-13.1"
+      }
+    ]
+  },
+  "runs": {
+    "total": 10,
+    "by_kind": {
+      "Baseline": 1,
+      "Distill": 2,
+      "Gate": 6,
+      "Tag": 1
+    },
+    "by_verdict": {
+      "FAIL": 6,
+      "n/a": 4
+    }
+  },
+  "rulebook": null,
+  "settings": {
+    "paused": false,
+    "rubric_in_force": "2026-10-13.1",
+    "last_run_summary": "Gate 2026-10-13.2 · LS-1 (5): FAIL (small sample). Rulebook untouched; LS-1 stays Approved. Set by the orchestrator on 13 Oct; run-card.mjs keeps it current from the next run"
+  }
+}

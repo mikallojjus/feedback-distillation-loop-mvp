@@ -89,19 +89,19 @@
     "source": "agents/claim-tagger/runs/*/run.json: sum of cost_usd"
   },
   "testFiles": {
-    "value": 29,
-    "source": "git ls-tree 86ef650 tests/: *.test.mjs files (the commit the unit-test figure was measured on)"
+    "value": 32,
+    "source": "git ls-tree 9d66fab tests/: *.test.mjs files (the commit the unit-test figure was measured on)"
   },
   "testCommit": {
-    "value": "86ef650",
+    "value": "9d66fab",
     "source": "the commit the unit-test figure was measured on"
   },
   "unitTests": {
-    "value": 713,
-    "source": "node --test tests/ on a clean export of commit 86ef650, 13 Oct 2026: 713 tests, 713 pass, 0 fail"
+    "value": 856,
+    "source": "node --test tests/ on a clean export of commit 9d66fab, 13 Oct 2026: 856 tests, 856 pass, 0 fail (32 test files)"
   },
   "personaActions": {
-    "value": 18,
+    "value": 20,
     "source": "docs/mvp-2026-10/evidence/persona-editor-actions.json: actions"
   },
   "ruleOwnerApprovals": {

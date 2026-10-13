@@ -23,7 +23,7 @@ const agent = join(repo, 'agents', 'claim-tagger');
 
 // `node --test tests/` was run on a clean export (git archive) of the commit below; the working tree may carry later edits, so the
 // number of test files is counted at the same commit. Update both fields together after a new run.
-const UNIT_TESTS = { commit: '86ef650', value: 713, source: 'node --test tests/ on a clean export of commit 86ef650, 13 Oct 2026: 713 tests, 713 pass, 0 fail' };
+const UNIT_TESTS = { commit: '9d66fab', value: 856, source: 'node --test tests/ on a clean export of commit 9d66fab, 13 Oct 2026: 856 tests, 856 pass, 0 fail (32 test files)' };
 
 const readJson = (p) => JSON.parse(readFileSync(p, 'utf8'));
 const readJsonl = (p) => readFileSync(p, 'utf8').split('\n').filter((l) => l.trim()).map((l) => JSON.parse(l));

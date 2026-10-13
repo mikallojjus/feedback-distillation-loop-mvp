@@ -64,7 +64,7 @@
     <h4>Settings for the MVP</h4>
     <ul>
       <li><strong>{{count:config.minPositives}} labelled positives per tag</strong> before a tag is gated, instead of the research's 30 (decision M5). The trial has few labels, so every card carries the small-sample label.</li>
-      <li><strong>Intervals</strong> come from a paired bootstrap over claims ({{count:config.bootstrap}} resamples, seeded), so the same judgments always give the same card.</li>
+      <li><strong>Intervals</strong> come from a paired bootstrap over claims ({{count:config.bootstrap}} resamples, seeded): in plain words, the comparison is repeated many times on reshuffled claims to see how much the result could move, and it is computed the same way every time, so the same judgments always give the same card.</li>
       <li><strong><dfn data-t="reconfirmation">Reconfirmation</dfn></strong> (decision M11): a regression case that flips between the two rulebooks is judged {{count:config.reconfirmRuns}} more times under each ({{count:config.reconfirmTotal}} runs each) before it counts, for fixes and breaks alike. It was added after three attempts were blocked by borderline claims decided 2 to 1, at confidence 0.5 to 0.65, which a few more runs could tip either way.</li>
     </ul>
     <h4>What each verdict does</h4>

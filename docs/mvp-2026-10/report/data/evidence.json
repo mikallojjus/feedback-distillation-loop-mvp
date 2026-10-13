@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-13T18:38:44.013Z",
+  "generated_at": "2026-10-13T19:00:19.396Z",
   "rubric": {
     "version": "2026-10-13.1",
     "hash": "sha256:63f085c84a038df8",
@@ -3234,10 +3234,11 @@
     }
   ],
   "persona": {
-    "total": 18,
+    "total": 20,
     "by_role": {
       "editor": 12,
-      "rule owner": 6
+      "rule owner": 6,
+      "editor reviewer": 2
     },
     "fields_written": [
       "Tag outcome",
@@ -3338,8 +3339,8 @@
   ],
   "tests": {
     "files": 32,
-    "files_at_commit": 29,
-    "commit": "86ef650"
+    "files_at_commit": 32,
+    "commit": "9d66fab"
   },
   "config": {
     "agent": "claim-tagger",
@@ -3385,8 +3386,11 @@
         "9e979fe1-e03d-45cd-b9b1-d971dc3d90a2",
         "7219756338b2416f8fa8af83d75ec47d",
         "9e111d22c14e4344bb90072606036942",
-        "b65273e214eb836c8e7c816e810d3ba1",
-        "b65273e2-14eb-8362-86a6-870ea8d632f4"
+        "f05273e214eb8353b0a981544507de32",
+        "b65273e2-14eb-8362-86a6-870ea8d632f4",
+        "0e2273e214eb83b0a2b1013e7d0958fc",
+        "eec273e2-14eb-8349-a416-074a30396303",
+        "67a1940f-db0d-477a-9737-0a9eb01a5eac"
       ],
       "requests_per_second": 3,
       "page_size": 100,

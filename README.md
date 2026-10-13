@@ -40,8 +40,9 @@ Scripts run from the repository root as `node agents/claim-tagger/scripts/<name>
 | You killed a judge or promote run half way, or the machine went down | The same resume command. `status.mjs` shows it under "Unfinished". |
 | promote refuses: "run `<id>` holds the promote lock" | That run is still going or was killed. Continue it with `promote.mjs --lesson "<lesson>" --resume --run-id <id>`; to drop it, `promote.mjs --abort <id>` (or delete `runs/PROMOTE.lock`). |
 | `apply.mjs` ends with exit 1 (some ops did not land) | `apply.mjs --run <id> --retry`. It reads Notion again before it sends anything, so a row whose create was cut off but landed is updated, not created twice. |
+| An apply was killed half way (no `plan.retry.jsonl` yet) | `apply.mjs --run <id>` again: ops already recorded as written are skipped, and it pulls first. |
 | `apply.mjs` ends with exit 5 (an editor field changed while the agent wrote; the agent paused itself) | Read `runs/PAUSED` and look at the row in Notion, then `status.mjs --unpause --confirm`. Only a person does this. |
-| `status.mjs` says PROMOTING (a gate PASS is waiting) | `plan.mjs check --run <id>`, `apply.mjs --run <id>`, then `promote.mjs --finalize <id>`. To give up instead: `promote.mjs --abort <id>`. |
+| `status.mjs` says PROMOTING (a gate PASS is waiting) | `plan.mjs check --run <id>`, `apply.mjs --run <id>`, then `promote.mjs --finalize <id>` and commit `rubric/` and `evals/`. To give up instead: `promote.mjs --abort <id>`. |
 | A Live lesson has to be reverted | `pull.mjs --all`, then `promote.mjs --rollback <lesson> --confirm`, then `plan.mjs check --run <id>` and `apply.mjs --run <id>` for the plan it wrote, and commit `rubric/` and `evals/`. |
 | `status.mjs` reports drift (the Rulebook in Notion differs from `rubric.json`) | `status.mjs` explains each difference and offers the restore plan: `status.mjs --restore-rulebook --confirm`, then `plan.mjs check --run <id>` and `apply.mjs --run <id>`. |
 
