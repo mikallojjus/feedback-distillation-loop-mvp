@@ -259,7 +259,8 @@ test('normId and sameDate', () => {
   assert.equal(sameDate('2026-10-09', '2026-10-10'), false);
   assert.equal(sameDate('2026-10-13T14:25:01.123Z', '2026-10-13T14:25:01.000+00:00'), true, 'same second, different notation');
   assert.equal(sameDate('2026-10-13T14:25:01Z', '2026-10-13T16:25:01+02:00'), true, 'same instant');
-  assert.equal(sameDate('2026-10-13T14:25:01Z', '2026-10-13T14:25:02Z'), false);
+  assert.equal(sameDate('2026-10-13T14:25:01Z', '2026-10-13T14:25:59Z'), true, 'Notion keeps datetimes to the minute');
+  assert.equal(sameDate('2026-10-13T14:25:59Z', '2026-10-13T14:26:00Z'), false);
   assert.equal(sameDate(null, ''), true);
   assert.equal(sameDate('2026-10-09', null), false);
 });

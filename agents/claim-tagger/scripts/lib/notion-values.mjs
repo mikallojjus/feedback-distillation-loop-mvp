@@ -193,7 +193,8 @@ export function sameDate(a, b) {
   const x = Date.parse(DAY.test(a) ? `${a}T00:00:00Z` : a);
   const y = Date.parse(DAY.test(b) ? `${b}T00:00:00Z` : b);
   if (Number.isNaN(x) || Number.isNaN(y)) return a === b;
-  return Math.floor(x / 1000) === Math.floor(y / 1000);
+  // Notion keeps datetimes to the minute (seconds and milliseconds are dropped on write), so compare at minute precision.
+  return Math.floor(x / 60000) === Math.floor(y / 60000);
 }
 
 const idSet = (v) => [...new Set((Array.isArray(v) ? v : [v]).filter((x) => !EMPTY(x)).map((x) => (looksLikeId(x) ? normId(x) : String(x))))].sort();

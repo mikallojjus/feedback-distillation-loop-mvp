@@ -221,8 +221,11 @@ export function assertWritable(db, prop, value, { schema = null, ctx = {} } = {}
     const ok = STATUS_VALUES.agent.includes(value) || (ctx.op === 'create' && STATUS_VALUES.on_create.includes(value));
     if (!ok) refuse(db, prop, 'status-value', `the agent sets Live or Rolled back (and Proposed when it creates the row), never ${JSON.stringify(value)}`);
   }
-  if (db === 'rulebook' && prop === 'When to use' && !(ctx.promote === true && ctx.gate === 'PASS') && !seedCreate) {
-    refuse(db, prop, 'promote-only', 'the rule text changes only through promote with a gate PASS');
+  // The one engineer-only exception: `status.mjs --restore-rulebook --confirm` writes the live rubric's own text back
+  // into a drifted Rulebook row (ctx.restore with ctx.confirm). It never introduces new text; it restores the file's.
+  const restore = ctx.restore === true && ctx.confirm === true;
+  if (db === 'rulebook' && prop === 'When to use' && !(ctx.promote === true && ctx.gate === 'PASS') && !seedCreate && !restore) {
+    refuse(db, prop, 'promote-only', 'the rule text changes only through promote with a gate PASS (or a confirmed restore of the live rubric text)');
   }
 
   // 6. select-like values must be options that already exist (writing an unknown name would silently create it)

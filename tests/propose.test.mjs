@@ -290,22 +290,32 @@ test('proposal wording, direction, low confidence, reasons and priorities as sma
   assert.equal(prio({ why: 'Auditor flag' }), 'Medium');
 });
 
-test('readiness: needs editor, then fix needed, then not checkable, then ready', () => {
-  const polarityOf = (t) => ({ Predictive: 'Issue', Hypothetical: 'Issue', Opinion: 'Classification', 'Improperly sourced': 'Issue', Unsourced: 'Issue' }[t]);
-  const sourceReadingTags = new Set(['Improperly sourced', 'Source inaccessible']);
-  const ready = (states) => readinessOf(new Map(Object.entries(states)), { polarityOf, fixPolarities: ['Issue'], sourceReadingTags });
+test('readiness: needs editor, then fix needed, then not checkable, then ready; tags the trial does not evaluate never count', () => {
+  const polarityOf = (t) => ({ Predictive: 'Issue', Hypothetical: 'Issue', Opinion: 'Classification', 'Improperly sourced': 'Issue', 'Source inaccessible': 'Issue', Unsourced: 'Issue' }[t]);
+  const ready = (states, ignored = []) => readinessOf(new Map(Object.entries(states)), { polarityOf, fixPolarities: ['Issue'], ignored: new Set(ignored) });
   assert.equal(ready({ Opinion: 'apply', Predictive: 'do_not_apply' }), 'Ready');
   assert.equal(ready({ Opinion: 'ask_editor' }), 'Needs editor');
   assert.equal(ready({ Opinion: 'error' }), 'Needs editor');
-  assert.equal(ready({ Opinion: 'cannot_tell' }), 'Needs editor', 'a text-only tag nobody could decide');
   assert.equal(ready({ Predictive: 'apply', Opinion: 'ask_editor' }), 'Needs editor', 'needs editor beats fix needed');
+  assert.equal(ready({ Opinion: 'ask_editor', Unsourced: 'cannot_tell' }), 'Needs editor', 'and not checkable');
   assert.equal(ready({ Predictive: 'apply' }), 'Fix needed');
+  assert.equal(ready({ Unsourced: 'apply' }), 'Fix needed', 'the code-decided Unsourced counts');
   assert.equal(ready({ Opinion: 'apply' }), 'Ready', 'a Classification tag applying is not a problem');
-  assert.equal(ready({ Predictive: 'apply', 'Improperly sourced': 'cannot_tell' }), 'Fix needed', 'fix needed beats not checkable');
-  assert.equal(ready({ 'Improperly sourced': 'cannot_tell', Opinion: 'apply' }), 'Not checkable');
-  assert.equal(ready({ 'Improperly sourced': 'do_not_apply', 'Source inaccessible': 'cannot_tell' }), 'Not checkable');
-  assert.equal(ready({ 'Improperly sourced': 'apply' }), 'Fix needed');
+  assert.equal(ready({ Predictive: 'apply', Opinion: 'cannot_tell' }), 'Fix needed', 'fix needed beats not checkable');
+  assert.equal(ready({ Opinion: 'cannot_tell' }), 'Not checkable', 'a model-judged tag nobody could tell');
+  assert.equal(ready({ Unsourced: 'cannot_tell' }), 'Not checkable', 'Unsourced when the sources count is unknown');
+  assert.equal(ready({ Unsourced: 'do_not_apply', Opinion: 'apply' }), 'Ready');
   assert.equal(ready({}), 'Ready');
+
+  // tags this trial does not evaluate (code-decided, basis no_source_text) never count, whatever their state
+  const unchecked = ['Improperly sourced', 'Source inaccessible'];
+  assert.equal(ready({ 'Improperly sourced': 'cannot_tell', 'Source inaccessible': 'cannot_tell' }, unchecked), 'Ready');
+  assert.equal(ready({ 'Improperly sourced': 'cannot_tell', Opinion: 'apply' }, unchecked), 'Ready');
+  assert.equal(ready({ 'Improperly sourced': 'apply' }, unchecked), 'Ready');
+  assert.equal(ready({ 'Improperly sourced': 'apply' }), 'Fix needed', 'the same state does count when the tag is evaluated');
+  assert.equal(ready({ 'Improperly sourced': 'cannot_tell', Opinion: 'cannot_tell' }, unchecked), 'Not checkable', 'a model-judged tag still counts next to them');
+  assert.equal(ready({ 'Improperly sourced': 'cannot_tell', Unsourced: 'cannot_tell' }, unchecked), 'Not checkable');
+  assert.equal(ready({ 'Improperly sourced': 'cannot_tell', Predictive: 'apply' }, unchecked), 'Fix needed');
 });
 
 // ---- text helpers --------------------------------------------------------------------------------------------------------------------------------
@@ -316,6 +326,18 @@ test('text: tag line, full note, recommendation (at most 40 words, k of n runs a
   assert.equal(tagLine('Predictive', verdict, 'Does not apply'), 'Predictive · apply · 0.85 · 2/3 runs · Predictive rule 1 · editor: Does not apply (kept)');
   const none = decideVerdict([r('cannot_tell', null, 'Improperly sourced description', 'No source read.'), r('cannot_tell', null, 'Improperly sourced description'), r('cannot_tell', null, 'Improperly sourced description')], 3);
   assert.equal(tagLine('Improperly sourced', none, null), 'Improperly sourced · cannot tell · - · 3/3 runs · Improperly sourced description');
+  assert.equal(none.unchecked, false, 'a verdict whose entries carry no basis is a model verdict');
+  // a tag nobody evaluates in this trial: every entry has the basis no_source_text
+  const withBasis = (basis, ...entries) => decideVerdict(entries.map((e) => ({ ...e, basis })), entries.length);
+  const unchecked = withBasis('no_source_text', r('cannot_tell', null, 'Improperly sourced description'), r('cannot_tell', null, 'Improperly sourced description'), r('cannot_tell', null, 'Improperly sourced description'));
+  assert.equal(unchecked.unchecked, true);
+  assert.equal(tagLine('Improperly sourced', unchecked, null), 'Improperly sourced · not checked in this trial');
+  assert.equal(tagLine('Improperly sourced', unchecked, 'Applies'), 'Improperly sourced · not checked in this trial · editor: Applies (kept)');
+  const nothingToSource = withBasis('deterministic', r('do_not_apply', 1, 'Improperly sourced description'), r('do_not_apply', 1, 'Improperly sourced description'), r('do_not_apply', 1, 'Improperly sourced description'));
+  assert.equal(nothingToSource.unchecked, false, 'no sources at all is decided by code, and said so');
+  assert.equal(tagLine('Improperly sourced', nothingToSource, null), 'Improperly sourced · do not apply · 1.00 · 3/3 runs · Improperly sourced description');
+  assert.equal(withBasis('no_source_text', r('cannot_tell', null)).unchecked, true);
+  assert.equal(decideVerdict([{ ...r('cannot_tell', null), basis: 'no_source_text' }, { ...r('apply', 0.9), basis: 'model' }], 2).unchecked, false, 'only when every entry says so');
   assert.equal(tagLine('Opinion', decideVerdict([r('apply', 0.9), null, r('apply', 0.9)], 3), null), 'Opinion · error · 0.90 · 2/3 runs · -');
 
   assert.equal(recommendation(verdict), 'It is flatly stated; 2 of 3 runs applied it');
@@ -400,7 +422,8 @@ test('a claim with mixed verdicts: the claim update and one queue row per uncert
   assert.ok(lines.includes('Hypothetical · ask editor · 0.55 · 3/3 runs · Hypothetical description'));
   assert.ok(lines.includes('Opinion · ask editor · 0.77 · 1/3 runs · Opinion description') || lines.some((l) => l.startsWith('Opinion · ask editor · 0.77 · 1/3 runs')));
   assert.ok(lines.includes('Unsourced · do not apply · 1.00 · 3/3 runs · Unsourced description'));
-  assert.ok(lines.includes('Improperly sourced · cannot tell · - · 3/3 runs · Improperly sourced description'));
+  assert.ok(lines.includes('Improperly sourced · not checked in this trial'));
+  assert.ok(lines.includes('Source inaccessible · not checked in this trial'));
   assert.ok(claimOp.properties['Tag confidence'].length <= 1900);
 
   // the rows
@@ -445,28 +468,71 @@ test('a claim with mixed verdicts: the claim update and one queue row per uncert
   assert.equal(readJsonl(join(world.runsDir, 'o1', 'plan.jsonl')).rows.length, 1 + res.ops.length, 'the plan file: a header and the ops');
 });
 
-test('readiness table end to end', async () => {
+test('readiness table end to end: the sources nobody reads in this trial do not make a claim Not checkable', async () => {
   const world = makeWorld();
-  const allNo = { Unsourced: ['do_not_apply', 1], 'Improperly sourced': ['do_not_apply', 1], 'Source inaccessible': ['do_not_apply', 1] };
   world.addClaim('needs-ask', { spec: { Opinion: ['ask_editor', 0.5] } });
   world.addClaim('needs-error', { missingRuns: [3] });
-  world.addClaim('needs-cannot', { spec: { ...allNo, Factual: ['cannot_tell', null] } });
   world.addClaim('needs-beats-fix', { spec: { Predictive: ['apply', 0.9], Opinion: ['ask_editor', 0.5] } });
+  world.addClaim('needs-beats-not-checkable', { sources: null, spec: { Opinion: ['ask_editor', 0.5] } });
   world.addClaim('fix', { spec: { Predictive: ['apply', 0.9] } });
   world.addClaim('fix-unsourced', { sources: 0 });
-  world.addClaim('not-checkable', { sources: 3 });
-  world.addClaim('ready', { spec: { ...allNo, Factual: ['apply', 0.9] } });
+  world.addClaim('fix-beats-not-checkable', { sources: null, spec: { Predictive: ['apply', 0.9] } });
+  world.addClaim('not-checkable-model', { spec: { Factual: ['cannot_tell', null] } });
+  world.addClaim('not-checkable-count', { sources: null });
+  world.addClaim('ready-sourced', { sources: 3 });
+  world.addClaim('ready', { spec: { Factual: ['apply', 0.9] } });
   world.write();
   const res = await propose(world);
   assert.equal(res.code, EXIT.OK, res.err.join('\n'));
   const readiness = Object.fromEntries(world.claims.map((c) => [c.geo_id, opFor(res.ops, 'claims', c.geo_id).properties.Readiness]));
   assert.deepEqual(readiness, {
-    'needs-ask': 'Needs editor', 'needs-error': 'Needs editor', 'needs-cannot': 'Needs editor', 'needs-beats-fix': 'Needs editor', fix: 'Fix needed', 'fix-unsourced': 'Fix needed',
-    'not-checkable': 'Not checkable', ready: 'Ready',
+    'needs-ask': 'Needs editor', 'needs-error': 'Needs editor', 'needs-beats-fix': 'Needs editor', 'needs-beats-not-checkable': 'Needs editor',
+    fix: 'Fix needed', 'fix-unsourced': 'Fix needed', 'fix-beats-not-checkable': 'Fix needed',
+    'not-checkable-model': 'Not checkable', 'not-checkable-count': 'Not checkable',
+    'ready-sourced': 'Ready', ready: 'Ready',
   });
-  assert.deepEqual(res.summary.readiness_counts, { 'Needs editor': 4, 'Fix needed': 2, 'Not checkable': 1, Ready: 1 });
+  assert.deepEqual(res.summary.readiness_counts, { 'Needs editor': 4, 'Fix needed': 3, 'Not checkable': 2, Ready: 2 });
   // the Unsourced tag of a claim with no sources is applied, so it is in Agent tags
   assert.deepEqual(opFor(res.ops, 'claims', 'fix-unsourced').properties['Agent tags'], [{ rulebook: 'Unsourced' }]);
+
+  // what the editor reads in Tag confidence for the two source-reading tags
+  const lines = (id) => opFor(res.ops, 'claims', id).properties['Tag confidence'].split('\n');
+  for (const id of ['ready-sourced', 'not-checkable-count', 'needs-error']) {
+    assert.ok(lines(id).includes('Improperly sourced · not checked in this trial'), id);
+    assert.ok(lines(id).includes('Source inaccessible · not checked in this trial'), id);
+  }
+  assert.ok(lines('ready-sourced').includes('Unsourced · do not apply · 1.00 · 3/3 runs · Unsourced description'), 'Unsourced is checked, from the count');
+  assert.ok(lines('not-checkable-count').includes('Unsourced · cannot tell · - · 3/3 runs · Unsourced description'));
+  // with no sources at all the code does decide them: nothing to source
+  assert.ok(lines('fix-unsourced').includes('Improperly sourced · do not apply · 1.00 · 3/3 runs · Improperly sourced description'));
+  assert.ok(lines('fix-unsourced').includes('Source inaccessible · do not apply · 1.00 · 3/3 runs · Source inaccessible description'));
+});
+
+test('a tag the trial does not evaluate stays on the claim and never decides Readiness, but an editor decision on it counts', async () => {
+  const world = makeWorld();
+  world.addClaim('N1', { sources: 2, agentTags: ['Improperly sourced'] });
+  world.addClaim('N2', { sources: 2 });
+  world.addRow('N2', 'Improperly sourced', { effective_outcome: 'Applies', tag_outcome: 'Applies', why_in_queue: 'Auditor flag' });
+  world.addClaim('N3', { sources: 2 });
+  world.addRow('N3', 'Source inaccessible', { effective_outcome: 'Does not apply', seeded_outcome: 'Does not apply', why_in_queue: 'Seeded decision' });
+  world.write();
+  const res = await propose(world);
+  assert.equal(res.code, EXIT.OK, res.err.join('\n'));
+
+  const n1 = opFor(res.ops, 'claims', 'N1').properties;
+  assert.equal(n1['Agent tags'], undefined, 'nothing was checked, so the old tagger\'s tag is not taken away');
+  assert.equal(n1.Readiness, 'Ready');
+  assert.ok(n1['Tag confidence'].split('\n').includes('Improperly sourced · not checked in this trial'));
+
+  const n2 = opFor(res.ops, 'claims', 'N2').properties;
+  assert.deepEqual(n2['Agent tags'], [{ rulebook: 'Improperly sourced' }], 'the editor said it applies');
+  assert.equal(n2.Readiness, 'Fix needed', 'a decided tag is not "not evaluated"');
+  assert.ok(n2['Tag confidence'].split('\n').includes('Improperly sourced · not checked in this trial · editor: Applies (kept)'));
+
+  const n3 = opFor(res.ops, 'claims', 'N3').properties;
+  assert.equal(n3.Readiness, 'Ready');
+  assert.ok(n3['Tag confidence'].split('\n').includes('Source inaccessible · not checked in this trial · editor: Does not apply (kept)'));
+  assert.equal(res.ops.some((o) => o.database === 'tag_decisions' && (o.key === 'N2::Improperly sourced' || o.key === 'N3::Source inaccessible')), false, 'decided rows stay untouched');
 });
 
 test('an unknown sources count is a gap in the data: Unsourced cannot be told, the claim is Not checkable, no queue row is made for it', async () => {
@@ -508,7 +574,7 @@ test('decided tags win in both directions, seeded outcomes included, and their r
   assert.equal(lineOf('D1', 'Predictive'), 'Predictive · apply · 0.95 · 3/3 runs · Predictive rule 1 · editor: Does not apply (kept)');
   assert.equal(lineOf('D1', 'Hypothetical'), 'Hypothetical · do not apply · 0.95 · 3/3 runs · Hypothetical description · editor: Applies (kept)');
   assert.equal(lineOf('D3', 'Predictive'), 'Predictive · do not apply · 0.95 · 3/3 runs · Predictive description · editor: Applies (kept)');
-  assert.equal(opFor(res.ops, 'claims', 'D2').properties.Readiness, 'Not checkable', 'the decided Predictive does not make it Fix needed; its sources are not read');
+  assert.equal(opFor(res.ops, 'claims', 'D2').properties.Readiness, 'Ready', 'the decided Predictive does not make it Fix needed, and the sources nobody reads do not make it Not checkable');
 
   for (const key of ['D1::Predictive', 'D1::Hypothetical', 'D2::Predictive', 'D3::Predictive']) {
     assert.equal(res.ops.some((o) => o.database === 'tag_decisions' && o.key === key), false, `${key} is decided: no op at all`);
@@ -1074,10 +1140,13 @@ test('golden plan: the fixture pull and judgments produce exactly the recorded o
   const err = [];
   const code = await main(['--run', 'j1', '--pull', 'p1', '--out-run', 'o1'], { out: (s) => out.push(s), err: (s) => err.push(s) }, { agentDir: dir, now: () => NOW, planFactory: planner.factory });
   assert.equal(code, EXIT.OK, err.join('\n'));
-  const expected = readJson(new URL('./fixtures/judge/expected-ops.json', import.meta.url));
+  const goldenFile = new URL('./fixtures/judge/expected-ops.json', import.meta.url);
+  // After changing propose.mjs on purpose: UPDATE_GOLDEN=1 node --test tests/propose.test.mjs, then read the diff of expected-ops.json.
+  if (process.env.UPDATE_GOLDEN === '1') writeFileSync(goldenFile, `${JSON.stringify(planner.ops, null, 2)}\n`);
+  const expected = readJson(goldenFile);
   assert.deepEqual(planner.ops, expected);
   const summary = readJson(join(dir, 'runs', 'o1', 'propose.json'));
   assert.deepEqual([summary.claims_updated, summary.rows_created, summary.rows_updated, summary.held_by_cap, summary.kept_by_decision], [3, 1, 2, 0, 1]);
-  assert.deepEqual(summary.readiness_counts, { 'Needs editor': 0, 'Fix needed': 2, 'Not checkable': 1, Ready: 0 });
+  assert.deepEqual(summary.readiness_counts, { 'Needs editor': 0, 'Fix needed': 2, 'Not checkable': 0, Ready: 1 });
   assert.deepEqual(summary.by_why_in_queue, { 'Seeded decision': 1, 'Rule changed': 1, 'Low confidence': 1 });
 });

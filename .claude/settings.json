@@ -34,5 +34,18 @@
       "mcp__claude_ai_notion__notion-duplicate-page",
       "mcp__claude_ai_notion__notion-restore-pages"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__.*notion-(create-pages|update-page|create-database|update-data-source|create-view|update-view|move-pages|duplicate-page)",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node agents/claim-tagger/scripts/hooks/guard.mjs"
+          }
+        ]
+      }
+    ]
   }
 }

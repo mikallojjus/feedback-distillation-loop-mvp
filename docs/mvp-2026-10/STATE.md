@@ -11,11 +11,11 @@
 |---|---|
 | 0 Skeleton, token, docs, memory | done |
 | 1 Day-1 checks (CLI flags, DDL, formulas, view DSL, subagent connector) | done; hooks checked in the headless test later |
-| 2 lib + schemas (done) + allowlist + hooks (agent B running) | in progress |
-| 3 pull, plan, apply, verify (agent B running) | in progress |
-| 4 setup (databases, formulas, views, hub done) + seed files built; Notion seeding pending apply.mjs | in progress |
-| 5 judge + propose (agent C running) | in progress |
-| 6 propose + first tag run | pending |
+| 2 lib, schemas, allowlist, guard hook | done |
+| 3 pull, plan, apply, verify (REST, token) | done |
+| 4 setup + seed applied to Notion (14 + 60 + 50 + 1 rows, verify clean) | done |
+| 5 judge (Haiku smoke 5/5 ok; Sonnet tag run 60 x 3 and eval baseline running in background) + propose (report pending) | in progress |
+| 6 first tag run → propose → apply | pending (after the Sonnet run) |
 | 7 eval done; distill, promote, followup, status, cases-sync pending (agent F after B and C) | in progress |
 | 8 SKILL.md, README, headless tests | pending |
 | 9 Demo storyline end to end | pending |

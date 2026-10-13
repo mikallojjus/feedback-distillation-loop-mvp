@@ -15,6 +15,10 @@
 //    Tags the code decides (Unsourced, the source-reading tags) do not depend on the model runs, so a failed run does not make them errors.
 //  - an editor's decision (Tag outcome, or the seeded one) always wins and its queue row is never touched.
 //  - Agent tags: tags with final state apply; tags this run does not judge (Editor verified) stay; an error verdict changes nothing.
+//  - Readiness, in order: Needs editor (a model-judged tag is ask_editor or error), Fix needed (an applied tag has an Issue polarity, Unsourced
+//    included), Not checkable (a model-judged tag is cannot_tell, or Unsourced is because its sources count is unknown), else Ready. A code-decided
+//    tag whose basis is no_source_text (Improperly sourced, Source inaccessible: nobody reads sources in this trial) never counts, its Tag
+//    confidence line says "<tag> · not checked in this trial", and a tag of that kind already on the claim stays on it.
 //  - a plan only carries values that differ from the pull, so a second run on the same inputs gives an empty plan. For that the
 //    proposal wording sticks while its direction holds, and Why in queue only ever gets stronger (Rule changed > Low confidence > the rest).
 //  - Rule changed needs a recorded rubric version that looks like one (YYYY-MM-DD.n): rows seeded from the audit have none.
@@ -106,13 +110,15 @@ export function isoWeek(date) {
  * The verdict of one tag on one claim from its runs. runsOut has one entry per run: { run, decision, p, rule_ref, reason, trigger } or null
  * for a run that is missing or failed. More than half of the runs agreeing gives that decision; otherwise ask_editor; any run missing gives
  * "error". meanP is the mean p of the runs that gave the verdict's decision (all valid runs when there is no majority).
- * Returns { decision, k (runs that gave it), n, meanP, unanimous, split (every run different, 3 or more runs), ruleRef, reason, applyCount, runs }.
+ * Returns { decision, k (runs that gave it), n, meanP, unanimous, split (every run different, 3 or more runs), ruleRef, reason, applyCount,
+ * unchecked (the tag was not evaluated in this trial: every entry has basis "no_source_text"), runs }.
  */
 export function decideVerdict(runsOut, n) {
   const valid = runsOut.filter(Boolean);
   const applyCount = valid.filter((r) => r.decision === 'apply').length;
+  const unchecked = valid.length > 0 && valid.every((r) => r.basis === 'no_source_text');
   if (n < 1 || valid.length < n) {
-    return { decision: 'error', k: valid.length, n, meanP: mean(valid), unanimous: false, split: false, ruleRef: null, reason: null, applyCount, runs: runsOut };
+    return { decision: 'error', k: valid.length, n, meanP: mean(valid), unanimous: false, split: false, ruleRef: null, reason: null, applyCount, unchecked, runs: runsOut };
   }
   const counts = new Map();
   for (const r of valid) counts.set(r.decision, (counts.get(r.decision) ?? 0) + 1);
@@ -133,6 +139,7 @@ export function decideVerdict(runsOut, n) {
     ruleRef,
     reason: agreeing.map((r) => oneLine(r.reason)).find(Boolean) ?? null,
     applyCount,
+    unchecked,
     runs: runsOut,
   };
 }
@@ -192,19 +199,32 @@ export function priorityOf({ proposal, why, verdict, polarity, fixPolarities }) 
   return 'Medium';
 }
 
-/** Needs editor, else Fix needed, else Not checkable, else Ready; states maps tag -> final state ('apply', 'do_not_apply', 'ask_editor', 'cannot_tell', 'error'). */
-export function readinessOf(states, { polarityOf, fixPolarities, sourceReadingTags }) {
-  const entries = [...states.entries()];
-  if (entries.some(([tag, s]) => s === 'ask_editor' || s === 'error' || (s === 'cannot_tell' && !sourceReadingTags.has(tag)))) return 'Needs editor';
-  if (entries.some(([tag, s]) => s === 'apply' && fixPolarities.includes(polarityOf(tag)))) return 'Fix needed';
-  if (entries.some(([tag, s]) => s === 'cannot_tell' && sourceReadingTags.has(tag))) return 'Not checkable';
+/**
+ * The Readiness of a claim, from the final state of each tag (states: tag -> 'apply' | 'do_not_apply' | 'ask_editor' | 'cannot_tell' | 'error'):
+ *   Needs editor   a model-judged tag is ask_editor or error (an editor decision is a final state of its own, so a decided tag never counts here)
+ *   Fix needed     an applied tag has an Issue polarity (fixPolarities), the code-decided Unsourced included
+ *   Not checkable  a model-judged tag is cannot_tell, or Unsourced is (its sources count is unknown)
+ *   Ready          otherwise
+ * `ignored` holds the tags this trial deliberately does not evaluate (code-decided with basis "no_source_text": Improperly sourced and
+ * Source inaccessible, whose sources nobody reads yet); they never count, whatever their state.
+ */
+export function readinessOf(states, { polarityOf, fixPolarities, ignored = new Set() }) {
+  const live = [...states.entries()].filter(([tag]) => !ignored.has(tag));
+  if (live.some(([, s]) => s === 'ask_editor' || s === 'error')) return 'Needs editor';
+  if (live.some(([tag, s]) => s === 'apply' && fixPolarities.includes(polarityOf(tag)))) return 'Fix needed';
+  if (live.some(([, s]) => s === 'cannot_tell')) return 'Not checkable';
   return 'Ready';
 }
 
-/** "<tag> · <decision> · <p> · <k>/<n> runs · <rule_ref>" plus " · editor: <outcome> (kept)" on a decided tag. */
+/**
+ * "<tag> · <decision> · <p> · <k>/<n> runs · <rule_ref>", or "<tag> · not checked in this trial" for a tag nobody evaluates (verdict.unchecked),
+ * plus " · editor: <outcome> (kept)" on a decided tag.
+ */
 export function tagLine(tag, verdict, decidedOutcome) {
   const p = verdict.meanP === null ? '-' : verdict.meanP.toFixed(2);
-  let line = `${tag} · ${DECISION_WORDS[verdict.decision]} · ${p} · ${verdict.k}/${verdict.n} runs · ${verdict.ruleRef ?? '-'}`;
+  let line = verdict.unchecked
+    ? `${tag} · not checked in this trial`
+    : `${tag} · ${DECISION_WORDS[verdict.decision]} · ${p} · ${verdict.k}/${verdict.n} runs · ${verdict.ruleRef ?? '-'}`;
   if (decidedOutcome) line += ` · editor: ${decidedOutcome} (kept)`;
   return line;
 }
@@ -447,8 +467,8 @@ async function run(opts, io, deps) {
   if (!usable.length) throw new ExitError(EXIT.INVALID, `run ${opts.run} left no usable judgment for the claims of pull ${opts.pull}`);
   const tagNames = [...new Set(usable.flatMap((d) => d.tags.map((t) => t.name)))].sort(compareCodePoints);
   const codeTagNames = new Set(usable.flatMap((d) => d.tags.filter((t) => t.basis !== 'model').map((t) => t.name))); // decided by code, not by a model run
-  // Tags that can end in cannot_tell because something is not known or not read (the source-reading tags, and Unsourced when the count is unknown):
-  // that is a gap in the data, not a question for an editor, so it means Not checkable and Read source first, never Needs editor or Low confidence.
+  // For the queue rows: tags that can end in cannot_tell because something is not known or not read (the source-reading tags, and Unsourced when
+  // the count is unknown). That is a gap in the data, not a question for an editor: the proposal is Read source first and the row is never Low confidence.
   const unreadable = new Set([...sourceReadingTags, ...codeTagNames]);
 
   // --- queue rows by key
@@ -475,6 +495,7 @@ async function run(opts, io, deps) {
     const claim = claimById.get(geoId);
     const currentTags = new Set(col(claim, 'agent_tags', 'Agent tags') ?? []);
     const states = new Map();
+    const ignored = new Set(); // tags this trial does not evaluate: they do not count toward Readiness
     const lines = [];
     const next = new Set([...currentTags].filter((t) => !tagNames.includes(t))); // tags this run does not judge stay as they are
 
@@ -496,10 +517,12 @@ async function run(opts, io, deps) {
       const decided = isDecided(outcome);
       const final = decided ? (outcome === 'Applies' ? 'apply' : 'do_not_apply') : verdict.decision;
       states.set(tag, final);
+      const notEvaluated = verdict.unchecked && !decided; // an editor's decision on such a tag is still a decision
+      if (notEvaluated) ignored.add(tag);
       if (decided) keptByDecision++;
       lines.push(tagLine(tag, verdict, decided ? outcome : null));
       if (final === 'apply') next.add(tag);
-      else if (final === 'error' && currentTags.has(tag)) next.add(tag); // nothing is known, so nothing changes
+      else if ((final === 'error' || notEvaluated) && currentTags.has(tag)) next.add(tag); // nothing is known, so nothing changes
 
       if (decided) continue; // a decided row is never touched
 
@@ -546,7 +569,7 @@ async function run(opts, io, deps) {
       if (Object.keys(changed).length) rowUpdates.push({ key, pageId: col(row, 'page_id', 'page_id') ?? null, properties: changed });
     }
 
-    const readiness = readinessOf(states, { polarityOf: (t) => polarity.get(t), fixPolarities, sourceReadingTags: unreadable });
+    const readiness = readinessOf(states, { polarityOf: (t) => polarity.get(t), fixPolarities, ignored });
     readinessCounts[readiness]++;
     const wantedClaim = {
       'Agent tags': [...next].sort(compareCodePoints),
