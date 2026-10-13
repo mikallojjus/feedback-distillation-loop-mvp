@@ -54,7 +54,7 @@ node S/pull.mjs --all
 node S/cases-sync.mjs --run-id <id>-cases          (then A on <id>-cases when it wrote a plan)
 ```
 
-`judge.mjs` takes minutes (about 50 seconds per 8 claims); never start a second judge on the same run. Report the propose summary (claims judged, rows queued, held by cap, readiness counts, cost) and link "Your queue" on the hub page.
+`judge.mjs` takes minutes (about 50 seconds per 8 claims); never start a second judge on the same run. If its summary says `cells=0`, every claim already has its judgments under the current rubric (judgments are cached by rubric and model): say so, and run `propose.mjs` against the latest tag run listed by `status.mjs` instead of judging again. Report the propose summary (claims judged, rows queued, held by cap, readiness counts, cost) and link "Your queue" on the hub page.
 
 ### `distill`
 
