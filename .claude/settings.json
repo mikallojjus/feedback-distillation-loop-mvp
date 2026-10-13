@@ -1,14 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node agents/claim-tagger/scripts/*)",
-      "Bash(node --test*)",
-      "Bash(npm test*)",
-      "Bash(git status*)",
-      "Bash(git diff*)",
-      "Bash(git log*)",
-      "Bash(git add agents/claim-tagger/*)",
-      "Bash(git commit -m *)",
       "Read(agents/**)",
       "Read(docs/**)",
       "Read(tests/**)",
@@ -17,7 +9,33 @@
       "mcp__claude_ai_notion__notion-query-data-sources",
       "mcp__claude_ai_notion__notion-create-pages",
       "mcp__claude_ai_notion__notion-update-page",
-      "mcp__claude_ai_notion__notion-get-async-task"
+      "mcp__claude_ai_notion__notion-get-async-task",
+      "Bash(node --test:*)",
+      "Bash(npm test:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add agents/claim-tagger:*)",
+      "Bash(git commit:*)",
+      "Bash(node agents/claim-tagger/scripts/allowlist.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/apply.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/cases-sync.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/distill.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/eval.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/followup.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/judge.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/plan.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/promote.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/propose.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/pull.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/rubric-init.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/run-card.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/seed-build.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/seed.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/snapshot.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/status.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/transcript-check.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/verify.mjs:*)"
     ],
     "ask": [
       "mcp__claude_ai_notion__notion-create-database",
@@ -28,11 +46,14 @@
     "deny": [
       "Read(**/.env*)",
       "Read(.env)",
-      "Bash(curl *)",
-      "Bash(git push*)",
       "mcp__claude_ai_notion__notion-move-pages",
       "mcp__claude_ai_notion__notion-duplicate-page",
-      "mcp__claude_ai_notion__notion-restore-pages"
+      "mcp__claude_ai_notion__notion-restore-pages",
+      "Bash(curl:*)",
+      "Bash(git push:*)",
+      "Bash(cat .env:*)",
+      "Bash(grep * .env:*)",
+      "Bash(type .env:*)"
     ]
   },
   "hooks": {

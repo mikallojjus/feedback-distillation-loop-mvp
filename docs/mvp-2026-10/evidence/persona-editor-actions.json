@@ -265,6 +265,50 @@
       },
       "written_at": "2026-10-13T16:41:45Z",
       "note": "Coordinator's quality check, same question. Rule 1 requires a scenario and shows only 'under' wrappers; rule 2 lists could/may/might/can be designed to/can be used to and never bare 'would'; 'would' appears only in the tag description, still tied to an assumed scenario that this claim leaves implicit (nothing says the rules are proposed). So my Applies rested on inferring the unenacted-rules scenario from 'would', beyond the letter. Tag outcome kept; Why wrong set to Rule unclear; reasoning replaced by one sentence carrying both the rationale and the gap. Only Why wrong and Your reasoning written."
+    },
+    {
+      "role": "rule owner",
+      "action": "tie-break on a seeded label",
+      "row_url": "https://app.notion.com/p/3f8273e214eb818fac2cec928ab1bab6",
+      "key": "e3c28f62526e4880b9edb5c16817b27b::Context-dependent",
+      "claim": "Melania Trump should not host her initiative's G20 event at President Trump's golf resort",
+      "tag": "Context-dependent",
+      "agent_proposal": "Do not add tag",
+      "seeded_outcome": "Applies",
+      "trigger": "Confirmed flip blocking LS-1's gate: current rulebook applies Context-dependent 8/8 (rule 3, the initiative is not identified); the LS-1 candidate says Self-contained 8/8 (Self-contained rule 2, 'her' resolves to Melania Trump).",
+      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "'Her' resolves (Self-contained rule 2), but 'her initiative' names a kind, not which one, exactly like the canary 'Open AI's initiative'; Self-contained rule 3 fails, Context-dependent rule 3 applies.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T17:33:42Z",
+      "note": "Option (a): the seeded label is right and the written rules settle it, so no Why wrong. Context-dependent and Self-contained are unchanged (2026-10-13.1). Self-contained rule 2 only resolves the pronoun 'her' to Melania Trump; the possessed noun 'her initiative' is a descriptive definite that names a kind of thing but not which one (Context-dependent rule 3), fails Self-contained rule 3's 'could two different things fit this phrase?' test (she has had more than one initiative), fails Context-dependent rule 4's reader test (the seeded editor's own sentence asks 'what's the initiative?'), and matches the tag's own example claim 'Open AI's initiative went well with the target group' and the description's 'the initiative'. 'President Trump's golf resort' has the same problem. Same pattern and same answer as the Boulder lawsuit row. The candidate's flip is a misreading of rule 2 as settling the possessed noun, which is the fence LS-1's Editor wording does not yet address; the row is now a decided regression case. Only Tag outcome, Your reasoning and Decided at written; Decided by left empty."
+    },
+    {
+      "role": "rule owner",
+      "action": "replace Editor wording (minimal text)",
+      "row_url": "https://app.notion.com/p/3f8273e214eb81018282fba148e934a6",
+      "lesson_id": "LS-1",
+      "lesson_title": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+      "tag": "Predictive",
+      "rule": "Predictive rule 1",
+      "kind": "Change the rule",
+      "trigger": "Gate attempt 4 FAIL on the 1,439-character Editor wording: canaries 83/83, Predictive +36.4 points (all four hedged rows fixed over 8 runs), Hypothetical unchanged, but one confirmed broken flip (the Melania Trump Context-dependent row, tie-broken as Applies) where the candidate makes the judge misread Self-contained rule 2; likely cause is the length of the rule text, not its meaning.",
+      "before": {
+        "Status": "Approved",
+        "Editor wording": "Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to (\"the market is forecasted to grow to a multi-trillion size by 2030\", \"the largest wave of maturities is expected in the fall\"). Hedged markers (is likely to, is likely, probably) fire only when they attach to a definite future outcome or event that only the future can settle (\"the hiring freeze is likely a short-lived phase\" fires). Hedged markers do NOT fire when they describe: an actor's general tendency or disposition, which can be checked against its past record (\"the agency is likely to side with large incumbents\"); a comparison of which strategy or approach tends to work better (\"tariffs are more likely than talks to change the policy\"); or a present trajectory (\"is on track to\", \"is heading toward\"). Such claims are assessments of the present, not forecasts. In particular, a hedged claim that an actor is likely to keep doing, continue or extend what it already does (to expand, tighten or favour something further), even with a future time phrase attached, describes that actor's tendency and does not fire. This rule decides Predictive only: it never decides whether a claim is Hypothetical, which Hypothetical's own rules settle unchanged, so a conditional or scenario claim keeps the Hypothetical verdict those rules give it even where this rule would also fire, and the two tags may stand together.",
+        "Approved by": null
+      },
+      "after": {
+        "Status": "Approved",
+        "Editor wording": "Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to, is likely to (\"the market is forecasted to grow to a multi-trillion size by 2030\", \"the largest wave of maturities is expected in the fall\"). Hedged markers (is likely to, is likely, more likely than, on track to) fire only when they attach to a definite future outcome that only the future can settle. A hedged claim about an actor's tendency or disposition, a comparison of which approach tends to work, or a present trajectory does not fire.",
+        "Approved by": null
+      },
+      "editor_wording_chars": 562,
+      "written_at": "2026-10-13T17:36:41Z",
+      "note": "Only the Editor wording property written; Status left Approved. Smallest text that still carries the four decisions: rule 1's original sentence and its two examples kept exactly (including 'is likely to' in the marker list, as instructed, so the second sentence reads as its qualification), plus exactly two sentences: hedged markers (is likely to, is likely, more likely than, on track to) fire only on a definite future outcome that only the future can settle; a hedged claim about an actor's tendency or disposition, a comparison of which approach tends to work, or a present trajectory does not fire. No Hypothetical fence, no boundary examples, no claim quoted, single paragraph, no leading '1.', 562 characters (down from 1,439)."
     }
   ]
 }

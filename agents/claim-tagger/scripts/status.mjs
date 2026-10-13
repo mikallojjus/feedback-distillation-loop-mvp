@@ -323,14 +323,25 @@ export function renderReport(state) {
   return lines.join('\n');
 }
 
-function checkLine(state) {
+/** Whether an integration token is configured in the repository's .env, without reading or printing its value. */
+function tokenNote(root) {
+  try {
+    const envPath = join(root, '..', '..', '.env');
+    if (!existsSync(envPath)) return 'no integration token configured (.env missing)';
+    const text = readFileSync(envPath, 'utf8');
+    return /^\s*NOTION_TOKEN\s*=\s*\S+/m.test(text) ? 'integration token configured' : 'no integration token configured (NOTION_TOKEN not set in .env)';
+  } catch { return 'integration token: could not check .env'; }
+}
+
+function checkLine(state, root) {
   const v = checkVerdict(state);
   const notes = [];
   if (!state.pull || state.pull.error) notes.push('no pull: Paused in Notion and drift not checked');
+  const token = root ? tokenNote(root) : null;
   if (v.code === EXIT.OK) {
-    return `status: ok - rubric ${state.rubric.version} (lock ok), not paused, no promote in flight${state.pull?.id ? `, pull ${state.pull.id} is ${state.pull.age} old` : ''}${notes.length ? ` (${notes.join('; ')})` : ''}`;
+    return `status: ok - rubric ${state.rubric.version} (lock ok), not paused, no promote in flight${state.pull?.id ? `, pull ${state.pull.id} is ${state.pull.age} old` : ''}${token ? `, ${token}` : ''}${notes.length ? ` (${notes.join('; ')})` : ''}`;
   }
-  return `status: ${v.label} - ${v.text}`;
+  return `status: ${v.label} - ${v.text}${token ? ` (${token})` : ''}`;
 }
 
 // ---- --run <id> ---------------------------------------------------------------------------------------------------------
@@ -536,7 +547,7 @@ export function main(argv, io = defaultIo, env = {}) {
       return args.check ? verdict.code : EXIT.OK;
     }
     if (args.check) {
-      io.out(checkLine(state));
+      io.out(checkLine(state, root));
       if (verdict.code !== EXIT.OK) io.err(`status: ${describeExit(verdict.code)}`);
       return verdict.code;
     }

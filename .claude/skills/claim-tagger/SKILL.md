@@ -19,7 +19,7 @@ Read `agents/claim-tagger/AGENT.md` once per session before the first subcommand
 node S/status.mjs --check
 ```
 
-Stops on PAUSED, lock mismatch, drift or an unfinished promote. If `.env` has no `NOTION_TOKEN`, say so and stop: every write goes through the token in this version.
+Stops on PAUSED, lock mismatch, drift or an unfinished promote, and reports whether an integration token is configured. Never read, grep or print `.env`; if the check says no token is configured, say so and stop: every write goes through the token in this version.
 
 ## The apply step (used below as "A")
 

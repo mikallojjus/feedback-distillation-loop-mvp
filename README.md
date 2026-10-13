@@ -7,7 +7,14 @@ Agents of the Geo content team, one folder per agent. The first agent is the **c
 1. Node 22 or later (built with Node 26). No npm dependencies: `npm test` runs `node --test tests/`.
 2. Claude Code on the subscription. The headless judge uses `claude -p` with a pinned model; no API key.
 3. A Notion integration token for scripted reads and writes: copy `.env.example` to `.env` and set `NOTION_TOKEN=...`. The integration must be connected to the Notion page "Editorial feedback loop" (page → ⋯ → Connections). Without a token the skill falls back to the Notion connector for every write (slower).
-4. Open Claude Code in this folder. The skill `/claim-tagger` is discovered from `.claude/skills/`.
+4. Open Claude Code in this folder. The skill `/claim-tagger` is discovered from `.claude/skills/`; the first interactive session asks you to trust the folder, after which `.claude/settings.json` (the allow rules for the scripts and the guard hook) applies.
+5. Headless use (`claude -p`): a folder never opened interactively is untrusted, so pass the settings explicitly, and in Git Bash stop MSYS from rewriting the leading slash of the skill name:
+
+   ```
+   MSYS_NO_PATHCONV=1 claude -p "/claim-tagger status" --settings .claude/settings.json --permission-mode acceptEdits --output-format stream-json --verbose
+   ```
+
+   Permission rules for Bash match whole words, so the settings list one rule per script (`Bash(node agents/claim-tagger/scripts/status.mjs:*)` and so on); a command chained with `;` or `&&` is denied, by design.
 
 ## The daily loop (editor's view)
 
