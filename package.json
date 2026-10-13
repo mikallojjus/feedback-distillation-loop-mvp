@@ -1,0 +1,11 @@
+{
+  "name": "geo-agents",
+  "private": true,
+  "type": "module",
+  "description": "Geo content-team agents, one folder per agent. First agent: claim-tagger with the editor feedback loop.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test tests/",
+    "check:model": "node agents/claim-tagger/scripts/judge.mjs --items eval --runs 1 --smoke"
+  }
+}
