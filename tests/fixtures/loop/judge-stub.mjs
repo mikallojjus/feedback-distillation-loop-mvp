@@ -11,12 +11,17 @@ const OPPOSITE = { apply: 'do_not_apply', do_not_apply: 'apply' };
 export const normClaim = (s) => String(s).replace(/\s+/g, ' ').trim();
 
 /**
- * decide({ claim, tag, version, hash, fallback }) returns 'apply' | 'do_not_apply' (a decision the test wants) or undefined (keep the fake's own).
+ * decide({ claim, tag, version, hash, fallback, run }) returns 'apply' | 'do_not_apply' (a decision the test wants) or undefined (keep the fake's own).
  * For a tag in a counterpart pair a decision for one member sets the other to the opposite unless the test decided that one too.
- * The stub records every call in stub.calls: { ids, version, hash, model }. Options: cost (USD per call), failWith (an errorKind to return instead).
+ * `run` is the number of the run this answer belongs to for this claim under this rubric: the 1st, 2nd, ... time the stub answers for it (judge.mjs asks
+ * for the runs of an item in order), so a scenario can say "wrong in runs 1 and 2, right from run 3 on". Failed calls do not count.
+ * The stub records every call in stub.calls: { ids, version, hash, model }. Options: cost (USD per call), failWith (an errorKind to return instead,
+ * after failAfter calls); stub.options holds them and may be changed between calls (a test lets the usage window reopen before --resume).
  */
 export function makeJudgeStub({ decide = () => undefined, cost = 0.01, failWith = null, failAfter = Infinity } = {}) {
   const calls = [];
+  const options = { cost, failWith, failAfter };
+  const answered = new Map(); // "<rubric hash>|<item id>" -> how many times the stub answered for it
   async function runClaudeStub(opts) {
     const prompt = parseSystemPrompt(opts.systemPromptFile);
     const header = HEADER.exec(prompt.text);
@@ -24,8 +29,8 @@ export function makeJudgeStub({ decide = () => undefined, cost = 0.01, failWith 
     const hash = header?.[2] ?? 'unknown';
     const claims = parseClaims(opts.prompt);
     calls.push({ ids: claims.map((c) => c.id), version, hash, model: opts.model, retry: opts.prompt.includes('Your previous reply was invalid') });
-    if (failWith && calls.length > failAfter) {
-      return { ok: false, text: '', isError: true, errorKind: failWith, message: failWith === 'usage_window' ? 'Claude usage limit reached. Your limit will reset at 3am.' : 'scripted failure', costUsd: 0, modelUsage: null, durationMs: 1, exitCode: 1, stdout: '', stderr: '', raw: null };
+    if (options.failWith && calls.length > options.failAfter) {
+      return { ok: false, text: '', isError: true, errorKind: options.failWith, message: options.failWith === 'usage_window' ? 'Claude usage limit reached. Your limit will reset at 3am.' : 'scripted failure', costUsd: 0, modelUsage: null, durationMs: 1, exitCode: 1, stdout: '', stderr: '', raw: null };
     }
     const partner = new Map();
     for (const [a, b] of prompt.pairs) {
@@ -35,9 +40,11 @@ export function makeJudgeStub({ decide = () => undefined, cost = 0.01, failWith 
     const judgments = fakeJudgments(claims, prompt);
     for (const j of judgments) {
       const text = claims.find((c) => c.id === j.id).text;
+      const run = (answered.get(`${hash}|${j.id}`) ?? 0) + 1;
+      answered.set(`${hash}|${j.id}`, run);
       const wanted = new Map();
       for (const t of j.tags) {
-        const d = decide({ claim: text, tag: t.name, version, hash, fallback: t.decision });
+        const d = decide({ claim: text, tag: t.name, version, hash, fallback: t.decision, run });
         if (d === 'apply' || d === 'do_not_apply') wanted.set(t.name, d);
       }
       for (const [name, d] of [...wanted]) {
@@ -58,11 +65,12 @@ export function makeJudgeStub({ decide = () => undefined, cost = 0.01, failWith 
       }
     }
     return {
-      ok: true, text: JSON.stringify(judgments), isError: false, errorKind: null, message: '', costUsd: cost, durationMs: 5, exitCode: 0, numTurns: 1, stdout: '', stderr: '', raw: null,
-      modelUsage: { [opts.model]: { inputTokens: 1000, outputTokens: 200, cacheReadInputTokens: 0, cacheCreationInputTokens: 0, costUSD: cost } },
+      ok: true, text: JSON.stringify(judgments), isError: false, errorKind: null, message: '', costUsd: options.cost, durationMs: 5, exitCode: 0, numTurns: 1, stdout: '', stderr: '', raw: null,
+      modelUsage: { [opts.model]: { inputTokens: 1000, outputTokens: 200, cacheReadInputTokens: 0, cacheCreationInputTokens: 0, costUSD: options.cost } },
     };
   }
   runClaudeStub.calls = calls;
+  runClaudeStub.options = options;
   return runClaudeStub;
 }
 

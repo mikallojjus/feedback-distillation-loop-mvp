@@ -12,7 +12,7 @@ import { checkHashes, composeWhenToUse } from '../agents/claim-tagger/scripts/li
 import { validate } from '../agents/claim-tagger/scripts/lib/validate.mjs';
 import { check as planCheck, readPlan } from '../agents/claim-tagger/scripts/plan.mjs';
 import { canaryItemId, judgmentFileName } from '../agents/claim-tagger/scripts/eval.mjs';
-import { candidateVersion, canariesText, cardMarkdown, checkLesson, effectiveText, main, perTagSummary, resolveLesson } from '../agents/claim-tagger/scripts/promote.mjs';
+import { candidateVersion, canariesText, cardMarkdown, checkLesson, effectiveText, main, perTagSummary, reconfirmCandidates, reconfirmSettings, resolveLesson } from '../agents/claim-tagger/scripts/promote.mjs';
 import { loadPull } from '../agents/claim-tagger/scripts/pull.mjs';
 import { main as statusMain } from '../agents/claim-tagger/scripts/status.mjs';
 import { makeJudgeStub, labelMap, labelOf, normClaim, opposite } from './fixtures/loop/judge-stub.mjs';
@@ -30,9 +30,11 @@ const rootFile = (w, ...parts) => join(w.root, ...parts);
 /**
  * The scripted judge for a promote world. The baseline gets the four lesson claims wrong (Predictive) and everything else as labelled; the candidate
  * gets `fixed` of the lesson claims right, and breaks `breakCanaries` Context-dependent canaries (with their Self-contained twins) and `breakCases` active
- * Hypothetical cases.
+ * Hypothetical cases. `noisy: { cases, wrongRuns }` makes that many more active Hypothetical cases borderline: the candidate judges them wrong in exactly
+ * these runs (numbered per claim and rubric, 1 to N) and right in the others, the baseline always right. `noisyFixed: { cases, rightRuns }` makes the first
+ * `cases` lesson claims only seem fixed: the candidate is right about them in exactly these runs.
  */
-function scenario(w, { fixed = 4, breakCanaries = 0, breakCases = 0, ...stubOptions } = {}) {
+function scenario(w, { fixed = 4, breakCanaries = 0, breakCases = 0, noisy = null, noisyFixed = null, ...stubOptions } = {}) {
   const cases = casesOf(w);
   const canaries = canariesOf(w);
   const labels = labelMap([...cases, ...canaries]);
@@ -41,15 +43,21 @@ function scenario(w, { fixed = 4, breakCanaries = 0, breakCases = 0, ...stubOpti
   const fixedClaims = new Set(lessonCases.slice(0, fixed).map((c) => normClaim(c.claim)));
   const brokenCanaries = new Set(canaries.filter((c) => c.tag === 'Context-dependent' && c.expected === 'apply').slice(0, breakCanaries).map((c) => normClaim(c.claim)));
   const brokenCases = new Set(cases.filter((c) => c.active && c.tag === 'Hypothetical' && c.expected === 'apply').slice(0, breakCases).map((c) => normClaim(c.claim)));
+  const noisyFixedClaims = new Set(lessonCases.slice(0, noisyFixed?.cases ?? 0).map((c) => normClaim(c.claim)));
+  const noisyClaims = new Set(cases.filter((c) => c.active && c.tag === 'Hypothetical' && c.expected === 'apply').slice(breakCases, breakCases + (noisy?.cases ?? 0)).map((c) => normClaim(c.claim)));
   return makeJudgeStub({
     ...stubOptions,
-    decide: ({ claim, tag, version }) => {
+    decide: ({ claim, tag, version, run }) => {
       const want = labelOf(labels, claim, tag);
       if (!want) return undefined;
       const candidate = version !== LIVE;
       const c = normClaim(claim);
-      if (tag === 'Predictive' && lessonClaims.has(c)) return candidate && fixedClaims.has(c) ? want : opposite(want);
+      if (tag === 'Predictive' && lessonClaims.has(c)) {
+        if (candidate && noisyFixedClaims.has(c)) return noisyFixed.rightRuns.includes(run) ? want : opposite(want);
+        return candidate && fixedClaims.has(c) ? want : opposite(want);
+      }
       if (candidate && ((['Context-dependent', 'Self-contained'].includes(tag) && brokenCanaries.has(c)) || (tag === 'Hypothetical' && brokenCases.has(c)))) return opposite(want);
+      if (candidate && tag === 'Hypothetical' && noisyClaims.has(c) && noisy.wrongRuns.includes(run)) return opposite(want);
       return want;
     },
   });
@@ -61,6 +69,8 @@ const promote = async (w, argv, stub, extra = {}) => {
   return { code, out: c.out, err: c.err, text: c.out.join('\n') };
 };
 const lessonArgs = (runId, ...more) => ['--lesson', LESSON_TITLE, '--driver', 'fake', '--run-id', runId, ...more];
+/** A promote world whose gate asks for `runs` extra runs (0: none) for at most `max` flipped cases, whatever config.json says today. */
+const reconfirmWorld = (runs = 5, max = 16) => makePromoteWorld({ config: (cfg) => { cfg.gate.reconfirm_runs = runs; cfg.gate.reconfirm_max = max; } });
 
 async function applyPlan(w, runId, pullId) {
   const chk = planCheck({ root: w.root, runId, now: w.clock.now });
@@ -121,7 +131,7 @@ test('candidateVersion takes the next free version: a version that has a history
 // ---- PASS: the whole road ------------------------------------------------------------------------------------------------------------------------
 
 test('PASS: candidate, items, two judge runs, the card, a plan with exactly the allowed fields, PROMOTING; then apply, finalize and the rubric on disk', async () => {
-  const { w, lessonPage, supporting } = await makePromoteWorld();
+  const { w, lessonPage, supporting } = await reconfirmWorld(0);
   const stub = scenario(w);
   const rubric = liveRubric();
   const r = await promote(w, lessonArgs('pr1'), stub);
@@ -429,7 +439,7 @@ test('the planted demo lesson is marked Rolled back when it fails the gate (its 
 });
 
 test('--smoke judges once, writes a Smoke row, and can never go live or be finalized', async () => {
-  const { w } = await makePromoteWorld();
+  const { w } = await reconfirmWorld(0);
   const stub = scenario(w);
   const r = await promote(w, lessonArgs('pr1', '--smoke'), stub);
   assert.ok([EXIT.OK, EXIT.HOLD].includes(r.code), r.err.join('\n'));
@@ -550,7 +560,7 @@ test('a second promote of the same lesson judges nothing: both sides are cache h
 });
 
 test('the usage window stops the run with exit 75 and the resume command; --resume finishes it', async () => {
-  const { w } = await makePromoteWorld();
+  const { w } = await reconfirmWorld(0);
   const limited = scenario(w, { failWith: 'usage_window', failAfter: 6 });
   const r = await promote(w, lessonArgs('pr1'), limited);
   assert.equal(r.code, EXIT.USAGE_WINDOW, r.err.join('\n'));
@@ -571,6 +581,237 @@ test('the wrong model answering stops the run with exit 4', async () => {
   const r = await promote(w, lessonArgs('pr1'), wrong);
   assert.equal(r.code, EXIT.DRIFT);
   assert.match(r.err.join('\n'), /the baseline judge stopped: the rubric or the model did not match/);
+});
+
+// ---- reconfirmation of flipped cases ------------------------------------------------------------------------------------------------------------------
+
+/** The index-th active Hypothetical case that the scenario's `noisy` option makes borderline. */
+const noisyCaseOf = (w, index = 0) => casesOf(w).filter((c) => c.active && c.tag === 'Hypothetical' && c.expected === 'apply')[index];
+/** The four lesson cases (the rows behind the lesson, expected do_not_apply), which the scenario's candidate fixes. */
+const lessonCasesOf = (w) => casesOf(w).filter((c) => c.contested && c.contested_lesson === LESSON_TITLE);
+const cardOf = (w, runId) => readJson(rootFile(w, 'runs', runId, 'card.json'));
+const ofFlip = (card, flip) => card.reconfirmed.filter((x) => x.flip === flip);
+const FIXED_FOR_GOOD = { tag: 'Predictive', flip: 'fixed', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'do_not_apply' }, outcome: 'confirmed' };
+
+test('reconfirmation: a 2:1 flip that was noise goes away with five more runs while the four fixed lesson cases hold; FAIL becomes PASS and only those claims are judged again', async () => {
+  const { w } = await reconfirmWorld();
+  const flipped = noisyCaseOf(w);
+  const lessonCases = lessonCasesOf(w);
+  const r = await promote(w, lessonArgs('pr1'), scenario(w, { noisy: { cases: 1, wrongRuns: [1, 2] } }));
+  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
+  const card = cardOf(w, 'pr1');
+  const ids = card.reconfirmed.map((x) => x.case_id);
+  assert.deepEqual(ids, [flipped.case_id, ...lessonCases.map((c) => c.case_id).sort()], 'harm first, then improvement, each in case-id order');
+  assert.match(r.text, /promote: first pass FAIL: 5 flipped case\(s\) \(1 broken, 4 fixed\); judging 5 of them again/);
+  assert.ok(r.text.includes(`(${ids.join(', ')}) with 5 more run(s) per rubric, 8 in all`), r.text);
+  assert.match(r.text, /promote: reconfirmation: 1 flip\(s\) were noise, 4 confirmed; the verdict after reconfirmation \(PASS\) is the one that counts, not the first pass \(FAIL\)/);
+
+  assert.equal(card.verdict, 'PASS');
+  assert.deepEqual(ofFlip(card, 'broken'), [{ case_id: flipped.case_id, tag: 'Hypothetical', flip: 'broken', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'apply' }, outcome: 'noise' }]);
+  assert.deepEqual(ofFlip(card, 'fixed').map(({ case_id, ...rest }) => rest), Array(4).fill(FIXED_FOR_GOOD));
+  assert.deepEqual(card.cases.newly_failing, []);
+  const used = Object.fromEntries(card.cases.items.map((i) => [i.case_id, i.runs_used]));
+  for (const id of ids) assert.deepEqual(used[id], { baseline: 8, candidate: 8 }, id);
+  assert.ok(card.cases.items.filter((i) => !ids.includes(i.case_id)).every((i) => i.runs_used.baseline === 3 && i.runs_used.candidate === 3), 'every other case keeps its three runs');
+  assert.deepEqual(validate(cardSchema, card), { ok: true, errors: [] });
+  const md = readFileSync(rootFile(w, 'runs', 'pr1', 'card.md'), 'utf8');
+  assert.match(md, /Reconfirmed .*: baseline apply over 8 runs, candidate apply over 8 runs: broken flip was noise/);
+  assert.match(md, /Reconfirmed .*: baseline apply over 8 runs, candidate do_not_apply over 8 runs: fixed flip confirmed/);
+
+  // what was judged again: those five claims, five more runs under each rubric, nothing else
+  const rows = readJsonl(rootFile(w, 'runs', 'pr1', 'reconfirm-items.jsonl')).rows;
+  assert.deepEqual(new Set(rows.map((i) => i.id)), new Set([flipped.geo_id, ...lessonCases.map((c) => c.geo_id)]));
+  for (const side of ['baseline', 'candidate']) {
+    const meta = readJson(rootFile(w, 'runs', `pr1-reconfirm-${side}`, 'run.json'));
+    assert.equal(meta.runs, 8);
+    assert.equal(meta.items.length, 5);
+    assert.deepEqual([meta.counts.done, meta.counts.skipped, meta.counts.error], [25, 15, 0], side);
+  }
+
+  // the record, the cost, and a plan that is a PASS plan because the second verdict counts
+  assert.deepEqual(readJson(rootFile(w, 'runs', 'pr1', 'run.json')).reconfirm, {
+    runs: 5, max: 16, flipped: 5, broken: 1, fixed: 4, cases: ids, not_judged: [], over_cap: 0, first_verdict: 'FAIL', verdict: 'PASS', noise: 1, confirmed: 4, cost_usd: 0.1,
+    items: 'reconfirm-items.jsonl', baseline_run: 'pr1-reconfirm-baseline', candidate_run: 'pr1-reconfirm-candidate',
+  });
+  assert.equal(card.cost.reconfirm_usd, 0.1);
+  assert.ok(Math.abs(card.cost.usd - (card.cost.baseline_usd + card.cost.candidate_usd)) < 1e-9, 'the reconfirmation is part of the cost of each rubric');
+  assert.deepEqual(readPlan(w.root, 'pr1').header.ctx, { seed: false, promote: true, gate: 'PASS' });
+  assert.equal(opsFor(w, 'pr1', 'runs')[0].properties['Newly failing'], 0);
+  assert.ok(existsSync(rootFile(w, 'runs', 'PROMOTING.json')));
+});
+
+test('a PASS that rests on the reconfirmation goes through apply and finalize, and the Runs row page lists every reconfirmed case', async () => {
+  const { w } = await reconfirmWorld();
+  const stub = scenario(w, { noisy: { cases: 1, wrongRuns: [1, 2] } });
+  const r = await promote(w, lessonArgs('pr1'), stub);
+  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
+  const page = opsFor(w, 'pr1', 'runs')[0].content_md;
+  assert.match(page, /## Reconfirmed with more runs \(harm and improvement alike\)/);
+  assert.equal(page.split('\n').filter((l) => /^- ctr-.*: (broken|fixed) flip (was noise|confirmed); baseline /.test(l)).length, 5);
+  await applyPlan(w, 'pr1', 'p2');
+  const f = await promote(w, ['--finalize', 'pr1'], stub);
+  assert.equal(f.code, EXIT.OK, f.err.join('\n'));
+  assert.equal(readJson(rootFile(w, 'rubric', 'rubric.json')).rubric_version, '2026-10-13.2');
+  assert.equal(existsSync(rootFile(w, 'runs', 'PROMOTING.json')), false);
+});
+
+test('reconfirmation: a flip that stays with eight runs is confirmed; FAIL stays FAIL, the card and the Notion row say so, and the log says the first pass said the same', async () => {
+  const { w } = await reconfirmWorld();
+  const flipped = noisyCaseOf(w);
+  const r = await promote(w, lessonArgs('pr1'), scenario(w, { noisy: { cases: 1, wrongRuns: [1, 2, 4, 5, 6, 7] } }));
+  assert.equal(r.code, EXIT.FAIL, r.err.join('\n'));
+  assert.match(r.text, /promote: reconfirmation: 0 flip\(s\) were noise, 5 confirmed; the verdict after reconfirmation \(FAIL\) is the one that counts \(the first pass said the same\)/);
+  assert.match(r.text, /FAIL: 1 regression cases newly failing/);
+  const card = cardOf(w, 'pr1');
+  assert.deepEqual(ofFlip(card, 'broken'), [{ case_id: flipped.case_id, tag: 'Hypothetical', flip: 'broken', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'do_not_apply' }, outcome: 'confirmed' }]);
+  assert.deepEqual(card.cases.newly_failing, [flipped.case_id]);
+  assert.equal(readPlan(w.root, 'pr1').header.ctx.promote, false);
+  assert.equal(existsSync(rootFile(w, 'runs', 'PROMOTING.json')), false);
+  await applyPlan(w, 'pr1', 'p2');
+  const run = w.fake.find('runs', 'Gate 2026-10-13.2 · LS-1').props;
+  assert.equal(run.Verdict, 'FAIL');
+  assert.equal(run['Newly failing'], 1);
+  assert.match(run.Summary, /Reconfirmed .*: baseline apply over 8 runs, candidate do_not_apply over 8 runs: broken flip confirmed/);
+  assert.match(w.fake.find('rule_changes', LESSON_TITLE).props['Gate result'], /Reconfirmed /);
+});
+
+test('reconfirmation holds improvement to the same standard: lesson cases that only seemed fixed are re-rolled, and PASS becomes HOLD', async () => {
+  const { w } = await reconfirmWorld();
+  const [first, second] = lessonCasesOf(w);
+  const r = await promote(w, lessonArgs('pr1'), scenario(w, { noisyFixed: { cases: 2, rightRuns: [1, 2] } }));
+  assert.equal(r.code, EXIT.HOLD, r.err.join('\n'));
+  assert.match(r.text, /promote: first pass PASS: 4 flipped case\(s\) \(0 broken, 4 fixed\); judging 4 of them again/);
+  assert.match(r.text, /promote: reconfirmation: 2 flip\(s\) were noise, 2 confirmed; the verdict after reconfirmation \(HOLD\) is the one that counts, not the first pass \(PASS\)/);
+  const card = cardOf(w, 'pr1');
+  assert.equal(card.verdict, 'HOLD');
+  for (const seemed of [first, second]) {
+    assert.deepEqual(card.reconfirmed.find((x) => x.case_id === seemed.case_id), { case_id: seemed.case_id, tag: 'Predictive', flip: 'fixed', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'apply' }, outcome: 'noise' });
+  }
+  assert.equal(card.reconfirmed.filter((x) => x.outcome === 'confirmed').length, 2);
+  assert.equal(card.per_tag.find((t) => t.tag === 'Predictive').fixed.length, 2, 'the two that only seemed fixed are not counted');
+  assert.match(r.text, /HOLD: Predictive: interval straddles zero/);
+  assert.equal(readJson(rootFile(w, 'runs', 'pr1', 'run.json')).reconfirm.first_verdict, 'PASS');
+  assert.equal(existsSync(rootFile(w, 'runs', 'PROMOTING.json')), false, 'a HOLD never goes live');
+});
+
+test('reconfirmation switched off (gate.reconfirm_runs 0): the old behaviour; the 2:1 flip fails the gate at once and nothing is judged again', async () => {
+  const { w } = await reconfirmWorld(0);
+  const r = await promote(w, lessonArgs('pr1'), scenario(w, { noisy: { cases: 1, wrongRuns: [1, 2] } }));
+  assert.equal(r.code, EXIT.FAIL, r.err.join('\n'));
+  assert.doesNotMatch(r.text, /first pass|reconfirm/i);
+  const card = cardOf(w, 'pr1');
+  assert.equal('reconfirmed' in card, false);
+  assert.equal('reconfirm_usd' in card.cost, false);
+  assert.deepEqual(card.cases.newly_failing, [noisyCaseOf(w).case_id]);
+  assert.ok(card.cases.items.every((i) => i.runs_used.baseline === 3 && i.runs_used.candidate === 3));
+  assert.equal(existsSync(rootFile(w, 'runs', 'pr1', 'reconfirm-items.jsonl')), false);
+  assert.equal(existsSync(rootFile(w, 'runs', 'pr1-reconfirm-baseline')), false);
+  assert.equal('reconfirm' in readJson(rootFile(w, 'runs', 'pr1', 'run.json')), false);
+});
+
+test('reconfirmation is capped at gate.reconfirm_max cases per run, harm first; the others count as they are, and the log says so', async () => {
+  const { w } = await reconfirmWorld(5, 1);
+  const [first, second] = [noisyCaseOf(w, 0).case_id, noisyCaseOf(w, 1).case_id].sort();
+  const r = await promote(w, lessonArgs('pr1'), scenario(w, { noisy: { cases: 2, wrongRuns: [1, 2] } }));
+  assert.equal(r.code, EXIT.FAIL, r.err.join('\n'));
+  assert.match(r.text, /first pass FAIL: 6 flipped case\(s\) \(2 broken, 4 fixed\); judging 1 of them again/);
+  assert.match(r.text, /5 more beyond gate\.reconfirm_max \(1\) count as they are/);
+  const card = cardOf(w, 'pr1');
+  assert.deepEqual(card.reconfirmed.map((x) => [x.case_id, x.flip, x.outcome]), [[first, 'broken', 'noise']], 'case-id order decides among the harmful flips, and they come before the improvements');
+  assert.deepEqual(card.cases.newly_failing, [second], 'the case that was not judged again still counts');
+  assert.equal(readJson(rootFile(w, 'runs', 'pr1', 'run.json')).reconfirm.over_cap, 5);
+});
+
+test('--smoke never reconfirms: it stays a one-run rehearsal', async () => {
+  const { w } = await reconfirmWorld();
+  const r = await promote(w, lessonArgs('pr1', '--smoke'), scenario(w, { noisy: { cases: 1, wrongRuns: [1] } }));
+  assert.equal(r.code, EXIT.FAIL, r.err.join('\n'));
+  assert.doesNotMatch(r.text, /first pass/);
+  assert.equal(existsSync(rootFile(w, 'runs', 'pr1', 'reconfirm-items.jsonl')), false);
+  const card = cardOf(w, 'pr1');
+  assert.equal('reconfirmed' in card, false);
+  assert.equal(card.stats.runs, 1);
+});
+
+test('the usage window can close during the reconfirmation; --resume finishes it without judging anything twice', async () => {
+  const { w } = await reconfirmWorld();
+  const sel = selectCases(casesOf(w), { lesson: LESSON_TITLE, sourceReadingTags: ['Improperly sourced', 'Source inaccessible'] });
+  const itemIds = new Set([...sel.gating, ...sel.lessonCases, ...selectCanaries(canariesOf(w))].map((c) => c.item));
+  const firstPass = 2 * 3 * Math.ceil(itemIds.size / 8); // two rubrics, three runs, batches of eight
+  const stub = scenario(w, { noisy: { cases: 1, wrongRuns: [1, 2] }, failWith: 'usage_window', failAfter: firstPass });
+  const stopped = await promote(w, lessonArgs('pr1'), stub);
+  assert.equal(stopped.code, EXIT.USAGE_WINDOW, stopped.err.join('\n'));
+  assert.match(stopped.err.join('\n'), /the usage window ran out while judging the reconfirm baseline; the finished judgments are kept\. Resume when it reopens: node agents\/claim-tagger\/scripts\/promote\.mjs --lesson .* --resume --run-id pr1/);
+  const refused = stub.calls.length - firstPass; // the judge starts as many batches at once as its concurrency allows, and the window refuses each of them
+  assert.ok(refused >= 1 && refused <= w.config.judge.concurrency, `the first pass was complete; ${refused} call(s) of the reconfirmation were refused`);
+  assert.equal(existsSync(rootFile(w, 'runs', 'PROMOTING.json')), false);
+  stub.options.failWith = null;
+  const done = await promote(w, lessonArgs('pr1', '--resume'), stub);
+  assert.equal(done.code, EXIT.OK, done.err.join('\n'));
+  assert.equal(stub.calls.length, firstPass + refused + 10, 'five more runs under each rubric for the five claims (one batch per run), and not one call twice');
+  assert.deepEqual(cardOf(w, 'pr1').reconfirmed.map((x) => x.outcome), ['noise', 'confirmed', 'confirmed', 'confirmed', 'confirmed']);
+});
+
+test('reconfirmation also covers a broken item of the target tag: a lesson case that the baseline got right and the candidate got wrong by chance', async () => {
+  const { w } = await reconfirmWorld();
+  const cases = casesOf(w);
+  const labels = labelMap([...cases, ...canariesOf(w)]);
+  const [chance, ...rest] = lessonCasesOf(w);
+  const others = new Set(rest.map((c) => normClaim(c.claim)));
+  const stub = makeJudgeStub({
+    decide: ({ claim, tag, version, run }) => {
+      const want = labelOf(labels, claim, tag);
+      if (!want || tag !== 'Predictive') return want;
+      const c = normClaim(claim);
+      if (c === normClaim(chance.claim)) return version !== LIVE && run <= 2 ? opposite(want) : want; // right under the baseline, wrong in two of three candidate runs
+      return others.has(c) && version === LIVE ? opposite(want) : want; // the other lesson claims: wrong under the baseline, right under the candidate
+    },
+  });
+  const r = await promote(w, lessonArgs('pr1'), stub);
+  assert.ok([EXIT.OK, EXIT.HOLD].includes(r.code), r.err.join('\n'));
+  assert.match(r.text, /promote: first pass (HOLD|FAIL): 4 flipped case\(s\) \(1 broken, 3 fixed\); judging 4 of them again/);
+  const card = cardOf(w, 'pr1');
+  assert.deepEqual(card.reconfirmed.map((x) => [x.case_id, x.flip, x.outcome]), [[chance.case_id, 'broken', 'noise'], ...rest.map((c) => c.case_id).sort().map((id) => [id, 'fixed', 'confirmed'])]);
+  assert.deepEqual(card.reconfirmed[0], { case_id: chance.case_id, tag: 'Predictive', flip: 'broken', baseline: { runs: 8, decision: 'do_not_apply' }, candidate: { runs: 8, decision: 'do_not_apply' }, outcome: 'noise' });
+  const predictive = card.per_tag.find((t) => t.tag === 'Predictive');
+  assert.deepEqual([predictive.fixed.length, predictive.broken.length], [3, 0]);
+  assert.equal(readJsonl(rootFile(w, 'runs', 'pr1', 'reconfirm-items.jsonl')).rows.length, 4);
+});
+
+test('reconfirmCandidates: harm first (newly failing cases, then the broken items of the target tag), then improvement (the fixed items of the target tag and the lesson cases that now pass); each in case-id order; only judged tags; at most max', () => {
+  const tags = { 'h-1': 'Hypothetical', 'h-2': 'Hypothetical', 'u-1': 'Unjudged', 'p-1': 'Predictive', 'p-2': 'Predictive', 'p-3': 'Predictive', 'p-4': 'Predictive', 'l-1': 'Predictive' };
+  const card = {
+    cases: { newly_failing: ['h-2', 'h-1', 'u-1'], lesson: { fixed: ['l-1', 'p-3'] }, items: Object.entries(tags).map(([case_id, tag]) => ({ case_id, tag })) },
+    per_tag: [{ tag: 'Predictive', broken: ['p-2', 'p-1', 'h-1'], fixed: ['p-3', 'p-4'] }, { tag: 'Hypothetical', broken: ['h-9'], fixed: ['h-8'] }],
+  };
+  const judged = new Set(['Hypothetical', 'Predictive']);
+  const all = reconfirmCandidates(card, { target: 'Predictive', judged, max: 16 });
+  assert.deepEqual(all.picks, [
+    { case_id: 'h-1', flip: 'broken' }, { case_id: 'h-2', flip: 'broken' }, { case_id: 'p-1', flip: 'broken' }, { case_id: 'p-2', flip: 'broken' },
+    { case_id: 'l-1', flip: 'fixed' }, { case_id: 'p-3', flip: 'fixed' }, { case_id: 'p-4', flip: 'fixed' },
+  ]);
+  assert.deepEqual([all.flipped, all.broken, all.fixed, all.notJudged, all.overCap], [8, 5, 3, ['u-1'], 0]);
+  const capped = reconfirmCandidates(card, { target: 'Predictive', judged, max: 5 });
+  assert.deepEqual(capped.picks.map((p) => p.case_id), ['h-1', 'h-2', 'p-1', 'p-2', 'l-1'], 'the cap cuts the improvements first');
+  assert.equal(capped.overCap, 2);
+  const noLesson = reconfirmCandidates({ ...card, cases: { ...card.cases, lesson: null } }, { target: 'Predictive', judged, max: 16 });
+  assert.deepEqual(noLesson.picks.filter((p) => p.flip === 'fixed').map((p) => p.case_id), ['p-3', 'p-4']);
+  assert.deepEqual(reconfirmCandidates({ cases: null, per_tag: [] }, { target: 'Predictive', judged, max: 16 }), { picks: [], flipped: 0, broken: 0, fixed: 0, notJudged: [], overCap: 0 });
+});
+
+test('reconfirmSettings: off when absent or 0; sixteen cases by default; whole numbers only; a nonsensical value is refused before anything is judged', async () => {
+  assert.deepEqual(reconfirmSettings({}), { runs: 0, max: 16 });
+  assert.deepEqual(reconfirmSettings({ gate: { reconfirm_runs: 0 } }), { runs: 0, max: 16 });
+  assert.deepEqual(reconfirmSettings({ gate: { reconfirm_runs: 5, reconfirm_max: 3 } }), { runs: 5, max: 3 });
+  for (const gate of [{ reconfirm_runs: -1 }, { reconfirm_runs: 2.5 }, { reconfirm_runs: '5' }, { reconfirm_runs: 5, reconfirm_max: 0 }]) {
+    assert.throws(() => reconfirmSettings({ gate }), (e) => e.code === EXIT.INVALID && /config\.gate\.reconfirm_(runs|max) must be a whole number of at least/.test(e.message), JSON.stringify(gate));
+  }
+  const { w } = await makePromoteWorld({ config: (cfg) => { cfg.gate.reconfirm_runs = -1; } });
+  const stub = scenario(w);
+  const r = await promote(w, lessonArgs('pr1'), stub);
+  assert.equal(r.code, EXIT.INVALID);
+  assert.match(r.err.join('\n'), /config\.gate\.reconfirm_runs must be a whole number of at least 0/);
+  assert.equal(stub.calls.length, 0, 'not one judge call');
 });
 
 // ---- the real data: the items file ---------------------------------------------------------------------------------------------------------------------

@@ -27,6 +27,10 @@
 // h8 is the same value, so a claim whose text was edited since it was judged has no judgment (incomplete), never a stale one.
 // (judge.mjs normalises claim text with its own function; files named with its digits are found too.)
 // A tag the configuration does not judge has no decision and counts as do_not_apply (it was not written).
+// --runs is the number of runs every item must have under a configuration (fewer is incomplete). An item may have MORE: promote.mjs judges a flipped
+// case again with extra runs (config.gate.reconfirm_runs), and then the verdict of that item rests on every run file that exists for it (run-1 to
+// run-N, N above --runs). The card's per-item records say how many runs each verdict used (runs_used). An extra run that is missing, broken or an
+// error is left out, never a gap; a smoke run reads exactly --runs.
 //
 // Choices where the research skeleton leaves room (see tests/eval.test.mjs for each one):
 //   - verdict per tag = the decision more than half of the runs gave, else "undecided"; undecided, ask_editor and cannot_tell
@@ -269,20 +273,46 @@ function loadSchemas() {
   return schemas;
 }
 
+/** The run numbers above `runs` that have a folder under a configuration's judgments, ascending. */
+function extraRunNumbers(folder, runs) {
+  if (!existsSync(folder)) return [];
+  return readdirSync(folder).map((f) => /^run-([0-9]+)$/.exec(f)).filter(Boolean).map((m) => Number(m[1])).filter((n) => n > runs).sort((a, b) => a - b);
+}
+
 /**
- * Reads the judgment files of one configuration: docs.get(item) is one parsed judgment (or null) per run, problems.get(item)
+ * Reads the judgment files of one configuration: docs.get(item) is one parsed judgment (or null) per REQUIRED run (1..runs), problems.get(item)
  * says why a file is missing, unreadable, invalid or from other claim text. Nothing is guessed: a missing file is never a decision.
+ * extras.get(item) are the usable judgments of the runs AFTER the required ones ({ run, doc }, ascending): promote.mjs judges a flipped case again
+ * with more runs, and the verdict of that item then rests on all of its runs. Extra runs are optional evidence, never a requirement: one that is
+ * missing, unreadable, invalid, made under another configuration or an error is left out. A smoke run reads none (withExtras false).
  */
-function loadSide({ dir, config16, runs, items }) {
+function loadSide({ dir, config16, runs, items, withExtras = true }) {
   const { judgment: schema } = loadSchemas();
   const docs = new Map();
   const problems = new Map();
+  const extras = new Map();
   const rubricHashes = new Set();
   const listings = new Map();
   const listing = (folder) => {
     if (!listings.has(folder)) listings.set(folder, existsSync(folder) ? new Set(readdirSync(folder)) : null);
     return listings.get(folder);
   };
+  // reads and checks the file `found` of run n: { doc } or { problem }
+  const readCell = (folder, found, n) => {
+    let doc;
+    try {
+      doc = readJson(join(folder, found.name));
+    } catch (e) {
+      return { problem: `run-${n}: ${found.name} is unreadable (${(e.cause ?? e).message.split('\n')[0]})` };
+    }
+    const v = validate(schema, doc);
+    if (!v.ok) return { problem: `run-${n}: ${found.name} is not a valid judgment (${v.errors[0]})` };
+    if (doc.id !== found.id || doc.run !== n) return { problem: `run-${n}: ${found.name} says it is ${doc.id} run ${doc.run}` };
+    if (String(doc.config.config_id).replace(/^sha256:/, '') !== config16) return { problem: `run-${n}: ${found.name} was made under configuration ${doc.config.config_id}, not ${config16}` };
+    rubricHashes.add(doc.config.rubric_hash);
+    return { doc };
+  };
+  const extraRuns = withExtras ? extraRunNumbers(join(dir, config16), runs) : [];
   for (const item of items.values()) {
     const itemDocs = [];
     const itemProblems = [];
@@ -298,38 +328,33 @@ function loadSide({ dir, config16, runs, items }) {
         const stale = [...present].find((f) => item.names.some((v) => f.startsWith(`${v.id}.`)) && f.endsWith('.json'));
         itemProblems.push(stale ? `run-${n}: ${stale} was judged on other claim text (expected ${preferred})` : `run-${n}: ${preferred} is missing`);
       } else {
-        try {
-          doc = readJson(join(folder, found.name));
-        } catch (e) {
-          itemProblems.push(`run-${n}: ${found.name} is unreadable (${(e.cause ?? e).message.split('\n')[0]})`);
-        }
-        if (doc) {
-          const v = validate(schema, doc);
-          if (!v.ok) {
-            itemProblems.push(`run-${n}: ${found.name} is not a valid judgment (${v.errors[0]})`);
-            doc = null;
-          } else if (doc.id !== found.id || doc.run !== n) {
-            itemProblems.push(`run-${n}: ${found.name} says it is ${doc.id} run ${doc.run}`);
-            doc = null;
-          } else if (String(doc.config.config_id).replace(/^sha256:/, '') !== config16) {
-            itemProblems.push(`run-${n}: ${found.name} was made under configuration ${doc.config.config_id}, not ${config16}`);
-            doc = null;
-          } else {
-            rubricHashes.add(doc.config.rubric_hash);
-          }
-        }
+        const cell = readCell(folder, found, n);
+        if (cell.problem) itemProblems.push(cell.problem);
+        else doc = cell.doc;
       }
       itemDocs.push(doc);
     }
+    const itemExtras = [];
+    for (const n of extraRuns) {
+      const folder = join(dir, config16, `run-${n}`);
+      const present = listing(folder);
+      const found = present ? item.names.find((v) => present.has(v.name)) : null;
+      if (!found) continue;
+      const cell = readCell(folder, found, n);
+      if (cell.doc && cell.doc.status !== 'error') itemExtras.push({ run: n, doc: cell.doc });
+    }
     docs.set(item.id, itemDocs);
     problems.set(item.id, itemProblems);
+    extras.set(item.id, itemExtras);
   }
-  return { config16, runs, docs, problems, rubricHashes };
+  return { config16, runs, docs, problems, extras, rubricHashes };
 }
 
 /**
- * The per-run decisions of one tag on one item: { list } or { problems }. A run that errored is "error". A tag the
- * configuration does not judge and the file does not mention was not written: do_not_apply. A judged tag with no decision is a gap.
+ * The decisions of one tag on one item: { list } or { problems }. list has one entry per required run and then one per usable extra run (the runs
+ * promote.mjs added for a flipped case), so list.length is the number of runs the verdict rests on. A run that errored is "error". A tag the
+ * configuration does not judge and the file does not mention was not written: do_not_apply. A judged tag with no decision is a gap in a required
+ * run; an extra run without one is left out.
  */
 function decisionsFor(side, judged, itemId, tag) {
   const problems = [...side.problems.get(itemId)];
@@ -345,20 +370,27 @@ function decisionsFor(side, judged, itemId, tag) {
     else if (!judged.has(tag)) list.push('do_not_apply');
     else problems.push(`run-${i + 1}: no decision for ${tag}`);
   });
-  return problems.length ? { problems } : { list };
+  if (problems.length) return { problems };
+  for (const { doc } of side.extras.get(itemId) ?? []) {
+    const entry = doc.tags.find((t) => t.name === tag);
+    if (entry) list.push(entry.decision);
+    else if (!judged.has(tag)) list.push('do_not_apply');
+  }
+  return { list };
 }
 
-/** Condition 5. An apply on a human-only tag, or on a tag the candidate does not judge unless code decided it (basis deterministic). */
+/** Condition 5. An apply on a human-only tag, or on a tag the candidate does not judge unless code decided it (basis deterministic). Extra runs count too. */
 function forbiddenWrites(side, items, judged, humanOnly) {
   const hits = [];
   for (const item of items.values()) {
-    side.docs.get(item.id).forEach((doc, i) => {
-      if (!doc || doc.status !== 'ok') return;
+    const runsOfItem = [...side.docs.get(item.id).map((doc, i) => ({ run: i + 1, doc })), ...(side.extras.get(item.id) ?? [])];
+    for (const { run, doc } of runsOfItem) {
+      if (!doc || doc.status !== 'ok') continue;
       for (const t of doc.tags) {
         if (t.decision !== 'apply') continue;
-        if (humanOnly.has(t.name) || (!judged.has(t.name) && !EXEMPT_BASES.has(t.basis))) hits.push(`${item.id}/run-${i + 1}/${t.name}`);
+        if (humanOnly.has(t.name) || (!judged.has(t.name) && !EXEMPT_BASES.has(t.basis))) hits.push(`${item.id}/run-${run}/${t.name}`);
       }
-    });
+    }
   }
   return hits;
 }
@@ -430,7 +462,9 @@ function statusOf(...flags) {
 
 /**
  * Runs the whole evaluation and returns { verdict, exitCode, card, md, incomplete }. Reads files, writes nothing.
- * input: { baseline, candidate, candidateRubric, baselineRubric?, cases?, canaries?, runs?, target?, lesson?, changedTags?, out?, smoke?, judgments?, config?, cardId? }
+ * input: { baseline, candidate, candidateRubric, baselineRubric?, cases?, canaries?, runs?, target?, lesson?, changedTags?, out?, smoke?, judgments?, config?, cardId?, reconfirmed? }
+ * (reconfirmed: the cases that were judged again with extra runs, as { case_id, flip: "broken" | "fixed" } (a plain id means broken); the card then lists them
+ * in "reconfirmed" with what each configuration decided over how many runs and whether the flip stayed)
  * (rubrics may be paths or parsed objects). Throws InputError (exit 2) for bad input.
  */
 export function evaluate(input = {}) {
@@ -447,8 +481,8 @@ export function evaluate(input = {}) {
   const canaries = selectCanaries(loadRows(o.canaries, 'canaries'));
   const items = collectItems([...gating, ...lessonCases], canaries);
 
-  const base = loadSide({ dir: o.judgments, config16: o.baseline, runs: o.runs, items });
-  const cand = loadSide({ dir: o.judgments, config16: o.candidate, runs: o.runs, items });
+  const base = loadSide({ dir: o.judgments, config16: o.baseline, runs: o.runs, items, withExtras: !o.smoke });
+  const cand = loadSide({ dir: o.judgments, config16: o.candidate, runs: o.runs, items, withExtras: !o.smoke });
   for (const [label, side, info] of [['baseline', base, baseInfo], ['candidate', cand, candInfo]]) {
     const wrong = [...side.rubricHashes].filter((h) => h !== info.hash);
     if (wrong.length) throw new InputError(`the ${label} judgments (${side.config16}) were made under rubric ${wrong[0]}, but the ${label} rubric file is ${info.hash}: wrong --${label}-rubric or --${label}?`);
@@ -484,9 +518,12 @@ export function evaluate(input = {}) {
     const vc = majorityVerdict(k.list);
     const candTag = candInfo.tags.get(c.tag);
     const ruleChanged = c.rule_hash ? !candTag?.ruleHashes.has(c.rule_hash) : c.tag_hash ? candTag?.tagHash !== c.tag_hash : false;
-    caseResults.push({ id: c.case_id, tag: c.tag, expected: c.expected, lesson: c.lesson, baseline: vb, candidate: vc, passBase: vb === c.expected, passCand: vc === c.expected, ruleChanged });
-    cells.baseline.set(`${c.item}|${c.tag}`, b.list);
-    cells.candidate.set(`${c.item}|${c.tag}`, k.list);
+    caseResults.push({
+      id: c.case_id, tag: c.tag, expected: c.expected, lesson: c.lesson, baseline: vb, candidate: vc, passBase: vb === c.expected, passCand: vc === c.expected, ruleChanged,
+      runsUsed: { baseline: b.list.length, candidate: k.list.length },
+    });
+    cells.baseline.set(`${c.item}|${c.tag}`, b.list.slice(0, o.runs)); // the noise is measured over the required runs, so extra runs on the borderline items do not inflate it
+    cells.candidate.set(`${c.item}|${c.tag}`, k.list.slice(0, o.runs));
   }
 
   const configs = {
@@ -536,6 +573,32 @@ export function evaluate(input = {}) {
     return finish(card, EXIT.INVALID, incomplete);
   }
 
+  // ---- cases that promote.mjs judged again with extra runs (input.reconfirmed): what each configuration decided over how many runs, and whether the flip stayed ----
+  // An entry is { case_id, flip: 'broken' | 'fixed' } (a plain id means 'broken'). A broken flip (passed under the baseline, failed under the candidate) is
+  // confirmed while it still is one, a fixed flip (failed under the baseline, passes under the candidate) while it still is one; otherwise it was noise.
+  let reconfirmed = null;
+  if (Array.isArray(input.reconfirmed) && input.reconfirmed.length) {
+    const byId = new Map(caseResults.map((r) => [r.id, r]));
+    reconfirmed = [];
+    for (const entry of input.reconfirmed) {
+      const id = typeof entry === 'string' ? entry : entry?.case_id;
+      const flip = typeof entry === 'string' ? 'broken' : (entry?.flip ?? 'broken');
+      if (flip !== 'broken' && flip !== 'fixed') throw new InputError(`reconfirmed: ${id}: flip must be "broken" or "fixed", got "${flip}"`);
+      const r = byId.get(id);
+      if (!r) throw new InputError(`reconfirmed: ${id} is not an evaluated case`);
+      if (reconfirmed.some((x) => x.case_id === id)) continue;
+      const stays = flip === 'broken' ? r.passBase && !r.passCand : !r.passBase && r.passCand;
+      reconfirmed.push({
+        case_id: id,
+        tag: r.tag,
+        flip,
+        baseline: { runs: r.runsUsed.baseline, decision: r.baseline },
+        candidate: { runs: r.runsUsed.candidate, decision: r.candidate },
+        outcome: stays ? 'confirmed' : 'noise',
+      });
+    }
+  }
+
   // ---- 1. canaries ----
   const canaryOf = (passKey) => {
     const failing = canaryResults.filter((r) => !r[passKey]).map((r) => r.id);
@@ -569,6 +632,7 @@ export function evaluate(input = {}) {
       expected: r.expected,
       baseline: r.baseline,
       candidate: r.candidate,
+      runs_used: r.runsUsed,
       ...(r.lesson ? { lesson: true } : {}),
       ...(r.ruleChanged ? { rule_changed: true } : {}),
     })),
@@ -711,6 +775,7 @@ export function evaluate(input = {}) {
     cases: casesReport,
     per_tag: perTag,
     noise,
+    ...(reconfirmed ? { reconfirmed } : {}),
     ...(incomplete.length ? { incomplete: incompleteInfo } : {}),
   };
   return finish(card, verdict === 'PASS' ? EXIT.OK : verdict === 'HOLD' ? EXIT.HOLD : EXIT.FAIL, incomplete);
@@ -755,6 +820,13 @@ export function renderCardMd(card) {
     }
     card.reasons.forEach((r) => add(`FAIL: ${r}`, 1));
     card.holds.forEach((h) => add(`HOLD: ${h}`, 1));
+    if (card.reconfirmed?.length) {
+      const expectedOf = new Map((card.cases?.items ?? []).map((i) => [i.case_id, i.expected]));
+      for (const r of card.reconfirmed) {
+        const how = `${r.flip ?? 'broken'} flip ${r.outcome === 'noise' ? 'was noise' : 'confirmed'}`;
+        add(`Reconfirmed ${r.case_id} (${r.tag}, expected ${expectedOf.get(r.case_id) ?? 'n/a'}): baseline ${r.baseline.decision} over ${r.baseline.runs} runs, candidate ${r.candidate.decision} over ${r.candidate.runs} runs: ${how}`, 1);
+      }
+    }
     if (card.not_gated.length) add(`Not gated (under ${card.stats.min_positives} positives): ${card.not_gated.join('; ')}`, 3);
     if (incomplete) add(`Incomplete: ${gaps(incomplete.count)} left out for missing judgments`, 3);
   }

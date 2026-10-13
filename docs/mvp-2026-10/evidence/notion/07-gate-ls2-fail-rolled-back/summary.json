@@ -1,0 +1,129 @@
+{
+  "step": 7,
+  "label": "gate-ls2-fail-rolled-back",
+  "folder": "07-gate-ls2-fail-rolled-back",
+  "files": [
+    "claims.jsonl",
+    "rulebook.json",
+    "queue.jsonl",
+    "decisions.jsonl",
+    "lessons.jsonl",
+    "runs.jsonl",
+    "settings.json"
+  ],
+  "pull_id": "20261013T165050Z-pull",
+  "taken_at": "2026-10-13T16:50:50.578Z",
+  "databases": [
+    "rulebook",
+    "claims",
+    "tag_decisions",
+    "rule_changes",
+    "runs",
+    "agent_settings"
+  ],
+  "counts": {
+    "rulebook": 14,
+    "claims": 60,
+    "tag_decisions": 90,
+    "rule_changes": 2,
+    "runs": 8,
+    "agent_settings": 1
+  },
+  "queue": {
+    "total": 90,
+    "by_stage": {
+      "Closed": 5,
+      "Decided": 2,
+      "Lesson proposed": 4,
+      "Regression case": 25,
+      "To review": 53,
+      "Waiting for evidence": 1
+    },
+    "by_direction": {
+      "Agent right": 10,
+      "Missed": 19,
+      "Open": 54,
+      "Wrongly applied": 7
+    },
+    "by_why_in_queue": {
+      "Auditor flag": 8,
+      "Low confidence": 50,
+      "Seeded decision": 32
+    },
+    "by_priority": {
+      "Check source": 5,
+      "High": 41,
+      "Medium": 44
+    },
+    "decided": 36,
+    "editor_decided": 10,
+    "with_lesson": 6,
+    "in_regression_suite": 32,
+    "by_follow_up": {
+      "(empty)": 90
+    }
+  },
+  "claims": {
+    "total": 60,
+    "by_readiness": {
+      "Fix needed": 35,
+      "Needs editor": 14,
+      "Ready": 11
+    },
+    "by_sample": {
+      "Decided": 33,
+      "Forecast": 17,
+      "Random": 10
+    }
+  },
+  "lessons": {
+    "total": 2,
+    "by_status": {
+      "Approved": 1,
+      "Rolled back": 1
+    },
+    "list": [
+      {
+        "id": "LS-2",
+        "key": "Gate test (deliberately bad): only pronouns make a claim Context-dependent",
+        "tag": "Context-dependent",
+        "status": "Rolled back",
+        "rubric_version": "2026-10-13.1"
+      },
+      {
+        "id": "LS-1",
+        "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+        "tag": "Predictive",
+        "status": "Approved",
+        "rubric_version": "2026-10-13.1"
+      }
+    ]
+  },
+  "runs": {
+    "total": 8,
+    "by_kind": {
+      "Baseline": 1,
+      "Distill": 2,
+      "Gate": 4,
+      "Tag": 1
+    },
+    "by_verdict": {
+      "FAIL": 4,
+      "PASS": 1,
+      "n/a": 3
+    }
+  },
+  "rulebook": {
+    "tags": 14,
+    "drift": 0,
+    "rule_versions": {
+      "2026-10-13.1": 14
+    },
+    "changed_by": []
+  },
+  "settings": {
+    "paused": false,
+    "rubric_in_force": "2026-10-13.1",
+    "last_run_summary": null
+  }
+}

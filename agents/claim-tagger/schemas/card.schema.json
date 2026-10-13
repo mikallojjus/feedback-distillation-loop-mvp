@@ -59,6 +59,30 @@
       }
     },
     "noise": { "type": ["object", "null"] },
+    "reconfirmed": {
+      "type": "array",
+      "description": "Flipped cases that were judged again with extra runs before the verdict (promote.mjs, config.gate.reconfirm_runs), harm and improvement alike: per case what each configuration decided over how many runs, and whether the flip stayed (confirmed) or went away (noise). Absent when nothing was reconfirmed.",
+      "items": {
+        "type": "object",
+        "required": ["case_id", "tag", "baseline", "candidate", "outcome"],
+        "properties": {
+          "case_id": { "type": "string" },
+          "tag": { "type": "string" },
+          "flip": { "type": "string", "enum": ["broken", "fixed"], "description": "What the first pass saw: broken (passed under the baseline, failed under the candidate) or fixed (the other way round). Absent on cards made before fixed flips were reconfirmed too: those are broken flips." },
+          "baseline": {
+            "type": "object",
+            "required": ["runs", "decision"],
+            "properties": { "runs": { "type": "integer", "minimum": 1 }, "decision": { "type": "string" } }
+          },
+          "candidate": {
+            "type": "object",
+            "required": ["runs", "decision"],
+            "properties": { "runs": { "type": "integer", "minimum": 1 }, "decision": { "type": "string" } }
+          },
+          "outcome": { "type": "string", "enum": ["confirmed", "noise"] }
+        }
+      }
+    },
     "rollback": { "type": ["object", "null"] },
     "stats": { "type": "object" },
     "cost": { "type": ["object", "null"] }

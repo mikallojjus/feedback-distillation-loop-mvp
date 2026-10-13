@@ -166,6 +166,7 @@ test('the fixtures assume the gate numbers of config.json (a change there must b
   assert.deepEqual(config.gate.ci, [0.025, 0.975]);
   assert.equal(config.gate.ungated_flips_hold, 1);
   assert.equal(config.gate.ungated_flips_fail, 3);
+  assert.equal(config.gate.reconfirm_runs, 5);
   assert.deepEqual(config.scope.source_reading_tags, ['Improperly sourced', 'Source inaccessible']);
   assert.deepEqual(config.scope.human_only_tags, ['Editor verified']);
 });
@@ -768,6 +769,173 @@ test('two of three runs decide the verdict, and the disagreement shows up as noi
   const split = scenario({ cand: { perRun: { 'c-act-1': ['apply', 'do_not_apply', 'cannot_tell'] } } }).run();
   assert.deepEqual(split.card.cases.newly_failing, ['c-act-1']);
   assert.equal(split.card.cases.items.find((i) => i.case_id === 'c-act-1').candidate, 'undecided');
+});
+
+// ---- extra runs: the runs promote.mjs adds for a flipped case ----
+
+/** Judges some items again: rewrites runs 1..runs of the items behind these case ids under one configuration (the other items keep the three they have). */
+function addRuns(s, side, caseIds, { runs = 8, ...more } = {}) {
+  const items = new Map([...s.items].filter(([, item]) => item.rows.some((r) => caseIds.includes(r.id))));
+  writeSide({ dir: s.dir, config16: side === 'baseline' ? BASE : CAND, rubric: side === 'baseline' ? s.opts.baselineRubric : s.opts.candidateRubric, items, runs, ...more });
+  return items;
+}
+const itemOf = (s, caseId) => [...s.items.values()].find((i) => i.rows.some((r) => r.id === caseId));
+const FLIP = ['do_not_apply', 'do_not_apply', 'apply']; // c-act-1 is expected to be "apply": two of three runs wrong, and right in every run added later
+
+test('runs_used: each per-item record says how many runs its verdicts rest on; an item with extra runs uses all of them, the others keep their three', () => {
+  const s = scenario();
+  const plain = s.run();
+  assert.ok(plain.card.cases.items.every((i) => i.runs_used.baseline === 3 && i.runs_used.candidate === 3));
+  addRuns(s, 'baseline', ['c-act-1']);
+  addRuns(s, 'candidate', ['c-act-1']);
+  const more = s.run();
+  assertCardSound(more);
+  const used = Object.fromEntries(more.card.cases.items.map((i) => [i.case_id, i.runs_used]));
+  assert.deepEqual(used['c-act-1'], { baseline: 8, candidate: 8 });
+  assert.deepEqual(used['c-act-2'], { baseline: 3, candidate: 3 });
+  assert.equal(more.card.verdict, plain.card.verdict, 'right answers in every run change nothing');
+  assert.equal(more.card.stats.runs, 3, '--runs stays the number of runs every item must have');
+  assert.equal('reconfirmed' in more.card, false, 'the card lists reconfirmed cases only when the caller names them');
+});
+
+test('extra runs outvote a 2:1 flip: wrong in two of three runs, right in the five added ones; the case is no longer newly failing and FAIL becomes PASS', () => {
+  const s = scenario({ cand: { perRun: { 'c-act-1': FLIP } } });
+  const first = s.run();
+  assert.equal(first.card.verdict, 'FAIL');
+  assert.deepEqual(first.card.cases.newly_failing, ['c-act-1']);
+  addRuns(s, 'baseline', ['c-act-1']);
+  addRuns(s, 'candidate', ['c-act-1'], { perRun: { 'c-act-1': FLIP } });
+  const second = s.run({ reconfirmed: ['c-act-1'] });
+  assertCardSound(second);
+  assert.equal(second.card.verdict, 'PASS');
+  assert.equal(second.exitCode, EXIT.OK);
+  assert.deepEqual(second.card.cases.newly_failing, []);
+  assert.deepEqual(second.card.reconfirmed, [{ case_id: 'c-act-1', tag: 'Context-dependent', flip: 'broken', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'apply' }, outcome: 'noise' }]);
+  assert.match(second.md, /^Reconfirmed c-act-1 \(Context-dependent, expected apply\): baseline apply over 8 runs, candidate apply over 8 runs: broken flip was noise$/m);
+});
+
+test('extra runs that agree with the first three confirm the flip: still newly failing, outcome confirmed, FAIL stays', () => {
+  const stay = ['do_not_apply', 'do_not_apply', 'apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'apply', 'do_not_apply']; // six of eight wrong
+  const s = scenario({ cand: { perRun: { 'c-act-1': FLIP } } });
+  addRuns(s, 'baseline', ['c-act-1']);
+  addRuns(s, 'candidate', ['c-act-1'], { perRun: { 'c-act-1': stay } });
+  const r = s.run({ reconfirmed: ['c-act-1'] });
+  assertCardSound(r);
+  assert.equal(r.card.verdict, 'FAIL');
+  assert.equal(r.exitCode, EXIT.FAIL);
+  assert.deepEqual(r.card.cases.newly_failing, ['c-act-1']);
+  assert.deepEqual(r.card.reconfirmed, [{ case_id: 'c-act-1', tag: 'Context-dependent', flip: 'broken', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'do_not_apply' }, outcome: 'confirmed' }]);
+  assert.match(r.md, /^Reconfirmed c-act-1 .*: baseline apply over 8 runs, candidate do_not_apply over 8 runs: broken flip confirmed$/m);
+});
+
+test('a flip is noise as well when the extra runs show that the baseline did not really pass', () => {
+  const s = scenario({ base: { ...PASS_BASE, perRun: { 'c-act-1': ['apply', 'apply', 'do_not_apply'] } }, cand: { perRun: { 'c-act-1': FLIP } } });
+  assert.deepEqual(s.run().card.cases.newly_failing, ['c-act-1']);
+  const baseRuns = ['apply', 'apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'do_not_apply'];
+  const candRuns = ['do_not_apply', 'do_not_apply', 'apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'do_not_apply'];
+  addRuns(s, 'baseline', ['c-act-1'], { perRun: { 'c-act-1': baseRuns } });
+  addRuns(s, 'candidate', ['c-act-1'], { perRun: { 'c-act-1': candRuns } });
+  const r = s.run({ reconfirmed: ['c-act-1'] });
+  assert.deepEqual(r.card.cases.newly_failing, []);
+  assert.deepEqual(r.card.reconfirmed.map((x) => [x.baseline.decision, x.candidate.decision, x.outcome]), [['do_not_apply', 'do_not_apply', 'noise']]);
+});
+
+test('improvement is held to the same standard: a lesson case that seems fixed after three runs and is wrong in most of eight is noise, and no longer counts as fixed', () => {
+  const seemsFixed = ['do_not_apply', 'do_not_apply', 'apply']; // p-les-1 is expected to be "do_not_apply": right in two of the first three runs
+  const s = scenario({ cand: { perRun: { 'p-les-1': seemsFixed } } });
+  assert.ok(tagRow(s.run(), 'Predictive').fixed.includes('p-les-1'));
+  addRuns(s, 'baseline', ['p-les-1'], { wrong: ['p-les-1'] });
+  addRuns(s, 'candidate', ['p-les-1'], { perRun: { 'p-les-1': [...seemsFixed, 'apply', 'apply', 'apply', 'apply', 'apply'] } });
+  const r = s.run({ reconfirmed: [{ case_id: 'p-les-1', flip: 'fixed' }] });
+  assertCardSound(r);
+  assert.ok(!tagRow(r, 'Predictive').fixed.includes('p-les-1'));
+  assert.deepEqual(r.card.reconfirmed, [{ case_id: 'p-les-1', tag: 'Predictive', flip: 'fixed', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'apply' }, outcome: 'noise' }]);
+  assert.match(r.md, /^Reconfirmed p-les-1 .*: baseline apply over 8 runs, candidate apply over 8 runs: fixed flip was noise$/m);
+});
+
+test('a fixed flip that holds with eight runs is confirmed; the entry says which kind of flip it is, and a plain id means a broken flip', () => {
+  const s = scenario({ cand: { perRun: { 'p-les-1': ['do_not_apply', 'do_not_apply', 'apply'] } } });
+  addRuns(s, 'baseline', ['p-les-1'], { wrong: ['p-les-1'] });
+  addRuns(s, 'candidate', ['p-les-1'], { perRun: { 'p-les-1': ['do_not_apply', 'do_not_apply', 'apply', 'do_not_apply', 'apply', 'do_not_apply', 'do_not_apply', 'do_not_apply'] } });
+  const r = s.run({ reconfirmed: [{ case_id: 'p-les-1', flip: 'fixed' }] });
+  assert.ok(tagRow(r, 'Predictive').fixed.includes('p-les-1'));
+  assert.deepEqual(r.card.reconfirmed, [{ case_id: 'p-les-1', tag: 'Predictive', flip: 'fixed', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'do_not_apply' }, outcome: 'confirmed' }]);
+  assert.match(r.md, /^Reconfirmed p-les-1 .*: baseline apply over 8 runs, candidate do_not_apply over 8 runs: fixed flip confirmed$/m);
+  // the same case named as a plain id is read as a broken flip: it was never broken, so that flip is noise
+  assert.deepEqual(s.run({ reconfirmed: ['p-les-1'] }).card.reconfirmed.map((x) => [x.flip, x.outcome]), [['broken', 'noise']]);
+  assert.throws(() => s.run({ reconfirmed: [{ case_id: 'p-les-1', flip: 'sideways' }] }), (e) => e instanceof InputError && /flip must be "broken" or "fixed", got "sideways"/.test(e.message));
+  assert.equal(s.run({ reconfirmed: [{ case_id: 'p-les-1', flip: 'fixed' }, { case_id: 'p-les-1', flip: 'fixed' }] }).card.reconfirmed.length, 1, 'a case is listed once');
+});
+
+test('--runs is still the minimum: extra runs do not stand in for a missing required run', () => {
+  const s = scenario();
+  const item = addRuns(s, 'candidate', ['c-act-1']).values().next().value;
+  rmSync(join(s.dir, 'judgments', CAND, 'run-2', judgmentFileName(item.id, item.text)));
+  const r = s.run();
+  assert.equal(r.exitCode, EXIT.INVALID);
+  assert.equal(r.card.verdict, 'n/a');
+  assert.match(r.card.incomplete.items[0].problems.join(' '), /candidate run-2: .* is missing/);
+});
+
+test('a smoke run reads exactly one run per item, whatever extra runs exist', () => {
+  const s = scenario({ cand: { perRun: { 'c-act-1': FLIP } } });
+  addRuns(s, 'baseline', ['c-act-1']);
+  addRuns(s, 'candidate', ['c-act-1'], { perRun: { 'c-act-1': FLIP } });
+  const smoke = s.run({ smoke: true });
+  assert.ok(smoke.card.cases.items.every((i) => i.runs_used.baseline === 1 && i.runs_used.candidate === 1));
+  assert.deepEqual(smoke.card.cases.newly_failing, ['c-act-1'], 'the first run alone was wrong');
+  assert.deepEqual(s.run().card.cases.items.find((i) => i.case_id === 'c-act-1').runs_used, { baseline: 8, candidate: 8 });
+});
+
+test('an extra run that errored or is unreadable is left out: no gap, no "error" decision; the verdict rests on the runs that are usable', () => {
+  const s = scenario();
+  const item = addRuns(s, 'candidate', ['c-act-1'], { errors: [`${itemOf(s, 'c-act-1').id}#5`] }).values().next().value;
+  writeFileSync(join(s.dir, 'judgments', CAND, 'run-6', judgmentFileName(item.id, item.text)), '{ not json');
+  const r = s.run();
+  assertCardSound(r);
+  assert.equal(r.card.verdict, 'PASS');
+  const rec = r.card.cases.items.find((i) => i.case_id === 'c-act-1');
+  assert.deepEqual(rec.runs_used, { baseline: 3, candidate: 6 }, 'runs 1 to 4, 7 and 8');
+  assert.equal(rec.candidate, 'apply');
+});
+
+test('the noise figure stays measured over the required runs: extra runs on one item change its verdict, not the noise', () => {
+  const s = scenario({ cand: { perRun: { 'p-act-2': ['apply', 'apply', 'do_not_apply'] } } });
+  const before = s.run().card.noise;
+  const eight = ['apply', 'apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'do_not_apply', 'do_not_apply'];
+  addRuns(s, 'candidate', ['p-act-2'], { perRun: { 'p-act-2': eight } });
+  const after = s.run();
+  assert.deepEqual(after.card.noise, before);
+  assert.deepEqual(after.card.cases.newly_failing, ['p-act-2'], 'but the verdict of that item rests on all eight runs');
+});
+
+test('condition 5 reads the extra runs too: an apply on the human-only tag in run 6 fails the gate and names the file', () => {
+  const s = scenario();
+  const item = addRuns(s, 'candidate', ['c-act-1']).values().next().value;
+  const file = join(s.dir, 'judgments', CAND, 'run-6', judgmentFileName(item.id, item.text));
+  const doc = JSON.parse(readFileSync(file, 'utf8'));
+  doc.tags.push(entry('Editor verified', 'apply'));
+  writeFileSync(file, JSON.stringify(doc));
+  const r = s.run();
+  assert.equal(r.card.verdict, 'FAIL');
+  assert.match(r.card.reasons.join(' '), new RegExp(`${item.id}/run-6/Editor verified`));
+});
+
+test('reconfirmed: an id that is not an evaluated case is refused; card.md keeps every reconfirmed line when there is room and drops the last ones first when there is not', () => {
+  const s = scenario({ cand: { perRun: { 'c-act-1': FLIP } } });
+  assert.throws(() => s.run({ reconfirmed: ['no-such-case'] }), (e) => e instanceof InputError && /reconfirmed: no-such-case is not an evaluated case/.test(e.message));
+  const card = structuredClone(s.run({ reconfirmed: ['c-act-1'] }).card);
+  const many = (n) => Array.from({ length: n }, (_, i) => ({ case_id: `case-number-${i}`, tag: 'Hypothetical', baseline: { runs: 8, decision: 'apply' }, candidate: { runs: 8, decision: 'do_not_apply' }, outcome: i % 2 ? 'noise' : 'confirmed' }));
+  const reconfirmLines = (md) => md.split('\n').filter((l) => l.startsWith('Reconfirmed '));
+  const roomy = { ...card, reconfirmed: many(3), reasons: ['one short reason'] };
+  assert.equal(reconfirmLines(renderCardMd(roomy)).length, 3, 'one line per reconfirmed case');
+  const crowded = { ...card, reconfirmed: many(10), reasons: Array.from({ length: 4 }, (_, i) => `reason ${i} ${'x'.repeat(150)}`) };
+  const md = renderCardMd(crowded);
+  assert.ok(md.length <= CARD_MD_LIMIT, `${md.length}`);
+  assert.match(md.split('\n')[0], /^Verdict: FAIL/);
+  assert.match(md, /Rollback: /);
+  assert.match(md, /FAIL: reason 3 /, 'the reasons rank above the reconfirmed lines');
+  assert.ok(reconfirmLines(md).length < 10 && /more line\(s\) in card\.json/.test(md), 'what does not fit is announced, and it is the reconfirmed lines that go');
 });
 
 test('ask_editor and cannot_tell verdicts are not the expected answer, so they fail a case or a canary', () => {

@@ -91,7 +91,8 @@
       0.975
     ],
     "ungated_flips_hold": 1,
-    "ungated_flips_fail": 3
+    "ungated_flips_fail": 3,
+    "reconfirm_runs": 5
   },
   "anonymise": {
     "replacements": [

@@ -16,6 +16,14 @@
 //   3. The items: the claims behind every gate case (active, or contested for THIS lesson) plus the active canaries, runs/<run-id>/items.jsonl. judge.mjs
 //      judges them twice with the same model: the live rubric (normally a cache hit) and the candidate, config.judge.runs runs each (1 with --smoke).
 //   4. eval.mjs decides; the card goes to runs/<run-id>/card.json and card.md.
+//      Reconfirmation (config.gate.reconfirm_runs, 5; 0 switches it off; not for --smoke): a case that flipped between the rubrics, for the worse (passed
+//      under the baseline, fails under the candidate: a newly failing active case or a broken item of the target tag) or for the better (a fixed item of the
+//      target tag, a lesson case that now passes), on a tag both rubrics judge, is often a borderline claim that goes 2:1 one way under one rubric and 2:1
+//      the other way under the other. Harm and improvement are held to the same standard, so both are judged again (at most config.gate.reconfirm_max, 16;
+//      canaries are not among them): their claims go to runs/<run-id>/reconfirm-items.jsonl, judge.mjs runs both rubrics on them up to config.judge.runs +
+//      reconfirm_runs runs (it skips the runs that exist), and eval.mjs decides again with every run it finds. That second verdict is the one that counts
+//      (the run log says so); the card lists each reconfirmed case with its flip (broken or fixed), what each rubric decided over how many runs, and
+//      whether the flip stayed ("confirmed") or went away ("noise").
 //   5. PASS: a plan with the Rulebook row (When to use, Rule version, Tag hash, Changed by) under ctx { promote, gate: "PASS" }, the lesson Live with its
 //      Gate result, a Runs row "Gate <version> · <lesson>" carrying the card, In regression suite on the supporting rows, and the Agent settings
 //      "Rubric in force". runs/PROMOTING.json is written. Then: plan.mjs check, apply.mjs, and --finalize.
@@ -182,6 +190,10 @@ export function cardMarkdown(card, md, extra = {}) {
     lines.push('', '## Per tag (paired accuracy, candidate minus baseline)');
     for (const t of tags) lines.push(`- ${t.tag}: ${pct(t.acc_base)} -> ${pct(t.acc_cand)}, ${pts(t.delta)} points${t.ci ? ` (95% interval ${pts(t.ci[0])} to ${pts(t.ci[1])})` : ''}, fixed ${t.fixed.length}${t.fixed.length ? ` [${t.fixed.slice(0, 6).join(', ')}]` : ''}, broken ${t.broken.length}${t.broken.length ? ` [${t.broken.slice(0, 6).join(', ')}]` : ''}, n ${t.n}, ${t.positives} positives, ${t.gated ? 'gated' : 'not gated'}`);
   }
+  if (card.reconfirmed?.length) {
+    lines.push('', '## Reconfirmed with more runs (harm and improvement alike)');
+    for (const r of card.reconfirmed) lines.push(`- ${r.case_id} (${r.tag}): ${r.flip ?? 'broken'} flip ${r.outcome === 'noise' ? 'was noise' : 'confirmed'}; baseline ${r.baseline.decision} over ${r.baseline.runs} runs, candidate ${r.candidate.decision} over ${r.candidate.runs} runs`);
+  }
   if (card.not_run?.length) lines.push('', '## Not run', `- ${card.not_run.length} case(s) on source-reading tags: the MVP fetches no source text.`);
   if (card.noise) lines.push('', '## Noise', `- Self-flip rate over ${card.noise.cells} cell(s): baseline ${card.noise.baseline === null ? 'n/a' : pct(card.noise.baseline)}, candidate ${card.noise.candidate === null ? 'n/a' : pct(card.noise.candidate)}.`);
   lines.push('', '## Configurations', `- Baseline ${card.configs.baseline.config16}, rubric ${card.configs.baseline.rubric_version} (${card.configs.baseline.rubric_hash})`, `- Candidate ${card.configs.candidate.config16}, rubric ${card.configs.candidate.rubric_version} (${card.configs.candidate.rubric_hash})`);
@@ -200,8 +212,9 @@ function uniqueRunTitle(base, pull) {
 
 // ---- running the judge ------------------------------------------------------------------------------------------------------------------
 
-async function judgeSide({ side, runId, itemsFile, runs, args, root, deps, now, io, candidatePath }) {
-  const id = `${runId}-${side}`;
+async function judgeSide({ side, runId, itemsFile, runs, args, root, deps, now, io, candidatePath, reconfirm = false }) {
+  const id = reconfirm ? `${runId}-reconfirm-${side}` : `${runId}-${side}`;
+  const label = reconfirm ? `reconfirm ${side}` : side;
   const runsDir = locations(root).runs;
   const argv = ['--items', itemsFile, '--runs', String(runs), '--run-id', id];
   if (side === 'candidate') argv.push('--rubric', candidatePath);
@@ -212,15 +225,104 @@ async function judgeSide({ side, runId, itemsFile, runs, args, root, deps, now, 
   const code = await judgeMain(argv, { out: (s) => lines.push(s), err: (s) => lines.push(s) }, {
     agentDir: root, runsDir, env: deps.processEnv ?? process.env, now, runClaude: deps.runClaude, fakeState: deps.fakeState, bin: deps.judgeBin, spawnImpl: deps.spawnImpl, cliVersion: deps.cliVersion,
   });
-  for (const l of lines) io.out(`promote: ${side} judge: ${l}`);
+  for (const l of lines) io.out(`promote: ${label} judge: ${l}`);
   if (code !== EXIT.OK) {
     const resume = `node agents/claim-tagger/scripts/promote.mjs --lesson ${JSON.stringify(args.lesson)} --resume --run-id ${runId}${args.smoke ? ' --smoke' : ''}${args.driver ? ` --driver ${args.driver}` : ''}`;
-    if (code === EXIT.USAGE_WINDOW) throw new ExitError(code, `the usage window ran out while judging the ${side}; the finished judgments are kept. Resume when it reopens: ${resume}`);
-    if (code === EXIT.DRIFT) throw new ExitError(code, `the ${side} judge stopped: the rubric or the model did not match`);
-    throw new ExitError(code === EXIT.INVALID ? EXIT.INVALID : EXIT.ERROR, `the ${side} judge failed (exit ${code}); run ${id} has the details`);
+    if (code === EXIT.USAGE_WINDOW) throw new ExitError(code, `the usage window ran out while judging the ${label}; the finished judgments are kept. Resume when it reopens: ${resume}`);
+    if (code === EXIT.DRIFT) throw new ExitError(code, `the ${label} judge stopped: the rubric or the model did not match`);
+    throw new ExitError(code === EXIT.INVALID ? EXIT.INVALID : EXIT.ERROR, `the ${label} judge failed (exit ${code}); run ${id} has the details`);
   }
   const meta = readJson(join(runsDir, id, 'run.json'));
   return { id, config16: meta.config16, cost: meta.cost_usd ?? 0, model: meta.model, meta };
+}
+
+// ---- reconfirming flipped cases ---------------------------------------------------------------------------------------------------------------
+
+const byCode = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/** config.gate.reconfirm_runs (extra runs per rubric for a flipped case; 0 or absent: off) and config.gate.reconfirm_max (cases per run; 16 when absent). */
+export function reconfirmSettings(config) {
+  const g = config.gate ?? {};
+  const runs = g.reconfirm_runs ?? 0;
+  const max = g.reconfirm_max ?? 16;
+  if (!Number.isInteger(runs) || runs < 0) throw new ExitError(EXIT.INVALID, 'config.gate.reconfirm_runs must be a whole number of at least 0 (0 switches the reconfirmation off)');
+  if (!Number.isInteger(max) || max < 1) throw new ExitError(EXIT.INVALID, 'config.gate.reconfirm_max must be a whole number of at least 1');
+  return { runs, max };
+}
+
+/**
+ * Which flipped cases to judge again, read from the card of the first evaluation. Harm and improvement are held to the same standard, so both are judged
+ * again: first the newly failing active cases and the broken items of the target tag, then the fixed items of the target tag and the lesson cases that
+ * flipped to passing; each group in case-id order, a case listed once as { case_id, flip: 'broken' | 'fixed' }. Only a case on a tag in `judged` (judged by
+ * both rubrics) can flip by chance: a tag nobody judges never changes its answer. At most `max` are taken, in that order. Canaries are not looked at.
+ * Returns { picks, flipped, broken, fixed, notJudged, overCap } (flipped, broken and fixed count every flip found, picked or not).
+ */
+export function reconfirmCandidates(card, { target, judged, max }) {
+  if (!card?.cases) return { picks: [], flipped: 0, broken: 0, fixed: 0, notJudged: [], overCap: 0 };
+  const tagOf = new Map(card.cases.items.map((i) => [i.case_id, i.tag]));
+  const targetRow = target ? card.per_tag.find((t) => t.tag === target) : null;
+  const flips = [];
+  const take = (ids, flip) => {
+    for (const id of [...ids].sort(byCode)) if (!flips.some((f) => f.case_id === id)) flips.push({ case_id: id, flip });
+  };
+  take(card.cases.newly_failing, 'broken');
+  take(targetRow?.broken ?? [], 'broken');
+  take([...(targetRow?.fixed ?? []), ...(card.cases.lesson?.fixed ?? [])], 'fixed');
+  const eligible = flips.filter((f) => judged.has(tagOf.get(f.case_id)));
+  return {
+    picks: eligible.slice(0, max),
+    flipped: flips.length,
+    broken: flips.filter((f) => f.flip === 'broken').length,
+    fixed: flips.filter((f) => f.flip === 'fixed').length,
+    notJudged: flips.filter((f) => !judged.has(tagOf.get(f.case_id))).map((f) => f.case_id),
+    overCap: Math.max(0, eligible.length - max),
+  };
+}
+
+/**
+ * The reconfirmation (config.gate.reconfirm_runs). A case that passed under the baseline and fails under the candidate after the usual runs is often a
+ * borderline claim that goes 2:1 one way under one rubric and 2:1 the other way under the other, whatever the changed rule says; so is a case that seems to
+ * be fixed. Both kinds are judged again: their claims go to runs/<run-id>/reconfirm-items.jsonl, judge.mjs runs both rubrics on them up to `runs +
+ * reconfirm_runs` runs (it skips the runs that exist), and `evaluateAgain(picks)` decides again, now with every run it finds. The second verdict is the one
+ * that counts; the card lists each reconfirmed case. Returns null when no flipped case qualifies, else { result, costs, record } (record goes into run.json).
+ */
+async function reconfirmFlips({ first, base, cand, settings, lesson, judged, selected, runDir, runId, runs, args, root, deps, now, io, candidatePath, evaluateAgain }) {
+  const pick = reconfirmCandidates(first.card, { target: lesson.tag, judged, max: settings.max });
+  if (!pick.picks.length) return null;
+  const ids = pick.picks.map((p) => p.case_id);
+  const byId = new Map([...selected.gating, ...selected.lessonCases].map((c) => [c.case_id, c]));
+  const items = new Map();
+  for (const id of ids) {
+    const c = byId.get(id);
+    items.set(c.item, { id: c.item, claim: c.text, sources_count: null });
+  }
+  const itemsFile = join(runDir, 'reconfirm-items.jsonl');
+  writeTextAtomic(itemsFile, `${[...items.values()].map((i) => JSON.stringify(i)).join('\n')}\n`);
+  const total = runs + settings.runs;
+  const notes = [];
+  if (pick.overCap) notes.push(`${pick.overCap} more beyond gate.reconfirm_max (${settings.max}) count as they are`);
+  if (pick.notJudged.length) notes.push(`${pick.notJudged.length} on tags the rubric does not judge count as they are`);
+  io.out(`promote: first pass ${first.verdict}: ${pick.flipped} flipped case(s) (${pick.broken} broken, ${pick.fixed} fixed); judging ${ids.length} of them again (${ids.join(', ')}) with ${settings.runs} more run(s) per rubric, ${total} in all${notes.length ? `; ${notes.join('; ')}` : ''}`);
+  const rcBase = await judgeSide({ side: 'baseline', reconfirm: true, runId, itemsFile, runs: total, args, root, deps, now, io, candidatePath });
+  const rcCand = await judgeSide({ side: 'candidate', reconfirm: true, runId, itemsFile, runs: total, args, root, deps, now, io, candidatePath });
+  if (rcBase.config16 !== base.config16 || rcCand.config16 !== cand.config16) {
+    throw new ExitError(EXIT.DRIFT, `the reconfirmation ran under another judge configuration than the first pass (baseline ${base.config16} -> ${rcBase.config16}, candidate ${cand.config16} -> ${rcCand.config16}): the model or the CLI changed meanwhile; start a new promote run`);
+  }
+  const result = evaluateAgain(pick.picks);
+  const outcomes = result.card.reconfirmed ?? [];
+  const noise = outcomes.filter((o) => o.outcome === 'noise').length;
+  const confirmed = outcomes.length - noise;
+  io.out(`promote: reconfirmation: ${noise} flip(s) were noise, ${confirmed} confirmed; the verdict after reconfirmation (${result.verdict}) is the one that counts${result.verdict === first.verdict ? ' (the first pass said the same)' : `, not the first pass (${first.verdict})`}`);
+  const costs = { baseline: rcBase.cost ?? 0, candidate: rcCand.cost ?? 0 };
+  return {
+    result,
+    costs,
+    record: {
+      runs: settings.runs, max: settings.max, flipped: pick.flipped, broken: pick.broken, fixed: pick.fixed, cases: ids, not_judged: pick.notJudged, over_cap: pick.overCap,
+      first_verdict: first.verdict, verdict: result.verdict, noise, confirmed, cost_usd: round6(costs.baseline + costs.candidate), items: 'reconfirm-items.jsonl',
+      baseline_run: rcBase.id, candidate_run: rcCand.id,
+    },
+  };
 }
 
 // ---- phase 1 --------------------------------------------------------------------------------------------------------------------------------
@@ -256,6 +358,7 @@ async function promote({ args, io, root, config, deps, now }) {
   const rubric = readJson(loc.rubric);
   const lesson = resolveLesson(pull, args.lesson);
   const { target, text } = checkLesson({ lesson, rubric });
+  const reconfirmation = reconfirmSettings(config);
   const promoting = readPromoting(root);
   let runId = args['run-id'];
   if (args.resume && !runId) runId = findResumable(root, lesson.lesson_key);
@@ -310,19 +413,31 @@ async function promote({ args, io, root, config, deps, now }) {
   const cand = await judgeSide({ side: 'candidate', runId, itemsFile, runs, args, root, deps, now, io, candidatePath });
   writeJsonAtomic(recordFile, { ...record, status: 'evaluating', baseline_run: base.id, candidate_run: cand.id, baseline_config16: base.config16, candidate_config16: cand.config16 });
 
-  let result;
-  try {
-    result = evaluate({
-      baseline: base.config16, candidate: cand.config16, baselineRubric: loc.rubric, candidateRubric: candidatePath, cases: loc.cases, canaries: loc.canaries,
-      judgments: join(loc.runs, 'judgments'), config, runs, target: lesson.tag, lesson: lesson.lesson_key, changedTags: [lesson.tag], smoke, cardId: runId,
+  const evaluateWith = (extra = {}) => {
+    try {
+      return evaluate({
+        baseline: base.config16, candidate: cand.config16, baselineRubric: loc.rubric, candidateRubric: candidatePath, cases: loc.cases, canaries: loc.canaries,
+        judgments: join(loc.runs, 'judgments'), config, runs, target: lesson.tag, lesson: lesson.lesson_key, changedTags: [lesson.tag], smoke, cardId: runId, ...extra,
+      });
+    } catch (e) {
+      if (e instanceof InputError) throw new ExitError(EXIT.INVALID, e.message);
+      throw e;
+    }
+  };
+  let result = evaluateWith();
+  let reconfirm = null;
+  if (!smoke && reconfirmation.runs > 0 && result.exitCode !== EXIT.INVALID) { // flipped cases get more runs before the verdict; a smoke run stays a one-run rehearsal
+    const judged = new Set(rubric.tags.filter((t) => t.judged === true && candidate.tags.some((c) => c.name === t.name && c.judged === true)).map((t) => t.name));
+    reconfirm = await reconfirmFlips({
+      first: result, base, cand, settings: reconfirmation, lesson, judged, selected, runDir, runId, runs, args, root, deps, now, io, candidatePath, evaluateAgain: (picks) => evaluateWith({ reconfirmed: picks }),
     });
-  } catch (e) {
-    if (e instanceof InputError) throw new ExitError(EXIT.INVALID, e.message);
-    throw e;
+    if (reconfirm) result = reconfirm.result; // the verdict after reconfirmation is the one that counts
   }
-  const cost = round6((base.cost ?? 0) + (cand.cost ?? 0));
+  const baseUsd = (base.cost ?? 0) + (reconfirm?.costs.baseline ?? 0);
+  const candUsd = (cand.cost ?? 0) + (reconfirm?.costs.candidate ?? 0);
+  const cost = round6(baseUsd + candUsd);
   const model = cand.model ?? base.model ?? config.models.judge;
-  result.card.cost = { usd: cost, baseline_usd: round6(base.cost ?? 0), candidate_usd: round6(cand.cost ?? 0), model };
+  result.card.cost = { usd: cost, baseline_usd: round6(baseUsd), candidate_usd: round6(candUsd), model, ...(reconfirm ? { reconfirm_usd: round6(reconfirm.costs.baseline + reconfirm.costs.candidate) } : {}) };
   writeCard(result, runDir);
 
   const verdict = result.verdict;
@@ -379,7 +494,7 @@ async function promote({ args, io, root, config, deps, now }) {
 
   const rolledBack = !live;
   writeJsonAtomic(recordFile, {
-    ...readJson(recordFile), status: live ? 'planned' : 'done', verdict, card_id: result.card.card_id, plan: written.path, rolled_back: rolledBack, run_title: runTitle, judge_cost_usd: cost,
+    ...readJson(recordFile), status: live ? 'planned' : 'done', verdict, card_id: result.card.card_id, plan: written.path, rolled_back: rolledBack, run_title: runTitle, judge_cost_usd: cost, ...(reconfirm ? { reconfirm: reconfirm.record } : {}),
     ...(rolledBack ? { rolled_back_reason: smoke ? 'smoke run: never finalized' : `gate ${verdict}` } : {}), lesson_status_set: markRolledBack ? 'Rolled back' : live ? 'Live' : lesson.status,
   });
   writeJsonAtomic(join(runDir, 'candidate', 'run.json'), { run_id: runId, version: candidate.rubric_version, rubric_hash: candidate.rubric_hash, verdict, rolled_back: rolledBack, lesson_key: lesson.lesson_key });

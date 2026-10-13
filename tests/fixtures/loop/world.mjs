@@ -184,11 +184,11 @@ export const rowKey = (w, prefix, tag = 'Predictive') => Object.keys(w.ids.decis
  * The seeded world plus what the demo's storyline has by step 5: two hedged forecasts the editor decided Does not apply / Rule should change, two flat
  * forecasts decided Applies, and the lesson LESSON_TITLE (Predictive rule 1, Change the rule) in the given Status, supported by those two rows and by
  * the two seeded hedged rows (Texas, Supreme Court). The pull p1 is taken and the REAL cases-sync has written evals/cases.jsonl, so the four supporting
- * rows are contested cases of the lesson and six Predictive positives are active. Options: canaryTags (which of the real canaries to copy), research.
+ * rows are contested cases of the lesson and six Predictive positives are active. Options: canaryTags (which of the real canaries to copy), research, config (edits the copy of config.json, e.g. cfg.gate.reconfirm_runs = 0).
  */
-export async function makePromoteWorld({ lessonStatus = 'Approved', canaryTags = ['Predictive', 'Hypothetical', 'Context-dependent', 'Self-contained'], research = false, lessonOptions = {} } = {}) {
+export async function makePromoteWorld({ lessonStatus = 'Approved', canaryTags = ['Predictive', 'Hypothetical', 'Context-dependent', 'Self-contained'], research = false, lessonOptions = {}, config } = {}) {
   const real = readJsonl(join(RESEARCH, 'canaries.jsonl')).rows.filter((x) => x.active === true && x.contested !== true && canaryTags.includes(x.tag));
-  const w = makeLoopWorld({ cases: research ? 'research' : 'empty', canaries: research ? 'research' : real });
+  const w = makeLoopWorld({ cases: research ? 'research' : 'empty', canaries: research ? 'research' : real, config });
   const hedged = [rowKey(w, '6e820a8a'), rowKey(w, '8172f325')];
   for (const key of hedged) w.decide(key, { outcome: 'Does not apply', why: 'Rule should change', reasoning: 'A hedged tendency is not a forecast.' });
   for (const key of [rowKey(w, 'f4d50e38'), rowKey(w, '8b17d6ea')]) w.decide(key, { outcome: 'Applies', why: 'Agent slip', reasoning: 'A flat will is a forecast.' });
