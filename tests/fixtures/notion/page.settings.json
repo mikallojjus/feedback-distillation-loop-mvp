@@ -1,0 +1,29 @@
+{
+  "object": "page",
+  "id": "e0000000-0000-4000-8000-000000000001",
+  "created_time": "2026-10-13T14:40:00.000Z",
+  "last_edited_time": "2026-10-13T18:10:00.000Z",
+  "created_by": { "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" },
+  "last_edited_by": { "object": "user", "id": "bbbbbbbb-0000-4000-8000-00000000b0b0" },
+  "cover": null,
+  "icon": null,
+  "parent": { "type": "database_id", "database_id": "43c8a1c3-a8d4-4a7f-8246-98b4789cffe6" },
+  "archived": false,
+  "in_trash": false,
+  "url": "https://www.notion.so/claim-tagger-e0000000000040008000000000000001",
+  "properties": {
+    "Name": {
+      "id": "title",
+      "type": "title",
+      "title": [{ "type": "text", "text": { "content": "claim-tagger", "link": null }, "plain_text": "claim-tagger", "href": null }]
+    },
+    "Paused": { "id": "%41ag1", "type": "checkbox", "checkbox": true },
+    "Paused by": { "id": "%42ag2", "type": "people", "people": [{ "object": "user", "id": "bbbbbbbb-0000-4000-8000-00000000b0b0" }] },
+    "Reason": { "id": "%43ag3", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "Checking the queue by hand", "link": null }, "plain_text": "Checking the queue by hand", "href": null }] },
+    "Weekly cap": { "id": "%44ag4", "type": "number", "number": 40 },
+    "Owner": { "id": "%45ag5", "type": "people", "people": [{ "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" }] },
+    "Rubric in force": { "id": "%46ag6", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "2026-10-13.1", "link": null }, "plain_text": "2026-10-13.1", "href": null }] },
+    "Last run at": { "id": "%47ag7", "type": "date", "date": { "start": "2026-10-13T18:00:00.000+00:00", "end": null, "time_zone": null } },
+    "Last run summary": { "id": "%48ag8", "type": "rich_text", "rich_text": [] }
+  }
+}

@@ -1,0 +1,147 @@
+{
+  "pull_id": "p1",
+  "rows": [
+    {
+      "name": "Context-dependent",
+      "page_id": "tag-page-Context-dependent",
+      "status": "Verified",
+      "category": "Quality",
+      "polarity": "Issue",
+      "counterpart": "Self-contained",
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Debate",
+      "page_id": "tag-page-Debate",
+      "status": "Verified",
+      "category": "Usage",
+      "polarity": "Classification",
+      "counterpart": "Simple",
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Editor verified",
+      "page_id": "tag-page-Editor verified",
+      "status": "Verified",
+      "category": "Check",
+      "polarity": "Positive",
+      "counterpart": null,
+      "judged": false,
+      "human_only": true
+    },
+    {
+      "name": "Factual",
+      "page_id": "tag-page-Factual",
+      "status": "Verified",
+      "category": "Meaning",
+      "polarity": "Classification",
+      "counterpart": "Opinion",
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Hypothetical",
+      "page_id": "tag-page-Hypothetical",
+      "status": "Verified",
+      "category": "Meaning",
+      "polarity": "Issue",
+      "counterpart": null,
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Improperly sourced",
+      "page_id": "tag-page-Improperly sourced",
+      "status": "Verified",
+      "category": "Quality",
+      "polarity": "Issue",
+      "counterpart": null,
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Multiple statements",
+      "page_id": "tag-page-Multiple statements",
+      "status": "Verified",
+      "category": "Format",
+      "polarity": "Classification",
+      "counterpart": "Single core statement",
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Opinion",
+      "page_id": "tag-page-Opinion",
+      "status": "Verified",
+      "category": "Meaning",
+      "polarity": "Classification",
+      "counterpart": "Factual",
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Predictive",
+      "page_id": "tag-page-Predictive",
+      "status": "Verified",
+      "category": "Meaning",
+      "polarity": "Issue",
+      "counterpart": null,
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Self-contained",
+      "page_id": "tag-page-Self-contained",
+      "status": "Verified",
+      "category": "Quality",
+      "polarity": "Positive",
+      "counterpart": "Context-dependent",
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Simple",
+      "page_id": "tag-page-Simple",
+      "status": "Verified",
+      "category": "Usage",
+      "polarity": "Classification",
+      "counterpart": "Debate",
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Single core statement",
+      "page_id": "tag-page-Single core statement",
+      "status": "Verified",
+      "category": "Format",
+      "polarity": "Classification",
+      "counterpart": "Multiple statements",
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Source inaccessible",
+      "page_id": "tag-page-Source inaccessible",
+      "status": "Verified",
+      "category": "Quality",
+      "polarity": "Issue",
+      "counterpart": null,
+      "judged": true,
+      "human_only": false
+    },
+    {
+      "name": "Unsourced",
+      "page_id": "tag-page-Unsourced",
+      "status": "Verified",
+      "category": "Quality",
+      "polarity": "Issue",
+      "counterpart": null,
+      "judged": false,
+      "human_only": false
+    }
+  ],
+  "drift": [],
+  "drift_checked": true
+}

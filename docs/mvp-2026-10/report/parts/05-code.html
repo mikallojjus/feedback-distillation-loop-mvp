@@ -1,0 +1,61 @@
+<!-- ============================== 4 CODE AND COMMANDS ============================== -->
+<section id="code" role="tabpanel" aria-labelledby="tab-code" hidden>
+  <h2>Code and commands</h2>
+
+  <div class="plain">
+    <p class="geo-eyebrow plain-label">In short</p>
+    <ul>
+      <li>TODO: the one sentence an editor types into Claude Code to run the week's loop, and what comes back.</li>
+      <li>TODO: how to pause the agent with one checkbox, and how to resume it.</li>
+      <li>TODO: the subcommands in one line each: setup, status, tag, distill, promote, follow-up.</li>
+      <li>TODO: which identity each step uses (the integration token for scripts, the connector for the interactive skill and the Editor persona).</li>
+    </ul>
+  </div>
+
+  <div class="sub" id="code-ask" data-title="One ask in plain words">
+    <h3>One ask in plain words</h3>
+    <p>TODO: the sentence an editor types into Claude Code (the editor-phrased prompt from the plan's headless test) and what the answer looks like.</p>
+  </div>
+
+  <div class="sub" id="code-pause" data-title="The pause switch">
+    <h3>The pause switch</h3>
+    <p>TODO: where the Paused checkbox is (Agent settings), what the agent does when it is ticked (it refuses to start and exits with code 3), and how to resume.</p>
+  </div>
+
+  <div class="sub" id="code-tree" data-title="Folder tree" data-layer="tech">
+    <h3>Folder tree</h3>
+    <p>TODO: the folder tree of agents/claim-tagger as a code block (rubric, prompts, schemas, evals, scripts, runs) with one line per folder.</p>
+  </div>
+
+  <div class="sub" id="code-commands" data-title="Commands" data-layer="tech">
+    <h3>Commands</h3>
+    <p>TODO: a table of the /claim-tagger subcommands (setup, status, tag, distill, promote, follow-up): the script each one runs and what it writes.</p>
+  </div>
+
+  <div class="sub" id="code-resume" data-title="Resume and exit codes" data-layer="tech">
+    <h3>Resume and exit codes</h3>
+    <p>TODO: how a stopped run resumes (the ledger and --resume) and the exit codes in plain words: 0 ok, 2 invalid or incomplete, 3 paused, 5 trust breaker, 10 HOLD, 11 FAIL, 75 usage window.</p>
+  </div>
+
+  <div class="sub" id="code-rubric" data-title="Rubric sync" data-layer="tech">
+    <h3>Rubric sync</h3>
+    <p>TODO: how the rulebook in Notion and rubric.json stay in step: the drift check, the hashes, the lock file, and what happens when someone edits a rule directly in Notion.</p>
+  </div>
+
+  <div class="sub" id="code-judge" data-title="Judge contract" data-layer="tech">
+    <h3>Judge contract</h3>
+    <p>TODO: what the judge reads and returns: the prompt shape, the batches, the output schema, the retry on invalid output, and the tags decided in code.</p>
+  </div>
+
+  <div class="sub" id="code-harness" data-title="Evaluation harness" data-layer="tech">
+    <h3>Evaluation harness</h3>
+    <p>TODO: how the harness compares the old and the new rules on the same claims (paired bootstrap, canaries, regression cases) and how it reaches PASS, HOLD or FAIL.</p>
+  </div>
+
+  <div class="sub" id="code-headless" data-title="The headless command" data-layer="tech">
+    <h3>The headless command</h3>
+    <p>TODO: the claude -p command that tests the loop the way an editor's machine would run it, its allowed tools, and where the transcript is saved.</p>
+  </div>
+
+  <aside class="terms" data-strip></aside>
+</section>

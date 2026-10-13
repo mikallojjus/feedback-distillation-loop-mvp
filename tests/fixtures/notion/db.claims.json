@@ -1,0 +1,198 @@
+{
+  "object": "database",
+  "id": "9418c3f6-25d2-4b43-9539-f381b7ff03c2",
+  "created_time": "2026-10-13T14:05:00.000Z",
+  "last_edited_time": "2026-10-13T14:30:00.000Z",
+  "title": [
+    {
+      "type": "text",
+      "text": {
+        "content": "Claims",
+        "link": null
+      },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Claims",
+      "href": null
+    }
+  ],
+  "description": [],
+  "is_inline": false,
+  "properties": {
+    "Claim title": {
+      "id": "title",
+      "name": "Claim title",
+      "type": "title",
+      "title": {}
+    },
+    "Geo ID": {
+      "id": "%41cl1",
+      "name": "Geo ID",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Geo link": {
+      "id": "%42cl2",
+      "name": "Geo link",
+      "type": "url",
+      "url": {}
+    },
+    "Sources count": {
+      "id": "%43cl3",
+      "name": "Sources count",
+      "type": "number",
+      "number": {
+        "format": "number"
+      }
+    },
+    "Source URLs": {
+      "id": "%44cl4",
+      "name": "Source URLs",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Table": {
+      "id": "%45cl5",
+      "name": "Table",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ocl50xxx",
+            "name": "U.S. Politics",
+            "color": "green"
+          },
+          {
+            "id": "ocl51xxx",
+            "name": "World affairs",
+            "color": "blue"
+          }
+        ]
+      }
+    },
+    "Sample": {
+      "id": "%46cl6",
+      "name": "Sample",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ocl60xxx",
+            "name": "Decided",
+            "color": "blue"
+          },
+          {
+            "id": "ocl61xxx",
+            "name": "Forecast",
+            "color": "purple"
+          },
+          {
+            "id": "ocl62xxx",
+            "name": "Random",
+            "color": "pink"
+          }
+        ]
+      }
+    },
+    "Agent tags": {
+      "id": "%47cl7",
+      "name": "Agent tags",
+      "type": "relation",
+      "relation": {
+        "database_id": "89043d4a-7490-41ff-b834-f96a5239e148",
+        "type": "single_property",
+        "single_property": {}
+      }
+    },
+    "Readiness": {
+      "id": "%48cl8",
+      "name": "Readiness",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ocl80xxx",
+            "name": "Needs editor",
+            "color": "pink"
+          },
+          {
+            "id": "ocl81xxx",
+            "name": "Fix needed",
+            "color": "red"
+          },
+          {
+            "id": "ocl82xxx",
+            "name": "Not checkable",
+            "color": "default"
+          },
+          {
+            "id": "ocl83xxx",
+            "name": "Ready",
+            "color": "gray"
+          }
+        ]
+      }
+    },
+    "Tag confidence": {
+      "id": "%49cl9",
+      "name": "Tag confidence",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Last judged": {
+      "id": "%50cla",
+      "name": "Last judged",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Tag decisions": {
+      "id": "%51clb",
+      "name": "Tag decisions",
+      "type": "relation",
+      "relation": {
+        "database_id": "de7a08f6-d3ae-4c08-b938-7e6d762d79f2",
+        "type": "dual_property",
+        "dual_property": {
+          "synced_property_name": "Claim",
+          "synced_property_id": "%41ta1"
+        }
+      }
+    },
+    "Decided applies": {
+      "id": "%52clc",
+      "name": "Decided applies",
+      "type": "rollup",
+      "rollup": {
+        "relation_property_name": "Tag decisions",
+        "relation_property_id": "%51clb",
+        "rollup_property_name": "Applied tag",
+        "rollup_property_id": "%66taq",
+        "function": "show_original"
+      }
+    },
+    "Decided does not apply": {
+      "id": "%53cld",
+      "name": "Decided does not apply",
+      "type": "rollup",
+      "rollup": {
+        "relation_property_name": "Tag decisions",
+        "relation_property_id": "%51clb",
+        "rollup_property_name": "Rejected tag",
+        "rollup_property_id": "%67tar",
+        "function": "show_original"
+      }
+    }
+  },
+  "parent": {
+    "type": "page_id",
+    "page_id": "3f8273e2-14eb-81c5-9b0c-c7576b1bb62f"
+  },
+  "url": "https://www.notion.so/9418c3f625d24b439539f381b7ff03c2",
+  "archived": false
+}

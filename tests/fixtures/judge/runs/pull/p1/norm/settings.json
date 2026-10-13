@@ -1,0 +1,12 @@
+{
+  "page_id": "settings-page",
+  "name": "claim-tagger",
+  "paused": false,
+  "paused_by": [],
+  "reason": null,
+  "weekly_cap": 40,
+  "owner": [],
+  "rubric_in_force": "2026-10-13.1",
+  "last_run_at": null,
+  "last_run_summary": null
+}

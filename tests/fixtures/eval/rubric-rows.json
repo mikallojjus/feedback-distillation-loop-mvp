@@ -1,0 +1,80 @@
+[
+  {
+    "name": "Predictive",
+    "status": "Verified",
+    "category": "Meaning",
+    "polarity": "Issue",
+    "counterpart": null,
+    "description": "Synthetic fixture tag: a claim that flatly forecasts what will happen.",
+    "when_to_use": "Decide from the markers in the main assertion of the claim.\n1. Fires on an unconditional forecast marker: will, is expected to, is projected to, is likely to.\n2. The forecast must be stated flatly, with no scenario wrapper.\n3. Does NOT fire on an attributed forecast.",
+    "example_claims": "Sales will double next year.\nThe market is projected to grow.",
+    "human_only": false,
+    "deterministic": false,
+    "needs_source_reading": false
+  },
+  {
+    "name": "Hypothetical",
+    "status": "Verified",
+    "category": "Meaning",
+    "polarity": "Issue",
+    "counterpart": null,
+    "description": "Synthetic fixture tag: a claim about a scenario that has not happened.",
+    "when_to_use": "A forecast under a scenario is Hypothetical, not Predictive.\n1. Fires when the claim is conditional: if, would, could, might.\n2. Fires on an assumed outcome of an election or a vote.\n3. Does NOT fire on a past counterfactual stated as fact.",
+    "example_claims": "If the vote passes, the budget would grow.\nA new tax could raise revenue.",
+    "human_only": false,
+    "deterministic": false,
+    "needs_source_reading": false
+  },
+  {
+    "name": "Context-dependent",
+    "status": "Verified",
+    "category": "Quality",
+    "polarity": "Issue",
+    "counterpart": null,
+    "description": "Synthetic fixture tag: a claim that cannot be understood without text outside it.",
+    "when_to_use": "Ask which one, about a definite phrase.\n1. Fires on a pronoun or a definite phrase with no antecedent in the claim.\n2. Does NOT fire on a bare generic.",
+    "example_claims": "He said it works.\nThe committee rejected the proposal.",
+    "human_only": false,
+    "deterministic": false,
+    "needs_source_reading": false
+  },
+  {
+    "name": "Source inaccessible",
+    "status": "Verified",
+    "category": "Check",
+    "polarity": "Issue",
+    "counterpart": null,
+    "description": "Synthetic fixture tag: an attached source that cannot be read.",
+    "when_to_use": "Needs the source text, which the MVP does not fetch.\n1. Fires when every attached source is unreadable.\n2. Does NOT fire when a readable source exists.",
+    "example_claims": "A claim whose only source returns an error page.",
+    "human_only": false,
+    "deterministic": false,
+    "needs_source_reading": true
+  },
+  {
+    "name": "Editor verified",
+    "status": "Verified",
+    "category": "Check",
+    "polarity": "Positive",
+    "counterpart": null,
+    "description": "Synthetic fixture tag: an editor checked the claim by hand. The agent never writes it.",
+    "when_to_use": "Human only.\n1. Set by an editor after a manual check.",
+    "example_claims": "A claim an editor has confirmed.",
+    "human_only": true,
+    "deterministic": false,
+    "needs_source_reading": false
+  },
+  {
+    "name": "Unsourced",
+    "status": "Verified",
+    "category": "Check",
+    "polarity": "Issue",
+    "counterpart": null,
+    "description": "Synthetic fixture tag: a claim with no sources. Computed by code from the sources count.",
+    "when_to_use": "Computed, not judged.\n1. Fires when the sources count is zero.",
+    "example_claims": "A claim with an empty source list.",
+    "human_only": false,
+    "deterministic": true,
+    "needs_source_reading": false
+  }
+]

@@ -1,0 +1,417 @@
+{
+  "object": "database",
+  "id": "de7a08f6-d3ae-4c08-b938-7e6d762d79f2",
+  "created_time": "2026-10-13T14:05:00.000Z",
+  "last_edited_time": "2026-10-13T14:30:00.000Z",
+  "title": [
+    {
+      "type": "text",
+      "text": {
+        "content": "Tag decisions",
+        "link": null
+      },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Tag decisions",
+      "href": null
+    }
+  ],
+  "description": [],
+  "is_inline": false,
+  "properties": {
+    "Key": {
+      "id": "title",
+      "name": "Key",
+      "type": "title",
+      "title": {}
+    },
+    "Claim": {
+      "id": "%41ta1",
+      "name": "Claim",
+      "type": "relation",
+      "relation": {
+        "database_id": "9418c3f6-25d2-4b43-9539-f381b7ff03c2",
+        "type": "dual_property",
+        "dual_property": {
+          "synced_property_name": "Tag decisions",
+          "synced_property_id": "%51clb"
+        }
+      }
+    },
+    "Tag": {
+      "id": "%42ta2",
+      "name": "Tag",
+      "type": "relation",
+      "relation": {
+        "database_id": "89043d4a-7490-41ff-b834-f96a5239e148",
+        "type": "single_property",
+        "single_property": {}
+      }
+    },
+    "Agent proposal": {
+      "id": "%43ta3",
+      "name": "Agent proposal",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ota30xxx",
+            "name": "Add tag",
+            "color": "orange"
+          },
+          {
+            "id": "ota31xxx",
+            "name": "Remove tag",
+            "color": "yellow"
+          },
+          {
+            "id": "ota32xxx",
+            "name": "Keep tag",
+            "color": "green"
+          },
+          {
+            "id": "ota33xxx",
+            "name": "Do not add tag",
+            "color": "blue"
+          },
+          {
+            "id": "ota34xxx",
+            "name": "Read source first",
+            "color": "purple"
+          }
+        ]
+      }
+    },
+    "Agent confidence": {
+      "id": "%44ta4",
+      "name": "Agent confidence",
+      "type": "number",
+      "number": {
+        "format": "number"
+      }
+    },
+    "Why I recommend this": {
+      "id": "%45ta5",
+      "name": "Why I recommend this",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Agent full note": {
+      "id": "%46ta6",
+      "name": "Agent full note",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Why in queue": {
+      "id": "%47ta7",
+      "name": "Why in queue",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ota70xxx",
+            "name": "Low confidence",
+            "color": "purple"
+          },
+          {
+            "id": "ota71xxx",
+            "name": "Auditor flag",
+            "color": "pink"
+          },
+          {
+            "id": "ota72xxx",
+            "name": "Editor challenge",
+            "color": "red"
+          },
+          {
+            "id": "ota73xxx",
+            "name": "Rule changed",
+            "color": "default"
+          },
+          {
+            "id": "ota74xxx",
+            "name": "Blind check",
+            "color": "gray"
+          },
+          {
+            "id": "ota75xxx",
+            "name": "Seeded decision",
+            "color": "brown"
+          },
+          {
+            "id": "ota76xxx",
+            "name": "Migrated decision",
+            "color": "orange"
+          }
+        ]
+      }
+    },
+    "Priority": {
+      "id": "%48ta8",
+      "name": "Priority",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ota80xxx",
+            "name": "High",
+            "color": "pink"
+          },
+          {
+            "id": "ota81xxx",
+            "name": "Medium",
+            "color": "red"
+          },
+          {
+            "id": "ota82xxx",
+            "name": "Check source",
+            "color": "default"
+          }
+        ]
+      }
+    },
+    "Rubric version": {
+      "id": "%49ta9",
+      "name": "Rubric version",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Tag outcome": {
+      "id": "%50taa",
+      "name": "Tag outcome",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ota100xx",
+            "name": "Applies",
+            "color": "default"
+          },
+          {
+            "id": "ota101xx",
+            "name": "Does not apply",
+            "color": "gray"
+          },
+          {
+            "id": "ota102xx",
+            "name": "Needs evidence",
+            "color": "brown"
+          },
+          {
+            "id": "ota103xx",
+            "name": "Ask another editor",
+            "color": "orange"
+          }
+        ]
+      }
+    },
+    "Why wrong": {
+      "id": "%51tab",
+      "name": "Why wrong",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ota110xx",
+            "name": "Agent slip",
+            "color": "gray"
+          },
+          {
+            "id": "ota111xx",
+            "name": "Rule unclear",
+            "color": "brown"
+          },
+          {
+            "id": "ota112xx",
+            "name": "Rule should change",
+            "color": "orange"
+          },
+          {
+            "id": "ota113xx",
+            "name": "No tag fits",
+            "color": "yellow"
+          },
+          {
+            "id": "ota114xx",
+            "name": "Other",
+            "color": "green"
+          }
+        ]
+      }
+    },
+    "Your reasoning": {
+      "id": "%52tac",
+      "name": "Your reasoning",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Decided by": {
+      "id": "%53tad",
+      "name": "Decided by",
+      "type": "people",
+      "people": {}
+    },
+    "Decided at": {
+      "id": "%54tae",
+      "name": "Decided at",
+      "type": "date",
+      "date": {}
+    },
+    "Seeded outcome": {
+      "id": "%55taf",
+      "name": "Seeded outcome",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ota150xx",
+            "name": "Applies",
+            "color": "green"
+          },
+          {
+            "id": "ota151xx",
+            "name": "Does not apply",
+            "color": "blue"
+          }
+        ]
+      }
+    },
+    "Seeded reasoning": {
+      "id": "%56tag",
+      "name": "Seeded reasoning",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Seeded at": {
+      "id": "%57tah",
+      "name": "Seeded at",
+      "type": "date",
+      "date": {}
+    },
+    "Lesson": {
+      "id": "%58tai",
+      "name": "Lesson",
+      "type": "relation",
+      "relation": {
+        "database_id": "833efad0-634f-4360-8ca1-8e4f7291cc02",
+        "type": "dual_property",
+        "dual_property": {
+          "synced_property_name": "Supporting rows",
+          "synced_property_id": "%53rud"
+        }
+      }
+    },
+    "In regression suite": {
+      "id": "%59taj",
+      "name": "In regression suite",
+      "type": "date",
+      "date": {}
+    },
+    "Agent follow-up": {
+      "id": "%60tak",
+      "name": "Agent follow-up",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "ota200xx",
+            "name": "Fixed",
+            "color": "default"
+          },
+          {
+            "id": "ota201xx",
+            "name": "Still wrong",
+            "color": "gray"
+          },
+          {
+            "id": "ota202xx",
+            "name": "Not re-run",
+            "color": "brown"
+          }
+        ]
+      }
+    },
+    "Follow-up run": {
+      "id": "%61tal",
+      "name": "Follow-up run",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Tag name": {
+      "id": "%62tam",
+      "name": "Tag name",
+      "type": "rollup",
+      "rollup": {
+        "relation_property_name": "Tag",
+        "relation_property_id": "%42ta2",
+        "rollup_property_name": "Tag title",
+        "rollup_property_id": "title",
+        "function": "show_original"
+      }
+    },
+    "Effective outcome": {
+      "id": "%63tan",
+      "name": "Effective outcome",
+      "type": "formula",
+      "formula": {
+        "expression": "if(empty(prop(\"Tag outcome\")), prop(\"Seeded outcome\"), prop(\"Tag outcome\"))"
+      }
+    },
+    "Direction": {
+      "id": "%64tao",
+      "name": "Direction",
+      "type": "formula",
+      "formula": {
+        "expression": "ifs(empty(prop(\"Effective outcome\")), \"Open\", \"Agent right\")"
+      }
+    },
+    "Stage": {
+      "id": "%65tap",
+      "name": "Stage",
+      "type": "formula",
+      "formula": {
+        "expression": "ifs(empty(prop(\"Effective outcome\")), \"To review\", \"Decided\")"
+      }
+    },
+    "Applied tag": {
+      "id": "%66taq",
+      "name": "Applied tag",
+      "type": "formula",
+      "formula": {
+        "expression": "if(prop(\"Effective outcome\") == \"Applies\", prop(\"Tag name\"), \"\")"
+      }
+    },
+    "Rejected tag": {
+      "id": "%67tar",
+      "name": "Rejected tag",
+      "type": "formula",
+      "formula": {
+        "expression": "if(prop(\"Effective outcome\") == \"Does not apply\", prop(\"Tag name\"), \"\")"
+      }
+    },
+    "Lesson status": {
+      "id": "%68tas",
+      "name": "Lesson status",
+      "type": "rollup",
+      "rollup": {
+        "relation_property_name": "Lesson",
+        "relation_property_id": "%58tai",
+        "rollup_property_name": "Status",
+        "rollup_property_id": "%48ru8",
+        "function": "show_original"
+      }
+    }
+  },
+  "parent": {
+    "type": "page_id",
+    "page_id": "3f8273e2-14eb-81c5-9b0c-c7576b1bb62f"
+  },
+  "url": "https://www.notion.so/de7a08f6d3ae4c08b9387e6d762d79f2",
+  "archived": false
+}

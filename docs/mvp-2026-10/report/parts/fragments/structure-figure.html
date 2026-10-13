@@ -1,0 +1,83 @@
+<!-- Structure of the Notion page as one inline SVG: six databases in two rows, five labelled arrows, a legend.
+     Colours come only from the role tokens (ink, ink-muted, accent, border, surface-raised), so it follows the light and dark themes.
+     No ids inside, so the fragment can be included more than once. Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="100%" role="img" aria-label="Six Notion databases in two rows. Top row: Rulebook, Claims, Tag decisions. Bottom row: Rule changes, Runs, Agent settings. The agent judges claims against the Rulebook and sends uncertain tags to Tag decisions. Decided rows are distilled into lessons in Rule changes. A lesson goes through the gate, which is recorded in Runs, and on a PASS the rule is written back into the Rulebook. Agent settings holds the pause switch." style="min-width:760px;font-family:var(--font-sans)">
+  <rect x="16" y="16" width="928" height="388" rx="12" fill="none" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="36" y="42" font-size="14" font-weight="600" fill="var(--ink-muted)">Notion page: Editorial feedback loop</text>
+  <text x="924" y="42" font-size="13.5" text-anchor="end" fill="var(--ink-muted)">nothing here is written to Geo</text>
+
+  <g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M250 104H369"/>
+    <path d="M580 104H699"/>
+    <path d="M810 146V198H220V239"/>
+    <path d="M250 292H369"/>
+    <path d="M100 250V157"/>
+  </g>
+  <g fill="var(--ink)">
+    <polygon points="379,104 369,99.5 369,108.5"/>
+    <polygon points="709,104 699,99.5 699,108.5"/>
+    <polygon points="220,249 215.5,239 224.5,239"/>
+    <polygon points="379,292 369,287.5 369,296.5"/>
+    <polygon points="100,147 95.5,157 104.5,157"/>
+  </g>
+
+  <g font-size="13.5" fill="var(--ink)">
+    <g text-anchor="middle">
+      <text x="315" y="95">judge</text>
+      <text x="645" y="95">uncertain tags</text>
+      <text x="515" y="190">distill</text>
+      <text x="315" y="283">gate</text>
+    </g>
+    <text x="112" y="193">PASS writes</text>
+    <text x="112" y="209">the rule</text>
+  </g>
+  <g font-size="13" fill="var(--ink-muted)" text-anchor="middle">
+    <text x="515" y="216">decided rows become lessons</text>
+    <text x="315" y="311">old rules against new</text>
+  </g>
+
+  <g fill="var(--surface-raised)">
+    <rect x="50" y="62" width="200" height="84" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+    <rect x="380" y="62" width="200" height="84" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+    <rect x="710" y="62" width="200" height="84" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+    <rect x="50" y="250" width="200" height="84" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+    <rect x="380" y="250" width="200" height="84" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <rect x="710" y="250" width="200" height="84" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+  </g>
+
+  <g font-size="17" font-weight="600" fill="var(--ink)">
+    <text x="66" y="90">Rulebook</text>
+    <text x="396" y="90">Claims</text>
+    <text x="726" y="90">Tag decisions</text>
+    <text x="66" y="278">Rule changes</text>
+    <text x="396" y="278">Runs</text>
+    <text x="726" y="278">Agent settings</text>
+  </g>
+  <g font-size="13.5" fill="var(--ink-muted)">
+    <text x="66" y="112">the rules, one row per tag</text>
+    <text x="396" y="112">the claims and their tags</text>
+    <text x="726" y="112">one row per claim and tag</text>
+    <text x="66" y="300">lessons from decisions</text>
+    <text x="396" y="300">a result card for each step</text>
+    <text x="726" y="300">the Paused switch</text>
+  </g>
+  <g font-size="13.5" fill="var(--ink)">
+    <text x="66" y="130">agent writes, after a PASS</text>
+    <text x="396" y="130">agent writes the tags</text>
+    <text x="396" y="318">record</text>
+    <text x="726" y="318">checked before every step</text>
+  </g>
+  <g font-size="13.5" font-weight="600" fill="var(--accent)">
+    <text x="726" y="130">editors decide</text>
+    <text x="66" y="318">rule owner approves</text>
+  </g>
+
+  <g font-size="13.5" fill="var(--ink)">
+    <rect x="50" y="361" width="26" height="16" rx="4" fill="var(--surface-raised)" stroke="var(--ink)" stroke-width="1.5"/>
+    <text x="86" y="374">agent writes</text>
+    <rect x="226" y="361" width="26" height="16" rx="4" fill="var(--surface-raised)" stroke="var(--accent)" stroke-width="2.5"/>
+    <text x="262" y="374">people decide</text>
+    <rect x="408" y="361" width="26" height="16" rx="4" fill="var(--surface-raised)" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="444" y="374">record and switches</text>
+  </g>
+</svg>

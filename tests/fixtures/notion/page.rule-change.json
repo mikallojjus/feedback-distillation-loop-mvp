@@ -1,0 +1,40 @@
+{
+  "object": "page",
+  "id": "d0000000-0000-4000-8000-000000000001",
+  "created_time": "2026-10-13T17:00:00.000Z",
+  "last_edited_time": "2026-10-13T17:20:00.000Z",
+  "created_by": { "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" },
+  "last_edited_by": { "object": "user", "id": "bbbbbbbb-0000-4000-8000-00000000b0b0" },
+  "cover": null,
+  "icon": null,
+  "parent": { "type": "database_id", "database_id": "833efad0-634f-4360-8ca1-8e4f7291cc02" },
+  "archived": false,
+  "in_trash": false,
+  "url": "https://www.notion.so/Hedged-trajectories-are-not-forecasts-d0000000000040008000000000000001",
+  "properties": {
+    "Lesson title": {
+      "id": "title",
+      "type": "title",
+      "title": [{ "type": "text", "text": { "content": "Hedged trajectories are not forecasts", "link": null }, "plain_text": "Hedged trajectories are not forecasts", "href": null }]
+    },
+    "Lesson ID": { "id": "%41ru1", "type": "unique_id", "unique_id": { "prefix": "LS", "number": 3 } },
+    "Tag": { "id": "%42ru2", "type": "relation", "relation": [{ "id": "a0000000-0000-4000-8000-000000000008" }], "has_more": false },
+    "Rule": { "id": "%43ru3", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "Predictive rule 1", "link": null }, "plain_text": "Predictive rule 1", "href": null }] },
+    "Kind": { "id": "%44ru4", "type": "select", "select": { "id": "oc4r", "name": "Change the rule", "color": "orange" } },
+    "Current text": { "id": "%45ru5", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "1. Fires on a future marker.", "link": null }, "plain_text": "1. Fires on a future marker.", "href": null }] },
+    "Proposed text": { "id": "%46ru6", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "1. Fires on an unconditional future marker.", "link": null }, "plain_text": "1. Fires on an unconditional future marker.", "href": null }] },
+    "Editor wording": { "id": "%47ru7", "type": "rich_text", "rich_text": [] },
+    "Status": { "id": "%48ru8", "type": "select", "select": { "id": "oc8r", "name": "Approved", "color": "blue" } },
+    "Approved by": { "id": "%49ru9", "type": "people", "people": [{ "object": "user", "id": "bbbbbbbb-0000-4000-8000-00000000b0b0" }] },
+    "Rubric version": { "id": "%50rua", "type": "rich_text", "rich_text": [] },
+    "Gate result": { "id": "%51rub", "type": "rich_text", "rich_text": [] },
+    "Created": { "id": "%52ruc", "type": "created_time", "created_time": "2026-10-13T17:00:00.000Z" },
+    "Supporting rows": {
+      "id": "%53rud",
+      "type": "relation",
+      "relation": [{ "id": "7f3c1a52-0b6e-4d9a-8f21-5c4d3b2a1e90" }, { "id": "7f3c1a52-0b6e-4d9a-8f21-5c4d3b2a1e91" }],
+      "has_more": false
+    },
+    "Result card": { "id": "%54rue", "type": "relation", "relation": [], "has_more": false }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "agent": "claim-tagger",
+  "notion": {
+    "max_text": 1900
+  },
+  "thresholds": {
+    "t_apply": 0.75,
+    "t_skip": 0.25
+  },
+  "readiness": {
+    "fix_polarities": [
+      "Issue"
+    ]
+  },
+  "queue": {
+    "weekly_cap_default": 40,
+    "why_max_words": 40
+  },
+  "scope": {
+    "code_decided_tags": [
+      "Unsourced",
+      "Improperly sourced",
+      "Source inaccessible"
+    ],
+    "human_only_tags": [
+      "Editor verified"
+    ],
+    "source_reading_tags": [
+      "Improperly sourced",
+      "Source inaccessible"
+    ]
+  }
+}

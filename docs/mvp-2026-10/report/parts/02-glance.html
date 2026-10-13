@@ -1,0 +1,33 @@
+<!-- ============================== 1 AT A GLANCE ============================== -->
+<section id="glance" role="tabpanel" aria-labelledby="tab-glance">
+  <h2>At a glance</h2>
+
+  <div class="plain">
+    <p class="geo-eyebrow plain-label">In short</p>
+    <ul>
+      <li>TODO: two sentences on what was built: a <dfn data-t="rulebook">rulebook</dfn> in Notion, an editor queue, and an agent that changes a rule only after a lesson passes the <dfn data-t="gate">gate</dfn>.</li>
+      <li>TODO: the headline result: the verdict of the demo lesson and the verdict of the deliberately bad one (<dfn data-t="pass-hold-fail">PASS, HOLD or FAIL</dfn>), both labelled <dfn data-t="small-sample">small sample</dfn>.</li>
+      <li>TODO: what an editor does now: decide the <dfn data-t="tag-outcome">Tag outcome</dfn> and, only when overruling the agent or the written rule, pick a <dfn data-t="why-wrong">Why wrong</dfn> reason.</li>
+      <li>TODO: what editors get back: Fixed or Still wrong on the rows behind a <dfn data-t="lesson">lesson</dfn>, after a <dfn data-t="follow-up">follow-up</dfn>.</li>
+      <li>TODO: what is not finished yet and who decides next, with a link to the tab "Decisions and next steps".</li>
+    </ul>
+  </div>
+
+  <div class="sub" id="glance-built" data-title="What was built">
+    <h3>What was built</h3>
+    <div class="geo-stat-grid">
+      <div class="geo-card"><div class="geo-stat-value">{{count:claims}}</div><div class="geo-stat-label">claims in the trial</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:decisions}}</div><div class="geo-stat-label">editor decisions recorded</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:canariesActive}}</div><div class="geo-stat-label">canaries that must always pass</div></div>
+      <div class="geo-card"><div class="geo-stat-value">{{count:editorFieldsTouched}}</div><div class="geo-stat-label">editor fields touched by the agent</div></div>
+    </div>
+    <p>TODO: list what exists at the end of the trial: the six Notion databases, the rulebook at <dfn data-t="rubric-version">rubric version</dfn> R1, the <dfn data-t="canary">canaries</dfn> and <dfn data-t="regression-case">regression cases</dfn> kept as tests, and the <code>/claim-tagger</code> skill with its subcommands. Check the four numbers above against data/counts.json.</p>
+  </div>
+
+  <div class="sub" id="glance-results" data-title="Demo results">
+    <h3>Demo results</h3>
+    <p>TODO: one row per demo step (tag run, distill, <dfn data-t="promote">promote</dfn> L-1, promote of the bad lesson, follow-up, <dfn data-t="trust-breaker">trust breaker</dfn> drill) with its verdict and a link to the evidence file in docs/mvp-2026-10/evidence.</p>
+  </div>
+
+  <aside class="terms" data-strip></aside>
+</section>

@@ -1,0 +1,97 @@
+{
+  "object": "page",
+  "id": "7f3c1a52-0b6e-4d9a-8f21-5c4d3b2a1e90",
+  "created_time": "2026-10-13T15:10:00.000Z",
+  "last_edited_time": "2026-10-13T16:02:00.000Z",
+  "created_by": { "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" },
+  "last_edited_by": { "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" },
+  "cover": null,
+  "icon": null,
+  "parent": { "type": "database_id", "database_id": "de7a08f6-d3ae-4c08-b938-7e6d762d79f2" },
+  "archived": false,
+  "in_trash": false,
+  "url": "https://www.notion.so/6aa014be141b4c6dab2c3c180f963639Predictive-7f3c1a520b6e4d9a8f215c4d3b2a1e90",
+  "properties": {
+    "Key": {
+      "id": "title",
+      "type": "title",
+      "title": [
+        {
+          "type": "text",
+          "text": { "content": "6aa014be141b4c6dab2c3c180f963639::Predictive", "link": null },
+          "annotations": { "bold": false, "italic": false, "strikethrough": false, "underline": false, "code": false, "color": "default" },
+          "plain_text": "6aa014be141b4c6dab2c3c180f963639::Predictive",
+          "href": null
+        }
+      ]
+    },
+    "Claim": { "id": "%41ta1", "type": "relation", "relation": [{ "id": "c0000000-0000-4000-8000-000000000001" }], "has_more": false },
+    "Tag": { "id": "%42ta2", "type": "relation", "relation": [{ "id": "a0000000-0000-4000-8000-000000000008" }], "has_more": false },
+    "Agent proposal": { "id": "%43ta3", "type": "select", "select": { "id": "oc3a", "name": "Do not add tag", "color": "gray" } },
+    "Agent confidence": { "id": "%44ta4", "type": "number", "number": 0.62 },
+    "Why I recommend this": {
+      "id": "%45ta5",
+      "type": "rich_text",
+      "rich_text": [
+        { "type": "text", "text": { "content": "First line\nSecond line", "link": null }, "annotations": { "bold": false, "italic": false, "strikethrough": false, "underline": false, "code": false, "color": "default" }, "plain_text": "First line\nSecond line", "href": null },
+        { "type": "text", "text": { "content": " and a tail", "link": null }, "annotations": { "bold": true, "italic": false, "strikethrough": false, "underline": false, "code": false, "color": "default" }, "plain_text": " and a tail", "href": null }
+      ]
+    },
+    "Agent full note": { "id": "%46ta6", "type": "rich_text", "rich_text": [] },
+    "Why in queue": { "id": "%47ta7", "type": "select", "select": { "id": "oc7a", "name": "Seeded decision", "color": "gray" } },
+    "Priority": { "id": "%48ta8", "type": "select", "select": { "id": "oc8a", "name": "High", "color": "red" } },
+    "Rubric version": { "id": "%49ta9", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "2026-10-13.1", "link": null }, "plain_text": "2026-10-13.1", "href": null }] },
+    "Tag outcome": { "id": "%50taa", "type": "select", "select": null },
+    "Why wrong": { "id": "%51tab", "type": "select", "select": null },
+    "Your reasoning": { "id": "%52tac", "type": "rich_text", "rich_text": [] },
+    "Decided by": { "id": "%53tad", "type": "people", "people": [] },
+    "Decided at": { "id": "%54tae", "type": "date", "date": null },
+    "Seeded outcome": { "id": "%55taf", "type": "select", "select": { "id": "ocfa", "name": "Does not apply", "color": "red" } },
+    "Seeded reasoning": {
+      "id": "%56tag",
+      "type": "rich_text",
+      "rich_text": [{ "type": "text", "text": { "content": "Rule should change: it is a likely outcome, not a forecast.", "link": null }, "plain_text": "Rule should change: it is a likely outcome, not a forecast.", "href": null }]
+    },
+    "Seeded at": { "id": "%57tah", "type": "date", "date": { "start": "2026-10-09", "end": null, "time_zone": null } },
+    "Lesson": {
+      "id": "%58tai",
+      "type": "relation",
+      "relation": [{ "id": "d0000000-0000-4000-8000-000000000001" }, { "id": "d0000000-0000-4000-8000-000000000002" }],
+      "has_more": true
+    },
+    "In regression suite": { "id": "%59taj", "type": "date", "date": { "start": "2026-10-14", "end": "2026-10-15", "time_zone": null } },
+    "Agent follow-up": { "id": "%60tak", "type": "select", "select": null },
+    "Follow-up run": { "id": "%61tal", "type": "rich_text", "rich_text": [] },
+    "Tag name": {
+      "id": "%62tam",
+      "type": "rollup",
+      "rollup": {
+        "type": "array",
+        "array": [
+          {
+            "type": "title",
+            "title": [{ "type": "text", "text": { "content": "Predictive", "link": null }, "annotations": { "bold": false, "italic": false, "strikethrough": false, "underline": false, "code": false, "color": "default" }, "plain_text": "Predictive", "href": null }]
+          }
+        ],
+        "function": "show_original"
+      }
+    },
+    "Effective outcome": { "id": "%63tan", "type": "formula", "formula": { "type": "string", "string": "Does not apply" } },
+    "Direction": { "id": "%64tao", "type": "formula", "formula": { "type": "string", "string": "Wrongly applied" } },
+    "Stage": { "id": "%65tap", "type": "formula", "formula": { "type": "string", "string": "Lesson proposed" } },
+    "Applied tag": { "id": "%66taq", "type": "formula", "formula": { "type": "string", "string": null } },
+    "Rejected tag": { "id": "%67tar", "type": "formula", "formula": { "type": "string", "string": "Predictive" } },
+    "Lesson status": {
+      "id": "%68tas",
+      "type": "rollup",
+      "rollup": {
+        "type": "array",
+        "array": [
+          { "type": "select", "select": { "id": "ors1", "name": "Proposed", "color": "yellow" } },
+          { "type": "select", "select": { "id": "ors2", "name": "Approved", "color": "blue" } }
+        ],
+        "function": "show_original"
+      }
+    }
+  }
+}

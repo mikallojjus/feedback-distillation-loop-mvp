@@ -1,0 +1,33 @@
+{
+  "object": "page",
+  "id": "f0000000-0000-4000-8000-000000000001",
+  "created_time": "2026-10-14T09:00:00.000Z",
+  "last_edited_time": "2026-10-14T09:05:00.000Z",
+  "created_by": { "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" },
+  "last_edited_by": { "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" },
+  "cover": null,
+  "icon": null,
+  "parent": { "type": "database_id", "database_id": "0c397590-fb15-4ddb-9801-0830faaa159b" },
+  "archived": false,
+  "in_trash": false,
+  "url": "https://www.notion.so/Gate-R2-L-1-f0000000000040008000000000000001",
+  "properties": {
+    "Run title": {
+      "id": "title",
+      "type": "title",
+      "title": [{ "type": "text", "text": { "content": "Gate R2 · L-1", "link": null }, "plain_text": "Gate R2 · L-1", "href": null }]
+    },
+    "Kind": { "id": "%41ru1", "type": "select", "select": { "id": "oc1u", "name": "Gate", "color": "orange" } },
+    "Rubric version": { "id": "%42ru2", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "2026-10-13.1 → 2026-10-14.1", "link": null }, "plain_text": "2026-10-13.1 → 2026-10-14.1", "href": null }] },
+    "Started": { "id": "%43ru3", "type": "date", "date": { "start": "2026-10-14T09:00:00.000+00:00", "end": "2026-10-14T09:04:30.000+00:00", "time_zone": null } },
+    "Claims judged": { "id": "%44ru4", "type": "number", "number": 86 },
+    "Canaries": { "id": "%45ru5", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "83 of 83", "link": null }, "plain_text": "83 of 83", "href": null }] },
+    "Newly failing": { "id": "%46ru6", "type": "number", "number": 0 },
+    "Per-tag summary": { "id": "%47ru7", "type": "rich_text", "rich_text": [] },
+    "Verdict": { "id": "%48ru8", "type": "select", "select": { "id": "oc8u", "name": "PASS", "color": "green" } },
+    "Summary": { "id": "%49ru9", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "PASS (small sample)", "link": null }, "plain_text": "PASS (small sample)", "href": null }] },
+    "Lesson": { "id": "%50rua", "type": "relation", "relation": [{ "id": "d0000000-0000-4000-8000-000000000001" }], "has_more": false },
+    "Cost USD": { "id": "%51rub", "type": "number", "number": 1.7 },
+    "Model": { "id": "%52ruc", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "claude-sonnet-5-5", "link": null }, "plain_text": "claude-sonnet-5-5", "href": null }] }
+  }
+}

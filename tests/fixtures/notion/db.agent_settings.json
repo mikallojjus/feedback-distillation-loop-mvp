@@ -1,0 +1,91 @@
+{
+  "object": "database",
+  "id": "43c8a1c3-a8d4-4a7f-8246-98b4789cffe6",
+  "created_time": "2026-10-13T14:05:00.000Z",
+  "last_edited_time": "2026-10-13T14:30:00.000Z",
+  "title": [
+    {
+      "type": "text",
+      "text": {
+        "content": "Agent settings",
+        "link": null
+      },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Agent settings",
+      "href": null
+    }
+  ],
+  "description": [],
+  "is_inline": false,
+  "properties": {
+    "Name": {
+      "id": "title",
+      "name": "Name",
+      "type": "title",
+      "title": {}
+    },
+    "Paused": {
+      "id": "%41ag1",
+      "name": "Paused",
+      "type": "checkbox",
+      "checkbox": {}
+    },
+    "Paused by": {
+      "id": "%42ag2",
+      "name": "Paused by",
+      "type": "people",
+      "people": {}
+    },
+    "Reason": {
+      "id": "%43ag3",
+      "name": "Reason",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Weekly cap": {
+      "id": "%44ag4",
+      "name": "Weekly cap",
+      "type": "number",
+      "number": {
+        "format": "number"
+      }
+    },
+    "Owner": {
+      "id": "%45ag5",
+      "name": "Owner",
+      "type": "people",
+      "people": {}
+    },
+    "Rubric in force": {
+      "id": "%46ag6",
+      "name": "Rubric in force",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Last run at": {
+      "id": "%47ag7",
+      "name": "Last run at",
+      "type": "date",
+      "date": {}
+    },
+    "Last run summary": {
+      "id": "%48ag8",
+      "name": "Last run summary",
+      "type": "rich_text",
+      "rich_text": {}
+    }
+  },
+  "parent": {
+    "type": "page_id",
+    "page_id": "3f8273e2-14eb-81c5-9b0c-c7576b1bb62f"
+  },
+  "url": "https://www.notion.so/43c8a1c3a8d44a7f824698b4789cffe6",
+  "archived": false
+}

@@ -1,0 +1,71 @@
+<!-- ============================== 3 NOTION WALKTHROUGH ============================== -->
+<section id="notion" role="tabpanel" aria-labelledby="tab-notion" hidden>
+  <h2>Notion walkthrough</h2>
+
+  <div class="plain">
+    <p class="geo-eyebrow plain-label">In short</p>
+    <ul>
+      <li>TODO: where editors work: the hub page "Editorial feedback loop", its four views, and what each one shows.</li>
+      <li>TODO: the queue in one picture: the same row before and after an editor decides it.</li>
+      <li>TODO: how to decide a row: Tag outcome first, Why wrong only when overruling, one sentence when the reason asks for it.</li>
+      <li>TODO: where a lesson shows up, who approves it, and what a live rule looks like.</li>
+      <li>TODO: how to read a result card in under a minute.</li>
+    </ul>
+  </div>
+
+  <div class="sub" id="notion-structure" data-title="The six databases">
+    <h3>The six databases</h3>
+    <p>TODO: one paragraph per database in the figure: what a row is, who writes it, and where an editor meets it.</p>
+    <figure class="geo-figure">
+      <div class="geo-figure-frame">
+        <!-- include:fragments/structure-figure.html -->
+      </div>
+      <figcaption class="geo-figure-caption">The six databases inside the page "Editorial feedback loop". Arrows show the order of work: the agent judges claims against the rulebook, sends uncertain tags to the queue, drafts lessons from decided rows, tests a rule change at the gate, and writes the rulebook only after a PASS. Box outlines show who writes: the agent, people, or neither (a record or a switch).</figcaption>
+    </figure>
+    <h3>One row each</h3>
+    <p>TODO: say what to notice in each sample row, for example how a row's Stage follows from the editor's decision.</p>
+    <!-- include:fragments/sample-tables.html -->
+  </div>
+
+  <div class="sub" id="notion-queue" data-title="Queue before and after">
+    <h3>Your queue, before and after</h3>
+    <p>TODO: the same queue rows before and after an editor decides them (a table or screenshots), and what changes in Stage and Direction.</p>
+  </div>
+
+  <div class="sub" id="notion-decide" data-title="How to decide a row">
+    <h3>How to decide a row</h3>
+    <p>TODO: the steps in order: read the claim and the agent's reason, set Tag outcome, pick Why wrong only when overruling, add one sentence when it is asked for. Use the column descriptions as the wording.</p>
+  </div>
+
+  <div class="sub" id="notion-lessons" data-title="Lessons and live rules">
+    <h3>Lessons waiting and live rules</h3>
+    <p>TODO: the view Lessons waiting for the rule owner (Status = Proposed), what the rule owner sets, and the Live rules view with L-1 as the example.</p>
+  </div>
+
+  <div class="sub" id="notion-card" data-title="A result card">
+    <h3>A result card</h3>
+    <p>TODO: one gate result card (Runs, kind Gate) read line by line: verdict, canaries, newly failing cases, per-tag summary, and the words small sample.</p>
+  </div>
+
+  <div class="sub" id="notion-ddl" data-title="Database definitions" data-layer="tech">
+    <h3>Database definitions</h3>
+    <p>TODO: the six CREATE TABLE statements from agents/claim-tagger/schemas/notion as code blocks, with the owner of each column (editor, agent, computed).</p>
+  </div>
+
+  <div class="sub" id="notion-views" data-title="Views" data-layer="tech">
+    <h3>Views</h3>
+    <p>TODO: a table of the views (database, view, filter, sort, columns shown) from the plan's Views table, and the hub page layout.</p>
+  </div>
+
+  <div class="sub" id="notion-seed" data-title="Seed strata" data-layer="tech">
+    <h3>Seed strata</h3>
+    <p>TODO: how the {{count:claims}} claims and {{count:queueRows}} queue rows were seeded: by sample (Decided, Forecast, Random), by seeded outcome and by why in queue. Read the numbers from agents/claim-tagger/evals/seed/seed-report.json.</p>
+  </div>
+
+  <div class="sub" id="notion-check" data-title="Check by hand" data-layer="tech">
+    <h3>Check-by-hand rows</h3>
+    <p>TODO: the table of audit rows the seed did not turn into a decision, from agents/claim-tagger/evals/seed/check-by-hand.md, with the reason for each.</p>
+  </div>
+
+  <aside class="terms" data-strip></aside>
+</section>

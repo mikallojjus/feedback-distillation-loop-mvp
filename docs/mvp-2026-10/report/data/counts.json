@@ -1,0 +1,41 @@
+{
+  "_about": "Numbers for the report. Write {{count:key}} in any part or fragment and build.mjs fills it from this file (dots reach into groups: {{count:seed.claims}}). A key is a plain value or an object {value, source, pending}. source says which file the figure comes from. pending: true marks a figure that is not measured yet: the build warns about it, and --strict refuses to build while a pending key is used. Keys starting with an underscore are ignored.",
+  "rulebookTags": {
+    "value": 14,
+    "source": "agents/claim-tagger/rubric/rubric.json: tag_count"
+  },
+  "judgedTags": {
+    "value": 12,
+    "source": "agents/claim-tagger/rubric/rubric.json: judged_count"
+  },
+  "claims": {
+    "value": 60,
+    "source": "agents/claim-tagger/evals/seed/seed-report.json: claims_total"
+  },
+  "queueRows": {
+    "value": 50,
+    "source": "agents/claim-tagger/evals/seed/seed-report.json: decisions_total"
+  },
+  "queueRowsOpen": {
+    "value": 23,
+    "source": "agents/claim-tagger/evals/seed/seed-report.json: decisions_by_seeded_outcome.open"
+  },
+  "decisions": {
+    "value": 27,
+    "source": "agents/claim-tagger/evals/seed/seed-report.json: decisions_with_seeded_outcome (seeded decisions only; the Editor persona's decisions from the demo are added to this figure)",
+    "pending": true
+  },
+  "canariesTotal": {
+    "value": 86,
+    "source": "agents/claim-tagger/evals/canaries.jsonl: number of lines"
+  },
+  "canariesActive": {
+    "value": 83,
+    "source": "agents/claim-tagger/evals/canaries.jsonl: lines with active true"
+  },
+  "editorFieldsTouched": {
+    "value": "not measured",
+    "source": "docs/mvp-2026-10/evidence: the editor-field snapshot comparison after the demo (verify output)",
+    "pending": true
+  }
+}

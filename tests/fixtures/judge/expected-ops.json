@@ -1,0 +1,122 @@
+[
+  {
+    "op": "update",
+    "database": "claims",
+    "key": "f001",
+    "pageId": "claim-page-f001",
+    "properties": {
+      "Agent tags": [
+        {
+          "rulebook": "Opinion"
+        },
+        {
+          "rulebook": "Predictive"
+        },
+        {
+          "rulebook": "Unsourced"
+        }
+      ],
+      "Readiness": "Fix needed",
+      "Tag confidence": "Context-dependent · do not apply · 0.95 · 3/3 runs · Context-dependent description\nDebate · do not apply · 0.95 · 3/3 runs · Debate description\nFactual · do not apply · 0.95 · 3/3 runs · Factual description\nHypothetical · do not apply · 0.95 · 3/3 runs · Hypothetical description\nImproperly sourced · do not apply · 1.00 · 3/3 runs · Improperly sourced description\nMultiple statements · do not apply · 0.95 · 3/3 runs · Multiple statements description\nOpinion · apply · 0.85 · 3/3 runs · Opinion rule 2\nPredictive · apply · 0.85 · 2/3 runs · Predictive rule 1\nSelf-contained · do not apply · 0.95 · 3/3 runs · Self-contained description\nSimple · do not apply · 0.95 · 3/3 runs · Simple description\nSingle core statement · do not apply · 0.95 · 3/3 runs · Single core statement description\nSource inaccessible · do not apply · 1.00 · 3/3 runs · Source inaccessible description\nUnsourced · apply · 1.00 · 3/3 runs · Unsourced description",
+      "Last judged": "2026-10-13.1 · j1"
+    },
+    "opts": {}
+  },
+  {
+    "op": "update",
+    "database": "claims",
+    "key": "f002",
+    "pageId": "claim-page-f002",
+    "properties": {
+      "Readiness": "Not checkable",
+      "Tag confidence": "Context-dependent · do not apply · 0.95 · 3/3 runs · Context-dependent description\nDebate · apply · 0.90 · 3/3 runs · Debate rule 1\nFactual · do not apply · 0.95 · 3/3 runs · Factual description\nHypothetical · do not apply · 0.95 · 3/3 runs · Hypothetical description\nImproperly sourced · cannot tell · - · 3/3 runs · Improperly sourced description\nMultiple statements · do not apply · 0.95 · 3/3 runs · Multiple statements description\nOpinion · do not apply · 0.95 · 3/3 runs · Opinion description\nPredictive · apply · 0.80 · 3/3 runs · Predictive rule 1 · editor: Does not apply (kept)\nSelf-contained · do not apply · 0.95 · 3/3 runs · Self-contained description\nSimple · do not apply · 0.95 · 3/3 runs · Simple description\nSingle core statement · do not apply · 0.95 · 3/3 runs · Single core statement description\nSource inaccessible · cannot tell · - · 3/3 runs · Source inaccessible description\nUnsourced · do not apply · 1.00 · 3/3 runs · Unsourced description",
+      "Last judged": "2026-10-13.1 · j1"
+    },
+    "opts": {}
+  },
+  {
+    "op": "update",
+    "database": "claims",
+    "key": "f003",
+    "pageId": "claim-page-f003",
+    "properties": {
+      "Agent tags": [
+        {
+          "rulebook": "Hypothetical"
+        }
+      ],
+      "Readiness": "Fix needed",
+      "Tag confidence": "Context-dependent · do not apply · 0.95 · 3/3 runs · Context-dependent description\nDebate · do not apply · 0.95 · 3/3 runs · Debate description\nFactual · do not apply · 0.95 · 3/3 runs · Factual description\nHypothetical · apply · 0.90 · 3/3 runs · Hypothetical rule 1\nImproperly sourced · cannot tell · - · 3/3 runs · Improperly sourced description\nMultiple statements · do not apply · 0.95 · 3/3 runs · Multiple statements description\nOpinion · do not apply · 0.95 · 3/3 runs · Opinion description\nPredictive · do not apply · 0.95 · 3/3 runs · Predictive rule 2\nSelf-contained · do not apply · 0.95 · 3/3 runs · Self-contained description\nSimple · do not apply · 0.95 · 3/3 runs · Simple description\nSingle core statement · do not apply · 0.95 · 3/3 runs · Single core statement description\nSource inaccessible · cannot tell · - · 3/3 runs · Source inaccessible description\nUnsourced · do not apply · 1.00 · 3/3 runs · Unsourced description",
+      "Last judged": "2026-10-13.1 · j1"
+    },
+    "opts": {}
+  },
+  {
+    "op": "update",
+    "database": "tag_decisions",
+    "key": "f001::Improperly sourced",
+    "pageId": "row-page-f001-Improperly sourced",
+    "properties": {
+      "Agent proposal": "Do not add tag",
+      "Agent confidence": 1,
+      "Why I recommend this": "No source is attached, so there is nothing to read or to check; 0 of 3 runs applied it",
+      "Agent full note": "Judge run j1 · rubric 2026-10-13.1 · verdict do not apply (3/3 runs)\nRun 1: do not apply · p 1.00 · Improperly sourced description · No source is attached, so there is nothing to read or to check.\nRun 2: do not apply · p 1.00 · Improperly sourced description · No source is attached, so there is nothing to read or to check.\nRun 3: do not apply · p 1.00 · Improperly sourced description · No source is attached, so there is nothing to read or to check.",
+      "Priority": "Medium",
+      "Rubric version": "2026-10-13.1"
+    },
+    "opts": {
+      "guard": {
+        "undecided": true
+      }
+    }
+  },
+  {
+    "op": "update",
+    "database": "tag_decisions",
+    "key": "f003::Predictive",
+    "pageId": "row-page-f003-Predictive",
+    "properties": {
+      "Agent proposal": "Remove tag",
+      "Agent confidence": 0.95,
+      "Why I recommend this": "The saving is conditional on the proposed policy, so Hypothetical owns it; 0 of 3 runs applied it",
+      "Agent full note": "Judge run j1 · rubric 2026-10-13.1 · verdict do not apply (3/3 runs)\nRun 1: do not apply · p 0.95 · Predictive rule 2 · The saving is conditional on the proposed policy, so Hypothetical owns it.\nRun 2: do not apply · p 0.95 · Predictive rule 2 · The saving is conditional on the proposed policy, so Hypothetical owns it.\nRun 3: do not apply · p 0.95 · Predictive rule 2 · The saving is conditional on the proposed policy, so Hypothetical owns it.",
+      "Why in queue": "Rule changed",
+      "Rubric version": "2026-10-13.1"
+    },
+    "opts": {
+      "guard": {
+        "undecided": true
+      }
+    }
+  },
+  {
+    "op": "create",
+    "database": "tag_decisions",
+    "key": "f001::Predictive",
+    "pageId": null,
+    "properties": {
+      "Claim": [
+        {
+          "claims": "f001"
+        }
+      ],
+      "Tag": [
+        {
+          "rulebook": "Predictive"
+        }
+      ],
+      "Agent proposal": "Add tag",
+      "Agent confidence": 0.85,
+      "Why I recommend this": "An unconditional is-likely-to forecast about the actual future; 2 of 3 runs applied it",
+      "Agent full note": "Judge run j1 · rubric 2026-10-13.1 · verdict apply (2/3 runs)\nRun 1: apply · p 0.90 · Predictive rule 1 · trigger \"is likely to uphold\" · An unconditional is-likely-to forecast about the actual future.\nRun 2: apply · p 0.80 · Predictive rule 1 · trigger \"is likely to uphold\" · Forecast marker, no scenario.\nRun 3: do not apply · p 0.60 · Predictive description · Likely is a tendency, not a forecast.",
+      "Why in queue": "Low confidence",
+      "Priority": "High",
+      "Rubric version": "2026-10-13.1"
+    },
+    "opts": {
+      "guard": {
+        "undecided": true
+      }
+    }
+  }
+]

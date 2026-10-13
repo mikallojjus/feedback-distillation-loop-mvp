@@ -1,0 +1,63 @@
+{
+  "object": "page",
+  "id": "c0000000-0000-4000-8000-000000000001",
+  "created_time": "2026-10-13T15:00:00.000Z",
+  "last_edited_time": "2026-10-13T15:45:00.000Z",
+  "created_by": { "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" },
+  "last_edited_by": { "object": "user", "id": "0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d" },
+  "cover": null,
+  "icon": null,
+  "parent": { "type": "database_id", "database_id": "9418c3f6-25d2-4b43-9539-f381b7ff03c2" },
+  "archived": false,
+  "in_trash": false,
+  "url": "https://www.notion.so/The-Supreme-Court-is-likely-to-expand-executive-power-c0000000000040008000000000000001",
+  "properties": {
+    "Claim title": {
+      "id": "title",
+      "type": "title",
+      "title": [{ "type": "text", "text": { "content": "The Supreme Court is likely to expand executive power further in the future", "link": null }, "plain_text": "The Supreme Court is likely to expand executive power further in the future", "href": null }]
+    },
+    "Geo ID": { "id": "%41cl1", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "6aa014be141b4c6dab2c3c180f963639", "link": null }, "plain_text": "6aa014be141b4c6dab2c3c180f963639", "href": null }] },
+    "Geo link": { "id": "%42cl2", "type": "url", "url": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6aa014be141b4c6dab2c3c180f963639" },
+    "Sources count": { "id": "%43cl3", "type": "number", "number": 2 },
+    "Source URLs": {
+      "id": "%44cl4",
+      "type": "rich_text",
+      "rich_text": [
+        { "type": "text", "text": { "content": "https://www.geobrowser.io/space/4582/aaa\n", "link": null }, "plain_text": "https://www.geobrowser.io/space/4582/aaa\n", "href": null },
+        { "type": "text", "text": { "content": "https://www.geobrowser.io/space/4582/bbb", "link": null }, "plain_text": "https://www.geobrowser.io/space/4582/bbb", "href": null }
+      ]
+    },
+    "Table": { "id": "%45cl5", "type": "select", "select": { "id": "oc5a", "name": "U.S. Politics", "color": "blue" } },
+    "Sample": { "id": "%46cl6", "type": "select", "select": { "id": "oc6a", "name": "Forecast", "color": "purple" } },
+    "Agent tags": {
+      "id": "%47cl7",
+      "type": "relation",
+      "relation": [{ "id": "a0000000-0000-4000-8000-000000000002" }, { "id": "a0000000-0000-4000-8000-000000000007" }, { "id": "a0000000-0000-4000-8000-000000000099" }],
+      "has_more": false
+    },
+    "Readiness": { "id": "%48cl8", "type": "select", "select": { "id": "oc8b", "name": "Needs editor", "color": "orange" } },
+    "Tag confidence": { "id": "%49cl9", "type": "rich_text", "rich_text": [{ "type": "text", "text": { "content": "Predictive: ask editor (0.62)", "link": null }, "plain_text": "Predictive: ask editor (0.62)", "href": null }] },
+    "Last judged": { "id": "%50cla", "type": "rich_text", "rich_text": [] },
+    "Tag decisions": {
+      "id": "%51clb",
+      "type": "relation",
+      "relation": [{ "id": "7f3c1a52-0b6e-4d9a-8f21-5c4d3b2a1e90" }, { "id": "7f3c1a52-0b6e-4d9a-8f21-5c4d3b2a1e91" }],
+      "has_more": false
+    },
+    "Decided applies": {
+      "id": "%52clc",
+      "type": "rollup",
+      "rollup": {
+        "type": "array",
+        "array": [{ "type": "formula", "formula": { "type": "string", "string": "Hypothetical" } }],
+        "function": "show_original"
+      }
+    },
+    "Decided does not apply": {
+      "id": "%53cld",
+      "type": "rollup",
+      "rollup": { "type": "array", "array": [], "function": "show_original" }
+    }
+  }
+}

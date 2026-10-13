@@ -1,0 +1,177 @@
+{
+  "object": "database",
+  "id": "0c397590-fb15-4ddb-9801-0830faaa159b",
+  "created_time": "2026-10-13T14:05:00.000Z",
+  "last_edited_time": "2026-10-13T14:30:00.000Z",
+  "title": [
+    {
+      "type": "text",
+      "text": {
+        "content": "Runs",
+        "link": null
+      },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Runs",
+      "href": null
+    }
+  ],
+  "description": [],
+  "is_inline": false,
+  "properties": {
+    "Run title": {
+      "id": "title",
+      "name": "Run title",
+      "type": "title",
+      "title": {}
+    },
+    "Kind": {
+      "id": "%41ru1",
+      "name": "Kind",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "oru10xxx",
+            "name": "Tag",
+            "color": "gray"
+          },
+          {
+            "id": "oru11xxx",
+            "name": "Distill",
+            "color": "brown"
+          },
+          {
+            "id": "oru12xxx",
+            "name": "Gate",
+            "color": "orange"
+          },
+          {
+            "id": "oru13xxx",
+            "name": "Follow-up",
+            "color": "yellow"
+          },
+          {
+            "id": "oru14xxx",
+            "name": "Smoke",
+            "color": "green"
+          }
+        ]
+      }
+    },
+    "Rubric version": {
+      "id": "%42ru2",
+      "name": "Rubric version",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Started": {
+      "id": "%43ru3",
+      "name": "Started",
+      "type": "date",
+      "date": {}
+    },
+    "Claims judged": {
+      "id": "%44ru4",
+      "name": "Claims judged",
+      "type": "number",
+      "number": {
+        "format": "number"
+      }
+    },
+    "Canaries": {
+      "id": "%45ru5",
+      "name": "Canaries",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Newly failing": {
+      "id": "%46ru6",
+      "name": "Newly failing",
+      "type": "number",
+      "number": {
+        "format": "number"
+      }
+    },
+    "Per-tag summary": {
+      "id": "%47ru7",
+      "name": "Per-tag summary",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Verdict": {
+      "id": "%48ru8",
+      "name": "Verdict",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "oru80xxx",
+            "name": "PASS",
+            "color": "pink"
+          },
+          {
+            "id": "oru81xxx",
+            "name": "HOLD",
+            "color": "red"
+          },
+          {
+            "id": "oru82xxx",
+            "name": "FAIL",
+            "color": "default"
+          },
+          {
+            "id": "oru83xxx",
+            "name": "n/a",
+            "color": "gray"
+          }
+        ]
+      }
+    },
+    "Summary": {
+      "id": "%49ru9",
+      "name": "Summary",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Lesson": {
+      "id": "%50rua",
+      "name": "Lesson",
+      "type": "relation",
+      "relation": {
+        "database_id": "833efad0-634f-4360-8ca1-8e4f7291cc02",
+        "type": "dual_property",
+        "dual_property": {
+          "synced_property_name": "Result card",
+          "synced_property_id": "%54rue"
+        }
+      }
+    },
+    "Cost USD": {
+      "id": "%51rub",
+      "name": "Cost USD",
+      "type": "number",
+      "number": {
+        "format": "dollar"
+      }
+    },
+    "Model": {
+      "id": "%52ruc",
+      "name": "Model",
+      "type": "rich_text",
+      "rich_text": {}
+    }
+  },
+  "parent": {
+    "type": "page_id",
+    "page_id": "3f8273e2-14eb-81c5-9b0c-c7576b1bb62f"
+  },
+  "url": "https://www.notion.so/0c397590fb154ddb98010830faaa159b",
+  "archived": false
+}

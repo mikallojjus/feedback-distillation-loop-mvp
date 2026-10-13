@@ -1,0 +1,181 @@
+{
+  "object": "database",
+  "id": "89043d4a-7490-41ff-b834-f96a5239e148",
+  "created_time": "2026-10-13T14:05:00.000Z",
+  "last_edited_time": "2026-10-13T14:30:00.000Z",
+  "title": [
+    {
+      "type": "text",
+      "text": {
+        "content": "Rulebook",
+        "link": null
+      },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Rulebook",
+      "href": null
+    }
+  ],
+  "description": [],
+  "is_inline": false,
+  "properties": {
+    "Tag title": {
+      "id": "title",
+      "name": "Tag title",
+      "type": "title",
+      "title": {}
+    },
+    "Status": {
+      "id": "%41ru1",
+      "name": "Status",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "oru10xxx",
+            "name": "Verified",
+            "color": "gray"
+          },
+          {
+            "id": "oru11xxx",
+            "name": "Proposed",
+            "color": "brown"
+          },
+          {
+            "id": "oru12xxx",
+            "name": "Retired",
+            "color": "orange"
+          }
+        ]
+      }
+    },
+    "Category": {
+      "id": "%42ru2",
+      "name": "Category",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "oru20xxx",
+            "name": "Meaning",
+            "color": "brown"
+          },
+          {
+            "id": "oru21xxx",
+            "name": "Quality",
+            "color": "orange"
+          },
+          {
+            "id": "oru22xxx",
+            "name": "Format",
+            "color": "yellow"
+          },
+          {
+            "id": "oru23xxx",
+            "name": "Usage",
+            "color": "green"
+          },
+          {
+            "id": "oru24xxx",
+            "name": "Check",
+            "color": "blue"
+          }
+        ]
+      }
+    },
+    "Polarity": {
+      "id": "%43ru3",
+      "name": "Polarity",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "oru30xxx",
+            "name": "Classification",
+            "color": "orange"
+          },
+          {
+            "id": "oru31xxx",
+            "name": "Issue",
+            "color": "yellow"
+          },
+          {
+            "id": "oru32xxx",
+            "name": "Positive",
+            "color": "green"
+          }
+        ]
+      }
+    },
+    "Counterpart": {
+      "id": "%44ru4",
+      "name": "Counterpart",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Description": {
+      "id": "%45ru5",
+      "name": "Description",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Example claims": {
+      "id": "%46ru6",
+      "name": "Example claims",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "When to use": {
+      "id": "%47ru7",
+      "name": "When to use",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Human only": {
+      "id": "%48ru8",
+      "name": "Human only",
+      "type": "checkbox",
+      "checkbox": {}
+    },
+    "Judged": {
+      "id": "%49ru9",
+      "name": "Judged",
+      "type": "checkbox",
+      "checkbox": {}
+    },
+    "Rule version": {
+      "id": "%50rua",
+      "name": "Rule version",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Tag hash": {
+      "id": "%51rub",
+      "name": "Tag hash",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Changed by": {
+      "id": "%52ruc",
+      "name": "Changed by",
+      "type": "relation",
+      "relation": {
+        "database_id": "833efad0-634f-4360-8ca1-8e4f7291cc02",
+        "type": "single_property",
+        "single_property": {}
+      }
+    }
+  },
+  "parent": {
+    "type": "page_id",
+    "page_id": "3f8273e2-14eb-81c5-9b0c-c7576b1bb62f"
+  },
+  "url": "https://www.notion.so/89043d4a749041ffb834f96a5239e148",
+  "archived": false
+}

@@ -1,0 +1,162 @@
+{
+  "id": "f001",
+  "run": 2,
+  "text_hash": "sha256:7800f6bb204b4b18",
+  "status": "ok",
+  "error": null,
+  "tags": [
+    {
+      "name": "Context-dependent",
+      "decision": "do_not_apply",
+      "p": 0.95,
+      "rule_ref": "Context-dependent description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No rule of Context-dependent fires on this claim.",
+      "basis": "model"
+    },
+    {
+      "name": "Debate",
+      "decision": "do_not_apply",
+      "p": 0.95,
+      "rule_ref": "Debate description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No rule of Debate fires on this claim.",
+      "basis": "model"
+    },
+    {
+      "name": "Factual",
+      "decision": "do_not_apply",
+      "p": 0.95,
+      "rule_ref": "Factual description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No rule of Factual fires on this claim.",
+      "basis": "model"
+    },
+    {
+      "name": "Hypothetical",
+      "decision": "do_not_apply",
+      "p": 0.95,
+      "rule_ref": "Hypothetical description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No rule of Hypothetical fires on this claim.",
+      "basis": "model"
+    },
+    {
+      "name": "Improperly sourced",
+      "decision": "do_not_apply",
+      "p": 1,
+      "rule_ref": "Improperly sourced description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No source is attached, so there is nothing to read or to check.",
+      "basis": "deterministic"
+    },
+    {
+      "name": "Multiple statements",
+      "decision": "do_not_apply",
+      "p": 0.95,
+      "rule_ref": "Multiple statements description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No rule of Multiple statements fires on this claim.",
+      "basis": "model"
+    },
+    {
+      "name": "Opinion",
+      "decision": "apply",
+      "p": 0.85,
+      "rule_ref": "Opinion rule 2",
+      "rule_hash": null,
+      "trigger": "is likely to uphold",
+      "reason": "A judgement about a future ruling.",
+      "basis": "model"
+    },
+    {
+      "name": "Predictive",
+      "decision": "apply",
+      "p": 0.8,
+      "rule_ref": "Predictive rule 1",
+      "rule_hash": null,
+      "trigger": "is likely to uphold",
+      "reason": "Forecast marker, no scenario.",
+      "basis": "model"
+    },
+    {
+      "name": "Self-contained",
+      "decision": "do_not_apply",
+      "p": 0.95,
+      "rule_ref": "Self-contained description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No rule of Self-contained fires on this claim.",
+      "basis": "model"
+    },
+    {
+      "name": "Simple",
+      "decision": "do_not_apply",
+      "p": 0.95,
+      "rule_ref": "Simple description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No rule of Simple fires on this claim.",
+      "basis": "model"
+    },
+    {
+      "name": "Single core statement",
+      "decision": "do_not_apply",
+      "p": 0.95,
+      "rule_ref": "Single core statement description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No rule of Single core statement fires on this claim.",
+      "basis": "model"
+    },
+    {
+      "name": "Source inaccessible",
+      "decision": "do_not_apply",
+      "p": 1,
+      "rule_ref": "Source inaccessible description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No source is attached, so there is nothing to read or to check.",
+      "basis": "deterministic"
+    },
+    {
+      "name": "Unsourced",
+      "decision": "apply",
+      "p": 1,
+      "rule_ref": "Unsourced description",
+      "rule_hash": null,
+      "trigger": null,
+      "reason": "No source is attached (sources count 0).",
+      "basis": "deterministic"
+    }
+  ],
+  "config": {
+    "driver": "fake",
+    "model": "claude-sonnet-5-5",
+    "effort": "medium",
+    "rubric_version": "2026-10-13.1",
+    "rubric_hash": "sha256:b7851e23dcd3be52",
+    "scope_hash": "sha256:5cf30ca98835c948",
+    "prompt_version": "sha256:0000000000000000",
+    "cli_version": "unknown",
+    "config_id": "sha256:aaaaaaaaaaaaaaaa"
+  },
+  "call": {
+    "batch": "r2-b01",
+    "attempt": 1,
+    "duration_ms": 1200,
+    "cost_usd": 0.012,
+    "batch_size": 3,
+    "model_usage": {
+      "claude-sonnet-5-5": {
+        "costUSD": 0.012
+      }
+    }
+  }
+}

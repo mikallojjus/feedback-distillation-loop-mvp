@@ -16,11 +16,11 @@
 | 4 setup (databases, formulas, views, hub done) + seed files built; Notion seeding pending apply.mjs | in progress |
 | 5 judge + propose (agent C running) | in progress |
 | 6 propose + first tag run | pending |
-| 7 eval (agent D running); distill, promote, followup, status pending | in progress |
+| 7 eval done; distill, promote, followup, status, cases-sync pending (agent F after B and C) | in progress |
 | 8 SKILL.md, README, headless tests | pending |
 | 9 Demo storyline end to end | pending |
 | 10 Persona reviews, dispositions | pending |
-| 11 Artifact | pending |
+| 11 Artifact frame built (build checks clean, 63 TODO placeholders); content after the demo | in progress |
 
 ## Notion ids (filled as created)
 - Hub page: 3da273e214eb80c180d5fd0894bc2db8

@@ -1,0 +1,196 @@
+{
+  "object": "database",
+  "id": "833efad0-634f-4360-8ca1-8e4f7291cc02",
+  "created_time": "2026-10-13T14:05:00.000Z",
+  "last_edited_time": "2026-10-13T14:30:00.000Z",
+  "title": [
+    {
+      "type": "text",
+      "text": {
+        "content": "Rule changes",
+        "link": null
+      },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Rule changes",
+      "href": null
+    }
+  ],
+  "description": [],
+  "is_inline": false,
+  "properties": {
+    "Lesson title": {
+      "id": "title",
+      "name": "Lesson title",
+      "type": "title",
+      "title": {}
+    },
+    "Lesson ID": {
+      "id": "%41ru1",
+      "name": "Lesson ID",
+      "type": "unique_id",
+      "unique_id": {
+        "prefix": "LS"
+      }
+    },
+    "Tag": {
+      "id": "%42ru2",
+      "name": "Tag",
+      "type": "relation",
+      "relation": {
+        "database_id": "89043d4a-7490-41ff-b834-f96a5239e148",
+        "type": "single_property",
+        "single_property": {}
+      }
+    },
+    "Rule": {
+      "id": "%43ru3",
+      "name": "Rule",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Kind": {
+      "id": "%44ru4",
+      "name": "Kind",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "oru40xxx",
+            "name": "Clarify wording",
+            "color": "yellow"
+          },
+          {
+            "id": "oru41xxx",
+            "name": "Add boundary example",
+            "color": "green"
+          },
+          {
+            "id": "oru42xxx",
+            "name": "Change the rule",
+            "color": "blue"
+          },
+          {
+            "id": "oru43xxx",
+            "name": "New or promoted tag",
+            "color": "purple"
+          }
+        ]
+      }
+    },
+    "Current text": {
+      "id": "%45ru5",
+      "name": "Current text",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Proposed text": {
+      "id": "%46ru6",
+      "name": "Proposed text",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Editor wording": {
+      "id": "%47ru7",
+      "name": "Editor wording",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Status": {
+      "id": "%48ru8",
+      "name": "Status",
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "oru80xxx",
+            "name": "Proposed",
+            "color": "pink"
+          },
+          {
+            "id": "oru81xxx",
+            "name": "Approved",
+            "color": "red"
+          },
+          {
+            "id": "oru82xxx",
+            "name": "Rejected",
+            "color": "default"
+          },
+          {
+            "id": "oru83xxx",
+            "name": "Live",
+            "color": "gray"
+          },
+          {
+            "id": "oru84xxx",
+            "name": "Rolled back",
+            "color": "brown"
+          }
+        ]
+      }
+    },
+    "Approved by": {
+      "id": "%49ru9",
+      "name": "Approved by",
+      "type": "people",
+      "people": {}
+    },
+    "Rubric version": {
+      "id": "%50rua",
+      "name": "Rubric version",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Gate result": {
+      "id": "%51rub",
+      "name": "Gate result",
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Created": {
+      "id": "%52ruc",
+      "name": "Created",
+      "type": "created_time",
+      "created_time": {}
+    },
+    "Supporting rows": {
+      "id": "%53rud",
+      "name": "Supporting rows",
+      "type": "relation",
+      "relation": {
+        "database_id": "de7a08f6-d3ae-4c08-b938-7e6d762d79f2",
+        "type": "dual_property",
+        "dual_property": {
+          "synced_property_name": "Lesson",
+          "synced_property_id": "%58tai"
+        }
+      }
+    },
+    "Result card": {
+      "id": "%54rue",
+      "name": "Result card",
+      "type": "relation",
+      "relation": {
+        "database_id": "0c397590-fb15-4ddb-9801-0830faaa159b",
+        "type": "dual_property",
+        "dual_property": {
+          "synced_property_name": "Lesson",
+          "synced_property_id": "%50rua"
+        }
+      }
+    }
+  },
+  "parent": {
+    "type": "page_id",
+    "page_id": "3f8273e2-14eb-81c5-9b0c-c7576b1bb62f"
+  },
+  "url": "https://www.notion.so/833efad0634f43608ca18e4f7291cc02",
+  "archived": false
+}
