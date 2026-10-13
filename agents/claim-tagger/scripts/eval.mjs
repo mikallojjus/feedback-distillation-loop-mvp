@@ -805,6 +805,11 @@ export function renderCardMd(card) {
     const first = incomplete?.items?.[0];
     add(`Incomplete: ${gaps(incomplete?.count ?? 0)} without complete judgments${first ? `, for example ${first.id} (${first.problems[0]})` : ''}`);
   } else {
+    // One plain-words line first, for editors (the rest of the card is for the engineer and the rule owner).
+    const worse = unique([...(card.cases?.newly_failing ?? []).map((id) => (card.cases?.items ?? []).find((i) => i.case_id === id)?.tag).filter(Boolean), ...card.per_tag.filter((t) => t.broken.length).map((t) => t.tag)]);
+    if (card.verdict === 'PASS') add(`For editors: the change is live; the rows behind it are re-checked and marked Fixed or Still wrong.`);
+    else if (card.verdict === 'HOLD') add(`For editors: nothing changed; the gate needs more decided examples${card.target ? ` on ${card.target}` : ''} before it can tell whether the change helps.`);
+    else add(`For editors: nothing changed; the change would make ${worse.length ? worse.join(' and ') : 'another tag'} worse on claims you already decided, so the rule owner can reword or reject it.`);
     add(`Verdict: ${card.verdict}${card.smoke ? ' - smoke: not a gate verdict' : ''}${card.small_sample ? ` - ${small}` : ''}`);
     const c = card.canaries.candidate;
     const b = card.canaries.baseline;

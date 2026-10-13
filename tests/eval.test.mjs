@@ -328,7 +328,8 @@ test('PASS: the target gains 4 fixed and 0 broken on 8 labelled claims, every ca
 test('PASS card.md: verdict with the small-sample label, canaries, cases, target, gated tags, rollback, at most 1,900 characters', () => {
   const { md } = scenario().run();
   const lines = md.trimEnd().split('\n');
-  assert.match(lines[0], /^Verdict: PASS - .*small sample/);
+  assert.equal(lines[0], 'For editors: the change is live; the rows behind it are re-checked and marked Fixed or Still wrong.', 'the plain-words opener for editors comes first');
+  assert.match(lines[1], /^Verdict: PASS - .*small sample/);
   assert.ok(lines.some((l) => l.startsWith('Canaries: 6/6 pass under the candidate; baseline 6/6')));
   assert.ok(lines.some((l) => l.startsWith('Cases newly failing: 0 of 15 active; newly passing 1')));
   const target = lines.find((l) => l.startsWith('Target Predictive:'));
@@ -723,7 +724,8 @@ test('--smoke: one run, the same verdict logic, incomplete items are listed and 
   assert.equal(tagRow(result, 'Predictive').n, 7, 'the left-out claim is not counted');
   assert.equal(result.card.verdict, 'PASS');
   assert.equal(result.exitCode, EXIT.OK);
-  assert.match(result.md.split('\n')[0], /^Verdict: PASS - smoke: not a gate verdict - small sample/);
+  assert.match(result.md.split('\n')[0], /^For editors: /);
+  assert.match(result.md.split('\n')[1], /^Verdict: PASS - smoke: not a gate verdict - small sample/);
   assert.match(result.md, /Incomplete: 2 gating items left out for missing judgments/);
   // the same data as a gate run is incomplete
   assert.equal(s.run().exitCode, EXIT.INVALID);
@@ -734,7 +736,8 @@ test('--smoke: one run, the same verdict logic, incomplete items are listed and 
   const fail = scenario({ cand: { wrong: ['can-ctx-2'] } }).run({ smoke: true });
   assert.equal(fail.card.verdict, 'FAIL');
   assert.equal(fail.exitCode, EXIT.FAIL);
-  assert.match(fail.md.split('\n')[0], /^Verdict: FAIL - smoke: not a gate verdict/);
+  assert.match(fail.md.split('\n')[0], /^For editors: nothing changed; the change would make /);
+  assert.match(fail.md.split('\n')[1], /^Verdict: FAIL - smoke: not a gate verdict/);
 });
 
 test('with nothing to evaluate the verdict is HOLD, not PASS', () => {
@@ -932,7 +935,8 @@ test('reconfirmed: an id that is not an evaluated case is refused; card.md keeps
   const crowded = { ...card, reconfirmed: many(10), reasons: Array.from({ length: 4 }, (_, i) => `reason ${i} ${'x'.repeat(150)}`) };
   const md = renderCardMd(crowded);
   assert.ok(md.length <= CARD_MD_LIMIT, `${md.length}`);
-  assert.match(md.split('\n')[0], /^Verdict: FAIL/);
+  assert.match(md.split('\n')[0], /^For editors: nothing changed; the change would make /);
+  assert.match(md.split('\n')[1], /^Verdict: FAIL/);
   assert.match(md, /Rollback: /);
   assert.match(md, /FAIL: reason 3 /, 'the reasons rank above the reconfirmed lines');
   assert.ok(reconfirmLines(md).length < 10 && /more line\(s\) in card\.json/.test(md), 'what does not fit is announced, and it is the reconfirmed lines that go');
@@ -1086,7 +1090,8 @@ test('card.md stays within 1,900 characters in the worst case and keeps verdict,
   assert.ok(result.card.canaries.candidate.failing.length > 20);
   assert.ok(result.md.length <= CARD_MD_LIMIT, `${result.md.length} characters`);
   const lines = result.md.trimEnd().split('\n');
-  assert.match(lines[0], /^Verdict: FAIL/);
+  assert.match(lines[0], /^For editors: nothing changed; the change would make .* worse on claims you already decided, so the rule owner can reword or reject it\.$/);
+  assert.match(lines[1], /^Verdict: FAIL/);
   assert.ok(lines.some((l) => l.startsWith('Canaries: ')));
   assert.ok(lines.some((l) => l.startsWith('Cases newly failing: ')));
   assert.equal(lines.at(-1), 'Rollback: /claim-tagger promote --rollback L-1');
@@ -1099,7 +1104,8 @@ test('card.md stays within 1,900 characters in the worst case and keeps verdict,
   card.per_tag = Array.from({ length: 30 }, (_, i) => ({ ...card.per_tag[0], tag: `Tag number ${i}`, gated: true }));
   const md = renderCardMd(card);
   assert.ok(md.length <= CARD_MD_LIMIT, `${md.length}`);
-  assert.match(md.split('\n')[0], /^Verdict: FAIL/);
+  assert.match(md.split('\n')[0], /^For editors: nothing changed; the change would make /);
+  assert.match(md.split('\n')[1], /^Verdict: FAIL/);
   assert.match(md, /Rollback: /);
   assert.match(md, /more line\(s\) in card\.json/);
 });

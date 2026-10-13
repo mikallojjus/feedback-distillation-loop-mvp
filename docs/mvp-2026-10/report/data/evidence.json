@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-13T17:42:37.549Z",
+  "generated_at": "2026-10-13T17:56:04.191Z",
   "rubric": {
     "version": "2026-10-13.1",
     "hash": "sha256:63f085c84a038df8",
@@ -953,6 +953,182 @@
       }
     },
     {
+      "name": "gate-ls1-attempt5",
+      "card_id": "20261013T2150Z-promote-ls1-e",
+      "kind": "gate",
+      "lesson": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+      "target": "Predictive",
+      "verdict": "FAIL",
+      "small_sample": true,
+      "canaries": {
+        "baseline": {
+          "active": 83,
+          "passed": 83,
+          "failing": []
+        },
+        "candidate": {
+          "active": 83,
+          "passed": 83,
+          "failing": []
+        }
+      },
+      "newly_failing": [
+        "ctr-f2cc9025f0f5-predic"
+      ],
+      "newly_passing": [],
+      "target_stats": {
+        "n": 11,
+        "positives": 7,
+        "acc_base": 0.5454545454545454,
+        "acc_cand": 0.5454545454545454,
+        "delta": 0,
+        "ci": [
+          -0.2727272727272727,
+          0.2727272727272727
+        ],
+        "fixed": [
+          "ctr-c9b46cfbd720-predic"
+        ],
+        "broken": [
+          "ctr-f2cc9025f0f5-predic"
+        ]
+      },
+      "per_tag": [
+        {
+          "tag": "Context-dependent",
+          "n": 11,
+          "positives": 4,
+          "acc_base": 0.7272727272727273,
+          "acc_cand": 0.7272727272727273,
+          "delta": 0,
+          "ci": [
+            0,
+            0
+          ],
+          "gated": false,
+          "fixed": 0,
+          "broken": 0
+        },
+        {
+          "tag": "Hypothetical",
+          "n": 9,
+          "positives": 9,
+          "acc_base": 0.7777777777777778,
+          "acc_cand": 0.7777777777777778,
+          "delta": 0,
+          "ci": [
+            0,
+            0
+          ],
+          "gated": true,
+          "fixed": 0,
+          "broken": 0
+        },
+        {
+          "tag": "Predictive",
+          "n": 11,
+          "positives": 7,
+          "acc_base": 0.5454545454545454,
+          "acc_cand": 0.5454545454545454,
+          "delta": 0,
+          "ci": [
+            -0.2727272727272727,
+            0.2727272727272727
+          ],
+          "gated": true,
+          "fixed": 1,
+          "broken": 1
+        }
+      ],
+      "reconfirmed": [
+        {
+          "case_id": "ctr-c59c5313859e-contex",
+          "tag": "Context-dependent",
+          "flip": "broken",
+          "baseline": {
+            "runs": 8,
+            "decision": "undecided"
+          },
+          "candidate": {
+            "runs": 8,
+            "decision": "undecided"
+          },
+          "outcome": "noise"
+        },
+        {
+          "case_id": "ctr-f2cc9025f0f5-predic",
+          "tag": "Predictive",
+          "flip": "broken",
+          "baseline": {
+            "runs": 8,
+            "decision": "apply"
+          },
+          "candidate": {
+            "runs": 8,
+            "decision": "ask_editor"
+          },
+          "outcome": "confirmed"
+        },
+        {
+          "case_id": "ctr-c7c20ae98de9-predic",
+          "tag": "Predictive",
+          "flip": "fixed",
+          "baseline": {
+            "runs": 8,
+            "decision": "apply"
+          },
+          "candidate": {
+            "runs": 8,
+            "decision": "undecided"
+          },
+          "outcome": "noise"
+        },
+        {
+          "case_id": "ctr-c9b46cfbd720-predic",
+          "tag": "Predictive",
+          "flip": "fixed",
+          "baseline": {
+            "runs": 8,
+            "decision": "apply"
+          },
+          "candidate": {
+            "runs": 8,
+            "decision": "do_not_apply"
+          },
+          "outcome": "confirmed"
+        }
+      ],
+      "reasons": [
+        "1 regression cases newly failing: ctr-f2cc9025f0f5-predic",
+        "Predictive: accuracy lower bound -27.3 points (tolerance -5.0)"
+      ],
+      "holds": [
+        "Predictive: interval straddles zero (-27.3 to +27.3 points); more labels needed"
+      ],
+      "cost": {
+        "usd": 2.730338,
+        "baseline_usd": 0.150886,
+        "candidate_usd": 2.579452,
+        "model": "claude-sonnet-5-5",
+        "reconfirm_usd": 0.41017
+      },
+      "md": "Verdict: FAIL - small sample: a gated tag has under 30 labelled positives, read the numbers and not only the word\nCanaries: 83/83 pass under the candidate; baseline 83/83\nCases newly failing: 1 (ctr-f2cc9025f0f5-predic) of 27 active; newly passing 0; rule changed 11\nTarget Predictive: 0.0 points (95% CI -27.3 to +27.3), fixed 1, broken 1, n 11, 7 positives\nHypothetical: 77.8% -> 77.8% (0.0 points, CI 0.0 to 0.0), fixed 0, broken 0, n 9\nFAIL: 1 regression cases newly failing: ctr-f2cc9025f0f5-predic\nFAIL: Predictive: accuracy lower bound -27.3 points (tolerance -5.0)\nHOLD: Predictive: interval straddles zero (-27.3 to +27.3 points); more labels needed\nReconfirmed ctr-c59c5313859e-contex (Context-dependent, expected do_not_apply): baseline undecided over 8 runs, candidate undecided over 8 runs: broken flip was noise\nReconfirmed ctr-f2cc9025f0f5-predic (Predictive, expected apply): baseline apply over 8 runs, candidate ask_editor over 8 runs: broken flip confirmed\nReconfirmed ctr-c7c20ae98de9-predic (Predictive, expected do_not_apply): baseline apply over 8 runs, candidate undecided over 8 runs: fixed flip was noise\nReconfirmed ctr-c9b46cfbd720-predic (Predictive, expected do_not_apply): baseline apply over 8 runs, candidate do_not_apply over 8 runs: fixed flip confirmed\nNot gated (under 5 positives): Context-dependent (4 positives of 11)\nNot run: 9 cases on source-reading tags (Source inaccessible, Improperly sourced)\nBaseline f0b5d66f0b36f8e5 (rubric 2026-10-13.1) vs candidate a0d49bb16857dce8 (rubric 2026-10-13.2), 3 run(s)\nRollback: /claim-tagger promote --rollback Hedged 'likely to' needs a definite future outcome, not a tendency\n",
+      "configs": {
+        "baseline": {
+          "config16": "f0b5d66f0b36f8e5",
+          "rubric_version": "2026-10-13.1",
+          "rubric_hash": "sha256:63f085c84a038df8",
+          "scope_hash": "sha256:5cf30ca98835c948"
+        },
+        "candidate": {
+          "config16": "a0d49bb16857dce8",
+          "rubric_version": "2026-10-13.2",
+          "rubric_hash": "sha256:21adb780b42a81a0",
+          "scope_hash": "sha256:5cf30ca98835c948"
+        }
+      }
+    },
+    {
       "name": "gate-ls2-planted",
       "card_id": "20261013T2030Z-promote-ls2-demo",
       "kind": "gate",
@@ -1869,6 +2045,185 @@
           "Fix needed": 35
         }
       }
+    },
+    {
+      "name": "08-end-state-gate-held",
+      "summary": {
+        "step": 8,
+        "label": "end-state-gate-held",
+        "folder": "08-end-state-gate-held",
+        "files": [
+          "claims.jsonl",
+          "rulebook.json",
+          "queue.jsonl",
+          "decisions.jsonl",
+          "lessons.jsonl",
+          "runs.jsonl",
+          "settings.json"
+        ],
+        "pull_id": "20261013T175400Z-pull",
+        "taken_at": "2026-10-13T17:54:00.708Z",
+        "databases": [
+          "rulebook",
+          "claims",
+          "tag_decisions",
+          "rule_changes",
+          "runs",
+          "agent_settings"
+        ],
+        "counts": {
+          "rulebook": 14,
+          "claims": 60,
+          "tag_decisions": 90,
+          "rule_changes": 2,
+          "runs": 10,
+          "agent_settings": 1
+        },
+        "queue": {
+          "total": 90,
+          "by_stage": {
+            "Closed": 7,
+            "Decided": 2,
+            "Lesson proposed": 4,
+            "Regression case": 25,
+            "To review": 51,
+            "Waiting for evidence": 1
+          },
+          "by_direction": {
+            "Agent right": 12,
+            "Missed": 19,
+            "Open": 52,
+            "Wrongly applied": 7
+          },
+          "by_why_in_queue": {
+            "Auditor flag": 8,
+            "Low confidence": 50,
+            "Seeded decision": 32
+          },
+          "by_priority": {
+            "Check source": 5,
+            "High": 41,
+            "Medium": 44
+          },
+          "decided": 38,
+          "editor_decided": 13,
+          "with_lesson": 6,
+          "in_regression_suite": 32,
+          "by_follow_up": {
+            "(empty)": 90
+          }
+        },
+        "claims": {
+          "total": 60,
+          "by_readiness": {
+            "Fix needed": 35,
+            "Needs editor": 14,
+            "Ready": 11
+          },
+          "by_sample": {
+            "Decided": 33,
+            "Forecast": 17,
+            "Random": 10
+          }
+        },
+        "lessons": {
+          "total": 2,
+          "by_status": {
+            "Approved": 1,
+            "Rolled back": 1
+          },
+          "list": [
+            {
+              "id": "LS-2",
+              "key": "Gate test (deliberately bad): only pronouns make a claim Context-dependent",
+              "tag": "Context-dependent",
+              "status": "Rolled back",
+              "rubric_version": "2026-10-13.1"
+            },
+            {
+              "id": "LS-1",
+              "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+              "tag": "Predictive",
+              "status": "Approved",
+              "rubric_version": "2026-10-13.1"
+            }
+          ]
+        },
+        "runs": {
+          "total": 10,
+          "by_kind": {
+            "Baseline": 1,
+            "Distill": 2,
+            "Gate": 6,
+            "Tag": 1
+          },
+          "by_verdict": {
+            "FAIL": 6,
+            "PASS": 1,
+            "n/a": 3
+          }
+        },
+        "rulebook": {
+          "tags": 14,
+          "drift": 0,
+          "rule_versions": {
+            "2026-10-13.1": 14
+          },
+          "changed_by": []
+        },
+        "settings": {
+          "paused": false,
+          "rubric_in_force": "2026-10-13.1",
+          "last_run_summary": null
+        }
+      },
+      "queue": {
+        "rows": 90,
+        "stage": {
+          "To review": 51,
+          "Regression case": 25,
+          "Lesson proposed": 4,
+          "Waiting for evidence": 1,
+          "Decided": 2,
+          "Closed": 7
+        },
+        "direction": {
+          "Open": 52,
+          "Missed": 19,
+          "Agent right": 12,
+          "Wrongly applied": 7
+        },
+        "why_in_queue": {
+          "Low confidence": 50,
+          "Seeded decision": 32,
+          "Auditor flag": 8
+        },
+        "editor_decided": 13
+      },
+      "lessons": [
+        {
+          "key": "Gate test (deliberately bad): only pronouns make a claim Context-dependent",
+          "id": "LS-2",
+          "status": "Rolled back",
+          "tag": "Context-dependent",
+          "rule": "Context-dependent rule 2"
+        },
+        {
+          "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+          "id": "LS-1",
+          "status": "Approved",
+          "tag": "Predictive",
+          "rule": "Predictive rule 1"
+        }
+      ],
+      "claims": {
+        "rows": 60,
+        "readiness": {
+          "Needs editor": 14,
+          "Ready": 11,
+          "Fix needed": 35
+        }
+      }
     }
   ],
   "runs": [
@@ -2205,7 +2560,7 @@
     {
       "run_id": "20261013T2150Z-promote-ls1-e",
       "kind": "promote",
-      "status": "judging",
+      "status": "done",
       "runs": 3,
       "items": 71,
       "smoke": false
@@ -2231,9 +2586,63 @@
     {
       "run_id": "20261013T2150Z-promote-ls1-e-candidate",
       "kind": "judge",
-      "status": "running",
+      "status": "done",
       "model": "claude-sonnet-5-5",
       "runs": 3,
+      "counts": {
+        "done": 213,
+        "error": 0,
+        "stopped": 0,
+        "skipped": 0
+      },
+      "cost_usd": 2.320168,
+      "rubric_version": "2026-10-13.2",
+      "config_id": "sha256:a0d49bb16857dce8",
+      "items": 71,
+      "smoke": false
+    },
+    {
+      "run_id": "20261013T2150Z-promote-ls1-e-reconfirm-baseline",
+      "kind": "judge",
+      "status": "done",
+      "model": "claude-sonnet-5-5",
+      "runs": 8,
+      "counts": {
+        "done": 10,
+        "error": 0,
+        "stopped": 0,
+        "skipped": 22
+      },
+      "cost_usd": 0.150886,
+      "rubric_version": "2026-10-13.1",
+      "config_id": "sha256:f0b5d66f0b36f8e5",
+      "items": 4,
+      "smoke": false
+    },
+    {
+      "run_id": "20261013T2150Z-promote-ls1-e-reconfirm-candidate",
+      "kind": "judge",
+      "status": "done",
+      "model": "claude-sonnet-5-5",
+      "runs": 8,
+      "counts": {
+        "done": 20,
+        "error": 0,
+        "stopped": 0,
+        "skipped": 12
+      },
+      "cost_usd": 0.259284,
+      "rubric_version": "2026-10-13.2",
+      "config_id": "sha256:a0d49bb16857dce8",
+      "items": 4,
+      "smoke": false
+    },
+    {
+      "run_id": "tag-dry-20261013a",
+      "kind": "judge",
+      "status": "done",
+      "model": "claude-sonnet-5-5",
+      "runs": 1,
       "counts": {
         "done": 0,
         "error": 0,
@@ -2241,17 +2650,17 @@
         "skipped": 0
       },
       "cost_usd": 0,
-      "rubric_version": "2026-10-13.2",
-      "config_id": "sha256:a0d49bb16857dce8",
-      "items": 71,
+      "rubric_version": "2026-10-13.1",
+      "config_id": "sha256:f0b5d66f0b36f8e5",
+      "items": 0,
       "smoke": false
     }
   ],
   "persona": {
-    "total": 17,
+    "total": 18,
     "by_role": {
       "editor": 12,
-      "rule owner": 5
+      "rule owner": 6
     },
     "fields_written": [
       "Tag outcome",
@@ -2303,10 +2712,18 @@
       "cost": "0.210",
       "denials": "2",
       "editor_writes": "0"
+    },
+    {
+      "file": "tag-dry-run.summary.md",
+      "is_error": "false",
+      "turns": "8",
+      "cost": "0.191",
+      "denials": "2",
+      "editor_writes": "0"
     }
   ],
   "tests": {
     "files": 29
   },
-  "total_cost_usd": 11.15
+  "total_cost_usd": 13.88
 }

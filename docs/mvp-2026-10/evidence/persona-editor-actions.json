@@ -311,48 +311,28 @@
       "note": "Only the Editor wording property written; Status left Approved. Smallest text that still carries the four decisions: rule 1's original sentence and its two examples kept exactly (including 'is likely to' in the marker list, as instructed, so the second sentence reads as its qualification), plus exactly two sentences: hedged markers (is likely to, is likely, more likely than, on track to) fire only on a definite future outcome that only the future can settle; a hedged claim about an actor's tendency or disposition, a comparison of which approach tends to work, or a present trajectory does not fire. No Hypothetical fence, no boundary examples, no claim quoted, single paragraph, no leading '1.', 562 characters (down from 1,439)."
     },
     {
-      "role": "editor reviewer",
-      "row_url": "https://app.notion.com/p/3f8273e214eb819d8df0e2b395fbc70b",
-      "key": "f4d50e38cfc4794d985d619c072d508b::Predictive",
-      "claim": "The Trump administration will find another route to restrict mail voting before November",
+      "role": "rule owner",
+      "action": "restore attempt-4 Editor wording",
+      "row_url": "https://app.notion.com/p/3f8273e214eb81018282fba148e934a6",
+      "lesson_id": "LS-1",
+      "lesson_title": "Hedged 'likely to' needs a definite future outcome, not a tendency",
       "tag": "Predictive",
-      "agent_proposal": "Add tag",
-      "why_in_queue": "Auditor flag",
-      "priority": "Medium",
-      "agent_confidence": 0.92,
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
-      "after": {
-        "Tag outcome": "Applies",
-        "Why wrong": null,
-        "Your reasoning": "A flat, unattributed 'will' forecast that a named actor will do a specific thing before a date, with no scenario wrapper: Predictive rule 1, and none of rules 2 to 5 blocks it.",
-        "Decided at": "2026-10-13"
+      "rule": "Predictive rule 1",
+      "kind": "Change the rule",
+      "trigger": "Gate attempt 5 FAIL on the 562-character minimal wording: canaries 83/83 and Hypothetical unchanged, but Predictive 0.0 points (fixed 1, broken 1): the cognitive-offloading 'likely a temporary phase' row slid from apply to ask-editor over 8 runs and the 'uphold' row's fix became noise. The attempt-4 wording remains the best candidate (four hedged rows fixed over 8 runs, canaries 83/83, Hypothetical unchanged; only cost the adjudicated Melania Context-dependent flip), so the coordinator asked for it back; the lesson stays held at the gate pending a per-tag judge.",
+      "before": {
+        "Status": "Approved",
+        "Editor wording": "Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to, is likely to (\"the market is forecasted to grow to a multi-trillion size by 2030\", \"the largest wave of maturities is expected in the fall\"). Hedged markers (is likely to, is likely, more likely than, on track to) fire only when they attach to a definite future outcome that only the future can settle. A hedged claim about an actor's tendency or disposition, a comparison of which approach tends to work, or a present trajectory does not fire.",
+        "Approved by": null
       },
-      "written_at": "2026-10-13T17:48:35Z",
-      "time_taken": "about 1 minute",
-      "looked_up": "Opened the claim page to read the claim text (the row shows the claim only as a link); nothing else.",
-      "note": "Fresh-eyes editor review, round 1. Agreed with the agent, so no Why wrong. Only Tag outcome, Your reasoning and Decided at written; Decided by left empty."
-    },
-    {
-      "role": "editor reviewer",
-      "row_url": "https://app.notion.com/p/3f8273e214eb81bfabb9ded1c570c9fe",
-      "key": "fbd881e9ff2b4f64991acd03ae177ef5::Context-dependent",
-      "claim": "Keeping the Camp David meeting secret shields Iran-Yemen policy from public accountability",
-      "tag": "Context-dependent",
-      "agent_proposal": "Keep tag",
-      "why_in_queue": "Low confidence",
-      "priority": "High",
-      "agent_confidence": 0.65,
-      "before": { "Tag outcome": null, "Why wrong": null, "Your reasoning": "", "Decided at": null },
       "after": {
-        "Tag outcome": "Applies",
-        "Why wrong": null,
-        "Your reasoning": "'The Camp David meeting' names a kind of meeting at a named place but not which one; more than one fits, so Self-contained rule 3 fails and Context-dependent rule 3 applies.",
-        "Decided at": "2026-10-13"
+        "Status": "Approved",
+        "Editor wording": "Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to (\"the market is forecasted to grow to a multi-trillion size by 2030\", \"the largest wave of maturities is expected in the fall\"). Hedged markers (is likely to, is likely, probably) fire only when they attach to a definite future outcome or event that only the future can settle (\"the hiring freeze is likely a short-lived phase\" fires). Hedged markers do NOT fire when they describe: an actor's general tendency or disposition, which can be checked against its past record (\"the agency is likely to side with large incumbents\"); a comparison of which strategy or approach tends to work better (\"tariffs are more likely than talks to change the policy\"); or a present trajectory (\"is on track to\", \"is heading toward\"). Such claims are assessments of the present, not forecasts. In particular, a hedged claim that an actor is likely to keep doing, continue or extend what it already does (to expand, tighten or favour something further), even with a future time phrase attached, describes that actor's tendency and does not fire. This rule decides Predictive only: it never decides whether a claim is Hypothetical, which Hypothetical's own rules settle unchanged, so a conditional or scenario claim keeps the Hypothetical verdict those rules give it even where this rule would also fire, and the two tags may stand together.",
+        "Approved by": null
       },
-      "written_at": "2026-10-13T17:48:35Z",
-      "time_taken": "about 2 to 3 minutes",
-      "looked_up": "Opened the claim page to read the claim text; re-read Context-dependent rule 3 and Self-contained rule 3 in the Rulebook to confirm the could-two-things-fit test; had to infer that agreeing with 'Keep tag' means Tag outcome = Applies.",
-      "note": "Fresh-eyes editor review, round 1. Agreed with the agent's Keep tag, so no Why wrong. Only Tag outcome, Your reasoning and Decided at written; Decided by left empty."
+      "editor_wording_chars": 1439,
+      "written_at": "2026-10-13T17:53:07Z",
+      "note": "Only the Editor wording property written; Status left Approved. Copied verbatim from the before-value of the previous edit (same text as the attempt-4 scratch file, re-measured at 1,439 characters). Reading of the two failures: the minimal text lost the worked example of a hedged definite outcome, and that example is what kept the 'temporary phase' row firing, so the examples carry meaning for the judge and length alone does not explain attempt 4's Context-dependent side effect; the engineer's per-tag judge is the right fix for that."
     }
   ]
 }

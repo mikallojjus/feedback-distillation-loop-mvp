@@ -96,6 +96,15 @@ export async function main(argv = process.argv.slice(2)) {
   const plan = openPlan({ runId, sourcePull, root });
   const props = Object.fromEntries(Object.entries(built.props).filter(([, v]) => v !== null && v !== undefined && v !== ''));
   plan.create('runs', built.title, props, { content_md: built.content, note: 'run card' });
+  // Keep Agent settings current (agent-owned fields only): the editors' page shows when the agent last ran and what it did.
+  try {
+    const idMap = JSON.parse(readFileSync(join(root, 'runs', 'pull', sourcePull, 'id-map.json'), 'utf8'));
+    const settingsId = idMap.agent_settings && idMap.agent_settings['claim-tagger'];
+    if (settingsId) {
+      const summary = String(props.Summary || built.title).split('\n')[0].slice(0, 300);
+      plan.update('agent_settings', 'claim-tagger', settingsId, { 'Last run at': new Date().toISOString(), 'Last run summary': `${built.title}: ${summary}` }, { note: 'last run' });
+    }
+  } catch { /* no settings row in the pull: skip */ }
   const out = plan.write();
   console.log(`run-card: plan ${runId} written (${built.title}); next: plan.mjs check --run ${runId}, then apply.mjs --run ${runId}`);
   return EXIT.OK;

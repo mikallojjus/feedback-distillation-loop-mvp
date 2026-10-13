@@ -205,7 +205,8 @@ test('PASS: candidate, items, two judge runs, the card, a plan with exactly the 
   assert.equal(card.cost.model, 'claude-sonnet-5-5');
   const md = readFileSync(rootFile(w, 'runs', 'pr1', 'card.md'), 'utf8');
   assert.ok(md.length <= 1900);
-  assert.equal(r.out.find((l) => l.startsWith('Verdict:')) !== undefined, true);
+  const printed = r.out.find((l) => l.startsWith('For editors:'));
+  assert.ok(printed && printed.split('\n')[1].startsWith('Verdict: PASS'), 'the card is printed with the opener for editors first and the verdict second');
 
   // the plan: exactly the allowed fields, under the PASS context
   const { header, ops } = readPlan(w.root, 'pr1');
@@ -364,10 +365,10 @@ test('HOLD: only the Runs row and the lesson\'s Gate result are written; the les
   await applyPlan(w, 'pr1', 'p2');
   const lesson = w.fake.find('rule_changes', LESSON_TITLE).props;
   assert.equal(lesson.Status, 'Approved');
-  assert.match(lesson['Gate result'], /^Verdict: HOLD/);
+  assert.match(lesson['Gate result'], /^For editors: nothing changed; the gate needs more decided examples on Predictive before it can tell whether the change helps\.\nVerdict: HOLD/);
   const run = w.fake.find('runs', 'Gate 2026-10-13.2 · LS-1').props;
   assert.equal(run.Verdict, 'HOLD');
-  assert.match(run.Summary, /^Verdict: HOLD/);
+  assert.match(run.Summary, /^For editors: nothing changed; the gate needs more decided examples on Predictive before it can tell whether the change helps\.\nVerdict: HOLD/);
   assert.equal(w.fake.find('rulebook', 'Predictive').props['Rule version'], LIVE);
   assert.deepEqual(w.fake.find('rulebook', 'Predictive').props['Changed by'], []);
   assert.equal(readJson(rootFile(w, 'rubric', 'rubric.json')).rubric_version, LIVE);
