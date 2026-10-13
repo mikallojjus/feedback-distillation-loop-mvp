@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "judgment",
+  "description": "One judgment file: one item (claim or canary) under one configuration and one run number. Model-judged tags carry basis model; code-decided tags carry basis deterministic or no_source_text.",
+  "type": "object",
+  "required": ["id", "run", "text_hash", "status", "tags", "config"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "run": { "type": "integer", "minimum": 1 },
+    "text_hash": { "type": "string" },
+    "status": { "type": "string", "enum": ["ok", "error"] },
+    "error": { "type": ["string", "null"] },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "decision", "p", "rule_ref", "basis"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "decision": { "type": "string", "enum": ["apply", "do_not_apply", "ask_editor", "cannot_tell"] },
+          "p": { "type": ["number", "null"] },
+          "rule_ref": { "type": "string" },
+          "rule_hash": { "type": ["string", "null"] },
+          "trigger": { "type": ["string", "null"] },
+          "reason": { "type": ["string", "null"] },
+          "basis": { "type": "string", "enum": ["model", "deterministic", "no_source_text"] }
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "required": ["driver", "model", "rubric_version", "rubric_hash", "scope_hash", "prompt_version", "config_id"],
+      "additionalProperties": true,
+      "properties": {
+        "driver": { "type": "string", "enum": ["cli", "subagent", "fake"] },
+        "model": { "type": "string" },
+        "effort": { "type": ["string", "null"] },
+        "rubric_version": { "type": "string" },
+        "rubric_hash": { "type": "string" },
+        "scope_hash": { "type": "string" },
+        "prompt_version": { "type": "string" },
+        "cli_version": { "type": ["string", "null"] },
+        "config_id": { "type": "string" }
+      }
+    },
+    "call": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "batch": { "type": "string" },
+        "attempt": { "type": "integer" },
+        "duration_ms": { "type": "number" },
+        "cost_usd": { "type": ["number", "null"] }
+      }
+    }
+  }
+}

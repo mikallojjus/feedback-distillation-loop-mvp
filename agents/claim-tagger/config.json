@@ -1,0 +1,134 @@
+{
+  "agent": "claim-tagger",
+  "notion": {
+    "api_version": "2022-06-28",
+    "hub_page_id": "3da273e214eb80c180d5fd0894bc2db8",
+    "databases_page_id": "3f8273e214eb81c59b0cc7576b1bb62f",
+    "engineer_notes_page_id": "3f8273e214eb8137a13cd8d4d483b936",
+    "databases": {
+      "rulebook": {
+        "database_id": "89043d4a749041ffb834f96a5239e148",
+        "data_source_id": "319e6022-0b6a-4068-b560-99c83fae5bdf",
+        "key": "Tag title"
+      },
+      "claims": {
+        "database_id": "9418c3f625d24b439539f381b7ff03c2",
+        "data_source_id": "506dddee-af6e-4cbe-980f-a1ef1564d9bd",
+        "key": "Geo ID"
+      },
+      "tag_decisions": {
+        "database_id": "de7a08f6d3ae4c08b9387e6d762d79f2",
+        "data_source_id": "92c9f4a9-f729-447b-88b9-982ff0e97074",
+        "key": "Key"
+      },
+      "rule_changes": {
+        "database_id": "833efad0634f43608ca18e4f7291cc02",
+        "data_source_id": "e1836e35-d614-4434-ab34-a0ddeaa1842c",
+        "key": "Lesson title"
+      },
+      "runs": {
+        "database_id": "0c397590fb154ddb98010830faaa159b",
+        "data_source_id": "e1f2103e-6233-468c-91b4-2c2382e86d1b",
+        "key": "Run title"
+      },
+      "agent_settings": {
+        "database_id": "43c8a1c3a8d44a7f824698b4789cffe6",
+        "data_source_id": "5de4f0e4-21ab-417c-b9a5-06bbc6c143eb",
+        "key": "Name"
+      }
+    },
+    "protected_database_ids": [
+      "d1307596-e531-420f-8688-2485f3ef28ab",
+      "9e979fe1-e03d-45cd-b9b1-d971dc3d90a2"
+    ],
+    "requests_per_second": 3,
+    "page_size": 100,
+    "max_creates_per_call": 100,
+    "max_text": 1900
+  },
+  "models": {
+    "judge": "claude-sonnet-5-5",
+    "cheap": "claude-haiku-5-5",
+    "distill": "claude-opus-5-5"
+  },
+  "judge": {
+    "runs": 3,
+    "smoke_runs": 1,
+    "batch_size": 8,
+    "concurrency": 2,
+    "effort": "medium",
+    "max_turns": 1,
+    "timeout_ms": 300000,
+    "claude_bin": "claude",
+    "max_error_share": 0.1,
+    "prompt": "prompts/judge.md"
+  },
+  "thresholds": {
+    "t_apply": 0.75,
+    "t_skip": 0.25
+  },
+  "readiness": {
+    "fix_polarities": [
+      "Issue"
+    ]
+  },
+  "queue": {
+    "weekly_cap_default": 40,
+    "why_max_words": 40
+  },
+  "distill": {
+    "min_claims": 2,
+    "min_claims_rule_change": 3,
+    "owner_ruling_at": 2,
+    "overfit_ngram": 8
+  },
+  "gate": {
+    "tolerance": 0.05,
+    "min_positives": 5,
+    "bootstrap": 1000,
+    "ci": [
+      0.025,
+      0.975
+    ],
+    "ungated_flips_hold": 1,
+    "ungated_flips_fail": 3
+  },
+  "anonymise": {
+    "replacements": [
+      [
+        "Mohammed",
+        "the editor"
+      ],
+      [
+        "Moh",
+        "the editor"
+      ],
+      [
+        "Yaniv's rule",
+        "the team's rule"
+      ],
+      [
+        "Yaniv",
+        "the rule owner"
+      ],
+      [
+        "Arturas",
+        "the auditor"
+      ]
+    ]
+  },
+  "scope": {
+    "code_decided_tags": [
+      "Unsourced",
+      "Improperly sourced",
+      "Source inaccessible"
+    ],
+    "human_only_tags": [
+      "Editor verified"
+    ],
+    "source_reading_tags": [
+      "Improperly sourced",
+      "Source inaccessible"
+    ]
+  }
+}

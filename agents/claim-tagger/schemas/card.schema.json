@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "card",
+  "description": "The result card of a gate (or smoke) run: the verdict, the five gate conditions, per-tag numbers with their intervals, what was not run, and how to roll back.",
+  "type": "object",
+  "required": ["card_id", "kind", "verdict", "small_sample", "conditions", "per_tag", "configs", "stats"],
+  "additionalProperties": true,
+  "properties": {
+    "card_id": { "type": "string" },
+    "kind": { "type": "string", "enum": ["gate", "smoke", "baseline", "tag", "follow-up", "distill"] },
+    "lesson": { "type": ["string", "null"] },
+    "target": { "type": ["string", "null"] },
+    "verdict": { "type": "string", "enum": ["PASS", "HOLD", "FAIL", "n/a"] },
+    "small_sample": { "type": "boolean" },
+    "smoke": { "type": "boolean" },
+    "configs": {
+      "type": "object",
+      "properties": {
+        "baseline": { "type": ["object", "null"] },
+        "candidate": { "type": ["object", "null"] }
+      }
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["n", "status", "detail"],
+        "properties": {
+          "n": { "type": "integer", "minimum": 1, "maximum": 5 },
+          "status": { "type": "string", "enum": ["pass", "fail", "hold", "not_applicable"] },
+          "detail": { "type": "string" }
+        }
+      }
+    },
+    "holds": { "type": "array", "items": { "type": "string" } },
+    "reasons": { "type": "array", "items": { "type": "string" } },
+    "not_gated": { "type": "array", "items": { "type": "string" } },
+    "not_run": { "type": "array", "items": { "type": "object" } },
+    "canaries": { "type": ["object", "null"] },
+    "cases": { "type": ["object", "null"] },
+    "per_tag": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tag", "n", "positives", "acc_base", "acc_cand"],
+        "properties": {
+          "tag": { "type": "string" },
+          "n": { "type": "integer" },
+          "positives": { "type": "integer" },
+          "acc_base": { "type": ["number", "null"] },
+          "acc_cand": { "type": ["number", "null"] },
+          "delta": { "type": ["number", "null"] },
+          "ci": { "type": ["array", "null"] },
+          "fixed": { "type": "array" },
+          "broken": { "type": "array" },
+          "mcnemar_p": { "type": ["number", "null"] },
+          "gated": { "type": "boolean" }
+        }
+      }
+    },
+    "noise": { "type": ["object", "null"] },
+    "rollback": { "type": ["object", "null"] },
+    "stats": { "type": "object" },
+    "cost": { "type": ["object", "null"] }
+  }
+}

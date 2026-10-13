@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "plan-op",
+  "description": "One line of runs/<run-id>/plan.jsonl. The first line is a header op; every other line is a create or update against one configured database, keyed by that database's key property. Relations are arrays of Notion page ids. Properties use the Notion property names exactly.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": ["op", "plan_id", "run_id", "created_at"],
+      "additionalProperties": true,
+      "properties": {
+        "op": { "const": "header" },
+        "plan_id": { "type": "string" },
+        "run_id": { "type": "string" },
+        "created_at": { "type": "string" },
+        "source_pull": { "type": ["string", "null"] },
+        "counts": { "type": "object" },
+        "allowlist_sha": { "type": ["string", "null"] }
+      }
+    },
+    {
+      "type": "object",
+      "required": ["op", "seq", "database", "key", "properties"],
+      "additionalProperties": false,
+      "properties": {
+        "op": { "type": "string", "enum": ["create", "update"] },
+        "seq": { "type": "integer", "minimum": 1 },
+        "database": { "type": "string", "enum": ["rulebook", "claims", "tag_decisions", "rule_changes", "runs", "agent_settings"] },
+        "key": { "type": "string", "minLength": 1 },
+        "page_id": { "type": ["string", "null"] },
+        "properties": { "type": "object" },
+        "expect": { "type": ["object", "null"] },
+        "guard": { "type": ["object", "null"] },
+        "content_md": { "type": ["string", "null"] },
+        "note": { "type": ["string", "null"] }
+      }
+    }
+  ]
+}

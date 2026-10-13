@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node agents/claim-tagger/scripts/*)",
+      "Bash(node --test*)",
+      "Bash(npm test*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git add agents/claim-tagger/*)",
+      "Bash(git commit -m *)",
+      "Read(agents/**)",
+      "Read(docs/**)",
+      "Read(tests/**)",
+      "Write(agents/claim-tagger/runs/**)",
+      "mcp__claude_ai_notion__notion-fetch",
+      "mcp__claude_ai_notion__notion-query-data-sources",
+      "mcp__claude_ai_notion__notion-create-pages",
+      "mcp__claude_ai_notion__notion-update-page",
+      "mcp__claude_ai_notion__notion-get-async-task"
+    ],
+    "ask": [
+      "mcp__claude_ai_notion__notion-create-database",
+      "mcp__claude_ai_notion__notion-update-data-source",
+      "mcp__claude_ai_notion__notion-create-view",
+      "mcp__claude_ai_notion__notion-update-view"
+    ],
+    "deny": [
+      "Read(**/.env*)",
+      "Read(.env)",
+      "Bash(curl *)",
+      "Bash(git push*)",
+      "mcp__claude_ai_notion__notion-move-pages",
+      "mcp__claude_ai_notion__notion-duplicate-page",
+      "mcp__claude_ai_notion__notion-restore-pages"
+    ]
+  }
+}

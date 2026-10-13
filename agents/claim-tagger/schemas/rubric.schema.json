@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rubric file (rubric/rubric.json)",
+  "description": "The agent's only source of tagging rules: the Verified tags with their numbered rules, hashed at three levels. Format notes: skeletons/rubric-file-format.md in the research folder. Checked with scripts/lib/validate.mjs; the hashes themselves are checked by checkHashes() in scripts/lib/rubric-build.mjs.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["rubric_version", "rubric_hash", "scope", "scope_hash", "source", "tag_count", "judged_count", "counterpart_pairs", "changelog", "tags"],
+  "properties": {
+    "rubric_version": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$", "description": "YYYY-MM-DD.n; not part of any hash." },
+    "rubric_hash": { "$ref": "#/definitions/hash" },
+    "scope": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Names of the judged tags, sorted." },
+    "scope_hash": { "$ref": "#/definitions/hash" },
+    "source": { "type": "object", "description": "Provenance: where the rules were copied from, when, and under which filter. Free-form." },
+    "tag_count": { "type": "integer", "minimum": 1 },
+    "judged_count": { "type": "integer", "minimum": 0 },
+    "counterpart_pairs": {
+      "type": "array",
+      "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "string", "minLength": 1 } },
+      "description": "The mutually exclusive pairs; the judge treats each as one forced choice."
+    },
+    "changelog": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/changelogEntry" }, "description": "The last entry is the current version." },
+    "tags": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/tag" }, "description": "One entry per Verified tag, sorted by name." }
+  },
+  "definitions": {
+    "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{16}$" },
+    "changelogEntry": {
+      "type": "object",
+      "required": ["version", "date"],
+      "properties": {
+        "version": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$" },
+        "previous_version": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$" },
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "by": { "type": "string" },
+        "change": { "type": "string" },
+        "tag": { "type": "string" },
+        "kind": { "type": ["string", "null"] },
+        "ruleN": { "type": ["integer", "null"] },
+        "lesson_id": { "type": "string" },
+        "note": { "type": "string" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "text", "rule_hash"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 1 },
+        "text": { "type": "string", "minLength": 1, "description": "One line; a lesson targets one rule and a judgment cites it as 'Tag rule n'." },
+        "rule_hash": { "$ref": "#/definitions/hash" }
+      }
+    },
+    "whenToUse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preamble", "rules", "note"],
+      "properties": {
+        "preamble": { "type": "string", "description": "The lines before rule 1, joined." },
+        "rules": { "type": "array", "items": { "$ref": "#/definitions/rule" } },
+        "note": { "type": "string", "description": "The lines after the last rule, joined." }
+      }
+    },
+    "tag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name", "notion_page_id", "status", "category", "polarity", "counterpart", "geo_status", "geo_tag_id", "verified_on",
+        "evidence_url", "description", "when_to_use", "example_claims", "human_only", "deterministic", "needs_source_reading", "tag_hash", "judged"
+      ],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "notion_page_id": { "type": ["string", "null"] },
+        "status": { "const": "Verified" },
+        "category": { "type": ["string", "null"] },
+        "polarity": { "enum": ["Classification", "Issue", "Positive"] },
+        "counterpart": { "type": ["string", "null"] },
+        "geo_status": { "type": ["string", "null"] },
+        "geo_tag_id": { "type": ["string", "null"] },
+        "verified_on": { "type": ["string", "null"] },
+        "evidence_url": { "type": ["string", "null"] },
+        "description": { "type": "string" },
+        "when_to_use": { "$ref": "#/definitions/whenToUse" },
+        "example_claims": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "human_only": { "type": "boolean" },
+        "deterministic": { "type": "boolean" },
+        "needs_source_reading": { "type": "boolean" },
+        "tag_hash": { "$ref": "#/definitions/hash" },
+        "judged": { "type": "boolean" }
+      }
+    }
+  }
+}

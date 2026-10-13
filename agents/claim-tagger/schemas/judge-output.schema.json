@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "judge-output",
+  "description": "What one claude -p judge call must return: one object per claim in the batch, every in-scope tag decided exactly once.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "tags"],
+    "additionalProperties": false,
+    "properties": {
+      "id": { "type": "string", "minLength": 1 },
+      "tags": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": ["name", "decision", "p", "rule_ref", "reason"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "decision": { "type": "string", "enum": ["apply", "do_not_apply", "ask_editor", "cannot_tell"] },
+            "p": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+            "rule_ref": { "type": "string", "minLength": 1 },
+            "trigger": { "type": ["string", "null"] },
+            "reason": { "type": "string", "maxLength": 400 }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,304 @@
+{
+  "report_version": 1,
+  "claims_total": 60,
+  "claims_by_sample": {
+    "Decided": 33,
+    "Forecast": 17,
+    "Random": 10
+  },
+  "claims_in_13_oct_sample": 30,
+  "claims_from_audit_rows_only": 30,
+  "decisions_total": 50,
+  "decisions_by_seeded_outcome": {
+    "Applies": 17,
+    "Does not apply": 10,
+    "open": 23
+  },
+  "decisions_by_why_in_queue": {
+    "Auditor flag": 17,
+    "Seeded decision": 33
+  },
+  "decisions_by_tag": {
+    "Context-dependent": 10,
+    "Hypothetical": 15,
+    "Improperly sourced": 6,
+    "Predictive": 18,
+    "Unsourced": 1
+  },
+  "decisions_by_priority": {
+    "Check source": 5,
+    "High": 27,
+    "Medium": 18
+  },
+  "decisions_by_agent_proposal": {
+    "Do not add tag": 40,
+    "Keep tag": 6,
+    "Read source first": 4
+  },
+  "decisions_with_seeded_outcome": 27,
+  "decisions_with_why_wrong_hint": [
+    "6aa014be141b4c6dab2c3c180f963639::Predictive",
+    "f376c2cc2f6f4338893cce864ec82c02::Predictive"
+  ],
+  "excluded_total": 24,
+  "excluded_by_tag": {
+    "Exact duplicate": 2,
+    "Factually challenged": 2,
+    "Incorrect grammar": 2,
+    "Poor wording": 3,
+    "Semantically duplicated": 12,
+    "Wordy": 3
+  },
+  "forecast_prefixes_requested": 17,
+  "forecast_prefixes_not_found": [],
+  "forecast_geo_ids_by_prefix": {
+    "867fd9bc": [
+      "867fd9bc120ad9c6e5dd302b3f9a7ba2"
+    ],
+    "a744944a": [
+      "a744944a83893d6eb0a5d79c0bfee56f"
+    ],
+    "88b525b6": [
+      "88b525b62513782be60d3f03b19a1feb"
+    ],
+    "8b17d6ea": [
+      "8b17d6eab89f8ae1af045b071922890c"
+    ],
+    "fb71e3da": [
+      "fb71e3dae633c161386264ebf9e25cf2"
+    ],
+    "f06b756f": [
+      "f06b756f64bb5061ba6c9e1271af19d1"
+    ],
+    "f4d50e38": [
+      "f4d50e38cfc4794d985d619c072d508b"
+    ],
+    "616e1ec1": [
+      "616e1ec10d8f35fe1d3a8f41a613bf9f"
+    ],
+    "3764186f": [
+      "3764186f5a834c8180ea144dddb08add"
+    ],
+    "6e820a8a": [
+      "6e820a8a97c5496fb3125ba3317facb6"
+    ],
+    "8172f325": [
+      "8172f325d9944eb0937dcd1945f55598"
+    ],
+    "dd526c57": [
+      "dd526c57b0565aadb02f6e8c20a8e42e"
+    ],
+    "e070ab9d": [
+      "e070ab9d029b4cf0b090c16b79366351"
+    ],
+    "01c0d1ae": [
+      "01c0d1ae38864f60aa78f0629fd6a7d5"
+    ],
+    "3908289a": [
+      "3908289af0fd162e9549fb68dd97db3a"
+    ],
+    "e6195b10": [
+      "e6195b10b302460b820897480734082d"
+    ],
+    "cd8ae5d9": [
+      "cd8ae5d9923c4adfa66bb8b568979f32"
+    ]
+  },
+  "forecast_prefix_claims_already_decided": [],
+  "forecast_claims_in_sample": 9,
+  "forecast_claims_from_audit_rows_only": 8,
+  "forecast_topped_up_from_wording": [],
+  "forecast_claims_without_an_open_predictive_or_hypothetical_row": [],
+  "claims_with_unknown_sources_count": {
+    "count": 30,
+    "geo_ids": [
+      "01c0d1ae38864f60aa78f0629fd6a7d5",
+      "1516d532fa144279b159420022869f5f",
+      "157d1128ad4277bef5ee4926b49c4690",
+      "15dcb1af5908466285e716da215d36f1",
+      "1a4c000846f04c889e3032b443cbbf4c",
+      "1bff859247ecdb618af41a397d2eb6ba",
+      "22e45bef85644c04b00268519ca0a7b5",
+      "367c2673408140d9bc523a879e333276",
+      "3908289af0fd162e9549fb68dd97db3a",
+      "4bada81d9d4843dbae3b55e589a67670",
+      "4ebe12ede6b9d065d8cd7442523443d0",
+      "54d827f04e44562db5c2ee38df545c4c",
+      "6aa014be141b4c6dab2c3c180f963639",
+      "6e820a8a97c5496fb3125ba3317facb6",
+      "78dd775028795b65bb5c4945eda1c3bb",
+      "807f9fa08f284213adbd97278641f8aa",
+      "8114bb424fb742f59bc263eb83fd3998",
+      "8172f325d9944eb0937dcd1945f55598",
+      "8f9c833b41e54eee9ca78e9c2f4ffb58",
+      "975f63fffd4840cb9caebe92a4f108ce",
+      "c7ff945ecd55848eeac24d06226caed7",
+      "c8b676c3cce79edaec871afd1633ac2f",
+      "cd8ae5d9923c4adfa66bb8b568979f32",
+      "d2523b6023ca4d6ab4eb4c8a5f824e58",
+      "d7e6f069beeb50e2a58ad7173fbbc24b",
+      "dd526c57b0565aadb02f6e8c20a8e42e",
+      "e070ab9d029b4cf0b090c16b79366351",
+      "e3c28f62526e4880b9edb5c16817b27b",
+      "e6195b10b302460b820897480734082d",
+      "ea2c1abcb9e93c5e1da590f2d8dffeb7"
+    ],
+    "claim_page_urls": {
+      "01c0d1ae38864f60aa78f0629fd6a7d5": "https://app.notion.com/p/3f2273e214eb81a1af7af6aea20a28ca",
+      "1516d532fa144279b159420022869f5f": "https://app.notion.com/p/3f2273e214eb81a79c35d52a82ce31cc",
+      "157d1128ad4277bef5ee4926b49c4690": "https://app.notion.com/p/3f2273e214eb8127996bcf363fcb6b72",
+      "15dcb1af5908466285e716da215d36f1": "https://app.notion.com/p/3f2273e214eb81a2af28c384a4422d10",
+      "1a4c000846f04c889e3032b443cbbf4c": "https://app.notion.com/p/3f2273e214eb8107895ccebc88529b15",
+      "1bff859247ecdb618af41a397d2eb6ba": "https://app.notion.com/p/3f2273e214eb81b9a1e6dbc9acc95024",
+      "22e45bef85644c04b00268519ca0a7b5": "https://app.notion.com/p/3f2273e214eb812eb7ecf9a12c2085e1",
+      "367c2673408140d9bc523a879e333276": "https://app.notion.com/p/3f2273e214eb811a9080e2c7badc3eec",
+      "3908289af0fd162e9549fb68dd97db3a": "https://app.notion.com/p/3f2273e214eb810fa785dd269d2ce061",
+      "4bada81d9d4843dbae3b55e589a67670": "https://app.notion.com/p/3f2273e214eb81dd82d4ddd65cee1f47",
+      "4ebe12ede6b9d065d8cd7442523443d0": "https://app.notion.com/p/3f2273e214eb81d69e21d2f2ab9d7058",
+      "54d827f04e44562db5c2ee38df545c4c": "https://app.notion.com/p/3f2273e214eb816eb6d8cd4ead7be066",
+      "6aa014be141b4c6dab2c3c180f963639": "https://app.notion.com/p/3f2273e214eb814c8c03cb68f66cafbd",
+      "6e820a8a97c5496fb3125ba3317facb6": "https://app.notion.com/p/3f2273e214eb81edbe55fdb471bec037",
+      "78dd775028795b65bb5c4945eda1c3bb": "https://app.notion.com/p/3f2273e214eb81b5a752eabc4e6f257f",
+      "807f9fa08f284213adbd97278641f8aa": "https://app.notion.com/p/3f2273e214eb81508ee0ccd3845f63c3",
+      "8114bb424fb742f59bc263eb83fd3998": "https://app.notion.com/p/3f2273e214eb81dd9ebded6a5e71463e",
+      "8172f325d9944eb0937dcd1945f55598": "https://app.notion.com/p/3f2273e214eb81099200e296473d6b70",
+      "8f9c833b41e54eee9ca78e9c2f4ffb58": "https://app.notion.com/p/3f2273e214eb81de911de1b39c616b99",
+      "975f63fffd4840cb9caebe92a4f108ce": "https://app.notion.com/p/3f2273e214eb81e5bf88e068b647193d",
+      "c7ff945ecd55848eeac24d06226caed7": "https://app.notion.com/p/3f2273e214eb817fa492d23e42778966",
+      "c8b676c3cce79edaec871afd1633ac2f": "https://app.notion.com/p/3f2273e214eb81e28bf0e8bf972b2bb8",
+      "cd8ae5d9923c4adfa66bb8b568979f32": "https://app.notion.com/p/3f2273e214eb81b592d4eedc25b0c9d7",
+      "d2523b6023ca4d6ab4eb4c8a5f824e58": "https://app.notion.com/p/3f2273e214eb81d7b1c5d5a7c4c0e485",
+      "d7e6f069beeb50e2a58ad7173fbbc24b": "https://app.notion.com/p/3f2273e214eb81afb27eca8709417fbe",
+      "dd526c57b0565aadb02f6e8c20a8e42e": "https://app.notion.com/p/3f2273e214eb81bda25de3d21f676121",
+      "e070ab9d029b4cf0b090c16b79366351": "https://app.notion.com/p/3f2273e214eb814eaf47c5ad86e84e90",
+      "e3c28f62526e4880b9edb5c16817b27b": "https://app.notion.com/p/3f2273e214eb81f69a13fde1991c6346",
+      "e6195b10b302460b820897480734082d": "https://app.notion.com/p/3f2273e214eb8193a105d96f5e074bd4",
+      "ea2c1abcb9e93c5e1da590f2d8dffeb7": "https://app.notion.com/p/3f2273e214eb81209e55c52bf746c4fd"
+    }
+  },
+  "scrub_replacements_applied": {
+    "total": 4,
+    "by_replacement_text": {
+      "the auditor": 3,
+      "the editor": 1,
+      "the rule owner": 0,
+      "the team's rule": 0
+    }
+  },
+  "random": {
+    "seed": 20261013,
+    "pool_size": 293,
+    "method": "pool = sample claims not in Decided or Forecast, sorted by Geo ID ascending; Fisher-Yates from the end with j = floor(mulberry32(seed)() * (i + 1)); first 10 of the shuffled pool",
+    "geo_ids": [
+      "54d1fc34f5c7645cd28e433a65a554e5",
+      "435d127ece8cd463efef96e53f256b57",
+      "73aef60360f4465ba5238f45c806aaa5",
+      "cba8b37e1988b8788b3df448c5d13054",
+      "ee5b0f50b0efce59dbb403df3f6d1ea3",
+      "fbd881e9ff2b4f64991acd03ae177ef5",
+      "f2544bf6c6c67eac9ce0da21ccaf7993",
+      "79253ff311304f4aa78fa2b67e0cc64b",
+      "f76c3310ad1907cecbfa41b83ebbf766",
+      "653b8d8670a0414aad2354c71c00ebaa"
+    ]
+  },
+  "sample_quality_tags_field": [
+    "Claim quality tags — verified"
+  ],
+  "inputs": {
+    "sources/claims-to-review.13oct.jsonl": {
+      "rows": 260,
+      "sha256": "sha256:d2607e9d1e2c6961"
+    },
+    "sources/us-politics-sample.13oct.jsonl": {
+      "rows": 313,
+      "sha256": "sha256:c8bba74f520f9aea"
+    },
+    "sources/raw/us-politics-allclaims.p1.json": {
+      "rows": 100,
+      "sha256": "sha256:e84e7b31d2c94913"
+    },
+    "sources/raw/us-politics-flagged.p1.json": {
+      "rows": 31,
+      "sha256": "sha256:3a83069aa73976fd"
+    },
+    "sources/raw/us-politics-tagged.p1.json": {
+      "rows": 100,
+      "sha256": "sha256:a885d92d684e4242"
+    },
+    "sources/raw/us-politics-tagged.p2.json": {
+      "rows": 100,
+      "sha256": "sha256:c99cc8e0d9a40ce4"
+    },
+    "skeletons/cases.example.jsonl": {
+      "rows": 62,
+      "sha256": "sha256:f57354a7a50eac23"
+    }
+  },
+  "cross_check_cases": {
+    "cases_file_found": true,
+    "seeded_rows_compared": 27,
+    "agree": 27,
+    "disagree": [],
+    "seeded_rows_without_a_case": 0,
+    "note": "cases.example.jsonl derives expected from the final review note; the seed derives the outcome from Flag reason x Your decision"
+  },
+  "check_by_hand_rows": [
+    {
+      "key": "8114bb424fb742f59bc263eb83fd3998::Hypothetical",
+      "tag": "Hypothetical",
+      "seeded": "Open (no seeded outcome); priority High; proposal Do not add tag"
+    },
+    {
+      "key": "1a4c000846f04c889e3032b443cbbf4c::Improperly sourced",
+      "tag": "Improperly sourced",
+      "seeded": "Open (no seeded outcome); priority Check source; proposal Do not add tag"
+    },
+    {
+      "key": "1516d532fa144279b159420022869f5f::Improperly sourced",
+      "tag": "Improperly sourced",
+      "seeded": "Open (no seeded outcome); priority Check source; proposal Read source first"
+    },
+    {
+      "key": "15dcb1af5908466285e716da215d36f1::Improperly sourced",
+      "tag": "Improperly sourced",
+      "seeded": "Open (no seeded outcome); priority Check source; proposal Read source first"
+    },
+    {
+      "key": "975f63fffd4840cb9caebe92a4f108ce::Improperly sourced",
+      "tag": "Improperly sourced",
+      "seeded": "Open (no seeded outcome); priority Check source; proposal Read source first"
+    },
+    {
+      "key": "d2523b6023ca4d6ab4eb4c8a5f824e58::Improperly sourced",
+      "tag": "Improperly sourced",
+      "seeded": "Open (no seeded outcome); priority Check source; proposal Read source first"
+    },
+    {
+      "key": "15212f28d30959448f40f313e02cb73b::Wordy",
+      "tag": "Wordy",
+      "seeded": "Excluded (excluded-decisions.jsonl)"
+    },
+    {
+      "key": "6aa014be141b4c6dab2c3c180f963639::Predictive",
+      "tag": "Predictive",
+      "seeded": "Seeded outcome Does not apply; why_wrong_hint Rule should change; priority High"
+    },
+    {
+      "key": "f376c2cc2f6f4338893cce864ec82c02::Predictive",
+      "tag": "Predictive",
+      "seeded": "Seeded outcome Does not apply; why_wrong_hint Rule should change; priority Medium"
+    },
+    {
+      "key": "807f9fa08f284213adbd97278641f8aa::Predictive",
+      "tag": "Predictive",
+      "seeded": "Seeded outcome Applies; priority Medium"
+    },
+    {
+      "key": "c7ff945ecd55848eeac24d06226caed7::Predictive",
+      "tag": "Predictive",
+      "seeded": "Seeded outcome Applies; priority Medium"
+    }
+  ],
+  "warnings": []
+}

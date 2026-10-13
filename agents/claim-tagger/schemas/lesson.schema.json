@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "lesson",
+  "description": "One proposed or live lesson as the scripts carry it (runs/<run-id>/lessons.jsonl and the normalised pull of Rule changes). The Notion row is the record; this is its file twin.",
+  "type": "object",
+  "required": ["lesson_key", "tag", "kind", "title", "current_text", "proposed_text", "supporting_keys", "status"],
+  "additionalProperties": true,
+  "properties": {
+    "lesson_key": { "type": "string", "minLength": 1 },
+    "page_id": { "type": ["string", "null"] },
+    "lesson_id": { "type": ["string", "null"] },
+    "tag": { "type": "string" },
+    "target": {
+      "type": ["object", "null"],
+      "properties": {
+        "rule_n": { "type": ["integer", "null"] },
+        "part": { "type": "string", "enum": ["rule", "note", "preamble"] }
+      }
+    },
+    "rule_label": { "type": ["string", "null"] },
+    "kind": { "type": "string", "enum": ["Clarify wording", "Add boundary example", "Change the rule", "New or promoted tag"] },
+    "why_wrong": { "type": ["string", "null"] },
+    "title": { "type": "string" },
+    "statement": { "type": ["string", "null"] },
+    "current_text": { "type": "string" },
+    "proposed_text": { "type": "string" },
+    "editor_wording": { "type": ["string", "null"] },
+    "effective_text": { "type": ["string", "null"] },
+    "supporting_keys": { "type": "array", "items": { "type": "string" } },
+    "boundary_examples": { "type": "array" },
+    "counter_evidence": { "type": "array" },
+    "confidence": { "type": ["number", "null"] },
+    "owner_ruling_route": { "type": "boolean" },
+    "status": { "type": "string", "enum": ["Proposed", "Approved", "Rejected", "Live", "Rolled back"] },
+    "approved_by": { "type": "array" },
+    "rubric_version": { "type": ["string", "null"] },
+    "gate_result": { "type": ["string", "null"] },
+    "card_id": { "type": ["string", "null"] },
+    "demo": { "type": "boolean" }
+  }
+}
