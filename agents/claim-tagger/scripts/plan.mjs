@@ -69,7 +69,7 @@ const isRef = (v) => v !== null && typeof v === 'object' && !Array.isArray(v) &&
 export function openPlan({ runId, sourcePull, root = agentRoot(), config = loadConfig(root), ctx = {}, now = () => new Date(), pull } = {}) {
   const dir = runDirOf(root, runId);
   const source = pull ?? loadPull(root, sourcePull ?? latestPullId(root), { config });
-  const planCtx = { seed: ctx.seed === true, promote: ctx.promote === true, gate: typeof ctx.gate === 'string' ? ctx.gate : null, restore: ctx.restore === true, confirm: ctx.confirm === true };
+  const planCtx = { seed: ctx.seed === true, promote: ctx.promote === true, gate: typeof ctx.gate === 'string' ? ctx.gate : null, ...(ctx.restore === true ? { restore: true, confirm: ctx.confirm === true } : {}) };
   const idMap = source.idMap ?? {};
   const schemas = new Map();
   const schemaOf = (db) => {

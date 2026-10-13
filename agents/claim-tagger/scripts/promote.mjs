@@ -589,7 +589,7 @@ async function rollback({ args, io, root, config, now }) {
   const today = now().toISOString().slice(0, 10);
   const planId = args['run-id'] ?? makeRunId('rollback', now());
   const title = uniqueRunTitle(`Rollback ${live.rubric_version}`, pull);
-  const { plan, fallback } = buildRestorePlan({ runId: planId, root, config, pull, now }, (p) => {
+  const { plan } = buildRestorePlan({ runId: planId, root, config, pull, now }, (p) => {
     restoreOps(p, {
       root,
       pull, rubricBack: back, tag: lesson.tag, lesson, lessonStatus: 'Rolled back', gateNote: `Rolled back ${today}: rubric ${back.rubric_version} restored.`, runTitle: title,
@@ -605,7 +605,7 @@ async function rollback({ args, io, root, config, now }) {
   writeLock(loc, restored, now);
   appendChangelog(loc.changelog, `- ${back.rubric_version} (${today}), rollback: ${live.rubric_version} rolled back (${lesson.lesson_id ? `${lesson.lesson_id} ` : ''}"${lesson.lesson_key}"); rubric/history/${safeName(back.rubric_version)}.json restored. rubric_hash ${restored.rubric_hash}, scope_hash ${restored.scope_hash}.`);
   const sync = syncCases({ root, config, pull, rubric: restored, now, lessonStatus: new Map([[lesson.lesson_key, 'Rolled back']]) });
-  io.out(`promote: rolled back ${lesson.lesson_id ?? lesson.lesson_key}: rubric ${restored.rubric_version} ${restored.rubric_hash} restored (equals rubric/history/${safeName(back.rubric_version)}.json); cases: ${sync.counts.contested} contested, ${sync.counts.restamped} hash(es) re-stamped; plan ${written.path}${fallback ? ' [ctx fallback: see status.mjs buildRestorePlan]' : ''}`);
+  io.out(`promote: rolled back ${lesson.lesson_id ?? lesson.lesson_key}: rubric ${restored.rubric_version} ${restored.rubric_hash} restored (equals rubric/history/${safeName(back.rubric_version)}.json); cases: ${sync.counts.contested} contested, ${sync.counts.restamped} hash(es) re-stamped; plan ${written.path}`);
   io.out(`promote: next: node agents/claim-tagger/scripts/plan.mjs check --run ${planId}; apply.mjs --run ${planId}; then git add agents/claim-tagger/rubric agents/claim-tagger/evals && git commit`);
   return EXIT.OK;
 }

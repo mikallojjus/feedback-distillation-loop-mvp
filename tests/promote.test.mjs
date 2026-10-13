@@ -702,7 +702,7 @@ test('abort after the apply: a restore plan puts the old text, version and hash 
   assert.equal(r.code, EXIT.OK, r.err.join('\n'));
   assert.match(r.out[0], /Notion's Rulebook still carried the candidate text, so a restore plan was written \(pr1-abort\)/);
   const { header, ops } = readPlan(w.root, 'pr1-abort');
-  assert.ok(header.ctx.restore === true || (header.ctx.promote === true && header.ctx.gate === 'PASS'));
+  assert.deepEqual(header.ctx, { seed: false, promote: false, gate: null, restore: true, confirm: true }, 'the restore path, not a borrowed gate PASS');
   const rulebook = ops.find((o) => o.database === 'rulebook');
   assert.equal(rulebook.properties['When to use'], original['When to use']);
   assert.equal(rulebook.properties['Rule version'], LIVE);
@@ -758,7 +758,7 @@ test('rollback needs --confirm; with it the previous rubric comes back byte for 
   assert.match(log.at(-1), /^- 2026-10-13\.1 \(2026-10-13\), rollback: 2026-10-13\.2 rolled back \(LS-1 "Hedged trajectories are not forecasts"\); rubric\/history\/2026-10-13\.1\.json restored\. rubric_hash sha256:63f085c84a038df8/);
 
   const { ops, header } = readPlan(w.root, 'rb1');
-  assert.ok(header.ctx.restore === true || (header.ctx.promote === true && header.ctx.gate === 'PASS'));
+  assert.deepEqual(header.ctx, { seed: false, promote: false, gate: null, restore: true, confirm: true }, 'the restore path, not a borrowed gate PASS');
   const rulebook = ops.find((o) => o.database === 'rulebook');
   assert.equal(rulebook.properties['When to use'], composeWhenToUse(oldRubric.tags.find((t) => t.name === 'Predictive').when_to_use));
   assert.notEqual(rulebook.properties['When to use'], before['When to use'], 'Notion carried the lesson\'s text until now');

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, utimesSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   ExitError, buildUserMessage, canaryItemId, codeDecidedTag, computeConfig, judgmentFileName, loadItems, main, modelPairs, parseArgs, renderSystemPrompt,
   resolvePullDir, scopeOf, textHash, validateJudgeOutput,
@@ -19,6 +20,8 @@ import { fakeJudgments } from './fixtures/fake-claude.mjs';
 
 const REAL = agentRoot();
 const FIXTURE_RUBRIC = new URL('./fixtures/rubric.research-example.json', import.meta.url);
+// the 62 research cases and 86 research canaries as they were before the first real run: evals/cases.jsonl in the agent folder is rewritten by cases-sync
+const RESEARCH_EVALS = fileURLToPath(new URL('./fixtures/research/', import.meta.url));
 const realConfig = readJson(join(REAL, 'config.json'));
 const template = readFileSync(join(REAL, 'prompts', 'judge.md'), 'utf8');
 const outputSchema = readJson(join(REAL, 'schemas', 'judge-output.schema.json'));
@@ -779,9 +782,9 @@ test('--items claims: the newest pull, LATEST (file or folder) or a named pull; 
 test('--items eval: the claims of the active cases plus the distinct texts of the active canaries; ids are safe, canaries are canary-<h8>', async () => {
   const agent = makeAgent({ n: 1 });
   mkdirSync(join(agent.dir, 'evals'), { recursive: true });
-  for (const f of ['cases.jsonl', 'canaries.jsonl']) cpSync(join(REAL, 'evals', f), join(agent.dir, 'evals', f));
-  const cases = readJsonl(join(REAL, 'evals', 'cases.jsonl')).rows.filter((c) => c.active);
-  const canaries = readJsonl(join(REAL, 'evals', 'canaries.jsonl')).rows.filter((c) => c.active);
+  for (const f of ['cases.jsonl', 'canaries.jsonl']) cpSync(join(RESEARCH_EVALS, f), join(agent.dir, 'evals', f));
+  const cases = readJsonl(join(RESEARCH_EVALS, 'cases.jsonl')).rows.filter((c) => c.active);
+  const canaries = readJsonl(join(RESEARCH_EVALS, 'canaries.jsonl')).rows.filter((c) => c.active);
 
   const items = loadItems({ items: 'eval' }, { agentDir: agent.dir, runsDir: agent.runsDir });
   const claimItems = items.filter((i) => !i.id.startsWith('canary-'));

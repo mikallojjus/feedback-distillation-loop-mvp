@@ -9,6 +9,7 @@ import { createHash } from 'node:crypto';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { DATABASES } from '../../../agents/claim-tagger/scripts/allowlist.mjs';
 import { readJsonl } from '../../../agents/claim-tagger/scripts/lib/jsonl.mjs';
 import { composeWhenToUse } from '../../../agents/claim-tagger/scripts/lib/rubric-build.mjs';
@@ -18,6 +19,12 @@ import { pull as pullLib } from '../../../agents/claim-tagger/scripts/pull.mjs';
 import { AGENT, createFakeNotion, realConfig } from '../notion/fake-notion.mjs';
 
 export { AGENT };
+/**
+ * The frozen inputs the loop tests run on, so that a real run on the live agent folder (cases-sync rewriting evals/cases.jsonl, a promote moving the
+ * rubric on) cannot change a test: rubric/ is rubric 2026-10-13.1 with its lock, history and changelog, cases.jsonl the 62 research cases and
+ * canaries.jsonl the 86 research canaries, all as they were before the first real run. Nothing in here is ever written.
+ */
+export const RESEARCH = fileURLToPath(new URL('../research/', import.meta.url));
 export const USER = '0a1b2c3d-4e5f-4a6b-8c7d-9e0f1a2b3c4d';
 export const OWNER = '1b2c3d4e-5f6a-4b7c-8d9e-0f1a2b3c4d5e';
 
@@ -26,7 +33,8 @@ export function cleanupLoop() {
   for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
 }
 
-export const liveRubric = () => JSON.parse(readFileSync(join(AGENT, 'rubric', 'rubric.json'), 'utf8'));
+/** The rubric of the test world: the frozen rubric 2026-10-13.1 (see RESEARCH), not whatever the live agent folder holds now. */
+export const liveRubric = () => JSON.parse(readFileSync(join(RESEARCH, 'rubric', 'rubric.json'), 'utf8'));
 /** A stable 32-hex Geo id for a short test name. */
 export const geoId = (name) => createHash('sha256').update(String(name)).digest('hex').slice(0, 32);
 
@@ -36,8 +44,9 @@ const writeJsonl = (path, rows) => {
 };
 
 /**
- * A temporary agent root. cases / canaries: 'research' copies the real file, 'empty' writes an empty one, an array writes those rows.
- * Copies config.json (edited by `config(cfg)` when given), rubric/ (rubric.json, rubric.lock, CHANGELOG.md, history/), prompts/, schemas/ and evals/seed/.
+ * A temporary agent root. cases / canaries: 'research' copies the frozen research file (RESEARCH), 'empty' writes an empty one, an array writes those rows.
+ * Copies config.json (edited by `config(cfg)` when given), prompts/, schemas/ and evals/seed/ from the agent folder and the frozen rubric/ (rubric.json,
+ * rubric.lock, CHANGELOG.md, history/) from RESEARCH.
  */
 export function makeLoopRoot({ cases = 'empty', canaries = 'empty', config } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'geo-agents-loop-'));
@@ -49,12 +58,13 @@ export function makeLoopRoot({ cases = 'empty', canaries = 'empty', config } = {
   const cfg = structuredClone(realConfig());
   config?.(cfg);
   writeFileSync(join(root, 'config.json'), JSON.stringify(cfg, null, 2));
-  for (const name of ['rubric', 'prompts', 'schemas']) cpSync(join(AGENT, name), join(root, name), { recursive: true });
+  cpSync(join(RESEARCH, 'rubric'), join(root, 'rubric'), { recursive: true });
+  for (const name of ['prompts', 'schemas']) cpSync(join(AGENT, name), join(root, name), { recursive: true });
   mkdirSync(join(root, 'evals'), { recursive: true });
   cpSync(join(AGENT, 'evals', 'seed'), join(root, 'evals', 'seed'), { recursive: true });
   for (const [name, mode] of [['cases', cases], ['canaries', canaries]]) {
     const target = join(root, 'evals', `${name}.jsonl`);
-    if (mode === 'research') cpSync(join(AGENT, 'evals', `${name}.jsonl`), target);
+    if (mode === 'research') cpSync(join(RESEARCH, `${name}.jsonl`), target);
     else writeJsonl(target, Array.isArray(mode) ? mode : []);
   }
   return { dir, root, repo, config: cfg };
@@ -177,7 +187,7 @@ export const rowKey = (w, prefix, tag = 'Predictive') => Object.keys(w.ids.decis
  * rows are contested cases of the lesson and six Predictive positives are active. Options: canaryTags (which of the real canaries to copy), research.
  */
 export async function makePromoteWorld({ lessonStatus = 'Approved', canaryTags = ['Predictive', 'Hypothetical', 'Context-dependent', 'Self-contained'], research = false, lessonOptions = {} } = {}) {
-  const real = readJsonl(join(AGENT, 'evals', 'canaries.jsonl')).rows.filter((x) => x.active === true && x.contested !== true && canaryTags.includes(x.tag));
+  const real = readJsonl(join(RESEARCH, 'canaries.jsonl')).rows.filter((x) => x.active === true && x.contested !== true && canaryTags.includes(x.tag));
   const w = makeLoopWorld({ cases: research ? 'research' : 'empty', canaries: research ? 'research' : real });
   const hedged = [rowKey(w, '6e820a8a'), rowKey(w, '8172f325')];
   for (const key of hedged) w.decide(key, { outcome: 'Does not apply', why: 'Rule should change', reasoning: 'A hedged tendency is not a forecast.' });

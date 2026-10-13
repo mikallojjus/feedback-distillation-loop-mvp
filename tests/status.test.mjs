@@ -328,7 +328,7 @@ test('--restore-rulebook --confirm writes the live rubric text back into a drift
   assert.equal(ops[0].properties['When to use'], composeWhenToUse(predictive.when_to_use));
   assert.deepEqual(ops[0].expect, { 'When to use': '1. Somebody rewrote this in Notion.\n2. And this.' });
   // plan.mjs openPlan drops ctx.restore and ctx.confirm (a contract gap, see status.mjs buildRestorePlan): the header then carries the form it accepts
-  assert.ok(header.ctx.restore === true || (header.ctx.promote === true && header.ctx.gate === 'PASS'), JSON.stringify(header.ctx));
+  assert.deepEqual(header.ctx, { seed: false, promote: false, gate: null, restore: true, confirm: true }, 'the restore path, not a borrowed gate PASS');
 
   assert.equal(planCheck({ root: w.root, runId: 'restore-1', now: w.clock.now }).code, EXIT.OK);
   const cap = captureIo();

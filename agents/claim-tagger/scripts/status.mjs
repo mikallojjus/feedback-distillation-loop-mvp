@@ -110,27 +110,16 @@ export function tagRuleVersion(rubric, tagName) {
 
 /**
  * Open a plan whose Rulebook "When to use" writes put the live rubric's text back (status --restore-rulebook, promote --rollback and --abort).
- * `build(plan)` adds the ops. The plan asks for ctx { restore: true, confirm: true }, the allowlist's own path for this.
- * CONTRACT GAP: plan.mjs openPlan() copies only seed, promote and gate into the plan's ctx, so restore and confirm never reach the allowlist and
- * the first Rulebook op is refused with reason "promote-only". Until plan.mjs passes them on, the helper tries again with ctx
- * { restore, confirm, promote: true, gate: "PASS" }, which the allowlist accepts today; the header then reads promote and PASS although no
- * gate ran. This only ever happens inside a command the engineer confirmed with --confirm, and the plan only carries text the live rubric
- * already has. Returns { plan, ctx } (ctx is what was asked for, `fallback` says whether the second form was needed).
+ * `build(plan)` adds the ops. The plan carries ctx { restore: true, confirm: true }, the allowlist's own path for this: openPlan() records both in
+ * the plan header (and only when restore is true), so check and apply judge the plan the same way, and the header never claims a gate that did not
+ * run. This only ever happens inside a command the engineer confirmed with --confirm, and the plan only carries text the live rubric already has.
+ * Returns { plan, ctx }.
  */
 export function buildRestorePlan({ runId, root, config, pull, now }, build) {
-  const forms = [{ restore: true, confirm: true }, { restore: true, confirm: true, promote: true, gate: 'PASS' }];
-  let last = null;
-  for (const [i, ctx] of forms.entries()) {
-    const plan = openPlan({ runId, root, config, pull, now, ctx });
-    try {
-      build(plan);
-      return { plan, ctx, fallback: i > 0 };
-    } catch (e) {
-      if (e.code !== 'ALLOWLIST' || e.reason !== 'promote-only') throw e;
-      last = e;
-    }
-  }
-  throw last;
+  const ctx = { restore: true, confirm: true };
+  const plan = openPlan({ runId, root, config, pull, now, ctx });
+  build(plan);
+  return { plan, ctx };
 }
 
 // ---- the facts --------------------------------------------------------------------------------------------------------
@@ -471,7 +460,7 @@ function restoreRulebook({ root, config, now, io, runId }) {
     return manual.length ? EXIT.INVALID : EXIT.OK;
   }
   const rowByName = new Map(rows.map((r) => [r.name, r]));
-  const { plan, fallback } = buildRestorePlan({ runId, root, config, pull, now }, (p) => {
+  const { plan } = buildRestorePlan({ runId, root, config, pull, now }, (p) => {
     for (const [name] of [...tags].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
       const tag = rubric.tags.find((t) => t.name === name);
       const row = rowByName.get(name);
@@ -482,7 +471,7 @@ function restoreRulebook({ root, config, now, io, runId }) {
     }
   });
   const written = plan.write();
-  io.out(`status: restore plan ${runId} written: ${plan.ops.length} Rulebook row(s) (${[...tags.keys()].sort().join(', ')}) back to rubric ${rubric.rubric_version}${fallback ? ' [ctx fallback: see status.mjs buildRestorePlan]' : ''}; next: plan.mjs check --run ${runId}, then apply.mjs --run ${runId}`);
+  io.out(`status: restore plan ${runId} written: ${plan.ops.length} Rulebook row(s) (${[...tags.keys()].sort().join(', ')}) back to rubric ${rubric.rubric_version}; next: plan.mjs check --run ${runId}, then apply.mjs --run ${runId}`);
   io.out(`status: plan file ${written.path}`);
   return EXIT.OK;
 }
