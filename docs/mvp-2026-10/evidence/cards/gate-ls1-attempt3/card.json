@@ -1,0 +1,515 @@
+{
+  "card_id": "20261013T2045Z-promote-ls1-c",
+  "kind": "gate",
+  "lesson": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+  "target": "Predictive",
+  "smoke": false,
+  "configs": {
+    "baseline": {
+      "config16": "f0b5d66f0b36f8e5",
+      "rubric_version": "2026-10-13.1",
+      "rubric_hash": "sha256:63f085c84a038df8",
+      "scope_hash": "sha256:5cf30ca98835c948"
+    },
+    "candidate": {
+      "config16": "038f96ade2a80e70",
+      "rubric_version": "2026-10-13.2",
+      "rubric_hash": "sha256:5a46ce82abb9e8fc",
+      "scope_hash": "sha256:5cf30ca98835c948"
+    }
+  },
+  "not_run": [
+    {
+      "case_id": "ctr-e8a662736d93-source",
+      "tag": "Source inaccessible",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    },
+    {
+      "case_id": "ctr-c9915a9655ec-improp",
+      "tag": "Improperly sourced",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    },
+    {
+      "case_id": "ctr-c9915a9655ec-source",
+      "tag": "Source inaccessible",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    },
+    {
+      "case_id": "ctr-d3da1932b5b8-improp",
+      "tag": "Improperly sourced",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    },
+    {
+      "case_id": "ctr-d3da1932b5b8-source",
+      "tag": "Source inaccessible",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    },
+    {
+      "case_id": "ctr-e1af71ee4f64-improp",
+      "tag": "Improperly sourced",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    },
+    {
+      "case_id": "ctr-e1af71ee4f64-source",
+      "tag": "Source inaccessible",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    },
+    {
+      "case_id": "ctr-df984286978a-improp",
+      "tag": "Improperly sourced",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    },
+    {
+      "case_id": "ctr-df984286978a-source",
+      "tag": "Source inaccessible",
+      "reason": "source-reading tag: the MVP fetches no source text, so the case is not run",
+      "lesson": false
+    }
+  ],
+  "rollback": {
+    "command": "/claim-tagger promote --rollback Hedged 'likely to' needs a definite future outcome, not a tendency"
+  },
+  "stats": {
+    "method": "paired percentile bootstrap over the labelled claims of a tag (seeded); exact two-sided McNemar test",
+    "B": 1000,
+    "seed": "h16(baseline + candidate + tag), the 16 hex digits of each config id",
+    "ci": [
+      0.025,
+      0.975
+    ],
+    "min_positives": 5,
+    "tolerance": 0.05,
+    "runs": 3
+  },
+  "cost": {
+    "usd": 0,
+    "baseline_usd": 0,
+    "candidate_usd": 0,
+    "model": "claude-sonnet-5-5"
+  },
+  "verdict": "FAIL",
+  "small_sample": true,
+  "conditions": [
+    {
+      "n": 1,
+      "status": "pass",
+      "detail": "every active canary passes under the candidate: 83 of 83 pass"
+    },
+    {
+      "n": 2,
+      "status": "fail",
+      "detail": "no active case that passes under the baseline fails under the candidate: 1 of 27 newly failing (ctr-ec6e3f00cf08-contex); 22 pass under the baseline"
+    },
+    {
+      "n": 3,
+      "status": "pass",
+      "detail": "every gated tag keeps its paired accuracy lower bound within the tolerance; ungated tags with changed rules have no negative flips: 2 gated tag(s), lowest lower bound 0.0 points (Hypothetical), tolerance -5.0; 0 ungated tag(s) with changed rules, 0 negative flip(s)"
+    },
+    {
+      "n": 4,
+      "status": "pass",
+      "detail": "the target tag's interval is above zero: Predictive interval +9.1 to +63.6 points is above zero"
+    },
+    {
+      "n": 5,
+      "status": "pass",
+      "detail": "no apply on a tag the candidate does not judge, or on a human-only tag: none"
+    }
+  ],
+  "holds": [],
+  "reasons": [
+    "1 regression cases newly failing: ctr-ec6e3f00cf08-contex"
+  ],
+  "not_gated": [
+    "Context-dependent (4 positives of 11)"
+  ],
+  "canaries": {
+    "baseline": {
+      "active": 83,
+      "passed": 83,
+      "failing": []
+    },
+    "candidate": {
+      "active": 83,
+      "passed": 83,
+      "failing": []
+    }
+  },
+  "cases": {
+    "gating": [
+      "ctr-c90a07a26900-contex",
+      "ctr-c2863d198c3b-hypoth",
+      "ctr-d42aa33076b4-predic",
+      "ctr-f77c821bc698-contex",
+      "ctr-ea4fbb86cc01-hypoth",
+      "ctr-d56ecb14613e-contex",
+      "ctr-d91f85d0dae4-hypoth",
+      "ctr-d71a4fe9990a-hypoth",
+      "ctr-ec6e3f00cf08-contex",
+      "ctr-f796423c788b-contex",
+      "ctr-f804e2a1c094-contex",
+      "ctr-d8a3944540b5-contex",
+      "ctr-c88518ef32ac-contex",
+      "ctr-d4408cbe2b96-hypoth",
+      "ctr-c9796d976bfb-predic",
+      "ctr-fc4df1264d12-hypoth",
+      "ctr-c3a726790afd-predic",
+      "ctr-d2cc4e9e1679-predic",
+      "ctr-ceacdc6c95a9-contex",
+      "ctr-c59c5313859e-contex",
+      "ctr-ef04483dc87e-hypoth",
+      "ctr-e051f47f69ff-hypoth",
+      "ctr-d21451c346f9-hypoth",
+      "ctr-d8f24707806b-predic",
+      "ctr-e25cad5cf816-contex",
+      "ctr-e4fed14cbb0d-predic",
+      "ctr-f2cc9025f0f5-predic"
+    ],
+    "passing_baseline": 22,
+    "passing_candidate": 21,
+    "newly_failing": [
+      "ctr-ec6e3f00cf08-contex"
+    ],
+    "newly_passing": [],
+    "rule_changed": [
+      "ctr-d42aa33076b4-predic",
+      "ctr-c9796d976bfb-predic",
+      "ctr-c3a726790afd-predic",
+      "ctr-d2cc4e9e1679-predic",
+      "ctr-d8f24707806b-predic",
+      "ctr-e4fed14cbb0d-predic",
+      "ctr-f2cc9025f0f5-predic",
+      "ctr-c968f9819580-predic",
+      "ctr-c78bac8861c7-predic",
+      "ctr-c7c20ae98de9-predic",
+      "ctr-c9b46cfbd720-predic"
+    ],
+    "lesson": {
+      "key": "Hedged 'likely to' needs a definite future outcome, not a tendency",
+      "cases": [
+        "ctr-c968f9819580-predic",
+        "ctr-c78bac8861c7-predic",
+        "ctr-c7c20ae98de9-predic",
+        "ctr-c9b46cfbd720-predic"
+      ],
+      "fixed": [
+        "ctr-c968f9819580-predic",
+        "ctr-c78bac8861c7-predic",
+        "ctr-c7c20ae98de9-predic",
+        "ctr-c9b46cfbd720-predic"
+      ],
+      "broken": []
+    },
+    "items": [
+      {
+        "case_id": "ctr-c90a07a26900-contex",
+        "tag": "Context-dependent",
+        "expected": "do_not_apply",
+        "baseline": "do_not_apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-c2863d198c3b-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-d42aa33076b4-predic",
+        "tag": "Predictive",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply",
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-f77c821bc698-contex",
+        "tag": "Context-dependent",
+        "expected": "do_not_apply",
+        "baseline": "do_not_apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-ea4fbb86cc01-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-d56ecb14613e-contex",
+        "tag": "Context-dependent",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-d91f85d0dae4-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-d71a4fe9990a-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-ec6e3f00cf08-contex",
+        "tag": "Context-dependent",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-f796423c788b-contex",
+        "tag": "Context-dependent",
+        "expected": "do_not_apply",
+        "baseline": "do_not_apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-f804e2a1c094-contex",
+        "tag": "Context-dependent",
+        "expected": "do_not_apply",
+        "baseline": "do_not_apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-d8a3944540b5-contex",
+        "tag": "Context-dependent",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-c88518ef32ac-contex",
+        "tag": "Context-dependent",
+        "expected": "do_not_apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-d4408cbe2b96-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-c9796d976bfb-predic",
+        "tag": "Predictive",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply",
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-fc4df1264d12-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-c3a726790afd-predic",
+        "tag": "Predictive",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply",
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-d2cc4e9e1679-predic",
+        "tag": "Predictive",
+        "expected": "apply",
+        "baseline": "ask_editor",
+        "candidate": "ask_editor",
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-ceacdc6c95a9-contex",
+        "tag": "Context-dependent",
+        "expected": "do_not_apply",
+        "baseline": "do_not_apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-c59c5313859e-contex",
+        "tag": "Context-dependent",
+        "expected": "do_not_apply",
+        "baseline": "do_not_apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-ef04483dc87e-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply"
+      },
+      {
+        "case_id": "ctr-e051f47f69ff-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "do_not_apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-d21451c346f9-hypoth",
+        "tag": "Hypothetical",
+        "expected": "apply",
+        "baseline": "ask_editor",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-d8f24707806b-predic",
+        "tag": "Predictive",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply",
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-e25cad5cf816-contex",
+        "tag": "Context-dependent",
+        "expected": "apply",
+        "baseline": "do_not_apply",
+        "candidate": "do_not_apply"
+      },
+      {
+        "case_id": "ctr-e4fed14cbb0d-predic",
+        "tag": "Predictive",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply",
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-f2cc9025f0f5-predic",
+        "tag": "Predictive",
+        "expected": "apply",
+        "baseline": "apply",
+        "candidate": "apply",
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-c968f9819580-predic",
+        "tag": "Predictive",
+        "expected": "do_not_apply",
+        "baseline": "apply",
+        "candidate": "do_not_apply",
+        "lesson": true,
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-c78bac8861c7-predic",
+        "tag": "Predictive",
+        "expected": "do_not_apply",
+        "baseline": "apply",
+        "candidate": "do_not_apply",
+        "lesson": true,
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-c7c20ae98de9-predic",
+        "tag": "Predictive",
+        "expected": "do_not_apply",
+        "baseline": "apply",
+        "candidate": "do_not_apply",
+        "lesson": true,
+        "rule_changed": true
+      },
+      {
+        "case_id": "ctr-c9b46cfbd720-predic",
+        "tag": "Predictive",
+        "expected": "do_not_apply",
+        "baseline": "undecided",
+        "candidate": "do_not_apply",
+        "lesson": true,
+        "rule_changed": true
+      }
+    ]
+  },
+  "per_tag": [
+    {
+      "tag": "Context-dependent",
+      "n": 11,
+      "positives": 4,
+      "acc_base": 0.8181818181818182,
+      "acc_cand": 0.7272727272727273,
+      "delta": -0.09090909090909091,
+      "ci": [
+        -0.2727272727272727,
+        0
+      ],
+      "fixed": [],
+      "broken": [
+        "ctr-ec6e3f00cf08-contex"
+      ],
+      "mcnemar_p": 1,
+      "gated": false,
+      "lesson_cases": 0,
+      "seed": "sha256:ff34efbd92670147"
+    },
+    {
+      "tag": "Hypothetical",
+      "n": 9,
+      "positives": 9,
+      "acc_base": 0.7777777777777778,
+      "acc_cand": 0.7777777777777778,
+      "delta": 0,
+      "ci": [
+        0,
+        0
+      ],
+      "fixed": [],
+      "broken": [],
+      "mcnemar_p": 1,
+      "gated": true,
+      "lesson_cases": 0,
+      "seed": "sha256:dfe928579c6ec693"
+    },
+    {
+      "tag": "Predictive",
+      "n": 11,
+      "positives": 7,
+      "acc_base": 0.5454545454545454,
+      "acc_cand": 0.9090909090909091,
+      "delta": 0.36363636363636365,
+      "ci": [
+        0.09090909090909091,
+        0.6363636363636364
+      ],
+      "fixed": [
+        "ctr-c78bac8861c7-predic",
+        "ctr-c7c20ae98de9-predic",
+        "ctr-c968f9819580-predic",
+        "ctr-c9b46cfbd720-predic"
+      ],
+      "broken": [],
+      "mcnemar_p": 0.125,
+      "gated": true,
+      "lesson_cases": 4,
+      "seed": "sha256:85692b0f489127d5"
+    }
+  ],
+  "noise": {
+    "cells": 31,
+    "runs": 3,
+    "baseline": 0.12903225806451613,
+    "candidate": 0.12903225806451613
+  }
+}

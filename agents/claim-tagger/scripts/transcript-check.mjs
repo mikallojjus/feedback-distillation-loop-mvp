@@ -9,7 +9,7 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { EDITOR_NAMES } from './allowlist.mjs';
 
-const EDITOR_FIELDS = new Set(Object.values(EDITOR_NAMES || {}).flat());
+const EDITOR_FIELDS = EDITOR_NAMES instanceof Set ? EDITOR_NAMES : new Set(Object.values(EDITOR_NAMES || {}).flat());
 
 function parse(path) {
   const lines = readFileSync(path, 'utf8').split('\n').filter((l) => l.trim());

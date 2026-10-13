@@ -219,6 +219,52 @@
       "editor_wording_chars": 1439,
       "written_at": "2026-10-13T16:26:06Z",
       "note": "Only the Editor wording property written; Status left Approved. Kept the distiller's Proposed text verbatim and appended two sentences in my own words: (1) a sharper tendency clause for an actor likely to keep doing, continue or extend what it already does, even with a future time phrase attached (the 'likely to expand' case); (2) a fence that this rule decides Predictive only and never Hypothetical, whose own rules are unchanged, so a conditional or scenario claim keeps its Hypothetical verdict even where this rule would also fire. The fence is phrased as 'Hypothetical is never withheld because of this rule' rather than as an instruction for Predictive to fire on scenario claims, so it does not collide with Predictive rule 2's scenario hand-off. Single paragraph, no leading '1.', no decided claim quoted verbatim, 1,439 characters."
+    },
+    {
+      "role": "editor",
+      "action": "quality-check amendment",
+      "row_url": "https://app.notion.com/p/3f8273e214eb810ba7bec40b9bad1b9b",
+      "key": "8114bb424fb742f59bc263eb83fd3998::Hypothetical",
+      "claim": "A ceasefire in Ukraine will increase the military threat to the Baltic states",
+      "tag": "Hypothetical",
+      "agent_proposal": "Add tag",
+      "before": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "The indefinite 'A ceasefire' is an unrealized event the claim does not predict; the effect is conditional on it, so scenario framing beats the 'will'.",
+        "Decided at": "2026-10-13"
+      },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": "Rule unclear",
+        "Your reasoning": "Scenario framing (an unrealized ceasefire) wins over 'will', but rule 1 names only 'if'/'under'-style wrappers and leaves an indefinite-subject conditional unaddressed.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T16:41:45Z",
+      "note": "Coordinator's quality check: the judge answers ask-editor 3/3 under the current rulebook because rule 1 shows only explicit wrappers. On re-reading Hypothetical (unchanged, 2026-10-13.1): the opening line says to decide from markers, rule 1's examples are both 'under ...' wrappers, and nothing names an unrealized event introduced by an indefinite subject, so my Applies was a reading of 'assumed scenario', not the letter of the rule. Tag outcome kept; Why wrong set to Rule unclear; reasoning replaced by one sentence carrying both the rationale and the gap (the old sentence is preserved here). Only Why wrong and Your reasoning written."
+    },
+    {
+      "role": "editor",
+      "action": "quality-check amendment",
+      "row_url": "https://app.notion.com/p/3f8273e214eb815dbc10dacb1fb93fb3",
+      "key": "c8b676c3cce79edaec871afd1633ac2f::Hypothetical",
+      "claim": "Federal Medicaid whistleblower rules would weaken state control over program enforcement",
+      "tag": "Hypothetical",
+      "agent_proposal": "Add tag",
+      "before": {
+        "Tag outcome": "Applies",
+        "Why wrong": null,
+        "Your reasoning": "'Would weaken' describes the effect of rules not yet in force, an assumed scenario the claim does not predict, so Hypothetical rather than Predictive.",
+        "Decided at": "2026-10-13"
+      },
+      "after": {
+        "Tag outcome": "Applies",
+        "Why wrong": "Rule unclear",
+        "Your reasoning": "'Would' marks rules not yet in force, an assumed scenario, but rules 1-2 list neither bare 'would' nor a wrapper-less conditional, so the letter leaves it open.",
+        "Decided at": "2026-10-13"
+      },
+      "written_at": "2026-10-13T16:41:45Z",
+      "note": "Coordinator's quality check, same question. Rule 1 requires a scenario and shows only 'under' wrappers; rule 2 lists could/may/might/can be designed to/can be used to and never bare 'would'; 'would' appears only in the tag description, still tied to an assumed scenario that this claim leaves implicit (nothing says the rules are proposed). So my Applies rested on inferring the unenacted-rules scenario from 'would', beyond the letter. Tag outcome kept; Why wrong set to Rule unclear; reasoning replaced by one sentence carrying both the rationale and the gap. Only Why wrong and Your reasoning written."
     }
   ]
 }

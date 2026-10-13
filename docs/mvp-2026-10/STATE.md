@@ -4,7 +4,7 @@
 - Orchestrator: Claude Code session in `X:\work\research\overnight-feedback-loop-research`, folder `X:\work\geo-agents` added to the session
 - Notion hub page: https://app.notion.com/p/3da273e214eb80c180d5fd0894bc2db8 (writes only inside it)
 - Identities: integration token (bot "claude") in `X:\work\geo-agents\.env` for scripts; the connector (Mika) for the interactive skill and persona decisions
-- Current phase: **Day 1 / Notion structure built; lib and seed agents running** (databases, formulas, rollups, views and hub layout done 13 Oct ~14:30)
+- Current phase: **Day 1 / demo storyline running** (seeded, tag R1 applied, editor decisions, LS-1 distilled and gated twice: FAIL on borderline Hypothetical flips; LS-2 planted gate running; next: LS-1 attempt 3 after the editor re-check, finalize, follow-up, headless test, persona reviews, artifact)
 
 ## Phase plan
 | Phase | Status |
@@ -14,11 +14,11 @@
 | 2 lib, schemas, allowlist, guard hook | done |
 | 3 pull, plan, apply, verify (REST, token) | done |
 | 4 setup + seed applied to Notion (14 + 60 + 50 + 1 rows, verify clean) | done |
-| 5 judge (Haiku smoke 5/5 ok; Sonnet tag run 60 x 3 and eval baseline running in background) + propose (report pending) | in progress |
-| 6 first tag run → propose → apply | pending (after the Sonnet run) |
-| 7 eval done; distill, promote, followup, status, cases-sync pending (agent F after B and C) | in progress |
+| 5 judge + propose (Sonnet tag run 180/180, baseline 83/83 canaries) | done |
+| 6 first tag run → propose → apply (40 rows queued, 60 claims updated, verify clean) | done |
+| 7 eval, distill, promote, followup, status, cases-sync, snapshot, run-card | done (690 tests) |
 | 8 SKILL.md, README, headless tests | pending |
-| 9 Demo storyline end to end | pending |
+| 9 Demo storyline: steps 0-5 done; LS-1 gate FAIL x2 (honest); LS-2 gate running; steps 6-10 pending | in progress |
 | 10 Persona reviews, dispositions | pending |
 | 11 Artifact frame built (build checks clean, 63 TODO placeholders); content after the demo | in progress |
 

@@ -12,3 +12,4 @@
 | M8 | 13 Oct | Editor's-machine test = fresh headless `claude -p` session in geo-agents, transcript kept as evidence | no GitHub remote needed |
 | M9 | 13 Oct | Artifact: seven tabs, Plain/Technical switch, wider reading column than the research artifact, diagram and sample tables | Mika reads visually; the research page was too narrow |
 | M10 | 13 Oct | Writes only inside the hub page; real databases listed as protected; no delete or archive calls | brief |
+| M11 | 13 Oct | A regression case that flips between baseline and candidate is re-judged with 5 extra runs per configuration before it counts; the card lists reconfirmed flips | three gate attempts were blocked by 2:1 items at confidence 0.5 to 0.65; the research measures self-flip noise but never applied it to cases |
