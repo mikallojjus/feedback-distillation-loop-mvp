@@ -16,7 +16,7 @@
 // In drift entries ({ tag, part, a, b }) a is the Notion side and b the rubric/rubric.json side; part "added" is a tag that is only in
 // rubric.json (deleted, renamed or no longer Verified in Notion) and "missing" one that is only in Notion.
 
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
@@ -97,16 +97,30 @@ export function loadPull(root = agentRoot(), pullId = latestPullId(root), { conf
   return api;
 }
 
-/** The schema file of a database from the given pull, else from the latest pull, else null. */
+/**
+ * The schema file of a database from the given pull, else from the latest pull, else from the newest pull on disk that fetched it
+ * (by taken_at), else null. The last step matters after an apply: its post pull covers only the touched databases and becomes LATEST.
+ */
 export function findSchema(root, db, preferredPullId = null) {
   const base = controlPaths(root).pull;
-  const tried = [preferredPullId, latestPullId(root)].filter(Boolean);
-  for (const id of tried) {
+  const schemaIn = (id) => {
     const file = join(base, safeName(id), 'schema', `${db}.json`);
     const manifest = join(base, safeName(id), 'pull.json');
-    if (existsSync(file) && existsSync(manifest) && readJson(manifest).dbs?.includes(db)) return readJson(file);
+    if (!existsSync(file) || !existsSync(manifest)) return null;
+    const info = readJson(manifest);
+    return info.dbs?.includes(db) ? { info, file } : null;
+  };
+  for (const id of [preferredPullId, latestPullId(root)].filter(Boolean)) {
+    const hit = schemaIn(id);
+    if (hit) return readJson(hit.file);
   }
-  return null;
+  if (!existsSync(base)) return null;
+  const newest = readdirSync(base, { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => schemaIn(d.name))
+    .filter(Boolean)
+    .sort((a, b) => String(b.info.taken_at ?? '').localeCompare(String(a.info.taken_at ?? '')))[0];
+  return newest ? readJson(newest.file) : null;
 }
 
 // ---- checking the schema ------------------------------------------------------------------------------------------

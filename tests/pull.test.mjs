@@ -1,12 +1,13 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DATABASES, OPTIONAL_PROPERTIES } from '../agents/claim-tagger/scripts/allowlist.mjs';
 import { EXIT } from '../agents/claim-tagger/scripts/lib/exit-codes.mjs';
 import { h16 } from '../agents/claim-tagger/scripts/lib/hash.mjs';
 import { readJsonl } from '../agents/claim-tagger/scripts/lib/jsonl.mjs';
 import { NotionError } from '../agents/claim-tagger/scripts/lib/notion-rest.mjs';
+import { openPlan } from '../agents/claim-tagger/scripts/plan.mjs';
 import { normaliseText } from '../agents/claim-tagger/scripts/lib/notion-values.mjs';
 import { findSchema, isDecided, latestPullId, loadPull, main, pull, schemaProblems, schemaWarnings } from '../agents/claim-tagger/scripts/pull.mjs';
 import { createFakeNotion } from './fixtures/notion/fake-notion.mjs';
@@ -394,7 +395,7 @@ test('API failures: a broken cursor and a refused token exit 2, a server error e
   assert.equal(await s.run(['--dbs', 'claims', '--pull-id', 'p1'], { client: failing(new Error('disk full')) }), EXIT.ERROR);
 });
 
-test('loadPull: rows, lookups, decided keys, snapshot; findSchema falls back to the latest pull', async () => {
+test('loadPull: rows, lookups, decided keys, snapshot; findSchema falls back to the latest pull, then to the newest pull that has it', async () => {
   const s = setup();
   await s.run(['--all', '--pull-id', 'p1']);
   await s.run(['--dbs', 'agent_settings', '--pull-id', 'p2']);
@@ -414,10 +415,29 @@ test('loadPull: rows, lookups, decided keys, snapshot; findSchema falls back to 
   assert.equal(latest.covers('claims'), false);
   assert.equal(latest.schema('claims'), null);
   assert.equal(latest.rows('claims').length, 0);
-  assert.equal(findSchema(s.root, 'claims', 'p2'), null, 'neither p2 nor LATEST has it');
+  assert.equal(findSchema(s.root, 'claims', 'p2').properties['Geo ID'].type, 'rich_text', 'neither p2 nor LATEST has it, p1 does');
+  assert.equal(findSchema(makeRoot().root, 'claims'), null, 'no pull on disk');
   assert.equal(findSchema(s.root, 'claims', 'p1').properties['Geo ID'].type, 'rich_text');
   assert.throws(() => loadPull(s.root, 'nope'), /does not exist/);
   assert.throws(() => loadPull(makeRoot().root), /no pull yet/);
+});
+
+test('after a partial post-apply pull becomes LATEST, findSchema and a Runs plan use the newest pull that fetched the database', async () => {
+  const s = setup();
+  // names sort the other way round from taken_at, so the order must come from the manifests
+  await s.run(['--all', '--pull-id', 'z-older'], { now: clockAt('2026-10-13T09:00:00.000Z') });
+  await s.run(['--all', '--pull-id', 'a-newer'], { now: clockAt('2026-10-13T10:00:00.000Z') });
+  await s.run(['--dbs', 'claims,tag_decisions,agent_settings', '--pull-id', 'run-1-propose-post'], { now: clockAt('2026-10-13T11:00:00.000Z') });
+  assert.equal(latestPullId(s.root), 'run-1-propose-post');
+  const older = join(s.root, 'runs', 'pull', 'z-older', 'schema', 'runs.json');
+  writeFileSync(older, JSON.stringify({ ...JSON.parse(readFileSync(older, 'utf8')), marker: 'z-older' }));
+  const found = findSchema(s.root, 'runs', 'run-1-propose-post');
+  assert.equal(found.properties.Kind.type, 'select');
+  assert.equal(found.marker, undefined, 'the newer full pull wins over the older one');
+  // what run-card.mjs does right after apply.mjs: a Runs create planned against the partial LATEST
+  const plan = openPlan({ runId: 'run-1-card', root: s.root });
+  plan.create('runs', 'Tag R1', { Kind: 'Tag', Verdict: 'n/a' }, { note: 'run card' });
+  assert.equal(plan.ops.length, 1);
 });
 
 test('pull() can be called as a library: returns counts, drift, paused and a summary line', async () => {
