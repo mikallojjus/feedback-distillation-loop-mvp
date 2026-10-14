@@ -28,7 +28,7 @@ import { join } from 'node:path';
 import { controlPaths } from '../allowlist.mjs';
 import { fileSha256 } from './hash.mjs';
 import { readJson, readJsonl } from './jsonl.mjs';
-import { agentRoot } from './paths.mjs';
+import { agentRoot, codeFile } from './paths.mjs';
 import { checkHashes, composeWhenToUse } from './rubric-build.mjs';
 import { validate } from './validate.mjs';
 
@@ -87,12 +87,11 @@ function readFileJson(file, label, add) {
   }
 }
 
+/** The card schema: the root's own copy when it has one, else the agent folder's (a sandbox root holds state, not schemas). */
 function readCardSchema(root) {
-  for (const base of [root, agentRoot()]) {
-    const file = join(base, 'schemas', 'card.schema.json');
-    if (existsSync(file)) return readJson(file);
-  }
-  throw new Error('schemas/card.schema.json does not exist');
+  const file = codeFile(root, 'schemas', 'card.schema.json');
+  if (!existsSync(file)) throw new Error('schemas/card.schema.json does not exist');
+  return readJson(file);
 }
 
 /** rubric.lock against rubric.json (version, hash, file bytes): the text is only "locked" while they agree. */

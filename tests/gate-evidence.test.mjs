@@ -203,6 +203,22 @@ test('a consistent promote (PROMOTING.json, PASS card, candidate rubric, matchin
   assert.equal(w.fake.find('agent_settings', 'claim-tagger').props['Rubric in force'], VERSION);
 });
 
+test('sandbox root (CLAIM_TAGGER_ROOT set to a folder with state but no schemas): the PASS evidence still finds card.schema.json in the agent folder', async () => {
+  const w = await world();
+  lay(w);
+  assert.equal(existsSync(join(w.root, 'schemas')), false, 'the test root holds no schemas, like agents/claim-tagger/sandbox');
+  const saved = process.env.CLAIM_TAGGER_ROOT;
+  process.env.CLAIM_TAGGER_ROOT = w.root;
+  try {
+    const gate = evidenceOf(w);
+    assert.equal(gate.ok, true, joined(gate));
+    assert.deepEqual(gate.evidence.modes, ['promote']);
+  } finally {
+    if (saved === undefined) delete process.env.CLAIM_TAGGER_ROOT;
+    else process.env.CLAIM_TAGGER_ROOT = saved;
+  }
+});
+
 test('a plan that claims nothing and writes no rule text needs no evidence and no file is read for it', () => {
   const plan = { header: { op: 'header', run_id: 'tag-1', ctx: { seed: false, promote: false, gate: null } }, ops: [
     { op: 'update', seq: 1, database: 'claims', key: 'g1', properties: { Readiness: 'Ready' } },
