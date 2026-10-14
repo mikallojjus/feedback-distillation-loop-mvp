@@ -28,7 +28,7 @@ node S/plan.mjs check --run <run-id>
 node S/apply.mjs --run <run-id>
 ```
 
-`apply.mjs` pulls the touched databases before and after, writes, reads back and verifies; its summary line ends with "verify clean" and "editor fields changed: 0". On exit 1 run `apply.mjs --run <run-id> --retry` once; on exit 5 stop and report the trust breaker.
+`apply.mjs` pulls the touched databases before and after, writes, reads back and verifies; its summary line ends with "verify clean (pre <pull>, post <pull>)". It does not print the editor-field count: an editor field that changed on a row the plan touched makes it exit 5 (trust breaker) instead, so exit 0 with "verify clean" means no editor field changed (`verify.mjs --run <run-id>` prints the count, "editor fields changed: 0", if someone asks). On exit 1 run `apply.mjs --run <run-id> --retry` once; on exit 5 stop and report the trust breaker.
 
 ## Subcommands
 
@@ -97,6 +97,10 @@ Report the Fixed and Still wrong counts.
 ### `setup` (engineer, one-time; already done for the trial page)
 
 The six databases, formulas and views were created through the connector on 13 October 2026 (ids in `config.json`; the as-built statements are in `schemas/notion/as-built.md`). Before anything else, `node S/probe.mjs` must report every protected real database as not reachable (exit 4 names one the token can reach: stop and tell the engineer to disconnect the integration from that page). Seeding needs the marker file `agents/claim-tagger/runs/SETUP`, which the engineer creates from a terminal (Claude Code cannot write under runs/) and deletes afterwards. Seeding: `node S/pull.mjs --all`, then for phase 1, 2 and 3: `node S/seed.mjs --phase <n>`, A on the phase run, `node S/pull.mjs --all`. Then `node S/rubric-init.mjs` if `rubric/rubric.json` does not exist, and `cases-sync.mjs`.
+
+## Sandbox mode (the walkthrough)
+
+When the user says "sandbox" or "walkthrough" (for example `/claim-tagger sandbox status`, or "run the walkthrough tag step"), every subcommand above runs against the walkthrough sandbox instead of the trial: write each script call `node S/<name>.mjs <args>` as `node S/sandbox.mjs <name> <args>`. The sandbox is `agents/claim-tagger/sandbox/` (its own config.json, rubric/, evals/, runs/) and six small databases under the Notion page Walkthrough inside Editorial feedback loop; the trial's databases, rubric and cases are never read or written in this mode. Everything else is unchanged: preflight, the apply step, exit codes, the trust breaker. Two differences: after a promote PASS, do not run `git add`/`git commit` (the engineer commits the sandbox after the walkthrough, if at all); and link the Walkthrough page's views (Your queue, Lessons waiting, Latest runs) instead of the hub's. Say "sandbox" in every report so nobody mistakes a walkthrough result for a trial result.
 
 ## Evidence
 

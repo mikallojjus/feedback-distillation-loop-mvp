@@ -234,6 +234,45 @@ test('schema tools need runs/SETUP', async () => {
   }
 });
 
+test('setup pages: with runs/SETUP, a title-only page under a listed parent and the text of a listed page are allowed; nothing else', async () => {
+  const w = makeWorld({ populate: false });
+  const d = (input) => decide(input, { root: w.root });
+  const cfgPath = join(w.root, 'config.json');
+  const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
+  const HUB = '3da273e2-14eb-80c1-80d5-fd0894bc2db8';
+  const WALK = '11112222333344445555666677778888';
+  cfg.notion.setup_page_parents = [HUB.replace(/-/g, ''), WALK];
+  cfg.notion.setup_content_pages = [WALK];
+  writeFileSync(cfgPath, JSON.stringify(cfg));
+  const createWalk = tool('create-pages', { parent: { type: 'page_id', page_id: HUB }, pages: [{ properties: { title: 'Walkthrough' }, content: 'Step 1' }] });
+  const writeWalk = tool('update-page', { page_id: WALK, command: 'insert_content', content: 'Step 1', position: { type: 'start' } });
+  // without the marker both go to the plan check, which refuses
+  assert.equal(verdict(d(createWalk)), 'deny');
+  assert.equal(verdict(d(writeWalk)), 'deny');
+  writeFileSync(join(w.root, 'runs', 'SETUP'), 'engineer, 14 Oct');
+  const yes = d(createWalk);
+  assert.equal(verdict(yes), 'allow', yes.permissionDecisionReason);
+  assert.match(yes.permissionDecisionReason, /plain page/);
+  assert.equal(verdict(d(writeWalk)), 'allow');
+  assert.equal(verdict(d(tool('update-page', { page_id: WALK, command: 'replace_content', new_str: 'x' }))), 'allow');
+  // refused: a parent not listed, a database row, extra properties, deleting children, the text of an unlisted page, property edits
+  const no = (input, re) => {
+    const r = d(input);
+    assert.equal(verdict(r), 'deny', JSON.stringify(input.tool_input));
+    if (re) assert.match(r.permissionDecisionReason, re);
+  };
+  no(tool('create-pages', { parent: { type: 'page_id', page_id: '99990000999900009999000099990000' }, pages: [{ properties: { title: 'x' } }] }));
+  no(tool('create-pages', { parent: { type: 'data_source_id', data_source_id: WALK }, pages: [{ properties: { title: 'x' } }] }));
+  no(tool('create-pages', { parent: { type: 'page_id', page_id: HUB }, pages: [{ properties: { title: 'x', Status: 'Live' } }] }), /only a title/);
+  no(tool('create-pages', { parent: { type: 'page_id', page_id: HUB }, pages: [{ properties: { title: 'x' }, template_id: 'abc' }] }), /template_id/);
+  no(tool('update-page', { page_id: WALK, command: 'replace_content', new_str: 'x', allow_deleting_content: true }), /never deletes/);
+  no(tool('update-page', { page_id: HUB, command: 'insert_content', content: 'x' }));
+  no(tool('update-page', { page_id: WALK, command: 'update_properties', properties: { title: 'y' } }));
+  // the protected ids and the editor fields still win
+  no(tool('update-page', { page_id: WALK, command: 'insert_content', content: `see ${cfg.notion.protected_database_ids[0]}` }), /protected/);
+  no(tool('create-pages', { parent: { type: 'page_id', page_id: HUB }, pages: [{ properties: { title: 'x', 'Tag outcome': 'Applies' } }] }), /editors/);
+});
+
 test('move-pages and duplicate-page are never allowed, armed or in setup', async () => {
   const a = await armed();
   writeFileSync(join(a.w.root, 'runs', 'SETUP'), 'x');

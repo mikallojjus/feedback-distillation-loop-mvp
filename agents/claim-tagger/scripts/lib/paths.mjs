@@ -1,19 +1,37 @@
 // Folder locations and file-name safety. Windows host: node:path only, and never a ':' in an id or file name.
 
-import { mkdirSync, realpathSync } from 'node:fs';
+import { existsSync, mkdirSync, realpathSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url)); // <agent>/scripts/lib
 
-/** <repo>/agents/claim-tagger, found from this file's location, so it works from any working directory. */
-export function agentRoot() {
+/** The environment variable that points the scripts at another state folder (the walkthrough sandbox). Set by scripts/sandbox.mjs. */
+export const ROOT_ENV = 'CLAIM_TAGGER_ROOT';
+
+/** <repo>/agents/claim-tagger, found from this file's location: the code (scripts, schemas, prompts). Never moves. */
+export function codeRoot() {
   return resolve(HERE, '..', '..');
 }
 
-/** The geo-agents repository root. */
+/**
+ * The state folder the scripts work on: config.json, rubric/, evals/, runs/. That is the agent folder itself, unless CLAIM_TAGGER_ROOT
+ * names another one (agents/claim-tagger/sandbox for the walkthrough), so the same code can run a separate copy of the loop.
+ */
+export function agentRoot() {
+  const override = process.env[ROOT_ENV];
+  return override ? resolve(override) : codeRoot();
+}
+
+/** The geo-agents repository root (where .env lives), always found from the code, never from a sandbox. */
 export function repoRoot() {
-  return resolve(agentRoot(), '..', '..');
+  return resolve(codeRoot(), '..', '..');
+}
+
+/** A code file (a schema, a prompt) for a state root: the root's own copy when it has one, else the agent folder's. */
+export function codeFile(root, ...parts) {
+  const own = join(root, ...parts);
+  return existsSync(own) ? own : join(codeRoot(), ...parts);
 }
 
 /** <agent>/runs, the git-ignored folder for pulls, judgments, plans and cards. */

@@ -1,0 +1,23 @@
+{
+  "_about": "What the walkthrough sandbox holds. `node agents/claim-tagger/scripts/sandbox.mjs init` builds the sandbox rubric, canaries and seed files from this list and the trial's own files; the Notion side lives under the page Walkthrough inside Editorial feedback loop.",
+  "rubric_version": "2026-10-14.1",
+  "tags": ["Hypothetical", "Predictive"],
+  "decided": [
+    "eda71609fa8d01701c5952e64af60a8f::Predictive",
+    "54d827f04e44562db5c2ee38df545c4c::Predictive",
+    "807f9fa08f284213adbd97278641f8aa::Predictive",
+    "3764186f5a834c8180ea144dddb08add::Predictive",
+    "f06b756f64bb5061ba6c9e1271af19d1::Predictive",
+    "8172f325d9944eb0937dcd1945f55598::Predictive",
+    "5422c1c777914f57b775bf784a3de161::Hypothetical",
+    "5b20e1fb41a1465aa4191de4da7fd75f::Hypothetical",
+    "340dc7e5c4e1511f86b7b674323c0b57::Hypothetical"
+  ],
+  "open": [
+    "6aa014be141b4c6dab2c3c180f963639::Predictive",
+    "f376c2cc2f6f4338893cce864ec82c02::Predictive",
+    "6e820a8a97c5496fb3125ba3317facb6::Predictive",
+    "157d1128ad4277bef5ee4926b49c4690::Predictive"
+  ],
+  "open_note": "Flagged for the walkthrough: a hedged 'likely to' or 'on track to' claim. Decide whether Predictive applies."
+}

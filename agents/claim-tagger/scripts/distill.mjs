@@ -37,7 +37,7 @@ import { FAKE_CLAUDE_SCRIPT, extractJson, findClaudeBin, runClaude, usageResetHi
 import { EXIT } from './lib/exit-codes.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { normId } from './lib/notion-values.mjs';
-import { agentRoot, isMain, repoRoot, runId as makeRunId, safeName } from './lib/paths.mjs';
+import { agentRoot, codeFile, isMain, repoRoot, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { composeWhenToUse, normaliseText } from './lib/rubric-build.mjs';
 import { validate } from './lib/validate.mjs';
@@ -305,7 +305,7 @@ function lessonMarkdown(lesson, rows) {
 
 function modelCaller({ root, config, deps, driver, model, state }) {
   const call = deps.runClaude ?? runClaude;
-  const promptFile = join(root, 'prompts', 'distill.md');
+  const promptFile = codeFile(root, 'prompts', 'distill.md');
   if (!existsSync(promptFile)) throw new ExitError(EXIT.INVALID, `the distiller prompt ${promptFile} does not exist`);
   let bin;
   if (driver === 'fake') {
@@ -546,7 +546,7 @@ async function distill({ args, io, root, config, deps, now }) {
   const recordGroups = (runDir) => {
     for (const g of groupFiles) {
       writeJsonAtomic(join(runDir, 'groups', `${String(g.n).padStart(2, '0')}-${safeName(`${g.group.tag}-${g.group.why}`)}.group.json`), {
-        prompt_path: join(root, 'prompts', 'distill.md'), output_path: null, tag: g.group.tag, why_wrong: g.group.why, rule_cited: g.group.rule_n, row_keys: g.group.rows.map((r) => r.key),
+        prompt_path: codeFile(root, 'prompts', 'distill.md'), output_path: null, tag: g.group.tag, why_wrong: g.group.why, rule_cited: g.group.rule_n, row_keys: g.group.rows.map((r) => r.key),
         input: g.input, attempts: g.result.attempts ?? [], reply: g.result.reply ?? null, failed: g.result.failed ?? null, overfit: g.result.overfit ?? null,
       });
     }
@@ -569,7 +569,7 @@ async function distill({ args, io, root, config, deps, now }) {
   const runDir = join(controlPaths(root).runs, runId);
   if (existsSync(join(runDir, 'plan.jsonl'))) throw new ExitError(EXIT.INVALID, `run "${runId}" already has a plan; pick another --run-id`);
   const plan = openPlan({ runId, sourcePull: pull.id, root, config, pull, now });
-  const lessonSchema = readJson(join(root, 'schemas', 'lesson.schema.json'));
+  const lessonSchema = readJson(codeFile(root, 'schemas', 'lesson.schema.json'));
   for (const { lesson, rows } of lessons) {
     const checked = validate(lessonSchema, lesson);
     if (!checked.ok) throw new Error(`internal error: the lesson "${lesson.lesson_key}" does not match lesson.schema.json: ${checked.errors.slice(0, 3).join('; ')}`);

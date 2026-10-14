@@ -34,7 +34,7 @@ import { controlPaths } from './allowlist.mjs';
 import { EXIT, describeExit } from './lib/exit-codes.mjs';
 import { fileSha256 } from './lib/hash.mjs';
 import { appendJsonl, readJson, readJsonl } from './lib/jsonl.mjs';
-import { agentRoot, isMain, runId as makeRunId } from './lib/paths.mjs';
+import { agentRoot, isMain, repoRoot, runId as makeRunId } from './lib/paths.mjs';
 import { checkHashes, composeWhenToUse } from './lib/rubric-build.mjs';
 import { openPlan } from './plan.mjs';
 import { computeDrift, latestPullId, loadConfig, loadPull } from './pull.mjs';
@@ -344,7 +344,8 @@ export function renderReport(state) {
 /** Whether an integration token is configured in the repository's .env, without reading or printing its value. */
 function tokenNote(root) {
   try {
-    const envPath = join(root, '..', '..', '.env');
+    const beside = join(root, '..', '..', '.env'); // a sandbox root sits deeper: fall back to the repository's .env
+    const envPath = existsSync(beside) ? beside : join(repoRoot(), '.env');
     if (!existsSync(envPath)) return 'no integration token configured (.env missing)';
     const text = readFileSync(envPath, 'utf8');
     return /^\s*NOTION_TOKEN\s*=\s*\S+/m.test(text) ? 'integration token configured' : 'no integration token configured (NOTION_TOKEN not set in .env)';

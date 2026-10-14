@@ -13,6 +13,10 @@
 //                   that run's batch files (parent, every property, page content); an identical create is allowed once (the ledger
 //                   runs/<run>/guard-ledger.jsonl, cleared when `plan.mjs check` arms the run again).
 //   Schema tools:   allowed only while the file runs/SETUP exists.
+//   Setup pages:    while runs/SETUP exists, a plain page (title only, no database row) may be created under a page listed in
+//                   config notion.setup_page_parents, and the text of a page listed in notion.setup_content_pages may be written
+//                   (insert, update or replace content, never deleting child pages or databases). This is how the engineer
+//                   writes pages such as the walkthrough; every other page write still has to match an armed plan.
 
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -198,12 +202,53 @@ export function decide(input, { root = agentRoot() } = {}) {
         ? allow('runs/SETUP exists: schema work is allowed during setup')
         : deny('schema changes need the setup marker runs/SETUP (created by the engineer during setup)');
     }
+    if (existsSync(controlPaths(root).setup)) {
+      const page = decideSetupPage(tool, toolInput, config);
+      if (page) return page;
+    }
     const state = armedBatches(root);
     if (state.problem) return deny(state.problem);
     return tool === 'create-pages' ? decideCreate(toolInput, state) : decideUpdate(toolInput, state);
   } catch (e) {
     return deny(`the guard hit an error and refuses: ${e?.message ?? e}`);
   }
+}
+
+// ---- setup pages ---------------------------------------------------------------------------------------------------
+
+const SETUP_CREATE_PAGE_KEYS = new Set(['properties', 'content', 'icon']);
+const SETUP_CONTENT_COMMANDS = new Set(['insert_content', 'update_content', 'replace_content']);
+const SETUP_UPDATE_KEYS = new Set(['page_id', 'command', 'content', 'position', 'content_updates', 'new_str', 'icon', 'allow_async']);
+
+const listed = (config, name) => new Set((config?.notion?.[name] ?? []).map(normId));
+
+/** During setup: allow a plain page under a setup parent, or the text of a setup page; null when the call is not of that kind. */
+function decideSetupPage(tool, toolInput, config) {
+  if (tool === 'create-pages') {
+    const parent = toolInput.parent;
+    if (!isObject(parent) || typeof parent.page_id !== 'string' || parent.data_source_id || parent.database_id) return null;
+    if (!listed(config, 'setup_page_parents').has(normId(parent.page_id))) return null;
+    const extra = Object.keys(toolInput).filter((k) => !CREATE_KEYS.has(k));
+    if (extra.length) return deny(`notion-create-pages carries ${extra.join(', ')}, which a setup page does not need`);
+    if (!Array.isArray(toolInput.pages) || toolInput.pages.length === 0) return deny('notion-create-pages has no pages');
+    for (const [i, page] of toolInput.pages.entries()) {
+      if (!isObject(page)) return deny(`page ${i + 1} is not an object`);
+      const extraKeys = Object.keys(page).filter((k) => !SETUP_CREATE_PAGE_KEYS.has(k));
+      if (extraKeys.length) return deny(`page ${i + 1} carries ${extraKeys.join(', ')}, which a setup page does not need`);
+      const props = isObject(page.properties) ? Object.keys(page.properties) : [];
+      if (props.length !== 1 || props[0] !== 'title') return deny(`page ${i + 1} must carry only a title: a setup page is a plain page, not a database row`);
+    }
+    return allow(`runs/SETUP exists: ${toolInput.pages.length} plain page(s) under the setup page ${parent.page_id}`);
+  }
+  if (tool === 'update-page') {
+    const d = isObject(toolInput.data) ? toolInput.data : toolInput;
+    if (typeof d.page_id !== 'string' || !SETUP_CONTENT_COMMANDS.has(d.command)) return null;
+    if (!listed(config, 'setup_content_pages').has(normId(d.page_id))) return null;
+    const extra = Object.keys(d).filter((k) => !SETUP_UPDATE_KEYS.has(k));
+    if (extra.length) return deny(`notion-update-page carries ${extra.join(', ')}; a setup page write never deletes child pages or databases`);
+    return allow(`runs/SETUP exists: ${d.command} on the setup page ${d.page_id}`);
+  }
+  return null;
 }
 
 /** The JSON the hook prints for an input. */

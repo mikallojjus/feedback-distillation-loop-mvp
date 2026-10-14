@@ -1,0 +1,164 @@
+{
+  "rubric_version": "2026-10-14.2",
+  "rubric_hash": "sha256:b5ad6894949fac52",
+  "scope": [
+    "Hypothetical",
+    "Predictive"
+  ],
+  "scope_hash": "sha256:923e997301d09189",
+  "source": {
+    "notion_database": "f05273e214eb8353b0a981544507de32",
+    "data_source": "collection://b65273e2-14eb-8362-86a6-870ea8d632f4",
+    "fetched": [
+      "2026-10-09 (29 rows, sources/claim-tags-verified.9oct.rows.json)",
+      "2026-10-13 (delta: Source inaccessible, Improperly sourced)"
+    ],
+    "filter": "Status = Verified (decision D1); Work tags are ignored",
+    "scope_note": "judged = tags the judge decides; Editor verified is human-only; Unsourced is computed from the Sources relation. This file carries the candidate scope (every judged tag). The baseline scope, the list the current prompt reads, is recorded in rubric.lock on day 0; the two differ only in scope, so their rubric_hash is the same and their scope_hash differs.",
+    "note": "walkthrough sandbox: the trial rubric 2026-10-13.1 cut down to Hypothetical, Predictive"
+  },
+  "tag_count": 2,
+  "judged_count": 2,
+  "counterpart_pairs": [],
+  "changelog": [
+    {
+      "version": "2026-10-14.1",
+      "date": "2026-10-14",
+      "by": "sandbox init",
+      "change": "Walkthrough sandbox: tags Hypothetical, Predictive copied unchanged from the trial rubric 2026-10-13.1."
+    },
+    {
+      "version": "2026-10-14.2",
+      "previous_version": "2026-10-14.1",
+      "date": "2026-10-14",
+      "tag": "Predictive",
+      "kind": "Change the rule",
+      "ruleN": 1,
+      "lesson_id": "WT-1",
+      "note": "Predictive rule 1 replaced by lesson WT-1 \"Hedged forecast markers count only when they point to a definite future event, not habits, comparisons, or trajectories.\"",
+      "lesson_key": "Hedged forecast markers count only when they point to a definite future event, not habits, comparisons, or trajectories."
+    }
+  ],
+  "tags": [
+    {
+      "name": "Hypothetical",
+      "notion_page_id": "12d273e214eb8312908e01b162b3325c",
+      "status": "Verified",
+      "category": "Meaning",
+      "polarity": "Issue",
+      "counterpart": null,
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-09-10",
+      "evidence_url": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+      "description": "A claim whose main assertion concerns what could, might, or would occur under an assumed, proposed, conditional, or otherwise unrealized scenario, without predicting that scenario as the actual future. Under this taxonomy, past counterfactuals are excluded by convention. Split from its sibling Predictive on 4 Sep.",
+      "when_to_use": {
+        "preamble": "Sibling of Predictive; a plain forecast of the actual future is Predictive, not Hypothetical. Decide from the markers in the claim's own main assertion.",
+        "rules": [
+          {
+            "n": 1,
+            "text": "Fires on a conditional under a proposed, potential or assumed scenario (\"under a potential U.S. model, voting would require KYC\"; \"under the proposed agreement, holders will retain no claim\"). SCENARIO FRAMING WINS: Hypothetical even when the verb is \"will\".",
+            "rule_hash": "sha256:a63e0f599150f0c3"
+          },
+          {
+            "n": 2,
+            "text": "Fires on an unrealized possibility or capability that produces something not yet realized: could, may, might, can be designed to, can be used to (\"platforms could compete\", \"tokens can be designed to generate revenue\", \"structured finance can be used to create rated instruments\").",
+            "rule_hash": "sha256:e02c2ed3a17bae36"
+          },
+          {
+            "n": 3,
+            "text": "Does NOT fire on a past counterfactual (\"the race condition could have allowed unlimited approvals\") — a past capability is analyzable now, tag Neither.",
+            "rule_hash": "sha256:8799a6e02769ede2"
+          },
+          {
+            "n": 4,
+            "text": "Does NOT fire on an unconditional, scenario-free forecast of the actual future — that is Predictive.",
+            "rule_hash": "sha256:1bb769258ed1d957"
+          },
+          {
+            "n": 5,
+            "text": "Does NOT fire on a bare present standing capability (\"borrowers can use Bitcoin as collateral\", \"SHRINCS keeps Bitcoin usable\") — tag Neither; the thin line is against \"can be designed/used to\" in rule 2, which produces something not yet realized.",
+            "rule_hash": "sha256:36d48a70572879f2"
+          },
+          {
+            "n": 6,
+            "text": "Co-exists with the Nature tag: a claim can be Factual and Hypothetical at once.",
+            "rule_hash": "sha256:bc9c01944f4b3b47"
+          }
+        ],
+        "note": "Verified 4 Sep on 100 crypto claims: glm-5.3-flash 98/100, glm-5.3 96/100, zero Predictive/Hypothetical bleed."
+      },
+      "example_claims": [
+        "Under a potential U.S. model, tokenized stock voting would likely require a user to be KYC'd on Coinbase.com.",
+        "Under the proposed Master Framework Agreement, equity holders will retain no residual claim.",
+        "Incumbent platforms like Coinbase's Echo could compete with existing ICO launchpads.",
+        "Structured finance can be used to create investment-grade rated instruments from SEDA."
+      ],
+      "human_only": false,
+      "deterministic": false,
+      "needs_source_reading": false,
+      "tag_hash": "sha256:77cd1b37d74d73e7",
+      "judged": true
+    },
+    {
+      "name": "Predictive",
+      "notion_page_id": "cef273e214eb8282909e81d2c86f2611",
+      "status": "Verified",
+      "category": "Meaning",
+      "polarity": "Issue",
+      "counterpart": null,
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-09-10",
+      "evidence_url": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+      "description": "A claim that asserts the actual future will unfold a certain way: an unconditional forecast or expectation about what will happen, not tied to a hypothesized scenario. Split from Hypothetical on 4 Sep; operationalizes the team's rule that prediction claims do not belong in the graph as settled facts.",
+      "when_to_use": {
+        "preamble": "Sibling of Hypothetical; a forecast under a scenario is Hypothetical, not Predictive. Decide from the markers in the claim's own main assertion.",
+        "rules": [
+          {
+            "n": 1,
+            "text": "Fires on an unconditional future/forecast marker: will, is expected to, is forecasted to, is projected to, is set to (\"the market is forecasted to grow to a multi-trillion size by 2030\", \"the largest wave of maturities is expected in the fall\"). Hedged markers (is likely to, is likely, probably) fire only when they attach to a definite future outcome or event that only the future can settle (\"the hiring freeze is likely a short-lived phase\" fires). Hedged markers do NOT fire when they describe: an actor's general tendency or disposition, which can be checked against its past record (\"the agency is likely to side with large incumbents\"); a comparison of which strategy or approach tends to work better (\"tariffs are more likely than talks to change the policy\"); or a present trajectory (\"is on track to\", \"is heading toward\"). Such claims are assessments of the present, not forecasts. In particular, a hedged claim that an actor is likely to keep doing, continue or extend what it already does (to expand, tighten or favour something further), even with a future time phrase attached, describes that actor's tendency and does not fire. This rule decides Predictive only: it never decides whether a claim is Hypothetical, which Hypothetical's own rules settle unchanged, so a conditional or scenario claim keeps the Hypothetical verdict those rules give it even where this rule would also fire, and the two tags may stand together.",
+            "rule_hash": "sha256:a90801d9467cbd92"
+          },
+          {
+            "n": 2,
+            "text": "The forecast must be about the actual future, stated flatly, with no \"under X\" / \"if X\" / \"proposed\" / \"potential\" scenario wrapper. SCENARIO FRAMING hands the claim to Hypothetical even when it says \"will\".",
+            "rule_hash": "sha256:19386e0398e4f74e"
+          },
+          {
+            "n": 3,
+            "text": "Does NOT fire on an attributed forecast (\"analysts expect a recession\", \"X said prices will rise\") — that is an observable statement, tag Neither.",
+            "rule_hash": "sha256:c8cb069c0c2d3176"
+          },
+          {
+            "n": 4,
+            "text": "Does NOT fire on possibility or capability (\"could\", \"may\", \"can be designed to\") — that is Hypothetical.",
+            "rule_hash": "sha256:41dfbf4f58c1af5b"
+          },
+          {
+            "n": 5,
+            "text": "Does NOT fire on a scheduled event or a statutory maximum (\"is scheduled to be sentenced on December 8\", \"faces up to 20 years\") — an arranged or legal present fact, tag Neither.",
+            "rule_hash": "sha256:d52b2d26a6d25548"
+          },
+          {
+            "n": 6,
+            "text": "Co-exists with the Nature tag: a forecast is Factual and Predictive at once.",
+            "rule_hash": "sha256:5fe75e6ac700347c"
+          }
+        ],
+        "note": "Verified 4 Sep on 100 crypto claims: glm-5.3-flash 98/100, glm-5.3 96/100, zero Predictive/Hypothetical bleed."
+      },
+      "example_claims": [
+        "The stablecoin market is forecasted to grow to a multi-trillion dollar size by 2030.",
+        "The largest wave of commercial real estate debt maturities in history is expected in the fall.",
+        "Bitcoin will reach $200,000 next year.",
+        "The upgrade is set to ship in the fourth quarter."
+      ],
+      "human_only": false,
+      "deterministic": false,
+      "needs_source_reading": false,
+      "tag_hash": "sha256:8c3c6267c6a99c19",
+      "judged": true
+    }
+  ]
+}

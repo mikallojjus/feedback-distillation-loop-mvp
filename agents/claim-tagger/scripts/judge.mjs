@@ -43,7 +43,7 @@ import { FAKE_CLAUDE_SCRIPT, claudeVersion, extractJson, findClaudeBin, runClaud
 import { EXIT } from './lib/exit-codes.mjs';
 import { configId, h16, promptVersion, ruleHash, sha256Hex } from './lib/hash.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
-import { agentRoot, ensureDir, isMain, runId as makeRunId, safeName } from './lib/paths.mjs';
+import { agentRoot, codeFile, ensureDir, isMain, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { mulberry32, seedFromString, shuffle } from './lib/rng.mjs';
 import { checkHashes, normaliseText } from './lib/rubric-build.mjs';
@@ -665,7 +665,7 @@ async function run(opts, io, deps) {
   const effort = previous && previous.effort !== undefined ? previous.effort : judgeCfg.effort; // a resumed run keeps the effort it started with
   const bin = driver === 'fake' ? FAKE_CLAUDE_SCRIPT : (deps.bin ?? findClaudeBin(judgeCfg.claude_bin ?? 'claude'));
   const cliVersion = driver === 'fake' ? 'unknown' : (deps.cliVersion ?? claudeVersion(bin, { env }));
-  const promptPath = join(agentDir, judgeCfg.prompt ?? 'prompts/judge.md');
+  const promptPath = codeFile(agentDir, judgeCfg.prompt ?? 'prompts/judge.md');
   if (!existsSync(promptPath)) throw new ExitError(EXIT.INVALID, `the judge prompt ${promptPath} does not exist`);
   const promptBytes = readFileSync(promptPath);
   const template = promptBytes.toString('utf8');
@@ -678,8 +678,8 @@ async function run(opts, io, deps) {
   const pullId = opts.items === 'claims' ? basename(resolvePullDir(runsDir, opts.pull)) : null;
   const allItems = loadItems({ ...opts, pull: pullId ?? opts.pull }, { agentDir, runsDir });
   const schemas = {
-    output: readJson(join(agentDir, 'schemas', 'judge-output.schema.json')),
-    judgment: readJson(join(agentDir, 'schemas', 'judgment.schema.json')),
+    output: readJson(codeFile(agentDir, 'schemas', 'judge-output.schema.json')),
+    judgment: readJson(codeFile(agentDir, 'schemas', 'judgment.schema.json')),
   };
   const runs = opts.smoke ? 1 : (opts.runs ?? judgeCfg.runs ?? 3);
   const cfgDir = ensureDir(join(runsDir, 'judgments', config16));

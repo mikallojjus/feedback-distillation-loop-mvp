@@ -32,7 +32,7 @@ import { EXIT } from './lib/exit-codes.mjs';
 import { checkGateEvidence } from './lib/gate-evidence.mjs';
 import { fileSha256 } from './lib/hash.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
-import { agentRoot, isMain } from './lib/paths.mjs';
+import { agentRoot, codeRoot, isMain } from './lib/paths.mjs';
 import { encodeProperties, normId, sameValue } from './lib/notion-values.mjs';
 import { validate } from './lib/validate.mjs';
 import { findSchema, isDecided, keyProperty, latestPullId, loadConfig, loadPull } from './pull.mjs';
@@ -52,7 +52,7 @@ export class PlanError extends Error {
   }
 }
 
-export const planSchema = () => readJson(join(agentRoot(), 'schemas', 'plan-op.schema.json'));
+export const planSchema = () => readJson(join(codeRoot(), 'schemas', 'plan-op.schema.json'));
 
 /** runs/<run-id> for a run id (which must already be a safe folder name and not a reserved one). */
 export function runDirOf(root, runId) {

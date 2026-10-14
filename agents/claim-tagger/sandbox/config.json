@@ -1,0 +1,143 @@
+{
+  "_about": "Walkthrough sandbox config: the same agent, pointed at six small databases under the Notion page Walkthrough (inside Editorial feedback loop). Run scripts against it with scripts/sandbox.mjs.",
+  "agent": "claim-tagger",
+  "notion": {
+    "api_version": "2022-06-28",
+    "hub_page_id": "3f9273e214eb81c2a075fd94e339d40e",
+    "databases_page_id": "3f9273e214eb817f8dd1cd336e2e6ab9",
+    "engineer_notes_page_id": "3f8273e214eb8137a13cd8d4d483b936",
+    "databases": {
+      "rulebook": {
+        "database_id": "32d9cf20624c49dd82e381e035092b8a",
+        "data_source_id": "4ad48d6f-cc91-417e-b780-5db4bcd0d1a6",
+        "key": "Tag title"
+      },
+      "claims": {
+        "database_id": "5e8b5f36885f4d60a8951255aeec086b",
+        "data_source_id": "755397bf-906c-4d60-9f05-fcd46f67c22d",
+        "key": "Geo ID"
+      },
+      "tag_decisions": {
+        "database_id": "8483669142a04204a1d82ef8e7f511b5",
+        "data_source_id": "ab0b0930-3d8f-4ce7-9491-904b25272f27",
+        "key": "Key"
+      },
+      "rule_changes": {
+        "database_id": "a9fb71b6896843afa4d8994414233562",
+        "data_source_id": "43614e6d-9d8c-4e0e-b1f5-26311eb03194",
+        "key": "Lesson title"
+      },
+      "runs": {
+        "database_id": "3be370cd6657424786b9d942b2583b31",
+        "data_source_id": "737d2036-0e9f-4cbb-871f-0755d665d706",
+        "key": "Run title"
+      },
+      "agent_settings": {
+        "database_id": "86ede9c7e6764512a8a5e85ca88f1340",
+        "data_source_id": "7e81475a-37b7-471a-87a5-bcebd6b304b7",
+        "key": "Name"
+      }
+    },
+    "protected_database_ids": [
+      "d1307596-e531-420f-8688-2485f3ef28ab",
+      "9e979fe1-e03d-45cd-b9b1-d971dc3d90a2",
+      "7219756338b2416f8fa8af83d75ec47d",
+      "9e111d22c14e4344bb90072606036942",
+      "f05273e214eb8353b0a981544507de32",
+      "b65273e2-14eb-8362-86a6-870ea8d632f4",
+      "0e2273e214eb83b0a2b1013e7d0958fc",
+      "eec273e2-14eb-8349-a416-074a30396303",
+      "67a1940f-db0d-477a-9737-0a9eb01a5eac"
+    ],
+    "requests_per_second": 3,
+    "page_size": 100,
+    "max_creates_per_call": 100,
+    "max_text": 1900
+  },
+  "models": {
+    "judge": "claude-sonnet-5-5",
+    "cheap": "claude-haiku-5-5",
+    "distill": "claude-opus-5-5"
+  },
+  "judge": {
+    "runs": 3,
+    "smoke_runs": 1,
+    "batch_size": 8,
+    "concurrency": 2,
+    "effort": "medium",
+    "max_turns": 1,
+    "timeout_ms": 300000,
+    "claude_bin": "claude",
+    "max_error_share": 0.1,
+    "prompt": "prompts/judge.md"
+  },
+  "thresholds": {
+    "t_apply": 0.75,
+    "t_skip": 0.25
+  },
+  "readiness": {
+    "fix_polarities": [
+      "Issue"
+    ]
+  },
+  "queue": {
+    "weekly_cap_default": 40,
+    "why_max_words": 40
+  },
+  "distill": {
+    "min_claims": 2,
+    "min_claims_rule_change": 3,
+    "owner_ruling_at": 2,
+    "overfit_ngram": 8
+  },
+  "gate": {
+    "tolerance": 0.05,
+    "min_positives": 5,
+    "bootstrap": 1000,
+    "ci": [
+      0.025,
+      0.975
+    ],
+    "ungated_flips_hold": 1,
+    "ungated_flips_fail": 3,
+    "reconfirm_runs": 5
+  },
+  "anonymise": {
+    "replacements": [
+      [
+        "Mohammed",
+        "the editor"
+      ],
+      [
+        "Moh",
+        "the editor"
+      ],
+      [
+        "Yaniv's rule",
+        "the team's rule"
+      ],
+      [
+        "Yaniv",
+        "the rule owner"
+      ],
+      [
+        "Arturas",
+        "the auditor"
+      ]
+    ]
+  },
+  "scope": {
+    "code_decided_tags": [
+      "Unsourced",
+      "Improperly sourced",
+      "Source inaccessible"
+    ],
+    "human_only_tags": [
+      "Editor verified"
+    ],
+    "source_reading_tags": [
+      "Improperly sourced",
+      "Source inaccessible"
+    ]
+  }
+}

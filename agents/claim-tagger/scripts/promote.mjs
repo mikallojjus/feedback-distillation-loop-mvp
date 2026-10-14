@@ -60,7 +60,7 @@ import { EXIT } from './lib/exit-codes.mjs';
 import { fileSha256 } from './lib/hash.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { normId } from './lib/notion-values.mjs';
-import { agentRoot, ensureDir, isMain, runId as makeRunId, safeName } from './lib/paths.mjs';
+import { agentRoot, codeFile, ensureDir, isMain, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { applyLesson, checkHashes, composeWhenToUse, nextVersion, normaliseText } from './lib/rubric-build.mjs';
 import { validate } from './lib/validate.mjs';
 import { lessonIndex, planRegression, syncCases, writeCases } from './cases-sync.mjs';
@@ -452,7 +452,7 @@ async function gate({ args, io, root, config, deps, now, loc, pull, rubric, less
   ensureDir(runDir);
   const version = previous?.version ?? candidateVersion(root, rubric.rubric_version, now());
   const candidate = buildCandidate({ rubric, lesson, target, text, version });
-  const problems = [...checkHashes(candidate).mismatches.map((m) => `hash ${m.kind} ${m.where}`), ...validate(readJson(join(root, 'schemas', 'rubric.schema.json')), candidate).errors];
+  const problems = [...checkHashes(candidate).mismatches.map((m) => `hash ${m.kind} ${m.where}`), ...validate(readJson(codeFile(root, 'schemas', 'rubric.schema.json')), candidate).errors];
   if (problems.length) throw new Error(`internal error: the candidate rubric is not valid: ${problems.slice(0, 3).join('; ')}`);
   const candidatePath = join(runDir, 'candidate', 'rubric.json');
   writeJsonAtomic(candidatePath, candidate);

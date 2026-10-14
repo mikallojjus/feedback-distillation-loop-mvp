@@ -33,7 +33,8 @@
       "Bash(node agents/claim-tagger/scripts/status.mjs:*)",
       "Bash(node agents/claim-tagger/scripts/transcript-check.mjs:*)",
       "Bash(node agents/claim-tagger/scripts/verify.mjs:*)",
-      "Bash(node agents/claim-tagger/scripts/probe.mjs:*)"
+      "Bash(node agents/claim-tagger/scripts/probe.mjs:*)",
+      "Bash(node agents/claim-tagger/scripts/sandbox.mjs:*)"
     ],
     "ask": [
       "mcp__claude_ai_notion__notion-update-page",
@@ -55,7 +56,9 @@
       "Bash(git push:*)",
       "Bash(cat .env:*)",
       "Bash(grep * .env:*)",
-      "Bash(type .env:*)"
+      "Bash(type .env:*)",
+      "Write(agents/claim-tagger/sandbox/runs/**)",
+      "Edit(agents/claim-tagger/sandbox/runs/**)"
     ]
   },
   "hooks": {

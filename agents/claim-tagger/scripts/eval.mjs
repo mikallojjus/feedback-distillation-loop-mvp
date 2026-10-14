@@ -50,7 +50,7 @@ import { basename, join, resolve } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { h16 } from './lib/hash.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
-import { agentRoot, isMain, runId, runsDir } from './lib/paths.mjs';
+import { agentRoot, codeRoot, isMain, runId, runsDir } from './lib/paths.mjs';
 import { checkHashes, normaliseText } from './lib/rubric-build.mjs';
 import { exactMcNemar, pairedBootstrapDelta, selfFlipRate } from './lib/stats.mjs';
 import { validate } from './lib/validate.mjs';
@@ -266,8 +266,8 @@ let schemas = null;
 function loadSchemas() {
   if (!schemas) {
     schemas = {
-      judgment: readJson(join(agentRoot(), 'schemas', 'judgment.schema.json')),
-      card: readJson(join(agentRoot(), 'schemas', 'card.schema.json')),
+      judgment: readJson(join(codeRoot(), 'schemas', 'judgment.schema.json')),
+      card: readJson(join(codeRoot(), 'schemas', 'card.schema.json')),
     };
   }
   return schemas;

@@ -300,3 +300,45 @@ View ids (from the create calls):
 - Second opinion (Tag decisions, database tab): view://3f8273e2-14eb-810f-b384-000c5c28d906
 - By claim (Tag decisions, database tab): view://3f8273e2-14eb-816d-94f1-000ce2224598
 - Handed on: needs evidence or a second opinion (Tag decisions, hub page): view://3f8273e2-14eb-81c9-b9cb-000c5063e1d3
+
+## Walkthrough sandbox (14 October 2026)
+
+The page **Walkthrough** (3f9273e214eb81c2a075fd94e339d40e) under the hub holds a separate copy of the six databases in its sub-page **Sandbox databases** (3f9273e214eb817f8dd1cd336e2e6ab9). Each was created with the statements above in their final form (every later `ALTER COLUMN ... COMMENT` folded into the `CREATE TABLE`, the `ADD COLUMN` formulas and rollups added afterwards in the same order), with three differences: relations point at the sandbox data sources; the Rule changes `Lesson ID` prefix is **WT** (Notion refuses a second `LS` prefix in the workspace); and a few descriptions say "walkthrough" or "copied from the trial" instead of the 9 Oct audit. The scripts reach it through `agents/claim-tagger/sandbox/config.json` and `scripts/sandbox.mjs`.
+
+| Database | database id | data source id |
+|---|---|---|
+| Rulebook | 32d9cf20624c49dd82e381e035092b8a | 4ad48d6f-cc91-417e-b780-5db4bcd0d1a6 |
+| Claims | 5e8b5f36885f4d60a8951255aeec086b | 755397bf-906c-4d60-9f05-fcd46f67c22d |
+| Tag decisions | 8483669142a04204a1d82ef8e7f511b5 | ab0b0930-3d8f-4ce7-9491-904b25272f27 |
+| Rule changes | a9fb71b6896843afa4d8994414233562 | 43614e6d-9d8c-4e0e-b1f5-26311eb03194 |
+| Runs | 3be370cd6657424786b9d942b2583b31 | 737d2036-0e9f-4cbb-871f-0755d665d706 |
+| Agent settings | 86ede9c7e6764512a8a5e85ca88f1340 | 7e81475a-37b7-471a-87a5-bcebd6b304b7 |
+
+Views, all inline on the Walkthrough page (configure strings as in the hub views above unless noted):
+
+- Your queue (Tag decisions): view://3f9273e2-14eb-8195-bec9-000c6a4c800f
+- Needs your note (Tag decisions): view://3f9273e2-14eb-81c7-9e5a-000c3b4d40b0
+- Your decisions (Tag decisions), new: `FILTER "Tag outcome" IS NOT EMPTY; SORT BY "Key" ASC; SHOW "Key", "Claim text", "Tag name", "Tag outcome", "Why wrong", "Your reasoning", "Direction", "Stage", "Lesson", "In regression suite", "Agent follow-up"; WRAP CELLS true`: view://3f9273e2-14eb-81b3-a923-000cab8d9f9a
+- Lessons waiting for the rule owner (Rule changes, the Owner action form): view://3f9273e2-14eb-8177-beee-000c6177b251
+- Latest runs (Runs, with "Lesson"): view://3f9273e2-14eb-81d3-92fa-000c8d5e4b90
+- Rulebook in force (Rulebook), new: `SORT BY "Tag title" DESC; SHOW "Tag title", "When to use", "Rule version", "Changed by"; WRAP CELLS true`: view://3f9273e2-14eb-816e-9c65-000c7f091240
+
+Later the same day (editor feedback: claim text first, a view of the claims): the three Tag decisions views were reordered with `SHOW "Claim text", "Tag name", ..., "Key"` (Key last; Your queue keeps `FREEZE COLUMNS 1` on Claim text), Your decisions sorts by Claim text, and a seventh view was added:
+
+- The 13 claims (Claims): `SORT BY "Claim title" ASC; SHOW "Claim title", "Decided applies", "Agent tags", "Readiness", "Tag confidence", "Last judged"; WRAP CELLS true`: view://3f9273e2-14eb-81a0-bfeb-000cc0f0089b
+
+Restructure for first-time editors (same day): every column of the six sandbox data sources got a plain-language description (`ALTER COLUMN "<name>" SET <same type> COMMENT '...'`, one statement per column, types, options, formulas and DUAL relations restated unchanged; Notion keeps option ids and the relation pair; descriptions are capped at 280 characters). A sandbox pull afterwards showed 13 queue rows, all linked to claim and tag, drift 0. These descriptions differ from the trial's on purpose (written for someone new to the loop). Six full-table views were added on the Walkthrough page, one per data source, every column shown:
+
+- Claims (full table): view://3f9273e2-14eb-8158-aa8d-000cca8bd82b
+- Tag decisions (full table): view://3f9273e2-14eb-8184-898e-000c5a798a71
+- Rulebook (full table): view://3f9273e2-14eb-8196-8b6e-000c0f8cb5db
+- Rule changes (full table): view://3f9273e2-14eb-817c-b382-000c9943532e
+- Runs (full table): view://3f9273e2-14eb-81b5-89bc-000cddd63baa
+- Agent settings (full table): view://3f9273e2-14eb-813f-a8a8-000c252c6a3c
+
+The page itself is now: table of contents; four toggle sections (1 ideas, 2 the six tables with a column guide and the full view each, 3 steps 1 to 8 each with Before / Do / What happens / After and the relevant small views, 4 help).
+
+Layout fix (same day, editor feedback with screenshots): tables nested in toggle headings render narrow, so parts 2 and 3 now use plain headings and all 13 inline views sit at the page's top level; only text folds (column guides and examples as toggles; parts 1 and 4 stay toggle headings). The page's Full width setting cannot be set through the connector; the callout asks the reader to turn it on.
+
+View columns aligned with the walkthrough text (every column a step names is shown in that step's view): The 13 claims adds "Decided does not apply"; Your queue adds "Stage", "Direction"; Your decisions adds "Effective outcome", "Lesson status", "Follow-up run".
+- Fill in here: your 4 rows (Tag decisions, step 3, directly under the suggested values): `FILTER "Tag" = <Predictive Rulebook page 3f9273e2-14eb-8199-8d52-e51b2aecc7d5>; FILTER "Seeded outcome" IS EMPTY; SORT BY "Key" ASC; SHOW "Claim text", "Tag outcome", "Why wrong", "Your reasoning", "Stage", "Agent proposal", "Agent confidence"; WRAP CELLS true; FREEZE COLUMNS 1`: view://3f9273e2-14eb-81ee-9223-000c28868724. Sorting by Key gives a fixed order (Iran, expand, uphold, Texas) that the suggested-values table above it repeats, numbered 1 to 4.

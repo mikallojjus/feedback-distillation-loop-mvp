@@ -23,7 +23,7 @@ import { controlPaths } from './allowlist.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { normId } from './lib/notion-values.mjs';
-import { agentRoot, ensureDir, isMain, runId as makeRunId } from './lib/paths.mjs';
+import { agentRoot, codeFile, ensureDir, isMain, runId as makeRunId } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { normaliseText } from './lib/rubric-build.mjs';
 import { validate } from './lib/validate.mjs';
@@ -162,7 +162,7 @@ async function followup({ args, io, root, config, deps, now }) {
   }
 
   // verdicts
-  const schema = readJson(join(root, 'schemas', 'judgment.schema.json'));
+  const schema = readJson(codeFile(root, 'schemas', 'judgment.schema.json'));
   const scope = scopeOf(rubric, config);
   const tagNames = [...scope.model, ...scope.coded].sort(compareCodePoints);
   const polarity = new Map(rubric.tags.map((t) => [t.name, t.polarity]));

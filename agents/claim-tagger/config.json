@@ -51,7 +51,15 @@
     "requests_per_second": 3,
     "page_size": 100,
     "max_creates_per_call": 100,
-    "max_text": 1900
+    "max_text": 1900,
+    "setup_page_parents": [
+      "3da273e214eb80c180d5fd0894bc2db8",
+      "3f9273e214eb81c2a075fd94e339d40e"
+    ],
+    "setup_content_pages": [
+      "3f9273e214eb81c2a075fd94e339d40e"
+    ],
+    "walkthrough_page_id": "3f9273e214eb81c2a075fd94e339d40e"
   },
   "models": {
     "judge": "claude-sonnet-5-5",

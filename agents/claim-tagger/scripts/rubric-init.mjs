@@ -12,7 +12,7 @@ import { join, resolve } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { fileSha256 } from './lib/hash.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
-import { agentRoot, isMain, repoRoot, safeName } from './lib/paths.mjs';
+import { agentRoot, codeRoot, isMain, repoRoot, safeName } from './lib/paths.mjs';
 import { checkHashes, rehash, scrubNames } from './lib/rubric-build.mjs';
 import { validate } from './lib/validate.mjs';
 
@@ -112,7 +112,7 @@ export function main(argv, io = defaultIo) {
     const rubric = initialRubric(fixture, { replacements, version });
     const problems = [
       ...checkHashes(rubric).mismatches.map((m) => `hash mismatch: ${m.kind} ${m.where}`),
-      ...validate(readJson(join(agentRoot(), 'schemas', 'rubric.schema.json')), rubric).errors,
+      ...validate(readJson(join(codeRoot(), 'schemas', 'rubric.schema.json')), rubric).errors,
       ...leftoverNames(rubric, replacements).map((n) => `the name "${n}" is still in the rubric`),
     ];
     if (problems.length) {

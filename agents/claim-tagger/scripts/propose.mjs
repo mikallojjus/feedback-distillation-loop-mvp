@@ -29,7 +29,7 @@ import { existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { readJson, readJsonl, writeJsonAtomic } from './lib/jsonl.mjs';
-import { agentRoot, ensureDir, isMain, runId as makeRunId } from './lib/paths.mjs';
+import { agentRoot, codeFile, ensureDir, isMain, runId as makeRunId } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { normaliseText } from './lib/rubric-build.mjs';
 import { validate } from './lib/validate.mjs';
@@ -408,7 +408,7 @@ async function run(opts, io, deps) {
   const config16 = String(meta.config_id).replace(/^sha256:/, '');
   const cfgDir = join(runsDir, 'judgments', config16);
   const version = meta.rubric_version;
-  const schema = readJson(join(agentDir, 'schemas', 'judgment.schema.json'));
+  const schema = readJson(codeFile(agentDir, 'schemas', 'judgment.schema.json'));
 
   // --- the pull
   const pullDir = resolvePullDir(runsDir, opts.pull);
