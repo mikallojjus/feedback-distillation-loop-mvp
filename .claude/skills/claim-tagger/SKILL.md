@@ -29,7 +29,7 @@ description: Run the claim tagger's editor feedback loop against the Notion page
 | setup | Engineer only; the sequence is in `agents/claim-tagger-mvp/AGENT.md`. Never run it for an editor; say that setup is the engineer's step. |
 | demo <subcommand> | See Demo mode. |
 
-For `tag`, the report to relay is the one `propose.mjs` prints; what `pull.mjs` and `judge.mjs` print is not shown. When `judge.mjs` stops with exit 75 (the usage window), relay the report it printed and stop; it tells the editor to type the same command again later.
+For `tag`, the report to relay is the one `propose.mjs` prints; what `pull.mjs` and `judge.mjs` print is not shown. When `judge.mjs` stops with exit 75 (your Claude allowance ran out), relay the report it printed and stop; it tells the editor to type the same command again when the allowance is back.
 
 ## Demo mode
 
@@ -43,7 +43,7 @@ Editors read these reports between other tasks. Every report, errors included, h
 2. **One table**, at most five rows and three columns, with the figures that matter for this subcommand (see the examples in `references/report-examples.md`). Leave it out when there is nothing to count.
 3. **One line starting "Next:"** with exactly one thing to do: a command to type, or a Notion link and the action to take there. When more rows wait than fit one sitting (a setting, default 20), the sentence gives the count and the line says "start at the top of Your queue (link)", not "decide the N rows".
 
-Leave out everything else: headings, how the scripts work, the commands you ran, retries and incidents (if one changed the result, say so in a few words inside the sentence), file paths, run ids, JSON, and any duration, dollar amount or model-call count (they stay in the run record). Add one row, "Usage", only when the share of the usage window that the run took is known. For a stopped run, "Next:" is the same slash command; the skill resumes the run itself. While a step takes a while, say once what is happening, with no duration ("Reading 7 claims."), then nothing until the report.
+Leave out everything else: headings, how the scripts work, the commands you ran, retries and incidents (if one changed the result, say so in a few words inside the sentence), file paths, run ids, JSON, and any duration, dollar amount or model-call count (they stay in the run record). Add one row, "Usage", only when the share of your Claude allowance that the run took is known. For a stopped run, "Next:" is the same slash command; the skill resumes the run itself. While a step takes a while, say once what is happening, with no duration ("Reading 7 claims."), then nothing until the report.
 
 The scripts write the report in exactly this shape. Relay it as printed; do not reword, shorten or extend it.
 
@@ -55,8 +55,8 @@ Status: nothing is paused; 46 rows and 1 rule change wait for you, more than fit
 
 | Where | Now |
 |---|---|
-| Rulebook | 13 Issue tags, edition 2026-11-04.2, same as Notion |
-| Your queue | 46 rows, lowest confidence first (the view shows the count) |
+| Rulebook | 13 tags, edition 2026-11-04.2 |
+| Your queue | 46 rows, lowest confidence first |
 | Lessons waiting | 1 rule change to approve |
 | Last run | Tag · 4 Nov 09:12 · 214 claims |
 

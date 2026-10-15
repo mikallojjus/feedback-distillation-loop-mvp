@@ -67,5 +67,5 @@ Next: fill in your 2 rows in Your queue (link).
 
 - `references/manifest.md`: the practice page's content (the seven claims, the five earlier decisions, the two open rows, the example claims), how to change it, and the calibration a change must pass.
 - `references/page-design.md`: the page template, the fixed format of the seven steps, the table limits, the banned words, and what `W verify` checks.
-- `references/troubleshooting.md`: a stop halfway, a usage-window stop, a run that stopped before step 7, a FAIL at step 6, a paused agent, a hand edit to the rulebook.
+- `references/troubleshooting.md`: a stop halfway, a stop when the allowance ran out, a run that stopped before step 7, a FAIL at step 6, a paused agent, a hand edit to the rulebook.
 - `references/report-examples.md`: every report, as the editor sees it.
