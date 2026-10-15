@@ -1,0 +1,570 @@
+{
+  "manifest_version": "2026-10-15.1",
+  "calibration": {
+    "status": "pending",
+    "runs": []
+  },
+  "tag": {
+    "Name": "Context-dependent",
+    "Description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
+    "When to use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+    "Example Claims": [
+      "Open AI's initiative went well with the target group.",
+      "He said the new model outperforms its predecessor.",
+      "The company's revenue grew 40% after the launch.",
+      "Core Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.",
+      "The Commodity Futures Trading Commission did not comment specifically on the discussions.",
+      "The Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts."
+    ],
+    "Counterpart": "Self-contained",
+    "Category": "Quality",
+    "Polarity": "Issue",
+    "Status": "Verified",
+    "Work tags": [
+      "Pipeline benchmark check",
+      "Issue"
+    ],
+    "Geo Status": "To be created",
+    "Geo Tag ID": null,
+    "Evidence": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+    "Verified on": "2026-09-10",
+    "copied_from": "Claim Tags — verified row 765273e214eb83458bd7819ebe81bd9e, 2026-10-15"
+  },
+  "counterpart": {
+    "Name": "Self-contained",
+    "Description": "A claim that identifies every essential referent clearly enough to be understood without surrounding context. Proper names are not required when a generic, indefinite, or uniquely descriptive phrase already makes the intended referent clear; the test is identifiability, not the presence of a name.",
+    "When to use": "This axis is about entity reference only: does every pronoun and every definite reference resolve to a name inside the claim?\n1. Indefinite phrases (\"a security researcher\", \"an illegal scheme\", \"one proposed exemption\", \"a potential model\") never make a claim Context-dependent.\n2. A pronoun or definite reference resolved by a name elsewhere in the same claim (\"Nvidia ... the company\"; \"an illegal scheme ... the organizers\"; \"Strategy ... it\") keeps the claim Self-contained.\n3. A definite phrase keeps the claim Self-contained only when the phrase itself pins down one specific thing, usually because it contains a proper name, a date, or a unique title (\"the supply chain risk designation against Anthropic\", \"the liquidations on Morpho on August 25\", \"the Commodity Futures Trading Commission\"). Ask: could two different things fit this phrase? If yes, it is not self-describing.\n4. Time expressions (\"currently\", \"now\", \"in the fall\", \"sixty years ago\", \"the fiscal second quarter\", \"last month\") do not trigger Context-dependent. Time anchoring is a different axis.\n5. Presuppositions and generics (\"retaliatory tariffs\", \"the increased program\", bare \"users\", bare \"investors\", passive \"is forecasted\") do not trigger Context-dependent.\nOpen convention question: an indefinite that presupposes one specific unnamed event (\"Attackers exchanged stolen tokens for $2.87 million\") reads as Self-contained under rule 1; round-1 gold said Context-dependent. Recommended: keep the strict reading.",
+    "Example Claims": [
+      "OpenAI released GPT-5 in August 2025.",
+      "The shift to domestic chips supports Beijing's ambitions to substitute American technology.",
+      "Nvidia reported record data-center revenue, and the company raised its full-year guidance.",
+      "A security researcher disclosed a race condition in the Ledger Ethereum app.",
+      "Water boils at 100 degrees Celsius at sea level."
+    ],
+    "Counterpart": "Context-dependent",
+    "Category": "Quality",
+    "Polarity": "Positive",
+    "Status": "Verified",
+    "Work tags": [],
+    "Geo Status": "To be created",
+    "Geo Tag ID": null,
+    "Evidence": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+    "Verified on": "2026-09-10",
+    "copied_from": "Claim Tags — verified row 71e273e214eb82bdb754812eb3bc7d3e, 2026-10-15"
+  },
+  "canaries": [
+    {
+      "id": "canary-1",
+      "claim": "Open AI's initiative went well with the target group.",
+      "expected": "apply",
+      "source": "example claims of Context-dependent"
+    },
+    {
+      "id": "canary-2",
+      "claim": "He said the new model outperforms its predecessor.",
+      "expected": "apply",
+      "source": "example claims of Context-dependent"
+    },
+    {
+      "id": "canary-3",
+      "claim": "The company's revenue grew 40% after the launch.",
+      "expected": "apply",
+      "source": "example claims of Context-dependent"
+    },
+    {
+      "id": "canary-4",
+      "claim": "Core Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.",
+      "expected": "apply",
+      "source": "example claims of Context-dependent"
+    },
+    {
+      "id": "canary-5",
+      "claim": "The Commodity Futures Trading Commission did not comment specifically on the discussions.",
+      "expected": "apply",
+      "source": "example claims of Context-dependent"
+    },
+    {
+      "id": "canary-6",
+      "claim": "The Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts.",
+      "expected": "apply",
+      "source": "example claims of Context-dependent"
+    },
+    {
+      "id": "canary-7",
+      "claim": "OpenAI released GPT-5 in August 2025.",
+      "expected": "do_not_apply",
+      "source": "example claims of Self-contained"
+    },
+    {
+      "id": "canary-8",
+      "claim": "The shift to domestic chips supports Beijing's ambitions to substitute American technology.",
+      "expected": "do_not_apply",
+      "source": "example claims of Self-contained"
+    },
+    {
+      "id": "canary-9",
+      "claim": "Nvidia reported record data-center revenue, and the company raised its full-year guidance.",
+      "expected": "do_not_apply",
+      "source": "example claims of Self-contained"
+    },
+    {
+      "id": "canary-10",
+      "claim": "A security researcher disclosed a race condition in the Ledger Ethereum app.",
+      "expected": "do_not_apply",
+      "source": "example claims of Self-contained"
+    },
+    {
+      "id": "canary-11",
+      "claim": "Water boils at 100 degrees Celsius at sea level.",
+      "expected": "do_not_apply",
+      "source": "example claims of Self-contained"
+    }
+  ],
+  "claims": [
+    {
+      "key": "covid",
+      "short": "The focus on the COVID-19 vaccine ignored the larger public…",
+      "Geo Name": "The focus on the COVID-19 vaccine ignored the larger public health problem in the U.S.",
+      "Geo ID": "78dd775028795b65bb5c4945eda1c3bb",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/78dd775028795b65bb5c4945eda1c3bb",
+      "Geo Sources": "Vaccination was more dangerous than COVID | Mark Reiff vs. Nico Lagan",
+      "source_pieces": [
+        {
+          "text": "Vaccination was more dangerous than COVID | Mark Reiff vs. Nico Lagan",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a1120c82687b109500bad2c902b221"
+        }
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "georgia",
+      "short": "Georgia's gubernatorial debate should be moderated by…",
+      "Geo Name": "Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience",
+      "Geo ID": "8f9c833b41e54eee9ca78e9c2f4ffb58",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8f9c833b41e54eee9ca78e9c2f4ffb58",
+      "Geo Sources": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+      "source_pieces": [
+        {
+          "text": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/409d76d8f23f4fb1927c67af42d371e5"
+        }
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "melania",
+      "short": "Melania Trump should not host her initiative's G20 event…",
+      "Geo Name": "Melania Trump should not host her initiative's G20 event at President Trump's golf resort",
+      "Geo ID": "e3c28f62526e4880b9edb5c16817b27b",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/e3c28f62526e4880b9edb5c16817b27b",
+      "Geo Sources": "Melania Trump says country entering ‘technological revolution,’ announces new Fostering the Future Together push\nMelania Trump: 'When nations speak with one voice, the world listens'",
+      "source_pieces": [
+        {
+          "text": "Melania Trump says country entering ‘technological revolution,’ announces new Fostering the Future Together push",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/11893feb9eb94a60be5f1393635d6f77"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Melania Trump: 'When nations speak with one voice, the world listens'",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3a90547d6f6b4207a6f1027182f7c943"
+        }
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "Government ethics\nTrump's inner circle",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "cnn",
+      "short": "Excluding CNN from Air Force One violates the federal court…",
+      "Geo Name": "Excluding CNN from Air Force One violates the federal court order",
+      "Geo ID": "fc0cb0da0a1a4375b0fae6b5c9a67c69",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/fc0cb0da0a1a4375b0fae6b5c9a67c69",
+      "Geo Sources": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction\nCNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction\nWhite House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics\nWhite House bans CNN from Air Force One trip despite federal judge's decision - report",
+      "source_pieces": [
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/dd6d8dc18b0844fe809a5def3882efbd"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ddb0c70521d34af99337271b8ce33998"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "White House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/49515733a126455a876e41e2a4a5c0b2"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "White House bans CNN from Air Force One trip despite federal judge's decision - report",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6f970f054a3b4e6a989466edd7a61737"
+        }
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "White House press-access ban",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "contractor",
+      "short": "A contractor's enforcement of safety restrictions constitutes…",
+      "Geo Name": "A contractor's enforcement of safety restrictions constitutes a national security supply chain risk",
+      "Geo ID": "6dc1222aeb364918821167370d8fbc40",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6dc1222aeb364918821167370d8fbc40",
+      "Geo Sources": "Appeals Court Lets the Pentagon Designate Anthropic a Supply-Chain Risk\nFederal appeals court upholds Pentagon designation of Anthropic as supply chain risk\nCourt rules Pentagon can blacklist Anthropic for refusing to enable Claude features\nU.S. appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+      "source_pieces": [
+        {
+          "text": "Appeals Court Lets the Pentagon Designate Anthropic a Supply-Chain Risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/4887197b811d4c12aca1d5b39d5b18c6"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Federal appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/066e171cd9ba41cf9e32756b8193a014"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Court rules Pentagon can blacklist Anthropic for refusing to enable Claude features",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/216b19c18ace4e4eacddd9592c8ffb8b"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "U.S. appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/a23bec40c7f14da8878cb33bb2621095"
+        }
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "kennedy",
+      "short": "Relocating the Kennedy Center Honors to a sports arena…",
+      "Geo Name": "Relocating the Kennedy Center Honors to a sports arena diminishes the prestige of the awards",
+      "Geo ID": "89fcfb7fc6684b63af7d829ed90106cd",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/89fcfb7fc6684b63af7d829ed90106cd",
+      "Geo Sources": "Kennedy Center Honors Moved To Capital One Arena Amid Trump Naming Dispute\nKennedy Center Honors to be held off-site for the first time in the ceremony’s history\nThe Kennedy Center Honors Will Be Held at Capital One Arena\nKennedy Center Honors to be held at Capital One Arena amid fight over adding Trump's name\nKennedy Center Honors Relocates to Capital One Arena During Building Closure\nKennedy Center Honors awards moved to new venue amid Trump’s onslaught\nKennedy Center Honors to be held at Capital One Arena amid demolition fight | Reuters",
+      "source_pieces": [
+        {
+          "text": "Kennedy Center Honors Moved To Capital One Arena Amid Trump Naming Dispute",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1ac491959f814f1b9412d1cf7f5d6e4d"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors to be held off-site for the first time in the ceremony’s history",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/622962b3f509482f9757e474dc485beb"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "The Kennedy Center Honors Will Be Held at Capital One Arena",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d8c0358d299547f397819e09e56b869f"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors to be held at Capital One Arena amid fight over adding Trump's name",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/25918bad3eb545e5baa8bce01a4aa4de"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors Relocates to Capital One Arena During Building Closure",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d6ca57a0d6004345af321e29627b26f7"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors awards moved to new venue amid Trump’s onslaught",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/b2fb93980eb44c7abe76c85443263499"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors to be held at Capital One Arena amid demolition fight | Reuters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1b245188e5094e08b16f902fc1e3003a"
+        }
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "stopgap",
+      "short": "December stopgap funding rewards Congress for avoiding a…",
+      "Geo Name": "December stopgap funding rewards Congress for avoiding a full budget",
+      "Geo ID": "3e0d601de961dbf8ae38154e3f3a02e5",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3e0d601de961dbf8ae38154e3f3a02e5",
+      "Geo Sources": "",
+      "source_pieces": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "Congress\nPublic budgeting\nGovernment and institutions\nEconomy\nShutdown delayed past 2026 midterms",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    }
+  ],
+  "decided": [
+    {
+      "claim": "melania",
+      "Agent proposal": "Does not apply",
+      "Tag outcome": "Applies",
+      "Why wrong": "Agent slip",
+      "Your reasoning": "From the audit of 9 October: The claim on its own makes sense, although the full context isn't in the claim. It leaves the reader thinking, \"What's the initiative?\"",
+      "source": "audit of 9 October"
+    },
+    {
+      "claim": "cnn",
+      "Agent proposal": "Does not apply",
+      "Tag outcome": "Applies",
+      "Why wrong": "Agent slip",
+      "Your reasoning": "From the audit of 9 October: the editor agreed; no reasoning was recorded",
+      "source": "audit of 9 October"
+    },
+    {
+      "claim": "contractor",
+      "Agent proposal": "Applies",
+      "Tag outcome": "Does not apply",
+      "Why wrong": "Agent slip",
+      "Your reasoning": "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’",
+      "source": "audit of 9 October"
+    },
+    {
+      "claim": "kennedy",
+      "Agent proposal": "Applies",
+      "Tag outcome": "Does not apply",
+      "Why wrong": "Agent slip",
+      "Your reasoning": "From the audit of 9 October: the editor agreed; no reasoning was recorded",
+      "source": "audit of 9 October"
+    },
+    {
+      "claim": "stopgap",
+      "Agent proposal": "Applies",
+      "Tag outcome": "Does not apply",
+      "Why wrong": "Agent slip",
+      "Your reasoning": "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it.",
+      "source": "audit of 9 October"
+    }
+  ],
+  "open": [
+    {
+      "claim": "covid",
+      "enter": {
+        "Tag outcome": "Does not apply",
+        "Why wrong": "Rule unclear",
+        "Your reasoning": "Rule 4 is too strict: \"the larger public health problem\" is general; the claim reads fine."
+      },
+      "calibrate": {
+        "agent": "apply",
+        "min_share": 0.67,
+        "min_p": 0.75,
+        "cites_rule": 4
+      }
+    },
+    {
+      "claim": "georgia",
+      "enter": {
+        "Tag outcome": "Does not apply",
+        "Why wrong": "Rule unclear",
+        "Your reasoning": "Rule 4 is too strict: the claim reads well without a date or names for the debate."
+      },
+      "calibrate": {
+        "agent": "apply",
+        "min_share": 0.67,
+        "min_p": 0.75,
+        "cites_rule": 4
+      }
+    }
+  ],
+  "alternates": [
+    {
+      "key": "fairford-credibility",
+      "geo_id": "692b48b7467b0220aed4d2a44002cfcf",
+      "text": null,
+      "replaces": "georgia"
+    },
+    {
+      "key": "usps-ballot-portal",
+      "geo_id": null,
+      "geo_id_prefix": "27ad00b5",
+      "text": "The USPS ballot portal should not launch before the 2026 midterms",
+      "replaces": "georgia"
+    }
+  ],
+  "views": {
+    "Your queue": 3,
+    "Lessons waiting": 5
+  },
+  "expect": {
+    "tables": [
+      "Rulebook",
+      "Claims",
+      "Tag decisions",
+      "Rule changes",
+      "Agent settings"
+    ],
+    "rulebook_rows": 1,
+    "claims": 7,
+    "queue_rows": 7,
+    "open_rows": 2,
+    "decided_rows": 5,
+    "linked_views": 2,
+    "lesson_rule": "Context-dependent rule 4",
+    "gate": "PASS"
+  },
+  "steps": [
+    {
+      "n": 1,
+      "title": "Meet the demo",
+      "command": "/claim-tagger demo status",
+      "affects": []
+    },
+    {
+      "n": 2,
+      "title": "The agent reads the claims",
+      "command": "/claim-tagger demo tag",
+      "affects": [
+        "Tag decisions",
+        "Claims"
+      ]
+    },
+    {
+      "n": 3,
+      "title": "Decide your two rows",
+      "command": null,
+      "affects": [
+        "Tag decisions"
+      ]
+    },
+    {
+      "n": 4,
+      "title": "The agent drafts a clearer rule 4",
+      "command": "/claim-tagger demo distill",
+      "affects": [
+        "Rule changes"
+      ]
+    },
+    {
+      "n": 5,
+      "title": "Approve the draft",
+      "command": null,
+      "affects": [
+        "Rule changes"
+      ]
+    },
+    {
+      "n": 6,
+      "title": "The safety check",
+      "command": "/claim-tagger demo promote",
+      "affects": [
+        "Rulebook",
+        "Rule changes",
+        "Agent settings"
+      ]
+    },
+    {
+      "n": 7,
+      "title": "The agent re-checks your rows",
+      "command": null,
+      "affects": [
+        "Tag decisions",
+        "Claims"
+      ]
+    }
+  ],
+  "quiet_columns": [
+    "Agent settings.Last run summary"
+  ]
+}

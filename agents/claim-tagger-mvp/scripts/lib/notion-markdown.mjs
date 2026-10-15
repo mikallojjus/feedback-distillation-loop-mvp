@@ -12,7 +12,7 @@
 const SPECIAL = /[\~`$[\]<>{}|^]/g;
 
 export function escapeInline(text) {
-  return String(text ?? '').replace(SPECIAL, (c) => `\${c}`);
+  return String(text ?? '').replace(SPECIAL, (c) => `\\${c}`);
 }
 
 const isTableLine = (line) => /^\s*\|.*\|\s*$/.test(line);
