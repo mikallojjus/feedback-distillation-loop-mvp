@@ -1,0 +1,29 @@
+{
+  "skill_name": "claim-tagger-walkthrough",
+  "evals": [
+    {
+      "id": 1,
+      "name": "practice-page-for-new-editor",
+      "prompt": "I'm the new editor on the QA team and want to try the claim tagging loop before I touch real claims. Set me up a practice page under https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051.",
+      "expected_output": "One new practice page under the Demo tests page that passes walkthrough verify, and a three-part report (one sentence, one table, one Next line) with the page link.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 2,
+      "name": "dry-run-preview-before-building",
+      "prompt": "before we create anything in notion, show me what the walkthrough demo page would look like under https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051",
+      "expected_output": "A dry run: plan and preview written, no Notion write, and a Next line saying how to build the page for real.",
+      "files": [],
+      "assertions": []
+    },
+    {
+      "id": 3,
+      "name": "real-tag-request-does-not-trigger",
+      "prompt": "tag this week's new U.S. Politics claims with the Context-dependent rules and put the unsure ones in my queue",
+      "expected_output": "The walkthrough skill does not act; the reply points to /claim-tagger tag (or reports that the production agent is paused).",
+      "files": [],
+      "assertions": []
+    }
+  ]
+}
