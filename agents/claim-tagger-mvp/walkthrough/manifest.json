@@ -1,8 +1,42 @@
 {
-  "manifest_version": "2026-10-15.1",
+  "manifest_version": "2026-10-15.2",
   "calibration": {
     "status": "pending",
-    "runs": []
+    "runs": [
+      {
+        "run": 1,
+        "date": "2026-10-15",
+        "manifest_version": "2026-10-15.1",
+        "demo_id": "20261015-1758-28d450",
+        "page": "3fa273e214eb81d3ac93fffea5680482",
+        "open_rows": {
+          "covid": {
+            "decision": "apply",
+            "p": 0.8,
+            "rule_ref": "Context-dependent rule 2"
+          },
+          "georgia": {
+            "decision": "do_not_apply",
+            "p": 0.15,
+            "rule_ref": "Context-dependent rule 5"
+          }
+        },
+        "earlier_decisions": {
+          "cnn": "as expected (apply 0.85)",
+          "melania": "not as expected (do_not_apply 0.25)",
+          "contractor": "as expected",
+          "kennedy": "as expected",
+          "stopgap": "as expected"
+        },
+        "canaries": "11 of 11 right under the draft",
+        "lesson": "References the claim pins down or that are general are fine (Context-dependent rule 4)",
+        "verdicts": [
+          "FAIL with a deliberately wrong Editor wording (examples 8 of 11, earlier 3 of 5, yours 1 of 2)",
+          "FAIL on the draft: Melania turns to Can’t tell (examples 11 of 11, earlier 4 of 5, yours 2 of 2)"
+        ],
+        "outcome": "story revised: Georgia and Melania out, press pool and Dallas in (decision 33)"
+      }
+    ]
   },
   "tag": {
     "Name": "Context-dependent",
@@ -147,55 +181,46 @@
       "Geo Name source": "This space"
     },
     {
-      "key": "georgia",
-      "short": "Georgia's gubernatorial debate should be moderated by…",
-      "Geo Name": "Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience",
-      "Geo ID": "8f9c833b41e54eee9ca78e9c2f4ffb58",
-      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8f9c833b41e54eee9ca78e9c2f4ffb58",
-      "Geo Sources": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+      "key": "presspool",
+      "short": "The press pool was justified in suspending coverage…",
+      "Geo Name": "The press pool was justified in suspending coverage in solidarity with banned networks",
+      "Geo ID": "5c9d133e54864197a585599669353aff",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/5c9d133e54864197a585599669353aff",
+      "Geo Sources": "White House TV pool resumes coverage of Trump after CNN regains access\nNetworks share coverage of Trump after CNN's credentials are restored\nUS TV networks to resume Trump coverage after CNN access restored\nUS TV networks to resume coverage of Trump events, CNN says",
       "source_pieces": [
         {
-          "text": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
-          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/409d76d8f23f4fb1927c67af42d371e5"
-        }
-      ],
-      "Geo Tags": [
-        "Debate"
-      ],
-      "Geo Topics": "",
-      "Geo Score": null,
-      "Geo Supporting arguments": "",
-      "Geo Opposing arguments": "",
-      "Geo Related people": "",
-      "Geo Related projects": "",
-      "Geo Is factual": false,
-      "Geo Name source": "This space"
-    },
-    {
-      "key": "melania",
-      "short": "Melania Trump should not host her initiative's G20 event…",
-      "Geo Name": "Melania Trump should not host her initiative's G20 event at President Trump's golf resort",
-      "Geo ID": "e3c28f62526e4880b9edb5c16817b27b",
-      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/e3c28f62526e4880b9edb5c16817b27b",
-      "Geo Sources": "Melania Trump says country entering ‘technological revolution,’ announces new Fostering the Future Together push\nMelania Trump: 'When nations speak with one voice, the world listens'",
-      "source_pieces": [
-        {
-          "text": "Melania Trump says country entering ‘technological revolution,’ announces new Fostering the Future Together push",
-          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/11893feb9eb94a60be5f1393635d6f77"
+          "text": "White House TV pool resumes coverage of Trump after CNN regains access",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/c9ea9647796a459483cff554bd5def79"
         },
         {
           "text": "\n",
           "href": null
         },
         {
-          "text": "Melania Trump: 'When nations speak with one voice, the world listens'",
-          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3a90547d6f6b4207a6f1027182f7c943"
+          "text": "Networks share coverage of Trump after CNN's credentials are restored",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2d764f02174f42f1b88517ea2de3a6d4"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "US TV networks to resume Trump coverage after CNN access restored",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/102bfa675d07403280157f775fba229d"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "US TV networks to resume coverage of Trump events, CNN says",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/91e0cb1140e5451483fe5ddbe3de91a1"
         }
       ],
       "Geo Tags": [
         "Debate"
       ],
-      "Geo Topics": "Government ethics\nTrump's inner circle",
+      "Geo Topics": "White House press-access ban",
       "Geo Score": null,
       "Geo Supporting arguments": "",
       "Geo Opposing arguments": "",
@@ -245,6 +270,26 @@
         "Debate"
       ],
       "Geo Topics": "White House press-access ban",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "dallas",
+      "short": "The Dallas convention is the unofficial launch of JD Vance’s…",
+      "Geo Name": "The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign",
+      "Geo ID": "1bff859247ecdb618af41a397d2eb6ba",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1bff859247ecdb618af41a397d2eb6ba",
+      "Geo Sources": "",
+      "source_pieces": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "Society and culture\nGovernment and institutions\nConservative politics\nPolitical parties\nTrump administration\n2026 U.S. midterm elections\nElections\nPolitical campaigning\nUS midterm elections\nRepublican Midterm Convention in Dallas\n2028 United States presidential election\nPresidential Elections",
       "Geo Score": null,
       "Geo Supporting arguments": "",
       "Geo Opposing arguments": "",
@@ -398,19 +443,19 @@
   ],
   "decided": [
     {
-      "claim": "melania",
-      "Agent proposal": "Does not apply",
-      "Tag outcome": "Applies",
-      "Why wrong": "Agent slip",
-      "Your reasoning": "From the audit of 9 October: The claim on its own makes sense, although the full context isn't in the claim. It leaves the reader thinking, \"What's the initiative?\"",
-      "source": "audit of 9 October"
-    },
-    {
       "claim": "cnn",
       "Agent proposal": "Does not apply",
       "Tag outcome": "Applies",
       "Why wrong": "Agent slip",
       "Your reasoning": "From the audit of 9 October: the editor agreed; no reasoning was recorded",
+      "source": "audit of 9 October"
+    },
+    {
+      "claim": "dallas",
+      "Agent proposal": "Does not apply",
+      "Tag outcome": "Applies",
+      "Why wrong": "Agent slip",
+      "Your reasoning": "From the audit of 9 October: the editor agreed; no reasoning was recorded.",
       "source": "audit of 9 October"
     },
     {
@@ -450,21 +495,21 @@
         "agent": "apply",
         "min_share": 0.67,
         "min_p": 0.75,
-        "cites_rule": 4
+        "cites_rule": null
       }
     },
     {
-      "claim": "georgia",
+      "claim": "presspool",
       "enter": {
         "Tag outcome": "Does not apply",
         "Why wrong": "Rule unclear",
-        "Your reasoning": "Rule 4 does not say that a debate named by its state and office is identified enough; it is."
+        "Your reasoning": "Rule 4 does not say that a body every reader knows, such as the press pool, counts as identified; it does: the claim reads well."
       },
       "calibrate": {
         "agent": "apply",
         "min_share": 0.67,
         "min_p": 0.75,
-        "cites_rule": 4
+        "cites_rule": null
       }
     }
   ],
@@ -473,19 +518,31 @@
       "key": "fairford-credibility",
       "geo_id": "692b48b7467b0220aed4d2a44002cfcf",
       "text": "The Fairford withdrawal weakens the credibility of U.S.-UK military cooperation",
-      "replaces": "georgia"
+      "replaces": "an open row"
     },
     {
       "key": "fairford-effectiveness",
       "geo_id": "9e8c71422b0fb7f264a9ff88ef4f0e74",
       "text": "The Fairford withdrawal reduces the effectiveness of U.S. bombing operations against Iran",
-      "replaces": "georgia"
+      "replaces": "an open row"
     },
     {
       "key": "usps-ballot-portal",
       "geo_id": "27ad00b59c1f7d4aee71643fc8cdec94",
       "text": "The USPS ballot portal should not launch before the 2026 midterms",
-      "replaces": "georgia"
+      "replaces": "an open row"
+    },
+    {
+      "key": "georgia",
+      "geo_id": "8f9c833b41e54eee9ca78e9c2f4ffb58",
+      "text": "Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience",
+      "note": "left out on 2026-10-15: the agent judged it Does not apply at 0.15 in every reading, agreeing with the editor, so it carries no disagreement; an earlier decision Does not apply if ever needed"
+    },
+    {
+      "key": "melania",
+      "geo_id": "e3c28f62526e4880b9edb5c16817b27b",
+      "text": "Melania Trump should not host her initiative's G20 event at President Trump's golf resort",
+      "note": "left out on 2026-10-15: the agent judged it Does not apply at 0.20 to 0.25 against the editor's Applies, so it would fail as an earlier decision"
     }
   ],
   "views": {
@@ -572,5 +629,5 @@
   "quiet_columns": [
     "Agent settings.Last run summary"
   ],
-  "alternates_note": "Texts and ids from the dry run dry-1 of 2026-10-15; if Georgia is swapped out, its earlier-decision row is Agent proposal Does not apply, Tag outcome Does not apply, Why wrong empty, Your reasoning \"From the audit of 9 October: We do not need to add context-dependent. the claim reads well\"."
+  "alternates_note": "Texts and ids from the dry run dry-1 of 2026-10-15. The three Fairford and USPS claims can replace an open row if a calibration run fails on it (they were judged Applies at 0.80 to 0.93 on 2026-10-15). Georgia and Melania were retired from the story on 2026-10-15 (decision 33 in docs/mvp-2026-11/DECISIONS.md)."
 }

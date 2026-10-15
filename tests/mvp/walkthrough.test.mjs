@@ -544,9 +544,9 @@ test('start builds the page: one page, five tables, the text in order, two linke
     assert.equal(row['Agent notes'], '');
   }
   const claimsDb = demo.databases.claims_copy.database_id;
-  const melania = w.fake.rows(claimsDb).find((p) => p.properties['Geo ID'].rich_text[0].plain_text === manifest.claims.find((c) => c.key === 'melania')['Geo ID']);
-  const hrefs = melania.properties['Geo Sources'].rich_text.map((x) => x.href).filter(Boolean);
-  assert.deepEqual(hrefs, manifest.claims.find((c) => c.key === 'melania').source_pieces.map((p) => p.href).filter(Boolean), 'Geo Sources keeps its links');
+  const cnn = w.fake.rows(claimsDb).find((p) => p.properties['Geo ID'].rich_text[0].plain_text === manifest.claims.find((c) => c.key === 'cnn')['Geo ID']);
+  const hrefs = cnn.properties['Geo Sources'].rich_text.map((x) => x.href).filter(Boolean);
+  assert.deepEqual(hrefs, manifest.claims.find((c) => c.key === 'cnn').source_pieces.map((p) => p.href).filter(Boolean), 'Geo Sources keeps its links');
   const decided = new Map(manifest.decided.map((d) => [manifest.claims.find((c) => c.key === d.claim)['Geo ID'], d]));
   const open = new Set(manifest.open.map((o) => manifest.claims.find((c) => c.key === o.claim)['Geo ID']));
   for (const c of manifest.claims) {
@@ -1876,10 +1876,10 @@ test('decide changes the two rows that wait and nothing else, and says why when 
     assert.match(r.err, pattern);
     assert.equal(r.out, '', 'no report of a change');
   };
-  await refused([], /decide needs --claim <key>; the rows to decide are: covid, georgia/);
+  await refused([], /decide needs --claim <key>; the rows to decide are: covid, presspool/);
   await refused(['--claim', ''], /decide needs --claim <key>/);
-  await refused(['--claim', 'nobody'], /"nobody" is not a claim of this practice page \(the rows to decide are: covid, georgia\)/);
-  await refused(['--claim', 'melania'], /"melania" is one of the earlier decisions, which are not changed/);
+  await refused(['--claim', 'nobody'], /"nobody" is not a claim of this practice page \(the rows to decide are: covid, presspool\)/);
+  await refused(['--claim', 'cnn'], /"cnn" is one of the earlier decisions, which are not changed/);
   await refused(['--claim', 'covid', '--outcome', 'Maybe'], /--outcome must be Applies or Does not apply/);
   await refused(['--claim', 'covid', '--outcome', 'Applies', '--why', 'Because'], /--why must be Agent slip, Rule unclear, Rule should change/);
   await refused(['--claim', 'covid', '--why', 'Rule unclear'], /--why and --reasoning go with --outcome/);

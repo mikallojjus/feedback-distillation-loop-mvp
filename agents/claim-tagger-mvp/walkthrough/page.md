@@ -6,8 +6,8 @@ Rule 4 of Context-dependent reads: "Test: could a reader who sees only this sent
 | Claim | Rule 4's test | The editor |
 |---|---|---|
 | The focus on the COVID-19 vaccine ignored the larger public… | Tag: which problem? | No tag: a general remark |
-| Georgia's gubernatorial debate should be moderated by… | Tag: which debate? | No tag: reads well |
-| Melania Trump should not host her initiative's G20 event… | Tag: which initiative? | Tag: "What's the initiative?" |
+| The press pool was justified in suspending coverage… | Tag: which press pool? | No tag: everyone knows it |
+| Excluding CNN from Air Force One violates the federal court… | Tag: which order? | Tag: 'Which court order?' |
 
 The first two wait for you: you decide them, the agent drafts a clearer rule 4, you approve it, and a safety check makes sure the earlier decisions still come out right before the new rule is used.
 
@@ -46,19 +46,19 @@ The sentence starts with "Demo · " and names this practice page, as every repor
 
 | Claim | Agent proposal | Agent confidence | Agent reason |
 |---|---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | Applies | 0.85 | "the larger public health problem": which one? · Context-dependent rule 4 · 3 of 3 runs agree |
-| Georgia's gubernatorial debate should be moderated by… | Applies | 0.80 | "Georgia's gubernatorial debate": which debate? · Context-dependent rule 4 · 3 of 3 runs agree |
+| The focus on the COVID-19 vaccine ignored the larger public… | Applies | 0.80 | "the larger public health problem": which one? · Context-dependent rule 2 · 3 of 3 runs agree |
+| The press pool was justified in suspending coverage… | Applies | 0.75 | "the press pool": which one? · Context-dependent rule 3 · 3 of 3 runs agree |
 
-Both rows also record the rulebook edition they used (Rulebook edition {{edition}}). They wait for you although the agent is fairly sure: they were picked for the demo.
+The COVID-19 row cites rule 2 and the press pool row rule 3: two kinds of definite reference that fail rule 4's test. Both rows also record the rulebook edition they used (Rulebook edition {{edition}}). They wait for you although the agent is fairly sure: they were picked for the demo.
 
 **Claims** (Agent notes is two short lines per claim; the table shows the line break as a slash)
 
 | Geo Name | Agent tags | Agent notes |
 |---|---|---|
 | The focus on the COVID-19 vaccine ignored the larger public… | (empty) | no tags / 1 waits for an editor · edition {{edition}} |
-| Georgia's gubernatorial debate should be moderated by… | (empty) | no tags / 1 waits for an editor · edition {{edition}} |
-| Melania Trump should not host her initiative's G20 event… | Context-dependent | Context-dependent / nothing waits for an editor · edition {{edition}} |
+| The press pool was justified in suspending coverage… | (empty) | no tags / 1 waits for an editor · edition {{edition}} |
 | Excluding CNN from Air Force One violates the federal court… | Context-dependent | Context-dependent / nothing waits for an editor · edition {{edition}} |
+| The Dallas convention is the unofficial launch of JD Vance’s… | Context-dependent | Context-dependent / nothing waits for an editor · edition {{edition}} |
 | A contractor's enforcement of safety restrictions constitutes… | (empty) | no tags / nothing waits for an editor · edition {{edition}} |
 | Relocating the Kennedy Center Honors to a sports arena… | (empty) | no tags / nothing waits for an editor · edition {{edition}} |
 | December stopgap funding rewards Congress for avoiding a… | (empty) | no tags / nothing waits for an editor · edition {{edition}} |
@@ -69,9 +69,9 @@ The agent agrees with all 5 earlier decisions; their rows are not touched, so th
 
 **Goal of the step.** Record your decision on both rows, and say that rule 4, not the agent, is the problem.
 
-**Existing status.** Both rows show Applies, citing rule 4 (step 2).
+**Existing status.** Both rows show Applies, citing a rule of the rulebook (step 2).
 
-**Doing the work.** In Your queue, just below, fill in three columns on each row. Tag outcome: Does not apply. Why wrong: Rule unclear. Your reasoning, on the COVID-19 row: "Rule 4 does not say whether a general reference such as 'the larger public health problem' counts as a definite reference; it should not: the claim reads fine." On the Georgia row: "Rule 4 does not say that a debate named by its state and office is identified enough; it is." What each Why wrong value makes happen is explained in Help at the bottom of the page.
+**Doing the work.** In Your queue, just below, fill in three columns on each row. Tag outcome: Does not apply. Why wrong: Rule unclear. Your reasoning, on the COVID-19 row: "Rule 4 does not say whether a general reference such as 'the larger public health problem' counts as a definite reference; it should not: the claim reads fine." On the press pool row: "Rule 4 does not say that a body every reader knows, such as the press pool, counts as identified; it does: the claim reads well." What each Why wrong value makes happen is explained in Help at the bottom of the page.
 
 {{view:Your queue}}
 
@@ -82,7 +82,7 @@ The agent agrees with all 5 earlier decisions; their rows are not touched, so th
 | Claim | Tag outcome | Why wrong | Your reasoning |
 |---|---|---|---|
 | The focus on the COVID-19 vaccine ignored the larger public… | Does not apply | Rule unclear | Rule 4 does not say whether a general reference counts as a definite one; it should not. |
-| Georgia's gubernatorial debate should be moderated by… | Does not apply | Rule unclear | Rule 4 does not say that a debate named by its state and office is identified enough; it is. |
+| The press pool was justified in suspending coverage… | Does not apply | Rule unclear | Rule 4 does not say that a body every reader knows (the press pool) counts as identified; it does. |
 
 The agent is not involved and no other table changes. Both rows leave Your queue when the page reloads; they stay in Tag decisions at the bottom.
 
@@ -154,13 +154,13 @@ The Rulebook does not change: a draft changes nothing until you approve it and i
 
 Your 2 rows are now earlier decisions: every future safety check tests a new rule against them.
 
-**If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Melania Trump should not host her initiative's G20 event…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence and quotes that claim; its Next line hands you the whole text for Editor wording: the rule as it was tested, with a sentence written from that claim added at the end.
+**If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Excluding CNN from Air Force One violates the federal court…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence and quotes that claim; its Next line hands you the whole text for Editor wording: the rule as it was tested, with a sentence written from that claim added at the end. For example, the added sentence reads: "A reference to one particular thing the claim does not name, such as 'the federal court order', still fails the test."
 
 1. Open the change in Lessons waiting. Editor wording must hold all of rule 4: put the whole text the report gives you into it (the rule as it was tested, with the added sentence at the end), or write all of rule 4 as you want it. Edit the added sentence if it does not say what you mean. You may also reject the change.
 2. Type `/claim-tagger demo promote` again.
 3. If it fails again, set Status to Rejected. The rule stays as it was, the demo ends here, and the safety check has done its job.
 
-The same three steps apply when the check names one of your own rows instead of an example claim: the Safety check result then reads like "FAIL: 'Georgia's gubernatorial debate should be moderated by…' now Applies", and the report proposes a sentence for that row in the same way.
+The same three steps apply when the check names one of your own rows instead of an example claim: the Safety check result then reads like "FAIL: 'The press pool was justified in suspending coverage…' now Applies", and the report proposes a sentence for that row in the same way.
 
 ## Step 7 · The agent re-checks your rows
 
@@ -177,14 +177,14 @@ The same three steps apply when the check names one of your own rows instead of 
 | Claim | Tag outcome | Follow-up |
 |---|---|---|
 | The focus on the COVID-19 vaccine ignored the larger public… | Does not apply | Fixed |
-| Georgia's gubernatorial debate should be moderated by… | Does not apply | Fixed |
+| The press pool was justified in suspending coverage… | Does not apply | Fixed |
 
 **Claims** (your 2 claims)
 
 | Geo Name | Agent tags | Agent notes |
 |---|---|---|
 | The focus on the COVID-19 vaccine ignored the larger public… | (empty) | no tags / nothing waits for an editor · the next edition |
-| Georgia's gubernatorial debate should be moderated by… | (empty) | no tags / nothing waits for an editor · the next edition |
+| The press pool was justified in suspending coverage… | (empty) | no tags / nothing waits for an editor · the next edition |
 
 Agent notes now names the next edition, the one the safety check put in force. Your queue no longer lists your two rows. They stay in Tag decisions at the bottom of the page, where Agent proposal still shows what the agent said in step 2 and Follow-up shows what it says now. That is one full cycle: your two notes became a clearer rule 4, it was tested against every earlier decision before it went live, and your two rows are earlier decisions now, checked by every future safety check.
 
