@@ -1,7 +1,7 @@
 {
-  "edition": "2026-10-15.1",
+  "edition": "2026-10-15.2",
   "rubric_hash": "sha256:704a01cc3190e98c",
-  "locked_at": "2026-10-15T13:43:38.079Z",
+  "locked_at": "2026-10-15T14:43:15.637Z",
   "tags": {
     "Context-dependent": "sha256:af49109ca891789f",
     "Exact duplicate": "sha256:33f5bfb52a305685",

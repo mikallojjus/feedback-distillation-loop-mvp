@@ -1,11 +1,11 @@
 {
-  "edition": "2026-10-15.1",
-  "built_at": "2026-10-15T13:43:38.079Z",
+  "edition": "2026-10-15.2",
+  "built_at": "2026-10-15T14:43:15.637Z",
   "source": {
-    "database_id": "f05273e214eb8353b0a981544507de32",
-    "data_source_id": "b65273e2-14eb-8362-86a6-870ea8d632f4",
-    "read_via": "connector",
-    "read_at": "2026-10-15T11:40:00.000Z"
+    "database_id": "17b99d1873384a1bb688c0075de45f78",
+    "data_source_id": "2b06fc1239c540da976da76a8e935e57",
+    "read_via": "rest",
+    "read_at": "2026-10-15T14:43:15.637Z"
   },
   "tags": [
     {
