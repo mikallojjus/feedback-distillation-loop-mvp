@@ -1,0 +1,11 @@
+{
+  "eval_id": 2,
+  "eval_name": "dry-run-preview-before-building",
+  "prompt": "before we create anything in notion, show me what the walkthrough demo page would look like under https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051",
+  "assertions": [
+    "No practice page was created: no new demo folder with state ready, and the Notion request count shows no write (a dry run sends reads only)",
+    "A dry run happened: walkthrough.mjs start was run with --dry-run and wrote preview.md and setup-plan.json under a dry-run folder",
+    "The final message is a three-part report: one sentence, one table of at most five rows and three columns, one line starting 'Next:' and nothing else",
+    "The Next line says how to build the page for real (ask again for a practice page under the same link) and names no node command"
+  ]
+}

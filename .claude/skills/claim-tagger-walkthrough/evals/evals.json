@@ -7,7 +7,13 @@
       "prompt": "I'm the new editor on the QA team and want to try the claim tagging loop before I touch real claims. Set me up a practice page under https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051.",
       "expected_output": "One new practice page under the Demo tests page that passes walkthrough verify, and a three-part report (one sentence, one table, one Next line) with the page link.",
       "files": [],
-      "assertions": []
+      "assertions": [
+        "A new practice page exists under the Demo tests page (a new demo folder under agents/claim-tagger-mvp/runs/demos/ whose demo.json has parent.id 3fa273e214eb81c2b223dcc2331b7051 and state ready)",
+        "walkthrough.mjs verify --demo <that id> --json reports ok true",
+        "The final message is a three-part report: one sentence, one table of at most five rows and three columns, one line starting 'Next:' and nothing else (no headings, paths, run ids, durations, JSON or Insight blocks)",
+        "The Next line names the new page by title or link and sends the editor to step 1",
+        "No Notion write went through the connector tools (every write came from walkthrough.mjs), and no editor column was filled by the assistant"
+      ]
     },
     {
       "id": 2,
@@ -15,7 +21,12 @@
       "prompt": "before we create anything in notion, show me what the walkthrough demo page would look like under https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051",
       "expected_output": "A dry run: plan and preview written, no Notion write, and a Next line saying how to build the page for real.",
       "files": [],
-      "assertions": []
+      "assertions": [
+        "No practice page was created: no new demo folder with state ready, and the Notion request count shows no write (a dry run sends reads only)",
+        "A dry run happened: walkthrough.mjs start was run with --dry-run and wrote preview.md and setup-plan.json under a dry-run folder",
+        "The final message is a three-part report: one sentence, one table of at most five rows and three columns, one line starting 'Next:' and nothing else",
+        "The Next line says how to build the page for real (ask again for a practice page under the same link) and names no node command"
+      ]
     },
     {
       "id": 3,
@@ -23,7 +34,26 @@
       "prompt": "tag this week's new U.S. Politics claims with the Context-dependent rules and put the unsure ones in my queue",
       "expected_output": "The walkthrough skill does not act; the reply points to /claim-tagger tag (or reports that the production agent is paused).",
       "files": [],
-      "assertions": []
+      "assertions": [
+        "No practice page was created and walkthrough.mjs start was not run",
+        "The reply points the editor to /claim-tagger tag (the production command) or reports that the production agent is paused; it does not treat the request as a walkthrough",
+        "No Notion write happened (no connector write tool call, no plan applied)",
+        "The reply is short and plain: no Insight blocks, no file paths, no run ids"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "practice-page-while-paused",
+      "prompt": "I'm the new editor on the QA team and want to try the claim tagging loop before I touch real claims. Set me up a practice page under https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051.",
+      "condition": "agents/claim-tagger-mvp/runs/PAUSED exists (the production agent is paused); a practice page cannot be built",
+      "expected_output": "No page is built. A short report says the agent is paused and sends the editor to the person who clears the pause, then to ask again with the same link; no command or file path for the editor, no workaround.",
+      "files": [],
+      "assertions": [
+        "No practice page was created (no new demo folder with state ready) and nothing was written to Notion",
+        "The reply says plainly that the agent is paused and does not work around the pause or tell the editor to delete the pause file themselves",
+        "The reply is a report in the skill's shape: one sentence, an optional table of at most five rows, one line starting 'Next:' and nothing else (no headings, bullets, paths, commands, run ids or Insight blocks)",
+        "The Next line sends the editor to the engineer (or the person who clears the pause) and says to ask again for the practice page under the same link"
+      ]
     }
   ]
 }

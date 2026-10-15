@@ -1,0 +1,54 @@
+{
+  "expectations": [
+    {
+      "text": "No practice page was created (no new demo folder with state ready) and nothing was written to Notion",
+      "passed": true,
+      "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+    },
+    {
+      "text": "The reply says plainly that the agent is paused and does not work around the pause or tell the editor to delete the pause file themselves",
+      "passed": true,
+      "evidence": "says paused: True; tells the editor how to remove the pause file: False"
+    },
+    {
+      "text": "The reply is a report in the skill's shape: one sentence, an optional table of at most five rows, one line starting 'Next:' and nothing else (no headings, bullets, paths, commands, run ids or Insight blocks)",
+      "passed": true,
+      "evidence": "lint problems []; parts {'sentence_lines': 1, 'table_rows': 0, 'table_cols': 0, 'next_lines': 1, 'next': 'Next: ask the engineer who runs the claim tagger to remove the pause, then ask for the practice page again with the same link.'}"
+    },
+    {
+      "text": "The Next line sends the editor to the engineer (or the person who clears the pause) and says to ask again for the practice page under the same link",
+      "passed": true,
+      "evidence": "Next line: Next: ask the engineer who runs the claim tagger to remove the pause, then ask for the practice page again with the same link."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {
+      "Read": 2,
+      "Bash": 10,
+      "Grep": 2,
+      "SubagentHandback": 2
+    },
+    "total_tool_calls": 16,
+    "total_steps": null,
+    "errors_encountered": null,
+    "output_chars": 1318,
+    "transcript_chars": 354122
+  },
+  "timing": {
+    "executor_duration_seconds": 130.6,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 130.6
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  }
+}

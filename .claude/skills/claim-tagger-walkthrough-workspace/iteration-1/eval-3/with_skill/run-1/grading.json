@@ -1,0 +1,49 @@
+{
+  "expectations": [
+    {
+      "text": "No practice page was created and walkthrough.mjs start was not run",
+      "passed": true,
+      "evidence": "0 new ready page(s); walkthrough start in notes: False"
+    },
+    {
+      "text": "The reply points the editor to /claim-tagger tag (the production command) or reports that the production agent is paused; it does not treat the request as a walkthrough",
+      "passed": true,
+      "evidence": "mentions /claim-tagger tag: True; mentions paused: True"
+    },
+    {
+      "text": "No Notion write happened (no connector write tool call, no plan applied)",
+      "passed": true,
+      "evidence": "0 connector write tool call(s) found in the transcript; production run folders with done ops since start: []"
+    },
+    {
+      "text": "The reply is short and plain: no Insight blocks, no file paths, no run ids",
+      "passed": true,
+      "evidence": "Insight/paths/run ids present: False; length 187"
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": null,
+    "errors_encountered": null,
+    "output_chars": 1567,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 337.5,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 337.5
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  }
+}

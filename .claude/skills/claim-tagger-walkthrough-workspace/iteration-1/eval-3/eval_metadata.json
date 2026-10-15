@@ -1,0 +1,11 @@
+{
+  "eval_id": 3,
+  "eval_name": "real-tag-request-does-not-trigger",
+  "prompt": "tag this week's new U.S. Politics claims with the Context-dependent rules and put the unsure ones in my queue",
+  "assertions": [
+    "No practice page was created and walkthrough.mjs start was not run",
+    "The reply points the editor to /claim-tagger tag (the production command) or reports that the production agent is paused; it does not treat the request as a walkthrough",
+    "No Notion write happened (no connector write tool call, no plan applied)",
+    "The reply is short and plain: no Insight blocks, no file paths, no run ids"
+  ]
+}

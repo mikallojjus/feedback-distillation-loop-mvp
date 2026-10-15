@@ -1,0 +1,12 @@
+{
+  "eval_id": 1,
+  "eval_name": "practice-page-for-new-editor",
+  "prompt": "I'm the new editor on the QA team and want to try the claim tagging loop before I touch real claims. Set me up a practice page under https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051.",
+  "assertions": [
+    "A new practice page exists under the Demo tests page (a new demo folder under agents/claim-tagger-mvp/runs/demos/ whose demo.json has parent.id 3fa273e214eb81c2b223dcc2331b7051 and state ready)",
+    "walkthrough.mjs verify --demo <that id> --json reports ok true",
+    "The final message is a three-part report: one sentence, one table of at most five rows and three columns, one line starting 'Next:' and nothing else (no headings, paths, run ids, durations, JSON or Insight blocks)",
+    "The Next line names the new page by title or link and sends the editor to step 1",
+    "No Notion write went through the connector tools (every write came from walkthrough.mjs), and no editor column was filled by the assistant"
+  ]
+}

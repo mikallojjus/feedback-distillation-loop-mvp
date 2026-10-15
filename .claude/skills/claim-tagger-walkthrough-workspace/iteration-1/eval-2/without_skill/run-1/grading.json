@@ -1,0 +1,49 @@
+{
+  "expectations": [
+    {
+      "text": "No practice page was created: no new demo folder with state ready, and the Notion request count shows no write (a dry run sends reads only)",
+      "passed": true,
+      "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+    },
+    {
+      "text": "A dry run happened: walkthrough.mjs start was run with --dry-run and wrote preview.md and setup-plan.json under a dry-run folder",
+      "passed": true,
+      "evidence": "--dry-run in notes: True; dry-run folders since start: 3"
+    },
+    {
+      "text": "The final message is a three-part report: one sentence, one table of at most five rows and three columns, one line starting 'Next:' and nothing else",
+      "passed": false,
+      "evidence": "lint problems ['more than three parts (17): a report is a sentence, a table and a Next line', 'line 3 holds a file path: \"- `X:\\\\work\\\\geo-agents\\\\agents\\\\claim-tagger-mvp\\\\runs\\\\demos\\\\...\"', 'line 4 holds a file path: \"- `X:\\\\work\\\\geo-agents\\\\agents\\\\claim-tagger-mvp\\\\runs\\\\demos\\\\...\"', 'line 18 holds a duration word: \"second\"', 'line 52 says \"databases\"; editors read table, rulebook and safety check', 'line 56 holds a file path: \"- `agents\\\\claim-tagger-mvp\\\\runs\\\\PAUSED` exists. A dry run...\"', 'line 57 holds a file path: \"- The dry run left only the two files above in `runs\\\\demo...\"', 'line 59 names a script file (.mjs): \"Next: when you want it built, say so and I\\'ll run `node a...\"']; parts {'sentence_lines': 26, 'table_rows': 14, 'table_cols': 3, 'next_lines': 1, 'next': \"Next: when you want it built, say so and I'll run `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051` once the pause is cleared, then `verify`. If you'd rather read the whole page text first, I can open preview.md.\"}"
+    },
+    {
+      "text": "The Next line says how to build the page for real (ask again for a practice page under the same link) and names no node command",
+      "passed": false,
+      "evidence": "Next line: Next: when you want it built, say so and I'll run `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051` once the pause is cleared"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 2,
+    "total": 4,
+    "pass_rate": 0.5
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": null,
+    "errors_encountered": null,
+    "output_chars": 7767,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 289.8,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 289.8
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  }
+}

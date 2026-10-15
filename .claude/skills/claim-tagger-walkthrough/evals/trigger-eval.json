@@ -1,0 +1,22 @@
+[
+  {"query": "set up a practice page for the tagging loop", "should_trigger": true},
+  {"query": "onboard our new editor to the claim tagger", "should_trigger": true},
+  {"query": "where am I in the claim tagger demo", "should_trigger": true},
+  {"query": "I want to try the editorial feedback loop on some sample claims before doing it for real", "should_trigger": true},
+  {"query": "make a fresh walkthrough page so I can show the team how rule changes get approved", "should_trigger": true},
+  {"query": "create a training copy of the claim tagging workflow in Notion under this page: https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051", "should_trigger": true},
+  {"query": "what's the next step in my practice run of the tagger?", "should_trigger": true},
+  {"query": "I'm new to the QA team, how do I learn the claim tagging process without touching real claims", "should_trigger": true},
+  {"query": "demo the claim tagger end to end for a new hire", "should_trigger": true},
+  {"query": "start another walkthrough, the last one is finished", "should_trigger": true},
+  {"query": "tag this week's claims", "should_trigger": false},
+  {"query": "promote the approved Wordy rule change", "should_trigger": false},
+  {"query": "what's waiting in my queue", "should_trigger": false},
+  {"query": "make a Notion page for meeting notes", "should_trigger": false},
+  {"query": "explain Context-dependent rule 4", "should_trigger": false},
+  {"query": "draft the rules for Wordy", "should_trigger": false},
+  {"query": "roll back the last rule change", "should_trigger": false},
+  {"query": "show me the status of the claim tagger", "should_trigger": false},
+  {"query": "add a new tag to the taxonomy", "should_trigger": false},
+  {"query": "archive the old walkthrough pages in Notion", "should_trigger": false}
+]

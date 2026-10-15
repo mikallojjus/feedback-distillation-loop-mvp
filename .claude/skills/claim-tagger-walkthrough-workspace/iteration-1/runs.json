@@ -1,0 +1,44 @@
+{
+  "dry-run-preview-before-building": {
+    "with_skill": {
+      "transcript": "C:/Users/JOHNMA~1/AppData/Local/Temp/claude/X--work-geo-agents/177a19a0-b037-4230-946d-5565bfc8d4ec/tasks/a8d03db65f7b6e1a8.output",
+      "started_at": "2026-10-15T15:59:30Z",
+      "total_tokens": 91698,
+      "duration_ms": 213661
+    },
+    "without_skill": {
+      "transcript": "C:/Users/JOHNMA~1/AppData/Local/Temp/claude/X--work-geo-agents/177a19a0-b037-4230-946d-5565bfc8d4ec/tasks/a3c254f956bbe814a.output",
+      "started_at": "2026-10-15T15:59:30Z",
+      "total_tokens": 100860,
+      "duration_ms": 289849
+    }
+  },
+  "real-tag-request-does-not-trigger": {
+    "with_skill": {
+      "transcript": "C:/Users/JOHNMA~1/AppData/Local/Temp/claude/X--work-geo-agents/177a19a0-b037-4230-946d-5565bfc8d4ec/tasks/a7143bdc4f7836e05.output",
+      "started_at": "2026-10-15T15:59:30Z",
+      "total_tokens": 107145,
+      "duration_ms": 337485
+    },
+    "without_skill": {
+      "transcript": "C:/Users/JOHNMA~1/AppData/Local/Temp/claude/X--work-geo-agents/177a19a0-b037-4230-946d-5565bfc8d4ec/tasks/a74aa2822857394a5.output",
+      "started_at": "2026-10-15T15:59:30Z",
+      "total_tokens": 86659,
+      "duration_ms": 258918
+    }
+  },
+  "practice-page-while-paused": {
+    "with_skill": {
+      "transcript": "C:/Users/JOHNMA~1/AppData/Local/Temp/claude/X--work-geo-agents/177a19a0-b037-4230-946d-5565bfc8d4ec/tasks/a6d351a41a400bb9d.output",
+      "started_at": "2026-10-15T15:59:30Z",
+      "total_tokens": 67790,
+      "duration_ms": 130615
+    },
+    "without_skill": {
+      "transcript": "C:/Users/JOHNMA~1/AppData/Local/Temp/claude/X--work-geo-agents/177a19a0-b037-4230-946d-5565bfc8d4ec/tasks/a066fb921b7470e06.output",
+      "started_at": "2026-10-15T15:59:30Z",
+      "total_tokens": 118037,
+      "duration_ms": 275203
+    }
+  }
+}

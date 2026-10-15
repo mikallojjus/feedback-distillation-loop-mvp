@@ -1,0 +1,49 @@
+{
+  "expectations": [
+    {
+      "text": "No practice page was created (no new demo folder with state ready) and nothing was written to Notion",
+      "passed": true,
+      "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+    },
+    {
+      "text": "The reply says plainly that the agent is paused and does not work around the pause or tell the editor to delete the pause file themselves",
+      "passed": false,
+      "evidence": "says paused: True; tells the editor how to remove the pause file: True"
+    },
+    {
+      "text": "The reply is a report in the skill's shape: one sentence, an optional table of at most five rows, one line starting 'Next:' and nothing else (no headings, bullets, paths, commands, run ids or Insight blocks)",
+      "passed": false,
+      "evidence": "lint problems ['more than three parts (5): a report is a sentence, a table and a Next line', 'line 11 names a run folder (runs/): \"Next: ask the engineer to lift the pause once the test ru...\"', 'line 11 names a script file (.mjs): \"Next: ask the engineer to lift the pause once the test ru...\"']; parts {'sentence_lines': 6, 'table_rows': 0, 'table_cols': 0, 'next_lines': 1, 'next': 'Next: ask the engineer to lift the pause once the test runs are done. Then ask again for a practice page under the same link and it will be built and you will be sent straight to step 1 on the page. For the engineer: remove `agents/claim-tagger-mvp/runs/PAUSED`, then run `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051` from the repository root.'}"
+    },
+    {
+      "text": "The Next line sends the editor to the engineer (or the person who clears the pause) and says to ask again for the practice page under the same link",
+      "passed": true,
+      "evidence": "Next line: Next: ask the engineer to lift the pause once the test runs are done. Then ask again for a practice page under the same link and it will be built and you will be sent straight to step 1 on the page. F"
+    }
+  ],
+  "summary": {
+    "passed": 2,
+    "failed": 2,
+    "total": 4,
+    "pass_rate": 0.5
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": null,
+    "errors_encountered": null,
+    "output_chars": 1675,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 275.2,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 275.2
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  }
+}

@@ -137,6 +137,39 @@
           "FAIL with the second proposed wording: the domestic-chips example claim turns to Applies (examples 10 of 11, yours 2 of 2); stopped here"
         ],
         "outcome": "not passed in three checks; the COVID-19 row carried no disagreement in this run; story revised: the AI Force claim replaces COVID-19, both open rows on rule 3, the domestic-chips example left out (decision 37)"
+      },
+      {
+        "run": 5,
+        "date": "2026-10-15",
+        "manifest_version": "2026-10-15.3",
+        "demo_id": "20261015-1854-d3ab95",
+        "page": "3fa273e214eb81169e15d8bf8a00be98",
+        "open_rows": {
+          "presspool": {
+            "decision": "apply",
+            "p": 0.75,
+            "rule_ref": "Context-dependent rule 3"
+          },
+          "aiforce": {
+            "decision": "do_not_apply",
+            "p": 0.35,
+            "rule_ref": null
+          }
+        },
+        "earlier_decisions": {
+          "cnn": "as expected",
+          "dallas": "as expected",
+          "contractor": "as expected",
+          "kennedy": "as expected",
+          "stopgap": "as expected"
+        },
+        "canaries": "10 of 10 right under the draft and under the wording",
+        "lesson": "Known standing bodies count; unknown capitalised names don't (Context-dependent rule 3)",
+        "verdicts": [
+          "FAIL on the draft: the press pool row turns to Can't tell (examples 10 of 10, earlier 5 of 5, yours 1 of 2); the AI Force row is right (Applies 0.85)",
+          "PASS with the proposed wording: edition 2026-10-15.2, both rows Fixed"
+        ],
+        "outcome": "passed after one wording round; the distill prompt was sharpened afterwards (decision 38): the draft described the press pool as a riddle instead of naming the kind"
       }
     ]
   },

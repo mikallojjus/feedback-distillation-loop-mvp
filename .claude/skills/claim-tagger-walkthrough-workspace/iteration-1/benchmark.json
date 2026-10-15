@@ -1,0 +1,293 @@
+{
+  "metadata": {
+    "skill_name": "claim-tagger-walkthrough",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-10-15T16:09:46Z",
+    "evals_run": [
+      2,
+      3,
+      4
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 213.7,
+        "tokens": 3006,
+        "tool_calls": 0,
+        "errors": null
+      },
+      "expectations": [
+        {
+          "text": "No practice page was created: no new demo folder with state ready, and the Notion request count shows no write (a dry run sends reads only)",
+          "passed": true,
+          "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+        },
+        {
+          "text": "A dry run happened: walkthrough.mjs start was run with --dry-run and wrote preview.md and setup-plan.json under a dry-run folder",
+          "passed": true,
+          "evidence": "--dry-run in notes: True; dry-run folders since start: 3"
+        },
+        {
+          "text": "The final message is a three-part report: one sentence, one table of at most five rows and three columns, one line starting 'Next:' and nothing else",
+          "passed": true,
+          "evidence": "lint problems []; parts {'sentence_lines': 1, 'table_rows': 4, 'table_cols': 2, 'next_lines': 1, 'next': 'Next: to build the page for real, ask again for a practice page under the same link.'}"
+        },
+        {
+          "text": "The Next line says how to build the page for real (ask again for a practice page under the same link) and names no node command",
+          "passed": true,
+          "evidence": "Next line: Next: to build the page for real, ask again for a practice page under the same link."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 337.5,
+        "tokens": 1567,
+        "tool_calls": 0,
+        "errors": null
+      },
+      "expectations": [
+        {
+          "text": "No practice page was created and walkthrough.mjs start was not run",
+          "passed": true,
+          "evidence": "0 new ready page(s); walkthrough start in notes: False"
+        },
+        {
+          "text": "The reply points the editor to /claim-tagger tag (the production command) or reports that the production agent is paused; it does not treat the request as a walkthrough",
+          "passed": true,
+          "evidence": "mentions /claim-tagger tag: True; mentions paused: True"
+        },
+        {
+          "text": "No Notion write happened (no connector write tool call, no plan applied)",
+          "passed": true,
+          "evidence": "0 connector write tool call(s) found in the transcript; production run folders with done ops since start: []"
+        },
+        {
+          "text": "The reply is short and plain: no Insight blocks, no file paths, no run ids",
+          "passed": true,
+          "evidence": "Insight/paths/run ids present: False; length 187"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 130.6,
+        "tokens": 1318,
+        "tool_calls": 16,
+        "errors": null
+      },
+      "expectations": [
+        {
+          "text": "No practice page was created (no new demo folder with state ready) and nothing was written to Notion",
+          "passed": true,
+          "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+        },
+        {
+          "text": "The reply says plainly that the agent is paused and does not work around the pause or tell the editor to delete the pause file themselves",
+          "passed": true,
+          "evidence": "says paused: True; tells the editor how to remove the pause file: False"
+        },
+        {
+          "text": "The reply is a report in the skill's shape: one sentence, an optional table of at most five rows, one line starting 'Next:' and nothing else (no headings, bullets, paths, commands, run ids or Insight blocks)",
+          "passed": true,
+          "evidence": "lint problems []; parts {'sentence_lines': 1, 'table_rows': 0, 'table_cols': 0, 'next_lines': 1, 'next': 'Next: ask the engineer who runs the claim tagger to remove the pause, then ask for the practice page again with the same link.'}"
+        },
+        {
+          "text": "The Next line sends the editor to the engineer (or the person who clears the pause) and says to ask again for the practice page under the same link",
+          "passed": true,
+          "evidence": "Next line: Next: ask the engineer who runs the claim tagger to remove the pause, then ask for the practice page again with the same link."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 289.8,
+        "tokens": 7767,
+        "tool_calls": 0,
+        "errors": null
+      },
+      "expectations": [
+        {
+          "text": "No practice page was created: no new demo folder with state ready, and the Notion request count shows no write (a dry run sends reads only)",
+          "passed": true,
+          "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+        },
+        {
+          "text": "A dry run happened: walkthrough.mjs start was run with --dry-run and wrote preview.md and setup-plan.json under a dry-run folder",
+          "passed": true,
+          "evidence": "--dry-run in notes: True; dry-run folders since start: 3"
+        },
+        {
+          "text": "The final message is a three-part report: one sentence, one table of at most five rows and three columns, one line starting 'Next:' and nothing else",
+          "passed": false,
+          "evidence": "lint problems ['more than three parts (17): a report is a sentence, a table and a Next line', 'line 3 holds a file path: \"- `X:\\\\work\\\\geo-agents\\\\agents\\\\claim-tagger-mvp\\\\runs\\\\demos\\\\...\"', 'line 4 holds a file path: \"- `X:\\\\work\\\\geo-agents\\\\agents\\\\claim-tagger-mvp\\\\runs\\\\demos\\\\...\"', 'line 18 holds a duration word: \"second\"', 'line 52 says \"databases\"; editors read table, rulebook and safety check', 'line 56 holds a file path: \"- `agents\\\\claim-tagger-mvp\\\\runs\\\\PAUSED` exists. A dry run...\"', 'line 57 holds a file path: \"- The dry run left only the two files above in `runs\\\\demo...\"', 'line 59 names a script file (.mjs): \"Next: when you want it built, say so and I\\'ll run `node a...\"']; parts {'sentence_lines': 26, 'table_rows': 14, 'table_cols': 3, 'next_lines': 1, 'next': \"Next: when you want it built, say so and I'll run `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051` once the pause is cleared, then `verify`. If you'd rather read the whole page text first, I can open preview.md.\"}"
+        },
+        {
+          "text": "The Next line says how to build the page for real (ask again for a practice page under the same link) and names no node command",
+          "passed": false,
+          "evidence": "Next line: Next: when you want it built, say so and I'll run `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051` once the pause is cleared"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 4,
+        "failed": 0,
+        "total": 4,
+        "time_seconds": 258.9,
+        "tokens": 1832,
+        "tool_calls": 0,
+        "errors": null
+      },
+      "expectations": [
+        {
+          "text": "No practice page was created and walkthrough.mjs start was not run",
+          "passed": true,
+          "evidence": "0 new ready page(s); walkthrough start in notes: False"
+        },
+        {
+          "text": "The reply points the editor to /claim-tagger tag (the production command) or reports that the production agent is paused; it does not treat the request as a walkthrough",
+          "passed": true,
+          "evidence": "mentions /claim-tagger tag: True; mentions paused: False"
+        },
+        {
+          "text": "No Notion write happened (no connector write tool call, no plan applied)",
+          "passed": true,
+          "evidence": "0 connector write tool call(s) found in the transcript; production run folders with done ops since start: []"
+        },
+        {
+          "text": "The reply is short and plain: no Insight blocks, no file paths, no run ids",
+          "passed": true,
+          "evidence": "Insight/paths/run ids present: False; length 1140"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 2,
+        "failed": 2,
+        "total": 4,
+        "time_seconds": 275.2,
+        "tokens": 1675,
+        "tool_calls": 0,
+        "errors": null
+      },
+      "expectations": [
+        {
+          "text": "No practice page was created (no new demo folder with state ready) and nothing was written to Notion",
+          "passed": true,
+          "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+        },
+        {
+          "text": "The reply says plainly that the agent is paused and does not work around the pause or tell the editor to delete the pause file themselves",
+          "passed": false,
+          "evidence": "says paused: True; tells the editor how to remove the pause file: True"
+        },
+        {
+          "text": "The reply is a report in the skill's shape: one sentence, an optional table of at most five rows, one line starting 'Next:' and nothing else (no headings, bullets, paths, commands, run ids or Insight blocks)",
+          "passed": false,
+          "evidence": "lint problems ['more than three parts (5): a report is a sentence, a table and a Next line', 'line 11 names a run folder (runs/): \"Next: ask the engineer to lift the pause once the test ru...\"', 'line 11 names a script file (.mjs): \"Next: ask the engineer to lift the pause once the test ru...\"']; parts {'sentence_lines': 6, 'table_rows': 0, 'table_cols': 0, 'next_lines': 1, 'next': 'Next: ask the engineer to lift the pause once the test runs are done. Then ask again for a practice page under the same link and it will be built and you will be sent straight to step 1 on the page. For the engineer: remove `agents/claim-tagger-mvp/runs/PAUSED`, then run `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051` from the repository root.'}"
+        },
+        {
+          "text": "The Next line sends the editor to the engineer (or the person who clears the pause) and says to ask again for the practice page under the same link",
+          "passed": true,
+          "evidence": "Next line: Next: ask the engineer to lift the pause once the test runs are done. Then ask again for a practice page under the same link and it will be built and you will be sent straight to step 1 on the page. F"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 227.2667,
+        "stddev": 104.115,
+        "min": 130.6,
+        "max": 337.5
+      },
+      "tokens": {
+        "mean": 1963.6667,
+        "stddev": 911.2323,
+        "min": 1318,
+        "max": 3006
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.6667,
+        "stddev": 0.2887,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 274.6333,
+        "stddev": 15.4578,
+        "min": 258.9,
+        "max": 289.8
+      },
+      "tokens": {
+        "mean": 3758.0,
+        "stddev": 3472.7832,
+        "min": 1675,
+        "max": 7767
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.33",
+      "time_seconds": "-47.4",
+      "tokens": "-1794"
+    }
+  },
+  "notes": []
+}

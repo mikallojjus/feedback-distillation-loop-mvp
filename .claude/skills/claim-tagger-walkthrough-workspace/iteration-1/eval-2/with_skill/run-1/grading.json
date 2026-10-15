@@ -1,0 +1,49 @@
+{
+  "expectations": [
+    {
+      "text": "No practice page was created: no new demo folder with state ready, and the Notion request count shows no write (a dry run sends reads only)",
+      "passed": true,
+      "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+    },
+    {
+      "text": "A dry run happened: walkthrough.mjs start was run with --dry-run and wrote preview.md and setup-plan.json under a dry-run folder",
+      "passed": true,
+      "evidence": "--dry-run in notes: True; dry-run folders since start: 3"
+    },
+    {
+      "text": "The final message is a three-part report: one sentence, one table of at most five rows and three columns, one line starting 'Next:' and nothing else",
+      "passed": true,
+      "evidence": "lint problems []; parts {'sentence_lines': 1, 'table_rows': 4, 'table_cols': 2, 'next_lines': 1, 'next': 'Next: to build the page for real, ask again for a practice page under the same link.'}"
+    },
+    {
+      "text": "The Next line says how to build the page for real (ask again for a practice page under the same link) and names no node command",
+      "passed": true,
+      "evidence": "Next line: Next: to build the page for real, ask again for a practice page under the same link."
+    }
+  ],
+  "summary": {
+    "passed": 4,
+    "failed": 0,
+    "total": 4,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": null,
+    "errors_encountered": null,
+    "output_chars": 3006,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 213.7,
+    "grader_duration_seconds": null,
+    "total_duration_seconds": 213.7
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  }
+}

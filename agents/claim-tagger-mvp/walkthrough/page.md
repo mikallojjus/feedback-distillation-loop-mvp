@@ -49,7 +49,7 @@ The sentence starts with "Demo · " and names this practice page, as every repor
 | The press pool was justified in suspending coverage… | Applies | 0.80 | "the press pool": which one? · Context-dependent rule 3 · 3 of 3 runs agree |
 | The AI Force should enforce binding safety standards | Can't tell | 0.50 | "The AI Force": a name, or a kind of body? · Context-dependent rule 3 · 2 of 3 runs agree |
 
-Both rows cite rule 3, the rule on descriptive definites: the agent is fairly sure about the press pool and cannot decide the AI Force. Both rows also record the rulebook edition they used (Rulebook edition {{edition}}). The press pool row waits for you although the agent is fairly sure, because it was picked for the demo; the AI Force row waits because the agent is unsure, as a row does for real.
+Both rows cite rule 3, the rule on descriptive definites: the agent is fairly sure about the press pool and unsure about the AI Force (Can't tell, or Does not apply at low confidence; the table shows one reading). Both rows also record the rulebook edition they used (Rulebook edition {{edition}}). The press pool row waits for you although the agent is fairly sure, because it was picked for the demo; the AI Force row waits because the agent is unsure, as a row does for real.
 
 **Claims** (Agent notes is two short lines per claim; the table shows the line break as a slash)
 
@@ -69,7 +69,7 @@ The agent agrees with all 5 earlier decisions; their rows are not touched, so th
 
 **Goal of the step.** Record your decision on both rows, and say that rule 3, not the agent, is the problem.
 
-**Existing status.** The press pool row shows Applies and the AI Force row Can't tell, both citing rule 3 (step 2).
+**Existing status.** The press pool row shows Applies and the AI Force row Can't tell or Does not apply at low confidence, both citing rule 3 (step 2).
 
 **Doing the work.** In Your queue, just below, fill in three columns on each row. Press pool row: Tag outcome Does not apply, Why wrong Rule unclear, Your reasoning "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well." AI Force row: Tag outcome Applies, Why wrong Rule unclear, Your reasoning "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context." What each Why wrong value makes happen is explained in Help at the bottom of the page.
 
@@ -166,7 +166,7 @@ The same three steps apply when the check names one of your own rows instead of 
 
 **Goal of the step.** Confirm that the agent now agrees with your two decisions.
 
-**Existing status.** You decided both rows in step 3 and the new rule 3 went live in step 6; in step 2 the agent had answered Applies on the press pool row and Can't tell on the AI Force row, which were its proposals and not yet tags on the claims.
+**Existing status.** You decided both rows in step 3 and the new rule 3 went live in step 6; in step 2 the agent had answered Applies on the press pool row and Can't tell (or Does not apply at low confidence) on the AI Force row, which were its proposals and not yet tags on the claims.
 
 **Doing the work.** Nothing to type: the follow-up ran by itself at the end of the safety check. It takes the answers the check already gave for your two rows under the new rule 3, so there was nothing more to wait for. Open Tag decisions at the bottom of the page and the Claims table.
 

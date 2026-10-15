@@ -1,0 +1,9 @@
+Demo · Rollback: rule 4 of Context-dependent is back to its earlier text (edition 2026-10-15.3) (practice page Claim tagger practice · calibration 3).
+
+| What | Result |
+|---|---|
+| Rule change | "Well-known bodies and general problems count as identified", Rolled back |
+| Rulebook | edition 2026-10-15.3 |
+
+Next: type /claim-tagger demo status to see what is open.
+rollback exit 0
