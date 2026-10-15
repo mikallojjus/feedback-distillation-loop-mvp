@@ -472,13 +472,18 @@
     {
       "key": "fairford-credibility",
       "geo_id": "692b48b7467b0220aed4d2a44002cfcf",
-      "text": null,
+      "text": "The Fairford withdrawal weakens the credibility of U.S.-UK military cooperation",
+      "replaces": "georgia"
+    },
+    {
+      "key": "fairford-effectiveness",
+      "geo_id": "9e8c71422b0fb7f264a9ff88ef4f0e74",
+      "text": "The Fairford withdrawal reduces the effectiveness of U.S. bombing operations against Iran",
       "replaces": "georgia"
     },
     {
       "key": "usps-ballot-portal",
-      "geo_id": null,
-      "geo_id_prefix": "27ad00b5",
+      "geo_id": "27ad00b59c1f7d4aee71643fc8cdec94",
       "text": "The USPS ballot portal should not launch before the 2026 midterms",
       "replaces": "georgia"
     }
@@ -566,5 +571,6 @@
   ],
   "quiet_columns": [
     "Agent settings.Last run summary"
-  ]
+  ],
+  "alternates_note": "Texts and ids from the dry run dry-1 of 2026-10-15; if Georgia is swapped out, its earlier-decision row is Agent proposal Does not apply, Tag outcome Does not apply, Why wrong empty, Your reasoning \"From the audit of 9 October: We do not need to add context-dependent. the claim reads well\"."
 }

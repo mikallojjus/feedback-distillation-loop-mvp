@@ -46,8 +46,8 @@ The sentence starts with "Demo · ", as every report in the demo does, and the N
 
 | Claim | Agent proposal | Agent confidence | Agent reason |
 |---|---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | Applies | 0.85 | "the larger public health problem": which one? (rule 4) |
-| Georgia's gubernatorial debate should be moderated by… | Applies | 0.80 | "Georgia's gubernatorial debate": which debate? (rule 4) |
+| The focus on the COVID-19 vaccine ignored the larger public… | Applies | 0.85 | "the larger public health problem": which one? · Context-dependent rule 4 · 3/3 runs agreed |
+| Georgia's gubernatorial debate should be moderated by… | Applies | 0.80 | "Georgia's gubernatorial debate": which debate? · Context-dependent rule 4 · 3/3 runs agreed |
 
 Both rows also record the rulebook edition they used (Rulebook edition {{edition}}). They wait for you although the agent is fairly sure: they were picked for the demo.
 
@@ -150,7 +150,7 @@ The Rulebook does not change: a draft changes nothing until you approve it and i
 
 | Name | Rulebook edition | Last run summary |
 |---|---|---|
-| Claim tagger | {{edition}} → goes up by one | Promote · {{date}} 11:20 · PASS |
+| Claim tagger | the next edition | Promote · {{date}} 11:20 · PASS |
 
 Your 2 rows are now earlier decisions: every future safety check tests a new rule against them.
 
