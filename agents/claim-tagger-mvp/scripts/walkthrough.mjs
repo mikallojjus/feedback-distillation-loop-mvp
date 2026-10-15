@@ -8,7 +8,7 @@
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs verify [--demo <id>] [--json]
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs list
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs decide [--demo <id>] --claim <key> [--outcome "Applies|Does not apply" [--why "Agent slip|Rule unclear|Rule should change"] [--reasoning "<text>"]]
-//   node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve [--demo <id>] [--lesson "<title>"] [--wording "<text>"]
+//   node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve [--demo <id>] [--lesson "<title>"] [--wording "<text>" | --clear-wording]
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs reject [--demo <id>] [--lesson "<title>"]
 //
 // start. --parent is required and has no default. Steps: (a) one GET of the parent page (unreachable, or protected: exit 2); (b) the profile under
@@ -70,7 +70,7 @@ export const USAGE = [
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs verify [--demo <id>] [--json]',
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs list',
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs decide [--demo <id>] --claim <key> [--outcome "Applies|Does not apply" [--why "Agent slip|Rule unclear|Rule should change"] [--reasoning "<text>"]]',
-  '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve [--demo <id>] [--lesson "<title>"] [--wording "<text>"]',
+  '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve [--demo <id>] [--lesson "<title>"] [--wording "<text>" | --clear-wording]',
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs reject [--demo <id>] [--lesson "<title>"]',
 ].join('\n');
 
@@ -1799,23 +1799,26 @@ function chooseLesson(lessons, title, { allowed, tiers }, command) {
 }
 
 async function decideLesson(args, io, env, { command, status, tiers, withWording }) {
-  const options = { demo: { type: 'string' }, lesson: { type: 'string' }, ...(withWording ? { wording: { type: 'string' } } : {}) };
+  const options = { demo: { type: 'string' }, lesson: { type: 'string' }, ...(withWording ? { wording: { type: 'string' }, 'clear-wording': { type: 'boolean' } } : {}) };
   const v = parse(args, options);
   if (v.help) {
     io.out(USAGE);
     return EXIT.OK;
   }
   return withEditing(command, v, args, io, env, async (ctx, run) => {
-    if (v.wording !== undefined && text(v.wording) === '') throw stop(EXIT.INVALID, `${command}: --wording is empty`);
+    if (v.wording !== undefined && text(v.wording) === '') throw stop(EXIT.INVALID, `${command}: --wording is empty (use --clear-wording to empty Editor wording so that the draft is tested)`);
+    const clearing = withWording && v['clear-wording'] === true;
+    if (clearing && v.wording !== undefined) throw stop(EXIT.INVALID, `${command}: --wording and --clear-wording cannot be combined`);
     const loaded = await pullForEditing(ctx, 'rule_changes');
     const lessons = loaded.lessons() ?? [];
     // approve with wording and no Proposed rule change left means the Approved one whose safety check did not pass
-    const chosen = chooseLesson(lessons, v.lesson, { allowed: tiers.flat(), tiers: withWording && v.wording !== undefined ? tiers : tiers.slice(0, 1) }, command);
+    const chosen = chooseLesson(lessons, v.lesson, { allowed: tiers.flat(), tiers: withWording && (v.wording !== undefined || clearing) ? tiers : tiers.slice(0, 1) }, command);
     const row = loaded.pulled(['rule_changes']).rule_changes[chosen.Lesson];
     if (!row) throw stop(EXIT.INVALID, `Rule changes has no row called "${chosen.Lesson}"`);
     const wrote = {};
     if (row.Status !== status) wrote.Status = status;
     if (v.wording !== undefined) wrote['Editor wording'] = v.wording;
+    if (clearing) wrote['Editor wording'] = '';
     const before = Object.fromEntries(Object.keys(wrote).map((column) => [column, row[column] ?? null]));
     const unchanged = Object.keys(wrote).length === 0 || sameColumns(loaded.schema('rule_changes'), wrote, before);
     if (unchanged) logEditorAction(ctx, { action: command, status: 'unchanged', table: 'rule_changes', key: chosen.Lesson, page_id: row.page_id, wrote, before });
@@ -1823,9 +1826,11 @@ async function decideLesson(args, io, env, { command, status, tiers, withWording
 
     const rows = [['Status', status, '']];
     if (v.wording !== undefined) rows.push(['Editor wording', quoted(v.wording, 100), '']);
+    if (clearing) rows.push(['Editor wording', 'cleared: the draft is tested', '']);
     const title = quoted(chosen.Lesson, 60);
     let sentence;
     if (unchanged) sentence = `Walkthrough: acting as the editor, the rule change ${title} is already ${status}${v.wording !== undefined ? ' with that wording' : ''}; nothing was changed.`;
+    else if (clearing && Object.hasOwn(wrote, 'Editor wording')) sentence = `Walkthrough: acting as the editor, the rule change ${title} is now ${status}, with its Editor wording cleared so that the draft is tested.`;
     else if (Object.hasOwn(wrote, 'Status') && Object.hasOwn(wrote, 'Editor wording')) sentence = `Walkthrough: acting as the editor, the rule change ${title} is now ${status}, with its Editor wording filled in.`;
     else if (Object.hasOwn(wrote, 'Editor wording')) sentence = `Walkthrough: acting as the editor, the Editor wording of the rule change ${title} is now filled in.`;
     else sentence = `Walkthrough: acting as the editor, the rule change ${title} is now ${status}.`;
