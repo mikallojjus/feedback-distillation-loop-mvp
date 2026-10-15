@@ -24,3 +24,9 @@ One line of reason each. The product owner's decisions D1 to D35 live in `docs/a
 | 18 | Canaries: the six example claims of Context-dependent (expected Applies) and the five example claims of its counterpart Self-contained (expected Does not apply), read from the taxonomy at setup. | The walkthrough design counts 11 canaries (6 apply, 5 do not apply) without naming them; the counterpart's examples are the natural negatives. |
 | 19 | The taxonomy's 13 rows are read once through the connector and saved to a file that the setup plan writes from; the real claims table is pulled once through the REST client with a request log. | The brief says so for both; the REST token was checked and reads both tables, so the request log can prove "reads only". |
 | 20 | The Claims copy carries the real table's thirteen Geo columns plus Agent tags and Agent notes; the six review columns and the two relations are left out. | The loop reads the Geo columns only; the review columns belong to the QA process on the real table. Shown as an open point in the proposal. |
+
+## Product owner decisions during the build
+
+| # | Decision | When |
+|---|---|---|
+| P1 | The structure proposal is approved as it stands ("Approved"; the page was read back and had not been edited: last edited 2026-10-15 10:53 UTC, its creation time; content identical to `STRUCTURE.md`). The five tables, four views and three sub-pages are built exactly as proposed. | 2026-10-15 |

@@ -68,3 +68,11 @@ Done: the Opus draft of `STRUCTURE.md` reviewed and corrected (a select value ca
 Verified: the page fetched back through the connector shows every section and all 13 tables; the strict build exits 0 (270 KB, no external loads); `builder status` shows no open session and one registered page; the config holds the page id.
 
 Next: wait for the product owner's "go" (or edits to the page); meanwhile the Stage 1 coders (foundation modules and the Notion fake, pull and plan, judge and cells) continue; after "go": read the page back, diff it against `STRUCTURE.md`, adopt edits, log the diff, build exactly that.
+
+### 8. Checkpoint 1 approved; Stage 1 opens (2026-10-15)
+
+Done: the product owner wrote "Approved". The proposal page was fetched again: `page_last_edited_at` equals its creation time (2026-10-15T10:53:32Z) and the content equals `STRUCTURE.notion.md`, so there is no diff to adopt (decision P1). Also done while waiting: the read-only dry run of the real table (2,351 rows, 21 columns, 1,408 rows with source links, Geo ID unique on every row; 34 requests, 0 writes; `evidence/04-dry-run-real-claims/`), the 50-claim pick with seed `mvp-2026-11` (`setup/claims-pick.json`: the 10 audit claims first, then 40 at random), the taxonomy's 13 Issue rows and the counterpart Self-contained read once through the connector (`setup/taxonomy-issue.json`), the foundation modules and the plan and pull modules committed (1,322 tests pass).
+
+Verified: the request log of the dry run counted by `countRequests` (writes 0); the pick holds 50 unique Geo IDs; the taxonomy file parses with 13 rows and 1 counterpart.
+
+Next: the setup coder's hand-back (structure builder and setup subcommands); then a builder session, `setup all`, the read-back and the structure diff (acceptance check 3); the judge coder's hand-back; then the loop scripts.

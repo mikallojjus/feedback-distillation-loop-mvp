@@ -2,8 +2,8 @@
 
 | Item | Value |
 |---|---|
-| Phase | Checkpoint 1 reached (2026-10-15); waiting for the product owner's go; Stage 1 code continues against the proposed structure |
-| Checkpoint 1 (structure proposal) | Proposal page created and read back: https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 (page id 3fa273e214eb81ef8504cb40e3bd7052). Waiting for "go" or edits. |
+| Phase | Stage 1 (structure approved 2026-10-15): building setup, judge and the loop scripts; the Notion tables are created once setup is verified on the fakes |
+| Checkpoint 1 (structure proposal) | Approved as proposed on 2026-10-15 (decision P1); page https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 |
 | Checkpoint 2 (final demo) | not reached |
 | Branch | `mvp-2026-11` |
 | Parent Notion page | "Feedback Distillation MVP", 3fa273e214eb805199f3d12ef01db453 |
