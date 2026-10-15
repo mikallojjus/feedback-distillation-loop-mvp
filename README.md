@@ -1,12 +1,17 @@
 # geo-agents
 
-Agents of the Geo content team, one folder per agent. The first agent is the **claim tagger with its editor feedback loop** (`agents/claim-tagger/`), built as an MVP in October 2026 from the overnight research "Learning from editor feedback".
+Agents of the Geo content team, one folder per agent.
+
+| Agent | Folder | Status |
+|---|---|---|
+| **Claim tagger with its editor feedback loop**, built as an MVP in October 2026 from the overnight research "Learning from editor feedback" | `agents/claim-tagger-mvp/` | The live build. Works under the Notion page "Feedback Distillation MVP". Runbook: `agents/claim-tagger-mvp/AGENT.md` |
+| Claim tagger, previous build | `agents/claim-tagger/` | Read-only history: kept for orientation, never run against Notion again, never edited. The live build still imports eight small helper modules from its `scripts/lib/`, so the folder stays |
 
 ## Install
 
 1. Node 22 or later (built with Node 26). No npm dependencies: `npm test` runs `node --test tests/`.
 2. Claude Code on the subscription. The headless judge uses `claude -p` with a pinned model; no API key.
-3. A Notion integration token for scripted reads and writes: copy `.env.example` to `.env` and set `NOTION_TOKEN=...`. The integration must be connected to the Notion page "Editorial feedback loop" (page → ⋯ → Connections). Without a token the scripts refuse to write: `apply.mjs` exits 2 and leaves the batch files in `runs/<id>/batches` for a connector apply, which is not part of the skill (the skill stops and reports).
+3. A Notion integration token for scripted reads and writes: copy `.env.example` to `.env` and set `NOTION_TOKEN=...`. The integration must be connected to the Notion page "Feedback Distillation MVP" (page → ⋯ → Connections). Without a token the scripts refuse to write: `apply.mjs` exits 2 and leaves the batch files in `runs/<id>/batches` for a connector apply, which is not part of the skill (the skill stops and reports).
 4. Open Claude Code in this folder. The skill `/claim-tagger` is discovered from `.claude/skills/`; the first interactive session asks you to trust the folder, after which `.claude/settings.json` (the allow rules for the scripts and the guard hook) applies.
 5. Headless use (`claude -p`): a folder never opened interactively is untrusted, so pass the settings explicitly, and in Git Bash stop MSYS from rewriting the leading slash of the skill name:
 
@@ -51,11 +56,14 @@ Scripts run from the repository root as `node agents/claim-tagger/scripts/<name>
 ```
 CLAUDE.md                      hard rules + routing
 .claude/skills/claim-tagger/   the skill (editor-facing entry point)
-.claude/agents/                thin fallback subagents (judge, distiller)
-agents/claim-tagger/
-  AGENT.md config.json rubric/ prompts/ schemas/ evals/ scripts/ runs/
-docs/mvp-2026-10/              the MVP session: plan, state, log, decisions, evidence, reviews, report
-tests/                         node:test unit tests and fixtures
+.claude/skills/claim-tagger-walkthrough/   the skill that builds a practice page
+.claude/agents/                thin fallback subagents (judge, distiller) of the previous build
+agents/claim-tagger-mvp/       the live agent
+  AGENT.md README.md config.json rubric/ prompts/ schemas/ evals/ setup/ walkthrough/ scripts/ runs/
+agents/claim-tagger/           the previous build, read-only history
+docs/mvp-2026-11/              the live build's session: contracts, decisions, structure, work log, evidence, report
+docs/mvp-2026-10/              the previous build's session
+tests/                         node:test unit tests and fixtures (tests/mvp/ is the live agent's)
 ```
 
-See `agents/claim-tagger/AGENT.md` for the run loop and contracts, and the Notion page "Engineer notes" for the allowlist and identities.
+See `agents/claim-tagger-mvp/AGENT.md` for the runbook of the live agent: run loop, contracts, safety. `agents/claim-tagger/AGENT.md` and the Notion page "Engineer notes" describe the previous build.

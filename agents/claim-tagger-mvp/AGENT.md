@@ -1,0 +1,200 @@
+# claim-tagger-mvp: the claim tagger and its editor feedback loop
+
+Read this first. It is the one runbook of this agent, written for the engineer; editors use the skill `/claim-tagger` and never need it. The repository's `CLAUDE.md` holds the hard rules, `docs/mvp-2026-11/CONTRACTS.md` the file shapes, `docs/mvp-2026-11/STRUCTURE.md` the Notion tables column by column, `docs/mvp-2026-11/WORKLOG.md` the build log. The previous build in `agents/claim-tagger/` is read-only history, but this agent still imports eight small modules from its `scripts/lib/` (exit-codes, hash, jsonl, notion-values, pyjson, rng, stats, validate): that folder stays and is not edited.
+
+## 1. What the agent is, and where it lives in Notion
+
+The agent reads Geo claims from a Notion table, asks a pinned Claude model which tags of the rulebook apply to each claim (in this build only Context-dependent has rules), and puts every answer it is unsure about into a queue table that an editor decides in Notion. It turns the editor's decisions into proposed rule changes, tests an approved change with a safety check, and only after a PASS writes the new rule into the Rulebook copy and saves a new edition of the rulebook. Nothing is ever appended to a prompt: the rulebook text is the only thing that learns.
+
+Needs: Node 22 or later, the `claude` CLI on the subscription (no API key), `NOTION_TOKEN` in `.env` (git-ignored; never opened, printed or sent anywhere), and the Notion integration connected to the parent page.
+
+Everything sits under the page "Feedback Distillation MVP" (`3fa273e214eb805199f3d12ef01db453`). The ids below are in `config.json`.
+
+| Table | Table id (`database_id`) | Data source id | Key column |
+|---|---|---|---|
+| Rulebook copy | `17b99d1873384a1bb688c0075de45f78` | `2b06fc1239c540da976da76a8e935e57` | Name |
+| Claims copy | `a0e77c4711044d87bc3e38296d2ea5d5` | `d91ec6a806d243dea9795083184e64d8` | Geo ID |
+| Tag decisions (the queue) | `b77d1b758c414293b14837fdd1af4754` | `05c35b80e4154ba583c24694d30f80a4` | Key |
+| Rule changes | `ce293cfbd61a4cc680ab3567bac6da38` | `9b5af949b47941169cb5794f9b7bafc2` | Lesson |
+| Agent settings | `d941cf5880bb4b4ea5de378191ab8202` | `8d500555731f40919c44427a8907fb48` | Name |
+
+| View | On table | View id |
+|---|---|---|
+| Your queue | Tag decisions | `3fa273e214eb81ceb47a000c49ca726d` |
+| Needs your note | Tag decisions | `3fa273e214eb81a5b651000cf5ec6760` |
+| Lessons waiting | Rule changes | `3fa273e214eb811081b1000c28c0682a` |
+| Rulebook | Rulebook copy | `3fa273e214eb81c5af0e000c3f4d2664` |
+
+Reports link the views through `config.json` `notion.views`; the table's own link is the fallback. Sub-pages: Demos `3fa273e214eb81ada268f4b511182378` (one practice page per walkthrough run, never deleted), Demo tests `3fa273e214eb81c2b223dcc2331b7051` (the walkthrough skill's own test runs), and Structure proposal `3fa273e214eb81ef8504cb40e3bd7052` (the approved design, kept as history). At setup the tables held 13 Rulebook rows, 50 claims, 10 decided audit rows and 1 settings row. Read only and protected: the taxonomy "Claim Tags — verified" and the real "U.S. Politics debate claims". The old hub and sandbox under "Editorial feedback loop" are history.
+
+## 2. Commands
+
+Run from the repository root. `.claude/settings.json` lets Claude Code run the scripts below without asking, except `setup.mjs`, `rollback.mjs` and `restore.mjs` (it asks every time); `headless-check.mjs` and `transcript-check.mjs` have no rule, so it asks for those too. The loop scripts also take `--pull <pull-id>` (use that pull instead of pulling again), `--run-id <id>` and `--help`; `--driver fake` is for tests.
+
+The loop, and what each step writes in Notion:
+
+| Step | Who | Writes in Notion |
+|---|---|---|
+| Tag | editor types `tag` | Claims copy: Agent tags, Agent notes. Tag decisions: a row for every unsure answer. Agent settings: edition, Last run summary |
+| Decide | editor, in Your queue | Tag outcome, Why wrong, Your reasoning (the agent never writes these) |
+| Distill | editor types `distill` | Rule changes: one row per lesson, Status Proposed |
+| Approve | rule owner, in Lessons waiting | Status Approved or Rejected, Editor wording (the agent never writes these) |
+| Promote | editor types `promote` | PASS: Rulebook copy (When to use), Rule changes (Live, result), Agent settings, and a new committed edition in `rubric/`. FAIL or HOLD: only the result and Agent settings |
+| Follow-up | by itself after a PASS | Tag decisions: Follow-up (Fixed or Still wrong). Claims copy: Agent tags, Agent notes |
+
+What the editor types, and the lines the skill runs (nothing else is run):
+
+| Editor types | Runs, in order |
+|---|---|
+| `/claim-tagger status` | `node agents/claim-tagger-mvp/scripts/status.mjs` (writes nothing to Notion) |
+| `/claim-tagger tag` | `node agents/claim-tagger-mvp/scripts/pull.mjs --all`, then `node agents/claim-tagger-mvp/scripts/judge.mjs --items claims`, then `node agents/claim-tagger-mvp/scripts/propose.mjs` (propose pulls again and prints the report that is shown) |
+| `/claim-tagger distill` | `node agents/claim-tagger-mvp/scripts/distill.mjs` |
+| `/claim-tagger promote "<title>"` | `node agents/claim-tagger-mvp/scripts/promote.mjs --lesson "<title>"`; with no title the script takes the only Approved rule change |
+| `/claim-tagger follow-up "<title>"` | `node agents/claim-tagger-mvp/scripts/followup.mjs --lesson "<title>"` (repeats the last step of a promote that stopped before it) |
+| `/claim-tagger rollback "<title>"` | `node agents/claim-tagger-mvp/scripts/rollback.mjs --lesson "<title>" --confirm` (the permission prompt is the confirmation) |
+| `/claim-tagger demo <command>` | the same script through `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run <script> [arguments]`, against the newest practice page |
+| `/claim-tagger-walkthrough` | `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent <link>`; then `... where` and `... list` |
+| `/claim-tagger setup` | nothing: the skill answers that setup is the engineer's step |
+
+| Engineer only | Command |
+|---|---|
+| Setup, once (section 3) | `node agents/claim-tagger-mvp/scripts/setup.mjs <step> ...` |
+| List editions; put one back | `node agents/claim-tagger-mvp/scripts/restore.mjs --list`; `node agents/claim-tagger-mvp/scripts/restore.mjs --edition <edition> --confirm` |
+| Roll a change back (asks every time; `--no-commit` leaves the commit out) | `node agents/claim-tagger-mvp/scripts/rollback.mjs --lesson "<title>" --confirm` |
+| Continue a stopped judge run | `node agents/claim-tagger-mvp/scripts/judge.mjs --resume <run-id>`; any other script: run it again (`run.json` holds the line) |
+| Read the real claims table, write nothing | `node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --dry-run`; the 50-claim pick: `node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --pick 50 --seed <seed> --audit <audit file> [--from <dry-run id>]` |
+| Make and check a plan, send nothing | `--plan-only` on `propose.mjs`, `distill.mjs` (the model is still asked) and `followup.mjs` |
+| Counts for the engineer | `node agents/claim-tagger-mvp/scripts/status.mjs --json` |
+| Headless check of the report format | `node agents/claim-tagger-mvp/scripts/headless-check.mjs --prompt "/claim-tagger status" --out <dir>` (or `--prompts-file <file>`); grade a saved transcript: `node agents/claim-tagger-mvp/scripts/transcript-check.mjs <transcript.jsonl> [--json]` |
+| Practice pages | `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent <link> [--dry-run] [--resume <id>] [--title <text>] [--manifest <path>]`; `... verify [--demo <id>] [--json]`; `... where [--demo <id>]`; `... list`; `... run [--demo <id>] <script> [arguments]` |
+
+`headless-check.mjs` starts the CLI with the Explanatory output style forced on and grades the final message and every tool call (three-part report, no Insight block, no JSON, no connector write, no editor column in a write, only allowed script lines typed alone with no `cd` or chaining, no token). It runs the prompt for real, so a `tag` prompt writes Notion; use a demo prompt for those.
+
+## 3. Setup as it was run (15 October 2026)
+
+Engineer only; every `setup.mjs` call asks for permission. Every step is safe to run again with the same arguments: rows are matched by key and a key already in the table is skipped, pages and tables are matched by the id in `config.json` and then by title under the parent, `canaries` refuses to overwrite a different file and `rubric` only ever makes the first edition. A create whose answer was lost (`create_uncertain`) is never sent twice; run the step again and it finds the object.
+
+1. `node agents/claim-tagger-mvp/scripts/setup.mjs structure --from-proposal docs/mvp-2026-11/STRUCTURE.md` writes `setup/structure.json` from the approved proposal (5 tables, 58 columns, 4 views, 2 sub-pages). Local only.
+2. `node agents/claim-tagger-mvp/scripts/setup.mjs preview` prints what would be built. Local only.
+3. `node agents/claim-tagger-mvp/scripts/setup.mjs api-check` makes one GET of the parent page under Notion-Version 2026-03-11 and records it in `runs/builder/api-check.json`.
+4. `node agents/claim-tagger-mvp/scripts/setup.mjs builder open --reason "stage 1 setup: the approved structure under Feedback Distillation MVP"` creates the marker `runs/SETUP` (one session at a time, a reason is required) and a line in `runs/builder/log.jsonl`. Every building step refuses without it.
+5. `node agents/claim-tagger-mvp/scripts/setup.mjs build` makes the sub-pages Demos and Demo tests, the five tables and the four views through the REST client. Each id is written at once to `config.json` and `runs/builder/*.json`; a page or table of the right title already under the parent is adopted, never made twice.
+6. `node agents/claim-tagger-mvp/scripts/setup.mjs verify` reads everything back into `runs/builder/verify.json` and exits 2 while differences remain (here only the rows were missing). It counts its own request log and fails if a write shows.
+7. `node agents/claim-tagger-mvp/scripts/setup.mjs all --taxonomy agents/claim-tagger-mvp/setup/taxonomy-issue.json --claims agents/claim-tagger-mvp/setup/claims-pick.json --audit docs/mvp-2026-11/evidence/03-audit-context-dependent-decisions.json` runs these steps in order, each also alone, and ends with `verify`:
+   - `api-check`, `pages`, `databases`, `views`: steps 3 and 5 again; they find everything there.
+   - `rulebook`: the 13 rows of the Rulebook copy, from the taxonomy file.
+   - `claims`: the 50 picked claims into the Claims copy, Geo Sources with its links.
+   - `seed-audit`: the audit's 10 decisions as decided rows of Tag decisions, Your reasoning starting "From the audit of 9 October". The one place a script writes editor columns.
+   - `rubric`: the first edition, `2026-10-15.1`, from the taxonomy file: `rubric/rubric.json`, `rubric.lock`, `history/`, `CHANGELOG.md`. Local only; it makes a first edition and nothing else.
+   - `canaries`: `evals/canaries.jsonl`, the example claims (6 that apply, 5 that do not). Frozen: a different existing file is refused.
+   - `settings`: the one Agent settings row, named `Claim tagger`, with the edition and a Last run summary. Paused is never written.
+8. `node agents/claim-tagger-mvp/scripts/setup.mjs builder close` removes `runs/SETUP`. Keep the session open only while setup runs; `builder status` says whether one is open and what is registered, and `register page|database --id <id> --name <role>` registers an object made through the connector (the proposal page was).
+
+Rows are plans applied with a ledger and a read-back (section 6). Inputs under `setup/`: `taxonomy-issue.json` (the 13 Issue rows and their counterparts, read once through the connector), `claims-pick.json` (10 audit claims plus 40 at random, seed `mvp-2026-11`, from the dry run of the real table), `audit-decisions.json` (the audit's decisions; the evidence copy is named in step 7), `structure.json`, and `rulebook-pages.json` and `claims-pages.json` (page ids the steps write for later steps). Evidence: `docs/mvp-2026-11/evidence/05-setup/` (request logs, plans, ledgers, verify) and `04-dry-run-real-claims/` (34 requests, 0 writes).
+
+## 4. The run folders
+
+`agents/claim-tagger-mvp/runs/` is git-ignored and Claude Code may not write there. `rubric/` and `evals/canaries.jsonl` are committed.
+
+- **Pulls** `runs/pull/<pull-id>/`: `schema/<table>.json`, `raw/<table>.jsonl`, `norm/` (`claims.jsonl`, `rulebook.json`, `queue.jsonl`, `lessons.jsonl`, `settings.json`), `drift.json`, `requests.jsonl`, `pull.json`; `runs/pull/LATEST` names the newest. A pull only reads, and completes even when the agent is paused. A pull that includes Tag decisions rewrites `evals/cases.jsonl` (the earlier decisions) from the decided queue rows; no script commits that file.
+- **The cell store** `runs/judgments/<key16>/`: `meta.json`, `run-1.jsonl`, `run-2.jsonl`, `run-3.jsonl` (one line per claim and read: decision, probability, rule cited, reason; the last line for a claim wins) and a `LOCK` for one writer. The key hashes driver, model, effort, prompt version, judge group and every rule hash of its tags, so a rule change gives the group a fresh store and the old one stays as history. `judge.mjs --refresh` renames a store to `<key16>.superseded-<run-id>`. Rendered prompts are cached in `runs/judgments/prompts/`.
+- **Plans, ledgers, read-back** `runs/<run-id>/`: `plan.jsonl` (a header, then one create or update per line), `ledger.jsonl` (one line per op: done, failed, skipped or uncertain, with the read-back result), `requests.jsonl` (one line per HTTP attempt: time, method, path, status, attempt; never a header or a body, so the token cannot get in).
+- **Reports** `report.md` and `report.json`: one sentence, an optional table (at most 5 rows of 3 cells), one Next line. `lib/report.mjs` lints them (no headings, paths, run ids, durations, dollars, JSON or shorthand codes; text in double quotes is exempt). The skill prints `report.md` word for word. The editor-facing words are in CONTRACTS section 13.
+- **run.json** is written first and last: run id, script, arguments, start and end, exit code, rulebook edition, pull id, status (`running`, `done`, `stopped`; a HOLD or FAIL is `done`) and `resume`, the exact line that continues the run. Judge runs also write `calls.jsonl` (one line per model call: group, batch, attempts, tokens, duration, CLI version; none of it reaches a report).
+- **Runs inside a run**: promote writes `<run-id>-baseline` and `<run-id>-candidate` (the two judge runs), `card.json`, `card.md` and `candidate-rubric.json`, then `<run-id>-record` (rule change Live, Agent settings) and `<run-id>-followup`; rollback and restore write `<run-id>-record`.
+- **Markers**: `runs/SETUP` (a builder session), `runs/PAUSED` (made and removed by a person), `runs/PROMOTING.json` (one safety check at a time; a lock left by a dead run is taken over after `LOCK_STALE_MS` in `lib/loop.mjs`). `runs/builder/` holds the session's registry (`pages.json`, `databases.json`), `log.jsonl`, `requests.jsonl`, `state.json`, `verify.json`. `runs/dry-run/<run-id>/` holds a dry run, `runs/demos/<id>/` the practice pages.
+- **Evidence** is copied by hand into `docs/mvp-2026-11/evidence/NN-<what>/` (request logs, plans, ledgers, verify output, headless transcripts) and committed; the work log names each folder.
+
+## 5. Models and runs
+
+| Work | Model | Effort | Prompt |
+|---|---|---|---|
+| Judge: every claim, the safety check's two rulebooks, the follow-up | `claude-sonnet-5-5` | medium | `prompts/judge.md` |
+| Distill: lessons from the editor's decisions | `claude-opus-5-5` | high | `prompts/distill.md` |
+| Wording sentence after a FAIL (30 words at most; report and `card.md` only, never Notion) | `claude-opus-5-5` | high | `prompts/wording.md` |
+
+Every call is `claude -p` through `lib/claude.mjs`: no shell, the prompt on standard input, each claim quoted as data in a `<claim>` block, no tools, one turn. The pinned model must appear in the answer's model usage, else exit 4 and the answer is dropped. `--bare` and `--fallback-model` are refused in code. The subagents `claim-tagger-judge` and `claim-tagger-distiller` in `.claude/agents/` belong to the previous build (they name `agents/claim-tagger/runs/`); no script of this agent calls them.
+
+**Adaptive runs.** Run 1 reads every claim once, in batches of `judge.batch_size`, `judge.concurrency` batches at a time. A cell (one claim, one tag) is unsure when the decision is `ask_editor` or its probability lies strictly between 0.25 and 0.75. Claims with an unsure cell are read again (run 2), at most 30% of the run's claims, least sure first; the rest are listed as `capped` in `run.json`. Run 3 happens only where runs 1 and 2 disagree. Answers already in the cell store are never asked again, so a repeat run asks nothing. `propose` then takes the majority of the reads (`ask_editor` wins a tie); a cell is unsure when a read failed, the reads disagree or the mean probability is inside the band, and each unsure cell without a row becomes a queue row.
+
+**Error classes.** An invalid reply (not JSON, a claim or tag missing, a break of `schemas/judge-reply.schema.json`) gets one more attempt for its batch; after that the batch's claims are stored as errors, the next run tries them again, and this run ends with exit 2. A transient error (429, overloaded, busy, timeout, any other failed call) waits `judge.transient.backoff_ms` and retries; the third in a row stops the run with exit 1 and its resume command. Only the CLI's usage-window wording stops a run with exit 75, nothing written for that batch; the window is checked first, so a 429 that says the limit was reached counts as the window.
+
+| Exit | Meaning |
+|---|---|
+| 0 | ok |
+| 1 | stopped: run the same command again (three transient errors in a row, a write that did not finish, an unexpected error) |
+| 2 | invalid: usage, no token, a refused plan, a duplicate key, a read-back that differs, a batch that could not be read |
+| 3 | paused |
+| 4 | drift (the rulebook text in Notion or the file on disk no longer matches the saved edition) or another model answered |
+| 5 | not used by this agent; the shared table calls it trust breaker |
+| 10 | HOLD: nothing to check a change against |
+| 11 | FAIL: the safety check failed; the rulebook did not change |
+| 75 | usage window (editors read "your Claude allowance ran out"): resume later |
+
+## 6. Safety
+
+The ten hard rules in `CLAUDE.md` apply; this is how they are kept here.
+
+- **Plan before write.** A script that writes builds `plan.jsonl` first; nothing is sent before the plan is checked, and `--plan-only` stops there.
+  - `checkPlan` (`lib/plan.mjs`) refuses the whole plan for: a table that is not one of the five in `config.json`; a column outside the table's allowlist; an editor column (below); a Status on a rule change other than Proposed, Live or Rolled back; a protected id in any string; a missing or repeated key.
+  - `applyPlan` sends the ops in order through `lib/notion-rest.mjs` (paced at `requests_per_second`, with retries, and with no call that deletes, archives or moves). It skips an update whose `expect` no longer matches the pulled value, appends one ledger line per op and reads every written page back.
+  - Success is claimed only after the read-back: a difference is exit 2, a write that could not be read back is exit 1, and the next run re-reads, never re-writes.
+- **Allowlist per table.** Tag decisions: Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Claim link, Rulebook edition, Follow-up. Rule changes: Lesson, Tag, Rule, Kind, Current text, Proposed text, Safety check result, Supporting rows, Status. Agent settings: Rulebook edition, Last run summary. Rulebook copy: When to use. Claims copy: Agent tags, Agent notes. A create at setup may fill every column of the copy it makes. The check is on columns, not rows: that propose never updates a decided row, and follow-up writes only Follow-up there, is the scripts' own rule.
+- **Editor columns** are Tag outcome, Why wrong and Your reasoning (Tag decisions), Editor wording and the Status values Approved and Rejected (Rule changes), Paused (Agent settings). No script writes them. Two exceptions, both creates inside a plan check: `seed-audit` at setup, and the five decided rows of a practice page. `CLAUDE.md` also lets the agent act as the editor on practice pages; no script does, so a person fills those columns in Notion.
+- **Protected ids.** `config.json` lists the real tables and the old trial's tables under `protected_database_ids`, and three pages of the old trial (the hub "Editorial feedback loop", its tables page and its sandbox page) under `protected_page_ids`. `lib/config.mjs` refuses a config where a read-only source is not protected or one of the agent's own tables is; `pull.mjs` refuses to read a protected table as one of its own; `walkthrough.mjs start` refuses a parent that is the production page itself, one of the agent's own tables or a protected id, or that sits directly under a protected id or table. This agent has no probe script (the previous build had one). The token can read the real claims table and the taxonomy (setup and the dry run needed that), so protection lives in code, and "reads only" is proved by counting the writes in a request log (`countRequests`): `pull --dry-run` and `setup verify` end with that count and fail if it is not 0.
+- **Content is data.** The judge's message quotes each claim, escaped so that it cannot close its own `<claim id>` element, and accepts only JSON of the schema's shape; distill and the wording prompt quote rows the same way. A reply decides nothing by itself: it is checked, then planned, then applied.
+- **The connector guard.** `.claude/settings.json` runs `scripts/hooks/guard.mjs` before every Notion connector write. It always denies delete, move, duplicate and restore, any call that names a protected id, and any page write that names an editor column or sets Approved or Rejected. Everything else is denied unless `runs/SETUP` exists, and then only a plain page under a registered parent, content commands on a registered page (no deleting children) and schema calls on registered targets. It reads `config.json` and the markers itself and imports none of the agent's library modules. Rows are never written through the connector.
+- **The builder session** is the marker `runs/SETUP` plus the registry in `runs/builder/`. Open one only for structural work and close it right after; the loop commands warn while it is open. A practice page's `start` keeps its own marker inside the demo folder while it seeds rows.
+- **Drift and restore.** After every pull, the When to use, Description, Example Claims and Counterpart of each tag are compared with `rubric.lock`. A judged tag that differs stops the command (exit 4, naming tag and column). Put the text back, or run `restore.mjs --edition <edition in force> --confirm`; restore writes only When to use, so the other three columns are put back by hand.
+- **Paused.** `runs/PAUSED` or Paused ticked in Agent settings stops every command that writes or judges; `pull` only reads and says so. There is no unpause command and no flag: a person clears it. Production's `runs/PAUSED` does not stop commands that run against a practice page (only `walkthrough start`); a practice page has its own file and its own Agent settings row.
+- **Never delete.** The settings deny the connector's delete, move, duplicate and restore tools; the REST client has no such call (a test reads its source to keep it so). Rows are superseded (a rule change becomes Rolled back); practice pages are archived by hand.
+- **Secrets.** No key in the repo. `.env` is git-ignored and Claude Code's deny rules block reading it, `curl` and `git push`; the token stays inside `lib/notion-rest.mjs`, and request logs hold paths only.
+
+| What you see | What to do |
+|---|---|
+| Exit 3, "the agent is paused" | A person unticks Paused in Agent settings (the report links it) or removes `runs/PAUSED`; then the same command again. |
+| Exit 75, "your Claude allowance ran out" | Nothing is lost. When the allowance is back, type the same command again (judge: `judge.mjs --resume <run-id>`). |
+| Exit 4, "rulebook text no longer matches" | See Drift and restore. For another model: check `models` in `config.json` and the CLI. For a bad `rubric/` file or lock: restore the folder from git (it is committed). |
+| Exit 1 | Run the same command again; it reads Notion first and goes on by key. |
+| Exit 2 | Read the message on standard error. After a read-back difference, look at the row in Notion before running again. |
+| A create whose answer was lost (`create_uncertain`) | It is never sent twice. Take a fresh pull, then run the same command: it finds the row, page or table by key or title. Never make it by hand. |
+| A practice page stopped halfway | `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --resume <id>`; never start another page. |
+| "a safety check is already running" | Another promote holds `runs/PROMOTING.json`. Wait for it; a dead run's lock is taken over after the limit. |
+| Exit 10 or 11 | Results, not errors. 10: the example claims or earlier decisions are missing. 11: the report hands the editor the whole rule to paste into Editor wording. |
+| "a builder session is open" | `setup.mjs builder status`, then `setup.mjs builder close`. |
+
+## 7. The rulebook
+
+`rubric/rubric.json` is the edition in force: each tag with its numbered rules (one `<n>.` line of When to use per rule), example claims, rule hashes and `judged`. A tag is judged only when its locked text holds rules, its capability is text (`config.json` `tags`) and it is in a judge group (`judge.groups`): today only Context-dependent. `rubric.lock` holds the edition, the rulebook hash, the time locked, the tag hashes, the locked When to use text and the other three compared columns. `history/<edition>.json` is the whole rulebook of each edition and is never rewritten. `CHANGELOG.md` gets one line per edition (date, edition, why). Editions are `YYYY-MM-DD.n`; a later change on the same day is `.2`. Nothing is appended to a prompt: a rule changes only through an Approved lesson, a PASS and promote, and the version of `prompts/judge.md` is part of the cell-store key.
+
+- **PASS** (promote). The candidate is the rulebook in force with that one rule replaced by the Editor wording, else the Proposed text. The example claims and the earlier decisions are judged under both rulebooks, and each flipped answer is read twice more per side. PASS needs every example claim right under the candidate, no earlier decision that was right now wrong, and every supporting row as the editor decided. Then, in this order:
+  1. the Rulebook copy's When to use is written (with `expect`) and read back;
+  2. the new edition is saved and committed (`rulebook edition <edition>: <title>`);
+  3. a run of its own sets the rule change Live (`PASS: examples a/a, earlier b/b, yours c/c`) and updates Agent settings;
+  4. the follow-up marks the supporting rows Fixed or Still wrong.
+
+  If a stop falls after step 1, the rule is live and the same command finishes without another edition. On FAIL the rule change gets `FAIL: '<claim>' now <answer>` and the rulebook does not change; the distill model's sentence for Editor wording goes into the report and `card.md` only. A HOLD (nothing to check against) leaves the rulebook alone too.
+- **Rollback.** The rule change must be Live and the rule must still read as that change left it. The lesson's Current text goes back into the Rulebook copy, a new edition "rolled back <title>" is saved and committed, and the rule change becomes Rolled back.
+- **Restore.** `restore.mjs --edition <e> --confirm` writes the When to use of that edition over every tag whose text differs and saves a new edition "restored from <e>" (committed). It is the answer to a drift stop and the way back to any older edition.
+- **Adoption.** A tag without rules in force whose row was edited in Notion is not a drift: the next writing command saves a new edition "adopted from Notion: <tag> <columns>" and goes on (`status` only warns). If the new text holds numbered rules the tag is judged from that edition, but only once an engineer lists it in `judge.groups`. Adoption writes the files but does not commit; the next committed edition carries them.
+- Commits run `git add agents/claim-tagger-mvp/rubric` and then `git commit -m`, which takes anything else that is staged: keep the index clean before a promote, rollback or restore. Practice pages are never committed. Nothing pushes.
+
+## 8. Demo profiles
+
+A practice page is a fresh copy of the loop on a Notion page an editor names, built by `walkthrough.mjs start` from `walkthrough/manifest.json` and `walkthrough/page.md`; the skill `.claude/skills/claim-tagger-walkthrough/` and its `references/` explain the content, the page format and the calibration. Calibration demos and the product owner's page go under Demos, the skill's test runs under Demo tests. A page holds a Rulebook with one tag, seven claims, a queue of seven rows (five decided, two open), Rule changes, Agent settings, a Help toggle and four views (two linked on the page). `settings.json` allows `walkthrough.mjs` by name, so `start` makes the page and its five tables without a permission prompt; it refuses protected parents, and no script ever deletes a practice page.
+
+- **Folder** `runs/demos/<id>/` (an id like `20261015-1422-a1b2c3`): `config.json` (`demo: true`, `demo_id`, `demo_title`, the page's own table ids; production's tables and parent page are added to its protected list), `demo.json` (state, ids, errors), `rubric/`, `evals/` (the 11 example claims), `setup/structure.json`, copies of the manifest and page, `setup-plan.json` (every request and row, written before the first is sent), `preview.md` and `runs/`.
+- **`CLAIM_TAGGER_MVP_ROOT`** points the scripts at a state folder (`config.json`, `rubric/`, `evals/`, `runs/`); schemas and prompts come from the agent folder (`codeFile` in `lib/paths.mjs`). `walkthrough.mjs run` sets it for the child; it accepts only pull, judge, propose, distill, promote, followup and status, refuses `--confirm`, `--bare`, `--fallback-model` and `--unpause`, and with no `--demo` takes the newest finished page. To restore or roll back a practice page, set the variable for that one command only, for example in Git Bash `CLAIM_TAGGER_MVP_ROOT=agents/claim-tagger-mvp/runs/demos/<id> node agents/claim-tagger-mvp/scripts/restore.mjs --list`; a variable left set in a shell points production commands at the demo.
+- **What differs**: reports start "Demo · ", name the practice page and show commands as `/claim-tagger demo ...`; nothing is committed; Agent settings is created with edition and Last run summary only; the five decided rows carry the editor's columns (the demo exception: `checkPlan` allows editor columns on a create when `demo` is true and the demo folder's `runs/SETUP` exists, which `start` makes and removes). Steps 3 and 5 of the page happen in Notion, step 7 needs no command. `start --dry-run` sends one GET and writes only the plan and the preview. `verify` reads the page and tables back and lists every difference from what was built; `where` names the step an editor is at.
+
+## 9. Tests
+
+`node --test tests/mvp/` runs this agent's suite; `npm test` is `node --test tests/` and adds the previous build's. They are built to run without the network, a real Claude or a real token. Scripts take `--driver fake` or the `driver: 'fake'` option. The fakes are in `tests/mvp/fixtures/`:
+
+- `fake-notion.mjs`: an in-memory Notion behind `fetchImpl`. It checks the token and Notion-Version, logs every request, `failNext` fails the next matching ones, `editRow` plays an editor, and ids can be protected. `fake-notion-pages.mjs` adds child pages, tables and linked views for the practice-page builder.
+- `fake-claude.mjs`: stands in for `claude -p`; `FAKE_CLAUDE_MODE` is ok, invalid-once, invalid-always, transient-once, transient-always, usage-window or wrong-model. `fake-claude-loop.mjs` adds answers that depend on the rule text, for promote and the loop.
+- `transcripts/`: headless runs for the transcript checker. `tests/mvp/helpers/` builds throw-away worlds (`loop-world`, `promote-scenario`, `setup-world`, `tables`).
+
+## 10. Backlog
+
+Deferred work, why it waits and what brings it in: `docs/mvp-2026-11/BACKLOG.md` (the other 12 tags, the source pass, duplicate search, the real claims table, scheduled runs, per-editor queues, the swap to the real taxonomy). The numbered decisions are in `docs/mvp-2026-11/DECISIONS.md`.
