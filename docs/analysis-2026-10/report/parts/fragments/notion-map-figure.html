@@ -1,0 +1,87 @@
+<!-- The Notion map as one inline SVG: on the left the real tables shared with the team (the U.S. Politics claims table where the agent writes two text columns, and three protected tables),
+on the right, inside a dashed frame for the new Notion page, the agent's four tables (Tag decisions, Rule changes, Agent settings, Rulebook copy), below it the rulebook file in the repository,
+the two arrows that matter (unsure tags to the queue, the taxonomy copied once into the Rulebook copy) and a legend for the box outlines.
+Colours come only from the role tokens (ink, ink-muted, accent, border, surface-raised, surface-sunken), so it follows the light and dark themes. No ids inside.
+Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption in plain words, for example: "Which Notion tables exist and who writes what: the agent writes two text columns on the real claims table and its own four tables, and nothing else."
+Used on Minimal and optimal. Counts are filled from data/counts.json. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" width="100%" role="img" aria-label="A map of the Notion tables and who writes what. On the left, four real tables shared with the team: U.S. Politics debate claims, with {{count:scale.usClaims}} claims, where the agent writes only two text columns; World affairs, protected until it is added; Claims to review, protected; and Claim Tags, verified, the taxonomy, protected and never written. On the right, on a new Notion page, the agent's four tables: Tag decisions, the queue with {{count:notion.minimalQueueColumns}} columns, where the editor decides; Rule changes, where the editor approves; Agent settings, where the Paused switch stops every command; and the Rulebook copy, where the agent writes When to use only after a PASS. Unsure tags go from the claims table to Tag decisions. The {{count:tags.issue}} Issue rows are copied once from the taxonomy to the Rulebook copy. The rulebook file in the repository, outside Notion, is compared with the Rulebook copy before every step, to catch drift. The old hub and the sandbox stay as read-only history." style="min-width:760px;font-family:var(--font-sans)">
+<g >
+<rect x="16" y="8" width="340" height="347" rx="12" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<rect x="516" y="8" width="428" height="347" rx="12" fill="none" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="6 5"/>
+<rect x="16" y="436" width="928" height="22" rx="6" fill="var(--surface-sunken)"/>
+</g>
+<g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round">
+<path d="M336 81H526"/>
+<path d="M336 304H526"/>
+</g>
+<path d="M740 351V372" fill="none" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4" stroke-linejoin="round"/>
+<g fill="var(--ink)">
+<polygon points="536,81 526,76.5 526,85.5"/>
+<polygon points="536,304 526,299.5 526,308.5"/>
+</g>
+<g fill="var(--ink-muted)">
+<polygon points="740,382 735.5,372 744.5,372"/>
+<polygon points="740,341 735.5,351 744.5,351"/>
+</g>
+<g fill="var(--surface-raised)">
+<rect x="36" y="41" width="300" height="80" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="36" y="137" width="300" height="52" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="36" y="205" width="300" height="52" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="36" y="276" width="300" height="56" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+</g>
+<rect x="40" y="45" width="292" height="72" rx="5" stroke="var(--ink)" stroke-width="1" fill="none"/>
+<g fill="var(--surface-raised)">
+<rect x="536" y="41" width="388" height="80" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="536" y="132" width="388" height="56" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="536" y="199" width="388" height="56" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="536" y="267" width="388" height="74" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="536" y="382" width="388" height="48" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="16" y="384" width="26" height="16" rx="4" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="284" y="384" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="16" y="410" width="26" height="16" rx="4" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="284" y="410" width="26" height="16" rx="4" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+</g>
+<g font-size="14" font-weight="600" fill="var(--ink-muted)">
+<text x="36" y="33">Real tables, shared with the team</text>
+<text x="536" y="33">New Notion page: the agent's four tables</text>
+</g>
+<g font-size="13" fill="var(--ink-muted)" text-anchor="middle">
+<text x="436" y="72">unsure tags</text>
+<text x="436" y="295">{{count:tags.issue}} Issue rows copied once</text>
+</g>
+<text x="754" y="372" font-size="13" fill="var(--ink-muted)">compared before every step (drift)</text>
+<g font-size="17" font-weight="600" fill="var(--ink)">
+<text x="54" y="70">U.S. Politics debate claims</text>
+<text x="54" y="162">World affairs</text>
+<text x="54" y="230">Claims to review</text>
+<text x="54" y="302">Claim Tags, verified (the taxonomy)</text>
+<text x="554" y="70">Tag decisions</text>
+<text x="554" y="158">Rule changes</text>
+<text x="554" y="225">Agent settings</text>
+<text x="554" y="294">Rulebook copy</text>
+<text x="554" y="404">Rulebook file in the repository</text>
+</g>
+<g font-size="13.5" fill="var(--ink-muted)">
+<text x="54" y="91">{{count:scale.usClaims}} claims</text>
+<text x="554" y="91">the queue, {{count:notion.minimalQueueColumns}} columns</text>
+<text x="554" y="314">the rules, one row per tag</text>
+<text x="554" y="422">outside Notion; the judge reads this file</text>
+</g>
+<g font-size="13.5" fill="var(--ink)">
+<text x="54" y="109">agent writes two text columns only</text>
+<text x="54" y="181">protected until it is added</text>
+<text x="54" y="249">protected</text>
+<text x="54" y="322">protected: never written</text>
+<text x="554" y="245">Paused stops every command</text>
+<text x="554" y="331">agent writes "When to use" after a PASS</text>
+<text x="52" y="397">ink outline = the agent writes</text>
+<text x="320" y="397">accent outline = a person decides</text>
+<text x="52" y="423">muted outline = a real table, protected</text>
+<text x="320" y="423">dashed outline = a switch</text>
+</g>
+<g font-size="13.5" font-weight="600" fill="var(--accent)">
+<text x="554" y="109">the editor decides</text>
+<text x="554" y="178">the editor approves</text>
+</g>
+<text x="480" y="452" font-size="13.5" fill="var(--ink-muted)" text-anchor="middle">The old hub and the sandbox stay as read-only history</text>
+</svg>

@@ -1,0 +1,129 @@
+<!-- Which tags go where, as one inline SVG in three columns: the thirteen tags as pills in five clusters (solid pill = ready now, dashed pill = after the drafted rules are approved or later),
+the five lanes that judge them (the first and second cache groups of the text pass, code, the source pass and the search that is not built yet, each with the event that makes it re-judge),
+and what happens when the judge is unsure. Colours come only from the role tokens (ink, ink-muted, accent, surface-raised, surface-sunken), so it follows the light and dark themes. No ids inside.
+Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption in plain words, for example: "Which tags go where: each tag is judged in one lane, and each lane decides what happens when the agent is unsure. Solid pills are ready now; dashed pills wait for approved rules or for later work." Used on Your questions, Human judgement and Per-tag judging. The legend is inside the SVG. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" width="100%" role="img" aria-label="Which tags go where, for the {{count:tags.issue}} tags. Context-dependent, ready now, goes to the first cache group of the text pass, {{count:cache.g1ClaimsPerCall}} claims a call. Six more text tags, Improper capitalization, Poor wording, Wordy, Incorrect grammar, Multi-sentence and Trailing period, follow once you approve drafted rules, in the second cache group, {{count:judge.batchSize}} claims a call; the last two may move to code. Unsourced is decided by code. Improperly sourced, Source inaccessible and Factually challenged go to the source pass, one claim a call; Source inaccessible is decided from the fetch result where possible. Exact duplicate and Semantically duplicated need a search across all claims, not built yet. When unsure: the text groups queue the answer, lowest confidence first, with no cap; code is never unsure; the source pass says Not checked unless a source was read; the search says Not checked and adds no row, except exact duplicates found by a text match inside the claims table." style="min-width:760px;font-family:var(--font-sans)">
+<g >
+<rect x="16" y="34" width="348" height="66" rx="10" fill="var(--surface-sunken)"/>
+<rect x="16" y="115" width="348" height="109" rx="10" fill="var(--surface-sunken)"/>
+<rect x="16" y="239" width="348" height="49" rx="10" fill="var(--surface-sunken)"/>
+<rect x="16" y="303" width="348" height="92" rx="10" fill="var(--surface-sunken)"/>
+<rect x="16" y="410" width="348" height="66" rx="10" fill="var(--surface-sunken)"/>
+</g>
+<g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round">
+<path d="M364 67H386"/>
+<path d="M364 169.5H386"/>
+<path d="M364 263.5H386"/>
+<path d="M364 349H386"/>
+<path d="M364 443H386"/>
+<path d="M700 67H716V169.5H700"/>
+<path d="M716 118.25H720"/>
+<path d="M700 263.5H720"/>
+<path d="M700 349H720"/>
+<path d="M700 443H720"/>
+</g>
+<g fill="var(--ink)">
+<polygon points="396,67 386,62.5 386,71.5"/>
+<polygon points="396,169.5 386,165 386,174"/>
+<polygon points="396,263.5 386,259 386,268"/>
+<polygon points="396,349 386,344.5 386,353.5"/>
+<polygon points="396,443 386,438.5 386,447.5"/>
+<polygon points="730,118.25 720,113.75 720,122.75"/>
+<polygon points="730,263.5 720,259 720,268"/>
+<polygon points="730,349 720,344.5 720,353.5"/>
+<polygon points="730,443 720,438.5 720,447.5"/>
+</g>
+<g fill="var(--surface-raised)">
+<rect x="203" y="55" width="122" height="24" rx="12" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="28" y="145" width="140" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="176" y="145" width="90" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="274" y="145" width="54" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="28" y="174" width="117" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="153" y="174" width="98" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="259" y="174" width="96" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="128" y="251.5" width="77" height="24" rx="12" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="28" y="333" width="121" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="157" y="333" width="123" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="28" y="362" width="127" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="28" y="440" width="101" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="137" y="440" width="144" height="24" rx="12" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="396" y="34" width="304" height="66" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="396" y="136.5" width="304" height="66" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="396" y="239" width="304" height="49" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="396" y="307.5" width="304" height="83" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="396" y="418.5" width="304" height="49" rx="8" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="730" y="93.75" width="214" height="49" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="730" y="248" width="214" height="31" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="730" y="324.5" width="214" height="49" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="730" y="410" width="214" height="66" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="16" y="502" width="30" height="16" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="192" y="502" width="30" height="16" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="16" y="528" width="26" height="16" rx="4" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="230" y="528" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="468" y="528" width="26" height="16" rx="4" stroke="var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/>
+</g>
+<g font-size="13.5" font-weight="600" fill="var(--ink-muted)">
+<text x="18" y="22">The {{count:tags.issue}} tags, by what each needs</text>
+<text x="396" y="22">Where each is judged</text>
+<text x="730" y="22">What happens when it is unsure</text>
+</g>
+<g font-size="13" font-weight="600" fill="var(--ink-muted)">
+<text x="28" y="71.5">From the claim text, ready now</text>
+<text x="28" y="135">From the claim text, after you approve drafted rules</text>
+<text x="28" y="268">Decided by code</text>
+<text x="28" y="323">Needs the source pages</text>
+<text x="28" y="430">Needs a search across all claims</text>
+</g>
+<g font-size="13.5" fill="var(--ink)" text-anchor="middle">
+<text x="264" y="71.5">Context-dependent</text>
+<text x="98" y="161.5">Improper capitalization</text>
+<text x="221" y="161.5">Poor wording</text>
+<text x="301" y="161.5">Wordy</text>
+<text x="86.5" y="190.5">Incorrect grammar</text>
+<text x="202" y="190.5">Multi-sentence</text>
+<text x="307" y="190.5">Trailing period</text>
+<text x="166.5" y="268">Unsourced</text>
+<text x="88.5" y="349.5">Improperly sourced</text>
+<text x="218.5" y="349.5">Source inaccessible</text>
+<text x="91.5" y="378.5">Factually challenged</text>
+<text x="78.5" y="456.5">Exact duplicate</text>
+<text x="209" y="456.5">Semantically duplicated</text>
+</g>
+<g font-size="13" fill="var(--ink-muted)">
+<text x="157" y="212">later by code</text>
+<text x="263" y="212">later by code</text>
+<text x="412" y="91">re-judged when its rules change</text>
+<text x="412" y="193.5">re-judged when one of its rules changes</text>
+<text x="412" y="279">re-judged: never</text>
+<text x="412" y="381.5">re-judged when a rule or the claim's sources change</text>
+<text x="412" y="458.5">re-judged: not applicable</text>
+<text x="746" y="133.75">lowest confidence first; no cap</text>
+<text x="746" y="450">exact duplicates: queued only on</text>
+<text x="746" y="467">a text match inside the claims table</text>
+</g>
+<g font-size="14" font-weight="600" fill="var(--ink)">
+<text x="412" y="56">First cache group: Context-dependent</text>
+<text x="412" y="158.5">Second cache group: the six drafted text tags</text>
+<text x="412" y="261">Code: no model call</text>
+<text x="412" y="329.5">Source pass: fetch, cut excerpts, one claim a call</text>
+<text x="412" y="440.5">Search: not built yet</text>
+<text x="746" y="115.75">Queue, when the judge is unsure</text>
+<text x="746" y="270">Never unsure</text>
+<text x="746" y="346.5">"Not checked" unless a source</text>
+<text x="746" y="364.5">was read; then the queue</text>
+<text x="746" y="432">"Not checked", no queue row</text>
+</g>
+<g font-size="13" fill="var(--ink)">
+<text x="412" y="74">text pass, {{count:cache.g1ClaimsPerCall}} claims a call</text>
+<text x="412" y="176.5">text pass, {{count:judge.batchSize}} claims a call</text>
+<text x="412" y="347.5">Source inaccessible is decided from the</text>
+<text x="412" y="364.5">fetch result where possible</text>
+</g>
+<g font-size="13.5" fill="var(--ink)">
+<text x="56" y="515">solid pill = ready now</text>
+<text x="232" y="515">dashed pill = after rules are approved, or later</text>
+<text x="52" y="541">ink outline = the agent writes</text>
+<text x="266" y="541">accent outline = a person decides</text>
+<text x="504" y="541">dashed box = not built yet</text>
+</g>
+</svg>

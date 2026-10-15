@@ -1,0 +1,121 @@
+<!-- ============================== 3 DEBT AND BUGS ============================== -->
+<section id="debt" role="tabpanel" aria-labelledby="tab-debt" hidden>
+<h2>Debt and bugs</h2>
+
+<div class="plain">
+<p class="geo-eyebrow plain-label">In short</p>
+<p>{{count:debt.total}} items. The {{count:debt.blocker}} blockers exist because the job moved from the {{count:trial.claims}}-claim <dfn data-t="mvp-trial">trial</dfn> to the real <dfn data-t="claim">claims</dfn>; most high items are quick fixes; many others go with the cuts.</p>
+</div>
+
+<div class="sub" id="debt-list" data-title="Blockers and high">
+<h3>The blockers and the high items</h3>
+<div class="geo-stat-grid">
+<div class="geo-card"><div class="geo-stat-value">{{count:debt.blocker}}</div><div class="geo-stat-label"><span class="mark mark-no">Blocker</span> stops the real claims</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:debt.high}}</div><div class="geo-stat-label"><span class="mark mark-part">High</span> a real risk now</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:debt.medium}}</div><div class="geo-stat-label"><span class="mark">Medium</span> fix while touching the code</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:debt.low}}</div><div class="geo-stat-label"><span class="mark">Low</span> tidy-up</div></div>
+</div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><dfn data-t="effort">Effort</dfn>: S small, M medium, L large · "Fixed in" names the <dfn data-t="stage">stage</dfn> on <a href="#path-plan">Path to editors</a> · all {{count:debt.total}} items with their files: <a href="#debt-all">All items (Technical)</a></caption>
+<colgroup><col style="width:5%"><col style="width:14%"><col style="width:53%"><col style="width:9%"><col style="width:19%"></colgroup>
+<thead><tr><th>#</th><th>Severity</th><th>What breaks</th><th>Effort</th><th>Fixed in</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><span class="mark mark-no">Blocker</span></td><td>Building the <dfn data-t="rulebook">rulebook</dfn> from the <dfn data-t="taxonomy">taxonomy</dfn> copy would drop its {{count:tags.proposed}} <dfn data-t="verified-proposed">Proposed</dfn> <dfn data-t="tag">tags</dfn>.</td><td>M</td><td>Stage 1</td></tr>
+<tr><td>2</td><td><span class="mark mark-no">Blocker</span></td><td>The code assumes the trial's one claims <dfn data-t="table">table</dfn>; the real one (the <dfn data-t="mirror">mirror</dfn>) differs.</td><td>L</td><td>Stages 0 and 1</td></tr>
+<tr><td>3</td><td><span class="mark mark-no">Blocker</span></td><td>All tags are treated alike, though they need different inputs (their <dfn data-t="capability">capability</dfn>); the <dfn data-t="tag-kinds">duplicate tags</dfn> alone would add about {{count:scale.duplicateRows}} <dfn data-t="queue">queue</dfn> rows.</td><td>M</td><td>Stages 0 to 2</td></tr>
+<tr><td>4</td><td><span class="mark mark-no">Blocker</span> design verified, code to write</td><td>Source links point at Geo pages; the lookup of article addresses works, its code is not written yet.</td><td>S to M</td><td>Stages 0 and 3</td></tr>
+<tr><td>5</td><td><span class="mark mark-part">High</span></td><td>Any update or <dfn data-t="rule">rule</dfn> change throws away all <dfn data-t="cache">saved answers</dfn>.</td><td>S + M</td><td>Stage 1</td></tr>
+<tr><td>6</td><td><span class="mark mark-part">High</span></td><td>A brief "busy" error stops a long run as if the <dfn data-t="usage-window">usage window</dfn> had run out.</td><td>S</td><td>Stage 0</td></tr>
+<tr><td>7</td><td><span class="mark mark-part">High</span></td><td>The <dfn data-t="gate">gate</dfn> can reject a good rule by chance; the decided fix re-reads each <dfn data-t="flipped-case">flipped claim</dfn>.</td><td>S</td><td>Stage 2</td></tr>
+<tr><td>8</td><td><span class="mark mark-part">High</span></td><td>The gate's test claims (<dfn data-t="canary">canaries</dfn>) are examples the <dfn data-t="judge">judge</dfn> already sees.</td><td>M</td><td>Stages 1 and 2</td></tr>
+<tr><td>9</td><td><span class="mark mark-part">High</span></td><td>Permission rules miss the Notion tools and let the model lift the <dfn data-t="pause">pause</dfn>.</td><td>S</td><td>Stages 0 and 1</td></tr>
+<tr><td>10</td><td><span class="mark mark-part">High</span></td><td><dfn data-t="integration-token">The access token</dfn> reaches {{count:security.realDatabases}} real tables, the taxonomy among them.</td><td>S to M</td><td>Stages 0 and 1</td></tr>
+<tr><td>11</td><td><span class="mark mark-part">High</span></td><td>A leftover setup marker loosens the <dfn data-t="guard-hook">safety hook</dfn>.</td><td>S</td><td>Stage 0</td></tr>
+<tr><td>12</td><td><span class="mark mark-part">High</span></td><td>A pointer names an incomplete data copy, so some runs stop.</td><td>S</td><td>Stage 1</td></tr>
+<tr><td>13</td><td><span class="mark mark-part">High</span></td><td>No backup remote; {{count:security.runsMB}} MB of run records on one disk.</td><td>S</td><td>Stage 0 (optional)</td></tr>
+</tbody>
+</table></div>
+<p>Already fixed: the sandbox files that were uncommitted when the analysis began are committed.</p>
+</div>
+
+<div class="sub" id="debt-all" data-title="All items" data-layer="tech">
+<h3>All {{count:debt.total}} items</h3>
+<p class="small">Items 1 to 13 are explained in plain words on the first page. Paths are under <code>agents/claim-tagger/scripts</code> unless they start with a folder. Fixed in: the stage, then the changes of the final change list in the design folder (<dfn data-t="codes">C0 to C22</dfn>; C1 to C18 keep the numbers of <a href="#versions-move">Moving from the MVP</a>). Dn is a decision of the <dfn data-t="roles">product owner</dfn>.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:4%"><col style="width:10%"><col style="width:42%"><col style="width:7%"><col style="width:21%"><col style="width:16%"></colgroup>
+<thead><tr><th>#</th><th>Severity</th><th>What breaks</th><th>Effort</th><th>Where</th><th>Fixed in</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><span class="mark mark-no">Blocker</span></td><td>The <dfn data-t="rubric">rubric</dfn> build keeps only Verified rows and reads trial column names.</td><td>M</td><td><code>lib/rubric-build.mjs</code>, <code>pull.mjs</code>, <code>allowlist.mjs</code></td><td>1: C4, C5, C6</td></tr>
+<tr><td>2</td><td><span class="mark mark-no">Blocker</span></td><td>One claims table hard-coded: table list, column names, <dfn data-t="geo-id">Geo ID</dfn> as the only key, one claims file, the <dfn data-t="probe">probe</dfn>'s six titles, the fixtures.</td><td>L</td><td><code>allowlist.mjs</code>, <code>pull.mjs</code>, <code>judge.mjs</code>, <code>eval.mjs</code>, <code>probe.mjs</code></td><td>0, 1: C2, C5, C6, C9, C11</td></tr>
+<tr><td>3</td><td><span class="mark mark-no">Blocker</span></td><td>No capability classes: "<dfn data-t="cannot-tell">cannot tell</dfn>" on the duplicate tags would queue about {{count:scale.duplicateRows}} rows, and the gate counts it as a failure.</td><td>M</td><td><code>propose.mjs</code>, <code>eval.mjs</code>, <code>judge.mjs</code></td><td>0 to 2: C2, C9, C11, C14</td></tr>
+<tr><td>4</td><td><span class="mark mark-no">Blocker</span> design verified</td><td>Geo Sources links to Geo pages and the <dfn data-t="pull">pull</dfn> keeps plain text. Checked 14 October: one GraphQL query per source entity (<code>entity(id)</code>, no authentication) returns its Web URL and publisher; <code>api-testnet.geobrowser.io</code> served the production space. Left: keep link targets, cache the lookup per source; no Web URL means "not checked".</td><td>S to M</td><td><code>lib/notion-values.mjs</code>, <code>pull.mjs</code>, <code>lib/geo-sources.mjs</code> (new)</td><td>0, 3: C3, C19, C10</td></tr>
+<tr><td>5</td><td><span class="mark mark-part">High</span></td><td>The <dfn data-t="cache-key">cache key</dfn> holds the <dfn data-t="cli">CLI</dfn> version and one hash for every tag.</td><td>S + M</td><td><code>judge.mjs</code>, <code>lib/hash.mjs</code></td><td>1: C8, C9</td></tr>
+<tr><td>6</td><td><span class="mark mark-part">High</span></td><td>A passing 429 or "overloaded" error stops a long run.</td><td>S</td><td><code>lib/claude.mjs</code>, <code>judge.mjs</code>, <code>distill.mjs</code></td><td>0: C0</td></tr>
+<tr><td>7</td><td><span class="mark mark-part">High</span></td><td>A one-run <dfn data-t="simple-strict-gate">simple gate</dfn> has no noise guard: with {{count:gate.cases}} cases, {{count:gate.chanceFlips}} look newly failing by chance, a false <dfn data-t="pass-hold-fail">FAIL</dfn> {{count:gate.falseFail}} of the time. Fix (D20): re-read each flip twice on both sides.</td><td>S</td><td><code>promote.mjs</code></td><td>2: C14</td></tr>
+<tr><td>8</td><td><span class="mark mark-part">High</span></td><td>All {{count:trial.canariesTotal}} trial canaries are the rubric's own examples, shown in the judge <dfn data-t="prompt">prompt</dfn>; every gate passed {{count:trial.canariesActive}} of {{count:trial.canariesActive}} (three wait for a ruling).</td><td>M</td><td><code>judge.mjs</code>, <code>evals/canaries.jsonl</code></td><td>1, 2: C7, C14</td></tr>
+<tr><td>9</td><td><span class="mark mark-part">High</span></td><td>Permission settings do not match the <dfn data-t="connector">connector</dfn>; commands meant for a person are pre-approved (<a href="#debt-permissions">Permissions</a>).</td><td>S</td><td><code>.claude/settings.json</code>, <code>hooks/guard.mjs</code></td><td>0, 1: C0, C5</td></tr>
+<tr><td>10</td><td><span class="mark mark-part">High</span></td><td>The token reaches {{count:security.realDatabases}} real databases: the mirror, Claims to review, the taxonomy, <dfn data-t="world-affairs">World affairs</dfn>.</td><td>S to M</td><td><code>config.json</code>, the token probe</td><td>0, 1: C1, C2, C3, C12</td></tr>
+<tr><td>11</td><td><span class="mark mark-part">High</span></td><td>The <dfn data-t="setup-marker">setup marker</dfn> <code>runs/SETUP</code> exists in the trial and the sandbox.</td><td>S</td><td><code>hooks/guard.mjs</code></td><td>0, 1: C0, C7, C15</td></tr>
+<tr><td>12</td><td><span class="mark mark-part">High</span></td><td>The latest-pull pointer names a partial pull with no claims file.</td><td>S</td><td><code>judge.mjs</code>, <code>pull.mjs</code></td><td>1: C6</td></tr>
+<tr><td>13</td><td><span class="mark mark-part">High</span></td><td>No git remote; the {{count:security.runsMB}} MB runs folder is git-ignored.</td><td>S</td><td><code>.gitignore</code></td><td>0, optional: C0</td></tr>
+<tr><td>14</td><td><span class="mark">Medium</span></td><td><dfn data-t="promote">Promote</dfn>'s smoke mode runs the full model and does not mark the run; the judge's hard-codes one run.</td><td>S</td><td><code>promote.mjs</code>, <code>judge.mjs</code>, <code>eval.mjs</code></td><td>2: C14</td></tr>
+<tr><td>15</td><td><span class="mark">Medium</span></td><td><dfn data-t="distill">Distill</dfn> picks rows in key order and cuts at {{count:distill.maxGroupRows}}, but links every row as support; counter-evidence too is in key order.</td><td>M</td><td><code>distill.mjs</code></td><td>2: C13</td></tr>
+<tr><td>16</td><td><span class="mark">Medium</span></td><td>Usage accounting: the <dfn data-t="ledger">ledger</dfn> keeps a cost share only; token usage loses retries.</td><td>S to M</td><td><code>judge.mjs</code>, <code>allowlist.mjs</code></td><td>1, 2: C9, C14, C15</td></tr>
+<tr><td>17</td><td><span class="mark">Medium</span></td><td>The guard hook ignores the sandbox <dfn data-t="profile">profile</dfn>, and the sandbox config lacks the setup keys; a fresh <dfn data-t="demo-page">demo page</dfn> per run needs both.</td><td>M</td><td><code>hooks/guard.mjs</code>, <code>sandbox/config.json</code></td><td>1: C5</td></tr>
+<tr><td>18</td><td><span class="mark">Medium</span></td><td>Taxonomy pitfalls: a note in an example field; duplicate tags without Status; Multi-sentence's Polarity.</td><td>S</td><td>the taxonomy rows, <code>config.json</code></td><td>1: C4, C7</td></tr>
+<tr><td>19</td><td><span class="mark">Medium</span></td><td>The <dfn data-t="rest-client">REST client</dfn> queries on the 2022 API version, which fails on a database with several <dfn data-t="notion-words">data sources</dfn>.</td><td>S to M</td><td><code>lib/notion-rest.mjs</code></td><td>0, 1: C19 detects, C6</td></tr>
+<tr><td>20</td><td><span class="mark">Medium</span></td><td>The judge prompt hard-codes the old scope and a Predictive example.</td><td>S</td><td><code>prompts/judge.md</code></td><td>1: C9</td></tr>
+<tr><td>21</td><td><span class="mark">Medium</span></td><td>Dead config keys; the distill effort and timeout are unset, so <dfn data-t="models">Opus</dfn> runs at the CLI default.</td><td>S</td><td><code>plan.mjs</code>, <code>distill.mjs</code></td><td>0: C0</td></tr>
+<tr><td>22</td><td><span class="mark">Medium</span></td><td>The fallback subagents are wired to nothing, and a deny rule would block them.</td><td>S</td><td><code>.claude/agents/</code></td><td>0: C16</td></tr>
+<tr><td>23</td><td><span class="mark">Medium</span></td><td>Real names are committed in the anonymisation list of both configs; public on the first push.</td><td>S</td><td><code>config.json</code>, <code>sandbox/config.json</code></td><td>0: C0</td></tr>
+<tr><td>24</td><td><span class="mark">Medium</span></td><td>Text errors in the MVP report, its plan and the gate cards (<a href="#debt-docs">Doc and text errors</a>).</td><td>S</td><td><code>docs/mvp-2026-10</code>, <code>eval.mjs</code></td><td>0: C0</td></tr>
+<tr><td>25</td><td><span class="mark">Low</span></td><td>Stale canary fingerprints: {{count:debt.staleCanariesTrial}} in the trial, {{count:debt.staleCanariesSandbox}} in the sandbox; the gate ignores them.</td><td>S</td><td><code>cases-sync.mjs</code></td><td>1: C7</td></tr>
+<tr><td>26</td><td><span class="mark">Low</span></td><td>Stale rubric text, and "tag Neither", not a valid decision, in {{count:debt.neitherRules}} rules.</td><td>S</td><td><code>rubric/rubric.json</code></td><td>0: C1</td></tr>
+<tr><td>27</td><td><span class="mark">Low</span></td><td>A statistics function with no caller; the sandbox script lists a module that cannot run.</td><td>S</td><td><code>lib/stats.mjs</code>, <code>sandbox.mjs</code></td><td>0: C16</td></tr>
+<tr><td>28</td><td><span class="mark">Low</span></td><td>Distill sends the examples twice and records its start time after the model <dfn data-t="call">calls</dfn>.</td><td>S</td><td><code>distill.mjs</code></td><td>2: C13</td></tr>
+<tr><td>29</td><td><span class="mark">Low</span></td><td>Notion bloat: {{count:notion.properties}} properties across {{count:notion.databases}} tables, {{count:notion.queueColumns}} on the queue alone.</td><td>M</td><td><code>schemas/notion/as-built.md</code></td><td>1: C7</td></tr>
+<tr><td>30</td><td><span class="mark">Low</span></td><td>Docs: {{count:debt.docFiles}} files, {{count:debt.docSessionShare}} of them session records; the runbook exists three times.</td><td>M</td><td><code>docs/mvp-2026-10</code></td><td>1: C17</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="debt-docs" data-title="Doc and text errors" data-layer="tech">
+<h3>Doc and text errors</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:26%"><col style="width:30%"><col style="width:44%"></colgroup>
+<thead><tr><th>Where</th><th>Says</th><th>In fact</th></tr></thead>
+<tbody>
+<tr><td>MVP report: At a glance and Decisions taken</td><td>{{count:tags.trialJudgedNoted}} tags are judged by the model</td><td>The model judges {{count:tags.trialJudged}}; two more are marked judged but decided in code.</td></tr>
+<tr><td>Every gate card's verdict line (<code>eval.mjs</code>)</td><td>"a gated tag has under {{count:gate.cardConstant}} labelled positives"</td><td>A tag counts in the gate from {{count:gate.minPositives}}; {{count:gate.cardConstant}} is where the small-sample label stops.</td></tr>
+<tr><td>MVP <dfn data-t="plan">plan</dfn> document</td><td>{{count:trial.auditDecisions}} audit decisions seeded</td><td>{{count:trial.auditSeeded}} seeded, {{count:trial.auditExcluded}} set aside (tags outside the trial rulebook).</td></tr>
+<tr><td>MVP report: verification</td><td>Every must-fix gap was addressed after round 1</td><td>The MVP review's editor item ED-8 is open, as are the token rotation (EN-3) and the remote (EN-4).</td></tr>
+<tr><td>Seed check list (<code>check-by-hand.md</code>)</td><td>{{count:debt.checkListNoted}} rows</td><td>The table has {{count:debt.checkListRows}}.</td></tr>
+<tr><td><code>AGENT.md</code> against <code>probe.mjs</code></td><td>The protected list holds both kinds of database id</td><td>True, but the probe can test only one kind.</td></tr>
+<tr><td>Decision D7 and the work log</td><td>{{count:tags.withoutRulesNoted}} tags lack rules</td><td>{{count:tags.withoutRules}}: two duplicate and six text tags.</td></tr>
+<tr><td>Work log, architecture plan</td><td>{{count:code.scriptsNoted}} scripts</td><td>{{count:code.scripts}} scripts, {{count:code.lib}} library modules and one hook.</td></tr>
+<tr><td>Work log</td><td>{{count:code.testsNoted}} tests</td><td>{{count:code.tests}}; the rest were regular-expression calls inside the tests.</td></tr>
+<tr><td>Reconciliation, calibration ruling</td><td>Calibrate with a {{count:adaptive.referenceCalls}}-call reference pass on the first {{count:adaptive.calibrationClaims}} claims</td><td>{{count:adaptive.referenceCalls}} calls is {{count:judge.runsToday}} runs over {{count:adaptive.referenceClaims}} claims: take the reference on {{count:adaptive.referenceClaims}} of the first {{count:adaptive.calibrationClaims}}.</td></tr>
+</tbody>
+</table></div>
+<p class="small">The sandbox files that were uncommitted when the analysis began were committed in c1e9de6, b3c7788 and d195bd4.</p>
+</div>
+
+<div class="sub" id="debt-permissions" data-title="Permissions" data-layer="tech">
+<h3>Permissions</h3>
+<p>What <code>.claude/settings.json</code> and the guard hook allow today. The hook works; the Notion rules in the settings miss the connector in use.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:22%"><col style="width:44%"><col style="width:34%"></colgroup>
+<thead><tr><th>Issue</th><th>Effect</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td><dfn data-t="permission-prefix">Prefix</dfn> mismatch</td><td>The Notion rules name tools as <code>mcp__claude_ai_notion__…</code>; the connector in use has a generated prefix, so none match. The hook's pattern does.</td><td>Rewrite the rules with the names <code>/permissions</code> shows.</td></tr>
+<tr><td><dfn data-t="wildcard-allow">Wildcard allows</dfn></td><td><code>status.mjs:*</code> lets the model run <code>--unpause --confirm</code> and <code>--restore-rulebook --confirm</code>; <code>promote.mjs:*</code> does the same for <code>--rollback --confirm</code>.</td><td>Allow only the read-only forms; unpause, restore, <dfn data-t="rollback">rollback</dfn> and setup under "ask".</td></tr>
+<tr><td>Delete tools uncovered</td><td>No rule names the delete-pages or delete-databases tools; <dfn data-t="hard-rules">hard rule</dfn> 8 rests on the model's restraint.</td><td>Deny both, with the right prefix.</td></tr>
+<tr><td>Setup marker present</td><td><code>runs/SETUP</code> in the trial and the sandbox lets the guard allow schema changes.</td><td>Delete both now.</td></tr>
+<tr><td>Subagent conflict</td><td>The deny on <code>runs/**</code> would block the two fallback subagents, which nothing calls.</td><td>Delete them.</td></tr>
+<tr><td><dfn data-t="token-rotation">Token reach</dfn></td><td>The token answers for {{count:security.realDatabases}} real databases, among them the <dfn data-t="protected-database">protected tables</dfn>.</td><td>Disconnect them, rotate the token, rerun the probe until it exits 0.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<aside class="terms" data-strip></aside>
+</section>

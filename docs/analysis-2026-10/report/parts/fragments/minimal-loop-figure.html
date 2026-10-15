@@ -1,0 +1,96 @@
+<!-- The minimal loop as one inline SVG: the real claims mirror on the left, the skill and its commands in the middle, the agent's
+     four Notion tables on the right, a legend for the box outlines. Colours come only from the role tokens (ink, ink-muted,
+     accent, border, border-control, surface-raised, surface-sunken), so it follows the light and dark themes. No ids inside.
+     Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption. Included by parts/05-versions.html. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" width="100%" role="img" aria-label="The minimal loop. On the left, the real claims mirror, U.S. Politics debate claims, where the agent writes only two text columns, Agent tags and Agent notes. In the middle, the claim-tagger skill in Claude Code with its five commands. On the right, inside a new Notion page, the agent's four tables: Tag decisions, the queue where the editor decides uncertain tags; Rule changes, where the editor approves drafted rule changes; the Rulebook copy, which the agent writes only after a gate PASS; and Agent settings, whose Paused switch stops every command. The commands tag and follow-up write the mirror and the queue, distill writes Rule changes, promote writes the Rulebook copy, and status and every other command read Agent settings first." style="min-width:760px;font-family:var(--font-sans)">
+  <rect x="620" y="16" width="324" height="428" rx="12" fill="none" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <text x="640" y="44" font-size="14" font-weight="600" fill="var(--ink-muted)">New Notion page</text>
+  <text x="924" y="44" font-size="13" text-anchor="end" fill="var(--ink-muted)">the agent's own tables</text>
+
+  <rect x="300" y="16" width="220" height="428" rx="12" fill="var(--surface-sunken)" stroke="var(--border-control)" stroke-width="1.5"/>
+  <g text-anchor="middle">
+    <text x="410" y="46" font-size="17" font-weight="600" fill="var(--ink)">/claim-tagger</text>
+    <text x="410" y="66" font-size="13" fill="var(--ink-muted)">a skill in Claude Code</text>
+    <g font-size="15" font-weight="600" fill="var(--ink)">
+      <text x="410" y="118">tag, follow-up</text>
+      <text x="410" y="208">distill</text>
+      <text x="410" y="298">promote</text>
+      <text x="410" y="388">status</text>
+    </g>
+    <g font-size="13" fill="var(--ink-muted)">
+      <text x="410" y="137">judge; re-check after a PASS</text>
+      <text x="410" y="227">draft a rule change</text>
+      <text x="410" y="317">gate it; write it on a PASS</text>
+      <text x="410" y="407">what waits; paused or not</text>
+    </g>
+  </g>
+
+  <g fill="none" stroke="var(--ink)" stroke-width="1.5">
+    <path d="M300 123H254"/>
+    <path d="M520 123H630"/>
+    <path d="M520 213H630"/>
+    <path d="M520 303H630"/>
+    <path d="M640 393H530"/>
+  </g>
+  <g fill="var(--ink)">
+    <polygon points="244,123 254,118.5 254,127.5"/>
+    <polygon points="640,123 630,118.5 630,127.5"/>
+    <polygon points="640,213 630,208.5 630,217.5"/>
+    <polygon points="640,303 630,298.5 630,307.5"/>
+    <polygon points="520,393 530,388.5 530,397.5"/>
+  </g>
+  <g font-size="13" fill="var(--ink-muted)" text-anchor="middle">
+    <text x="570" y="115">uncertain tags</text>
+    <text x="570" y="205">a draft</text>
+    <text x="570" y="295">new rule</text>
+    <text x="570" y="385">Paused?</text>
+  </g>
+
+  <g fill="var(--surface-raised)">
+    <rect x="24" y="80" width="220" height="86" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+    <rect x="640" y="80" width="280" height="86" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+    <rect x="640" y="170" width="280" height="86" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+    <rect x="640" y="260" width="280" height="86" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+    <rect x="640" y="350" width="280" height="86" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+  </g>
+  <g font-size="17" font-weight="600" fill="var(--ink)">
+    <text x="40" y="108">Claims mirror</text>
+    <text x="656" y="108">Tag decisions</text>
+    <text x="656" y="198">Rule changes</text>
+    <text x="656" y="288">Rulebook copy</text>
+    <text x="656" y="378">Agent settings</text>
+  </g>
+  <g font-size="13.5" fill="var(--ink-muted)">
+    <text x="40" y="130">U.S. Politics debate claims</text>
+    <text x="656" y="130">the queue, {{count:notion.minimalQueueColumns}} columns</text>
+    <text x="656" y="220">drafted rule changes</text>
+    <text x="656" y="310">{{count:tags.issue}} Issue tags and their rules</text>
+    <text x="656" y="400">{{count:notion.minimalSettingsColumns}} columns</text>
+  </g>
+  <g font-size="13.5" fill="var(--ink)">
+    <text x="40" y="150">agent writes two text columns</text>
+    <text x="656" y="330">agent writes after a PASS</text>
+    <text x="656" y="420">Paused stops every command</text>
+  </g>
+  <g font-size="13.5" font-weight="600" fill="var(--accent)">
+    <text x="656" y="150">editor decides</text>
+    <text x="656" y="240">editor approves</text>
+  </g>
+  <g font-size="13" fill="var(--ink-muted)">
+    <text x="24" y="192">Agent tags and Agent notes;</text>
+    <text x="24" y="210">{{count:scale.usClaims}} real claims, nothing else written</text>
+  </g>
+
+  <text x="24" y="258" font-size="13" font-weight="600" fill="var(--ink-muted)">Outlines</text>
+  <g font-size="13.5" fill="var(--ink)">
+    <rect x="24" y="272" width="26" height="16" rx="4" fill="var(--surface-raised)" stroke="var(--ink)" stroke-width="1.5"/>
+    <text x="60" y="285">agent writes</text>
+    <rect x="24" y="300" width="26" height="16" rx="4" fill="var(--surface-raised)" stroke="var(--accent)" stroke-width="2.5"/>
+    <text x="60" y="313">people decide</text>
+    <rect x="24" y="328" width="26" height="16" rx="4" fill="var(--surface-raised)" stroke="var(--ink-muted)" stroke-width="1.5"/>
+    <text x="60" y="341">real data, two columns only</text>
+    <rect x="24" y="356" width="26" height="16" rx="4" fill="var(--surface-raised)" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="60" y="369">a switch</text>
+  </g>
+  <text x="24" y="420" font-size="13" fill="var(--ink-muted)">The old hub stays as read-only history.</text>
+</svg>

@@ -1,0 +1,66 @@
+<!-- One rulebook over many claims tables, as one inline SVG: the U.S. Politics claims table and, dashed, World affairs at the top corners, the rulebook between them, the judge that sees only the claim text and the rules,
+the one shared answer per claim text that goes back to each claims table as two text columns, and the queue below it with the open check beside it.
+Colours come only from the role tokens (ink, ink-muted, accent, surface-raised), so it follows the light and dark themes. No ids inside.
+Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption in plain words, for example: "A claim that appears in two tables is judged once and written to both."
+Used on Your questions, One table or many. The legend is inside the SVG. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 340" width="100%" role="img" aria-label="One rulebook, many claims tables. At the top left, the U.S. Politics debate claims table with {{count:scale.usClaims}} claims; at the top right, drawn dashed, World affairs, which comes later; in the middle, the rulebook with {{count:tags.issue}} tags. Claim text flows from both claims tables into the judge, and the rules flow from the rulebook into the judge, which sees only the claim text and the rules. The judge keeps one shared answer per claim text. That answer goes back to each claims table as two text columns, Agent tags and Agent notes, so a claim that appears in two tables is judged once and written to both. Below the shared answer, the queue holds one row per Geo ID and tag, where a person decides. A dashed note beside the queue records an open check: can one Geo ID be in both tables?" style="min-width:760px;font-family:var(--font-sans)">
+<g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round">
+<path d="M156 72V140H240"/>
+<path d="M804 72V140H720"/>
+<path d="M480 72V102"/>
+<path d="M480 168V194"/>
+<path d="M340 232H48V82"/>
+<path d="M620 232H912V82"/>
+<path d="M480 260V278"/>
+</g>
+<path d="M620 310H656" fill="none" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4" stroke-linejoin="round"/>
+<g fill="var(--ink)">
+<polygon points="250,140 240,135.5 240,144.5"/>
+<polygon points="710,140 720,135.5 720,144.5"/>
+<polygon points="480,112 475.5,102 484.5,102"/>
+<polygon points="480,204 475.5,194 484.5,194"/>
+<polygon points="48,72 43.5,82 52.5,82"/>
+<polygon points="912,72 907.5,82 916.5,82"/>
+<polygon points="480,288 475.5,278 484.5,278"/>
+</g>
+<g fill="var(--surface-raised)">
+<rect x="16" y="10" width="280" height="62" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="340" y="10" width="280" height="62" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="664" y="10" width="280" height="62" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="250" y="112" width="460" height="56" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="340" y="204" width="280" height="56" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="340" y="288" width="280" height="44" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="656" y="288" width="288" height="44" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="16" y="292" width="26" height="16" rx="4" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="16" y="316" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="2.5"/>
+</g>
+<g font-size="17" font-weight="600" fill="var(--ink)">
+<text x="34" y="38">U.S. Politics debate claims</text>
+<text x="358" y="38">Rulebook, {{count:tags.issue}} tags</text>
+<text x="682" y="38">World affairs, later</text>
+</g>
+<g font-size="13.5" fill="var(--ink-muted)">
+<text x="34" y="58">{{count:scale.usClaims}} claims</text>
+<text x="358" y="58">one set of rules for every table</text>
+<text x="682" y="58">one more table in the list</text>
+</g>
+<g font-size="17" font-weight="600" fill="var(--ink)" text-anchor="middle">
+<text x="480" y="146">The judge sees only the claim text and the rules</text>
+<text x="480" y="238">One shared answer per claim text</text>
+<text x="480" y="316">Queue: one row per Geo ID and tag</text>
+</g>
+<g font-size="13.5" fill="var(--ink)">
+<text x="672" y="315">Open check: can one Geo ID be in both tables?</text>
+<text x="52" y="305">ink outline = the agent writes</text>
+<text x="52" y="329">accent outline = a person decides</text>
+</g>
+<g font-size="13" fill="var(--ink-muted)" text-anchor="middle">
+<text x="203" y="132">claim text</text>
+<text x="757" y="132">claim text</text>
+<text x="194" y="207">Agent tags, Agent notes</text>
+<text x="194" y="222">(two text columns)</text>
+<text x="766" y="207">Agent tags, Agent notes</text>
+<text x="766" y="222">(two text columns)</text>
+</g>
+<text x="492" y="98" font-size="13" fill="var(--ink-muted)">rules</text>
+</svg>

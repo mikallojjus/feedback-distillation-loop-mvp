@@ -1,0 +1,42 @@
+<!-- How many rows reach the editor in the first full pass, as one inline SVG: three bars (claims in the table, tag decisions, rows that need a look) with illustrative widths, and a callout that says there is no cap on new rows.
+The bar widths are not to scale (the rows bar is drawn wider than its share so the label stays readable); say so in the caption. No time estimates anywhere.
+Colours come only from the role tokens (ink, ink-muted, accent, accent-tint, surface-raised, surface-sunken), so it follows the light and dark themes. No ids inside.
+Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption in plain words, for example: "How many rows reach the editor in the first full pass. Bar widths are illustrative, not to scale."
+Used on Your questions, Scaling. The legend is inside the SVG. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 300" width="100%" role="img" aria-label="How many rows reach the editor in the first full pass over the U.S. Politics table, drawn as three bars with illustrative widths. First, {{count:scale.usClaims}} claims are in the table. Second, each claim is judged on every one of {{count:textpass.tags}} text tags, which gives {{count:scale.tagDecisions}} tag decisions. Third, only the unsure answers become rows: {{count:scale.firstPassRows}} rows need a look, {{count:scale.needLookShare}} of the decisions, and a person decides each of them. A callout says there is no cap on new rows: the queue is sorted by confidence, the editor filters in Notion, and tags go live one at a time." style="min-width:760px;font-family:var(--font-sans)">
+<rect x="652" y="150" width="292" height="96" rx="8" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.5"/>
+<g fill="var(--surface-sunken)">
+<rect x="16" y="58" width="84" height="28" rx="6" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="16" y="130" width="560" height="28" rx="6" stroke="var(--ink)" stroke-width="1.5"/>
+</g>
+<rect x="16" y="202" width="44" height="28" rx="6" stroke="var(--accent)" stroke-width="2.5" fill="var(--accent-tint)"/>
+<g fill="var(--surface-raised)">
+<rect x="16" y="266" width="26" height="16" rx="4" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="239" y="266" width="26" height="16" rx="4" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="453" y="266" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="2.5"/>
+</g>
+<text x="16" y="18" font-size="13.5" font-weight="600" fill="var(--ink-muted)">From claims to the rows an editor decides</text>
+<text x="576" y="18" font-size="13" fill="var(--ink-muted)" text-anchor="end">bar widths are illustrative, not to scale</text>
+<g font-size="17" font-weight="600" fill="var(--ink)">
+<text x="16" y="49">{{count:scale.usClaims}}</text>
+<text x="16" y="121">{{count:scale.tagDecisions}}</text>
+</g>
+<g font-size="14" fill="var(--ink)">
+<text x="58" y="49">claims in the U.S. Politics table</text>
+<text x="67" y="121">tag decisions ({{count:textpass.tags}} text tags for each claim)</text>
+<text x="97" y="193">rows need a look ({{count:scale.needLookShare}} of the decisions)</text>
+</g>
+<text x="16" y="193" font-size="17" font-weight="600" fill="var(--accent)">{{count:scale.firstPassRows}}</text>
+<text x="74" y="221" font-size="13" fill="var(--ink-muted)">only the unsure answers become rows</text>
+<text x="670" y="176" font-size="15" font-weight="600" fill="var(--ink)">No cap on new rows:</text>
+<g font-size="15" fill="var(--ink)">
+<text x="796" y="176">the queue is sorted</text>
+<text x="670" y="198">by confidence and the editor filters in</text>
+<text x="670" y="220">Notion. Tags go live one at a time.</text>
+</g>
+<g font-size="13.5" fill="var(--ink)">
+<text x="52" y="279">muted outline = the real claims</text>
+<text x="275" y="279">ink outline = the agent writes</text>
+<text x="489" y="279">accent outline = a person decides</text>
+</g>
+</svg>

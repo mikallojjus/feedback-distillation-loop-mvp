@@ -1,0 +1,138 @@
+<!-- The seven steps of the walkthrough as one inline SVG: two lanes (you, the editor, in Notion on top, the agent in Claude Code below), seven numbered steps in a staircase with the practice-page command on each agent step,
+the safety check drawn as a diamond with a PASS exit to step 7 and a dashed FAIL branch (reword the rule in Editor wording and run promote again; a second FAIL sets Rejected and the rule stays),
+one outcome line inside each box, and a strip that says nothing real changes. No durations anywhere.
+Colours come only from the role tokens (ink, ink-muted, accent, border, surface-raised, surface-sunken), so it follows the light and dark themes. No ids inside.
+Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption in plain words, for example: "The seven steps of the walkthrough, on a practice page: you decide in Notion, the agent works in Claude Code, and nothing real changes." In this figure "you" is the editor. Used on Path to editors. The legend is inside the SVG. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="100%" role="img" aria-label="The seven steps of the walkthrough on a practice page, in two lanes. Along the top, you, the editor, work in Notion; along the bottom, the agent works in Claude Code. Step 1, meet the demo, with the command demo status: {{count:demo.open}} rows are waiting for you. Step 2, the agent reads the claims, with demo tag: both rows get Applies, citing rule 4. Step 3, you decide your {{count:demo.open}} rows in Notion: your decision is recorded. Step 4, the agent drafts a clearer rule 4, with demo distill: rule 4 is drafted with status Proposed. Step 5, you approve the draft; approving does not change the rule, and the status becomes Approved. Step 6, the safety check, with demo promote, has two exits: on a PASS the Rulebook is updated and step 7 follows; on a FAIL the report proposes one sentence, you reword rule 4 in Editor wording and run promote again, and if it fails a second time you set Rejected and the rule stays. Step 7, the agent re-checks your rows; it runs by itself after a PASS, and the follow-up shows Fixed. Everything happens on a practice page; nothing real changes." style="min-width:760px;font-family:var(--font-sans)">
+<g >
+<rect x="16" y="24" width="928" height="136" rx="10" fill="var(--surface-sunken)"/>
+<rect x="16" y="188" width="928" height="180" rx="10" fill="var(--surface-sunken)"/>
+<rect x="16" y="374" width="928" height="26" rx="6" fill="var(--surface-sunken)"/>
+</g>
+<g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round">
+<path d="M152 261.5H176"/>
+<path d="M300 196V162"/>
+<path d="M381 152V186"/>
+<path d="M462 196V162"/>
+<path d="M530 152V262H592"/>
+<path d="M752 262H782"/>
+</g>
+<g fill="none" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4" stroke-linejoin="round">
+<path d="M657 225.33V162"/>
+<path d="M707 152V222"/>
+<path d="M743 106H759"/>
+</g>
+<g fill="var(--ink)">
+<polygon points="186,261.5 176,257 176,266"/>
+<polygon points="300,152 295.5,162 304.5,162"/>
+<polygon points="381,196 376.5,186 385.5,186"/>
+<polygon points="462,152 457.5,162 466.5,162"/>
+<polygon points="602,262 592,257.5 592,266.5"/>
+<polygon points="792,262 782,257.5 782,266.5"/>
+</g>
+<g fill="var(--ink-muted)">
+<polygon points="657,152 652.5,162 661.5,162"/>
+<polygon points="707,232 702.5,222 711.5,222"/>
+<polygon points="769,106 759,101.5 759,110.5"/>
+</g>
+<rect x="16" y="196" width="136" height="131" rx="8" stroke="var(--ink)" stroke-width="1.5" fill="var(--surface-raised)"/>
+<circle cx="16" cy="196" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<g fill="var(--surface-raised)">
+<rect x="28" y="231" width="103" height="20" rx="10" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="186" y="196" width="136" height="131" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+</g>
+<circle cx="186" cy="196" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<g fill="var(--surface-raised)">
+<rect x="198" y="248" width="79" height="20" rx="10" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="278" y="32" width="136" height="120" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+</g>
+<circle cx="278" cy="32" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<g fill="var(--surface-raised)">
+<rect x="290" y="84" width="62" height="20" rx="10" stroke="var(--accent)" stroke-width="1.5"/>
+<rect x="348" y="196" width="136" height="131" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+</g>
+<circle cx="348" cy="196" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<g fill="var(--surface-raised)">
+<rect x="360" y="248" width="111" height="20" rx="10" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="440" y="32" width="136" height="120" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+</g>
+<circle cx="440" cy="32" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<rect x="792" y="196" width="136" height="131" rx="8" stroke="var(--ink)" stroke-width="1.5" fill="var(--surface-raised)"/>
+<circle cx="792" cy="196" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<polygon points="677,212 752,262 677,312 602,262" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round" fill="var(--surface-raised)"/>
+<circle cx="639" cy="286.67" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<g fill="var(--surface-raised)">
+<rect x="621.5" y="318" width="111" height="20" rx="10" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="603" y="60" width="140" height="92" rx="8" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="769" y="60" width="136" height="92" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="500" y="379" width="26" height="16" rx="4" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="701" y="379" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="2.5"/>
+</g>
+<text x="18" y="16" font-size="13.5" font-weight="600" fill="var(--accent)">You, the editor, in Notion</text>
+<text x="18" y="180" font-size="13.5" font-weight="600" fill="var(--ink)">The agent, in Claude Code</text>
+<g font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">
+<text x="16" y="200.5">1</text>
+<text x="186" y="200.5">2</text>
+<text x="278" y="36.5">3</text>
+<text x="348" y="200.5">4</text>
+<text x="440" y="36.5">5</text>
+<text x="792" y="200.5">7</text>
+<text x="639" y="291.17">6</text>
+<text x="772" y="254">PASS</text>
+</g>
+<g font-size="14" font-weight="600" fill="var(--ink)">
+<text x="28" y="222">Meet the demo</text>
+<text x="198" y="222">The agent reads</text>
+<text x="198" y="239">the claims</text>
+<text x="290" y="58">You decide</text>
+<text x="290" y="75">your {{count:demo.open}} rows</text>
+<text x="360" y="222">The agent drafts a</text>
+<text x="360" y="239">clearer rule 4</text>
+<text x="452" y="58">You approve</text>
+<text x="452" y="75">the draft</text>
+<text x="804" y="222">The agent</text>
+<text x="804" y="239">re-checks your</text>
+<text x="804" y="256">rows</text>
+<text x="615" y="87">Reword rule 4 in</text>
+<text x="615" y="104">Editor wording</text>
+</g>
+<g font-size="13" fill="var(--ink)" text-anchor="middle" style="font-family:var(--font-mono)">
+<text x="79.5" y="245">demo status</text>
+<text x="237.5" y="262">demo tag</text>
+<text x="415.5" y="262">demo distill</text>
+<text x="677" y="332">demo promote</text>
+</g>
+<g font-size="13" fill="var(--ink-muted)">
+<text x="28" y="318">{{count:demo.open}} rows waiting for you</text>
+<text x="198" y="303">both rows: Applies,</text>
+<text x="198" y="318">citing rule 4</text>
+<text x="290" y="128">your decision</text>
+<text x="290" y="143">recorded</text>
+<text x="360" y="303">rule 4 drafted,</text>
+<text x="360" y="318">status Proposed</text>
+<text x="452" y="95">approving does not</text>
+<text x="452" y="110">change the rule</text>
+<text x="452" y="143">status Approved</text>
+<text x="804" y="276">(runs by itself</text>
+<text x="804" y="291">after a PASS)</text>
+<text x="804" y="318">Follow-up: Fixed</text>
+<text x="615" y="125">the report proposes</text>
+<text x="615" y="140">one sentence</text>
+<text x="781" y="94.5">Second FAIL:</text>
+<text x="781" y="110.5">set Rejected,</text>
+<text x="781" y="126.5">the rule stays</text>
+<text x="715" y="179">run promote again</text>
+</g>
+<text x="321" y="98" font-size="13" fill="var(--ink)" text-anchor="middle">in Notion</text>
+<g font-size="14" font-weight="600" fill="var(--ink)" text-anchor="middle">
+<text x="677" y="258">The safety</text>
+<text x="677" y="275">check</text>
+</g>
+<text x="677" y="355" font-size="13" fill="var(--ink-muted)" text-anchor="middle">PASS: Rulebook updated</text>
+<text x="649" y="179" font-size="13" font-weight="600" fill="var(--ink)" text-anchor="end">FAIL</text>
+<text x="28" y="392" font-size="13.5" fill="var(--ink-muted)">Everything here happens on a practice page; nothing real changes.</text>
+<g font-size="13" fill="var(--ink)">
+<text x="536" y="392">ink outline = the agent writes</text>
+<text x="737" y="392">accent outline = a person decides</text>
+</g>
+</svg>

@@ -1,0 +1,137 @@
+<!-- ============================== 1 SUMMARY ============================== -->
+<section id="summary" role="tabpanel" aria-labelledby="tab-summary">
+<h2>Summary</h2>
+
+<div class="plain">
+<p class="geo-eyebrow plain-label">The answer</p>
+<p><strong>Verdict.</strong> Keep the loop. Cut {{count:code.deletedScripts}} of the {{count:code.scripts}} scripts and most of the Notion set-up. Start with one <dfn data-t="tag">tag</dfn>, Context-dependent, on {{count:path.firstClaims}} real <dfn data-t="claim">claims</dfn>.</p>
+<p>What it is: a helper that reads claims (short statements from Geo debates), proposes tags (labels such as Wordy or Context-dependent) and learns from the editor's decisions.</p>
+<div class="answer">
+<div>
+<h4><span class="mark mark-yes">Keep</span></h4>
+<ul>
+<li>The loop: <dfn data-t="judge">judge</dfn>, <dfn data-t="queue">queue</dfn>, editor, <dfn data-t="lesson">lesson</dfn>, <dfn data-t="gate">gate</dfn>.</li>
+<li>Its safety checks: two text columns at most on the real claims <dfn data-t="table">table</dfn>, every write read back, a <dfn data-t="pause">Paused</dfn> switch.</li>
+<li>{{count:features.keep}} of {{count:features.total}} features.</li>
+</ul>
+</div>
+<div>
+<h4><span class="mark mark-no">Cut</span></h4>
+<ul>
+<li>{{count:code.deletedScripts}} of {{count:code.scripts}} scripts.</li>
+<li>Queue columns {{count:notion.queueColumns}} to {{count:notion.minimalQueueColumns}}, views {{count:notion.views}} to {{count:notion.minimalViews}}, no <dfn data-t="notion-words">formulas</dfn>.</li>
+<li>Three runs per answer: <dfn data-t="adaptive-runs">adaptive runs</dfn> instead.</li>
+<li>Gate statistics: kept for the <dfn data-t="simple-strict-gate">strict gate</dfn>.</li>
+</ul>
+</div>
+<div>
+<h4><span class="mark mark-part">Do next</span></h4>
+<ul>
+<li><dfn data-t="stage">Stage 0</dfn>: housekeeping, two checks.</li>
+<li>Stage 1: the <dfn data-t="rulebook">rulebook</dfn> copy; Context-dependent on {{count:path.firstClaims}} claims.</li>
+<li>Stage 2: the <dfn data-t="walkthrough">walkthrough</dfn>.</li>
+<li>Stage 3: the other <dfn data-t="tag-kinds">text tags</dfn>, one at a time.</li>
+<li>{{count:confirm.items}} checks open (<a href="#path-confirm">Decided and open</a>).</li>
+</ul>
+</div>
+</div>
+<p>Who types what, in one sentence for the editor: "You type four commands yourself (status, tag, distill and promote); the follow-up runs by itself after a <dfn data-t="pass-hold-fail">PASS</dfn>, and the engineer sets things up and fixes what breaks."</p>
+<p class="small">Words marked * are explained in the Glossary: hover one for a short line, or see the list at the foot of each tab.</p>
+</div>
+
+<div class="sub" id="summary-loop" data-title="The loop">
+<h3>The loop in one picture</h3>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/loop-cycle-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">The loop in six steps. People decide in steps 3 and 5; the agent does the rest; nothing changes a <dfn data-t="rule">rule</dfn> unless the gate passes.</figcaption>
+</figure>
+<p>The judge, a model <dfn data-t="call">call</dfn>, reads each claim against the rulebook; unsure answers go to the queue for the editor; decisions that blame a rule become a lesson, which the gate tests against every <dfn data-t="regression-case">earlier decision</dfn>. One <dfn data-t="skill">skill</dfn>, <code>/claim-tagger</code>, runs it all.</p>
+<p><strong>What the <dfn data-t="mvp-trial">trial</dfn> showed.</strong> On {{count:trial.claims}} claims the gate rejected the first lesson {{count:trial.gateAttempts}} times: each wording <dfn data-t="flipped-case">flipped</dfn> an earlier decision on another tag (<dfn data-t="interference">interference</dfn>). The machinery around the loop is far heavier than one editor needs.</p>
+</div>
+
+<div class="sub" id="summary-glance" data-title="At a glance">
+<h3>The {{count:tags.issue}} tags, by when they can be judged</h3>
+<div class="geo-stat-grid">
+<div class="geo-card"><div class="geo-stat-value">{{count:tags.readyNow}}</div><div class="geo-stat-label"><strong>Ready now</strong>: Context-dependent; Unsourced, by code</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:tags.textToDraft}}</div><div class="geo-stat-label"><strong>After drafted rules</strong>: Wordy, Poor wording, Incorrect grammar, Improper capitalization, Multi-sentence, Trailing period</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:tags.sourceTags}}</div><div class="geo-stat-label"><strong>Need the sources</strong>: Improperly sourced, Source inaccessible, Factually challenged</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:tags.corpusTags}}</div><div class="geo-stat-label"><strong>Not yet</strong>: Exact duplicate, Semantically duplicated (need a search)</div></div>
+</div>
+<h3>Before and after</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:52%"><col style="width:24%"><col style="width:24%"></colgroup>
+<thead><tr><th>What</th><th>Today (the MVP)</th><th>Minimal version</th></tr></thead>
+<tbody>
+<tr><td>Scripts</td><td class="num">{{count:code.scripts}}</td><td class="num">{{count:code.minimalScripts}}</td></tr>
+<tr><td>Notion tables the agent keeps</td><td class="num">{{count:notion.databases}}</td><td class="num">{{count:notion.minimalDatabases}}, plus two text columns on the real claims table</td></tr>
+<tr><td>Queue columns</td><td class="num">{{count:notion.queueColumns}}</td><td class="num">{{count:notion.minimalQueueColumns}}</td></tr>
+<tr><td>Columns the editor fills</td><td class="num">{{count:editor.fieldsToday}}</td><td class="num">{{count:editor.fieldsMinimal}}</td></tr>
+<tr><td>Views, trial and sandbox together</td><td class="num">{{count:notion.views}}</td><td class="num">{{count:notion.minimalViews}}</td></tr>
+<tr><td>Choices to learn in the dropdown columns</td><td class="num">{{count:editor.valuesToday}}</td><td class="num">{{count:editor.valuesMinimal}}</td></tr>
+<tr><td>Model calls for one pass over the U.S. Politics claims</td><td class="num">{{count:pass.calls3}}</td><td class="num">{{count:pass.callsAdaptive}}</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>Where to read next</strong></caption>
+<colgroup><col style="width:64%"><col style="width:36%"></colgroup>
+<thead><tr><th>Question</th><th>Tab</th></tr></thead>
+<tbody>
+<tr><td>What stays, what goes?</td><td><a href="#features">Features ranked</a></td></tr>
+<tr><td>What is broken?</td><td><a href="#debt">Debt and bugs</a></td></tr>
+<tr><td>The smallest working version, its tables, what comes later</td><td><a href="#versions">Minimal and optimal</a></td></tr>
+<tr><td>Your six questions</td><td><a href="#questions">Your questions</a></td></tr>
+<tr><td>In what order, and what is decided</td><td><a href="#path">Path to editors</a></td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="summary-decisions" data-title="Decisions" data-layer="tech">
+<h3>Decided on 14 October</h3>
+<p>The <dfn data-t="roles">product owner</dfn>'s {{count:plan.decisions}} decisions of 14 October 2026, in the order taken; they override the MVP's decisions M1 to M14. D17 to D24 came after the first draft of this report and settle what it listed as open.</p>
+<p class="small">Key: <dfn data-t="codes">D1 to D24</dfn> are the decisions. Status: As decided; Corrected (a figure in it was wrong); or changed, narrowed, adjusted, refined or signed off by a later decision.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:6%"><col style="width:30%"><col style="width:44%"><col style="width:20%"></colgroup>
+<thead><tr><th>#</th><th>Decision</th><th>What follows</th><th>Status</th></tr></thead>
+<tbody>
+<tr><td>D1</td><td>Tag scope: all {{count:tags.issue}} <dfn data-t="issue-tag">Issue tags</dfn> of the <dfn data-t="taxonomy">taxonomy</dfn></td><td>{{count:tags.withoutRules}} without rules; {{count:tags.sourceTags}} need sources; {{count:tags.corpusTags}} need a search. The judge may say "<dfn data-t="cannot-tell">cannot tell</dfn>".</td><td>Corrected: {{count:tags.withoutRules}}, not {{count:tags.withoutRulesNoted}}</td></tr>
+<tr><td>D2</td><td>Rulebook: a copy of the Issue rows; <dfn data-t="swap">swap</dfn> later</td><td>The agent writes only When to use, after a <dfn data-t="pass-hold-fail">PASS</dfn>.</td><td>Signed off, D23</td></tr>
+<tr><td>D3</td><td>Claims: the real <dfn data-t="mirror">mirror</dfn> first, from a list of mirrors</td><td>A strict <dfn data-t="allowlist">allowlist</dfn> on it.</td><td>As decided</td></tr>
+<tr><td>D4</td><td>One editor, also the rule owner</td><td>Second opinions, the weekly cap and priority tiers go.</td><td>Changed by D18</td></tr>
+<tr><td>D5</td><td>Mirror writes: text columns only</td><td><dfn data-t="agent-columns">Agent tags and Agent notes</dfn>, nothing else.</td><td>As decided</td></tr>
+<tr><td>D6</td><td>Source fetching now, duplicates later</td><td>Source tags get source text.</td><td>Changed by D17</td></tr>
+<tr><td>D7</td><td>The agent drafts first rules, the editor approves</td><td>{{count:tags.textToDraft}} text tags, one per run, in the editor's order.</td><td>Corrected: {{count:tags.textToDraft}}</td></tr>
+<tr><td>D8</td><td>Demo tag: Context-dependent</td><td><dfn data-t="verified-proposed">Verified</dfn>; the audit: {{count:trial.cdMissed}} missed, {{count:trial.cdWrong}} wrongly applied.</td><td>As decided</td></tr>
+<tr><td>D9</td><td>First mirror: U.S. Politics only</td><td>{{count:scale.usClaims}} claims; <dfn data-t="world-affairs">World affairs</dfn> later.</td><td>As decided</td></tr>
+<tr><td>D10</td><td>A fresh <dfn data-t="demo-page">demo page</dfn> per walkthrough</td><td>Its own small tables; nothing torn down.</td><td>Refined by D24</td></tr>
+<tr><td>D11</td><td>The editor runs the skill; the old hub is archived</td><td>The engineer sets up and repairs.</td><td>As decided</td></tr>
+<tr><td>D12</td><td>The scripts <dfn data-t="fetch-excerpt">fetch</dfn> sources; the judge reads excerpts</td><td>One judge call per claim; the Geo lookup checked on 14 October.</td><td>As decided</td></tr>
+<tr><td>D13</td><td>Judge runs: adaptive</td><td>About {{count:pass.multiplier}} times one pass.</td><td>Narrowed by D19</td></tr>
+<tr><td>D14</td><td>Gate: simple by default, strict optional</td><td><dfn data-t="canary">Canaries</dfn>, decided claims and the lesson's own claims.</td><td>Adjusted by D20</td></tr>
+<tr><td>D15</td><td>Deciding in Notion</td><td>No script writes <dfn data-t="queue-fields">Tag outcome, Why wrong or Your reasoning</dfn>.</td><td>As decided</td></tr>
+<tr><td>D16</td><td>A work log in the repository</td><td>Code changes and the walkthrough skill wait for a go-ahead.</td><td>As decided</td></tr>
+<tr><td>D17</td><td>Duplicate tags never queued until a search exists</td><td>"Not checked"; Exact duplicate queued only on an exact text match.</td><td>Decided</td></tr>
+<tr><td>D18</td><td>No cap on new queue rows</td><td>The views sort by <dfn data-t="confidence">confidence</dfn>; the editor filters.</td><td>Decided</td></tr>
+<tr><td>D19</td><td>Re-read only unsure answers, at most {{count:adaptive.capShare}} of claims</td><td>"Ask an editor" or {{count:adaptive.low}} to {{count:adaptive.high}}; calibrated on the first {{count:adaptive.calibrationClaims}} claims.</td><td>Decided</td></tr>
+<tr><td>D20</td><td>The default gate re-reads flipped claims twice per side</td><td>The <dfn data-t="bootstrap">bootstrap</dfn> and {{count:gate.reconfirmRuns}}-run reconfirmation stay behind <code>--strict</code>.</td><td>Decided</td></tr>
+<tr><td>D21</td><td>Setup adds the two mirror columns once, behind a confirm flag</td><td>Logged and read back.</td><td>Decided; one check open</td></tr>
+<tr><td>D22</td><td>The runner is on the Max 20x plan</td><td>Estimates per <dfn data-t="usage-window">usage window</dfn> after a full run.</td><td>Decided</td></tr>
+<tr><td>D23</td><td><dfn data-t="hard-rules">Hard rules</dfn> 5 and 10 changed</td><td>Edits to tags with no rules adopted without a gate.</td><td>Decided</td></tr>
+<tr><td>D24</td><td>A parent page named for each practice page</td><td>The skill always asks for a link.</td><td>Decided</td></tr>
+</tbody>
+</table></div>
+<h3>Still open</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:24%"><col style="width:44%"><col style="width:32%"></colgroup>
+<thead><tr><th>Who</th><th>What</th><th>Why it matters</th></tr></thead>
+<tbody>
+<tr><td>The product owner, with the owner of the Geo-to-Notion refresh job</td><td>Does a refresh keep added columns and page ids? (D21)</td><td>Needed before the first real write.</td></tr>
+<tr><td>The Geo team</td><td>Which address of the Geo API is official? The one that answered is named testnet but served the production space.</td><td>Needed before the full <dfn data-t="source-pass">source pass</dfn>.</td></tr>
+<tr><td>The engineer</td><td>One calibration of the re-run band and the gate's noise guard on the first {{count:adaptive.calibrationClaims}} real claims (D19, D20).</td><td>Confirms the settings on real data.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<aside class="terms" data-strip></aside>
+</section>

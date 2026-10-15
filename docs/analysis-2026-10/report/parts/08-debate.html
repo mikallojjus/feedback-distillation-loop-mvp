@@ -1,0 +1,80 @@
+<!-- ============================== 7 EDITOR'S DEBATE ============================== -->
+<!-- The record of the editor review, from debate/round-1.md, dispositions.md, answers.md and round-2.md: how it ran, every objection and what was decided, the persona's Tuesday, where it ended. The Technical page keeps what the table does not; the full rounds stay in the repository. -->
+<section id="debate" role="tabpanel" aria-labelledby="tab-debate" hidden>
+<h2>Editor's debate</h2>
+
+<div class="sub" id="debate-overview" data-title="Overview">
+<h3>How it ran</h3>
+<p>An AI <dfn data-t="persona">persona</dfn> played a Geo editor who also owns the tag rules (the <dfn data-t="roles">rule owner</dfn>): a Claude model with a written brief, not a real editor. It read this report's Plain layer, the plan for the <dfn data-t="demo-page">practice page</dfn> and the example reports of the <dfn data-t="skill">skills</dfn>, and raised {{count:debate.objections}} objections and {{count:debate.questions}} questions. It replied in {{count:debate.rounds}} rounds, the second reading the decision on each objection (the dispositions) and the revised text; of the {{count:debate.objections}} objections, {{count:debate.accepted}} were accepted and {{count:debate.acceptedAsWording}} was accepted as wording only.</p>
+
+<h3>Objections and decisions</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages" style="min-width:780px">
+<caption><strong>What the editor objected to, and what was done</strong> · severity is the persona's own ranking</caption>
+<colgroup><col style="width:8%"><col style="width:10%"><col style="width:25%"><col style="width:17%"><col style="width:40%"></colgroup>
+<thead><tr><th>ID</th><th>Severity</th><th>Objection</th><th>Decision</th><th>What changed</th></tr></thead>
+<tbody>
+<tr><td>ED-1</td><td>must</td><td>50 rows a run is far more than one sitting; wants a 15-row cap</td><td><span class="mark mark-part" style="white-space:normal">Accepted as wording</span></td><td>The cap is declined: the product owner decided on no cap, so the editor filters in Notion. The routine now says: decide as many rows as fit one sitting, lowest <dfn data-t="confidence">confidence</dfn> first; the rest waits and nothing is lost.</td></tr>
+<tr><td>ED-2</td><td>must</td><td>Two tabs disagree on who types the commands</td><td><span class="mark mark-yes">Accepted</span></td><td>One sentence on the Summary and the practice page: you type the commands; the engineer sets up and repairs.</td></tr>
+<tr><td>ED-3</td><td>must</td><td>The {{count:notion.minimalQueueColumns}} <dfn data-t="queue">queue</dfn> columns, the {{count:editor.valuesMinimal}} values and a sample row are never shown</td><td><span class="mark mark-yes">Accepted</span></td><td>The Minimal and optimal tab shows the final tables: the queue columns and who fills each, the values, two real rows.</td></tr>
+<tr><td>ED-4</td><td>should</td><td>The demo teaches view names the real page does not use</td><td><span class="mark mark-yes">Accepted</span></td><td>The same <dfn data-t="four-views">four view names</dfn> on the practice page and the real page: Your queue, Needs your note, <dfn data-t="lesson">Lessons</dfn> waiting, Rulebook.</td></tr>
+<tr><td>ED-5</td><td>should</td><td>Durations promised everywhere</td><td><span class="mark mark-yes">Accepted</span></td><td>No time estimates anywhere: effort words and order instead; model-call counts are gone from the reports.</td></tr>
+<tr><td>ED-6</td><td>should</td><td>Six drafted <dfn data-t="rulebook">rulebooks</dfn> land at once</td><td><span class="mark mark-yes">Accepted</span></td><td>Rules are drafted and approved one tag at a time, in the editor's order, each with its example claims.</td></tr>
+<tr><td>ED-7</td><td>should</td><td>The plan dropped the old page's help and never says why the rows wait</td><td><span class="mark mark-yes">Accepted</span></td><td>Back on the practice page: why the rows wait, a Why wrong table, a ten-line words list, help for a pause and the <dfn data-t="usage-window">usage limit</dfn>.</td></tr>
+<tr><td>ED-8</td><td>should</td><td>Column names are code words; "<dfn data-t="edition">edition</dfn>" unexplained</td><td><span class="mark mark-yes">Accepted</span></td><td>Editor-facing names: <dfn data-t="gate">Safety check result</dfn> and Rulebook edition; step 1 explains an edition in one line.</td></tr>
+<tr><td>ED-9</td><td>should</td><td><dfn data-t="agent-columns">Agent notes</dfn> becomes a wall of text on the mirror</td><td><span class="mark mark-yes">Accepted</span></td><td>Agent notes is at most two short lines per claim; reasons and confidence stay in the queue row.</td></tr>
+<tr><td>ED-10</td><td>should</td><td>Three documents disagree on step 7</td><td><span class="mark mark-yes">Accepted</span></td><td>One answer: nothing to type; the <dfn data-t="follow-up">follow-up</dfn> runs by itself after a <dfn data-t="pass-hold-fail">PASS</dfn>; the <dfn data-t="promote">promote</dfn> report points at step 7.</td></tr>
+<tr><td>ED-11</td><td>nice</td><td>Real rows before the <dfn data-t="walkthrough">walkthrough</dfn></td><td><span class="mark mark-yes">Accepted</span></td><td>The stages are reordered: the walkthrough comes before the first real rows.</td></tr>
+<tr><td>ED-12</td><td>nice</td><td>Codes never introduced; optimal never summed up for the editor</td><td><span class="mark mark-yes">Accepted</span></td><td>No codes in the Plain layer; a key where codes appear in Technical tables; three plain lines on what the optimal version adds.</td></tr>
+<tr><td>ED-13</td><td>should</td><td>With no cap, a status line could one day say "decide the 300 rows"</td><td><span class="mark mark-yes">Accepted</span></td><td>More rows than fit one sitting (a setting, default {{count:editor.sittingRows}}): the report gives the count and "Next:" says to start at the top of Your queue.</td></tr>
+<tr><td>ED-14</td><td>should</td><td>The <dfn data-t="stage">stage</dfn> order is only a picture</td><td><span class="mark mark-yes">Accepted</span></td><td>A list under the stage figure: one line per stage, naming the stage of the walkthrough and of the first real rows.</td></tr>
+<tr><td>ED-15</td><td>nice</td><td>Step 7 links to a view the rows have left; "five commands" against "four commands"</td><td><span class="mark mark-yes">Accepted</span></td><td>Step 7 now opens Tag decisions at the bottom of the page and the Claims table; the page header names the four commands.</td></tr>
+</tbody>
+</table></div>
+<p class="small">Key: ED-1 to ED-15 number the objections in the order they were raised. None was declined outright; ED-1 is the one must where the product owner's decision of no cap stands, so only its wording was accepted. The answers to the persona's questions and the rest of its final reply: <a href="#debate-transcript">Transcript (Technical)</a>.</p>
+
+<h3>A Tuesday, in the editor's words</h3>
+<p>The persona's day with the first draft; the capped count, the view names, the notes column and the follow-up step have changed since (durations and one retired view name are replaced by [bracketed words]).</p>
+<div class="geo-callout"><div class="geo-callout-body">
+<p>Tuesday, after lunch. I open Claude Code in the geo-agents folder and type <code>/claim-tagger status</code>. Three lines back: nothing paused, 50 rows and one rule change wait for me, Next: decide the rows. I click the link. Your queue shows four columns: Claim, Tag outcome, Why wrong, Your reasoning. The claim is the row title, so I read it in place. Most rows are a plain Applies or Does not apply. When I disagree with the agent I pick Why wrong and type one sentence, and I name the rule when I mean the rule. Context-dependent rows make me think; some take [a while]. After [a sitting] I have done eighteen rows. Thirty-two stay in the queue, which I accept because the report said nothing is lost.</p>
+<p>Then Lessons waiting: one row. The view shows the lesson name and status but not the two texts, so I open the row, read Current text against Proposed text, set Approved. Nobody has said whether I type <code>/claim-tagger promote</code> or the engineer does; I type it, the one-line [time estimate] notice appears, and I do other work until the three-part report says PASS.</p>
+<p>What annoys me: the mirror's Agent notes column has become a paragraph per claim, which the whole team sees; "6 model calls" in the report tells me nothing; the demo taught me [a view name the real page does not use] and the real page says "Your queue"; and I have [little] of my [sitting] left, into which the "optional [review]" does not fit.</p>
+</div></div>
+
+<h3>Where it ended</h3>
+<blockquote><p>Yes, I would run the walkthrough next week. The practice page now reads as something I would do in one sitting: four commands I type, two things I fill in, the view names I will use later, an edition explained where it first appears, a safety check that hands me a sentence when it fails, and nothing to type in step 7. The reports end with the one line I need and no longer tell me about model calls.</p><cite>The persona, round 2, acceptance statement</cite></blockquote>
+<p>The one item the persona says holds up the real loop is already in the Still open list (<a href="#path-confirm">Decided and open</a>): whether the Geo-to-Notion refresh keeps the two added columns and the page ids.</p>
+</div>
+
+<div class="sub" id="debate-transcript" data-title="Transcript" data-layer="tech">
+<h3>Transcript, shortened</h3>
+<p>To keep the page small, this page holds what the table does not: the persona's reading of the first draft, the five answers and the rest of its final reply. The full text of every round is in the repository, <code>docs/analysis-2026-10/debate</code>: <code>round-1.md</code>, <code>answers.md</code>, <code>round-2.md</code>, and <code>dispositions.md</code> for the decisions. Key: Dn is a decision of the product owner; ED-n is an objection in the Overview table.</p>
+<details class="geo-disclosure">
+<summary><span>Round 1: reading the first draft</span><span class="geo-disclosure-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M1 5L8 12L15 5" stroke="currentColor" stroke-linecap="round"/></svg></span></summary>
+<div class="geo-disclosure-body">
+<p>Readable in parts. The Summary's "What changes for the editor" table, the Minimal loop paragraph, and the Path to editors tab (the walkthrough, the skill reports, the weekly routine) were written for me and I read them whole; the Glossary is good and should be linked from every starred word, not parked at the end. I gave up on Features ranked (73 rows of engineering verdicts), Debt and bugs, and most of Your questions: Pricing, Scaling and Per-tag judging are token tables. Human judgement's 13-tag table I would keep, with the "Gate statistics" column cut. The "[figure]" of the loop was missing from what I got. The Editor's debate tab is still empty.</p>
+</div>
+</details>
+<details class="geo-disclosure">
+<summary><span>Answers to the five questions</span><span class="geo-disclosure-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M1 5L8 12L15 5" stroke="currentColor" stroke-linecap="round"/></svg></span></summary>
+<div class="geo-disclosure-body">
+<ol>
+<li><strong>Who runs the commands, and whose subscription.</strong> You do, on your own laptop, in Claude Code with your own Claude subscription (decision D11). The usage allowance is shared with your other Claude work; when it runs out, the skill says so and continues where it stopped once the allowance is back. The engineer sets the system up and fixes what breaks; they do not run the weekly commands.</li>
+<li><strong>What the mirror shows while a row waits.</strong> The mirror's Agent tags column shows only the tags the agent is sure about. A tag that is waiting for you is not written there; it is counted in Agent notes ("1 waits for an editor") and sits in your queue. Once you decide, your answer wins and the next run writes it. The team sees the agent's confident tags before you have reviewed them; that is intended, and the column is labelled as the agent's.</li>
+<li><strong>Undecided rows.</strong> They stay in your queue for as long as you leave them. The next run adds rows only for claims that are new or whose text changed, or whose answer changed because a rule changed; it does not top the queue up to a number. There is no cap (decision D18), so the queue is sorted by confidence and you filter it.</li>
+<li><strong>A failed safety check.</strong> Yes: the report will hand you one sentence to paste into Editor wording, written from the claim the check named, with the claim quoted. You may use it, edit it, or reject the change. This is added to the design.</li>
+<li><strong>Lessons waiting side by side.</strong> Yes: the view shows Lesson, Current text, Proposed text and Status with wrapping on, so you read both texts in place and open the row only to approve or to write your own wording. Added to the design.</li>
+</ol>
+</div>
+</details>
+<details class="geo-disclosure">
+<summary><span>Round 2: the acceptance statement, continued</span><span class="geo-disclosure-chevron" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M1 5L8 12L15 5" stroke="currentColor" stroke-linecap="round"/></svg></span></summary>
+<div class="geo-disclosure-body">
+<p class="small">The first paragraph is under Where it ended on the Overview page; [sitting] stands for a length of time in the original.</p>
+<p>Yes, I would start the loop after it, on Context-dependent alone, and I would type the commands myself on my own laptop. The declined must, ED-1, I can live with as wording: "as many rows as fit one sitting, lowest confidence first; the rest waits and nothing is lost" is what my [sitting] needs, and no top-up means the queue only grows with new claims. Two things keep it from being a trap: the first real run must be Context-dependent only, so the queue is tens of rows and not the 330 to 820 the report itself counts for a full pass; and the status report must stop saying "decide the N rows" once N is more than a sitting (ED-13). I would also like the stages back as a list under the picture, so the order the product owner asked for is readable without the figure (ED-14), and step 7's link fixed (ED-15). None of the three stops the walkthrough.</p>
+<p>What does hold up the real loop is the open item the report itself names: whether the Geo-to-Notion refresh keeps the two added columns. That is the product owner's to settle before the first real write, not mine, but I will not decide rows on a table that may lose them.</p>
+</div>
+</details>
+</div>
+
+<aside class="terms" data-strip></aside>
+</section>

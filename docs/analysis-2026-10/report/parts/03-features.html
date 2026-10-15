@@ -1,0 +1,189 @@
+<!-- ============================== 2 FEATURES RANKED ============================== -->
+<section id="features" role="tabpanel" aria-labelledby="tab-features" hidden>
+<h2>Features ranked</h2>
+
+<div class="plain">
+<p class="geo-eyebrow plain-label">In short</p>
+<p>All {{count:features.total}} features of the <dfn data-t="mvp-trial">MVP</dfn>, ranked 5 (the loop cannot work without it) to 1 (it can go). What is ranked 5, the loop and its safety checks, stays; what is ranked 1, calculated Notion columns, trial scaffolding and run history, goes.</p>
+</div>
+
+<div class="sub" id="features-overview" data-title="Overview">
+<h3>Rank by verdict</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>Features per verdict and rank</strong> · every feature with its reason: <a href="#features-ranking">Ranking (Technical)</a></caption>
+<thead><tr><th>Rank</th><th class="num"><span class="mark mark-yes">Keep</span></th><th class="num"><span class="mark mark-part">Simplify</span></th><th class="num"><span class="mark mark-no">Cut</span></th><th class="num"><span class="mark">Later</span></th><th class="num"><span class="mark mark-yes">Add</span></th></tr></thead>
+<tbody>
+<tr><td>5</td><td class="num">{{count:features.matrix.r5keep}}</td><td class="num">{{count:features.matrix.r5simplify}}</td><td class="num">{{count:features.matrix.r5cut}}</td><td class="num">{{count:features.matrix.r5later}}</td><td class="num">{{count:features.matrix.r5add}}</td></tr>
+<tr><td>4</td><td class="num">{{count:features.matrix.r4keep}}</td><td class="num">{{count:features.matrix.r4simplify}}</td><td class="num">{{count:features.matrix.r4cut}}</td><td class="num">{{count:features.matrix.r4later}}</td><td class="num">{{count:features.matrix.r4add}}</td></tr>
+<tr><td>3</td><td class="num">{{count:features.matrix.r3keep}}</td><td class="num">{{count:features.matrix.r3simplify}}</td><td class="num">{{count:features.matrix.r3cut}}</td><td class="num">{{count:features.matrix.r3later}}</td><td class="num">{{count:features.matrix.r3add}}</td></tr>
+<tr><td>2</td><td class="num">{{count:features.matrix.r2keep}}</td><td class="num">{{count:features.matrix.r2simplify}}</td><td class="num">{{count:features.matrix.r2cut}}</td><td class="num">{{count:features.matrix.r2later}}</td><td class="num">{{count:features.matrix.r2add}}</td></tr>
+<tr><td>1</td><td class="num">{{count:features.matrix.r1keep}}</td><td class="num">{{count:features.matrix.r1simplify}}</td><td class="num">{{count:features.matrix.r1cut}}</td><td class="num">{{count:features.matrix.r1later}}</td><td class="num">{{count:features.matrix.r1add}}</td></tr>
+<tr><td><strong>All</strong></td><td class="num"><strong>{{count:features.keep}}</strong></td><td class="num"><strong>{{count:features.simplify}}</strong></td><td class="num"><strong>{{count:features.cut}}</strong></td><td class="num"><strong>{{count:features.later}}</strong></td><td class="num"><strong>{{count:features.add}}</strong></td></tr>
+</tbody>
+</table></div>
+
+<h3><span class="mark mark-no">Cut</span> {{count:features.cut}} features</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<thead><tr><th>What goes</th><th>Instead</th></tr></thead>
+<tbody>
+<tr><td>{{count:notion.formulas}} <dfn data-t="notion-words">formulas</dfn> and {{count:notion.rollups}} rollups</td><td>Plain columns; the <dfn data-t="claim">claim</dfn> text is the row's title</td></tr>
+<tr><td><dfn data-t="queue">Queue</dfn> extras and the weekly cap</td><td>No cap; rows sorted by <dfn data-t="confidence">confidence</dfn></td></tr>
+<tr><td>Run history in Notion</td><td>Local run files and one summary line</td></tr>
+<tr><td>Steps with no job left, such as arming a <dfn data-t="plan">plan</dfn></td><td>Nothing: the <dfn data-t="gate">gate</dfn> already does the work</td></tr>
+<tr><td>Trial and demo scaffolding</td><td>One setup script for the real <dfn data-t="table">tables</dfn></td></tr>
+</tbody>
+</table></div>
+
+<h3><span class="mark mark-part">Simplify</span> {{count:features.simplify}} features</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<thead><tr><th>Today</th><th>Minimal version</th></tr></thead>
+<tbody>
+<tr><td>Queue: {{count:notion.queueColumns}} columns, {{count:notion.views}} views</td><td>{{count:notion.minimalQueueColumns}} columns, {{count:notion.minimalViews}} views</td></tr>
+<tr><td>Three runs and a <dfn data-t="majority-vote">majority vote</dfn> on every answer</td><td>One run, a second only when unsure (<dfn data-t="adaptive-runs">adaptive runs</dfn>)</td></tr>
+<tr><td><dfn data-t="cache">Saved answers</dfn> thrown away after any <dfn data-t="rule">rule</dfn> change</td><td>Kept per <dfn data-t="cache-group">cache group</dfn></td></tr>
+<tr><td>A status word per claim on the claims table</td><td><dfn data-t="agent-columns">Agent notes</dfn> in two short lines</td></tr>
+<tr><td>Heavy safety plumbing</td><td>The same protection, smaller</td></tr>
+</tbody>
+</table></div>
+
+<h3><span class="mark">Later</span> {{count:features.later}} features</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<thead><tr><th>Feature</th><th>Why later</th></tr></thead>
+<tbody>
+<tr><td>Gate statistics, extra re-runs, a sample-size label</td><td>Kept in <dfn data-t="simple-strict-gate">the strict gate</dfn> until a <dfn data-t="tag">tag</dfn> has {{count:gate.strictPositives}} decided examples</td></tr>
+<tr><td>Fingerprints that match the research code</td><td>A fresh start does not need them</td></tr>
+</tbody>
+</table></div>
+<h3><span class="mark mark-yes">Add</span> {{count:features.add}} features</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<thead><tr><th>Feature</th><th>What it does</th></tr></thead>
+<tbody>
+<tr><td>Drafting first rules</td><td>For tags that have none, one tag at a time</td></tr>
+<tr><td>A <dfn data-t="lesson">lesson</dfn> must fix its own claims</td><td>Or the gate refuses it</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="features-ranking" data-title="Ranking" data-layer="tech">
+<h3>All {{count:features.total}} features, ranked</h3>
+<p class="small">Sorted by rank (5 = the loop cannot work without it, 1 = it can go), then in the order the loop runs them. Key: <dfn data-t="codes">Dn</dfn> is a decision of the <dfn data-t="roles">product owner</dfn> (Summary, Decisions).</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:36%"><col style="width:12%"><col style="width:52%"></colgroup>
+<thead><tr><th>Feature</th><th>Verdict</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td colspan="3"><strong>Rank 5: the loop cannot work without it</strong></td></tr>
+<tr><td><dfn data-t="judge">Judge</dfn> runner: batched model <dfn data-t="call">calls</dfn>, checked replies, one retry, resume</td><td><span class="mark mark-yes">Keep</span></td><td>Core.</td></tr>
+<tr><td><dfn data-t="usage-window">Usage-window</dfn> stop and resume</td><td><span class="mark mark-yes">Keep</span></td><td>Fix the pattern: a passing 429 or "overloaded" error ends the whole run.</td></tr>
+<tr><td>Queue rows, one per claim and tag</td><td><span class="mark mark-part">Simplify</span></td><td>{{count:notion.queueColumns}} columns to {{count:notion.minimalQueueColumns}}.</td></tr>
+<tr><td>Plans as the only write path</td><td><span class="mark mark-yes">Keep</span></td><td>Reviewable, resumable writes (<dfn data-t="hard-rules">hard rule</dfn> 1). Core.</td></tr>
+<tr><td><dfn data-t="allowlist">Allowlist</dfn></td><td><span class="mark mark-yes">Keep</span></td><td>The only thing holding a real table to two columns; rewrite for the new tables and the <dfn data-t="mirror">mirror</dfn>.</td></tr>
+<tr><td><dfn data-t="read-back">Read-back</dfn> and verify</td><td><span class="mark mark-yes">Keep</span></td><td>One <dfn data-t="filtered-pull">filtered pull</dfn> per write.</td></tr>
+<tr><td>Never-twice creates, retry by key</td><td><span class="mark mark-yes">Keep</span></td><td>Needed at scale.</td></tr>
+<tr><td>Protected ids and <dfn data-t="probe">probe</dfn></td><td><span class="mark mark-yes">Keep</span></td><td><dfn data-t="integration-token">The token</dfn> cannot reach the <dfn data-t="protected-database">protected tables</dfn>. Three classes now: protected, mirror, configured.</td></tr>
+<tr><td><dfn data-t="pause">Pause</dfn>, a file and a Notion switch</td><td><span class="mark mark-yes">Keep</span></td><td>Core.</td></tr>
+<tr><td><dfn data-t="pull">Pull</dfn>: schema, rows, id map</td><td><span class="mark mark-yes">Keep</span></td><td>Add the mirror list, filtered columns and a limit on kept pulls.</td></tr>
+<tr><td><dfn data-t="drift">Drift</dfn> check against the <dfn data-t="rubric">rubric</dfn> file</td><td><span class="mark mark-yes">Keep</span></td><td>Needed for the <dfn data-t="swap">swap</dfn>; enforced only for tags that have rules (D23).</td></tr>
+<tr><td><dfn data-t="distill">Distill</dfn> groups and the <dfn data-t="models">Opus</dfn> call</td><td><span class="mark mark-yes">Keep</span></td><td>Group by tag and cited rule.</td></tr>
+<tr><td>Cases sync: the <dfn data-t="regression-case">regression cases</dfn></td><td><span class="mark mark-yes">Keep</span></td><td>As a library and a local file, no Notion writes.</td></tr>
+<tr><td>Draft-rules mode (new)</td><td><span class="mark mark-yes">Add</span></td><td>D7 as corrected: the {{count:tags.textToDraft}} <dfn data-t="tag-kinds">text tags</dfn> without rules, one Opus call per tag, one tag per run.</td></tr>
+<tr><td><dfn data-t="candidate">Candidate</dfn> build</td><td><span class="mark mark-yes">Keep</span></td><td>Core.</td></tr>
+<tr><td><dfn data-t="canary">Canary</dfn> condition</td><td><span class="mark mark-yes">Keep</span></td><td>For the changed tag only.</td></tr>
+<tr><td>No decided claim newly fails</td><td><span class="mark mark-yes">Keep</span></td><td>For the changed tag only.</td></tr>
+<tr><td>Supporting claims come out as decided (new)</td><td><span class="mark mark-yes">Add</span></td><td>Replaces the statistical target test in the simple gate.</td></tr>
+<tr><td>Finalize: Notion first, then files</td><td><span class="mark mark-yes">Keep</span></td><td>Core.</td></tr>
+<tr><td>Status: preflight and report</td><td><span class="mark mark-yes">Keep</span></td><td>Drop the Stage counts.</td></tr>
+<tr><td colspan="3"><strong>Rank 4</strong></td></tr>
+<tr><td>Cache keyed by the whole rubric and the <dfn data-t="cli">CLI</dfn> version</td><td><span class="mark mark-part">Simplify</span></td><td>Any lesson or CLI update re-judges everything. A <dfn data-t="cache-key">cache key</dfn> per cache group; record the CLI version instead.</td></tr>
+<tr><td>{{count:judge.batchSize}} claims and all tags per call</td><td><span class="mark mark-yes">Keep</span></td><td>One shared <dfn data-t="prompt">prompt</dfn> per batch. For the <dfn data-t="text-pass">text pass</dfn>; group claims by the tags they still need.</td></tr>
+<tr><td>Tags decided in code</td><td><span class="mark mark-yes">Keep</span></td><td>Answers without <dfn data-t="tokens">tokens</dfn>. Extend to <dfn data-t="fetch-excerpt">fetch</dfn> results: Source inaccessible is decided in code from the fetch result; the model's <dfn data-t="source-pass">source pass</dfn> judges Improperly sourced and Factually challenged.</td></tr>
+<tr><td>Notion contract</td><td><span class="mark mark-part">Simplify</span></td><td>Shrink to the new columns.</td></tr>
+<tr><td>Restore the <dfn data-t="rulebook">rulebook</dfn> from the file</td><td><span class="mark mark-yes">Keep</span></td><td>Behind a person's confirmation (<a href="#debt-permissions">Permissions</a>).</td></tr>
+<tr><td>Duplicate-lesson and copied-text checks</td><td><span class="mark mark-yes">Keep</span></td><td>Cheap.</td></tr>
+<tr><td>No <dfn data-t="apply">apply</dfn> on unjudged or human-only tags</td><td><span class="mark mark-yes">Keep</span></td><td>Free.</td></tr>
+<tr><td><dfn data-t="rollback">Rollback</dfn></td><td><span class="mark mark-yes">Keep</span></td><td>One editor needs an undo.</td></tr>
+<tr><td><dfn data-t="follow-up">Follow-up</dfn>: Fixed or Still wrong</td><td><span class="mark mark-yes">Keep</span></td><td>Reads the gate's saved answers; runs by itself right after a <dfn data-t="pass-hold-fail">PASS</dfn>.</td></tr>
+<tr><td>Agent settings ({{count:notion.settingsColumns}} columns)</td><td><span class="mark mark-part">Simplify</span></td><td>{{count:notion.minimalSettingsColumns}} columns.</td></tr>
+<tr><td><dfn data-t="profile">Profiles</dfn>: a root folder per copy</td><td><span class="mark mark-yes">Keep</span></td><td>The <dfn data-t="walkthrough">walkthrough</dfn> needs one per <dfn data-t="demo-page">practice page</dfn>; the sandbox script retires.</td></tr>
+<tr><td>Probe</td><td><span class="mark mark-yes">Keep</span></td><td>Adapt to the three classes.</td></tr>
+<tr><td><dfn data-t="guard-hook">Guard hook</dfn></td><td><span class="mark mark-part">Simplify</span></td><td>The session cannot write Notion through the <dfn data-t="connector">connector</dfn>. Deny every connector page write.</td></tr>
+<tr><td>Permission settings</td><td><span class="mark mark-yes">Keep</span></td><td>Fix them: the connector prefix is wrong, and wildcards let the model unpause and roll back.</td></tr>
+<tr><td colspan="3"><strong>Rank 3</strong></td></tr>
+<tr><td>Three runs and a majority per answer</td><td><span class="mark mark-part">Simplify</span></td><td>Most answers are a confident "does not apply". Adaptive runs instead (D13, narrowed by D19).</td></tr>
+<tr><td>Agent confidence</td><td><span class="mark mark-yes">Keep</span></td><td>A number on the queue row; the views sort by it.</td></tr>
+<tr><td><dfn data-t="gate-evidence">Gate evidence</dfn> ({{count:code.gateEvidenceLines}} lines)</td><td><span class="mark mark-part">Simplify</span></td><td>Three of the columns it checks are gone: about {{count:code.gateEvidenceTarget}} lines.</td></tr>
+<tr><td><dfn data-t="promote-lock">Promote lock</dfn> and in-flight record</td><td><span class="mark mark-part">Simplify</span></td><td>One <dfn data-t="promote">promote</dfn> at a time. Two files for one state: merge them.</td></tr>
+<tr><td>Abort</td><td><span class="mark mark-yes">Keep</span></td><td>Merged with the lock.</td></tr>
+<tr><td colspan="3"><strong>Rank 2</strong></td></tr>
+<tr><td>Counterpart-pair check</td><td><span class="mark mark-yes">Keep</span></td><td>Idle (no <dfn data-t="issue-tag">Issue tags</dfn> are paired) and free.</td></tr>
+<tr><td>Smoke mode: cheap model, one run</td><td><span class="mark mark-part">Simplify</span></td><td>Keep it in the judge and the model check; remove it from promote and eval (two bugs).</td></tr>
+<tr><td>Readiness on Claims</td><td><span class="mark mark-part">Simplify</span></td><td>No status word: Agent notes is two short lines.</td></tr>
+<tr><td>Weekly cap and its counter file</td><td><span class="mark mark-no">Cut</span></td><td>D18: no cap; the queue is sorted by confidence.</td></tr>
+<tr><td>Agent proposal ({{count:editor.proposalValues}} values)</td><td><span class="mark mark-part">Simplify</span></td><td>Applies, Does not apply, <dfn data-t="cannot-tell">Can't tell</dfn>; <dfn data-t="queue-fields">Tag outcome</dfn> keeps the first two. Agent reason says whether Can't tell means "ask an editor" or "cannot tell".</td></tr>
+<tr><td>Seeded outcomes in the queue</td><td><span class="mark mark-no">Cut</span></td><td>They go to local test cases and the draft-rules input.</td></tr>
+<tr><td>"Rule changed" detection</td><td><span class="mark mark-no">Cut</span></td><td>The proposal updates itself; the <dfn data-t="edition">Rulebook edition</dfn> column stays.</td></tr>
+<tr><td><dfn data-t="plan-arming">Plan arming</dfn> before apply</td><td><span class="mark mark-no">Cut</span></td><td>The connector write path is gone.</td></tr>
+<tr><td><dfn data-t="trust-breaker">Trust breaker</dfn>: pause on a changed <dfn data-t="editor-fields">editor field</dfn></td><td><span class="mark mark-part">Simplify</span></td><td>Warn only: with one editor it fires on their own clicks.</td></tr>
+<tr><td>Distill thresholds with a rule-owner route</td><td><span class="mark mark-part">Simplify</span></td><td>One threshold, {{count:distill.minClaims}} distinct claims.</td></tr>
+<tr><td>Second distill plan and the Lesson relation</td><td><span class="mark mark-no">Cut</span></td><td>A <dfn data-t="supporting-rows">Supporting rows</dfn> text column instead.</td></tr>
+<tr><td><dfn data-t="bootstrap">Bootstrap</dfn> intervals, tolerance, ungated <dfn data-t="flipped-case">flips</dfn></td><td><span class="mark">Later</span></td><td>Behind <code>--strict</code>: samples are tiny, and it needs {{count:judge.runsToday}} runs per side.</td></tr>
+<tr><td>Reconfirmation: extra runs per flipped case</td><td><span class="mark">Later</span></td><td>Gates cost ${{count:trial.costGate}} of the trial's ${{count:trial.costTotal}} at <dfn data-t="list-price">list price</dfn>. A {{count:gate.rejudgeRuns}}-run re-read stays in the default gate (D20).</td></tr>
+<tr><td>Follow-up regression over other rows</td><td><span class="mark mark-no">Cut</span></td><td>The gate already checked them.</td></tr>
+<tr><td>Run cards and the Runs table</td><td><span class="mark mark-no">Cut</span></td><td>Local cards, the Last run summary and the Safety check result instead.</td></tr>
+<tr><td>Views ({{count:notion.views}})</td><td><span class="mark mark-part">Simplify</span></td><td>{{count:notion.minimalViews}} views.</td></tr>
+<tr><td>Column descriptions ({{count:notion.columnComments}})</td><td><span class="mark mark-part">Simplify</span></td><td>Short ones on about {{count:notion.describedColumns}} columns.</td></tr>
+<tr><td><dfn data-t="python-hashes">Python-compatible hashes</dfn></td><td><span class="mark">Later</span></td><td>Optional: a fresh rubric does not need them.</td></tr>
+<tr><td colspan="3"><strong>Rank 1: it can go</strong></td></tr>
+<tr><td>Priority tiers</td><td><span class="mark mark-no">Cut</span></td><td>Sort by how unsure the agent is (D4, D18).</td></tr>
+<tr><td>Why in queue ({{count:editor.whyInQueueValues}} values)</td><td><span class="mark mark-no">Cut</span></td><td>Vocabulary load.</td></tr>
+<tr><td>Agent full note</td><td><span class="mark mark-no">Cut</span></td><td>Stays in local files.</td></tr>
+<tr><td><dfn data-t="connector-batch">Connector batch</dfn> files</td><td><span class="mark mark-no">Cut</span></td><td>The pull needs the token anyway.</td></tr>
+<tr><td>"In regression suite" column</td><td><span class="mark mark-no">Cut</span></td><td>An extra write every run.</td></tr>
+<tr><td>Planted bad lesson</td><td><span class="mark mark-no">Cut</span></td><td>A demo crutch.</td></tr>
+<tr><td>"Small sample" flag</td><td><span class="mark">Later</span></td><td>Strict only; the card says {{count:gate.cardConstant}}, the gate uses {{count:gate.minPositives}}.</td></tr>
+<tr><td>Seed builder ({{count:code.seedBuildLines}} lines)</td><td><span class="mark mark-no">Cut</span></td><td>Keep its one link parser in the library.</td></tr>
+<tr><td>Seed script, three phases</td><td><span class="mark mark-no">Cut</span></td><td>A setup script instead: the mirror is real now.</td></tr>
+<tr><td>Rubric init</td><td><span class="mark mark-no">Cut</span></td><td>Setup builds the rubric from the copy.</td></tr>
+<tr><td>Snapshot and transcript check</td><td><span class="mark mark-no">Cut</span></td><td>Report-only; the transcript check stays for the <dfn data-t="headless-output-style">headless</dfn> report test.</td></tr>
+<tr><td>Fallback subagents</td><td><span class="mark mark-no">Cut</span></td><td>Wired to nothing, and blocked by a deny rule.</td></tr>
+<tr><td>Formulas: Effective outcome, Direction, Stage, Applied tag, Rejected tag</td><td><span class="mark mark-no">Cut</span></td><td>Stage alone has {{count:editor.stageValues}} values to learn.</td></tr>
+<tr><td>Rollups</td><td><span class="mark mark-no">Cut</span></td><td>The tag is a select; the claim text is the title.</td></tr>
+<tr><td>Owner action formula</td><td><span class="mark mark-no">Cut</span></td><td>A view on Status does it.</td></tr>
+<tr><td>Evidence snapshots and the MVP report build</td><td><span class="mark mark-no">Cut</span></td><td>Archive; this report reuses the theme.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="features-tokens" data-title="Token sinks" data-layer="tech">
+<h3>Token sinks</h3>
+<p>Five features spend tokens on a certainty the data cannot use yet. Figures are for the U.S. Politics mirror ({{count:scale.usClaims}} claims) at the trial's rates; dollars are list-price equivalents. Key: Dn is a decision of the product owner.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:20%"><col style="width:27%"><col style="width:30%"><col style="width:23%"></colgroup>
+<thead><tr><th>Feature</th><th>Today</th><th>Minimal version</th><th>Note</th></tr></thead>
+<tbody>
+<tr><td>Three runs for every answer</td><td>A full pass: {{count:pass.calls3}} calls, ${{count:pass.usd3}}</td><td>Adaptive: {{count:pass.callsAdaptive}} calls, ${{count:pass.usdAdaptive}}; one run: {{count:pass.calls1}} calls, ${{count:pass.usd1}}</td><td>Holds only with the narrow rule of D19: a looser one would re-run {{count:measured.claimsTriggering}} of claims.</td></tr>
+<tr><td>Whole-rubric cache key</td><td>A lesson or a CLI update re-judges the mirror: {{count:pass.calls1}} to {{count:pass.calls3}} calls</td><td>A Context-dependent lesson: {{count:cache.g1Calls}} calls. A CLI update: a canary check of about {{count:cache.canaryCheckCalls}} calls.</td><td>Per-group caching cannot see effects across groups; the strict gate can.</td></tr>
+<tr><td>Statistics and reconfirmation in every gate</td><td>Trial gates: ${{count:trial.costGate}} of ${{count:trial.costTotal}}. A strict gate: {{count:gate.strictCalls}} calls.</td><td>Simple gate: {{count:gate.simpleCalls}} calls plus {{count:gate.rejudgeCalls}} to re-read flipped claims (D20).</td><td>Strict returns once a tag has {{count:gate.strictPositives}} <dfn data-t="decided-positives">decided positives</dfn>.</td></tr>
+<tr><td>Follow-up regression</td><td>Re-judges the other decided rows on the tag</td><td>Removed: follow-up reads the gate's saved answers.</td><td>The gate already checked those rows.</td></tr>
+<tr><td>Source pass (new)</td><td>None</td><td>Full mirror: about {{count:sources.calls}} calls, {{count:sources.input}} input, {{count:sources.inputFresh}} uncached.</td><td>Excerpts of the relevant paragraphs, about {{count:sources.relevantTokens}} tokens, halve the input.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="features-scale" data-title="Scale blockers" data-layer="tech">
+<h3>Scale blockers</h3>
+<p>Five things stop the MVP at thousands of claims: three in the code, two limits to design around. Key: Dn is a decision of the product owner.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:20%"><col style="width:42%"><col style="width:38%"></colgroup>
+<thead><tr><th>Blocker</th><th>What happens at scale</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>One claims table, hard-coded</td><td>The real mirror does not fit the trial's tables, names, file and key.</td><td>A list of mirrors in the config.</td></tr>
+<tr><td>Whole-rubric cache key</td><td>Any rule change or CLI update re-judges all {{count:scale.usClaims}} claims: {{count:pass.calls1}} to {{count:pass.calls3}} calls.</td><td>A key per cache group, without the CLI version.</td></tr>
+<tr><td>Usage-window pattern</td><td>A passing 429 or "overloaded" error stops a long run as if the window had run out.</td><td>Retry after a short pause, then a longer one; stop after {{count:claude.transientStops}} failures in a row.</td></tr>
+<tr><td>Gate case growth</td><td>At {{count:scale.decisions2000}} decisions: about {{count:scale.gateCases2000}} cases and {{count:scale.gateCalls2000}} calls per candidate run, {{count:scale.gateStrictCalls2000}} strict.</td><td>Every case on the target tag plus at most {{count:scale.gateCapPerTag}} per other tag in its group: about {{count:scale.gateCapCalls}} calls.</td></tr>
+<tr><td>Editor inflow</td><td>The first full pass would queue {{count:scale.firstPassRows}} rows.</td><td>No cap (D18): sorted by confidence, filtered in Notion; tags go live one at a time.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<aside class="terms" data-strip></aside>
+</section>

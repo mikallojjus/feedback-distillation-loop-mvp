@@ -1,0 +1,205 @@
+<!-- ============================== 6 PATH TO EDITORS ============================== -->
+<section id="path" role="tabpanel" aria-labelledby="tab-path" hidden>
+<h2>Path to editors</h2>
+
+<div class="plain">
+<p class="geo-eyebrow plain-label">In short</p>
+<ul>
+<li><strong><dfn data-t="stage">Stages</dfn>, not dates:</strong> housekeeping; the <dfn data-t="rulebook">rulebook</dfn> copy and one <dfn data-t="tag">tag</dfn> on {{count:path.firstClaims}} real <dfn data-t="claim">claims</dfn>; the <dfn data-t="walkthrough">walkthrough</dfn>; then the other tags, one at a time.</li>
+<li>The editor practises before deciding any real row; the first rows wait in the <dfn data-t="queue">queue</dfn>.</li>
+<li>Every <dfn data-t="skill">skill</dfn> report: one sentence, one small <dfn data-t="table">table</dfn>, one "Next:" line.</li>
+<li>{{count:confirm.items}} checks are still open (<a href="#path-confirm">Decided and open</a>).</li>
+</ul>
+</div>
+
+<div class="sub" id="path-plan" data-title="Stages">
+<h3>The plan in stages</h3>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/stage-plan-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">Each column is a stage, each row a person or the machine; S, M and L show the engineer's <dfn data-t="effort">effort</dfn>.</figcaption>
+</figure>
+<ul>
+<li><strong>Stage 0, housekeeping and two checks.</strong> The engineer limits <dfn data-t="integration-token">the access token</dfn>, makes a read-only <dfn data-t="dry-run-spike">dry run</dfn> and tests the Geo source lookup, after you decide to cut the token's reach; nothing real changes. Done when the new token cannot open the real tables and the repository is pushed.</li>
+<li><strong>Code changes, after your go-ahead.</strong> The engineer makes <a href="#versions-move">the {{count:plan.changeSteps}} ordered changes (Technical)</a>, each with its tests. Done when the tests pass and the loop runs end to end with a stand-in model.</li>
+<li><strong>Stage 1, the first real claims.</strong> The engineer builds the rulebook copy and runs Context-dependent on {{count:path.firstClaims}} real claims; the machine queues what the <dfn data-t="judge">judge</dfn> is unsure about, and the editor decides nothing yet. Done when every write checks out and only Context-dependent rows wait in the queue.</li>
+<li><strong>Stage 2, the walkthrough.</strong> The editor does the walkthrough on a <dfn data-t="demo-page">practice page</dfn> and nothing else; the engineer builds the drafting of first <dfn data-t="rule">rules</dfn>, one tag at a time. Done when the walkthrough is done and drafting passes its tests.</li>
+<li><strong>Stage 3, the first real rows.</strong> After the walkthrough, the editor decides the first real rows and approves rules one tag at a time, in the editor's order; the engineer tests the source pass and fixes what breaks. Done when each tag has passed its <dfn data-t="gate">safety check</dfn> and the source test has reported.</li>
+<li><strong>Later.</strong> The engineer adds the <dfn data-t="simple-strict-gate">strict gate</dfn>, <dfn data-t="world-affairs">World affairs</dfn>, the duplicate search, the swap to the real <dfn data-t="taxonomy">taxonomy</dfn> and scheduled runs, one at a time. Done when each one's trigger occurs, not before.</li>
+</ul>
+</div>
+
+<div class="sub" id="path-walkthrough" data-title="The walkthrough">
+<h3>The walkthrough</h3>
+<p>One command builds a fresh <dfn data-t="demo-page">practice page</dfn> under a page you name, with {{count:demo.claims}} real claims; nothing real changes. It opens with: "You type four commands yourself (status, tag, distill and promote); the follow-up runs by itself after a <dfn data-t="pass-hold-fail">PASS</dfn>, and the engineer sets things up and fixes what breaks." Below, "you" is the editor.</p>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/walkthrough-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">The seven steps: you decide in Notion, the agent works in Claude Code. Step 6, the <dfn data-t="gate">safety check</dfn>, is run by <dfn data-t="promote">promote</dfn>; step 7, the <dfn data-t="follow-up">follow-up</dfn>, runs by itself after a <dfn data-t="pass-hold-fail">PASS</dfn>.</figcaption>
+</figure>
+<h4>The story</h4>
+<p>Rule 4 of Context-dependent asks whether a reader can tell what each "the ..." points at; editors read more loosely.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:50%"><col style="width:22%"><col style="width:28%"></colgroup>
+<thead><tr><th>Claim</th><th>Rule 4's test</th><th>The editor</th></tr></thead>
+<tbody>
+<tr><td>The focus on the COVID-19 vaccine ignored the larger…</td><td>Tag: which problem?</td><td>No tag: a general remark</td></tr>
+<tr><td>Georgia's gubernatorial debate should be moderated…</td><td>Tag: which debate?</td><td>No tag: reads well</td></tr>
+<tr><td>Melania Trump should not host her initiative's…</td><td>Tag: which initiative?</td><td>Tag: "What's the initiative?"</td></tr>
+</tbody>
+</table></div>
+<p>You decide the first two, the agent drafts a clearer rule 4 (a <dfn data-t="lesson">lesson</dfn>) and you approve it; the third is one of {{count:demo.decided}} <dfn data-t="regression-case">earlier decisions</dfn>. These two rows were picked for the demo; for real, a row appears only when the agent is unsure.</p>
+<h4>Step 3, as the editor sees it</h4>
+<dl class="plan">
+<dt>Goal of the step</dt><dd>Record your decision on both rows, and say that rule 4, not the agent, is the problem.</dd>
+<dt>Existing status</dt><dd>Both rows show Applies, citing rule 4.</dd>
+<dt>Doing the work</dt><dd>In <dfn data-t="four-views">Your queue</dfn>, just below, fill in three columns on each row.</dd>
+<dt>Explaining the outputs</dt><dd>Your two rows now carry your decision; nothing else changes.</dd>
+</dl>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock packages">
+<caption><strong>Tag decisions</strong> · mock-up with example values</caption>
+<colgroup><col style="width:30%"><col style="width:17%"><col style="width:15%"><col style="width:38%"></colgroup>
+<thead><tr><th>Claim</th><th>Tag outcome</th><th>Why wrong</th><th>Your reasoning</th></tr></thead>
+<tbody>
+<tr><td>The focus on the COVID-19 vaccine ignored the larger…</td><td>Does not apply</td><td>Rule unclear</td><td>Rule 4 is too strict: "the larger public health problem" is general.</td></tr>
+<tr><td>Georgia's gubernatorial debate should be moderated by…</td><td>Does not apply</td><td>Rule unclear</td><td>Rule 4 is too strict: the claim reads well as it stands.</td></tr>
+</tbody>
+</table></div>
+<p>If the safety check fails, the report proposes one sentence for <dfn data-t="queue-fields">Editor wording</dfn>; Lessons waiting shows both texts side by side. Every step: <a href="#path-steps">The seven steps (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="path-reports" data-title="Skill reports">
+<h3>Skill reports, before and after</h3>
+<div class="two">
+<div>
+<h4>Before: {{count:reports.paragraphsBefore}} paragraphs</h4>
+<div class="geo-card">
+<p class="geo-card-body">"The dry run did not tag anything. I stopped after the judge step."</p>
+<ul class="small">
+<li>Then {{count:reports.beforeMoreParagraphs}} more paragraphs, a {{count:reports.beforeTableRows}}-row table with a run id, {{count:reports.beforeOptions}} options and a question.</li>
+<li>A commentary block that Claude Code adds by itself.</li>
+</ul>
+</div>
+</div>
+<div>
+<h4>After: three parts, nothing else</h4>
+<div class="geo-card">
+<p class="geo-card-body"><strong>1 · What ran.</strong> Demo · tag: the agent read the {{count:demo.claims}} claims and proposed Applies on both of your rows.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact" style="min-width:0">
+<caption><strong>2 · The result</strong></caption>
+<tbody>
+<tr><td>Your rows</td><td>{{count:demo.open}}, both Applies, citing rule 4</td></tr>
+<tr><td>Earlier decisions</td><td>{{count:demo.decided}} of {{count:demo.decided}} agree</td></tr>
+</tbody>
+</table></div>
+<p class="geo-card-body"><strong>3 · Next.</strong> Next: fill in your {{count:demo.open}} rows in Your queue (link).</p>
+</div>
+</div>
+</div>
+<p>No durations, dollars or model-<dfn data-t="call">call</dfn> counts; a "Usage" row only once the share of the <dfn data-t="usage-window">usage window</dfn> is known.</p>
+</div>
+
+<div class="sub" id="path-routine" data-title="The routine">
+<h3>The routine</h3>
+<ul>
+<li><strong>The editor</strong> types status and tag, then decides as many rows as fit one sitting, lowest <dfn data-t="confidence">confidence</dfn> first; the rest waits and nothing is lost; the next run adds rows only for new or changed claims. Then <dfn data-t="distill">distill</dfn> if decisions blame a rule.</li>
+<li><strong>As <dfn data-t="roles">rule owner</dfn></strong>: approve or rewrite in Lessons waiting, then promote.</li>
+<li><strong>The engineer</strong>: setup and repairs only. <strong>The machine</strong>: runs unattended.</li>
+</ul>
+<p>When more rows wait than fit one sitting (a setting, default {{count:editor.sittingRows}} rows), the status and tag reports give the count and their "Next:" line says "start at the top of Your queue (link)", not "decide the N rows". The first real run is Context-dependent only, so the first queue is tens of rows.</p>
+<p>After "<dfn data-t="pause">Paused</dfn>" or "usage limit reached", untick Paused or wait, then repeat the command; it resumes.</p>
+</div>
+
+<div class="sub" id="path-confirm" data-title="Decided and open">
+<h3>Decided on 14 October</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:34%"><col style="width:66%"></colgroup>
+<thead><tr><th>Question</th><th>Answer</th></tr></thead>
+<tbody>
+<tr><td>The <dfn data-t="tag-kinds">duplicate tags</dfn>?</td><td>Never queued until a search exists; "not checked" in <dfn data-t="agent-columns">Agent notes</dfn>; Exact duplicate queued only on an exact text match.</td></tr>
+<tr><td>How many new rows?</td><td>No cap; sorted by confidence; the editor filters.</td></tr>
+<tr><td>When is a claim read again?</td><td>Only after "<dfn data-t="cannot-tell">ask an editor</dfn>" or a confidence between {{count:adaptive.low}} and {{count:adaptive.high}}, for at most {{count:adaptive.capShare}} of claims.</td></tr>
+<tr><td>Chance in the safety check?</td><td>Each <dfn data-t="flipped-case">flipped claim</dfn> is read twice more on each side.</td></tr>
+<tr><td>The two new columns?</td><td>Added once by the setup script, behind a confirm flag.</td></tr>
+<tr><td>Which subscription?</td><td>Max 20x; estimates per usage window after a full run.</td></tr>
+<tr><td>The <dfn data-t="hard-rules">hard rules</dfn>?</td><td>Changed as recommended.</td></tr>
+<tr><td>Where do practice pages go?</td><td>Under a page you name each time.</td></tr>
+</tbody>
+</table></div>
+<p>Checked on 14 October: the Geo API gives each source's article address, one query per source.</p>
+<h3>Still open</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:30%"><col style="width:70%"></colgroup>
+<thead><tr><th>Who</th><th>What, and why</th></tr></thead>
+<tbody>
+<tr><td>You, with the refresh job's owner</td><td>Does the Geo-to-Notion refresh keep added columns and page ids? Needed before the first real write.</td></tr>
+<tr><td>The Geo team</td><td>The official address of the Geo API; needed before the full <dfn data-t="source-pass">source pass</dfn>.</td></tr>
+<tr><td>The engineer</td><td>One calibration of the re-read rule and the safety check's guard on the first {{count:adaptive.calibrationClaims}} real claims.</td></tr>
+</tbody>
+</table></div>
+<p class="small">Every decision, numbered: <a href="#summary-decisions">Summary, Decisions (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="path-guardrails" data-title="Guardrails" data-layer="tech">
+<h3>Guardrails</h3>
+<p>What keeps the real claims, the editor's fields and the live rules safe; what is kept and dropped is on <a href="#versions-safety">Safety checks kept</a>. Key: Dn is a decision of the product owner.</p>
+<ul>
+<li><dfn data-t="allowlist">Allowlist</dfn>: on the <dfn data-t="mirror">mirror</dfn>, updates to Agent tags and Agent notes only, checked in the <dfn data-t="plan">plan</dfn>, at <dfn data-t="apply">apply</dfn>, in the <dfn data-t="guard-hook">guard hook</dfn> and in the <dfn data-t="rest-client">REST client</dfn>.</li>
+<li><dfn data-t="read-back">Read-back</dfn>: a <dfn data-t="filtered-pull">filtered pull</dfn> after every apply; a changed <dfn data-t="editor-fields">editor field</dfn> is reported.</li>
+<li><dfn data-t="drift">Drift</dfn>: the copy is compared with the <dfn data-t="rubric">rubric</dfn> file at every step; edits to tags without rules are adopted (<dfn data-t="codes">D23</dfn>).</li>
+<li>Pause: the Paused checkbox or a PAUSED file stops every command until a person clears it.</li>
+<li>Protected ids: the <dfn data-t="taxonomy">taxonomy</dfn>, Claims to review, <dfn data-t="world-affairs">World affairs</dfn> and the old hub are refused in every plan; the <dfn data-t="probe">probe</dfn> proves the token cannot reach them.</li>
+<li>The guard hook denies every <dfn data-t="connector">connector</dfn> page write; <dfn data-t="gate-evidence">gate evidence</dfn> stops a rule written without a real PASS.</li>
+</ul>
+<p>Unchanged hard rules: no script writes an editor-owned field; nothing is appended to the judge <dfn data-t="prompt">prompt</dfn>; no Notion page is deleted or archived; a check that cannot run is reported, never skipped.</p>
+</div>
+
+<div class="sub" id="path-steps" data-title="The seven steps" data-layer="tech">
+<h3>The seven steps in full</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:5%"><col style="width:24%"><col style="width:43%"><col style="width:28%"></colgroup>
+<thead><tr><th>#</th><th>Where, who</th><th>What happens</th><th>Outcome</th></tr></thead>
+<tbody>
+<tr><td>1</td><td><code>demo status</code></td><td>Checks the demo; nothing changes. Explains an <dfn data-t="edition">edition</dfn>: a date plus a count.</td><td>{{count:demo.open}} rows wait</td></tr>
+<tr><td>2</td><td><code>demo tag</code></td><td>Reads the {{count:demo.claims}} claims; fills the {{count:demo.open}} open rows.</td><td>Both Applies, rule 4</td></tr>
+<tr><td>3</td><td>Notion, Your queue</td><td>Does not apply, Rule unclear, a reasoning naming rule 4.</td><td>Decisions recorded</td></tr>
+<tr><td>4</td><td><code>demo distill</code></td><td>Drafts a clearer rule 4 from the two notes.</td><td>One row, Proposed</td></tr>
+<tr><td>5</td><td>Notion, Lessons waiting</td><td>Both texts side by side; Approved, or Editor wording first.</td><td>Approved</td></tr>
+<tr><td>6</td><td><code>demo promote</code></td><td>{{count:demo.examples}} example claims, {{count:demo.decided}} earlier decisions and the {{count:demo.open}} rows under both versions; flips read twice more.</td><td>PASS: follow-up runs. FAIL: a proposed sentence</td></tr>
+<tr><td>7</td><td>Nothing to type</td><td>Open Tag decisions at the bottom of the page and the Claims table. <code>demo follow-up</code> only repeats a run that stopped early.</td><td>Both rows Fixed</td></tr>
+</tbody>
+</table></div>
+<p><strong>Before the page ships.</strong> The engineer runs {{count:demo.calibrationRuns}} fresh demos end to end (effort M). Accepted when both open rows get Applies citing rule 4 in two runs, every earlier decision and example comes out right, drafting gives one change on rule 4, and two runs PASS; otherwise the Georgia claim is swapped and the runs repeat.</p>
+</div>
+
+<div class="sub" id="path-detail" data-title="Routine and reports in detail" data-layer="tech">
+<h3>The machine's work in one run</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<thead><tr><th>Run</th><th class="num">Model calls</th></tr></thead>
+<tbody>
+<tr><td>Tag run on {{count:week.claims}} new claims, adaptive</td><td class="num">{{count:week.callsAdaptive}}</td></tr>
+<tr><td><dfn data-t="simple-strict-gate">Simple gate</dfn>, and the re-read of flipped claims</td><td class="num">{{count:gate.simpleCalls}} + {{count:gate.rejudgeCalls}}</td></tr>
+<tr><td>Follow-up after a PASS</td><td class="num">none new</td></tr>
+<tr><td>Source pass on the new claims, once live</td><td class="num">about {{count:sources.weeklyCalls}}</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>What the report template keeps and drops</strong></caption>
+<thead><tr><th>Before</th><th>After</th></tr></thead>
+<tbody>
+<tr><td>Several paragraphs</td><td>One sentence: what ran and what came out</td></tr>
+<tr><td>A table with run ids and costs to four decimals</td><td>One table, at most {{count:reports.maxRows}} rows and {{count:reports.maxColumns}} columns</td></tr>
+<tr><td>A commentary block from the <dfn data-t="headless-output-style">output style</dfn></td><td>Gone</td></tr>
+<tr><td>An account of retries and incidents</td><td>A few words in the sentence, only if they changed the result</td></tr>
+<tr><td>Several links, options and questions</td><td>One "Next:" line: one command, or one link and what to do there; with more rows than fit one sitting, "start at the top of Your queue (link)"</td></tr>
+<tr><td>File paths, JSON, durations, dollars, call counts</td><td>Never; they stay in the run record</td></tr>
+</tbody>
+</table></div>
+<p>The commentary comes from Claude Code's output style; <code>SKILL.md</code> gets one paragraph that replaces it while the skill runs. If a headless run still shows commentary, a script prints each report and the skill repeats it. A promote PASS points "Next:" at step 7; a FAIL at Lessons waiting, with the proposed sentence.</p>
+<p class="small">Sources for the Technical pages: the design folder, <code>docs/analysis-2026-10/design</code>; example reports: <code>docs/analysis-2026-10/debate/inputs</code>.</p>
+</div>
+
+<aside class="terms" data-strip></aside>
+</section>

@@ -1,0 +1,88 @@
+<!-- How the editor uses the skill in the real loop, as one inline SVG with two lanes: "The editor, in Notion" on top (accent outlines: a person decides) and "The editor, in Claude Code" below (ink outlines: the agent does the work),
+six numbered steps in a staircase (status, tag, decide rows, distill, approve or reject, promote) with a loop arrow from promote back to tag, and the Paused tick drawn apart with a dashed outline.
+Colours come only from the role tokens (ink, ink-muted, accent, border, surface-raised, surface-sunken), so it follows the light and dark themes. No ids inside.
+Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption in plain words, for example: "Four commands and two Notion actions; everything else the agent does by itself."
+Used on Minimal and optimal. The legend is inside the SVG. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 400" width="100%" role="img" aria-label="How the editor uses the skill in the real loop, in two lanes: in Claude Code the editor types commands, and in Notion the editor decides. Step 1: in Claude Code, type /claim-tagger status to see what is waiting. Step 2: type /claim-tagger tag; the agent reads new claims and unsure tags land in the queue. Step 3: in Notion, decide the rows in Your queue by filling in Tag outcome, Why wrong and Your reasoning. Step 4: type /claim-tagger distill; a rule change is drafted from decisions that blame a rule. Step 5: in Notion, approve or reject the draft in Lessons waiting, or rewrite it in Editor wording. Step 6: type /claim-tagger promote; the gate tests the rule, and on a PASS the rule goes live and follow-up runs by itself. An arrow labelled next run leads from step 6 back to step 2. Drawn apart from the loop, ticking Paused in Agent settings in Notion stops every command at once." style="min-width:760px;font-family:var(--font-sans)">
+<g >
+<rect x="16" y="26" width="928" height="136" rx="10" fill="var(--surface-sunken)"/>
+<rect x="16" y="196" width="928" height="176" rx="10" fill="var(--surface-sunken)"/>
+</g>
+<g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round">
+<path d="M196 264H220"/>
+<path d="M390 206V162"/>
+<path d="M493 152V196"/>
+<path d="M596 206V162"/>
+<path d="M699 152V196"/>
+<path d="M732 322V346H320V332"/>
+</g>
+<g fill="var(--ink)">
+<polygon points="230,264 220,259.5 220,268.5"/>
+<polygon points="390,152 385.5,162 394.5,162"/>
+<polygon points="493,206 488.5,196 497.5,196"/>
+<polygon points="596,152 591.5,162 600.5,162"/>
+<polygon points="699,206 694.5,196 703.5,196"/>
+<polygon points="320,322 315.5,332 324.5,332"/>
+</g>
+<rect x="16" y="206" width="180" height="116" rx="8" stroke="var(--ink)" stroke-width="1.5" fill="var(--surface-raised)"/>
+<circle cx="16" cy="206" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<rect x="230" y="206" width="180" height="116" rx="8" stroke="var(--ink)" stroke-width="1.5" fill="var(--surface-raised)"/>
+<circle cx="230" cy="206" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<rect x="370" y="36" width="180" height="116" rx="8" stroke="var(--accent)" stroke-width="2.5" fill="var(--surface-raised)"/>
+<circle cx="370" cy="36" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<rect x="436" y="206" width="180" height="116" rx="8" stroke="var(--ink)" stroke-width="1.5" fill="var(--surface-raised)"/>
+<circle cx="436" cy="206" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<rect x="576" y="36" width="180" height="116" rx="8" stroke="var(--accent)" stroke-width="2.5" fill="var(--surface-raised)"/>
+<circle cx="576" cy="36" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<rect x="642" y="206" width="180" height="116" rx="8" stroke="var(--ink)" stroke-width="1.5" fill="var(--surface-raised)"/>
+<circle cx="642" cy="206" r="11" stroke="var(--border-control)" stroke-width="1.5" fill="var(--surface-sunken)"/>
+<g fill="var(--surface-raised)">
+<rect x="780" y="36" width="164" height="116" rx="8" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="5 4"/>
+<rect x="16" y="380" width="26" height="16" rx="4" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="230" y="380" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="468" y="380" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="2.5" stroke-dasharray="5 4"/>
+</g>
+<text x="18" y="18" font-size="13.5" font-weight="600" fill="var(--accent)">The editor, in Notion</text>
+<text x="18" y="187" font-size="13.5" font-weight="600" fill="var(--ink)">The editor, in Claude Code</text>
+<g font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">
+<text x="16" y="210.5">1</text>
+<text x="230" y="210.5">2</text>
+<text x="370" y="40.5">3</text>
+<text x="436" y="210.5">4</text>
+<text x="576" y="40.5">5</text>
+<text x="642" y="210.5">6</text>
+</g>
+<g font-size="17" font-weight="600" fill="var(--ink)">
+<text x="28" y="236">/claim-tagger status</text>
+<text x="242" y="236">/claim-tagger tag</text>
+<text x="382" y="66">Decide rows in</text>
+<text x="382" y="87">Your queue</text>
+<text x="448" y="236">/claim-tagger distill</text>
+<text x="588" y="66">Approve or reject in</text>
+<text x="588" y="87">Lessons waiting</text>
+<text x="654" y="236">/claim-tagger promote</text>
+<text x="792" y="66">Tick Paused in</text>
+<text x="792" y="87">Agent settings</text>
+</g>
+<g font-size="13.5" fill="var(--ink-muted)">
+<text x="28" y="258">what is waiting</text>
+<text x="242" y="258">the agent reads new claims;</text>
+<text x="242" y="275">unsure tags land in the queue</text>
+<text x="382" y="109">Tag outcome, Why wrong,</text>
+<text x="382" y="126">Your reasoning</text>
+<text x="448" y="258">a rule change is drafted from</text>
+<text x="448" y="275">decisions that blame a rule</text>
+<text x="588" y="109">or rewrite it in Editor wording</text>
+<text x="654" y="258">the gate tests it; on PASS the</text>
+<text x="654" y="275">rule goes live and follow-up</text>
+<text x="654" y="292">runs by itself</text>
+<text x="792" y="109">stops every command at</text>
+<text x="792" y="126">once</text>
+</g>
+<text x="526" y="338" font-size="14" font-weight="600" fill="var(--ink)" text-anchor="middle">next run</text>
+<g font-size="13.5" fill="var(--ink)">
+<text x="52" y="393">ink outline = the agent writes</text>
+<text x="266" y="393">accent outline = a person decides</text>
+<text x="504" y="393">dashed = apart from the loop</text>
+</g>
+</svg>

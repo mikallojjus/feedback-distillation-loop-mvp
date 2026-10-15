@@ -1,0 +1,132 @@
+<!-- ============================== 8 GLOSSARY ============================== -->
+<!-- Every dt needs at least one dfn with the same slug somewhere in the report, and every dfn needs a dt (build check).
+The Plain page holds the terms used on the Plain pages, the most used first; the Technical page holds the terms used only on Technical pages and the codes. -->
+<section id="glossary" role="tabpanel" aria-labelledby="tab-glossary" hidden>
+<h2>Glossary</h2>
+
+<div class="sub" id="glossary-all" data-title="Main terms">
+<p class="lede">Every term marked with * in the report, in plain words. Each tab also lists the terms it uses at its foot; hover a marked word for its line here.</p>
+
+<h3>Words used across the report</h3>
+<dl class="geo-glossary">
+<dt id="g-adaptive-runs">adaptive runs</dt><dd>Judging each claim once and again only for the answers the judge was unsure about, at most {{count:adaptive.capShare}} of a run's claims, instead of three runs for every answer. Decided on 14 October.</dd>
+<dt id="g-agent-tables">agent's four tables</dt><dd>The agent's own tables on a new Notion page: Tag decisions (the queue), Rule changes (the lessons), the Rulebook copy (the rules) and Agent settings (Paused, the edition, a last-run line).</dd>
+<dt id="g-agent-columns">Agent tags, Agent notes</dt><dd>The two text columns the agent writes on each claim of the real claims table: the tags that apply, and at most two short lines on what waits for an editor and what was not checked.</dd>
+<dt id="g-allowlist">allowlist</dt><dd>The list in code of exactly which columns the agent may write in which table; anything else is refused before it is sent.</dd>
+<dt id="g-cannot-tell">ask an editor, cannot tell</dt><dd>Two of the judge's answers. Ask an editor: the rules do not settle the claim. Cannot tell: it lacks something, such as a source's text. Both show as Can't tell in the queue; Agent reason says which.</dd>
+<dt id="g-cache">cache</dt><dd>Saved judge answers, so a claim whose text and rules have not changed is not judged again. Not the same as prompt caching.</dd>
+<dt id="g-cache-group">cache group</dt><dd>A set of tags judged together, whose saved answers are kept together: Context-dependent alone, the six drafted text tags, or the source tags. A rule change re-judges only its own group.</dd>
+<dt id="g-canary">canary</dt><dd>An example claim with a known answer that every gate checks again. Today's are the rulebook's own examples, which the judge already sees. Editors see them as example claims.</dd>
+<dt id="g-capability">capability</dt><dd>What a tag needs to be decided: the claim text, the source text, a search across all claims, or only code.</dd>
+<dt id="g-claim">claim</dt><dd>One short statement from a Geo debate, such as "Excluding CNN from Air Force One violates the federal court order". The claims the agent tags live in claims tables in Notion.</dd>
+<dt id="g-confidence">confidence</dt><dd>A number from 0 to 1 that the judge gives with each answer: how sure it is. Queue rows are sorted by it, lowest first, and a value strictly between {{count:adaptive.low}} and {{count:adaptive.high}} makes the judge read the claim again.</dd>
+<dt id="g-distill">distill</dt><dd>The step where the agent reads the editor's decisions that blame a rule and drafts a lesson, a proposed new wording of that rule. Command: <code>/claim-tagger distill</code>.</dd>
+<dt id="g-drift">drift</dt><dd>A difference between the rules in Notion and the rubric file, such as a rule edited by hand. For a tag with rules the agent stops until a person resolves it; for a tag without rules the edit is adopted.</dd>
+<dt id="g-dry-run-spike">dry run, spike</dt><dd>Dry run: a run that changes nothing, here a read-only copy of the real claims table. Spike: a small trial that finds out whether an idea works before it is built in full.</dd>
+<dt id="g-effort">effort (S, M, L)</dt><dd>How much work a change is for the engineer: S small, M medium, L large. This report gives effort and order, never durations.</dd>
+<dt id="g-follow-up">follow-up</dt><dd>The step after a rule change goes live: the claims behind it are judged again, and their queue rows show Fixed or Still wrong. It runs by itself right after a PASS; the command only repeats it by hand.</dd>
+<dt id="g-gate">gate</dt><dd>The safety check before a rule change goes live: the same claims are judged under the current and the proposed rules, and the change goes live only if nothing right turns wrong and its own claims now come out right. Editors call it the safety check.</dd>
+<dt id="g-hard-rules">hard rules</dt><dd>The ten rules every agent session in this repository follows, such as: no script writes a field the editor owns; a check that cannot run is reported, never skipped.</dd>
+<dt id="g-interference">interference</dt><dd>A change to one tag's rules moving the judge's answer on another tag. In the trial a Predictive change flipped a Context-dependent answer, and the gate refused it.</dd>
+<dt id="g-issue-tag">Issue tag</dt><dd>A tag in the team's taxonomy that marks something wrong with a claim, such as Wordy or Unsourced. The target has {{count:tags.issue}}.</dd>
+<dt id="g-judge">judge</dt><dd>The model call that reads claims against the rules and answers, per claim and tag: applies, does not apply, ask an editor or cannot tell, each with a confidence from 0 to 1.</dd>
+<dt id="g-lesson">lesson</dt><dd>A proposed change to one rule, drafted by the agent from the editor's decisions, as a row in Rule changes. It changes the rulebook only after the editor approves it and it passes the gate.</dd>
+<dt id="g-mirror">mirror</dt><dd>A Notion copy of a collection of claims in Geo, such as "U.S. Politics debate claims". It is real data shared with the team, so the agent may write only its two text columns.</dd>
+<dt id="g-mvp-trial">MVP, trial, sandbox, hub</dt><dd>MVP: the first version of the claim tagger, built in October 2026. Trial: its run on {{count:trial.claims}} claims. Sandbox: the copy built afterwards for the editor walkthrough. Hub: the Notion page that holds the trial's tables, kept as read-only history.</dd>
+<dt id="g-notion-words">Notion words</dt><dd>Property: a column. Select: one value from a list. Relation: a link to a row elsewhere. Rollup: values pulled from linked rows. Formula: a calculated value. View: a saved filter and sort. Data source: one of several tables a newer Notion database can hold.</dd>
+<dt id="g-pass-hold-fail">PASS, HOLD, FAIL</dt><dd>The gate's results. PASS: nothing right turned wrong and the lesson's claims now come out right; the rule goes live. FAIL: it broke an earlier decision or did not help. HOLD: too little evidence. After FAIL or HOLD nothing changes.</dd>
+<dt id="g-pause">pause</dt><dd>The stop switch: the Paused checkbox in Agent settings, or a PAUSED file, stops every command until a person clears it.</dd>
+<dt id="g-demo-page">practice page (demo page)</dt><dd>A fresh Notion page the walkthrough builds under a page you name each time, with its own one-tag rulebook, {{count:demo.claims}} real claims and a small queue. Nothing on it touches the real tables. Its commands carry the word demo.</dd>
+<dt id="g-profile">profile</dt><dd>A folder with its own config, rulebook, tests and run records, so a demo or a test runs without touching the real setup.</dd>
+<dt id="g-promote">promote</dt><dd>Take an approved lesson through the gate and, only if it passes, write the new rule into the rulebook; follow-up then runs by itself. Command: <code>/claim-tagger promote</code>.</dd>
+<dt id="g-queue">queue</dt><dd>The Tag decisions table in Notion: one row per claim and tag the agent is unsure about. The editor records the outcome there. "Your queue" is the Notion view of the rows still waiting for the editor.</dd>
+<dt id="g-read-back">read-back</dt><dd>The check after every write: the agent reads Notion again and confirms that each value landed and that no editor field changed.</dd>
+<dt id="g-regression-case">regression case (earlier decision)</dt><dd>A claim the editor decided, kept as a permanent test: no rule change may make the agent get it wrong. This report calls it an earlier decision.</dd>
+<dt id="g-roles">roles</dt><dd>Editor: decides the rows in the queue and types the commands. Rule owner: approves rule changes; for now the same person as the editor. Engineer: sets things up and fixes what breaks. Product owner: you, who took the decisions listed on the Summary.</dd>
+<dt id="g-rubric">rubric</dt><dd>The rulebook as a versioned file in the repository; Notion is compared with it before every step. Editors never see the word: in Notion it is the rulebook edition.</dd>
+<dt id="g-rule">rule</dt><dd>One numbered statement in a tag's "When to use" text, for example Context-dependent rule 4. A lesson proposes a change to one rule.</dd>
+<dt id="g-rulebook">rulebook</dt><dd>The written rules for each tag ("When to use"), kept in Notion as a copy of the taxonomy's Issue rows. The judge works from these rules and nothing else.</dd>
+<dt id="g-edition">rulebook edition</dt><dd>The rulebook's version as editors see it: a date plus a count, such as 2026-10-15.1. It goes up when a rule changes.</dd>
+<dt id="g-simple-strict-gate">simple gate, strict gate</dt><dd>The gate's two modes. The simple gate, the default, checks only the changed tag and reads each flipped claim twice more on each side. The strict gate, an option, adds statistics and needs about {{count:gate.strictPositives}} decided examples of a tag.</dd>
+<dt id="g-skill">skill</dt><dd>The <code>/claim-tagger</code> command in Claude Code, with subcommands such as <code>tag</code> and <code>status</code>. It runs the scripts and reports back in three parts. A second small skill builds the practice page.</dd>
+<dt id="g-source-pass">source pass</dt><dd>A separate judge pass for the source tags. The agent first fetches each claim's sources and keeps a copy; then the model reads short excerpts, one claim per call.</dd>
+<dt id="g-stage">stage</dt><dd>A place in the order of work: Stage 0 to Stage 3, then Later. A stage starts when the one before it is done; it is not a length of time.</dd>
+<dt id="g-table">table</dt><dd>Notion calls a table a database; this report says table.</dd>
+<dt id="g-tag">tag</dt><dd>A label from the team's taxonomy that says something about a claim. Here, one of the {{count:tags.issue}} Issue tags, such as Context-dependent or Wordy. (<code>tag</code> is also the command that runs the judge.)</dd>
+<dt id="g-tag-kinds">text tag, source tag, duplicate tag</dt><dd>Three kinds of tag by what they need. A text tag can be judged from the claim's wording alone. A source tag needs the text of the claim's sources. A duplicate tag (Exact duplicate, Semantically duplicated) needs a search across all claims.</dd>
+<dt id="g-taxonomy">taxonomy</dt><dd>The team's master table of claim tags ("Claim Tags, verified" in Notion). The agent never writes to it; the rulebook is a copy of its Issue rows.</dd>
+<dt id="g-text-pass">text pass</dt><dd>The judge pass that decides tags from the claim's wording alone. The source pass decides the source tags.</dd>
+<dt id="g-integration-token">the access token</dt><dd>The secret key that lets the agent's scripts read and write Notion. Today it also reaches {{count:security.realDatabases}} real tables it should not. Not the same as model tokens.</dd>
+<dt id="g-four-views">the four views</dt><dd>The saved Notion views, named the same on the practice page and the real page: Your queue (rows waiting, least sure first), Needs your note (a Why wrong without reasoning), Lessons waiting (rule changes, both texts side by side) and Rulebook.</dd>
+<dt id="g-tokens">tokens</dt><dd>The units of text a model reads and writes, a few characters each. Usage limits and the dollar figures in this report are counted in them.</dd>
+<dt id="g-usage-window">usage window</dt><dd>The subscription's limit on how much Claude Code can do in a period. When it runs out, a run stops cleanly and resumes later where it left off. The runner is on the Max 20x plan; the window's size has not been measured yet.</dd>
+<dt id="g-verified-proposed">Verified, Proposed</dt><dd>The status of a tag in the taxonomy. Verified: the team has approved it. Proposed: suggested, not yet approved.</dd>
+<dt id="g-walkthrough">walkthrough</dt><dd>A guided practice run of the whole loop on a practice page: {{count:demo.steps}} steps, with real claims and nothing real changed.</dd>
+</dl>
+
+<h3>Words used on one page</h3>
+<dl class="geo-glossary">
+<dt id="g-apply">apply</dt><dd>Two meanings. A tag applies to a claim when the judge says it fits. The apply step carries out a plan's changes in Notion.</dd>
+<dt id="g-bootstrap">bootstrap</dt><dd>A statistical method that re-samples the decided examples many times to show how much an accuracy change could be luck. Strict gate only.</dd>
+<dt id="g-call">call</dt><dd>One request to the model. A judge call covers {{count:judge.batchSize}} to {{count:cache.g1ClaimsPerCall}} claims.</dd>
+<dt id="g-cli">CLI</dt><dd>Claude Code's command-line program, which the scripts use to call the model. Today its version is part of the label on saved answers.</dd>
+<dt id="g-connector">connector</dt><dd>The Notion tools built into Claude Code, as opposed to the agent's own scripts. The agent never writes Notion through them.</dd>
+<dt id="g-decided-positives">decided positives</dt><dd>Decided claims where a tag applies. Statistics need enough of them: the strict gate waits for {{count:gate.strictPositives}}, and a tag counts in the gate from {{count:gate.minPositives}}.</dd>
+<dt id="g-persona">editor persona</dt><dd>A Claude model given a written brief to play a Geo editor who also owns the claim-tag rules, used to review a report or practice page before real editors do. It is not a real editor, and it never writes Notion or code.</dd>
+<dt id="g-editor-fields">editor-owned fields</dt><dd>Tag outcome, Why wrong, Your reasoning, Editor wording, the Status values Approved and Rejected, Paused: no script writes them.</dd>
+<dt id="g-fetch-excerpt">fetch, excerpt</dt><dd>Fetch: download the page behind a source link. Excerpt: the relevant paragraphs the judge is shown.</dd>
+<dt id="g-flipped-case">flipped claim, noise</dt><dd>A decided claim whose answer changes between the current and the proposed rules. Some flips are noise, so the gate reads each twice more on each side.</dd>
+<dt id="g-geo-id">Geo ID, Geo Sources</dt><dd>Geo ID: a claim's identifier in Geo, the key for its rows. Geo Sources: the column that links to the claim's source pages in Geo.</dd>
+<dt id="g-guard-hook">guard hook</dt><dd>A small program Claude Code runs before every Notion tool call, so that only the agent's scripts can write to Notion.</dd>
+<dt id="g-headless-output-style">headless run, output style, SKILL.md</dt><dd>Headless run: Claude Code run without a person, as a test. Output style: a setting that changes how replies are written; one adds commentary. SKILL.md: the skill's instruction file.</dd>
+<dt id="g-list-price">list price</dt><dd>What the same tokens would cost on the pay-per-use API. On the subscription nothing is billed per call.</dd>
+<dt id="g-majority-vote">majority vote</dt><dd>The MVP's way of settling an answer: the judge runs three times and the answer given by at least two runs wins. Adaptive runs replace it.</dd>
+<dt id="g-models">models: Opus, Sonnet</dt><dd>Claude models. Opus, the strongest, drafts lessons and first rules. Sonnet, faster, does the judging.</dd>
+<dt id="g-plan">plan</dt><dd>A file listing every Notion change before it is made. Only a plan produced by a script may change Notion.</dd>
+<dt id="g-probe">probe</dt><dd>A test that tries to open each Notion table with the agent's token and shows which ones it can reach. Protected tables must answer "not found".</dd>
+<dt id="g-prompt">prompt</dt><dd>The written instructions, rules and claims sent to the model in one call.</dd>
+<dt id="g-prompt-caching">prompt caching</dt><dd>The model service stores the unchanging start of a prompt so later calls reuse it at lower cost: a cache read is the reused part, a cache write the part stored. Not the saved judge answers.</dd>
+<dt id="g-protected-database">protected table</dt><dd>A Notion table the agent must never write to: the taxonomy, Claims to review, World affairs and the old hub. The probe checks that the token cannot reach them.</dd>
+<dt id="g-pull">pull</dt><dd>Copy Notion tables into local files at the start of a step, so each step works from the same snapshot.</dd>
+<dt id="g-queue-fields">queue fields</dt><dd>The editor's answers on a queue row: Tag outcome (Applies or Does not apply), Why wrong (Agent slip, Rule unclear or Rule should change) and Your reasoning in words. Editor wording is the editor's own rewrite of a lesson.</dd>
+<dt id="g-rollback">rollback</dt><dd>Undo the most recent live lesson by restoring the previous wording of the rule; only a person confirms it.</dd>
+<dt id="g-swap">swap</dt><dd>Later replacing the rulebook copy with the real taxonomy, once the copy has proved itself.</dd>
+<dt id="g-trust-breaker">trust breaker</dt><dd>A check that stops the agent when a field the editor owns changes while it writes. In the minimal version it only warns.</dd>
+<dt id="g-wall-clock">wall clock</dt><dd>Real elapsed time, as opposed to the work the model does. This report gives no wall-clock estimates.</dd>
+<dt id="g-world-affairs">World affairs</dt><dd>The second claims table, to be added after U.S. Politics runs well.</dd>
+</dl>
+</div>
+
+<div class="sub" id="glossary-tech" data-title="Technical terms" data-layer="tech">
+<h3>Terms used only on Technical pages</h3>
+<p>Each is marked where it first appears on a Technical page. The codes come last.</p>
+<dl class="geo-glossary">
+<dt id="g-answer-store">answer store</dt><dd>The new layout of saved answers: one store per cache group instead of about {{count:cache.filesBefore}} files.</dd>
+<dt id="g-base-rate-check">base-rate check</dt><dd>For first rules only: on a fixed sample of {{count:gate.initialSample}} claims the tag may apply to at most half; the claims it applies to are listed for the editor.</dd>
+<dt id="g-cache-key">cache key</dt><dd>The label under which a saved judge answer is stored. Today it contains the rubric's fingerprint and the Claude Code version, so any change makes every answer invalid.</dd>
+<dt id="g-candidate">candidate</dt><dd>The proposed new version of the rulebook, built from the lesson's text, that the gate tests against the current one.</dd>
+<dt id="g-canonical-spaces">canonical spaces, corpus</dt><dd>The Geo spaces whose claims count as the full set to search for duplicates ({{count:scale.corpusClaims}} claims).</dd>
+<dt id="g-connector-batch">connector batch</dt><dd>A file of Notion changes prepared so the connector could apply them without the access token; removed.</dd>
+<dt id="g-defence-in-depth">defence in depth</dt><dd>Several independent checks guarding the same risk.</dd>
+<dt id="g-filtered-pull">filtered pull</dt><dd>Copying only the named columns of a table, to keep a pull small.</dd>
+<dt id="g-gate-evidence">gate evidence</dt><dd>The record proving a rule write came from a real gate PASS: the run's PASS card, matching fingerprints and the exact approved text.</dd>
+<dt id="g-ledger">ledger</dt><dd>The record of which items a run has already done, so a run can resume.</dd>
+<dt id="g-permission-prefix">permission prefix</dt><dd>The generated name prefix of the Notion tools in Claude Code. The settings use another one, so their Notion rules never match.</dd>
+<dt id="g-plan-arming">plan arming</dt><dd>A step that armed a plan before it could be applied through the Notion connector; removed.</dd>
+<dt id="g-promote-lock">promote lock</dt><dd>A file that lets only one promote run at a time.</dd>
+<dt id="g-python-hashes">Python-compatible hashes</dt><dd>Fingerprints computed the way the research code did, so old and new fingerprints match.</dd>
+<dt id="g-rehearsal">rehearsal</dt><dd>A practice gate run whose PASS cannot be used to write a rule.</dd>
+<dt id="g-rest-client">REST client, API version</dt><dd>The agent's own code for talking to the Notion API. It is pinned to the 2022-06-28 API version, which cannot read a database with several data sources.</dd>
+<dt id="g-retrieval-pair-judging">retrieval, pair-judging pass</dt><dd>A search that finds likely duplicate pairs by meaning, then a model pass that judges each pair.</dd>
+<dt id="g-setup-marker">setup marker</dt><dd>A file (<code>runs/SETUP</code>) whose presence tells the guard hook that structure changes and setup-page writes are allowed.</dd>
+<dt id="g-supporting-rows">supporting rows</dt><dd>The queue rows a lesson was drawn from, listed as text on the lesson.</dd>
+<dt id="g-text-fingerprint">text fingerprint</dt><dd>A short code computed from a claim's text; equal codes mean equal text.</dd>
+<dt id="g-token-rotation">token rotation, reach</dt><dd>Rotation: replacing the Notion access token with a new one and revoking the old. Reach: which tables a token can open.</dd>
+<dt id="g-whole-pass-run">whole-pass run</dt><dd>A strict-gate run that judges every tag of a claim in one call, so it can see interference between tags.</dd>
+<dt id="g-wildcard-allow">wildcard allow</dt><dd>A permission rule such as <code>status.mjs:*</code> that approves every use of a script, including forms meant for a person.</dd>
+<dt id="g-codes">codes</dt><dd>Labels used in the Technical tables, each with a key where it appears. D1 to D24: the product owner's decisions. O1 to O10: later steps of the optimal version. C0 to C22: the ordered code changes (C1 to C18 as first numbered). G1, G2 and S: the judge's cache groups. LS-1: the trial's first lesson.</dd>
+</dl>
+</div>
+
+<aside class="terms" data-strip></aside>
+</section>

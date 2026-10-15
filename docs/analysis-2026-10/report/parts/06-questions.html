@@ -1,0 +1,316 @@
+<!-- ============================== 5 YOUR QUESTIONS ============================== -->
+<section id="questions" role="tabpanel" aria-labelledby="tab-questions" hidden>
+<h2>Your questions</h2>
+
+<div class="plain">
+<p class="geo-eyebrow plain-label">The six answers in one line each</p>
+<ul>
+<li><a href="#questions-batch"><strong>Batch size:</strong></a> not a cost problem; at most {{count:distill.maxLessonsPerRun}} new <dfn data-t="lesson">lessons</dfn> per run.</li>
+<li><a href="#questions-tables"><strong>Tables:</strong></a> one <dfn data-t="rulebook">rulebook</dfn> can serve several <dfn data-t="claim">claims</dfn> <dfn data-t="table">tables</dfn>.</li>
+<li><a href="#questions-pertag"><strong>One tag at a time:</strong></a> the <dfn data-t="judge">judge</dfn> will work per group of <dfn data-t="tag">tags</dfn>.</li>
+<li><a href="#questions-human"><strong>Which tags need a person:</strong></a> only Context-dependent is ready; the others follow in steps.</li>
+<li><a href="#questions-pricing"><strong>Cost:</strong></a> nothing is billed per <dfn data-t="call">call</dfn>; the <dfn data-t="usage-window">usage window</dfn> is the limit.</li>
+<li><a href="#questions-scale"><strong>Scale:</strong></a> the code copes; the editor's time is the limit.</li>
+</ul>
+</div>
+
+<div class="sub" id="questions-batch" data-title="Batch size">
+<h3>How big should a batch of decisions be?</h3>
+<div class="geo-callout"><div class="geo-callout-body">
+<p><strong>Short answer.</strong> Batch size is not the cost problem: drafting a lesson (<dfn data-t="distill">distill</dfn>) is one call to the strongest model, <dfn data-t="models">Opus</dfn>, about ${{count:distill.costMeasured}} at <dfn data-t="list-price">list price</dfn>. The limit is the editor's attention and the <dfn data-t="gate">gate</dfn>, which tests one lesson at a time: so one lesson per tag, at most {{count:distill.maxLessonsPerRun}} per run, the best-supported first.</p>
+</div></div>
+<div class="geo-stat-grid">
+<div class="geo-card"><div class="geo-stat-value">{{count:distill.rows2000}}</div><div class="geo-stat-label">decided rows</div></div>
+<div class="geo-card"><div class="geo-stat-value">about {{count:distill.blame2000}}</div><div class="geo-stat-label">blame a <dfn data-t="rule">rule</dfn></div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:distill.groups2000}}</div><div class="geo-stat-label">groups</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:distill.maxLessonsPerRun}}</div><div class="geo-stat-label">lessons at most per run</div></div>
+</div>
+<h4>What would change this answer</h4>
+<ul>
+<li>Groups grow past about {{count:distill.clusterAbove}} rows: sort them before drafting.</li>
+<li>The editor can review more lessons: raise the limit.</li>
+</ul>
+<p class="small">Settings and costs: <a href="#questions-detail-tables">Batch and tables in detail (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="questions-tables" data-title="One table or many">
+<h3>One claims table or many?</h3>
+<div class="geo-callout"><div class="geo-callout-body">
+<p><strong>Short answer.</strong> One rulebook can serve several claims tables: the judge sees only the claim text and the rules, so a claim is judged once and its answer shared. The code needs a list of tables instead of one: U.S. Politics first, <dfn data-t="world-affairs">World affairs</dfn> later.</p>
+</div></div>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/mirrors-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">One rulebook, many claims tables (each a <dfn data-t="mirror">mirror</dfn> of Geo): a claim in two tables is judged once and written to both. Open check: can one <dfn data-t="geo-id">Geo ID</dfn> be in both?</figcaption>
+</figure>
+<h4>What would change this answer</h4>
+<ul>
+<li>The Geo-to-Notion refresh drops added columns (you are asking): <dfn data-t="agent-columns">the agent's two columns</dfn> move to an agent table.</li>
+<li>The claims table holds several <dfn data-t="notion-words">data sources</dfn>: the Notion client is upgraded first.</li>
+</ul>
+<p class="small">What is hard-coded today: <a href="#questions-detail-tables">Batch and tables in detail (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="questions-pertag" data-title="One tag at a time">
+<h3>Drafting works one tag at a time. Should the judge?</h3>
+<div class="geo-callout"><div class="geo-callout-body">
+<p><strong>Short answer.</strong> Today one call decides every tag for {{count:judge.batchSize}} claims with one <dfn data-t="prompt">prompt</dfn>, so a lesson on one tag throws away every <dfn data-t="cache">saved answer</dfn> and can move other tags (<dfn data-t="interference">interference</dfn>), which stopped the <dfn data-t="mvp-trial">trial</dfn>'s first lesson. The design judges the claim text (the <dfn data-t="text-pass">text pass</dfn>) apart from the sources (the <dfn data-t="source-pass">source pass</dfn>) and saves answers per <dfn data-t="cache-group">cache group</dfn>.</p>
+</div></div>
+<div class="two">
+<div class="geo-card"><div class="geo-card-title">Today</div><p class="geo-card-body">A Context-dependent rule change re-judges everything: {{count:pass.calls1}} to {{count:pass.calls3}} calls.</p></div>
+<div class="geo-card"><div class="geo-card-title">With a cache group</div><p class="geo-card-body">Only Context-dependent: {{count:cache.g1Calls}} calls.</p></div>
+</div>
+<h4>What would change this answer</h4>
+<ul>
+<li>The <dfn data-t="simple-strict-gate">strict gate</dfn> sees answers move between groups: regroup the tags; re-judge everything now and then, and before the <dfn data-t="taxonomy">taxonomy</dfn> takes over.</li>
+</ul>
+<p class="small">Groups and prompt sizes: <a href="#questions-detail-judging">Judging and tags in detail (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="questions-human" data-title="Which tags need a person">
+<h3>Which tags need a person?</h3>
+<div class="geo-callout"><div class="geo-callout-body">
+<p><strong>Short answer.</strong> Of the {{count:tags.issue}} <dfn data-t="issue-tag">Issue tags</dfn>, {{count:tags.textOnly}} is judged from the text today (Context-dependent); {{count:tags.textToDraft}} more after you approve drafted rules; Unsourced is decided by code; {{count:tags.sourceTags}} need the source pages (Source inaccessible is decided in code from the <dfn data-t="fetch-excerpt">fetch</dfn>, the other two by the source pass); the {{count:tags.corpusTags}} <dfn data-t="tag-kinds">duplicate tags</dfn> need a search across all claims and show "not checked" until then, never queued (decided).</p>
+</div></div>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/tag-routing-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">Which tags go where: what each tag needs (its <dfn data-t="capability">capability</dfn>) decides its lane, and the lane decides what happens when the agent is unsure: "<dfn data-t="cannot-tell">ask an editor</dfn>" or "cannot tell", both shown as Can't tell.</figcaption>
+</figure>
+<h4>What would change this answer</h4>
+<ul>
+<li>You approve drafted rules: each text tag starts being judged.</li>
+<li>A search across all claims is built: the duplicate tags are decided.</li>
+<li>The Geo source lookup stops working: the source tags stay "not checked".</li>
+</ul>
+<p class="small">All tags with status and rules: <a href="#questions-detail-judging">Judging and tags in detail (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="questions-pricing" data-title="Cost">
+<h3>What does it cost on the subscription?</h3>
+<div class="geo-callout"><div class="geo-callout-body">
+<p><strong>Short answer.</strong> Nothing is billed per call; the dollars only show what the same work would cost on the pay-per-use API. The limit is the usage window, how much Claude Code you can use in a period, which the trial never reached; its size on the Max 20x plan is still unmeasured. Reports will show the share of a window, not dollars.</p>
+</div></div>
+<div class="geo-stat-grid">
+<div class="geo-card"><div class="geo-stat-value">{{count:pass.calls1}} calls</div><div class="geo-stat-label">one run per answer: ${{count:pass.usd1}}</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:pass.calls3}} calls</div><div class="geo-stat-label">three runs, today: ${{count:pass.usd3}}</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:pass.callsAdaptive}} calls</div><div class="geo-stat-label"><dfn data-t="adaptive-runs">adaptive runs</dfn>, decided: ${{count:pass.usdAdaptive}}</div></div>
+</div>
+<p>One pass over the {{count:scale.usClaims}} U.S. Politics claims, at list price. Decided: a second reading only for "ask an editor" or a <dfn data-t="confidence">confidence</dfn> between {{count:adaptive.low}} and {{count:adaptive.high}}, for at most {{count:adaptive.capShare}} of claims.</p>
+<h4>What would change this answer</h4>
+<ul>
+<li>An API key instead of the subscription: the dollars become real bills.</li>
+</ul>
+<p class="small">Figures per call and other runs: <a href="#questions-detail-cost">Cost and scale in detail (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="questions-scale" data-title="Thousands of claims">
+<h3>What happens at thousands of claims?</h3>
+<div class="geo-callout"><div class="geo-callout-body">
+<p><strong>Short answer.</strong> After three fixes the code copes. The editor does not: the first full pass would put {{count:scale.firstPassRows}} rows in the <dfn data-t="queue">queue</dfn>. Decided: no cap; the queue is sorted by confidence, the editor filters in Notion, and tags go live one at a time.</p>
+</div></div>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/inflow-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">How many rows reach the editor in the first full pass. Bar widths are illustrative, not to scale.</figcaption>
+</figure>
+<h4>What would change this answer</h4>
+<ul>
+<li>Confident answers may be confirmed in bulk: the queue holds only real doubt.</li>
+<li>The usage window's size, once measured: how many runs fit between sittings.</li>
+</ul>
+<p class="small">Where the limits are: <a href="#questions-detail-cost">Cost and scale in detail (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="questions-detail-tables" data-title="Batch and tables in detail" data-layer="tech">
+<h3>Batch size in detail</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>How drafting works today</strong></caption>
+<thead><tr><th>Setting</th><th>Today</th></tr></thead>
+<tbody>
+<tr><td>A group</td><td>tag, <dfn data-t="queue-fields">Why wrong</dfn> and the rule the agent cited</td></tr>
+<tr><td>Rule unclear needs</td><td>{{count:distill.minClaims}} distinct claims</td></tr>
+<tr><td>Rule should change needs</td><td>{{count:distill.minClaimsChange}} distinct claims, or {{count:distill.ownerRuling}} with the <dfn data-t="roles">rule owner</dfn>'s ruling</td></tr>
+<tr><td>Rows the model sees per group</td><td>{{count:distill.maxGroupRows}} group rows and {{count:distill.maxOtherRows}} other rows on the tag</td></tr>
+<tr><td>Text per field</td><td>cut at {{count:distill.clipChars}} characters</td></tr>
+<tr><td>Calls per group</td><td>one, at most {{count:distill.attempts}} attempts</td></tr>
+<tr><td>Which rows the model sees</td><td>the first in key order; rows past the cut still count as support</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>At {{count:distill.rows20}}, {{count:distill.rows200}} and {{count:distill.rows2000}} decided rows</strong> · assumed: {{count:distill.blameShare}} of decided rows blame the rule (trial: {{count:distill.trialBlame}}); {{count:distill.busyShare}} of decisions fall on {{count:distill.busyTags}} busy tags with {{count:distill.rulesPerBusyTag}} cited rules each</caption>
+<colgroup><col style="width:12%"><col style="width:12%"><col style="width:12%"><col style="width:10%"><col style="width:20%"><col style="width:34%"></colgroup>
+<thead><tr><th>Decided rows</th><th>Blame the rule</th><th>Groups</th><th>Opus calls</th><th>Rows past the cut</th><th>Main risk</th></tr></thead>
+<tbody>
+<tr><td class="num">{{count:distill.rows20}}</td><td class="num">about {{count:distill.blame20}}</td><td class="num">{{count:distill.groups20}}</td><td class="num">{{count:distill.calls20}}</td><td>none</td><td>Usually nothing to propose.</td></tr>
+<tr><td class="num">{{count:distill.rows200}}</td><td class="num">about {{count:distill.blame200}}</td><td class="num">{{count:distill.groups200}}</td><td class="num">{{count:distill.calls200}}</td><td>none: groups of about {{count:distill.groupSize200}} rows</td><td>Fine; one open lesson per tag and rule, the rest wait.</td></tr>
+<tr><td class="num">{{count:distill.rows2000}}</td><td class="num">about {{count:distill.blame2000}}</td><td class="num">{{count:distill.groups2000}}</td><td class="num">{{count:distill.calls2000}}</td><td>busy groups of {{count:distill.busyGroup2000}}: {{count:distill.unseen2000}} unseen</td><td>A group mixes patterns and the model writes one compound rule, as with the trial's first lesson; {{count:distill.groups2000}} lessons reach one editor.</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>What a drafting call costs</strong>, at list price</caption>
+<thead><tr><th>Case</th><th class="num">Opus calls</th><th class="num">Input tokens</th><th class="num">List price</th></tr></thead>
+<tbody>
+<tr><td>Measured, {{count:distill.measuredRows}} rows (about {{count:distill.tokensPerRow}} <dfn data-t="tokens">tokens</dfn> a row)</td><td class="num">one</td><td class="num">about {{count:distill.measuredInput}}</td><td class="num">${{count:distill.costMeasured}}</td></tr>
+<tr><td>At the cap of {{count:distill.maxGroupRows}} + {{count:distill.maxOtherRows}} rows</td><td class="num">one</td><td class="num">about {{count:distill.capInput}}</td><td class="num">${{count:distill.costAtCap}}</td></tr>
+<tr><td>{{count:distill.fiveGroups}} groups</td><td class="num">{{count:distill.calls5}}</td><td class="num">{{count:distill.input5}}</td><td class="num">${{count:distill.cost5}}</td></tr>
+<tr><td>{{count:distill.rows2000}} decided rows</td><td class="num">{{count:distill.calls2000}}</td><td class="num">{{count:distill.input2000}}</td><td class="num">${{count:distill.cost2000}}</td></tr>
+</tbody>
+</table></div>
+<h4>The six drafting rules</h4>
+<ol>
+<li>One lesson per tag per run, at most {{count:distill.maxLessonsPerRun}} per run, ranked by distinct supporting claims.</li>
+<li>Group by tag and cited rule; the rule the editor names in Your reasoning wins over the one the agent cited.</li>
+<li>One Opus call may return up to {{count:distill.patternsPerCall}} patterns, each with the rows it rests on; only those rows count as support.</li>
+<li>Over {{count:distill.maxGroupRows}} rows: newest first, rows with reasoning first, both outcomes shown; the rest next run.</li>
+<li>Counter-evidence: the same rule with the opposite outcome first.</li>
+<li>Keep the threshold of {{count:distill.minClaims}} distinct claims and the checks against duplicate lessons and copied claim text.</li>
+</ol>
+<h3>One table or many, in detail</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>What is hard-coded today</strong></caption>
+<colgroup><col style="width:34%"><col style="width:66%"></colgroup>
+<thead><tr><th>Where</th><th>What it assumes</th></tr></thead>
+<tbody>
+<tr><td><code>allowlist.mjs</code></td><td>A closed list of six tables and the trial's column names, Agent tags as a relation.</td></tr>
+<tr><td><code>pull.mjs</code></td><td>One claims file; a duplicate key stops the <dfn data-t="pull">pull</dfn>.</td></tr>
+<tr><td><code>judge</code>, <code>propose</code>, <code>cases-sync</code>, <code>followup</code></td><td>Read that one file; one Geo ID with two texts stops the judge.</td></tr>
+<tr><td>Queue keys, answer files, test cases</td><td>Geo ID is the only key.</td></tr>
+<tr><td><code>probe.mjs</code>, <code>lib/notion-values.mjs</code></td><td>The six trial titles; link targets dropped, so the Geo Sources links are lost.</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>Pitfalls</strong> · the mirror entry (Geo ID, Geo Name, Geo URL, Geo Sources, two write columns) is on <a href="#versions-columns">Column lists</a></caption>
+<colgroup><col style="width:30%"><col style="width:70%"></colgroup>
+<thead><tr><th>Pitfall</th><th>How the design handles it</th></tr></thead>
+<tbody>
+<tr><td>The same Geo ID in two mirrors</td><td>Each mirror page is written; the answer is shared by text. Queue keys wait for the open check.</td></tr>
+<tr><td>Sources differ per mirror</td><td>Each mirror maps its own columns.</td></tr>
+<tr><td>Writing to a real table</td><td>Only the two text columns, checked in the <dfn data-t="plan">plan</dfn>, at <dfn data-t="apply">apply</dfn>, in the <dfn data-t="guard-hook">guard hook</dfn> and in the <dfn data-t="rest-client">REST client</dfn>.</td></tr>
+<tr><td>Linking queue rows to claims</td><td>A relation would add a column to the mirror; the queue carries a Claim link instead.</td></tr>
+<tr><td>Hand edits to the agent's columns</td><td>Compared with the last value written; a person's change is skipped and reported.</td></tr>
+<tr><td>One rate limit</td><td>{{count:notion.requestsPerSecond}} requests a second for all mirrors together.</td></tr>
+<tr><td>Several data sources</td><td>The 2022 API fails on them; the read-only <dfn data-t="dry-run-spike">dry run</dfn> detects it first.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="questions-detail-judging" data-title="Judging and tags in detail" data-layer="tech">
+<h3>One tag at a time, in detail</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:22%"><col style="width:22%"><col style="width:26%"><col style="width:30%"></colgroup>
+<thead><tr><th></th><th>Drafting</th><th>Judge today</th><th>Judge, designed</th></tr></thead>
+<tbody>
+<tr><td>Unit of work</td><td>One group: a tag and a rule</td><td>{{count:judge.batchSize}} claims, every model tag</td><td>Text pass: {{count:judge.batchSize}} to {{count:cache.g1ClaimsPerCall}} claims, one group; source pass: one claim</td></tr>
+<tr><td>The prompt holds</td><td>One tag's rulebook entry</td><td>The rules of all {{count:tags.trialJudged}} model tags</td><td>One group's rules</td></tr>
+<tr><td>A lesson on one tag</td><td>Not applicable</td><td>Invalidates every saved answer; can move other tags</td><td>Re-judges its group only</td></tr>
+<tr><td>Effects across tags</td><td>Not visible</td><td>Happen; the gate catches them</td><td>Not visible between groups; the strict gate checks them</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>Two passes, three groups</strong> · key: <dfn data-t="codes">G1, G2 and S</dfn> are the cache groups; O3 is a step of the optimal setup</caption>
+<colgroup><col style="width:14%"><col style="width:42%"><col style="width:20%"><col style="width:24%"></colgroup>
+<thead><tr><th>Group</th><th>Tags</th><th>Per call</th><th>Re-judged when</th></tr></thead>
+<tbody>
+<tr><td>G1, text</td><td>Context-dependent</td><td>{{count:cache.g1ClaimsPerCall}} claims</td><td>its rules change</td></tr>
+<tr><td>G2, text</td><td>The {{count:tags.textToDraft}} drafted text tags</td><td>{{count:judge.batchSize}} claims</td><td>one of their rules changes</td></tr>
+<tr><td>S, sources</td><td>Improperly sourced and Factually challenged by the model; Source inaccessible from the fetch result</td><td>one claim, up to {{count:sources.maxPerClaim}} excerpts</td><td>a rule or the claim's sources change</td></tr>
+<tr><td>Code</td><td>Unsourced; later Trailing period and Multi-sentence (O3)</td><td>no model call</td><td>never</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>Prompt sizes</strong></caption>
+<thead><tr><th>Prompt</th><th class="num">System prompt</th><th class="num">Input per call</th><th class="num">Output per claim</th></tr></thead>
+<tbody>
+<tr><td>Today, {{count:tags.trialJudged}} tags</td><td class="num">{{count:measured.promptBytes}} bytes, about {{count:measured.promptTokens}} tokens</td><td class="num">{{count:measured.inputPerCall}}, {{count:measured.cacheRead}} cached</td><td class="num">about {{count:measured.outputPerClaim}}</td></tr>
+<tr><td>Text pass, {{count:textpass.tags}} tags</td><td class="num">{{count:textpass.promptKB}} KB, {{count:textpass.promptTokens}} tokens</td><td class="num">about {{count:textpass.inputPerCall}}</td><td class="num">about {{count:textpass.outputPerClaim}}</td></tr>
+<tr><td>G1 alone</td><td class="num">not estimated</td><td class="num">not estimated</td><td class="num">about {{count:cache.g1OutputPerClaim}}</td></tr>
+<tr><td>Source pass</td><td class="num">about {{count:sources.promptTokens}} tokens</td><td class="num">about {{count:sources.inputPerCall}}, not cacheable across claims</td><td class="num">about {{count:sources.outputPerCall}}</td></tr>
+</tbody>
+</table></div>
+<p>Output per claim is about {{count:measured.outputFixed}} tokens of fixed overhead plus {{count:measured.outputPerTag}} per tag, which is why one tag per call costs more than two groups. Per-group caching cannot see interference between groups; the strict gate's <dfn data-t="whole-pass-run">whole-pass run</dfn> can, so a periodic whole re-judge, and one before the <dfn data-t="swap">swap</dfn>, bounds how stale that gets.</p>
+<h3>Which tags need a person, in detail</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption>The {{count:tags.issue}} rows were re-read live on 14 October (the verification notes); read them again before setup. Key: G1 the first cache group, O3 a step of the optimal setup, D17 a decision of the product owner</caption>
+<colgroup><col style="width:17%"><col style="width:17%"><col style="width:19%"><col style="width:17%"><col style="width:16%"><col style="width:14%"></colgroup>
+<thead><tr><th>Tag</th><th>Status, rules</th><th>Needs</th><th>Who decides</th><th>When unsure</th><th>Gate statistics</th></tr></thead>
+<tbody>
+<tr><td>Context-dependent</td><td><dfn data-t="verified-proposed">Verified</dfn>, {{count:tags.cdRules}} rules</td><td>the text</td><td>model, G1</td><td>the queue</td><td>yes; the demo tag</td></tr>
+<tr><td>Poor wording, Wordy, Incorrect grammar, Improper capitalization</td><td>Proposed, no rules (grammar's examples field holds a note)</td><td>the text; the first two subjective</td><td>model, once rules are approved</td><td>the queue</td><td>after approval</td></tr>
+<tr><td>Multi-sentence, Trailing period</td><td>Proposed, no rules</td><td>mostly mechanical</td><td>model; later code (O3)</td><td>the queue</td><td>while the model decides</td></tr>
+<tr><td>Exact duplicate</td><td>no status</td><td>a search of all claims; inside the mirror, a free text match</td><td>code, on an exact match</td><td>"not checked"; queued only on a match</td><td>no</td></tr>
+<tr><td>Semantically duplicated</td><td>no status</td><td>a search by meaning</td><td>nobody yet</td><td>"not checked", never queued (D17)</td><td>no</td></tr>
+<tr><td>Unsourced</td><td>Verified</td><td>code: no sources</td><td>code</td><td>never unsure</td><td>no</td></tr>
+<tr><td>Source inaccessible</td><td>Verified</td><td>a fetch result</td><td>code, from the fetch</td><td>"not checked" if the link cannot be resolved</td><td>source gate only</td></tr>
+<tr><td>Improperly sourced</td><td>Verified, {{count:tags.isRules}} rules</td><td>the source text</td><td>model, source pass</td><td>"not checked" if nothing was readable; else the queue</td><td>source gate only</td></tr>
+<tr><td>Factually challenged</td><td>Proposed, {{count:tags.fcRules}} rules</td><td>the source text and the wider record</td><td>model, source pass, report only</td><td>as above</td><td>no positives yet</td></tr>
+</tbody>
+</table></div>
+<p>Left out of the gate's statistics: both duplicate tags (their "cannot tell" would count as a failure); Unsourced, and later Trailing period and Multi-sentence (unit tests check the code); the source tags, from gates on text tags; Factually challenged until it has positives; drafted tags until their rules are approved.</p>
+</div>
+
+<div class="sub" id="questions-detail-cost" data-title="Cost and scale in detail" data-layer="tech">
+<h3>Cost in detail</h3>
+<p class="small">Key: Dn is a decision of the product owner; G1 is the first cache group.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>Measured per call</strong> · Sonnet 5.5, {{count:judge.batchSize}} claims a call, {{count:tags.trialJudged}} tags</caption>
+<thead><tr><th>Measure</th><th class="num">Value</th></tr></thead>
+<tbody>
+<tr><td>Calls measured</td><td class="num">{{count:measured.calls8}} eight-claim calls, {{count:measured.callsTotal}} judge calls in all</td></tr>
+<tr><td>Input per call</td><td class="num">{{count:measured.inputPerCall}} tokens: {{count:measured.cacheRead}} cache reads, {{count:measured.cacheWrite}} cache writes (<dfn data-t="prompt-caching">prompt caching</dfn>)</td></tr>
+<tr><td>Output per call</td><td class="num">{{count:measured.outputPerCall}} tokens, about {{count:measured.thinking}} of it thinking</td></tr>
+<tr><td>Output per claim</td><td class="num">about {{count:measured.outputPerClaim}} at {{count:tags.trialJudged}} tags; {{count:measured.outputPerClaim2}} at {{count:measured.tags2}}</td></tr>
+<tr><td>List-price equivalent</td><td class="num">${{count:measured.costPerCall}} a call, ${{count:measured.costPerClaimRun}} per claim and run</td></tr>
+<tr><td>The trial's busiest stretch</td><td class="num">{{count:measured.busiestCalls}} calls, {{count:measured.busiestInput}} input, {{count:measured.busiestOutput}} output; no usage-window stop</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>A full pass over the U.S. Politics mirror</strong> · {{count:scale.usClaims}} claims, {{count:pass.calls1}} calls per run, a cached {{count:pass.assumedPrompt}}-token prompt and {{count:pass.assumedOutput}} output tokens per claim; the last two columns use the measured rates</caption>
+<thead><tr><th>Policy</th><th class="num">Calls</th><th class="num">Input</th><th class="num">Output</th><th class="num">Output, {{count:textpass.tags}} tags</th><th class="num">List price</th></tr></thead>
+<tbody>
+<tr><td>One run</td><td class="num">{{count:pass.calls1}}</td><td class="num">{{count:pass.input1}}</td><td class="num">{{count:pass.output1}}</td><td class="num">{{count:pass.outputB1}}</td><td class="num">${{count:pass.usd1}}</td></tr>
+<tr><td>Three runs (<dfn data-t="majority-vote">majority vote</dfn>)</td><td class="num">{{count:pass.calls3}}</td><td class="num">{{count:pass.input3}}</td><td class="num">{{count:pass.output3}}</td><td class="num">{{count:pass.outputB3}}</td><td class="num">${{count:pass.usd3}}</td></tr>
+<tr><td>Adaptive</td><td class="num">{{count:pass.callsAdaptive}}</td><td class="num">{{count:pass.inputAdaptive}}</td><td class="num">{{count:pass.outputAdaptive}}</td><td class="num">{{count:pass.outputBAdaptive}}</td><td class="num">${{count:pass.usdAdaptive}}</td></tr>
+</tbody>
+</table></div>
+<p>Adaptive: a second run for {{count:pass.run2Share}} of claims ({{count:pass.run2Calls}} calls), a third for {{count:pass.run3Share}} ({{count:pass.run3Calls}}): {{count:pass.multiplier}} times one pass. It needs D19's narrow rule: in the trial {{count:measured.uncertainCells}} of answers sat between {{count:adaptive.low}} and {{count:adaptive.high}} and {{count:measured.claimsTriggering}} of claims had a reason to re-run ({{count:measured.rerunMultiplier}} times one pass). The calibration uses a {{count:judge.runsToday}}-run reference over {{count:adaptive.referenceClaims}} claims (about {{count:adaptive.referenceCalls}} calls).</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>Other runs</strong></caption>
+<thead><tr><th>Run</th><th class="num">Calls</th><th class="num">Input</th><th class="num">Output</th></tr></thead>
+<tbody>
+<tr><td>{{count:week.claims}} new claims: one run, three, adaptive</td><td class="num">{{count:week.calls1}}, {{count:week.calls3}}, {{count:week.callsAdaptive}}</td><td class="num">{{count:week.input1}}, {{count:week.input3}}, {{count:week.inputAdaptive}}</td><td class="num">{{count:week.output1}}, {{count:week.output3}}, {{count:week.outputAdaptive}}</td></tr>
+<tr><td>A lesson goes live, today</td><td class="num">{{count:pass.calls1}} to {{count:pass.calls3}}</td><td class="num">{{count:pass.input1}} to {{count:pass.input3}}</td><td class="num">{{count:pass.output1}} to {{count:pass.output3}}</td></tr>
+<tr><td>The same, with a cache per group (G1)</td><td class="num">{{count:cache.g1Calls}}</td><td class="num">about {{count:cache.g1Input}}</td><td class="num">about {{count:cache.g1Output}}</td></tr>
+<tr><td>Source pass, full mirror</td><td class="num">about {{count:sources.calls}}</td><td class="num">{{count:sources.input}}, {{count:sources.inputFresh}} uncached</td><td class="num">about {{count:sources.output}}</td></tr>
+<tr><td>Source pass on a run's new claims</td><td class="num">about {{count:sources.weeklyCalls}}</td><td class="num">about {{count:sources.weeklyInput}}</td><td class="num">about {{count:sources.weeklyOutput}}</td></tr>
+<tr><td>Drafting, {{count:distill.fiveGroups}} groups</td><td class="num">{{count:distill.calls5}}</td><td class="num">{{count:distill.input5}}</td><td class="num">{{count:distill.output5}} and thinking</td></tr>
+<tr><td>Simple gate: {{count:gate.cases}} cases, {{count:gate.canaries}} <dfn data-t="canary">canaries</dfn></td><td class="num">{{count:gate.simpleCalls}}, baseline cached</td><td class="num">{{count:gate.simpleInput}}</td><td class="num">{{count:gate.simpleOutput}}</td></tr>
+<tr><td>Plus a re-read of {{count:gate.rejudgeCases}} <dfn data-t="flipped-case">flipped claims</dfn></td><td class="num">+{{count:gate.rejudgeCalls}}</td><td class="num">+{{count:gate.rejudgeInput}}</td><td class="num">+{{count:gate.rejudgeOutput}}</td></tr>
+<tr><td>Strict gate</td><td class="num">{{count:gate.strictCalls}}</td><td class="num">{{count:gate.strictInput}}</td><td class="num">{{count:gate.strictOutput}}</td></tr>
+</tbody>
+</table></div>
+<p>Durations are left out on purpose: a run's <dfn data-t="wall-clock">wall clock</dfn> is kept in its run files, and estimates will be given as claims per usage window once a full run has recorded a window stop (D22).</p>
+<p><strong>A Claude Code update.</strong> Today the <dfn data-t="cli">CLI</dfn> version is in the cache key, so an update re-judges the mirror (about ${{count:cache.cliUpdateUsd}} at list price). The fix: record the version; on a change, judge the canaries once (about {{count:cache.canaryCheckCalls}} calls) and invalidate only if over {{count:cache.invalidateShare}} of answers change.</p>
+<h3>Scale in detail</h3>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>Where the limits are</strong></caption>
+<colgroup><col style="width:15%"><col style="width:27%"><col style="width:30%"><col style="width:28%"></colgroup>
+<thead><tr><th>Area</th><th>Today</th><th>At {{count:scale.usClaims}} claims</th><th>Fix</th></tr></thead>
+<tbody>
+<tr><td>Throughput</td><td>{{count:judge.concurrency}} calls at a time; {{count:judge.attempts}} attempts a batch; a run fails above {{count:judge.maxErrorShare}} errors</td><td>Output tokens per usage window bind, not calls at once</td><td>Keep {{count:judge.concurrency}}</td></tr>
+<tr><td>New claims</td><td>Unchanged claims skipped by their text fingerprint</td><td>Works while nothing changes</td><td>Keep</td></tr>
+<tr><td>A rule change or CLI update</td><td>Re-judges every claim</td><td>{{count:pass.calls1}} to {{count:pass.calls3}} calls</td><td>A cache per group</td></tr>
+<tr><td>Gate size</td><td>Every decided row is a test case</td><td>{{count:scale.decisions2000}} decisions: about {{count:scale.gateCases2000}} cases, {{count:scale.gateCalls2000}} calls per run; {{count:scale.gateStrictCalls2000}} strict</td><td>The target tag plus at most {{count:scale.gateCapPerTag}} per other tag: about {{count:scale.gateCapCalls}} calls</td></tr>
+<tr><td>Notion writes</td><td>{{count:notion.requestsPerSecond}} requests a second</td><td>{{count:scale.usClaims}} page updates, two reads of {{count:scale.readPages}} pages</td><td>Later runs write only changed claims ({{count:scale.weeklyChanged}})</td></tr>
+<tr><td>Editor inflow</td><td>A cap of {{count:trial.weeklyCap}} with priority tiers; the trial's {{count:trial.claims}} claims gave {{count:trial.lowConfidence}} uncertain answers, {{count:trial.heldByCap}} rows held back</td><td>{{count:scale.needLookShare}} of {{count:scale.tagDecisions}} tag decisions: {{count:scale.firstPassRows}} rows</td><td>No cap (D18): sort by confidence, filter in Notion</td></tr>
+</tbody>
+</table></div>
+<p><strong>What adaptive runs change.</strong> With one run, a shaky answer that comes out confident is never looked at; the reference run measures how often. The step that picks queue rows must cope with claims that have different numbers of runs.</p>
+<p><strong>The full Issue rulebook.</strong> The text pass of {{count:textpass.tags}} tags gives about {{count:textpass.outputPerClaim}} output tokens per claim; source tags have their own pass; duplicate tags make no model call until a search exists.</p>
+</div>
+
+<aside class="terms" data-strip></aside>
+</section>

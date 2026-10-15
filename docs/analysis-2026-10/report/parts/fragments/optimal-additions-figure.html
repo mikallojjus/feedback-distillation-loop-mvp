@@ -1,0 +1,129 @@
+<!-- What the optimal version adds, in one inline SVG: the same six-step cycle as loop-cycle-figure.html drawn in muted outlines, and the seven additions as accent-tinted boxes with a dashed outline,
+each with a "later" chip and a one-line trigger, joined by a dashed leader to the step where it applies (three at step 1, one at step 3, one at step 6, one on the PASS exit) and the scheduled runs as a tinted ring around the loop.
+Colours come only from the role tokens (ink, ink-muted, accent, accent-tint, border-control, surface-raised, surface-sunken), so it follows the light and dark themes. No ids inside.
+Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption in plain words, for example: "What the optimal version adds on top of the minimal loop; nothing in the loop itself changes."
+Used on Minimal and optimal. The legend is inside the SVG. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" width="100%" role="img" aria-label="The optimal version drawn on the minimal loop. The loop has six steps and none of them changes: the judge reads the claims, unsure tags go to the queue, the editor decides each row, a lesson is drafted, the rule owner approves it, and the gate tests it. Seven additions are marked later, each taken only when its trigger is met. At step 1: a second claims table, World affairs, after U.S. Politics runs well; a duplicate search across all claims, when duplicates matter enough to build it; and mechanical tags decided by code, Trailing period and Multi-sentence, after their rules are approved. At step 3: a queue per editor, if a second editor joins. At step 6: the strict gate with its statistics, once a tag has {{count:gate.strictPositives}} or more decided claims, and, on the PASS exit, a swap of the rulebook copy for the real taxonomy, after the copy has proved itself. Around the whole loop: scheduled runs that respect the Paused switch, when running it by hand becomes routine." style="min-width:760px;font-family:var(--font-sans)">
+<rect x="336" y="102" width="616" height="359" rx="12" fill="var(--accent-tint)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 5"/>
+<g fill="none" stroke="var(--ink-muted)" stroke-width="1.5" stroke-linejoin="round">
+<path d="M526 140H546"/>
+<path d="M732 140H752"/>
+<path d="M850 164V333"/>
+<path d="M762 367H742"/>
+<path d="M556 367H536"/>
+<path d="M438 343V174"/>
+</g>
+<g fill="none" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4" stroke-linejoin="round">
+<path d="M306 69H322"/>
+<path d="M306 135H322"/>
+<path d="M306 210H322"/>
+<path d="M322 69V210"/>
+<path d="M322 140H350"/>
+<path d="M306 367H350"/>
+<path d="M306 301H438"/>
+<path d="M850 72V116"/>
+</g>
+<g fill="var(--ink-muted)">
+<polygon points="556,140 546,135.5 546,144.5"/>
+<polygon points="762,140 752,135.5 752,144.5"/>
+<polygon points="850,343 845.5,333 854.5,333"/>
+<polygon points="732,367 742,362.5 742,371.5"/>
+<polygon points="526,367 536,362.5 536,371.5"/>
+<polygon points="438,164 433.5,174 442.5,174"/>
+</g>
+<g fill="var(--accent)">
+<circle cx="350" cy="140" r="3.5"/>
+<circle cx="350" cy="367" r="3.5"/>
+<circle cx="438" cy="301" r="3.5"/>
+<circle cx="850" cy="116" r="3.5"/>
+</g>
+<g fill="var(--surface-raised)">
+<rect x="350" y="116" width="176" height="48" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="556" y="116" width="176" height="48" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="762" y="116" width="176" height="48" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="762" y="343" width="176" height="48" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="556" y="343" width="176" height="48" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+<rect x="350" y="343" width="176" height="48" rx="8" stroke="var(--ink-muted)" stroke-width="1.5"/>
+</g>
+<g fill="var(--accent-tint)">
+<rect x="16" y="40" width="290" height="58" rx="8" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="16" y="106" width="290" height="58" rx="8" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="16" y="172" width="290" height="76" rx="8" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="16" y="272" width="290" height="58" rx="8" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="16" y="338" width="290" height="58" rx="8" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+<rect x="744" y="14" width="200" height="58" rx="8" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4"/>
+</g>
+<g fill="var(--surface-raised)">
+<rect x="30" y="71" width="40" height="18" rx="9" stroke="var(--accent)" stroke-width="1.5"/>
+<rect x="30" y="137" width="40" height="18" rx="9" stroke="var(--accent)" stroke-width="1.5"/>
+<rect x="30" y="221" width="40" height="18" rx="9" stroke="var(--accent)" stroke-width="1.5"/>
+<rect x="30" y="303" width="40" height="18" rx="9" stroke="var(--accent)" stroke-width="1.5"/>
+<rect x="30" y="369" width="40" height="18" rx="9" stroke="var(--accent)" stroke-width="1.5"/>
+<rect x="758" y="45" width="40" height="18" rx="9" stroke="var(--accent)" stroke-width="1.5"/>
+<rect x="627" y="415" width="40" height="18" rx="9" stroke="var(--accent)" stroke-width="1.5"/>
+</g>
+<g fill="var(--surface-sunken)">
+<circle cx="350" cy="116" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="556" cy="116" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="762" cy="116" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="762" cy="343" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="556" cy="343" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="350" cy="343" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+</g>
+<rect x="16" y="486" width="26" height="16" rx="4" stroke="var(--ink-muted)" stroke-width="1.5" fill="var(--surface-raised)"/>
+<rect x="212" y="486" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="5 4" fill="var(--accent-tint)"/>
+<rect x="332" y="485" width="40" height="18" rx="9" stroke="var(--accent)" stroke-width="1.5" fill="var(--surface-raised)"/>
+<g font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">
+<text x="350" y="120.5">1</text>
+<text x="556" y="120.5">2</text>
+<text x="762" y="120.5">3</text>
+<text x="762" y="347.5">4</text>
+<text x="556" y="347.5">5</text>
+<text x="350" y="347.5">6</text>
+</g>
+<g font-size="14" font-weight="600" fill="var(--ink)" text-anchor="middle">
+<text x="438" y="145">The judge reads the claims</text>
+<text x="644" y="145">Unsure tags go to the queue</text>
+<text x="850" y="145">The editor decides each row</text>
+<text x="850" y="372">A lesson is drafted</text>
+<text x="644" y="372">The rule owner approves it</text>
+<text x="438" y="372">The gate tests it</text>
+</g>
+<g font-size="14" font-weight="600" fill="var(--ink)">
+<text x="30" y="62">A second claims table (World affairs)</text>
+<text x="30" y="128">Duplicate search across all claims</text>
+<text x="30" y="194">Mechanical tags decided by code</text>
+<text x="30" y="294">Swap the rulebook copy for the real taxonomy</text>
+<text x="30" y="360">Strict gate: the statistics</text>
+<text x="758" y="36">A queue per editor</text>
+<text x="352" y="429">Scheduled runs that respect the Paused switch</text>
+</g>
+<g font-size="13" font-weight="600" fill="var(--accent)" text-anchor="middle">
+<text x="50" y="84">later</text>
+<text x="50" y="150">later</text>
+<text x="50" y="234">later</text>
+<text x="50" y="316">later</text>
+<text x="50" y="382">later</text>
+<text x="778" y="58">later</text>
+<text x="647" y="428">later</text>
+<text x="352" y="498">later</text>
+</g>
+<g font-size="13" fill="var(--ink-muted)">
+<text x="78" y="84.5">after U.S. Politics runs well</text>
+<text x="78" y="150.5">when duplicates matter enough to build it</text>
+<text x="78" y="234.5">after their rules are approved</text>
+<text x="78" y="316.5">after the copy has proved itself</text>
+<text x="78" y="382.5">once a tag has {{count:gate.strictPositives}} or more decided claims</text>
+<text x="806" y="58.5">if a second editor joins</text>
+<text x="352" y="449">when running it by hand becomes routine</text>
+<text x="448" y="262">PASS: rulebook updated</text>
+</g>
+<text x="30" y="212" font-size="13.5" fill="var(--ink-muted)">(Trailing period, Multi-sentence)</text>
+<text x="16" y="26" font-size="13.5" font-weight="600" fill="var(--ink-muted)">What the optimal version adds</text>
+<text x="700" y="268" font-size="14" font-weight="600" fill="var(--ink-muted)" text-anchor="middle">The minimal loop, unchanged</text>
+<g font-size="13.5" fill="var(--ink)">
+<text x="52" y="499">a step of the minimal loop</text>
+<text x="248" y="499">an addition</text>
+<text x="382" y="498">built only when its trigger is met</text>
+</g>
+</svg>

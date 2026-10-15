@@ -1,0 +1,296 @@
+<!-- ============================== 4 MINIMAL AND OPTIMAL ============================== -->
+<section id="versions" role="tabpanel" aria-labelledby="tab-versions" hidden>
+<h2>Minimal and optimal</h2>
+
+<div class="plain">
+<p class="geo-eyebrow plain-label">In short</p>
+<p>First the minimal version: the loop, how the editor uses it, and its Notion <dfn data-t="table">tables</dfn> with sample rows. Then what the optimal version adds, each piece only when the data justifies it. Getting there takes {{count:plan.changeSteps}} code changes, after your go-ahead.</p>
+</div>
+
+<div class="sub" id="versions-loop" data-title="The minimal loop">
+<h3>The minimal loop, end to end</h3>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/loop-cycle-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">The minimal loop in six steps: the <dfn data-t="judge">judge</dfn> reads the <dfn data-t="claim">claims</dfn>, unsure <dfn data-t="tag">tags</dfn> go to the <dfn data-t="queue">queue</dfn>, the editor decides, a <dfn data-t="lesson">lesson</dfn> is drafted, the editor approves it as <dfn data-t="roles">rule owner</dfn>, and the <dfn data-t="gate">gate</dfn> tests it against every <dfn data-t="regression-case">earlier decision</dfn>. Only a <dfn data-t="pass-hold-fail">PASS</dfn> changes a <dfn data-t="rule">rule</dfn> in the <dfn data-t="rulebook">rulebook</dfn>; then <dfn data-t="follow-up">follow-up</dfn> runs by itself.</figcaption>
+</figure>
+<h3>How the editor uses it</h3>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/skill-usage-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">Four commands and two Notion actions; everything else the agent does by itself.</figcaption>
+</figure>
+<p>The commands belong to one <dfn data-t="skill">skill</dfn>, <code>/claim-tagger</code>. Rarely used: setup, draft-rules (one tag at a time) and <dfn data-t="rollback">rollback</dfn>. Tags are judged in groups (<dfn data-t="cache-group">cache groups</dfn>), so a rule change re-judges only its group.</p>
+</div>
+
+<div class="sub" id="versions-tables" data-title="The tables">
+<h3>Which tables exist, and who writes what</h3>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/notion-map-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">The agent writes two text columns on the real claims table and <dfn data-t="agent-tables">its own four tables</dfn>, nothing else; the <dfn data-t="taxonomy">taxonomy</dfn> is copied once and never written.</figcaption>
+</figure>
+<p>Mock-ups of the final tables with example values; the claims are real. Every column and type: <a href="#versions-columns">Column lists (Technical)</a>.</p>
+
+<h4>Rulebook copy: one row per tag ({{count:tags.issue}} rows)</h4>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock packages">
+<colgroup><col style="width:18%"><col style="width:13%"><col style="width:40%"><col style="width:29%"></colgroup>
+<thead><tr><th>Name</th><th>Status</th><th>When to use (shortened)</th><th>Example Claims (shortened)</th></tr></thead>
+<tbody>
+<tr><td>Context-dependent</td><td><dfn data-t="verified-proposed">Verified</dfn></td><td>{{count:tags.cdRules}} numbered rules. Rule 4: "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent."</td><td>"He said the new model outperforms its predecessor."</td></tr>
+<tr><td>Wordy</td><td>Proposed</td><td>(empty until its first rules are approved)</td><td>(as in the taxonomy)</td></tr>
+</tbody>
+</table></div>
+
+<h4>Tag decisions, the queue: {{count:notion.minimalQueueColumns}} columns</h4>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:24%"><col style="width:14%"><col style="width:62%"></colgroup>
+<thead><tr><th>Column</th><th>Filled by</th><th>Holds</th></tr></thead>
+<tbody>
+<tr><td>Claim</td><td>the agent</td><td>The claim text, as the title</td></tr>
+<tr><td>Key</td><td>the agent</td><td><dfn data-t="geo-id">Geo ID</dfn> and tag</td></tr>
+<tr><td>Tag</td><td>the agent</td><td>One of the {{count:tags.issue}} tags</td></tr>
+<tr><td>Agent proposal</td><td>the agent</td><td>Applies, Does not apply or <dfn data-t="cannot-tell">Can't tell</dfn></td></tr>
+<tr><td>Agent <dfn data-t="confidence">confidence</dfn></td><td>the agent</td><td>0 to 1; the lowest come first</td></tr>
+<tr><td>Agent reason</td><td>the agent</td><td>A short reason and the rule used; for Can't tell, whether the rules do not settle it or the source is needed</td></tr>
+<tr><td>Claim link</td><td>the agent</td><td>The claim's page</td></tr>
+<tr><td><dfn data-t="edition">Rulebook edition</dfn></td><td>the agent</td><td>The edition the answer used</td></tr>
+<tr><td>Follow-up</td><td>the agent</td><td>Fixed or Still wrong, after a rule change</td></tr>
+<tr><td><dfn data-t="queue-fields">Tag outcome</dfn></td><td>the editor</td><td>Applies or Does not apply</td></tr>
+<tr><td>Why wrong</td><td>the editor</td><td>Agent slip, Rule unclear or Rule should change</td></tr>
+<tr><td>Your reasoning</td><td>the editor</td><td>The editor's words</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact">
+<caption><strong>The {{count:editor.valuesMinimal}} values to learn</strong>, under their columns</caption>
+<thead><tr><th>Agent proposal</th><th>Tag outcome</th><th>Why wrong</th></tr></thead>
+<tbody>
+<tr><td>Applies</td><td>Applies</td><td>Agent slip</td></tr>
+<tr><td>Does not apply</td><td>Does not apply</td><td>Rule unclear</td></tr>
+<tr><td>Can't tell</td><td></td><td>Rule should change</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock packages">
+<caption><strong>Tag decisions</strong> · two real Context-dependent rows, decided</caption>
+<colgroup><col style="width:34%"><col style="width:15%"><col style="width:13%"><col style="width:12%"><col style="width:13%"><col style="width:13%"></colgroup>
+<thead><tr><th>Claim</th><th>Tag</th><th>Agent proposal</th><th>Agent confidence</th><th>Tag outcome</th><th>Why wrong</th></tr></thead>
+<tbody>
+<tr><td>The focus on the COVID-19 vaccine ignored the larger public health problem in the U.S.</td><td>Context-dependent</td><td>Applies</td><td class="num">{{count:sample.covidConfidence}}</td><td>Does not apply</td><td>Rule unclear</td></tr>
+<tr><td>Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience</td><td>Context-dependent</td><td>Can't tell</td><td class="num">{{count:sample.georgiaConfidence}}</td><td>Does not apply</td><td>Rule unclear</td></tr>
+</tbody>
+</table></div>
+<p class="small">Your reasoning on both rows: "Rule 4 is too strict"; the claims read well as they stand.</p>
+
+<h4>Rule changes: one row per proposed change ({{count:notion.minimalRuleChangesColumns}} columns)</h4>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock packages">
+<colgroup><col style="width:27%"><col style="width:21%"><col style="width:13%"><col style="width:39%"></colgroup>
+<thead><tr><th>Lesson</th><th>Rule</th><th>Status</th><th>Safety check result</th></tr></thead>
+<tbody>
+<tr><td>First rules for Wordy</td><td>Wordy when to use</td><td>Proposed</td><td>(empty: not tested yet)</td></tr>
+<tr><td>General references pass the rule 4 test</td><td>Context-dependent rule 4</td><td>Approved</td><td>FAIL: "Melania Trump should not host her initiative's…" now Does not apply</td></tr>
+</tbody>
+</table></div>
+<p class="small">In <dfn data-t="four-views">Lessons waiting</dfn> the current and proposed text sit side by side; after a FAIL the report proposes one sentence for Editor wording.</p>
+
+<h4>Agent settings: one row ({{count:notion.minimalSettingsColumns}} columns)</h4>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock">
+<thead><tr><th>Name</th><th>Paused</th><th>Rulebook edition</th><th>Last run summary</th></tr></thead>
+<tbody>
+<tr><td>claim-tagger</td><td>unticked</td><td>2026-10-15.2</td><td>Tag · 15 Oct 09:12 · {{count:path.firstClaims}} claims</td></tr>
+</tbody>
+</table></div>
+<p class="small">Ticking <dfn data-t="pause">Paused</dfn> stops every command.</p>
+
+<h4>The real claims table: two new columns next to Geo Name</h4>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact mock packages">
+<colgroup><col style="width:29%"><col style="width:14%"><col style="width:57%"></colgroup>
+<thead><tr><th>Geo Name</th><th>Agent tags</th><th>Agent notes</th></tr></thead>
+<tbody>
+<tr><td>The focus on the COVID-19 vaccine ignored the larger public health problem in the U.S.</td><td>(empty)</td><td>no tags<br>1 waits for an editor · not checked: {{count:tags.sourceTags}} <dfn data-t="tag-kinds">source tags</dfn>, {{count:tags.corpusTags}} duplicate tags · edition 2026-10-15.2</td></tr>
+<tr><td>Excluding CNN from Air Force One violates the federal court order</td><td>Context-dependent</td><td>Context-dependent<br>nothing waits for an editor · not checked: {{count:tags.sourceTags}} source tags, {{count:tags.corpusTags}} duplicate tags · edition 2026-10-15.2</td></tr>
+</tbody>
+</table></div>
+<p class="small"><dfn data-t="agent-columns">Agent tags</dfn> holds only sure or decided tags; Agent notes is at most two short lines. The team reads this table (the <dfn data-t="mirror">mirror</dfn> of Geo), so nothing else is written there.</p>
+</div>
+
+<div class="sub" id="versions-adds" data-title="What optimal adds">
+<h3>What the optimal version adds</h3>
+<figure class="geo-figure">
+<div class="geo-figure-frame">
+<!-- include: fragments/optimal-additions-figure.html -->
+</div>
+<figcaption class="geo-figure-caption">What the optimal version adds on top of the minimal loop; the loop itself does not change.</figcaption>
+</figure>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:50%"><col style="width:50%"></colgroup>
+<thead><tr><th>Addition</th><th>When</th></tr></thead>
+<tbody>
+<tr><td>A second claims table, <dfn data-t="world-affairs">World affairs</dfn></td><td>After one clean cycle on U.S. Politics</td></tr>
+<tr><td>A search for duplicates across all claims</td><td>When duplicates matter enough</td></tr>
+<tr><td>Two mechanical tags decided by code</td><td>After their rules are approved</td></tr>
+<tr><td>The <dfn data-t="simple-strict-gate">strict gate</dfn> as routine</td><td>From {{count:gate.strictPositives}} decided examples of a tag</td></tr>
+<tr><td>The real taxonomy as the rulebook (the <dfn data-t="swap">swap</dfn>)</td><td>After the copy has proved itself</td></tr>
+<tr><td>A queue per editor</td><td>If a second editor joins</td></tr>
+<tr><td>Scheduled runs</td><td>When running by hand is routine</td></tr>
+</tbody>
+</table></div>
+<p>For the editor, in three lines:</p>
+<ul>
+<li>All {{count:tags.issue}} tags are judged.</li>
+<li>Duplicates are found by search, not only by exact text.</li>
+<li>Each editor gets a queue if a second one joins.</li>
+</ul>
+<p class="small">The smaller steps and the comparison with today: <a href="#versions-optimal">The optimal setup (Technical)</a>, <a href="#versions-compare">Side by side (Technical)</a>.</p>
+</div>
+
+<div class="sub" id="versions-compare" data-title="Side by side" data-layer="tech">
+<h3>Today, minimal and optimal, side by side</h3>
+<p class="small">Key: <dfn data-t="codes">O1 to O10</dfn> are the steps of <a href="#versions-optimal">The optimal setup</a>; Dn is a decision of the product owner.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:16%"><col style="width:26%"><col style="width:29%"><col style="width:29%"></colgroup>
+<thead><tr><th>Item</th><th>Today</th><th>Minimal</th><th>Optimal</th></tr></thead>
+<tbody>
+<tr><td colspan="4"><strong>Notion</strong></td></tr>
+<tr><td>Notion tables</td><td>{{count:notion.databases}} in the <dfn data-t="mvp-trial">trial</dfn>, {{count:notion.databases}} in the sandbox</td><td>{{count:notion.minimalDatabases}}, plus two mirror columns</td><td>The taxonomy as rulebook (O7); World affairs (O5)</td></tr>
+<tr><td>Queue columns</td><td>{{count:notion.queueColumns}}</td><td>{{count:notion.minimalQueueColumns}}</td><td>Plus an Editor column for a second editor (O9)</td></tr>
+<tr><td><dfn data-t="notion-words">Formulas, rollups</dfn></td><td>{{count:notion.formulas}} formulas, {{count:notion.rollups}} rollups</td><td>None</td><td>None</td></tr>
+<tr><td>Views</td><td>{{count:notion.views}}</td><td>{{count:notion.minimalViews}}</td><td>Plus one per editor</td></tr>
+<tr><td colspan="4"><strong>Code and safety</strong></td></tr>
+<tr><td>Scripts</td><td>{{count:code.scripts}}, {{count:code.lib}} library modules and a hook</td><td>{{count:code.minimalScripts}} and a hook</td><td>Plus a duplicate search (O6) and scheduled runs (O10)</td></tr>
+<tr><td>Safety checks</td><td>Plus a pausing <dfn data-t="trust-breaker">trust breaker</dfn>, <dfn data-t="plan-arming">plan arming</dfn>, <dfn data-t="connector-batch">connector batches</dfn></td><td><dfn data-t="allowlist">Allowlist</dfn>, <dfn data-t="read-back">read-back</dfn>, <dfn data-t="drift">drift</dfn>, pause, protected ids, <dfn data-t="guard-hook">guard hook</dfn>, slim <dfn data-t="gate-evidence">gate evidence</dfn></td><td>Plus the strict gate</td></tr>
+<tr><td colspan="4"><strong>Judge, gate and cost</strong></td></tr>
+<tr><td>Judge runs</td><td>{{count:judge.runsToday}} runs for every answer</td><td><dfn data-t="adaptive-runs">Adaptive</dfn>: a second run only for unsure answers, at most {{count:adaptive.capShare}} of claims (D19)</td><td>Thresholds set per tag (O8)</td></tr>
+<tr><td>Gate</td><td>Strict: <dfn data-t="bootstrap">bootstrap</dfn> and {{count:gate.reconfirmRuns}}-run reconfirmation</td><td>Simple, plus {{count:gate.rejudgeRuns}} more readings of each <dfn data-t="flipped-case">flipped claim</dfn> per side (D20)</td><td>Strict as routine from {{count:gate.strictPositives}} <dfn data-t="decided-positives">decided positives</dfn>, and before the swap (O1)</td></tr>
+<tr><td><dfn data-t="cache">Cache</dfn></td><td>Whole <dfn data-t="rubric">rubric</dfn> plus <dfn data-t="cli">CLI</dfn> version</td><td>Per cache group; the CLI version recorded, not keyed</td><td>Plus a whole-pass cache for strict runs (O1)</td></tr>
+<tr><td>Tags the model judges</td><td>{{count:tags.trialJudged}} of the trial's {{count:tags.trialRulebook}}</td><td>Context-dependent; text tags as their rules pass; source tags once the Geo lookup is in the code</td><td>All {{count:tags.issue}}: duplicates by search (O6), mechanical tags in code (O3)</td></tr>
+<tr><td>Claims</td><td>A {{count:trial.claims}}-claim trial copy</td><td>U.S. Politics, {{count:scale.usClaims}}</td><td>Plus World affairs (O5)</td></tr>
+<tr><td>A full pass</td><td>{{count:pass.calls3}} <dfn data-t="call">calls</dfn></td><td>{{count:pass.callsAdaptive}} calls</td><td>The same</td></tr>
+<tr><td>A Context-dependent rule change</td><td>Re-judges every claim and tag</td><td>Re-judges its group: {{count:cache.g1Calls}} calls</td><td>The same</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="versions-optimal" data-title="The optimal setup" data-layer="tech">
+<h3>The optimal setup, in steps</h3>
+<p>Each step is taken when the minimal version has produced the data that justifies it. Key: O1 to O10 number the steps; Dn is a decision of the product owner.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:6%"><col style="width:22%"><col style="width:30%"><col style="width:42%"></colgroup>
+<thead><tr><th>#</th><th>Step</th><th>When</th><th>What it adds</th></tr></thead>
+<tbody>
+<tr><td>O1</td><td>Strict gate as routine</td><td>{{count:gate.strictPositives}} decided positives on a tag; before the swap</td><td>A <dfn data-t="whole-pass-run">whole-pass run</dfn> measures <dfn data-t="interference">interference</dfn>; a periodic whole re-judge.</td></tr>
+<tr><td>O2</td><td>Adopt a direct edit</td><td>A judged tag's rules are edited in the copy</td><td>The edit becomes a gated lesson.</td></tr>
+<tr><td>O3</td><td>Mechanical tags in code</td><td>Their rules passed the gate</td><td>Trailing period, Multi-sentence; <dfn data-t="canary">canaries</dfn> test the code.</td></tr>
+<tr><td>O4</td><td>Throughput tuning</td><td>The <dfn data-t="usage-window">usage window</dfn> slows the loop</td><td>Batch size by tags per call.</td></tr>
+<tr><td>O5</td><td>World affairs</td><td>One clean cycle on U.S. Politics</td><td>A second mirror, after its refresh check (D21).</td></tr>
+<tr><td>O6</td><td>Search for duplicates</td><td>An export of the canonical spaces exists</td><td>A <dfn data-t="text-fingerprint">text fingerprint</dfn> over the <dfn data-t="canonical-spaces">canonical spaces</dfn> ({{count:scale.corpusClaims}} claims); a <dfn data-t="retrieval-pair-judging">retrieval and pair-judging pass</dfn>.</td></tr>
+<tr><td>O7</td><td>Swap to the real taxonomy</td><td>The copy has proved itself</td><td>The taxonomy becomes the rulebook.</td></tr>
+<tr><td>O8</td><td>Confidence per tag</td><td>Enough decided rows per tag</td><td>Thresholds set per tag.</td></tr>
+<tr><td>O9</td><td>A queue per editor</td><td>A second editor joins</td><td>An Editor column and views.</td></tr>
+<tr><td>O10</td><td>Scheduled runs</td><td>Runs by hand need no fixing</td><td>Runs that respect Paused.</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="versions-move" data-title="Moving from the MVP" data-layer="tech">
+<h3>Moving from the MVP: {{count:plan.changeSteps}} ordered changes</h3>
+<p class="small">Key: C1 to C18 are the ordered code changes, each with its tests; <dfn data-t="stage">Stage</dfn> is where each lands on <a href="#path-plan">Path to editors</a>. The final change list in the design folder keeps these numbers and adds C0 (housekeeping), C19 (the read-only <dfn data-t="dry-run-spike">dry run</dfn>), C20 (the Notion builder), C21 and C22 (the <dfn data-t="walkthrough">walkthrough</dfn> script and skill). Dn is a decision of the product owner.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:7%"><col style="width:81%"><col style="width:12%"></colgroup>
+<thead><tr><th>Step</th><th>What</th><th>Stage</th></tr></thead>
+<tbody>
+<tr><td>C1</td><td>Archive the trial; by hand, disconnect <dfn data-t="integration-token">the token</dfn> from the old hub and the <dfn data-t="protected-database">protected tables</dfn>; rotate it.</td><td>0</td></tr>
+<tr><td>C2</td><td>One config module; mirrors and tag <dfn data-t="capability">capabilities</dfn> in config; a three-class <dfn data-t="probe">probe</dfn>.</td><td>0</td></tr>
+<tr><td>C3</td><td>Library: link targets, database creates, filtered queries, the usage-window split, the Geo source lookup.</td><td>0</td></tr>
+<tr><td>C4</td><td>Rubric from the copy; a tag is judged once it has rules in force.</td><td>1</td></tr>
+<tr><td>C5</td><td>Allowlist, guard, settings: two mirror columns only; every <dfn data-t="connector">connector</dfn> page write denied.</td><td>1</td></tr>
+<tr><td>C6</td><td><dfn data-t="pull">Pull</dfn>: mirrors with filtered columns, source links kept.</td><td>1</td></tr>
+<tr><td>C7</td><td>Notion setup: the page, four tables, {{count:tags.issue}} copy rows, the two mirror columns behind a confirm flag (D21).</td><td>1</td></tr>
+<tr><td>C8</td><td><dfn data-t="answer-store">Answer store</dfn> per cache group: about {{count:cache.filesAfter}} files, not {{count:cache.filesBefore}}.</td><td>1</td></tr>
+<tr><td>C9</td><td>Judge: a <dfn data-t="text-pass">text pass</dfn> and a <dfn data-t="source-pass">source pass</dfn>; adaptive runs (D19).</td><td>1</td></tr>
+<tr><td>C10</td><td>Source pass: one lookup per source link (cached; a missing URL is "not checked"); <dfn data-t="fetch-excerpt">fetch</dfn> with limits, cut excerpts.</td><td>3</td></tr>
+<tr><td>C11</td><td>Propose: two-line Agent notes; every unsure answer queued, no cap (D18).</td><td>1</td></tr>
+<tr><td>C12</td><td><dfn data-t="plan">Plan</dfn>, <dfn data-t="apply">apply</dfn>, verify: no arming or batches; <dfn data-t="editor-fields">editor-field</dfn> changes reported.</td><td>1</td></tr>
+<tr><td>C13</td><td><dfn data-t="distill">Distill</dfn>, draft-rules: one threshold, <dfn data-t="supporting-rows">Supporting rows</dfn> as text, one tag per run (D7).</td><td>2</td></tr>
+<tr><td>C14</td><td>Gate: simple mode with the flip re-read (D20), a <dfn data-t="base-rate-check">base-rate check</dfn>, one lock; follow-up after a PASS; a proposed sentence after a FAIL.</td><td>2</td></tr>
+<tr><td>C15</td><td>Follow-up from saved answers; status; adopt edits of tags without rules (D23).</td><td>1</td></tr>
+<tr><td>C16</td><td>Delete {{count:code.deletedScripts}} scripts, their tests and the fallback subagents.</td><td>0</td></tr>
+<tr><td>C17</td><td>Docs: <dfn data-t="hard-rules">hard rules</dfn> 1, 5 and 10 (D23); demo mode and three-part reports.</td><td>1</td></tr>
+<tr><td>C18</td><td>End to end on a demo <dfn data-t="profile">profile</dfn> with a stand-in model and a <dfn data-t="headless-output-style">headless</dfn> report check; then live.</td><td>3</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="versions-safety" data-title="Safety checks kept" data-layer="tech">
+<h3>Safety checks kept, with one editor</h3>
+<p class="small">Key: Dn is a decision of the product owner.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:22%"><col style="width:14%"><col style="width:64%"></colgroup>
+<thead><tr><th>Check</th><th>Kept?</th><th>Why</th></tr></thead>
+<tbody>
+<tr><td>Allowlist</td><td><span class="mark mark-yes">Keep</span></td><td>A code constant intersected with the config; updates only.</td></tr>
+<tr><td>Read-back, drift, pause</td><td><span class="mark mark-yes">Keep</span></td><td>Hard rules 6 and 7; drift only for tags with rules (D23).</td></tr>
+<tr><td>Protected ids and probe</td><td><span class="mark mark-yes">Keep</span></td><td>Protected tables answer "not found" or "forbidden"; the mirror shows its two write columns.</td></tr>
+<tr><td>Guard hook</td><td><span class="mark mark-part">Simplify</span></td><td>Denies every connector page write; structure comes only from the setup builder.</td></tr>
+<tr><td>Gate evidence</td><td><span class="mark mark-part">Simplify</span></td><td>A <dfn data-t="promote">promote</dfn> record, a PASS card that is no <dfn data-t="rehearsal">rehearsal</dfn>, fingerprints matching the <dfn data-t="candidate">candidate</dfn>, the exact text.</td></tr>
+<tr><td><dfn data-t="promote-lock">Promote lock</dfn></td><td><span class="mark mark-part">Merge</span></td><td>One file with a phase instead of two.</td></tr>
+<tr><td>Trust breaker</td><td><span class="mark mark-part">Warn only</span></td><td>A pause would catch the editor's own clicks.</td></tr>
+<tr><td>Plan arming, batches, rehearsal, planted demos</td><td><span class="mark mark-no">Drop</span></td><td>They guarded a write path that is gone.</td></tr>
+</tbody>
+</table></div>
+<p><dfn data-t="defence-in-depth">Defence in depth</dfn> goes down to the allowlist, the deny rule on the runs folder, the guard hook and the slimmer gate evidence. That fits one editor; revisit it with more editors or unattended runs.</p>
+</div>
+
+<div class="sub" id="versions-columns" data-title="Column lists" data-layer="tech">
+<h3>The final tables, every column</h3>
+<p>One shared setup schema for the real page and every <dfn data-t="demo-page">practice page</dfn>. No formulas, rollups or relations; at most five columns in each default view, wrapping off except in Lessons waiting. Key: Dn is a decision of the product owner.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>Rulebook copy</strong>, "Claim Tags, Issue (copy)": the taxonomy's {{count:notion.copyColumns}} columns, same names and types; rows created once at setup; the agent writes only When to use, after a PASS</caption>
+<colgroup><col style="width:26%"><col style="width:74%"></colgroup>
+<thead><tr><th>Column</th><th>Type and values</th></tr></thead>
+<tbody>
+<tr><td>Name</td><td>title</td></tr>
+<tr><td>Description, When to use, Example Claims, Counterpart, Geo Tag ID</td><td>text (Counterpart hidden in the practice page's view)</td></tr>
+<tr><td>Evidence</td><td>url</td></tr>
+<tr><td>Category</td><td>select: Nature, Form, Quality, Style, Tone, Format, Meaning, Usage, Check</td></tr>
+<tr><td>Polarity</td><td>select: Classification, Positive, Issue</td></tr>
+<tr><td>Status</td><td>select: Verified, Proposed</td></tr>
+<tr><td>Geo Status</td><td>select: Existing in Geo, To be created, Implemented differently</td></tr>
+<tr><td>Work tags</td><td>multi-select: Pipeline benchmark check, Issue</td></tr>
+<tr><td>Verified on</td><td>date</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>Rule changes</strong> ({{count:notion.minimalRuleChangesColumns}}), <strong>Agent settings</strong> ({{count:notion.minimalSettingsColumns}}) and the <strong>mirror</strong>'s two columns. Tag decisions: the {{count:notion.minimalQueueColumns}} columns on <a href="#versions-tables">The tables</a>; Claim is the title, Key text (Geo ID::Tag), Agent confidence a number, Claim link a url, the dropdowns selects, the rest text; only Follow-up may change on a decided row</caption>
+<colgroup><col style="width:22%"><col style="width:52%"><col style="width:26%"></colgroup>
+<thead><tr><th>Column</th><th>Type and values</th><th>Written by</th></tr></thead>
+<tbody>
+<tr><td colspan="3"><strong>Rule changes</strong></td></tr>
+<tr><td>Lesson; Lesson ID</td><td>title; unique id with prefix RC, real page only, if the API check passed</td><td>the agent; Notion</td></tr>
+<tr><td>Tag; Rule; Kind</td><td>select; text ("Context-dependent rule 4", "Wordy when to use"); select: Clarify wording, Change the rule, Initial rules</td><td>the agent</td></tr>
+<tr><td>Current text; Proposed text; Safety check result; Supporting rows</td><td>text; the result as "PASS: examples {{count:demo.examples}}/{{count:demo.examples}}, earlier {{count:demo.decided}}/{{count:demo.decided}}, yours {{count:demo.open}}/{{count:demo.open}}"; supporting rows one per line with their Key</td><td>the agent</td></tr>
+<tr><td>Editor wording</td><td>text</td><td>the editor</td></tr>
+<tr><td>Status</td><td>select: Proposed, Approved, Rejected, Live, Rolled back</td><td>the editor sets Approved and Rejected</td></tr>
+<tr><td colspan="3"><strong>Agent settings</strong> and <strong>the mirror</strong></td></tr>
+<tr><td>Name; Paused</td><td>title; checkbox</td><td>setup; the editor</td></tr>
+<tr><td>Rulebook edition; Last run summary</td><td>text; text such as "Promote · 15 Oct 11:20 · PASS"</td><td>the agent</td></tr>
+<tr><td>Agent tags; Agent notes</td><td>text, added to the mirror once at setup, behind a confirm flag (D21)</td><td>the agent</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<caption><strong>The four views</strong>, with the same names on the real page and every practice page</caption>
+<colgroup><col style="width:18%"><col style="width:18%"><col style="width:36%"><col style="width:28%"></colgroup>
+<thead><tr><th>View</th><th>Table</th><th>Filter and sort</th><th>Shows</th></tr></thead>
+<tbody>
+<tr><td>Your queue</td><td>Tag decisions</td><td>Tag outcome empty; grouped by Tag; lowest Agent confidence first</td><td>Claim, Tag outcome, Why wrong, Your reasoning</td></tr>
+<tr><td>Needs your note</td><td>Tag decisions</td><td>Why wrong is Rule unclear or Rule should change; Your reasoning empty</td><td>The same columns</td></tr>
+<tr><td>Lessons waiting</td><td>Rule changes</td><td>Status Proposed or Approved; wrapping on</td><td>Lesson, Current text, Proposed text, Status</td></tr>
+<tr><td>Rulebook</td><td>Rulebook copy</td><td>All rows</td><td>Name, Status, When to use, Example Claims</td></tr>
+</tbody>
+</table></div>
+</div>
+
+<aside class="terms" data-strip></aside>
+</section>

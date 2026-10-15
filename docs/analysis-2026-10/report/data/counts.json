@@ -1,0 +1,448 @@
+{
+  "_about": "Numbers for the {{count:key}} placeholders in parts/*.html. Add an entry together with the text that uses it. An entry is a plain value or { value, source, pending }; groups nest and are addressed with dots, as in {{count:group.key}}. Keys that start with an underscore are ignored by the build. Every figure names its source (a file and what was counted, or the command that produced it); pending: true marks a figure that is not measured yet, and build.mjs --strict refuses a page that uses one. The file is edited by hand: this report has no collector script.",
+  "_paths": "Sources are repository paths. Short forms: analysis = docs/analysis-2026-10; architecture plan = analysis/design/P1-architecture.md; walkthrough design = analysis/design/P2-walkthrough-reporting-artifact-debate.md; scaling analysis = analysis/design/P3-scaling-cost-debt-verification.md; reconciliation = analysis/design/RECONCILIATION.md; decisions = analysis/DECISIONS.md; MVP counts = docs/mvp-2026-10/report/data/counts.json; final change list = analysis/design/W3-code-changes.md; walkthrough skill design = analysis/design/W4-walkthrough-skill.md; round-1 change list = analysis/report/CHANGES-ROUND-1.md.",
+  "_unused": "Kept for the record, used by no part since round 1, because the report gives no time estimates (feedback F7): pass.hours1, pass.hours3, pass.hoursAdaptive, pass.assumedSeconds, week.minutes1, week.minutes3, week.minutesAdaptive, cache.reJudgeHours, cache.g1Minutes, gate.simpleMinutes, gate.rejudgeMinutes, gate.simpleTotalMinutes, gate.strictMinutes, sources.hours, sources.fetchMinutes, sources.weeklyMinutes, scale.firstPassHours, scale.gateHours2000, scale.writeSeconds, scale.writeMinutes, scale.weeklyWriteMinutes, measured.secondsMedian, measured.secondsMax, measured.busiestHours, distill.minutes5, distill.minutes2000, editor.minPerRow, routine.*, demo.minutes, demo.calibrationMinutes, demo.calibrationUsd, reports.exampleTime, reports.exampleCost, claude.backoff1, claude.backoff2, judge.timeoutSeconds. Also unused after the round-1 cuts of the Plain layer: confirm.decisionsChanged (the decisions it counted are settled), code.lines, code.testFiles, tags.verifiedWithRules, tags.examples, trial.gateShare, cache.cliUpdateTrialUsd, scale.gateCapItems, demo.maxColumns, reports.beforeBullets, plan.optimalSteps, pull.keep, debt.uncommittedModified, debt.uncommittedNew. Dropped in round 1 (round-1 change list, section 2): queue.maxNewRows (decision D18: no cap) and path.spikeHours (the resolver is verified).",
+
+  "code": {
+    "lines": { "value": 12236, "source": "agents/claim-tagger/scripts: wc -l over *.mjs, lib/*.mjs and hooks/*.mjs at commit d195bd4 (11,954 without the hook)" },
+    "scripts": { "value": 22, "source": "agents/claim-tagger/scripts/*.mjs at commit d195bd4, counted with ls: 21 runnable scripts plus allowlist.mjs" },
+    "scriptsNoted": { "value": 29, "source": "analysis/WORKLOG.md step 2 and the architecture plan section 2.1 heading; a miscount, the folder holds 22" },
+    "lib": { "value": 14, "source": "agents/claim-tagger/scripts/lib/*.mjs at commit d195bd4" },
+    "tests": { "value": 832, "source": "tests/*.test.mjs at commit d195bd4: lines that declare a test with test(...), grep -E '^\\s*test\\('" },
+    "testsNoted": { "value": 885, "source": "analysis/WORKLOG.md step 2: a grep for 'test(' that also matched 53 regular-expression .test( calls" },
+    "testFiles": { "value": 33, "source": "tests/*.test.mjs at commit d195bd4" },
+    "minimalScripts": { "value": 17, "source": "architecture plan section 2.1: 14 kept, 1 renamed (profile), 2 new (sources, setup), besides the hook" },
+    "deletedScripts": { "value": 7, "source": "architecture plan section 2.1 and C16: seed-build, seed, rubric-init, snapshot, transcript-check, recard, run-card" },
+    "gateEvidenceLines": { "value": 334, "source": "analysis/findings/sweep-A-scripts.md section 9, wc -l of lib/gate-evidence.mjs" },
+    "gateEvidenceTarget": { "value": 120, "source": "architecture plan section 1, row 26" },
+    "seedBuildLines": { "value": 897, "source": "analysis/findings/sweep-A-scripts.md section 9, wc -l of seed-build.mjs" }
+  },
+
+  "notion": {
+    "properties": { "value": 92, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md section 3: declared properties in agents/claim-tagger/schemas/notion/as-built.md (95 with reverse relations)" },
+    "databases": { "value": 6, "source": "agents/claim-tagger/config.json notion.databases: Rulebook, Claims, Tag decisions, Rule changes, Runs, Agent settings" },
+    "formulas": { "value": 6, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md headline 7" },
+    "rollups": { "value": 5, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md headline 7" },
+    "views": { "value": 40, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md headline 7: 26 trial view statements plus 14 sandbox views" },
+    "queueColumns": { "value": 30, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md section 3, Tag decisions" },
+    "columnComments": { "value": 54, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md headline 7" },
+    "settingsColumns": { "value": 9, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md section 3, Agent settings" },
+    "describedColumns": { "value": 25, "source": "architecture plan section 1, row 71" },
+    "minimalDatabases": { "value": 4, "source": "architecture plan section 2.3: rulebook copy, Tag decisions, Rule changes, Agent settings" },
+    "minimalQueueColumns": { "value": 12, "source": "final change list C20, setup.json table: Tag decisions, 9 agent columns (Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Claim link, Rulebook edition, Follow-up) and 3 editor columns (Tag outcome, Why wrong, Your reasoning); architecture plan section 2.3" },
+    "minimalSettingsColumns": { "value": 4, "source": "final change list C20, setup.json table: Agent settings, Name, Paused, Rulebook edition, Last run summary" },
+    "minimalRuleChangesColumns": { "value": 11, "source": "final change list C20, setup.json table: Rule changes, Lesson, Lesson ID (real page only), Tag, Rule, Kind, Current text, Proposed text, Safety check result, Supporting rows, Editor wording, Status" },
+    "copyColumns": { "value": 13, "source": "final change list C20, setup.json table, and analysis/findings/verification-notes.md: the taxonomy's 13 columns on the rulebook copy (the two relations left out)" },
+    "minimalViews": { "value": 4, "source": "architecture plan section 2.4; final change list C20: Your queue, Needs your note, Lessons waiting, Rulebook" },
+    "requestsPerSecond": { "value": 3, "source": "agents/claim-tagger/config.json notion.requests_per_second" }
+  },
+
+  "tags": {
+    "issue": { "value": 13, "source": "analysis/findings/verification-notes.md: rows of the taxonomy with Work tags containing Issue" },
+    "verifiedWithRules": { "value": 4, "source": "analysis/findings/verification-notes.md: Context-dependent, Improperly sourced, Source inaccessible, Unsourced" },
+    "textOnly": { "value": 1, "source": "analysis/findings/verification-notes.md: Context-dependent is the only Verified tag decided from the claim text alone" },
+    "readyNow": { "value": 2, "source": "analysis/findings/verification-notes.md: Context-dependent (Verified, judged from the claim text) and Unsourced (Verified, decided in code from the sources); the other Verified tags need the source pass" },
+    "withoutRules": { "value": 8, "source": "architecture plan finding 3 and scaling analysis correction 2: empty When to use on 8 Issue rows" },
+    "withoutRulesNoted": { "value": 9, "source": "analysis/DECISIONS.md D1 and D7" },
+    "textToDraft": { "value": 6, "source": "scaling analysis correction 2: the six text tags without rules; the duplicate tags need none" },
+    "proposed": { "value": 7, "source": "scaling analysis correction 3: Proposed Issue rows that the current rubric build drops" },
+    "sourceTags": { "value": 3, "source": "analysis/DECISIONS.md D1: Improperly sourced, Source inaccessible, Factually challenged" },
+    "corpusTags": { "value": 2, "source": "analysis/DECISIONS.md D1: Exact duplicate, Semantically duplicated" },
+    "examples": { "value": 15, "source": "scaling analysis section 2, item 8: example claims under the Issue scope" },
+    "cdRules": { "value": 5, "source": "scaling analysis section 1d, capability matrix" },
+    "isRules": { "value": 5, "source": "scaling analysis section 1d, capability matrix" },
+    "fcRules": { "value": 4, "source": "scaling analysis section 1d, capability matrix" },
+    "trialJudged": { "value": 10, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md headline 2: tags the model decides in the trial rubric" },
+    "trialJudgedNoted": { "value": 12, "source": "docs/mvp-2026-10/report/parts/07-decide.html decision M3 and 02-glance.html: tags called judged by the model" },
+    "trialRulebook": { "value": 14, "source": "agents/claim-tagger/rubric/rubric.json tag_count" }
+  },
+
+  "trial": {
+    "claims": { "value": 60, "source": "MVP counts: claims" },
+    "costTotal": { "value": "13.88", "source": "MVP counts: cost.total, list-price dollars of every judge and distiller call" },
+    "costGate": { "value": "10.44", "source": "MVP counts: cost.gates" },
+    "gateShare": { "value": "75%", "source": "MVP counts: cost.gates / cost.total = 10.44 / 13.88" },
+    "gateAttempts": { "value": 5, "source": "MVP counts: gateAttemptsLs1, every verdict FAIL" },
+    "canariesTotal": { "value": 86, "source": "MVP counts: canariesTotal" },
+    "canariesActive": { "value": 83, "source": "MVP counts: canaries; every gate card reads 83 of 83" },
+    "cdMissed": { "value": 33, "source": "analysis/DECISIONS.md D8: Context-dependent missed in the audit" },
+    "cdWrong": { "value": 25, "source": "analysis/DECISIONS.md D8: Context-dependent wrongly applied in the audit" },
+    "auditDecisions": { "value": 57, "source": "docs/mvp-2026-10/plan.md line 27" },
+    "auditSeeded": { "value": 33, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md section 4" },
+    "auditExcluded": { "value": 24, "source": "agents/claim-tagger/evals/seed/excluded-decisions.jsonl, 24 rows" },
+    "weeklyCap": { "value": 40, "source": "agents/claim-tagger/runs/20261013T1805Z-propose-r1/propose.json weekly_cap" },
+    "lowConfidence": { "value": 117, "source": "agents/claim-tagger/runs/20261013T1805Z-propose-r1/propose.json by_why_in_queue Low confidence (107 of them would have been new rows)" },
+    "heldByCap": { "value": 67, "source": "agents/claim-tagger/runs/20261013T1805Z-propose-r1/propose.json held_by_cap" }
+  },
+
+  "judge": {
+    "runsToday": { "value": 3, "source": "agents/claim-tagger/config.json judge.runs" },
+    "batchSize": { "value": 8, "source": "agents/claim-tagger/config.json judge.batch_size" },
+    "concurrency": { "value": 2, "source": "agents/claim-tagger/config.json judge.concurrency" },
+    "timeoutSeconds": { "value": 300, "source": "agents/claim-tagger/config.json judge.timeout_ms = 300000" },
+    "maxErrorShare": { "value": "10%", "source": "agents/claim-tagger/config.json judge.max_error_share = 0.1" },
+    "attempts": { "value": 2, "source": "agents/claim-tagger/scripts/judge.mjs line 841: at most 2 attempts per batch, per sweep A section 1" }
+  },
+
+  "measured": {
+    "calls8": { "value": 138, "source": "scaling analysis, measured baseline: eight-claim calls in the trial and sandbox judgment files" },
+    "callsTotal": { "value": 199, "source": "scaling analysis, measured baseline" },
+    "inputPerCall": { "value": "10.3k", "source": "scaling analysis, measured baseline: call.model_usage" },
+    "cacheRead": { "value": "8.4k", "source": "scaling analysis, measured baseline" },
+    "cacheWrite": { "value": "1.9k", "source": "scaling analysis, measured baseline" },
+    "outputPerCall": { "value": "7.5k", "source": "scaling analysis, measured baseline: p50 7.8k, p90 8.7k, max 9.6k" },
+    "thinking": { "value": "1.6k", "source": "scaling analysis, measured baseline" },
+    "outputPerClaim": { "value": 990, "source": "scaling analysis, measured baseline: at 10 model tags" },
+    "outputPerClaim2": { "value": 335, "source": "scaling analysis, measured baseline: at 2 tags, sandbox" },
+    "tags2": { "value": 2, "source": "scaling analysis, measured baseline: the sandbox judged 2 tags" },
+    "outputFixed": { "value": 170, "source": "scaling analysis, measured baseline: about 170 + 82 per tag" },
+    "outputPerTag": { "value": 82, "source": "scaling analysis, measured baseline: about 170 + 82 per tag" },
+    "secondsMedian": { "value": 44, "source": "scaling analysis, measured baseline: duration p50" },
+    "secondsMax": { "value": 60, "source": "scaling analysis, measured baseline: duration max" },
+    "promptBytes": { "value": 24706, "source": "agents/claim-tagger/runs/judgments/f0b5d66f0b36f8e5/system-prompt.md, per the scaling analysis" },
+    "promptTokens": { "value": "6.2k", "source": "scaling analysis, measured baseline" },
+    "costPerCall": { "value": "0.084", "source": "scaling analysis, measured baseline: costBasis list" },
+    "costPerClaimRun": { "value": "0.0112", "source": "scaling analysis, measured baseline" },
+    "busiestCalls": { "value": 171, "source": "scaling analysis, measured baseline: busiest 5-hour stretch, from file times" },
+    "busiestHours": { "value": 5, "source": "scaling analysis, measured baseline" },
+    "busiestInput": { "value": "1.76M", "source": "scaling analysis, measured baseline: 80% cache reads" },
+    "busiestOutput": { "value": "1.25M", "source": "scaling analysis, measured baseline" },
+    "uncertainCells": { "value": "20.2%", "source": "scaling analysis section 1e, warning on the 1.3x target: trial tag run cells with confidence between 0.25 and 0.75" },
+    "claimsTriggering": { "value": "88%", "source": "scaling analysis section 1e, warning on the 1.3x target" },
+    "rerunMultiplier": { "value": "1.9 to 2.8", "source": "scaling analysis section 1e, warning on the 1.3x target" }
+  },
+
+  "pass": {
+    "calls1": { "value": 294, "source": "scaling analysis section 1e: 2,351 claims / 8 per call" },
+    "calls3": { "value": 882, "source": "scaling analysis section 1e, full-pass table" },
+    "callsAdaptive": { "value": 383, "source": "scaling analysis section 1e: 294 + 74 + 15" },
+    "input1": { "value": "2.0M", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "input3": { "value": "6.0M", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "inputAdaptive": { "value": "2.6M", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "output1": { "value": "1.18M", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "output3": { "value": "3.5M", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "outputAdaptive": { "value": "1.53M", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "hours1": { "value": "2.0", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "hours3": { "value": "6.1", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "hoursAdaptive": { "value": "2.7", "source": "scaling analysis section 1e, full-pass table, assumptions A" },
+    "outputB1": { "value": "1.76M", "source": "scaling analysis section 1e, full-pass table, assumptions B, 7 tags" },
+    "outputB3": { "value": "5.3M", "source": "scaling analysis section 1e, full-pass table, assumptions B, 7 tags" },
+    "outputBAdaptive": { "value": "2.29M", "source": "scaling analysis section 1e, full-pass table, assumptions B, 7 tags" },
+    "usd1": { "value": 26, "source": "scaling analysis section 1e, full-pass table, notional at 10 tags" },
+    "usd3": { "value": 79, "source": "scaling analysis section 1e, full-pass table, notional at 10 tags" },
+    "usdAdaptive": { "value": 34, "source": "scaling analysis section 1e, full-pass table, notional at 10 tags" },
+    "assumedPrompt": { "value": "6.5k", "source": "scaling analysis section 1e, assumptions A" },
+    "assumedOutput": { "value": 500, "source": "scaling analysis section 1e, assumptions A" },
+    "assumedSeconds": { "value": 50, "source": "scaling analysis section 1e, assumptions A" },
+    "run2Share": { "value": "25%", "source": "scaling analysis section 1e, adaptive arithmetic: 588 claims" },
+    "run2Calls": { "value": 74, "source": "scaling analysis section 1e, adaptive arithmetic" },
+    "run3Share": { "value": "5%", "source": "scaling analysis section 1e, adaptive arithmetic: 118 claims" },
+    "run3Calls": { "value": 15, "source": "scaling analysis section 1e, adaptive arithmetic" },
+    "multiplier": { "value": "1.3", "source": "analysis/DECISIONS.md D13; scaling analysis section 1e: 3,057 claim-runs, 1.30x" }
+  },
+
+  "week": {
+    "claims": { "value": 100, "source": "scaling analysis section 1e, other scenarios: weekly new claims" },
+    "calls1": { "value": 13, "source": "scaling analysis section 1e, other scenarios" },
+    "calls3": { "value": 39, "source": "scaling analysis section 1e, other scenarios" },
+    "callsAdaptive": { "value": 18, "source": "scaling analysis section 1e, other scenarios" },
+    "input1": { "value": "89k", "source": "scaling analysis section 1e, other scenarios" },
+    "input3": { "value": "266k", "source": "scaling analysis section 1e, other scenarios" },
+    "inputAdaptive": { "value": "123k", "source": "scaling analysis section 1e, other scenarios" },
+    "output1": { "value": "50k", "source": "scaling analysis section 1e, other scenarios" },
+    "output3": { "value": "150k", "source": "scaling analysis section 1e, other scenarios" },
+    "outputAdaptive": { "value": "65k", "source": "scaling analysis section 1e, other scenarios" },
+    "minutes1": { "value": "5.5", "source": "scaling analysis section 1e, other scenarios" },
+    "minutes3": { "value": 16, "source": "scaling analysis section 1e, other scenarios" },
+    "minutesAdaptive": { "value": "7.5", "source": "scaling analysis section 1e, other scenarios" }
+  },
+
+  "cache": {
+    "reJudgeHours": { "value": "2 to 6", "source": "scaling analysis section 1e: the week a lesson went live, and a Claude Code update" },
+    "g1Calls": { "value": 147, "source": "scaling analysis sections 1c and 1e: G1 only, 16 claims per call" },
+    "g1ClaimsPerCall": { "value": 16, "source": "scaling analysis section 1c" },
+    "g1Minutes": { "value": 35, "source": "scaling analysis sections 1c and 1e" },
+    "g1Input": { "value": "0.4M", "source": "scaling analysis section 1e, other scenarios" },
+    "g1Output": { "value": "0.6M", "source": "scaling analysis section 1e, other scenarios" },
+    "g1OutputPerClaim": { "value": 250, "source": "scaling analysis section 1e, other scenarios" },
+    "cliUpdateUsd": { "value": 26, "source": "scaling analysis section 1e, a Claude Code update today" },
+    "cliUpdateTrialUsd": { "value": 4, "source": "scaling analysis section 1e; docs/mvp-2026-10/report/parts/fragments/review-findings.html EN-9" },
+    "canaryCheckCalls": { "value": 7, "source": "scaling analysis section 1e, recommendation" },
+    "invalidateShare": { "value": "5%", "source": "scaling analysis section 1e, recommendation" },
+    "filesBefore": { "value": 30000, "source": "architecture plan C8: judgment files at 2,351 claims today" },
+    "filesAfter": { "value": 40, "source": "architecture plan C8" }
+  },
+
+  "claude": {
+    "backoff1": { "value": 30, "source": "architecture plan C3: transient errors back off 30 s, then 120 s" },
+    "backoff2": { "value": 120, "source": "architecture plan C3" },
+    "transientStops": { "value": 3, "source": "architecture plan C3: stop as a usage window only after 3 consecutive transient failures" }
+  },
+
+  "distill": {
+    "minClaims": { "value": 2, "source": "agents/claim-tagger/config.json distill.min_claims; architecture plan row 34" },
+    "minClaimsChange": { "value": 3, "source": "agents/claim-tagger/config.json distill.min_claims_rule_change" },
+    "ownerRuling": { "value": 2, "source": "agents/claim-tagger/config.json distill.owner_ruling_at" },
+    "maxGroupRows": { "value": 30, "source": "agents/claim-tagger/scripts/distill.mjs MAX_GROUP_ROWS" },
+    "maxOtherRows": { "value": 12, "source": "agents/claim-tagger/scripts/distill.mjs MAX_OTHER_ROWS" },
+    "clipChars": { "value": 600, "source": "analysis/findings/sweep-A-scripts.md section 3" },
+    "attempts": { "value": 2, "source": "analysis/findings/sweep-A-scripts.md sections 1 and 3: at most 2 attempts per batch and per group" },
+    "maxLessonsPerRun": { "value": 3, "source": "scaling analysis section 1a, recommendation 1; reconciliation R5" },
+    "patternsPerCall": { "value": 3, "source": "scaling analysis section 1a, recommendation 3" },
+    "clusterAbove": { "value": 60, "source": "scaling analysis section 1a, recommendation 6" },
+    "blameShare": { "value": "15%", "source": "scaling analysis section 1a, assumptions" },
+    "trialBlame": { "value": "7 of 38", "source": "scaling analysis section 1a: trial decisions that blame the rule" },
+    "busyShare": { "value": "60%", "source": "scaling analysis section 1a, assumptions" },
+    "busyTags": { "value": 3, "source": "scaling analysis section 1a, assumptions" },
+    "rulesPerBusyTag": { "value": "2 to 4", "source": "scaling analysis section 1a, assumptions" },
+    "rows20": { "value": 20, "source": "scaling analysis section 1a, table" },
+    "rows200": { "value": 200, "source": "scaling analysis section 1a, table" },
+    "rows2000": { "value": 2000, "source": "scaling analysis section 1a, table" },
+    "blame20": { "value": 3, "source": "scaling analysis section 1a, table" },
+    "blame200": { "value": 30, "source": "scaling analysis section 1a, table" },
+    "blame2000": { "value": 300, "source": "scaling analysis section 1a, table" },
+    "groups20": { "value": "0 to 1", "source": "scaling analysis section 1a, table" },
+    "groups200": { "value": "4 to 7", "source": "scaling analysis section 1a, table" },
+    "groups2000": { "value": "20 to 35", "source": "scaling analysis section 1a, table" },
+    "calls20": { "value": "0 to 2", "source": "scaling analysis section 1a, table" },
+    "calls200": { "value": "4 to 14", "source": "scaling analysis section 1a, table" },
+    "calls2000": { "value": "20 to 70", "source": "scaling analysis section 1a, table" },
+    "groupSize200": { "value": 10, "source": "scaling analysis section 1a, table" },
+    "busyGroup2000": { "value": "40 to 100", "source": "scaling analysis section 1a, table" },
+    "unseen2000": { "value": "10 to 70", "source": "scaling analysis section 1a, table" },
+    "costMeasured": { "value": "0.084 to 0.094", "source": "scaling analysis section 1a: agents/claim-tagger/runs/20261013T1845Z-distill-1 and sandbox/runs/wt-distill-1" },
+    "measuredRows": { "value": "10 to 11", "source": "scaling analysis section 1a and correction 5: 4 group rows plus 6 or 7 other rows" },
+    "measuredInput": { "value": "2.1k", "source": "scaling analysis, measured baseline: tokens of row data" },
+    "tokensPerRow": { "value": 190, "source": "scaling analysis section 1a" },
+    "capInput": { "value": "11k", "source": "scaling analysis section 1a: estimate at the 30 + 12 row cap" },
+    "costAtCap": { "value": "0.12 to 0.20", "source": "scaling analysis section 1a: estimate at the 30 + 12 row cap" },
+    "fiveGroups": { "value": 5, "source": "scaling analysis sections 1a and 1e" },
+    "calls5": { "value": "5 to 10", "source": "scaling analysis section 1e, other scenarios" },
+    "input5": { "value": "25k to 55k", "source": "scaling analysis sections 1a and 1e" },
+    "output5": { "value": "5k to 10k", "source": "scaling analysis section 1e, other scenarios" },
+    "cost5": { "value": "0.45 to 1.00", "source": "scaling analysis section 1a" },
+    "minutes5": { "value": "5 to 8", "source": "scaling analysis section 1e, other scenarios" },
+    "input2000": { "value": "0.2M to 0.4M", "source": "scaling analysis section 1a" },
+    "cost2000": { "value": "3 to 7", "source": "scaling analysis section 1a" },
+    "minutes2000": { "value": "20 to 60", "source": "scaling analysis section 1a" }
+  },
+
+  "gate": {
+    "cases": { "value": 40, "source": "scaling analysis section 1e, simple gate scenario; section 2 item 7" },
+    "canaries": { "value": 50, "source": "scaling analysis section 1e, simple gate scenario" },
+    "chanceFlips": { "value": "1.6 to 2.8", "source": "scaling analysis section 2, item 7" },
+    "falseFail": { "value": "80 to 95%", "source": "scaling analysis section 2, item 7" },
+    "simpleCalls": { "value": 12, "source": "scaling analysis section 1e: 90 items / 8, baseline cached" },
+    "simpleInput": { "value": "82k", "source": "scaling analysis section 1e" },
+    "simpleOutput": { "value": "45k", "source": "scaling analysis section 1e" },
+    "simpleMinutes": { "value": 5, "source": "scaling analysis section 1e" },
+    "rejudgeCases": { "value": 3, "source": "scaling analysis section 1e" },
+    "rejudgeCalls": { "value": 4, "source": "scaling analysis section 1e; reconciliation R2" },
+    "rejudgeInput": { "value": "27k", "source": "scaling analysis section 1e" },
+    "rejudgeOutput": { "value": "6k", "source": "scaling analysis section 1e" },
+    "rejudgeMinutes": { "value": 2, "source": "scaling analysis section 1e" },
+    "rejudgeRuns": { "value": 2, "source": "reconciliation R2: each flipped case judged twice more on both sides" },
+    "simpleTotalMinutes": { "value": 7, "source": "scaling analysis section 1e: 5 min for the simple gate plus 2 min for the re-judge" },
+    "strictCalls": { "value": "46 to 92", "source": "scaling analysis section 1e" },
+    "strictInput": { "value": "0.31M to 0.63M", "source": "scaling analysis section 1e" },
+    "strictOutput": { "value": "0.16M to 0.35M", "source": "scaling analysis section 1e" },
+    "strictMinutes": { "value": "19 to 38", "source": "scaling analysis section 1e" },
+    "strictPositives": { "value": 30, "source": "architecture plan section 3, O1" },
+    "reconfirmRuns": { "value": 5, "source": "agents/claim-tagger/config.json gate.reconfirm_runs" },
+    "minPositives": { "value": 5, "source": "agents/claim-tagger/config.json gate.min_positives" },
+    "cardConstant": { "value": 30, "source": "agents/claim-tagger/scripts/eval.mjs line 799, the small-sample verdict line" },
+    "initialSample": { "value": 30, "source": "final change list section 2, gate.initial_rules_sample, and C14 check S5: the base-rate check for first rules runs on a fixed seeded sample of 30 mirror claims" }
+  },
+
+  "scale": {
+    "usClaims": { "value": 2351, "source": "scaling analysis section 1b: rows of U.S. Politics debate claims (database 7219756338b2416f8fa8af83d75ec47d)" },
+    "tagDecisions": { "value": 16457, "source": "scaling analysis section 1f item 6: 2,351 claims x 7 text tags" },
+    "needLookShare": { "value": "2 to 5%", "source": "scaling analysis section 1f item 6, assumption" },
+    "firstPassRows": { "value": "330 to 820", "source": "scaling analysis section 1f item 6" },
+    "firstPassHours": { "value": "6 to 40", "source": "scaling analysis section 1f item 6: at 1 to 3 minutes a row" },
+    "duplicateRows": { "value": 4700, "source": "architecture plan finding 4 (about 4,700); scaling analysis section 1d: 2 x 2,351 = 4,702" },
+    "decisions2000": { "value": 2000, "source": "scaling analysis section 1f item 4" },
+    "gateCases2000": { "value": 1700, "source": "scaling analysis section 1f item 4" },
+    "gateCalls2000": { "value": 213, "source": "scaling analysis section 1f item 4" },
+    "gateHours2000": { "value": "1.5", "source": "scaling analysis section 1f item 4" },
+    "gateStrictCalls2000": { "value": "640+", "source": "scaling analysis section 1f item 4" },
+    "gateCapPerTag": { "value": 20, "source": "scaling analysis section 1f item 4" },
+    "gateCapItems": { "value": 150, "source": "scaling analysis section 1f item 4" },
+    "gateCapCalls": { "value": 19, "source": "scaling analysis section 1f item 4" },
+    "writeSeconds": { "value": 784, "source": "scaling analysis section 1f item 5: 2,351 writes at 3 a second" },
+    "writeMinutes": { "value": 13, "source": "scaling analysis section 1f item 5" },
+    "readPages": { "value": 24, "source": "scaling analysis section 1f item 5 and section 3: 24 pages of 100 rows" },
+    "weeklyChanged": { "value": "100 to 300", "source": "scaling analysis section 1f item 5" },
+    "weeklyWriteMinutes": { "value": "1 to 2", "source": "scaling analysis section 1f item 5" },
+    "corpusClaims": { "value": 348912, "source": "architecture plan section 3, O6: claims in the canonical spaces" }
+  },
+
+  "sources": {
+    "calls": { "value": 950, "source": "scaling analysis section 1e: 1,340 sourced claims x 71% checkable" },
+    "input": { "value": "6.7M", "source": "scaling analysis section 1e, other scenarios" },
+    "inputFresh": { "value": "5.2M", "source": "scaling analysis section 1e, other scenarios" },
+    "output": { "value": "0.57M", "source": "scaling analysis section 1e, other scenarios" },
+    "hours": { "value": "3.3", "source": "scaling analysis section 1e, other scenarios" },
+    "fetchMinutes": { "value": 25, "source": "scaling analysis section 1e, other scenarios" },
+    "weeklyCalls": { "value": 40, "source": "scaling analysis section 1e, other scenarios" },
+    "weeklyInput": { "value": "0.28M", "source": "scaling analysis section 1e, other scenarios" },
+    "weeklyOutput": { "value": "24k", "source": "scaling analysis section 1e, other scenarios" },
+    "weeklyMinutes": { "value": 8, "source": "scaling analysis section 1e, other scenarios" },
+    "inputPerCall": { "value": "7.0k", "source": "scaling analysis section 1e: 1.5k + 40 + 2.18 x 2.5k" },
+    "outputPerCall": { "value": 600, "source": "scaling analysis section 1e, source pass arithmetic" },
+    "promptTokens": { "value": "1.4k", "source": "scaling analysis section 1c" },
+    "relevantTokens": { "value": "1.5k", "source": "scaling analysis section 1e: selecting only the relevant paragraphs" },
+    "maxPerClaim": { "value": 3, "source": "architecture plan section 2.5, sources.max_sources_per_claim" }
+  },
+
+  "textpass": {
+    "tags": { "value": 7, "source": "scaling analysis section 1c: 6 drafted tags plus Context-dependent" },
+    "promptKB": { "value": "10 to 13", "source": "scaling analysis section 1c" },
+    "promptTokens": { "value": "2.6k to 3.3k", "source": "scaling analysis section 1c" },
+    "inputPerCall": { "value": "5.3k", "source": "scaling analysis section 1c" },
+    "outputPerClaim": { "value": 750, "source": "scaling analysis section 1c" }
+  },
+
+  "adaptive": {
+    "low": { "value": "0.25", "source": "analysis/DECISIONS.md D13; reconciliation R1" },
+    "high": { "value": "0.75", "source": "analysis/DECISIONS.md D13; reconciliation R1" },
+    "capShare": { "value": "30%", "source": "reconciliation R1" },
+    "calibrationClaims": { "value": 200, "source": "reconciliation R1; scaling analysis section 1e" },
+    "referenceClaims": { "value": 100, "source": "scaling analysis section 1f item 7: 100 random claims with 3 runs" },
+    "referenceCalls": { "value": 38, "source": "scaling analysis section 1f item 7: 100 claims x 3 runs / 8 per call" }
+  },
+
+  "editor": {
+    "fieldsToday": { "value": 5, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md section 3: editor-owned columns on Tag decisions" },
+    "fieldsMinimal": { "value": 3, "source": "architecture plan section 2.3: Tag outcome, Why wrong, Your reasoning" },
+    "valuesToday": { "value": 32, "source": "analysis/findings/sweep-B-docs-reviews-report.md section 3: Stage 7, Direction 4, Why in queue 7, Why wrong 5, Tag outcome 4, Agent proposal 5" },
+    "valuesMinimal": { "value": 8, "source": "architecture plan section 2.3 and final change list C20: Agent proposal 3 (Applies, Does not apply, Can't tell), Tag outcome 2 (Applies, Does not apply), Why wrong 3 (Agent slip, Rule unclear, Rule should change)" },
+    "stageValues": { "value": 7, "source": "analysis/findings/sweep-B-docs-reviews-report.md section 3" },
+    "whyInQueueValues": { "value": 7, "source": "architecture plan section 1, row 14" },
+    "proposalValues": { "value": 5, "source": "architecture plan section 1, row 15" },
+    "minPerRow": { "value": "1 to 3", "source": "analysis/findings/sweep-B-docs-reviews-report.md section 3 (MVP editor review); scaling analysis section 1f item 6" },
+    "sittingRows": { "value": 20, "source": "analysis/debate/dispositions.md, round 2, ED-13: the number of rows that fit one sitting, a setting with a default of 20; above it the report gives the count and its Next line says to start at the top of Your queue" }
+  },
+
+  "routine": {
+    "editorMinutes": { "value": "50 to 150", "source": "derived: at most 50 rows a run at 1 to 3 minutes a row" },
+    "meetingMinutes": { "value": 30, "source": "the brief for this report (weekly routine): an optional meeting; a proposal, not measured" },
+    "engineerMinutes": { "value": 15, "source": "the brief for this report (weekly routine): one tag run and one promote; an estimate, not measured" }
+  },
+
+  "demo": {
+    "claims": { "value": 7, "source": "walkthrough design section 1.6" },
+    "open": { "value": 2, "source": "walkthrough design section 1.6: covid and georgia" },
+    "decided": { "value": 5, "source": "walkthrough design section 1.6" },
+    "steps": { "value": 7, "source": "walkthrough design section 1.7" },
+    "minutes": { "value": 30, "source": "walkthrough design section 1.7, the page callout" },
+    "maxColumns": { "value": 4, "source": "walkthrough design section 1.7: tables of 4 columns or fewer; walkthrough skill design section 7.3" },
+    "examples": { "value": 11, "source": "walkthrough skill design section 6.4: the 11 trial canaries of Context-dependent (6 example claims of the rulebook row, 5 from the Self-contained examples), called example claims on the page" },
+    "calibrationRuns": { "value": 3, "source": "walkthrough design section 1.6, calibration" },
+    "calibrationUsd": { "value": 1, "source": "walkthrough design section 1.6: about $1 per run" },
+    "calibrationMinutes": { "value": 10, "source": "walkthrough design section 1.6: about 10 minutes per run" }
+  },
+
+  "reports": {
+    "paragraphsBefore": { "value": "3 to 6", "source": "analysis/findings/verification-notes.md, the sandbox session's skill reports" },
+    "beforeMoreParagraphs": { "value": 3, "source": "docs/mvp-2026-10/evidence/headless/tag-dry-run.summary.md, final message: paragraphs after the first" },
+    "beforeTableRows": { "value": 4, "source": "docs/mvp-2026-10/evidence/headless/tag-dry-run.summary.md, final message" },
+    "beforeOptions": { "value": 2, "source": "docs/mvp-2026-10/evidence/headless/tag-dry-run.summary.md, final message" },
+    "beforeBullets": { "value": 2, "source": "docs/mvp-2026-10/evidence/headless/tag-dry-run.summary.md, final message" },
+    "maxRows": { "value": 5, "source": "walkthrough design section 2.1" },
+    "maxColumns": { "value": 3, "source": "walkthrough design section 2.1" },
+    "exampleTime": { "value": "1 min 40 s", "source": "walkthrough design section 2.3, tag example (illustrative)" },
+    "exampleCost": { "value": "0.05", "source": "walkthrough design section 2.3, tag example (illustrative)" }
+  },
+
+  "path": {
+    "firstClaims": { "value": 50, "source": "architecture plan C18: Context-dependent on --limit 50 mirror claims; final change list section 7, stage 1" }
+  },
+
+  "sample": {
+    "covidConfidence": { "value": "0.72", "source": "illustrative value for the sample queue row: walkthrough skill design section 6.2, the trial's cached judgments of the COVID-19 claim on Context-dependent, apply 3/3 at p 0.72 to 0.85 (the low end shown)" },
+    "georgiaConfidence": { "value": "0.55", "source": "illustrative value for the sample queue row: walkthrough skill design section 6.2, the trial's cached judgments of the Georgia claim on Context-dependent, do_not_apply or ask_editor at p 0.4 to 0.6 (the middle shown)" }
+  },
+
+  "plan": {
+    "decisions": { "value": 24, "source": "analysis/DECISIONS.md: decisions D1 to D24, all of 14 October 2026" },
+    "optimalSteps": { "value": 10, "source": "architecture plan section 3: iterations O1 to O10" },
+    "changeSteps": { "value": 18, "source": "architecture plan section 4: change steps C1 to C18" }
+  },
+
+  "pull": {
+    "keep": { "value": 20, "source": "architecture plan C6: keep the last 20 pulls" }
+  },
+
+  "security": {
+    "realDatabases": { "value": 4, "source": "docs/mvp-2026-10/evidence/token-access-probe.json, per scaling analysis section 2 item 10" },
+    "runsMB": { "value": 61, "source": "analysis/WORKLOG.md step 2: size of agents/claim-tagger/runs" }
+  },
+
+  "features": {
+    "total": { "value": 73, "source": "architecture plan section 1, feature ranking" },
+    "keep": { "value": 30, "source": "architecture plan section 1: verdicts keep, keep with a fix, keep and extend (31), less the Python-compatible hashes row, moved to Later (round-1 change list, decision on review item C-12)" },
+    "simplify": { "value": 15, "source": "architecture plan section 1: verdicts simplify, trim, shrink, merge, replace with fewer" },
+    "cut": { "value": 22, "source": "architecture plan section 1: verdicts remove, delete, replace, archive" },
+    "later": { "value": 4, "source": "architecture plan section 1: rows 45 to 47, moved behind --strict, plus the Python-compatible hashes row (round-1 change list, C-12)" },
+    "add": { "value": 2, "source": "architecture plan section 1: rows 40 and 44, new" },
+    "matrix": {
+      "_about": "Rank by verdict, counted over the 73 rows of the ranking (report part 03-features, Ranking page) after the round-1 change of the Python-compatible hashes row (rank 2) from Keep to Later. Each row sums to the features of that rank; each column to features.keep, .simplify, .cut, .later, .add.",
+      "r5keep": { "value": 17, "source": "ranking rows with rank 5 and verdict Keep (architecture plan section 1)" },
+      "r5simplify": { "value": 1, "source": "ranking rows with rank 5 and verdict Simplify: queue rows" },
+      "r5cut": { "value": 0, "source": "ranking rows with rank 5 and verdict Cut" },
+      "r5later": { "value": 0, "source": "ranking rows with rank 5 and verdict Later" },
+      "r5add": { "value": 2, "source": "ranking rows with rank 5 and verdict Add: draft-rules mode, supporting claims come out as decided" },
+      "r4keep": { "value": 10, "source": "ranking rows with rank 4 and verdict Keep" },
+      "r4simplify": { "value": 4, "source": "ranking rows with rank 4 and verdict Simplify: cache key, Notion contract, Agent settings, guard hook" },
+      "r4cut": { "value": 0, "source": "ranking rows with rank 4 and verdict Cut" },
+      "r4later": { "value": 0, "source": "ranking rows with rank 4 and verdict Later" },
+      "r4add": { "value": 0, "source": "ranking rows with rank 4 and verdict Add" },
+      "r3keep": { "value": 2, "source": "ranking rows with rank 3 and verdict Keep: Agent confidence, abort" },
+      "r3simplify": { "value": 3, "source": "ranking rows with rank 3 and verdict Simplify: three runs, gate evidence, promote lock" },
+      "r3cut": { "value": 0, "source": "ranking rows with rank 3 and verdict Cut" },
+      "r3later": { "value": 0, "source": "ranking rows with rank 3 and verdict Later" },
+      "r3add": { "value": 0, "source": "ranking rows with rank 3 and verdict Add" },
+      "r2keep": { "value": 1, "source": "ranking rows with rank 2 and verdict Keep: the counterpart-pair check (the hashes row moved to Later)" },
+      "r2simplify": { "value": 7, "source": "ranking rows with rank 2 and verdict Simplify" },
+      "r2cut": { "value": 7, "source": "ranking rows with rank 2 and verdict Cut" },
+      "r2later": { "value": 3, "source": "ranking rows with rank 2 and verdict Later: bootstrap intervals, reconfirmation, Python-compatible hashes" },
+      "r2add": { "value": 0, "source": "ranking rows with rank 2 and verdict Add" },
+      "r1keep": { "value": 0, "source": "ranking rows with rank 1 and verdict Keep" },
+      "r1simplify": { "value": 0, "source": "ranking rows with rank 1 and verdict Simplify" },
+      "r1cut": { "value": 15, "source": "ranking rows with rank 1 and verdict Cut" },
+      "r1later": { "value": 1, "source": "ranking rows with rank 1 and verdict Later: the small-sample flag" },
+      "r1add": { "value": 0, "source": "ranking rows with rank 1 and verdict Add" }
+    }
+  },
+
+  "debt": {
+    "total": { "value": 30, "source": "scaling analysis section 2" },
+    "blocker": { "value": 4, "source": "scaling analysis section 2, items 1 to 4" },
+    "high": { "value": 9, "source": "scaling analysis section 2, items 5 to 13" },
+    "medium": { "value": 11, "source": "scaling analysis section 2, items 14 to 24" },
+    "low": { "value": 6, "source": "scaling analysis section 2, items 25 to 30" },
+    "uncommittedModified": { "value": 21, "source": "analysis/findings/sweep-B-docs-reviews-report.md headline; committed in c1e9de6, b3c7788, d195bd4" },
+    "uncommittedNew": { "value": 3, "source": "analysis/findings/sweep-B-docs-reviews-report.md headline" },
+    "staleCanariesTrial": { "value": 22, "source": "scaling analysis correction 6 and section 2 item 25" },
+    "staleCanariesSandbox": { "value": 4, "source": "scaling analysis section 2 item 25" },
+    "neitherRules": { "value": 4, "source": "analysis/findings/sweep-C-rubric-prompts-schema.md section 1: Hypothetical rules 3 and 5, Predictive rules 3 and 5" },
+    "docFiles": { "value": 152, "source": "analysis/findings/sweep-B-docs-reviews-report.md section 7" },
+    "docSessionShare": { "value": "74%", "source": "analysis/findings/sweep-B-docs-reviews-report.md section 7: 112 of 152" },
+    "checkListNoted": { "value": 9, "source": "agents/claim-tagger/evals/seed/check-by-hand.md header, per sweep C section 4" },
+    "checkListRows": { "value": 11, "source": "agents/claim-tagger/evals/seed/check-by-hand.md table, per sweep C section 4" }
+  },
+
+  "confirm": {
+    "items": { "value": 3, "source": "round-1 change list section 2: the three checks still open after decisions D17 to D24: the Geo-to-Notion refresh keeps added columns and page ids (D21, asked of the refresh job's owner); the canonical Geo API endpoint (the Geo team); one calibration of the re-run band and the gate's noise guard on the first 200 real claims (D19, D20)" },
+    "decisionsChanged": { "value": 5, "source": "reconciliation R1, R2, R3, R6 and R10: decisions D13, D14, D6, D4 and D2 carry a recommended change" }
+  },
+
+  "debate": {
+    "objections": { "value": 15, "source": "analysis/debate/dispositions.md: ED-1 to ED-12 from round 1 and ED-13 to ED-15 from round 2, counted from the two tables" },
+    "accepted": { "value": 14, "source": "analysis/debate/dispositions.md: ED-2 to ED-15 carry the decision Accepted (11 in round 1, 3 in round 2)" },
+    "acceptedAsWording": { "value": 1, "source": "analysis/debate/dispositions.md: ED-1 is Accepted as wording; the cap it asked for is declined by the product owner (decision D18, no cap)" },
+    "rounds": { "value": 2, "source": "analysis/debate/round-1.md and round-2.md; no third round (analysis/design/W2-debate.md, Rounds item 4)" },
+    "questions": { "value": 5, "source": "analysis/debate/round-1.md section 5, answered in analysis/debate/answers.md" }
+  }
+}

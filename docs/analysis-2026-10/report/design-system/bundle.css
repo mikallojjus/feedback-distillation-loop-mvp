@@ -1,0 +1,266 @@
+/* Geo components. Every value comes from apps/web (design-system/*.tsx, styles/styles.css) unless marked "addition".
+   Colours use the role tokens (surface, ink, accent, ...) from tokens.css, so every component follows the light and dark themes.
+   In light each role resolves to Geo's own colour, named beside it in the comments. */
+
+* { border-color: var(--border); }
+[data-theme="dark"] { color-scheme: dark; }
+body { margin: 0; font-family: var(--font-sans); color: var(--ink); background: var(--surface); text-rendering: optimizeLegibility; }
+.geo-root { font-family: var(--font-sans); color: var(--ink); }
+
+/* Shared type helpers, same values as the text-* styles in tokens */
+.geo-t-metadata { font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; }
+.geo-muted { color: var(--ink-muted); }
+
+/* ---------- Button (design-system/button.tsx) ---------- */
+.geo-btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+  padding: var(--space-2) var(--space-3); border: 1px solid transparent; border-radius: var(--radius);
+  font: inherit; font-size: 1.0625rem; line-height: 1.125rem; font-weight: 500; letter-spacing: -0.17px;
+  box-shadow: var(--shadow-light); cursor: pointer; white-space: nowrap;
+  transition: background-color 200ms ease-in-out, border-color 200ms ease-in-out, color 200ms ease-in-out, box-shadow 200ms ease-in-out;
+}
+.geo-btn:focus { outline: none; }
+.geo-btn-small { height: 24px; gap: var(--space-1\.5); padding: 0 var(--space-1\.5); font-size: 1rem; line-height: 1; letter-spacing: -0.25px; }
+/* primary: ctaPrimary fill, white label, ctaHover on hover and focus */
+.geo-btn-primary { background: var(--accent); color: var(--on-accent); }
+.geo-btn-primary:hover { background: var(--accent-hover); }
+.geo-btn-primary:focus-visible { border-color: var(--accent-hover); box-shadow: inset 0 0 0 1px var(--accent-hover); }
+/* secondary: white, grey-02 outline, text on hover */
+.geo-btn-secondary { background: var(--surface-raised); color: var(--ink); border-color: var(--border-control); box-shadow: var(--shadow-button); }
+.geo-btn-secondary:hover { border-color: var(--ink); background: var(--surface-hover); }
+.geo-btn-secondary:focus-visible, .geo-btn-ghost:focus-visible, .geo-btn-transparent:focus-visible { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.geo-btn-tertiary { background: var(--inverse); color: var(--on-inverse); border-color: var(--surface-raised); box-shadow: none; }
+.geo-btn-ghost { background: var(--surface-raised); color: var(--ink-muted); box-shadow: none; }
+.geo-btn-ghost:hover { border-color: var(--ink); background: var(--surface-hover); color: var(--ink); box-shadow: var(--shadow-button); }
+.geo-btn-transparent { background: transparent; color: var(--ink); border-color: var(--ink); box-shadow: none; }
+/* success and error keep Geo's white label in both themes (a source pair, flagged in the token notes) */
+.geo-btn-success { background: var(--success); color: var(--white); border-color: var(--surface-raised); box-shadow: none; }
+.geo-btn-error { background: var(--danger); color: var(--white); border-color: var(--surface-raised); box-shadow: none; }
+.geo-btn-done { background: var(--success); color: var(--on-success); border-color: var(--success); }
+.geo-btn-disabled, .geo-btn:disabled { background: var(--disabled-fill); color: var(--ink-faint); border-color: transparent; box-shadow: var(--shadow-light); cursor: not-allowed; }
+.geo-btn-text { all: unset; cursor: pointer; font-size: 0.875rem; line-height: 0.875rem; font-weight: 500; color: var(--accent); }
+.geo-btn-text:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* ---------- Tag (design-system/tag.tsx): grey-02 fill ---------- */
+.geo-tag { display: inline-block; border-radius: var(--radius-sm); padding: 0 var(--space-1) 1px; font-size: 0.875rem; line-height: 1; background: var(--border); color: var(--ink); }
+
+/* ---------- Badge (tab-group.tsx count badge: black; lobby "New" badge: ctaTertiary + ctaPrimary) ---------- */
+.geo-badge { display: inline-block; border-radius: var(--radius); padding: var(--space-0\.5) 5px; font-size: 0.75rem; line-height: 1; background: var(--inverse); color: var(--on-inverse); font-variant-numeric: tabular-nums; }
+.geo-badge-new { border-radius: var(--radius); padding: 0 var(--space-1); background: var(--accent-tint); color: var(--accent); font-size: 0.6875rem; line-height: 0.8125rem; font-weight: 500; }
+
+/* ---------- Chip (design-system/chip.tsx LinkableChip) ---------- */
+.geo-chip {
+  display: inline-flex; align-items: center; border: 1px solid var(--border-control); border-radius: var(--radius); background: var(--surface-raised);
+  padding: var(--space-1) var(--space-1\.5); font-size: 1rem; line-height: 1.125rem; letter-spacing: -0.25px; font-weight: 400;
+  color: var(--ink); text-decoration: none; overflow-wrap: anywhere;
+}
+a.geo-chip:hover, button.geo-chip:hover { cursor: pointer; border-color: var(--ink); }
+a.geo-chip:focus, button.geo-chip:focus { outline: none; border-color: var(--ink); background: var(--accent-tint); box-shadow: inset 0 0 0 2px var(--ink); }
+
+/* ---------- StatusChip (shape of the h-6 status chips in partials/active-proposal/execute.tsx) ---------- */
+.geo-status {
+  display: inline-flex; align-items: center; gap: var(--space-1\.5); height: 24px; max-width: 100%;
+  border: 1px solid var(--border-control); border-radius: var(--radius); background: var(--surface-raised);
+  /* Calibre (ascent 940, descent 247) sets text ~0.6px below centre in a 16px line: 1px of bottom padding lifts the
+     content 0.5px, and the dot's 1px top margin puts it back, so label and dot share the chip's centre line */
+  padding: 0 var(--space-1\.5) 1px; font-size: 1rem; line-height: 1; letter-spacing: -0.25px; color: var(--ink); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.geo-status-dot { width: 8px; height: 8px; margin-top: 1px; border-radius: var(--radius-full); flex: none; background: var(--ink-muted); }
+.geo-status-severe .geo-status-dot { background: var(--danger); }
+.geo-status-high .geo-status-dot { background: var(--warning); }
+.geo-status-medium .geo-status-dot { background: var(--accent); }
+.geo-status-low .geo-status-dot { background: var(--ink-muted); }
+.geo-status-done .geo-status-dot { background: var(--success); }
+.geo-status-severe { border-color: var(--danger-edge); background: var(--danger-tint); }
+
+/* ---------- PillToggle (design-system/space-pill.tsx shell) ---------- */
+.geo-pill-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.geo-pill-label { font-size: 0.8125rem; line-height: 0.8125rem; letter-spacing: -0.35px; color: var(--ink-muted); margin-right: var(--space-1); }
+.geo-pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--space-1\.5); max-width: 100%; min-width: 32px;
+  border: 1px solid var(--border-control); border-radius: var(--radius-full); background: var(--surface-raised);
+  /* even sides (Geo's space pill pads 8px left for an avatar, which PillToggle has none of); 5px over 7px lifts Calibre,
+     which sits ~0.6px low in an 18px line (ascent 940, descent 247), back to centre. Still 32px tall; one-letter pills are circles. */
+  padding: 5px var(--space-2\.5) 7px;
+  font: inherit; font-size: 16px; line-height: 18px; color: var(--ink); cursor: pointer; transition: border-color 150ms, background-color 150ms, color 150ms;
+}
+.geo-pill:hover { border-color: var(--ink); }
+.geo-pill[aria-pressed="true"] { background: var(--inverse); border-color: var(--inverse); color: var(--on-inverse); }
+.geo-pill:focus-visible { outline: none; box-shadow: inset 0 0 0 2px var(--ink); }
+.geo-pill[aria-pressed="true"]:focus-visible { box-shadow: inset 0 0 0 2px var(--on-inverse); }
+.geo-pill-count { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.geo-pill[aria-pressed="true"] .geo-pill-count { color: var(--on-inverse); opacity: .7; }
+
+/* ---------- Tabs (design-system/tab-group.tsx) ---------- */
+.geo-tabs { position: relative; overflow-x: auto; scrollbar-width: none; }
+.geo-tabs::-webkit-scrollbar { display: none; }
+.geo-tabs-row { position: relative; display: flex; width: max-content; min-width: 100%; align-items: center; gap: var(--space-6); padding-bottom: var(--space-2); box-shadow: inset 0 -1px 0 var(--border); }
+.geo-tab {
+  all: unset; position: relative; display: flex; align-items: center; gap: var(--space-1\.5); cursor: pointer; white-space: nowrap;
+  font-size: 1.0625rem; line-height: 1.375rem; font-weight: 600; color: var(--ink-muted); transition: color 100ms;
+}
+.geo-tab:hover { color: var(--ink); }
+.geo-tab[aria-selected="true"] { color: var(--ink); }
+.geo-tab[aria-selected="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: calc(-1 * var(--space-2)); height: 1px; background: var(--ink); }
+.geo-tab[aria-disabled="true"] { opacity: .25; cursor: not-allowed; }
+.geo-tab:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--radius-sm); }
+
+/* ---------- SideNav (MenuItem rows of design-system/menu.tsx, in a sticky rail) ---------- */
+.geo-sidenav { display: flex; flex-direction: column; gap: 0; position: sticky; top: env(safe-area-inset-top, 0px); align-self: start; }
+.geo-sidenav-item {
+  all: unset; box-sizing: border-box; position: relative; isolation: isolate; display: flex; width: 100%; align-items: center; gap: var(--space-2);
+  padding: var(--space-2\.5) var(--space-3); cursor: pointer; font-size: 1.0625rem; line-height: 1.1875rem; font-weight: 500; letter-spacing: -0.17px; color: var(--ink);
+}
+.geo-sidenav-item::before { content: ""; position: absolute; inset: var(--space-1); z-index: -1; border-radius: var(--radius); }
+.geo-sidenav-item:hover::before, .geo-sidenav-item[aria-selected="true"]::before { background: var(--surface-sunken); }
+.geo-sidenav-item[aria-selected="true"]::after { content: ""; position: absolute; left: 0; top: var(--space-2\.5); bottom: var(--space-2\.5); width: 1px; background: var(--ink); }
+.geo-sidenav-num { width: 18px; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.geo-sidenav-item:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: var(--radius); }
+@media (max-width: 767px) {
+  .geo-sidenav { flex-direction: row; overflow-x: auto; background: var(--surface); padding-block: var(--space-1\.5); gap: var(--space-1\.5); z-index: 2; }
+  .geo-sidenav-item { width: auto; white-space: nowrap; border: 1px solid var(--border-control); border-radius: var(--radius-full); padding: var(--space-1\.5) var(--space-2\.5); }
+  .geo-sidenav-item::before { inset: 0; border-radius: var(--radius-full); }
+  .geo-sidenav-item[aria-selected="true"] { border-color: var(--ink); }
+  .geo-sidenav-item[aria-selected="true"]::after { display: none; }
+}
+
+/* ---------- PageHeader ---------- */
+.geo-pageheader { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); padding-bottom: var(--space-4); border-bottom: 1px solid var(--rule); }
+.geo-pageheader-main { min-width: 0; flex: 1 1 420px; }
+.geo-eyebrow { font-size: 0.875rem; line-height: 0.9375rem; font-weight: 500; color: var(--ink-muted); }
+.geo-pageheader-title { margin: var(--space-2) 0; font-size: 3.25rem; line-height: 3.5rem; font-weight: 600; letter-spacing: -0.5px; text-wrap: balance; }
+.geo-pageheader-sub { margin: 0; max-width: 65ch; font-size: 1.25rem; line-height: 1.8125rem; letter-spacing: -0.08px; color: var(--ink-muted); }
+.geo-pageheader-meta { font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; color: var(--ink-muted); text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 767px) {
+  .geo-pageheader-title { font-size: 2.25rem; line-height: 2.375rem; }
+  .geo-pageheader-meta { text-align: left; }
+}
+
+/* ---------- Card (styles.css claim-card-panel-surface / claim-card-summary-band) ---------- */
+.geo-card { min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-raised); padding: var(--space-3); }
+.geo-card-selected { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.geo-card-eyebrow { font-family: var(--font-mono); font-size: 0.75rem; line-height: 1rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.geo-card-title { margin: var(--space-1) 0 var(--space-1\.5); font-size: 1.3125rem; line-height: 1.75rem; font-weight: 500; }
+.geo-card-body { margin: 0; font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; color: var(--ink-muted); }
+.geo-card-band { margin: var(--space-3) calc(-1 * var(--space-3)) calc(-1 * var(--space-3)); border-top: 1px solid var(--rule); background: var(--surface-sunken); padding: var(--space-2) var(--space-3); border-radius: 0 0 var(--radius-lg) var(--radius-lg); font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; color: var(--ink-muted); }
+.geo-card-selected .geo-card-band { margin: var(--space-3) calc(1px - var(--space-3)) calc(1px - var(--space-3)); }
+.geo-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--space-3); }
+
+/* ---------- StatCard ---------- */
+.geo-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: var(--space-3); }
+.geo-stat-value { font-size: 2rem; line-height: 2.5rem; font-weight: 600; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+.geo-stat-label { margin-top: var(--space-1); font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; color: var(--ink-muted); }
+
+/* ---------- Callout (tinted message blocks: ctaTertiary, red-02 / red-03, successTertiary, grey-01) ---------- */
+.geo-callout { display: flex; gap: var(--space-2\.5); max-width: 76ch; border-radius: var(--radius); padding: var(--space-2\.5) var(--space-3); font-size: 1rem; line-height: 1.375rem; letter-spacing: -0.25px; color: var(--ink); background: var(--accent-tint); }
+.geo-callout-icon { flex: none; display: flex; padding-top: 3px; color: var(--accent); }
+.geo-callout-body { min-width: 0; }
+.geo-callout-body > :first-child { margin-top: 0; }
+.geo-callout-body > :last-child { margin-bottom: 0; }
+.geo-callout-title { font-weight: 600; }
+.geo-callout-warning { background: var(--danger-tint); box-shadow: inset 0 0 0 1px var(--danger-edge); }
+.geo-callout-warning .geo-callout-icon { color: var(--danger); }
+.geo-callout-success { background: var(--success-tint); }
+.geo-callout-success .geo-callout-icon { color: var(--ink); }
+.geo-callout-neutral { background: var(--surface-sunken); }
+.geo-callout-neutral .geo-callout-icon { color: var(--ink-muted); }
+
+/* ---------- Table (design-system/table/cell.tsx) ---------- */
+.geo-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-raised); }
+.geo-table { width: 100%; border-collapse: collapse; font-size: 1.1875rem; line-height: 1.3125rem; }
+.geo-table th { position: sticky; top: 0; text-align: left; vertical-align: middle; padding: var(--space-2\.5); background: var(--surface-sunken); border-bottom: 1px solid var(--border); font-size: 1rem; line-height: 1rem; letter-spacing: -0.25px; font-weight: 400; color: var(--ink-muted); white-space: nowrap; }
+.geo-table td { min-height: 40px; padding: var(--space-2\.5); border-bottom: 1px solid var(--border); vertical-align: top; }
+.geo-table tr:last-child td { border-bottom: 0; }
+.geo-table tr.geo-row-highlight td { background: var(--accent-tint); }
+.geo-table-compact { font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; }
+.geo-table-count { font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+
+/* ---------- Code (addition: Geo has no code component; grey-01 surface, radius, mono) ---------- */
+.geo-code { margin: var(--space-2) 0; overflow-x: auto; border-radius: var(--radius-lg); background: var(--surface-sunken); padding: var(--space-3) var(--space-4); font-family: var(--font-mono); font-size: 0.875rem; line-height: 1.375rem; color: var(--ink); white-space: pre; }
+.geo-code .c { color: var(--ink-muted); }
+.geo-code-inline { font-family: var(--font-mono); font-size: 0.875em; background: var(--surface-sunken); border-radius: var(--radius-sm); padding: 1px 5px; }
+
+/* ---------- Figure ---------- */
+.geo-figure { margin: var(--space-4) 0; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-raised); padding: var(--space-3); }
+.geo-figure-frame { overflow-x: auto; }
+.geo-figure-frame svg { display: block; max-width: 100%; height: auto; }
+.geo-figure-caption { margin-top: var(--space-2); max-width: 80ch; font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; color: var(--ink-muted); }
+
+/* ---------- Disclosure (design-system/accordion.tsx, as native details) ---------- */
+.geo-disclosure { border-bottom: 1px solid var(--rule); }
+.geo-disclosure > summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-6) 0; cursor: pointer; font-size: 1.1875rem; line-height: 1.3125rem; font-weight: 600; letter-spacing: -0.25px; }
+.geo-disclosure > summary::-webkit-details-marker { display: none; }
+.geo-disclosure > summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--radius-sm); }
+.geo-disclosure-chevron { display: flex; color: var(--accent); transition: transform 300ms; }
+.geo-disclosure[open] .geo-disclosure-chevron { transform: rotate(180deg); }
+.geo-disclosure-body { padding-bottom: var(--space-6); }
+.geo-disclosure-sm > summary { padding: var(--space-3) 0; font-size: 1rem; line-height: 1.25rem; font-weight: 500; letter-spacing: -0.25px; color: var(--ink-muted); }
+.geo-disclosure-sm .geo-disclosure-body { padding-bottom: var(--space-3); }
+
+/* ---------- Term (dark tooltip variant of design-system/tooltip.tsx) ---------- */
+.geo-term { position: relative; font-style: normal; border-bottom: 1px dotted var(--ink-muted); cursor: help; }
+.geo-term::after { content: "*"; color: var(--accent); font-weight: 600; font-size: .75em; line-height: 0; position: relative; top: -0.5em; margin-left: 1px; } /* raised by offset, not vertical-align: super, so a line with a term is not taller than its neighbours */
+.geo-term-tip {
+  position: absolute; left: 50%; bottom: calc(100% + 4px); transform: translateX(-50%); z-index: 1001; width: max-content; max-width: 192px;
+  border-radius: var(--radius); background: var(--inverse); color: var(--on-inverse); padding: var(--space-2); text-align: center;
+  font-size: 0.875rem; line-height: 0.9375rem; font-weight: 500; letter-spacing: 0; pointer-events: none; opacity: 0; transition: opacity 150ms;
+}
+.geo-term:hover .geo-term-tip, .geo-term:focus .geo-term-tip { opacity: 1; }
+.geo-term:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ---------- Glossary ---------- */
+.geo-glossary { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--space-1\.5) var(--space-4); margin: 0; font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; }
+.geo-glossary dt { font-weight: 500; color: var(--ink); }
+.geo-glossary dd { margin: 0; color: var(--ink-muted); }
+.geo-glossary-title { margin: 0 0 var(--space-2); font-weight: 400; font-size: 0.8125rem; line-height: 0.8125rem; letter-spacing: -0.35px; color: var(--ink-muted); }
+@media (max-width: 767px) { .geo-glossary { grid-template-columns: 1fr; } .geo-glossary dd { margin-bottom: var(--space-1\.5); } }
+
+/* ---------- Divider (design-system/divider.tsx) ---------- */
+.geo-divider { border: 0; border-top: 1px solid var(--rule); margin: var(--space-6) 0; }
+.geo-divider-dashed { border-top: 1px dashed var(--border); }
+
+/* ---------- Input (design-system/input.tsx) ---------- */
+.geo-input-wrap { position: relative; width: 100%; }
+.geo-input {
+  box-sizing: border-box; width: 100%; appearance: none; border: 0; border-radius: var(--radius); background: var(--surface-raised);
+  padding: 9px 10px; font: inherit; font-size: 1.0625rem; line-height: 1.125rem; color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--border-control); outline: none; transition: box-shadow 150ms;
+}
+.geo-input::placeholder { color: var(--ink-faint); }
+.geo-input:hover { box-shadow: inset 0 0 0 1px var(--ink); }
+.geo-input:focus { box-shadow: inset 0 0 0 2px var(--ink); }
+.geo-input:disabled { cursor: not-allowed; background: var(--disabled-fill); color: var(--ink-faint); box-shadow: inset 0 0 0 1px var(--border-control); }
+.geo-input-search { padding-left: 36px; }
+.geo-input-icon { position: absolute; top: 10px; left: 12px; display: flex; color: var(--ink-muted); pointer-events: none; }
+
+/* ---------- Checkbox (design-system/checkbox.tsx) ---------- */
+.geo-checkbox-label { display: inline-flex; align-items: center; gap: var(--space-2); font-size: 1rem; line-height: 1.25rem; letter-spacing: -0.25px; cursor: pointer; }
+.geo-checkbox {
+  position: relative; box-sizing: border-box; display: inline-flex; width: 16px; height: 16px; flex: none; align-items: center; justify-content: center; padding: 0;
+  border: 1px solid var(--ink); border-radius: 4px; background: var(--surface-raised); color: var(--ink); cursor: pointer; transition: background-color 200ms ease-in-out;
+}
+.geo-checkbox:hover { background: var(--surface-hover); }
+.geo-checkbox:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.geo-checkbox svg { width: 12px; height: 12px; }
+
+/* ---------- Toggle (design-system/toggle.tsx): text track when on, grey-03 when off, white knob ---------- */
+.geo-toggle { position: relative; display: inline-flex; width: 16px; height: 10px; flex: none; align-items: center; justify-content: flex-start; padding: 1px; box-sizing: border-box; border: 0; border-radius: var(--radius-full); background: var(--ink-faint); cursor: pointer; }
+.geo-toggle::before { content: ""; position: absolute; inset: -8px; }
+.geo-toggle-knob { width: 8px; height: 8px; border-radius: var(--radius-full); background: var(--on-inverse); transition: transform 200ms; }
+.geo-toggle[aria-checked="true"] { background: var(--inverse); }
+.geo-toggle[aria-checked="true"] .geo-toggle-knob { transform: translateX(6px); }
+.geo-toggle:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+/* ---------- Icon ---------- */
+.geo-icon { display: inline-block; flex: none; vertical-align: middle; }
+
+/* ---------- Logo: the mark's arch is black, so on dark surfaces it sits on a white tile, as in Geo's app icon ---------- */
+.geo-logo-tile { display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-md); }
+[data-theme="dark"] .geo-logo-tile { background: var(--white); padding: var(--space-1); }
+
+/* ---------- Preview scaffolding ---------- */
+.geo-demo { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); padding: var(--space-4); }
+.geo-demo-col { display: flex; flex-direction: column; gap: var(--space-3); padding: var(--space-4); }
+
+@media (prefers-reduced-motion: reduce) { .geo-btn, .geo-pill, .geo-tab, .geo-disclosure-chevron, .geo-term-tip, .geo-toggle-knob, .geo-input { transition: none; } }

@@ -1,0 +1,102 @@
+<!-- The minimal loop as a cycle of six numbered steps, in one inline SVG: the judge, the queue, the editor, the drafted lesson, the rule owner and the gate, with the
+two exits of the gate (PASS goes on to the next run, FAIL or HOLD changes nothing) and the Paused switch drawn as a dashed frame around everything.
+Colours come only from the role tokens (ink, ink-muted, accent, border, border-control, surface-raised, surface-sunken), so it follows the light and dark themes. No ids inside.
+Put it inside figure.geo-figure > div.geo-figure-frame and give the figure a caption in plain words, for example: "The loop in six steps. People decide in steps 3 and 5; the agent does the rest; nothing changes a rule unless the gate passes."
+Used on the Summary and on Minimal and optimal. The legend is inside the SVG. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="100%" role="img" aria-label="The minimal loop as a cycle of six steps. Step 1: the judge reads the claims against the written rulebook, tag by tag. Step 2: unsure tags go to the queue, the Tag decisions table in Notion. Step 3: the editor decides each row, filling in Tag outcome, Why wrong and Your reasoning. Step 4: a lesson is drafted, only when decisions blame a rule, and saved in Rule changes. Step 5: the rule owner approves the lesson or rejects it. Step 6: the gate tests the lesson against every earlier decision; on a PASS the rulebook is updated, follow-up re-checks the claims and the next run uses the new rule, and on a FAIL or HOLD nothing changes and the rule owner can reword the lesson and try again. People decide in steps 3 and 5; the agent does the rest. The Paused switch stops every step." style="min-width:760px;font-family:var(--font-sans)">
+<rect x="4" y="8" width="952" height="374" rx="12" fill="none" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="6 5"/>
+<g fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round">
+<path d="M290 96H335"/>
+<path d="M615 96H660"/>
+<path d="M805 144V222"/>
+<path d="M670 280H625"/>
+<path d="M345 280H300"/>
+<path d="M155 232V221"/>
+<path d="M155 165V154"/>
+</g>
+<g fill="none" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4" stroke-linejoin="round">
+<path d="M155 328V342"/>
+<path d="M204 356H480V338"/>
+</g>
+<g fill="var(--ink)">
+<polygon points="345,96 335,91.5 335,100.5"/>
+<polygon points="670,96 660,91.5 660,100.5"/>
+<polygon points="805,232 800.5,222 809.5,222"/>
+<polygon points="615,280 625,275.5 625,284.5"/>
+<polygon points="290,280 300,275.5 300,284.5"/>
+<polygon points="155,211 150.5,221 159.5,221"/>
+<polygon points="155,144 150.5,154 159.5,154"/>
+</g>
+<polygon points="480,328 475.5,338 484.5,338" fill="var(--ink-muted)"/>
+<g fill="var(--surface-raised)">
+<rect x="20" y="48" width="270" height="96" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="345" y="48" width="270" height="96" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="670" y="48" width="270" height="96" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="670" y="232" width="270" height="96" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="345" y="232" width="270" height="96" rx="8" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="20" y="232" width="270" height="96" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="64" y="165" width="182" height="46" rx="8" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="20" y="342" width="184" height="28" rx="8" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="5 4"/>
+</g>
+<g fill="var(--surface-sunken)">
+<circle cx="20" cy="48" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="345" cy="48" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="670" cy="48" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="670" cy="232" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="345" cy="232" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+<circle cx="20" cy="232" r="11" stroke="var(--border-control)" stroke-width="1.5"/>
+</g>
+<g fill="var(--surface-raised)">
+<rect x="20" y="394" width="26" height="16" rx="4" stroke="var(--ink)" stroke-width="1.5"/>
+<rect x="234" y="394" width="26" height="16" rx="4" stroke="var(--accent)" stroke-width="2.5"/>
+<rect x="472" y="394" width="26" height="16" rx="4" stroke="var(--ink-muted)" stroke-width="1.5" stroke-dasharray="4 3"/>
+</g>
+<text x="940" y="29" font-size="13" font-weight="600" fill="var(--ink-muted)" text-anchor="end">The Paused switch stops every step</text>
+<g font-size="13" font-weight="600" fill="var(--ink)" text-anchor="middle">
+<text x="20" y="52.5">1</text>
+<text x="345" y="52.5">2</text>
+<text x="670" y="52.5">3</text>
+<text x="670" y="236.5">4</text>
+<text x="345" y="236.5">5</text>
+<text x="20" y="236.5">6</text>
+<text x="155" y="184">PASS: rulebook updated,</text>
+</g>
+<g font-size="17" font-weight="600" fill="var(--ink)">
+<text x="38" y="86">The judge reads the claims</text>
+<text x="363" y="86">Unsure tags go to the queue</text>
+<text x="688" y="86">The editor decides each row</text>
+<text x="688" y="270">A lesson is drafted</text>
+<text x="363" y="270">The rule owner approves it</text>
+<text x="38" y="270">The gate tests it</text>
+</g>
+<g font-size="13.5" fill="var(--ink-muted)">
+<text x="38" y="110">against the written rulebook, tag by tag</text>
+<text x="363" y="110">the Tag decisions table in Notion</text>
+<text x="688" y="110">Tag outcome, Why wrong, Your reasoning</text>
+<text x="688" y="294">only when decisions blame a rule;</text>
+<text x="688" y="312">saved in Rule changes</text>
+<text x="363" y="294">Approved, or Rejected</text>
+<text x="38" y="294">against every earlier decision</text>
+</g>
+<g font-size="13" fill="var(--ink-muted)" text-anchor="end">
+<text x="274" y="68">the agent</text>
+<text x="599" y="68">the agent</text>
+<text x="924" y="252">the agent</text>
+<text x="274" y="252">the agent</text>
+</g>
+<g font-size="13" font-weight="600" fill="var(--accent)" text-anchor="end">
+<text x="924" y="68">a person decides</text>
+<text x="599" y="252">a person decides</text>
+</g>
+<g font-size="13" fill="var(--ink)" text-anchor="middle">
+<text x="155" y="202">follow-up re-checks the claims</text>
+<text x="112" y="361">FAIL or HOLD: nothing changes</text>
+</g>
+<text x="260" y="192" font-size="13" fill="var(--ink-muted)">the next run uses the new rule</text>
+<text x="408" y="348" font-size="13" fill="var(--ink-muted)" text-anchor="middle">FAIL: reword and try again</text>
+<g font-size="13.5" fill="var(--ink)">
+<text x="56" y="407">ink outline = the agent writes</text>
+<text x="270" y="407">accent outline = a person decides</text>
+<text x="508" y="407">dashed = a switch, or nothing changes</text>
+</g>
+</svg>
