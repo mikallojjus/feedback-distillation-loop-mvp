@@ -4,13 +4,12 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: Stage 2 (2026-10-15). Stage 1 is live in Notion under the parent page: the approved structure, 13 rulebook rows, 50 claims, 10 seeded decisions, edition 2026-10-15.2 (the restore after the drift check), 11 canaries; the first real run tagged the 50 claims (2 open queue rows).
+- Phase: checkpoint 2 reached (2026-10-15 evening). The MVP is built, tested (1,854 tests pass) and run live; the independent verifier re-ran checks 1, 3, 5, 7, 8 and 10 (`VERIFICATION.md`); the artifact is republished. The MVP is agreed when the product owner runs the seven steps on a fresh practice page and says so.
 - Checkpoint 1 (Notion structure proposal): approved as proposed on 2026-10-15 (decision P1).
-- Checkpoint 2 (final demo): being prepared. Done: calibration runs 1 to 5 (manifests .1 to .3), the rollback read-back, the headless checks for status, tag, distill and promote, the walkthrough evals (three conditions graded, with-skill 100%), the description optimiser (running). Left: the verifier, the artifact republish, the checkpoint message; and, once a person clears the pause (blocker B2): calibration runs 6 and 7, the unpaused practice-page eval, the product owner's fresh practice page.
-- Blockers: B2, `agents/claim-tagger-mvp/runs/PAUSED` (set by the engineer for the evals; its removal was refused; a person deletes it). B1 (the token) was fixed on 2026-10-15.
+- Blockers: B2, `agents/claim-tagger-mvp/runs/PAUSED` (set by the engineer for the evals; its removal was refused; a person deletes it). While it exists no practice page can be built and no production command runs. Waiting on it: calibration runs 6 and 7 of manifest .3, the unpaused practice-page eval, the owner's fresh practice page.
 - Branch `mvp-2026-11`; the last commit is the newest one in `git log`.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The builder session is closed. Practice pages under Demos: calibration 1 to 5 (ids in `runs/demos/`); dry-run folders only under Demo tests.
-- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 1, checkpoint 1).
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The builder session is closed. Practice pages under Demos: calibration 1 to 5 (ids in `runs/demos/`); calibration 5 (3fa273e214eb81169e15d8bf8a00be98) shows a completed cycle.
+- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 2, checkpoint 2).
 
 ## Entries
 
@@ -149,3 +148,11 @@ Done: calibration page 5 was built from manifest .3 and run end to end: the pres
 Verified: run 5's reports, verify and where in `evidence/09-calibration/run-5/`; the rollback ledger shows one update with read-back ok and the fresh pull holds the restored text; every eval assertion was checked by `grade.py` against the saved final messages, the demo folders and the subagents' tool calls (no connector write in any run); the walkthrough tests pass against manifest .3 (77) and the page passes the page check in a dry run.
 
 Next: the verifier (acceptance check 11), the artifact republish, the checkpoint 2 message; after a person clears the pause: calibration runs 6 and 7, the unpaused practice-page eval, the owner's fresh practice page.
+
+### 18. The verifier, the test fix, the artifact, checkpoint 2 (2026-10-15)
+
+Done: the independent verifier re-ran acceptance checks 1, 3, 5, 7, 8 and 10 and the inspection for hard rule 9 from commit dd65af9, read-only towards Notion, and wrote `VERIFICATION.md`: checks 3, 5 (with the rollback), 7, 8 and 10 and the key inspection PASS; check 1 FAILed on one stale test expectation (the propose test still expected rule 4 on the practice page's Step 2 rows after the story moved to rule 3). The test now takes the rule from the manifest; the full suite was re-run (1,854 tests, 0 failures) and `evidence/01-tests/` refreshed; the verifier re-verified check 1 from commit a478df6 (1,854 of 1,854 pass, test names equal to the evidence) and its overall verdict is PASS, with notes for awareness (its discrepancies 2 to 5 and 7). The verifier's other findings were taken up: the grader now follows the eval workspace's layout and says plainly when a transcript is missing (five of the six subagent transcripts were empty when graded, decision 40); the pause and drift checks' one-off hand edits of editor-owned fields on the production tables are disclosed as such (decision 41); entry 17's "Does not apply at 0.35" for the AI Force row describes the judge's reading, while the queue row reads Can't tell at 0.65 (propose writes the unsure band as Can't tell and the confidence as the distance from 0.5). The description optimiser ran twice on the twenty trigger queries (once with the installed skill set aside); it counted no trigger on any positive query and left the description as written; a backlog row asks the product owner to try the ten positive phrasings in ordinary sessions. The artifact was rebuilt (Status, How to run, Backlog; the strict build passes every check) and republished at the same link.
+
+Verified: `evidence/01-tests/node-test-spec.txt` (1,854 pass, 0 fail); `VERIFICATION.md`; the grader's verdicts unchanged after the layout fix (with the skill 12 of 12, without 8 of 12); the strict build's check list; no secret in the committed files (the verifier's inspection and the engineer's scan).
+
+Next: the product owner deletes the pause file, builds a fresh practice page and runs the seven steps; then calibration runs 6 and 7 and the unpaused practice-page eval; the MVP is agreed when the product owner says so.

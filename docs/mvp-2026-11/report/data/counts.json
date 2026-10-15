@@ -22,7 +22,7 @@
   },
 
   "tests": {
-    "full": { "value": 1853, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1853, pass 1853, fail 0 (node --test tests/ on 15 October 2026, before the three tests added with decisions 35 and 36)" },
+    "full": { "value": 1854, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1854, pass 1854, fail 0 (node --test tests/ on 15 October 2026 at 19:50, after the propose test took the rule from the manifest)" },
     "files": { "value": 33, "source": "tests/mvp/*.test.mjs counted with ls on 15 October 2026" }
   },
 
@@ -99,7 +99,7 @@
   },
 
   "verify": {
-    "checks": { "value": 6, "source": "notes/VERIFICATION.md: acceptance checks 1, 3, 5, 7, 8 and 10 re-run by the independent verifier", "pending": true },
-    "passed": { "value": 0, "source": "notes/VERIFICATION.md: checks with verdict PASS", "pending": true }
+    "checks": { "value": 6, "source": "notes/VERIFICATION.md: acceptance checks 1, 3, 5, 7, 8 and 10 re-run by the independent verifier on 15 October 2026 (check 1 twice: at commit dd65af9 and again at a478df6)" },
+    "passed": { "value": 6, "source": "notes/VERIFICATION.md, the Checks table at commit a478df6: every re-run check has the verdict PASS (check 1 after the test was corrected); overall verdict PASS" }
   }
 }
