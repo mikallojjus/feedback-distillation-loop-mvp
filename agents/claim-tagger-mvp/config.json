@@ -1,0 +1,64 @@
+{
+  "agent": "claim-tagger-mvp",
+  "notion": {
+    "api_version": "2022-06-28",
+    "builder_api_version": "2026-03-11",
+    "parent_page_id": "3fa273e214eb805199f3d12ef01db453",
+    "setup_page_parents": [
+      "3fa273e214eb805199f3d12ef01db453"
+    ],
+    "databases": {},
+    "sources": {
+      "taxonomy": {
+        "database_id": "f05273e214eb8353b0a981544507de32",
+        "data_source_id": "b65273e2-14eb-8362-86a6-870ea8d632f4",
+        "work_tag": "Issue",
+        "read_only": true
+      },
+      "real_claims": {
+        "database_id": "7219756338b2416f8fa8af83d75ec47d",
+        "data_source_id": "d1307596-e531-420f-8688-2485f3ef28ab",
+        "key": "Geo ID",
+        "read_only": true
+      }
+    },
+    "protected_database_ids": [
+      "f05273e214eb8353b0a981544507de32",
+      "b65273e2-14eb-8362-86a6-870ea8d632f4",
+      "7219756338b2416f8fa8af83d75ec47d",
+      "d1307596-e531-420f-8688-2485f3ef28ab",
+      "9e111d22c14e4344bb90072606036942",
+      "9e979fe1-e03d-45cd-b9b1-d971dc3d90a2",
+      "67a1940f-db0d-477a-9737-0a9eb01a5eac",
+      "0e2273e214eb83b0a2b1013e7d0958fc",
+      "eec273e2-14eb-8349-a416-074a30396303",
+      "3f3273e2-14eb-801f-9da3-000b25bdb94e",
+      "89043d4a749041ffb834f96a5239e148",
+      "319e6022-0b6a-4068-b560-99c83fae5bdf",
+      "9418c3f625d24b439539f381b7ff03c2",
+      "506dddee-af6e-4cbe-980f-a1ef1564d9bd",
+      "de7a08f6d3ae4c08b9387e6d762d79f2",
+      "92c9f4a9-f729-447b-88b9-982ff0e97074",
+      "833efad0634f43608ca18e4f7291cc02",
+      "e1836e35-d614-4434-ab34-a0ddeaa1842c",
+      "0c397590fb154ddb98010830faaa159b",
+      "e1f2103e-6233-468c-91b4-2c2382e86d1b",
+      "43c8a1c3a8d44a7f824698b4789cffe6",
+      "5de4f0e4-21ab-417c-b9a5-06bbc6c143eb"
+    ],
+    "protected_page_ids": [
+      "3da273e214eb80c180d5fd0894bc2db8",
+      "3f8273e214eb81c59b0cc7576b1bb62f",
+      "3f9273e214eb81c2a075fd94e339d40e"
+    ],
+    "requests_per_second": 3,
+    "page_size": 100,
+    "max_text": 1900
+  },
+  "editor_columns": {
+    "tag_decisions": ["Tag outcome", "Why wrong", "Your reasoning"],
+    "rule_changes": ["Editor wording"],
+    "rule_changes_status_editor_values": ["Approved", "Rejected"],
+    "agent_settings": ["Paused"]
+  }
+}

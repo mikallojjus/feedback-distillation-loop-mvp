@@ -36,3 +36,11 @@ Done: read-only. The taxonomy's schema and its 13 Issue rows (the rows whose Wor
 Verified: counts from a grouped SQL query (10 assessed and decided, 48 assessed still to review); the JSON file parses.
 
 Next: remaining digests; CLAUDE.md; settings; dry run; proposal.
+
+### 4. CLAUDE.md amended; settings, config skeleton and connector guard for the new folder (2026-10-15)
+
+Done: `CLAUDE.md` rules 1, 5, 10 and the agents table amended as decisions D23 and D31 say, in one commit (`3c62989`). `.claude/settings.json`: allow rules for the new scripts, ask for `setup`, `rollback`, `restore` and the connector write tools (both server names), deny for the delete, move, duplicate and restore tools, writes under `runs/`, and the old folder's writer scripts; the hook now runs `agents/claim-tagger-mvp/scripts/hooks/guard.mjs`. `agents/claim-tagger-mvp/config.json` holds the parent page, the two read-only sources, the protected ids (real tables, the audit, World affairs, the old hub and sandbox databases) and the editor columns. The guard denies deletes and moves always, any mention of a protected id, any editor-column write, and everything else unless `runs/SETUP` exists and the target is registered in `runs/builder/`.
+
+Verified: 18 guard decisions checked against expectations in a temporary root (all as expected); the stdin path answers deny, no opinion and deny-on-garbage. Digests complete: library, orientation, W4 (1,043 lines, with 25 contradictions to settle), artifact recipe; W3 still being written.
+
+Next: W3 digest; dry-run pull script; structure proposal; artifact scaffold.

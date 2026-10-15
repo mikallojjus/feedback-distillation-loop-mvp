@@ -147,7 +147,7 @@ The notes contain no Description, Example Claims or Counterpart text for any of 
 
 ### 2.5 The other nine Issue rows, and discrepancies
 
-- No Description, When to use, Example Claims or Counterpart text for Factually challenged, Wordy, Poor wording, Incorrect grammar, Improper capitalization, Trailing period, Multi-sentence, Exact duplicate or Semantically duplicated exists in the notes or in the repo. A repo-wide search for the titles finds only audit rows, reports and design notes. W3 C4 names a 13-row file `claim-tags-verified.9oct.rows.json` that is not in this repo.
+- No Description, When to use, Example Claims or Counterpart text for Factually challenged, Wordy, Poor wording, Incorrect grammar, Improper capitalization, Trailing period, Multi-sentence, Exact duplicate or Semantically duplicated exists in the notes or in the repo. A repo-wide search for these titles finds them in audit rows, reports and design notes, and in the rubric only as cross-references inside two rule texts (Improperly sourced rule 3 and Source inaccessible rule 4). W3 C4 names a 13-row file `claim-tags-verified.9oct.rows.json` that is not in this repo.
 - Counterpart pairs in the trial rubric (rubric.json, `counterpart_pairs`): Debate and Simple; Opinion and Factual; Multiple statements and Single core statement; Context-dependent and Self-contained. Only Context-dependent is an Issue row.
 - The trial rubric holds 14 Verified tags: the four Issue rows above, and ten non-Issue tags (Debate, Editor verified, Factual, Hypothetical, Multiple statements, Opinion, Predictive, Self-contained, Simple, Single core statement). Predictive and Hypothetical leave the scope (D1).
 - Count check: D1 says 9 tags need rules written. The notes show "none" for 8 rows (Wordy, Poor wording, Incorrect grammar, Improper capitalization, Trailing period, Multi-sentence, Exact duplicate, Semantically duplicated), and 644 characters for Factually challenged. Check the live table before drafting rules.
@@ -166,18 +166,18 @@ The notes contain no Description, Example Claims or Counterpart text for any of 
 | 6 | Sandbox engineer notes page | page 3f8273e214eb8137a13cd8d4d483b936 (same id as row 3) | no | sandbox/config.json:8 |
 | 7 | Feedback Distillation MVP (root for all new Notion work) | page 3fa273e214eb805199f3d12ef01db453 | not listed (new) | DECISIONS.md:40 (D29); MVP-PROMPT.md section 3 |
 | 8 | "Claim tagger" page (planned name only) | no id in the notes | — | P1-architecture.md:117 |
-| 9 | Trial Rulebook (copy) | db 89043d4a749041ffb834f96a5239e148; ds 319e6022-0b6a-4068-b560-99c83fae5bdf | no | config.json:9-13 |
-| 10 | Trial Claims (agent mirror of 60 claims) | db 9418c3f625d24b439539f381b7ff03c2; ds 506dddee-af6e-4cbe-980f-a1ef1564d9bd | no | config.json:14-18 |
-| 11 | Trial Tag decisions (queue) | db de7a08f6d3ae4c08b9387e6d762d79f2; ds 92c9f4a9-f729-447b-88b9-982ff0e97074 | no | config.json:19-23 |
-| 12 | Trial Rule changes (lessons) | db 833efad0634f43608ca18e4f7291cc02; ds e1836e35-d614-4434-ab34-a0ddeaa1842c | no | config.json:24-28 |
-| 13 | Trial Runs | db 0c397590fb154ddb98010830faaa159b; ds e1f2103e-6233-468c-91b4-2c2382e86d1b | no | config.json:29-33 |
-| 14 | Trial Agent settings | db 43c8a1c3a8d44a7f824698b4789cffe6; ds 5de4f0e4-21ab-417c-b9a5-06bbc6c143eb | no | config.json:34-38 |
-| 15 | Sandbox Rulebook | db 32d9cf20624c49dd82e381e035092b8a; ds 4ad48d6f-cc91-417e-b780-5db4bcd0d1a6 | no | sandbox/config.json:9-14 |
+| 9 | Trial Rulebook (copy) | db 89043d4a749041ffb834f96a5239e148; ds 319e6022-0b6a-4068-b560-99c83fae5bdf | no | config.json:9-12 |
+| 10 | Trial Claims (agent mirror of 60 claims) | db 9418c3f625d24b439539f381b7ff03c2; ds 506dddee-af6e-4cbe-980f-a1ef1564d9bd | no | config.json:14-17 |
+| 11 | Trial Tag decisions (queue) | db de7a08f6d3ae4c08b9387e6d762d79f2; ds 92c9f4a9-f729-447b-88b9-982ff0e97074 | no | config.json:19-22 |
+| 12 | Trial Rule changes (lessons) | db 833efad0634f43608ca18e4f7291cc02; ds e1836e35-d614-4434-ab34-a0ddeaa1842c | no | config.json:24-27 |
+| 13 | Trial Runs | db 0c397590fb154ddb98010830faaa159b; ds e1f2103e-6233-468c-91b4-2c2382e86d1b | no | config.json:29-32 |
+| 14 | Trial Agent settings | db 43c8a1c3a8d44a7f824698b4789cffe6; ds 5de4f0e4-21ab-417c-b9a5-06bbc6c143eb | no | config.json:34-37 |
+| 15 | Sandbox Rulebook | db 32d9cf20624c49dd82e381e035092b8a; ds 4ad48d6f-cc91-417e-b780-5db4bcd0d1a6 | no | sandbox/config.json:10-13 |
 | 16 | Sandbox Claims | db 5e8b5f36885f4d60a8951255aeec086b; ds 755397bf-906c-4d60-9f05-fcd46f67c22d | no | sandbox/config.json:15-18 |
-| 17 | Sandbox Tag decisions | db 8483669142a04204a1d82ef8e7f511b5; ds ab0b0930-3d8f-4ce7-9491-904b25272f27 | no | sandbox/config.json:19-23 |
-| 18 | Sandbox Rule changes | db a9fb71b6896843afa4d8994414233562; ds 43614e6d-9d8c-4e0e-b1f5-26311eb03194 | no | sandbox/config.json:24-28 |
-| 19 | Sandbox Runs | db 3be370cd6657424786b9d942b2583b31; ds 737d2036-0e9f-4cbb-871f-0755d665d706 | no | sandbox/config.json:29-33 |
-| 20 | Sandbox Agent settings | db 86ede9c7e6764512a8a5e85ca88f1340; ds 7e81475a-37b7-471a-87a5-bcebd6b304b7 | no | sandbox/config.json:34-38 |
+| 17 | Sandbox Tag decisions | db 8483669142a04204a1d82ef8e7f511b5; ds ab0b0930-3d8f-4ce7-9491-904b25272f27 | no | sandbox/config.json:20-23 |
+| 18 | Sandbox Rule changes | db a9fb71b6896843afa4d8994414233562; ds 43614e6d-9d8c-4e0e-b1f5-26311eb03194 | no | sandbox/config.json:25-28 |
+| 19 | Sandbox Runs | db 3be370cd6657424786b9d942b2583b31; ds 737d2036-0e9f-4cbb-871f-0755d665d706 | no | sandbox/config.json:30-33 |
+| 20 | Sandbox Agent settings | db 86ede9c7e6764512a8a5e85ca88f1340; ds 7e81475a-37b7-471a-87a5-bcebd6b304b7 | no | sandbox/config.json:35-38 |
 | 21 | Taxonomy "Claim Tags — verified" | db f05273e214eb8353b0a981544507de32; ds b65273e2-14eb-8362-86a6-870ea8d632f4 | yes, both ids | config.json:45-46; allowlist.test.mjs:270; rubric.json:20-21 |
 | 22 | Taxonomy Issue view | view fcd273e214eb825d9be008f05e6e7392 | (a view) | WORKLOG.md:9 |
 | 23 | Taxonomy row pages for the four rubric rows | Context-dependent 765273e214eb83458bd7819ebe81bd9e; Improperly sourced 461273e214eb822cb6de81aa194dfc07; Source inaccessible 3f6273e214eb81c3b06ad421d3eff8a9; Unsourced 713273e214eb8315b9ce81a44ba6cc5d | no | rubric.json (notion_page_id) |
@@ -192,7 +192,7 @@ The notes contain no Description, Example Claims or Counterpart text for any of 
 
 Notes on the table:
 
-- The old protected list has nine ids in two forms. Four are database ids (rows 24, 25, 21, 26 by database) and five are data-source ids (rows 24, 25, 21, 26 and 27 by data source). The probe on 13 October returned 200 for the four database ids and 404 for the five data-source ids (evidence/token-access-probe.json, at 2026-10-13T18:56:05Z).
+- The old protected list has nine ids in two forms. Database ids: 7219756338b2416f8fa8af83d75ec47d (row 24), 9e111d22c14e4344bb90072606036942 (row 25), f05273e214eb8353b0a981544507de32 (row 21) and 0e2273e214eb83b0a2b1013e7d0958fc (row 26). Data-source ids: d1307596-e531-420f-8688-2485f3ef28ab (row 24), 9e979fe1-e03d-45cd-b9b1-d971dc3d90a2 (row 25), b65273e2-14eb-8362-86a6-870ea8d632f4 (row 21), eec273e2-14eb-8349-a416-074a30396303 (row 26) and 67a1940f-db0d-477a-9737-0a9eb01a5eac (row 27). The probe on 13 October returned 200 for the four database ids and 404 for the five data-source ids (evidence/token-access-probe.json, at 2026-10-13T18:56:05Z).
 - Row 25: allowlist.test.mjs:269 reads "its data source (also Claims to review)" for 9e979fe1. That is ambiguous, so treat it as a candidate.
 - Row 26 and row 27: the notes say "both World affairs mirrors" should be protected, as databases and data sources (W3 section 2, line 63). The list has three World affairs ids, so the second mirror's database id is missing from the repo (inferred).
 - Row 28: "QA agent work tags" appears in P1-architecture.md:187 and W3-code-changes.md:64 with no id.
@@ -207,7 +207,7 @@ Notes on the table:
 - Types: the notes give Geo Name as title and Geo Sources as text (P3:73). They do not give the types of the others. Whether Geo URL and Geo Is factual exist on the real table is unverified (P1-architecture.md:318). The W3 C19 dry run checks them.
 - Shape of "Geo Sources": text. Links are separated by `<br>`, and each is `[title](https://www.geobrowser.io/space/<space>/<entity>)`. The links point to Geo entity pages, not to publisher articles (P1-architecture.md:7; verification-notes.md:65). The old parser (seed-build.mjs:265-281) splits on `<br>`, takes the URL from `[title](url)` or a bare URL, drops duplicates, and throws on anything else.
 - Count: the 13 October research sample has a "Geo Sources (count)" column (seed-build.mjs:395). P3:90 calls it derived, and P1-architecture.md:318 says the schema lists only Geo Sources. The new build counts the links instead (W3 section 2, `sources_count` null; C6).
-- How the old pull parsed it: it never read this table. The trial pull reads only its six configured databases and rejects other names (pull.mjs:264-266). The trial Claims mirror stored "Sources count" (a number) and "Source URLs" (rich text, one per line; pull.mjs:354). The rich-text decoder dropped link targets (W3 C3, citing notion-values.mjs lines 33 and 60), so the pull kept plain text only (P3 #4). The 60 seed claims took their counts offline from the research exports (seed-build.mjs:395, 409). For 30 claims without a count, a read-only connector fetch filled it in (sources-fill.json, fetched 2026-10-13T13:58:01Z; 01-log.md:11: 30 of 30, seven with zero sources).
+- How the old pull parsed it: it never read this table. The trial pull reads only its six configured databases and rejects other names (pull.mjs:264-266). The trial Claims mirror stored "Sources count" (a number) and "Source URLs" (rich text, one per line; pull.mjs:354). The rich-text decoder dropped link targets (W3 C3, citing notion-values.mjs lines 33 and 60), so the pull kept plain text only (P3 #4). Thirty of the 60 seed claims took their counts offline from the 13 October research sample (seed-build.mjs:395, 409). The other 30 were filled by a read-only connector fetch (sources-fill.json, fetched 2026-10-13T13:58:01Z; 01-log.md:11: 30 of 30, seven with zero sources).
 - Web URL resolution (not built in the MVP; backlog): verification-notes.md:63-71 gives one GraphQL query per Geo entity, endpoint `https://api-testnet.geobrowser.io/graphql`, no authentication for reads, property "Web URL" (id 412ff593e9154012a43d4c27ec5c68b6). A missing Web URL is "not checked", never Source inaccessible. The mainnet host is unconfirmed (verification-notes.md:71).
 
 ## 5. The 9 October audit
@@ -216,7 +216,7 @@ What it is: 260 audit rows, 57 of them decided, in the research export `sources/
 
 Where the decisions live:
 
-- In the repo, seed output: `agents/claim-tagger/evals/seed/decisions.seed.jsonl` (50 rows: 33 with why_in_queue "Seeded decision", 17 "Auditor flag"); `excluded-decisions.jsonl` (24 rows on tags outside the Rulebook: Semantically duplicated 12, Wordy 3, Poor wording 3, Exact duplicate 2, Factually challenged 2, Incorrect grammar 2); `check-by-hand.md` (11 special rows; its header says 9, a known slip); `claims.seed.jsonl` (60 claims, each with audit_row_urls); `seed-report.json` (counts); `sources-fill.json` (the Sources counts).
+- In the repo, seed output: `agents/claim-tagger/evals/seed/decisions.seed.jsonl` (50 rows: 33 with why_in_queue "Seeded decision", 17 "Auditor flag"); `excluded-decisions.jsonl` (24 rows on tags outside the Rulebook: Semantically duplicated 12, Wordy 3, Poor wording 3, Exact duplicate 2, Factually challenged 2, Incorrect grammar 2); `check-by-hand.md` (11 special rows); `claims.seed.jsonl` (60 claims, each with audit_row_urls); `seed-report.json` (counts); `sources-fill.json` (the Sources counts).
 - In Notion, the seeded copies are in the trial Tag decisions database as Seeded outcome, Seeded reasoning and Seeded at (plan.md:53 and :300; `evidence/notion/00-seeded/decisions.jsonl`). 27 rows carry an outcome (17 Applies, 10 Does not apply); 23 are open (seed-report.json).
 - The counts: DECISIONS.md:14 (D8) says "33 missed, 25 wrongly applied in the audit" for Context-dependent. The repo does not recompute them. The Direction formula defines "Missed" and "Wrongly applied" (plan.md:60).
 
@@ -326,7 +326,7 @@ Detection (`agents/claim-tagger/scripts/lib/claude.mjs`):
 
 Anonymisation:
 
-- `anonymise.replacements` (config.json:112-135, and the sandbox config) holds five pairs. Three map person names to roles and two map possessive forms to roles. This digest does not repeat the names.
+- `anonymise.replacements` (config.json:112-135, and the sandbox config) holds five pairs. Four map a person's name, or its short form, to a role; one maps a possessive phrase to a role. This digest does not repeat the names.
 - Where it applies: seed-build.mjs builds the scrubber with `makeScrubber` (whole word, longest match first, apostrophe-tolerant; lines 220-226), applies it to every free-text field after flattening Notion mentions (lines 424-426), and refuses the build with exit 2 if a name is left (line 701). The rubric copy goes through `scrubNames` and `leftoverNames`, which refuse a rubric that still names someone (rubric-init.mjs:58-68, 101-116; seed.mjs:45-48). The auditor's predictions are dropped from the notes, and two columns are never emitted (seed-build.mjs header).
 - The problem: the pairs are committed in config (sweep-C section 8). The fix (W3 H5): move them to a git-ignored `agents/*/anonymise.local.json`, add a committed example file, deny Read on the local file, and have rubric-init refuse to run without it.
 
