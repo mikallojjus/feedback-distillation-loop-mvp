@@ -1,0 +1,56 @@
+{
+  "prompt": "/claim-tagger demo status",
+  "ok": true,
+  "status": "pass",
+  "exit_code": 0,
+  "signal": null,
+  "timed_out": false,
+  "started_at": "2026-10-15T15:13:38.546Z",
+  "finished_at": "2026-10-15T15:14:01.657Z",
+  "duration_ms": 23111,
+  "claude": {
+    "bin": "C:\\Users\\John Malkovich\\.local\\bin\\claude.exe",
+    "command": "C:\\Users\\John Malkovich\\.local\\bin\\claude.exe",
+    "version": "2.1.296",
+    "model": "claude-fable-5-1",
+    "style": "Explanatory"
+  },
+  "args": [
+    "-p",
+    "/claim-tagger demo status",
+    "--settings",
+    "X:\\work\\geo-agents\\docs\\mvp-2026-11\\evidence\\07-headless\\demo-status\\headless-settings.json",
+    "--permission-mode",
+    "acceptEdits",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "cwd": "X:\\work\\geo-agents",
+  "settings": "X:\\work\\geo-agents\\docs\\mvp-2026-11\\evidence\\07-headless\\demo-status\\headless-settings.json",
+  "problems": [],
+  "final": "Demo · Status of the practice page Claim tagger practice · calibration 1: nothing is paused; 1 rule change waits for you.\n\n| Where | Now |\n|---|---|\n| Rulebook | 1 tag, edition 2026-10-15.1 |\n| Your queue | nothing waits |\n| Lessons waiting | 1 approved, ready to check |\n| Last run | Promote · 15 Oct 18:12 · FAIL |\n\nNext: type /claim-tagger demo promote to check the approved rule change.",
+  "stats": {
+    "turns": 2,
+    "tool_calls": 1,
+    "bash_calls": 1,
+    "notion_reads": 0,
+    "notion_writes": 0
+  },
+  "tools": [
+    {
+      "name": "Bash",
+      "summary": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run status"
+    }
+  ],
+  "info": {
+    "events": 14,
+    "skipped_lines": 0,
+    "results": 1,
+    "style": "Explanatory",
+    "model": "claude-fable-5-1",
+    "cli_version": "2.1.296",
+    "denials": [],
+    "notes": []
+  }
+}
