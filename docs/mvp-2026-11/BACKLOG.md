@@ -17,3 +17,7 @@ One row per deferred item: what, why not now, the trigger that brings it in, eff
 | Calibrate the re-read band and the safety check's noise guard on the first 200 real claims | Needs the real table (decision D19) | The first real run | S |
 | Python-compatible hashes | Marked Later in the analysis | A Python consumer of the run files appears | S |
 | The old hub and sandbox under "Editorial feedback loop" | Read-only history; never touched, never deleted (hard rule 8) | Never | - |
+| Rotation of unseen rows in a distill group above 30 rows | The first groups are small; the newest 30 rows are taken | A tag's decided rows pass 30 and a lesson keeps missing older rows | S |
+| The calibration run that compares the adaptive judge with a three-run reference (`--reference`) | Needs the real table's first 200 claims (decision D19) | The first real run on the real table | S |
+| A warning when the Claude CLI version changes between judge runs | Recorded per call, not acted on | The example claims change answers after a CLI update | S |
+| Clearing the Follow-up marks of a rolled-back rule change | Rollback restores the text and marks the lesson; the Fixed marks stay as history | An editor asks what Fixed means after a rollback | S |
