@@ -1,0 +1,56 @@
+{
+  "prompt": "/claim-tagger status",
+  "ok": true,
+  "status": "pass",
+  "exit_code": 0,
+  "signal": null,
+  "timed_out": false,
+  "started_at": "2026-10-15T14:16:59.175Z",
+  "finished_at": "2026-10-15T14:17:16.077Z",
+  "duration_ms": 16902,
+  "claude": {
+    "bin": "C:\\Users\\John Malkovich\\.local\\bin\\claude.exe",
+    "command": "C:\\Users\\John Malkovich\\.local\\bin\\claude.exe",
+    "version": "2.1.296",
+    "model": "claude-fable-5-1",
+    "style": "Explanatory"
+  },
+  "args": [
+    "-p",
+    "/claim-tagger status",
+    "--settings",
+    "X:\\work\\geo-agents\\docs\\mvp-2026-11\\evidence\\07-headless\\status\\headless-settings.json",
+    "--permission-mode",
+    "acceptEdits",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "cwd": "X:\\work\\geo-agents",
+  "settings": "X:\\work\\geo-agents\\docs\\mvp-2026-11\\evidence\\07-headless\\status\\headless-settings.json",
+  "problems": [],
+  "final": "Status: nothing is paused; 2 rows wait for you.\n\n| Where | Now |\n|---|---|\n| Rulebook | 13 tags, edition 2026-10-15.1 |\n| Your queue | 2 rows, lowest confidence first |\n| Lessons waiting | none |\n| Last run | Tag · 15 Oct 17:04 · 50 claims |\n\nNext: decide the 2 rows in Your queue (https://www.notion.so/b77d1b758c414293b14837fdd1af4754?v=3fa273e214eb81ceb47a000c49ca726d).",
+  "stats": {
+    "turns": 2,
+    "tool_calls": 1,
+    "bash_calls": 1,
+    "notion_reads": 0,
+    "notion_writes": 0
+  },
+  "tools": [
+    {
+      "name": "Bash",
+      "summary": "node agents/claim-tagger-mvp/scripts/status.mjs"
+    }
+  ],
+  "info": {
+    "events": 11,
+    "skipped_lines": 0,
+    "results": 1,
+    "style": "Explanatory",
+    "model": "claude-fable-5-1",
+    "cli_version": "2.1.296",
+    "denials": [],
+    "notes": []
+  }
+}
