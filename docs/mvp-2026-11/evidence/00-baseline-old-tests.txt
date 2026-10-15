@@ -1,0 +1,14 @@
+# Baseline: the old agent's test suite on this machine, 2026-10-15 (node --test tests/, Node v26.10.0)
+
+✔ command line: prints one line and details on stderr; usage errors (575.5442ms)
+✔ after an apply by connector there is no apply.json: pre is the source pull of the plan and post is the newest pull (438.816ms)
+ℹ tests 865
+ℹ suites 3
+ℹ pass 865
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 91658.3126
+
+[exited with code 0]
