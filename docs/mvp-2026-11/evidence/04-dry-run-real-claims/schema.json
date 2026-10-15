@@ -1,0 +1,364 @@
+{
+  "object": "database",
+  "id": "72197563-38b2-416f-8fa8-af83d75ec47d",
+  "cover": null,
+  "icon": null,
+  "created_time": "2026-10-07T16:17:00.000Z",
+  "created_by": {
+    "object": "user",
+    "id": "15156d8c-dcf9-489e-82b3-bbe81233ccdb"
+  },
+  "last_edited_by": {
+    "object": "user",
+    "id": "b08a4fb5-6559-4ff1-94f0-247a4fca5a1a"
+  },
+  "last_edited_time": "2026-10-12T11:29:00.000Z",
+  "title": [
+    {
+      "type": "text",
+      "text": {
+        "content": "U.S. Politics debate claims",
+        "link": null
+      },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "U.S. Politics debate claims",
+      "href": null
+    }
+  ],
+  "description": [
+    {
+      "type": "text",
+      "text": {
+        "content": "Geo mirror: Claim entities with the Debate tag asserted in U.S. Politics. Snapshot 7 October 2026; proposed/review columns stay in Notion.",
+        "link": null
+      },
+      "annotations": {
+        "bold": false,
+        "italic": false,
+        "strikethrough": false,
+        "underline": false,
+        "code": false,
+        "color": "default"
+      },
+      "plain_text": "Geo mirror: Claim entities with the Debate tag asserted in U.S. Politics. Snapshot 7 October 2026; proposed/review columns stay in Notion.",
+      "href": null
+    }
+  ],
+  "is_inline": true,
+  "database_type": null,
+  "properties": {
+    "Geo Sources": {
+      "id": "%3B%3Apk",
+      "name": "Geo Sources",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Geo ID": {
+      "id": "%3BK%7Du",
+      "name": "Geo ID",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Review status": {
+      "id": "%3Es%7C%3D",
+      "name": "Review status",
+      "description": null,
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "a124975d-3828-4812-a63a-4d2f6dc65d6b",
+            "name": "To review",
+            "color": "yellow",
+            "description": null
+          },
+          {
+            "id": "56ddcef4-8ef5-46fa-9ae2-897a35819738",
+            "name": "Reviewed",
+            "color": "green",
+            "description": null
+          }
+        ]
+      }
+    },
+    "Geo URL": {
+      "id": "%3F%5CEe",
+      "name": "Geo URL",
+      "description": null,
+      "type": "url",
+      "url": {}
+    },
+    "Claim quality tags — verified": {
+      "id": "Hg~V",
+      "name": "Claim quality tags — verified",
+      "description": null,
+      "type": "relation",
+      "relation": {
+        "database_id": "f05273e2-14eb-8353-b0a9-81544507de32",
+        "data_source_id": "b65273e2-14eb-8362-86a6-870ea8d632f4",
+        "type": "dual_property",
+        "dual_property": {
+          "synced_property_name": "U.S. Politics debate claims",
+          "synced_property_id": "wSbF"
+        }
+      }
+    },
+    "Geo Tags": {
+      "id": "Jsl%3C",
+      "name": "Geo Tags",
+      "description": null,
+      "type": "multi_select",
+      "multi_select": {
+        "options": [
+          {
+            "id": "4100be3a-547d-464d-9197-d997a4ad93ce",
+            "name": "Debate",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "62982ca5-4dce-4777-b861-46eb661c4349",
+            "name": "Democracy & Media",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "50c0754d-3986-42d9-8701-63de15a9edc0",
+            "name": "Economy",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "6ff72b17-f729-4012-8ca5-ed24e16e5f96",
+            "name": "Featured",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "f06133fd-d83c-4046-802e-e5bfae69d8f6",
+            "name": "Immigration",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "d293a811-4aa5-4a01-ad57-f4c88dc812d4",
+            "name": "Main claim",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "a4ec2968-c488-497d-bf60-fdd8e6e61c3d",
+            "name": "Politics",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "e887e896-0de4-401b-8621-ddf067195e32",
+            "name": "debate claim",
+            "color": "default",
+            "description": null
+          }
+        ]
+      }
+    },
+    "Challenged tags notes": {
+      "id": "Limn",
+      "name": "Challenged tags notes",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Geo Name source": {
+      "id": "M%40yR",
+      "name": "Geo Name source",
+      "description": null,
+      "type": "select",
+      "select": {
+        "options": [
+          {
+            "id": "acf1eebc-7d78-493d-9654-205994c050ed",
+            "name": "This space",
+            "color": "green",
+            "description": null
+          },
+          {
+            "id": "53172e66-4bf5-4fa5-bb2d-cd0f20e00812",
+            "name": "Other space (fallback)",
+            "color": "orange",
+            "description": null
+          }
+        ]
+      }
+    },
+    "Geo Topics": {
+      "id": "Nq%3CH",
+      "name": "Geo Topics",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Geo Score": {
+      "id": "QNrp",
+      "name": "Geo Score",
+      "description": null,
+      "type": "number",
+      "number": {
+        "format": "number"
+      }
+    },
+    "Geo Supporting arguments": {
+      "id": "SayP",
+      "name": "Geo Supporting arguments",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Geo Related people": {
+      "id": "TvDj",
+      "name": "Geo Related people",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Proposed Tags": {
+      "id": "TwcU",
+      "name": "Proposed Tags",
+      "description": null,
+      "type": "multi_select",
+      "multi_select": {
+        "options": [
+          {
+            "id": "523179ab-1635-4af8-86eb-64ee17838400",
+            "name": "Debate",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "82302bd5-5121-46a6-afd6-797d66749059",
+            "name": "Democracy & Media",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "be6ca16e-4437-46e5-9a53-44d9b9641555",
+            "name": "Economy",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "773dff5b-1bbe-4468-a5f7-3f3d0025fbf7",
+            "name": "Featured",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "de410bf4-f7dc-431b-9559-b1645f088657",
+            "name": "Immigration",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "2000e75d-f9da-4e57-b7ef-7a4795fbdff3",
+            "name": "Main claim",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "64da09bf-a33d-4152-b76c-536bff628d30",
+            "name": "Politics",
+            "color": "default",
+            "description": null
+          },
+          {
+            "id": "ba9c0773-b598-4520-b747-7cf8abcca9ba",
+            "name": "debate claim",
+            "color": "default",
+            "description": null
+          }
+        ]
+      }
+    },
+    "Geo Opposing arguments": {
+      "id": "WOni",
+      "name": "Geo Opposing arguments",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Proposed rename": {
+      "id": "%5B%60Ag",
+      "name": "Proposed rename",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Geo Related projects": {
+      "id": "%5CC~E",
+      "name": "Geo Related projects",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Geo Is factual": {
+      "id": "c%5DZD",
+      "name": "Geo Is factual",
+      "description": null,
+      "type": "checkbox",
+      "checkbox": {}
+    },
+    "Proposed Topics": {
+      "id": "lpuW",
+      "name": "Proposed Topics",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Editors challenging the QA tags": {
+      "id": "mQUE",
+      "name": "Editors challenging the QA tags",
+      "description": null,
+      "type": "relation",
+      "relation": {
+        "database_id": "3f3273e2-14eb-8089-a05e-faba1be8ca14",
+        "data_source_id": "3f3273e2-14eb-801f-9da3-000b25bdb94e",
+        "type": "dual_property",
+        "dual_property": {
+          "synced_property_name": "U.S. Politics debate claims",
+          "synced_property_id": "%3DNl%7C"
+        }
+      }
+    },
+    "Review notes": {
+      "id": "sv%60m",
+      "name": "Review notes",
+      "description": null,
+      "type": "rich_text",
+      "rich_text": {}
+    },
+    "Geo Name": {
+      "id": "title",
+      "name": "Geo Name",
+      "description": null,
+      "type": "title",
+      "title": {}
+    }
+  },
+  "parent": {
+    "type": "page_id",
+    "page_id": "3f2273e2-14eb-8146-81df-f6ad6dcf21a0"
+  },
+  "url": "https://app.notion.com/p/7219756338b2416f8fa8af83d75ec47d",
+  "public_url": null,
+  "in_trash": false,
+  "archived": false,
+  "request_id": "7e128710-5f35-4a76-b430-c5c7475d9f70"
+}

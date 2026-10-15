@@ -1,0 +1,261 @@
+{
+  "run_id": "dry-1",
+  "read_at": "2026-10-15T11:32:03.184Z",
+  "source": "real_claims",
+  "multi_source": false,
+  "row_count": 2351,
+  "column_count": 21,
+  "columns": [
+    {
+      "name": "Geo Sources",
+      "type": "rich_text"
+    },
+    {
+      "name": "Geo ID",
+      "type": "rich_text"
+    },
+    {
+      "name": "Review status",
+      "type": "select",
+      "options": [
+        "To review",
+        "Reviewed"
+      ]
+    },
+    {
+      "name": "Geo URL",
+      "type": "url"
+    },
+    {
+      "name": "Claim quality tags — verified",
+      "type": "relation"
+    },
+    {
+      "name": "Geo Tags",
+      "type": "multi_select",
+      "options": [
+        "Debate",
+        "Democracy & Media",
+        "Economy",
+        "Featured",
+        "Immigration",
+        "Main claim",
+        "Politics",
+        "debate claim"
+      ]
+    },
+    {
+      "name": "Challenged tags notes",
+      "type": "rich_text"
+    },
+    {
+      "name": "Geo Name source",
+      "type": "select",
+      "options": [
+        "This space",
+        "Other space (fallback)"
+      ]
+    },
+    {
+      "name": "Geo Topics",
+      "type": "rich_text"
+    },
+    {
+      "name": "Geo Score",
+      "type": "number"
+    },
+    {
+      "name": "Geo Supporting arguments",
+      "type": "rich_text"
+    },
+    {
+      "name": "Geo Related people",
+      "type": "rich_text"
+    },
+    {
+      "name": "Proposed Tags",
+      "type": "multi_select",
+      "options": [
+        "Debate",
+        "Democracy & Media",
+        "Economy",
+        "Featured",
+        "Immigration",
+        "Main claim",
+        "Politics",
+        "debate claim"
+      ]
+    },
+    {
+      "name": "Geo Opposing arguments",
+      "type": "rich_text"
+    },
+    {
+      "name": "Proposed rename",
+      "type": "rich_text"
+    },
+    {
+      "name": "Geo Related projects",
+      "type": "rich_text"
+    },
+    {
+      "name": "Geo Is factual",
+      "type": "checkbox"
+    },
+    {
+      "name": "Proposed Topics",
+      "type": "rich_text"
+    },
+    {
+      "name": "Editors challenging the QA tags",
+      "type": "relation"
+    },
+    {
+      "name": "Review notes",
+      "type": "rich_text"
+    },
+    {
+      "name": "Geo Name",
+      "type": "title"
+    }
+  ],
+  "key": {
+    "column": "Geo ID",
+    "type": "rich_text",
+    "empty": 0,
+    "unique": true,
+    "duplicates": []
+  },
+  "claim_name": {
+    "column": "Geo Name",
+    "type": "title",
+    "empty": 0
+  },
+  "geo_sources": {
+    "column": "Geo Sources",
+    "type": "rich_text",
+    "non_empty_rows": 1408,
+    "empty_rows": 943,
+    "rows_with_links": 1408,
+    "rows_read_whole": 0,
+    "total_links": 3851,
+    "links_per_row": {
+      "0": 943,
+      "1": 550,
+      "2": 262,
+      "3 or more": 596
+    },
+    "links_by_form": {
+      "rich_text": 3851,
+      "markdown": 0,
+      "bare": 0
+    },
+    "hosts": [
+      {
+        "host": "www.geobrowser.io",
+        "links": 3851
+      }
+    ],
+    "samples": [
+      {
+        "geo_id": "fc917f73c02e45f0a3a755a4f2c486cd",
+        "claim": "The FTC is justified in using consumer protection laws to investigate AI safety risks",
+        "sources_text": "FTC opens probe into safety of AI, including Anthropic and OpenAI\nF.T.C. Investigates OpenAI and Anthropic Over Potential Consumer Harms\nUS trade regulator ope…",
+        "links": [
+          {
+            "text": "FTC opens probe into safety of AI, including Anthropic and …",
+            "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3cd8e094753b4bd2b1c236f1adfc3c98",
+            "form": "rich_text"
+          },
+          {
+            "text": "F.T.C. Investigates OpenAI and Anthropic Over Potential Con…",
+            "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/e4d9704ad1384ea78a3052a07c691437",
+            "form": "rich_text"
+          },
+          {
+            "text": "US trade regulator opens investigation into AI giants inclu…",
+            "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1a1061e9d5d24cc7aa86a0086a9719e2",
+            "form": "rich_text"
+          },
+          {
+            "text": "FTC intensifies OpenAI, Anthropic probe following 'rogue AI…",
+            "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/da9e2df9dcdf47a6beca7b89d3c7d7cd",
+            "form": "rich_text"
+          },
+          {
+            "text": "OpenAI, Anthropic Face FTC Scrutiny on AI Safety After Secu…",
+            "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/823f41993a8d4dce926969e58f2a2fbb",
+            "form": "rich_text"
+          }
+        ]
+      },
+      {
+        "geo_id": "fe9ea6d6e0c8936e038d0bd54fbb7099",
+        "claim": "Jessica Tarlov makes Fox News more credible",
+        "sources_text": "Trump criticizes Fox News for giving too much airtime to Democrats",
+        "links": [
+          {
+            "text": "Trump criticizes Fox News for giving too much airtime to De…",
+            "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/dde2f10960734f3da903bed223952859",
+            "form": "rich_text"
+          }
+        ]
+      },
+      {
+        "geo_id": "fd8af6b4971d4b9889724415db4d894d",
+        "claim": "The White House's mass disenrollment of suspected fraudulent ACA accounts is justified",
+        "sources_text": "Opinion | JD Vance is not ripping away anyone’s health insurance coverage\nTrump administration uncovers $1.2B in suspected COVID contract fraud tied to Biden-e…",
+        "links": [
+          {
+            "text": "Opinion | JD Vance is not ripping away anyone’s health insu…",
+            "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/4c36ef70678343108d0524eddeb0b362",
+            "form": "rich_text"
+          },
+          {
+            "text": "Trump administration uncovers $1.2B in suspected COVID cont…",
+            "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/45650a7e68dd4277939cfd17533983ea",
+            "form": "rich_text"
+          }
+        ]
+      }
+    ]
+  },
+  "is_factual": {
+    "column": "Geo Is factual",
+    "type": "checkbox",
+    "true": 14,
+    "false": 2337,
+    "empty": 0
+  },
+  "geo_tags": {
+    "column": "Geo Tags",
+    "type": "multi_select",
+    "counts": {
+      "Debate": 2351,
+      "Featured": 23,
+      "debate claim": 3,
+      "Democracy & Media": 1,
+      "Economy": 1,
+      "Immigration": 1,
+      "Main claim": 1,
+      "Politics": 1
+    },
+    "rows_without": 0
+  },
+  "review_status": {
+    "column": "Review status",
+    "type": "select",
+    "counts": {
+      "(empty)": 2351
+    }
+  },
+  "requests": {
+    "total": 34,
+    "by_method": {
+      "GET": 10,
+      "POST": 24,
+      "PATCH": 0
+    },
+    "writes": 0
+  }
+}

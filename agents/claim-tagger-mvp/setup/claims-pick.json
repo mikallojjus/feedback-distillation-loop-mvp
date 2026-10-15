@@ -1,0 +1,2553 @@
+{
+  "seed": "mvp-2026-11",
+  "picked_at": "2026-10-15T11:32:48.918Z",
+  "dry_run": "dry-1",
+  "audit_ids": [
+    "6dc1222aeb364918821167370d8fbc40",
+    "3e0d601de961dbf8ae38154e3f3a02e5",
+    "fc0cb0da0a1a4375b0fae6b5c9a67c69",
+    "c8b676c3cce79edaec871afd1633ac2f",
+    "e3c28f62526e4880b9edb5c16817b27b",
+    "89fcfb7fc6684b63af7d829ed90106cd",
+    "9a0e240456694696afdfbe7b7ac7021d",
+    "1bff859247ecdb618af41a397d2eb6ba",
+    "8f9c833b41e54eee9ca78e9c2f4ffb58",
+    "78dd775028795b65bb5c4945eda1c3bb"
+  ],
+  "random_ids": [
+    "ab63d8b2ad764847894a5d049ec3659a",
+    "34752a87d89d43dc84cf30e0c2693870",
+    "7ad46e10fa094f5eba549fbd977dae17",
+    "1d08c33e269b470593da812d478707cb",
+    "ef2cc805196176add2ec3b2c4cf78f72",
+    "4788db83ff294535bcee8263634876b8",
+    "20b95b84a67852a48f34d3d52e8c6c9e",
+    "36919c0e743245cc8efea80d63b9d80a",
+    "fb99ab327b8da4ebfa7558cffb797e31",
+    "aa42386028fa5d5a9d1dcf77ddc1a461",
+    "068a64cfbadf4594a40b807504a864ed",
+    "e8987fb32e08d760e814217851ae5716",
+    "4203a7a7f808485fb9ad85db9655da30",
+    "a744944a83893d6eb0a5d79c0bfee56f",
+    "616e1ec10d8f35fe1d3a8f41a613bf9f",
+    "d61b4ae2eae0290c09e38c295dde965c",
+    "d56a9a8530e7481bbbbfc4a18d5ade66",
+    "33df998575a64e5784371b32348408c5",
+    "98180b80d0284fe4055462249459896b",
+    "ad0ed56e514d41ed91ab6ec29a9d6616",
+    "fe687ebec6034c06bceb24634c31b440",
+    "6df72f0eab6634fd1ee3458dd97292ff",
+    "4e51c9379c5ad509b9aac13b285434aa",
+    "7d3b05cb43a24cc78658e393e9e7c5f7",
+    "37d0072a36dd40b5a810595da2350691",
+    "04f8249400c457b788026c9154d32f46",
+    "832f0f08985f42c1a38003c506afb703",
+    "ae86e42c892f1e3b518645f79766d074",
+    "68b5331f8e4142509ecb0f2a321a9009",
+    "d0a7d718d597445aa30cd8998e660a2d",
+    "15a43c9490f697b3847a1f4f74e93ec0",
+    "b71d1622cdea4ab3a088cc9c6c124dad",
+    "e36091ff4ad74376b3a2c0236e2b55c3",
+    "ff8b957918b74c1fad49d868af4865f1",
+    "1017f5815d49d8ac29c3dfd0860777be",
+    "669dd107886c4c848a925f726779ffd4",
+    "410054a2d5cc4c748fcb2b532312912d",
+    "5a106a2715fe461da5d19d8cf66fd7ae",
+    "92f57020ce349b27b5e56f54068cbc05",
+    "5c9d133e54864197a585599669353aff"
+  ],
+  "rows": [
+    {
+      "Geo Sources": "Appeals Court Lets the Pentagon Designate Anthropic a Supply-Chain Risk\nFederal appeals court upholds Pentagon designation of Anthropic as supply chain risk\nCourt rules Pentagon can blacklist Anthropic for refusing to enable Claude features\nU.S. appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+      "Geo ID": "6dc1222aeb364918821167370d8fbc40",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6dc1222aeb364918821167370d8fbc40",
+      "Claim quality tags — verified": [
+        "765273e2-14eb-8345-8bd7-819ebe81bd9e"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "QA audit 8 Oct — Questionable assignment: Context-dependent. “A contractor” is indefinite; safety restrictions and supply-chain risk are generic here. Context-dependent rule 5 excludes indefinites and generics. Suggested: remove Context-dependent.",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [
+        "3f3273e2-14eb-8025-a249-fcc75dfce6b8"
+      ],
+      "Review notes": "",
+      "Geo Name": "A contractor's enforcement of safety restrictions constitutes a national security supply chain risk",
+      "page_id": "3f2273e2-14eb-819a-89ae-e658e01e094b",
+      "url": "https://app.notion.com/p/A-contractor-s-enforcement-of-safety-restrictions-constitutes-a-national-security-supply-chain-risk-3f2273e214eb819a89aee658e01e094b",
+      "last_edited_time": "2026-10-08T14:49:00.000Z",
+      "source_links": [
+        {
+          "text": "Appeals Court Lets the Pentagon Designate Anthropic a Supply-Chain Risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/4887197b811d4c12aca1d5b39d5b18c6",
+          "form": "rich_text"
+        },
+        {
+          "text": "Federal appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/066e171cd9ba41cf9e32756b8193a014",
+          "form": "rich_text"
+        },
+        {
+          "text": "Court rules Pentagon can blacklist Anthropic for refusing to enable Claude features",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/216b19c18ace4e4eacddd9592c8ffb8b",
+          "form": "rich_text"
+        },
+        {
+          "text": "U.S. appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/a23bec40c7f14da8878cb33bb2621095",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Appeals Court Lets the Pentagon Designate Anthropic a Supply-Chain Risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/4887197b811d4c12aca1d5b39d5b18c6"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Federal appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/066e171cd9ba41cf9e32756b8193a014"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Court rules Pentagon can blacklist Anthropic for refusing to enable Claude features",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/216b19c18ace4e4eacddd9592c8ffb8b"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "U.S. appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/a23bec40c7f14da8878cb33bb2621095"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "3e0d601de961dbf8ae38154e3f3a02e5",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3e0d601de961dbf8ae38154e3f3a02e5",
+      "Claim quality tags — verified": [
+        "765273e2-14eb-8345-8bd7-819ebe81bd9e",
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "QA audit 8 Oct — Questionable assignment: Context-dependent. “December” is a time expression and “stopgap funding” is generic/abstract; neither triggers Context-dependent under rule 5. Suggested: remove Context-dependent.",
+      "Geo Name source": "This space",
+      "Geo Topics": "Congress\nPublic budgeting\nGovernment and institutions\nEconomy\nShutdown delayed past 2026 midterms",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [
+        "3f3273e2-14eb-8025-a249-fcc75dfce6b8"
+      ],
+      "Review notes": "",
+      "Geo Name": "December stopgap funding rewards Congress for avoiding a full budget",
+      "page_id": "3f2273e2-14eb-81fa-b0e6-e76171e6d2e2",
+      "url": "https://app.notion.com/p/December-stopgap-funding-rewards-Congress-for-avoiding-a-full-budget-3f2273e214eb81fab0e6e76171e6d2e2",
+      "last_edited_time": "2026-10-08T14:53:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction\nCNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction\nWhite House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics\nWhite House bans CNN from Air Force One trip despite federal judge's decision - report",
+      "Geo ID": "fc0cb0da0a1a4375b0fae6b5c9a67c69",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/fc0cb0da0a1a4375b0fae6b5c9a67c69",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "White House press-access ban",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Excluding CNN from Air Force One violates the federal court order",
+      "page_id": "3f2273e2-14eb-81ff-bc67-eb4d9226f267",
+      "url": "https://app.notion.com/p/Excluding-CNN-from-Air-Force-One-violates-the-federal-court-order-3f2273e214eb81ffbc67eb4d9226f267",
+      "last_edited_time": "2026-10-07T16:28:00.000Z",
+      "source_links": [
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/dd6d8dc18b0844fe809a5def3882efbd",
+          "form": "rich_text"
+        },
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ddb0c70521d34af99337271b8ce33998",
+          "form": "rich_text"
+        },
+        {
+          "text": "White House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/49515733a126455a876e41e2a4a5c0b2",
+          "form": "rich_text"
+        },
+        {
+          "text": "White House bans CNN from Air Force One trip despite federal judge's decision - report",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6f970f054a3b4e6a989466edd7a61737",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/dd6d8dc18b0844fe809a5def3882efbd"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ddb0c70521d34af99337271b8ce33998"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "White House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/49515733a126455a876e41e2a4a5c0b2"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "White House bans CNN from Air Force One trip despite federal judge's decision - report",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6f970f054a3b4e6a989466edd7a61737"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "c8b676c3cce79edaec871afd1633ac2f",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/c8b676c3cce79edaec871afd1633ac2f",
+      "Claim quality tags — verified": [
+        "765273e2-14eb-8345-8bd7-819ebe81bd9e",
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Medicaid whistleblower protection bill",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Federal Medicaid whistleblower rules would weaken state control over program enforcement",
+      "page_id": "3f2273e2-14eb-81e2-8bf0-e8bf972b2bb8",
+      "url": "https://app.notion.com/p/Federal-Medicaid-whistleblower-rules-would-weaken-state-control-over-program-enforcement-3f2273e214eb81e28bf0e8bf972b2bb8",
+      "last_edited_time": "2026-10-08T13:52:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "Melania Trump says country entering ‘technological revolution,’ announces new Fostering the Future Together push\nMelania Trump: 'When nations speak with one voice, the world listens'",
+      "Geo ID": "e3c28f62526e4880b9edb5c16817b27b",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/e3c28f62526e4880b9edb5c16817b27b",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Government ethics\nTrump's inner circle",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Melania Trump should not host her initiative's G20 event at President Trump's golf resort",
+      "page_id": "3f2273e2-14eb-81f6-9a13-fde1991c6346",
+      "url": "https://app.notion.com/p/Melania-Trump-should-not-host-her-initiative-s-G20-event-at-President-Trump-s-golf-resort-3f2273e214eb81f69a13fde1991c6346",
+      "last_edited_time": "2026-10-07T16:28:00.000Z",
+      "source_links": [
+        {
+          "text": "Melania Trump says country entering ‘technological revolution,’ announces new Fostering the Future Together push",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/11893feb9eb94a60be5f1393635d6f77",
+          "form": "rich_text"
+        },
+        {
+          "text": "Melania Trump: 'When nations speak with one voice, the world listens'",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3a90547d6f6b4207a6f1027182f7c943",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Melania Trump says country entering ‘technological revolution,’ announces new Fostering the Future Together push",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/11893feb9eb94a60be5f1393635d6f77"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Melania Trump: 'When nations speak with one voice, the world listens'",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3a90547d6f6b4207a6f1027182f7c943"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Kennedy Center Honors Moved To Capital One Arena Amid Trump Naming Dispute\nKennedy Center Honors to be held off-site for the first time in the ceremony’s history\nThe Kennedy Center Honors Will Be Held at Capital One Arena\nKennedy Center Honors to be held at Capital One Arena amid fight over adding Trump's name\nKennedy Center Honors Relocates to Capital One Arena During Building Closure\nKennedy Center Honors awards moved to new venue amid Trump’s onslaught\nKennedy Center Honors to be held at Capital One Arena amid demolition fight | Reuters",
+      "Geo ID": "89fcfb7fc6684b63af7d829ed90106cd",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/89fcfb7fc6684b63af7d829ed90106cd",
+      "Claim quality tags — verified": [
+        "765273e2-14eb-8345-8bd7-819ebe81bd9e"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "QA audit 8 Oct — Questionable assignment: Context-dependent. Kennedy Center Honors is named and “a sports arena” is indefinite. The claim resolves its references; an unnamed indefinite arena alone does not trigger Context-dependent. Suggested: remove Context-dependent.",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [
+        "3f3273e2-14eb-8025-a249-fcc75dfce6b8"
+      ],
+      "Review notes": "",
+      "Geo Name": "Relocating the Kennedy Center Honors to a sports arena diminishes the prestige of the awards",
+      "page_id": "3f2273e2-14eb-817e-bff0-c3ae9c241cb3",
+      "url": "https://app.notion.com/p/Relocating-the-Kennedy-Center-Honors-to-a-sports-arena-diminishes-the-prestige-of-the-awards-3f2273e214eb817ebff0c3ae9c241cb3",
+      "last_edited_time": "2026-10-08T14:50:00.000Z",
+      "source_links": [
+        {
+          "text": "Kennedy Center Honors Moved To Capital One Arena Amid Trump Naming Dispute",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1ac491959f814f1b9412d1cf7f5d6e4d",
+          "form": "rich_text"
+        },
+        {
+          "text": "Kennedy Center Honors to be held off-site for the first time in the ceremony’s history",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/622962b3f509482f9757e474dc485beb",
+          "form": "rich_text"
+        },
+        {
+          "text": "The Kennedy Center Honors Will Be Held at Capital One Arena",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d8c0358d299547f397819e09e56b869f",
+          "form": "rich_text"
+        },
+        {
+          "text": "Kennedy Center Honors to be held at Capital One Arena amid fight over adding Trump's name",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/25918bad3eb545e5baa8bce01a4aa4de",
+          "form": "rich_text"
+        },
+        {
+          "text": "Kennedy Center Honors Relocates to Capital One Arena During Building Closure",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d6ca57a0d6004345af321e29627b26f7",
+          "form": "rich_text"
+        },
+        {
+          "text": "Kennedy Center Honors awards moved to new venue amid Trump’s onslaught",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/b2fb93980eb44c7abe76c85443263499",
+          "form": "rich_text"
+        },
+        {
+          "text": "Kennedy Center Honors to be held at Capital One Arena amid demolition fight | Reuters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1b245188e5094e08b16f902fc1e3003a",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Kennedy Center Honors Moved To Capital One Arena Amid Trump Naming Dispute",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1ac491959f814f1b9412d1cf7f5d6e4d"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors to be held off-site for the first time in the ceremony’s history",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/622962b3f509482f9757e474dc485beb"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "The Kennedy Center Honors Will Be Held at Capital One Arena",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d8c0358d299547f397819e09e56b869f"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors to be held at Capital One Arena amid fight over adding Trump's name",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/25918bad3eb545e5baa8bce01a4aa4de"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors Relocates to Capital One Arena During Building Closure",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d6ca57a0d6004345af321e29627b26f7"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors awards moved to new venue amid Trump’s onslaught",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/b2fb93980eb44c7abe76c85443263499"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kennedy Center Honors to be held at Capital One Arena amid demolition fight | Reuters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1b245188e5094e08b16f902fc1e3003a"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "White House blocks CNN from Air Force One in latest escalation with news media\nWhite House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics\nCNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction\nCNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+      "Geo ID": "9a0e240456694696afdfbe7b7ac7021d",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/9a0e240456694696afdfbe7b7ac7021d",
+      "Claim quality tags — verified": [
+        "765273e2-14eb-8345-8bd7-819ebe81bd9e"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "QA audit 8 Oct — Questionable assignment: Context-dependent. Generic classes of outlets and coverage; no unresolved pronoun or definite referent. Context-dependent rule 5 excludes generics. Suggested: remove Context-dependent.",
+      "Geo Name source": "This space",
+      "Geo Topics": "White House press-access ban",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [
+        "3f3273e2-14eb-8025-a249-fcc75dfce6b8"
+      ],
+      "Review notes": "",
+      "Geo Name": "Replacing mainstream pool networks with partisan outlets damages presidential coverage",
+      "page_id": "3f2273e2-14eb-817e-ba2e-e8cd9afd9db4",
+      "url": "https://app.notion.com/p/Replacing-mainstream-pool-networks-with-partisan-outlets-damages-presidential-coverage-3f2273e214eb817eba2ee8cd9afd9db4",
+      "last_edited_time": "2026-10-08T14:49:00.000Z",
+      "source_links": [
+        {
+          "text": "White House blocks CNN from Air Force One in latest escalation with news media",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/09bab39802bc46b99e5ed4079278337b",
+          "form": "rich_text"
+        },
+        {
+          "text": "White House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/49515733a126455a876e41e2a4a5c0b2",
+          "form": "rich_text"
+        },
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ddb0c70521d34af99337271b8ce33998",
+          "form": "rich_text"
+        },
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/dd6d8dc18b0844fe809a5def3882efbd",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "White House blocks CNN from Air Force One in latest escalation with news media",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/09bab39802bc46b99e5ed4079278337b"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "White House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/49515733a126455a876e41e2a4a5c0b2"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ddb0c70521d34af99337271b8ce33998"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/dd6d8dc18b0844fe809a5def3882efbd"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "1bff859247ecdb618af41a397d2eb6ba",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1bff859247ecdb618af41a397d2eb6ba",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Society and culture\nGovernment and institutions\nConservative politics\nPolitical parties\nTrump administration\n2026 U.S. midterm elections\nElections\nPolitical campaigning\nUS midterm elections\nRepublican Midterm Convention in Dallas\n2028 United States presidential election\nPresidential Elections",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign",
+      "page_id": "3f2273e2-14eb-81b9-a1e6-dbc9acc95024",
+      "url": "https://app.notion.com/p/The-Dallas-convention-is-the-unofficial-launch-of-JD-Vance-s-2028-presidential-campaign-3f2273e214eb81b9a1e6dbc9acc95024",
+      "last_edited_time": "2026-10-08T15:04:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+      "Geo ID": "8f9c833b41e54eee9ca78e9c2f4ffb58",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8f9c833b41e54eee9ca78e9c2f4ffb58",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience",
+      "page_id": "3f2273e2-14eb-81de-911d-e1b39c616b99",
+      "url": "https://app.notion.com/p/Georgia-s-gubernatorial-debate-should-be-moderated-by-professional-journalists-rather-than-a-town-ha-3f2273e214eb81de911de1b39c616b99",
+      "last_edited_time": "2026-10-07T16:26:00.000Z",
+      "source_links": [
+        {
+          "text": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/409d76d8f23f4fb1927c67af42d371e5",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/409d76d8f23f4fb1927c67af42d371e5"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Vaccination was more dangerous than COVID | Mark Reiff vs. Nico Lagan",
+      "Geo ID": "78dd775028795b65bb5c4945eda1c3bb",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/78dd775028795b65bb5c4945eda1c3bb",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The focus on the COVID-19 vaccine ignored the larger public health problem in the U.S.",
+      "page_id": "3f2273e2-14eb-81b5-a752-eabc4e6f257f",
+      "url": "https://app.notion.com/p/The-focus-on-the-COVID-19-vaccine-ignored-the-larger-public-health-problem-in-the-U-S-3f2273e214eb81b5a752eabc4e6f257f",
+      "last_edited_time": "2026-10-07T16:26:00.000Z",
+      "source_links": [
+        {
+          "text": "Vaccination was more dangerous than COVID | Mark Reiff vs. Nico Lagan",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a1120c82687b109500bad2c902b221",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Vaccination was more dangerous than COVID | Mark Reiff vs. Nico Lagan",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a1120c82687b109500bad2c902b221"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Nidal Hasan: Trump orders military base mass shooter to be executed by firing squad",
+      "Geo ID": "ab63d8b2ad764847894a5d049ec3659a",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ab63d8b2ad764847894a5d049ec3659a",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Trump administration",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Donald Trump approved Nidal Hasan's execution primarily as a political distraction",
+      "page_id": "3f2273e2-14eb-81ee-ba1b-e8708e8bf915",
+      "url": "https://app.notion.com/p/Donald-Trump-approved-Nidal-Hasan-s-execution-primarily-as-a-political-distraction-3f2273e214eb81eeba1be8708e8bf915",
+      "last_edited_time": "2026-10-07T16:26:00.000Z",
+      "source_links": [
+        {
+          "text": "Nidal Hasan: Trump orders military base mass shooter to be executed by firing squad",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/435323857f2d4eb18c0e17a5bad90a2f",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Nidal Hasan: Trump orders military base mass shooter to be executed by firing squad",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/435323857f2d4eb18c0e17a5bad90a2f"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "David Lindstrom vs. Scot Loyd on Voter ID laws disproportionately burden minority voters",
+      "Geo ID": "34752a87d89d43dc84cf30e0c2693870",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/34752a87d89d43dc84cf30e0c2693870",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Voter ID requirements",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "In most countries with voter ID laws, the requirement is not considered controversial",
+      "page_id": "3f2273e2-14eb-8199-b466-fbd3bdafc200",
+      "url": "https://app.notion.com/p/In-most-countries-with-voter-ID-laws-the-requirement-is-not-considered-controversial-3f2273e214eb8199b466fbd3bdafc200",
+      "last_edited_time": "2026-10-07T16:24:00.000Z",
+      "source_links": [
+        {
+          "text": "David Lindstrom vs. Scot Loyd on Voter ID laws disproportionately burden minority voters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a0cfe8dc5f7e638e8995501a685b6d",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "David Lindstrom vs. Scot Loyd on Voter ID laws disproportionately burden minority voters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a0cfe8dc5f7e638e8995501a685b6d"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Trump and Natalie Harp Sued Over Truth Social Insider Trading Scheme",
+      "Geo ID": "7ad46e10fa094f5eba549fbd977dae17",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/7ad46e10fa094f5eba549fbd977dae17",
+      "Claim quality tags — verified": [
+        "765273e2-14eb-8345-8bd7-819ebe81bd9e"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Lobbying\nGovernment ethics",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Trump's $100,000 early access program violates pay-to-play laws",
+      "page_id": "3f2273e2-14eb-81b4-b276-d1d2c5b892e5",
+      "url": "https://app.notion.com/p/Trump-s-100-000-early-access-program-violates-pay-to-play-laws-3f2273e214eb81b4b276d1d2c5b892e5",
+      "last_edited_time": "2026-10-07T16:26:00.000Z",
+      "source_links": [
+        {
+          "text": "Trump and Natalie Harp Sued Over Truth Social Insider Trading Scheme",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2972d0945ab0497a8f958af0d7c3ec17",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Trump and Natalie Harp Sued Over Truth Social Insider Trading Scheme",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2972d0945ab0497a8f958af0d7c3ec17"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Scot Loyd vs. David Lindstrom on Christian nationalism is a bigger threat to democracy than America losing its religion",
+      "Geo ID": "1d08c33e269b470593da812d478707cb",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1d08c33e269b470593da812d478707cb",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Religion in public life\nChristianity\nCivil rights",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "America's civil religion, which descends from Christianity, expanded to create an understanding of equal rights for all human beings",
+      "page_id": "3f2273e2-14eb-8108-9663-c4fd9ddf0fa9",
+      "url": "https://app.notion.com/p/America-s-civil-religion-which-descends-from-Christianity-expanded-to-create-an-understanding-of-e-3f2273e214eb81089663c4fd9ddf0fa9",
+      "last_edited_time": "2026-10-07T16:24:00.000Z",
+      "source_links": [
+        {
+          "text": "Scot Loyd vs. David Lindstrom on Christian nationalism is a bigger threat to democracy than America losing its religion",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a0cfdbc0c770718568c651a659d118",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Scot Loyd vs. David Lindstrom on Christian nationalism is a bigger threat to democracy than America losing its religion",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a0cfdbc0c770718568c651a659d118"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "ef2cc805196176add2ec3b2c4cf78f72",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ef2cc805196176add2ec3b2c4cf78f72",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "debate claim",
+        "Debate",
+        "Economy"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Economy\nEmployment & labor force\nGovernment and institutions",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The welfare state discourages work",
+      "page_id": "3f2273e2-14eb-8129-aa17-cb4d09ae6315",
+      "url": "https://app.notion.com/p/The-welfare-state-discourages-work-3f2273e214eb8129aa17cb4d09ae6315",
+      "last_edited_time": "2026-10-07T16:28:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "Dahmmy Hilfigger vs. Nico Lagan on Voter ID should be required nationwide",
+      "Geo ID": "4788db83ff294535bcee8263634876b8",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/4788db83ff294535bcee8263634876b8",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Voter ID requirements\nElections",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "States should handle voter ID laws, not the federal government",
+      "page_id": "3f2273e2-14eb-81a8-a077-ec34b6627171",
+      "url": "https://app.notion.com/p/States-should-handle-voter-ID-laws-not-the-federal-government-3f2273e214eb81a8a077ec34b6627171",
+      "last_edited_time": "2026-10-07T16:24:00.000Z",
+      "source_links": [
+        {
+          "text": "Dahmmy Hilfigger vs. Nico Lagan on Voter ID should be required nationwide",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a09109a9d87fa3b9df330ab6d63a87",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Dahmmy Hilfigger vs. Nico Lagan on Voter ID should be required nationwide",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a09109a9d87fa3b9df330ab6d63a87"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Universities should stay officially neutral on political and social controversies | Travis Timmerman (Philosopher) vs. Arturas Vil",
+      "Geo ID": "20b95b84a67852a48f34d3d52e8c6c9e",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/20b95b84a67852a48f34d3d52e8c6c9e",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "It is not a universal rule that universities should stay officially neutral on political and social controversies",
+      "page_id": "3f2273e2-14eb-81e1-b2f8-d1a4fedc70ab",
+      "url": "https://app.notion.com/p/It-is-not-a-universal-rule-that-universities-should-stay-officially-neutral-on-political-and-social--3f2273e214eb81e1b2f8d1a4fedc70ab",
+      "last_edited_time": "2026-10-07T16:24:00.000Z",
+      "source_links": [
+        {
+          "text": "Universities should stay officially neutral on political and social controversies | Travis Timmerman (Philosopher) vs. Arturas Vil",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a11244a15d74139f5e3a4dfbc83200",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Universities should stay officially neutral on political and social controversies | Travis Timmerman (Philosopher) vs. Arturas Vil",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a11244a15d74139f5e3a4dfbc83200"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Supreme Court Allows ICE to Restart Third-Country Removals\nUS Supreme Court allows Trump to continue deportation policy after judge labels it unlawful",
+      "Geo ID": "36919c0e743245cc8efea80d63b9d80a",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/36919c0e743245cc8efea80d63b9d80a",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Refugees & displacement\nTrump vs. the Supreme Court",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The Supreme Court's use of emergency orders to resume deportations undermines the judicial process",
+      "page_id": "3f2273e2-14eb-81b8-9cef-c7157ac8844d",
+      "url": "https://app.notion.com/p/The-Supreme-Court-s-use-of-emergency-orders-to-resume-deportations-undermines-the-judicial-process-3f2273e214eb81b89cefc7157ac8844d",
+      "last_edited_time": "2026-10-07T16:24:00.000Z",
+      "source_links": [
+        {
+          "text": "Supreme Court Allows ICE to Restart Third-Country Removals",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/43fdcdca38794f14ababe54aad9b4387",
+          "form": "rich_text"
+        },
+        {
+          "text": "US Supreme Court allows Trump to continue deportation policy after judge labels it unlawful",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6c818fd8140f4d168095c7f5af6b60ed",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Supreme Court Allows ICE to Restart Third-Country Removals",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/43fdcdca38794f14ababe54aad9b4387"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "US Supreme Court allows Trump to continue deportation policy after judge labels it unlawful",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6c818fd8140f4d168095c7f5af6b60ed"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "fb99ab327b8da4ebfa7558cffb797e31",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/fb99ab327b8da4ebfa7558cffb797e31",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Michigan Senate race poll",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Michigan should regulate data centers like public utilities",
+      "page_id": "3f2273e2-14eb-81d8-96ba-dea551d629e4",
+      "url": "https://app.notion.com/p/Michigan-should-regulate-data-centers-like-public-utilities-3f2273e214eb81d896badea551d629e4",
+      "last_edited_time": "2026-10-07T16:28:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "People are smarter than ever, taking judgments into their own hands more than ever | Scot Loyd vs. Alexa Dominique",
+      "Geo ID": "aa42386028fa5d5a9d1dcf77ddc1a461",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/aa42386028fa5d5a9d1dcf77ddc1a461",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Society and culture",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The influences and environment a person grows up in are what make them smarter",
+      "page_id": "3f2273e2-14eb-81d3-ac73-ff94f88a84f8",
+      "url": "https://app.notion.com/p/The-influences-and-environment-a-person-grows-up-in-are-what-make-them-smarter-3f2273e214eb81d3ac73ff94f88a84f8",
+      "last_edited_time": "2026-10-07T16:26:00.000Z",
+      "source_links": [
+        {
+          "text": "People are smarter than ever, taking judgments into their own hands more than ever | Scot Loyd vs. Alexa Dominique",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a1120f25a076a195c9a46b25825a41",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "People are smarter than ever, taking judgments into their own hands more than ever | Scot Loyd vs. Alexa Dominique",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a1120f25a076a195c9a46b25825a41"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Brad Blitz vs. Arturas Vil on Mass deportation would hurt American workers more than it would help them",
+      "Geo ID": "068a64cfbadf4594a40b807504a864ed",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/068a64cfbadf4594a40b807504a864ed",
+      "Claim quality tags — verified": [
+        "3f2273e2-14eb-81e0-a520-fc8c58c3c4e5"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "U.S. immigration policy & reform\nU.S. economy",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Losing some people who contribute to the economy via deportation is a price worth paying",
+      "page_id": "3f2273e2-14eb-8138-b3c3-ffac22458e1c",
+      "url": "https://app.notion.com/p/Losing-some-people-who-contribute-to-the-economy-via-deportation-is-a-price-worth-paying-3f2273e214eb8138b3c3ffac22458e1c",
+      "last_edited_time": "2026-10-07T16:23:00.000Z",
+      "source_links": [
+        {
+          "text": "Brad Blitz vs. Arturas Vil on Mass deportation would hurt American workers more than it would help them",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a0ca03730a7eb081fdebe1ff3438d0",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Brad Blitz vs. Arturas Vil on Mass deportation would hurt American workers more than it would help them",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a0ca03730a7eb081fdebe1ff3438d0"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "e8987fb32e08d760e814217851ae5716",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/e8987fb32e08d760e814217851ae5716",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Election integrity\nBallot administration\nTrump mail-voting rules legal challenge\nMail-in voting\nU.S. voting rights\nElections\nTrump administration\nLaw and justice\nGovernment and institutions\nRights and liberties\nJudiciary",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The US Postal Service should not reject valid mail-in ballots because a state failed to submit voter lists or use federally standardized envelopes",
+      "page_id": "3f2273e2-14eb-8117-83b3-c4d5ca426416",
+      "url": "https://app.notion.com/p/The-US-Postal-Service-should-not-reject-valid-mail-in-ballots-because-a-state-failed-to-submit-voter-3f2273e214eb811783b3c4d5ca426416",
+      "last_edited_time": "2026-10-07T16:28:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "4203a7a7f808485fb9ad85db9655da30",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/4203a7a7f808485fb9ad85db9655da30",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Labor policy\nLabor unions\nEconomy",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Unions are important for protecting workers",
+      "page_id": "3f2273e2-14eb-8184-8815-c4ced6417c55",
+      "url": "https://app.notion.com/p/Unions-are-important-for-protecting-workers-3f2273e214eb81848815c4ced6417c55",
+      "last_edited_time": "2026-10-08T14:52:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "a744944a83893d6eb0a5d79c0bfee56f",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/a744944a83893d6eb0a5d79c0bfee56f",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "US-Iran diplomacy",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "An Iran deal based on presidential promises will not survive a change in administrations",
+      "page_id": "3f2273e2-14eb-81dd-b819-f0691442b33b",
+      "url": "https://app.notion.com/p/An-Iran-deal-based-on-presidential-promises-will-not-survive-a-change-in-administrations-3f2273e214eb81ddb819f0691442b33b",
+      "last_edited_time": "2026-10-08T14:02:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "616e1ec10d8f35fe1d3a8f41a613bf9f",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/616e1ec10d8f35fe1d3a8f41a613bf9f",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "QA audit 8 Oct — Provisional missing tag: Predictive. Unconditional forecast that Trump’s Canada tariffs will become a Republican midterm liability. Predictive rules 1–3 apply. Provisional: tagging is still progressing; recheck before treating this as a final omission.",
+      "Geo Name source": "This space",
+      "Geo Topics": "Elections\nRepublican backlash over Canada tariffs\nForeign affairs and defense\nTrade policy\n2026 U.S. midterm elections\nEconomy\nTariffs & duties\nUS midterm elections\nForeign policy & conflicts\nU.S.–Canada relations",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [
+        "3f3273e2-14eb-8025-a249-fcc75dfce6b8"
+      ],
+      "Review notes": "",
+      "Geo Name": "Trump’s Canada tariffs will become a midterm liability for Republicans",
+      "page_id": "3f2273e2-14eb-8186-b489-fe87f82a0e0a",
+      "url": "https://app.notion.com/p/Trump-s-Canada-tariffs-will-become-a-midterm-liability-for-Republicans-3f2273e214eb8186b489fe87f82a0e0a",
+      "last_edited_time": "2026-10-08T14:52:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "d61b4ae2eae0290c09e38c295dde965c",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d61b4ae2eae0290c09e38c295dde965c",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Trump’s AI Force proposal",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Federal AI policy should prioritize national security over commercial innovation",
+      "page_id": "3f2273e2-14eb-8161-aaef-e65e01c32e85",
+      "url": "https://app.notion.com/p/Federal-AI-policy-should-prioritize-national-security-over-commercial-innovation-3f2273e214eb8161aaefe65e01c32e85",
+      "last_edited_time": "2026-10-08T13:48:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "d56a9a8530e7481bbbbfc4a18d5ade66",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d56a9a8530e7481bbbbfc4a18d5ade66",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Federal noncitizen voting ban",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Federal prosecutors bear responsibility for pursuing cases under a voting ban later ruled unconstitutional",
+      "page_id": "3f2273e2-14eb-8112-89f7-f9ecebde3887",
+      "url": "https://app.notion.com/p/Federal-prosecutors-bear-responsibility-for-pursuing-cases-under-a-voting-ban-later-ruled-unconstitu-3f2273e214eb811289f7f9ecebde3887",
+      "last_edited_time": "2026-10-08T13:47:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "Scot Loyd vs. David Lindstrom on Institutional religion traps people more often than it liberates them",
+      "Geo ID": "33df998575a64e5784371b32348408c5",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/33df998575a64e5784371b32348408c5",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Society and culture\nPhilosophy",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Institutions can provide foundational values and beliefs that enable people to exercise their freedom and thrive",
+      "page_id": "3f2273e2-14eb-8181-9d4b-fadafbfc476a",
+      "url": "https://app.notion.com/p/Institutions-can-provide-foundational-values-and-beliefs-that-enable-people-to-exercise-their-freedo-3f2273e214eb81819d4bfadafbfc476a",
+      "last_edited_time": "2026-10-07T16:24:00.000Z",
+      "source_links": [
+        {
+          "text": "Scot Loyd vs. David Lindstrom on Institutional religion traps people more often than it liberates them",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a0cfe292a37b32b51c7e6275d28cc4",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Scot Loyd vs. David Lindstrom on Institutional religion traps people more often than it liberates them",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a0cfe292a37b32b51c7e6275d28cc4"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "98180b80d0284fe4055462249459896b",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/98180b80d0284fe4055462249459896b",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "White House press-access ban",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "White House officials deserve personal sanctions when they deliberately evade restored press credentials",
+      "page_id": "3f2273e2-14eb-81ca-9c8d-e866df7bd5a4",
+      "url": "https://app.notion.com/p/White-House-officials-deserve-personal-sanctions-when-they-deliberately-evade-restored-press-credent-3f2273e214eb81ca9c8de866df7bd5a4",
+      "last_edited_time": "2026-10-08T14:03:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "US judge blocks Trump policy of fining migrants up to $1.8 million | Reuters",
+      "Geo ID": "ad0ed56e514d41ed91ab6ec29a9d6616",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ad0ed56e514d41ed91ab6ec29a9d6616",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Imposing million-dollar civil fines on migrants who fail to deport is an excessive punishment",
+      "page_id": "3f2273e2-14eb-81c6-801b-cf1881ad00a7",
+      "url": "https://app.notion.com/p/Imposing-million-dollar-civil-fines-on-migrants-who-fail-to-deport-is-an-excessive-punishment-3f2273e214eb81c6801bcf1881ad00a7",
+      "last_edited_time": "2026-10-07T16:26:00.000Z",
+      "source_links": [
+        {
+          "text": "US judge blocks Trump policy of fining migrants up to $1.8 million | Reuters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/50478331db3b47d5acb72f2797beafc5",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "US judge blocks Trump policy of fining migrants up to $1.8 million | Reuters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/50478331db3b47d5acb72f2797beafc5"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "fe687ebec6034c06bceb24634c31b440",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/fe687ebec6034c06bceb24634c31b440",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Society and culture\nGender policy\nGender roles\nHuman rights",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Women should be treated more gently than men",
+      "page_id": "3f2273e2-14eb-8129-a636-f3f422ac29e0",
+      "url": "https://app.notion.com/p/Women-should-be-treated-more-gently-than-men-3f2273e214eb8129a636f3f422ac29e0",
+      "last_edited_time": "2026-10-07T16:28:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "6df72f0eab6634fd1ee3458dd97292ff",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6df72f0eab6634fd1ee3458dd97292ff",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Foreign student stay ruling",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Open-ended student visas have become a back door to permanent residency",
+      "page_id": "3f2273e2-14eb-81a2-b930-c4e4cc466e43",
+      "url": "https://app.notion.com/p/Open-ended-student-visas-have-become-a-back-door-to-permanent-residency-3f2273e214eb81a2b930c4e4cc466e43",
+      "last_edited_time": "2026-10-08T14:39:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "4e51c9379c5ad509b9aac13b285434aa",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/4e51c9379c5ad509b9aac13b285434aa",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "GAO ICE spending report",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "ICE’s rapid detention expansion wasted taxpayer money because officials acted without a comprehensive plan",
+      "page_id": "3f2273e2-14eb-81e6-8d71-f3c39bcf64cc",
+      "url": "https://app.notion.com/p/ICE-s-rapid-detention-expansion-wasted-taxpayer-money-because-officials-acted-without-a-comprehensiv-3f2273e214eb81e68d71f3c39bcf64cc",
+      "last_edited_time": "2026-10-08T14:47:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "Trump appointee overseeing election investigations steps down from FBI role\nTop FBI official Andrew Bailey, who was once widely seen as Patel successor, resigns\nFBI co-deputy director resigns one year into working under Patel\nKash Patel’s FBI Co-Deputy Director Quits After Barely A Year\nKash Patel's FBI loses another top official",
+      "Geo ID": "7d3b05cb43a24cc78658e393e9e7c5f7",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/7d3b05cb43a24cc78658e393e9e7c5f7",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Intelligence services\nKash Patel Senate hearing\nInstitutional independence",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Kash Patel's leadership of the FBI is politicizing the bureau",
+      "page_id": "3f2273e2-14eb-81b5-b44a-c88b3982bd0a",
+      "url": "https://app.notion.com/p/Kash-Patel-s-leadership-of-the-FBI-is-politicizing-the-bureau-3f2273e214eb81b5b44ac88b3982bd0a",
+      "last_edited_time": "2026-10-07T16:26:00.000Z",
+      "source_links": [
+        {
+          "text": "Trump appointee overseeing election investigations steps down from FBI role",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6dd39bb8facc438a95d32c6418863997",
+          "form": "rich_text"
+        },
+        {
+          "text": "Top FBI official Andrew Bailey, who was once widely seen as Patel successor, resigns",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1b42c08e9da449cfb85d8d615cfbe2ab",
+          "form": "rich_text"
+        },
+        {
+          "text": "FBI co-deputy director resigns one year into working under Patel",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/57c98db1946042deb26c91c9d2e9e067",
+          "form": "rich_text"
+        },
+        {
+          "text": "Kash Patel’s FBI Co-Deputy Director Quits After Barely A Year",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/cf42a24c3db14f2b919972c45c2df429",
+          "form": "rich_text"
+        },
+        {
+          "text": "Kash Patel's FBI loses another top official",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8b5234d97d1d4f2e8105f309782ba700",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Trump appointee overseeing election investigations steps down from FBI role",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6dd39bb8facc438a95d32c6418863997"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Top FBI official Andrew Bailey, who was once widely seen as Patel successor, resigns",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1b42c08e9da449cfb85d8d615cfbe2ab"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "FBI co-deputy director resigns one year into working under Patel",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/57c98db1946042deb26c91c9d2e9e067"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kash Patel’s FBI Co-Deputy Director Quits After Barely A Year",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/cf42a24c3db14f2b919972c45c2df429"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Kash Patel's FBI loses another top official",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8b5234d97d1d4f2e8105f309782ba700"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Transcript: Sen. Mark Kelly on \"Face the Nation with Margaret Brennan,\" Oct. 4, 2026\nMark Kelly calls Trump's $5,000 check plan a \"payoff\"",
+      "Geo ID": "37d0072a36dd40b5a810595da2350691",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/37d0072a36dd40b5a810595da2350691",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Trump's proposed $5,000 checks are a legitimate economic relief measure",
+      "page_id": "3f2273e2-14eb-8150-8c48-fad2cb22a2c5",
+      "url": "https://app.notion.com/p/Trump-s-proposed-5-000-checks-are-a-legitimate-economic-relief-measure-3f2273e214eb81508c48fad2cb22a2c5",
+      "last_edited_time": "2026-10-07T16:24:00.000Z",
+      "source_links": [
+        {
+          "text": "Transcript: Sen. Mark Kelly on \"Face the Nation with Margaret Brennan,\" Oct. 4, 2026",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/b580e6ec361b4222a924ca1e878b715b",
+          "form": "rich_text"
+        },
+        {
+          "text": "Mark Kelly calls Trump's $5,000 check plan a \"payoff\"",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1fd48ccfef414fdb89035f274cac6695",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Transcript: Sen. Mark Kelly on \"Face the Nation with Margaret Brennan,\" Oct. 4, 2026",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/b580e6ec361b4222a924ca1e878b715b"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Mark Kelly calls Trump's $5,000 check plan a \"payoff\"",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1fd48ccfef414fdb89035f274cac6695"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Multiculturalism makes a country stronger | Mark Reiff vs. Nico Lagan",
+      "Geo ID": "04f8249400c457b788026c9154d32f46",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/04f8249400c457b788026c9154d32f46",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Most people will not engage in debate, present arguments, or try to understand those with whom they disagree",
+      "page_id": "3f2273e2-14eb-8170-b14e-d0a3bb704449",
+      "url": "https://app.notion.com/p/Most-people-will-not-engage-in-debate-present-arguments-or-try-to-understand-those-with-whom-they--3f2273e214eb8170b14ed0a3bb704449",
+      "last_edited_time": "2026-10-07T16:23:00.000Z",
+      "source_links": [
+        {
+          "text": "Multiculturalism makes a country stronger | Mark Reiff vs. Nico Lagan",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a112265ffd7f00b9d82b26aa82f244",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Multiculturalism makes a country stronger | Mark Reiff vs. Nico Lagan",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/01a112265ffd7f00b9d82b26aa82f244"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Republican Rep. Massie moves to impeach Defense Secretary Hegseth over Iran war\nGOP's Thomas Massie moves to impeach Pete Hegseth\nMassie launches effort to impeach Hegseth",
+      "Geo ID": "832f0f08985f42c1a38003c506afb703",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/832f0f08985f42c1a38003c506afb703",
+      "Claim quality tags — verified": [
+        "3f2273e2-14eb-80bc-acc4-dfd320970272"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Iran war\nWar powers",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The US military campaign in Iran violates the War Powers Resolution",
+      "page_id": "3f2273e2-14eb-815e-bebc-f6a7608b09fb",
+      "url": "https://app.notion.com/p/The-US-military-campaign-in-Iran-violates-the-War-Powers-Resolution-3f2273e214eb815ebebcf6a7608b09fb",
+      "last_edited_time": "2026-10-07T16:26:00.000Z",
+      "source_links": [
+        {
+          "text": "Republican Rep. Massie moves to impeach Defense Secretary Hegseth over Iran war",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d87fa24921fd4968a0716e710cb0ab5e",
+          "form": "rich_text"
+        },
+        {
+          "text": "GOP's Thomas Massie moves to impeach Pete Hegseth",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/a99870e463f04712afd08ebbdd22ba77",
+          "form": "rich_text"
+        },
+        {
+          "text": "Massie launches effort to impeach Hegseth",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/968050d8bad24ac18bf766d695ad24e8",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Republican Rep. Massie moves to impeach Defense Secretary Hegseth over Iran war",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d87fa24921fd4968a0716e710cb0ab5e"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "GOP's Thomas Massie moves to impeach Pete Hegseth",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/a99870e463f04712afd08ebbdd22ba77"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Massie launches effort to impeach Hegseth",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/968050d8bad24ac18bf766d695ad24e8"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "ae86e42c892f1e3b518645f79766d074",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ae86e42c892f1e3b518645f79766d074",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "U.S. AI regulation",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Strict retention limits and independent audits are better than a blanket ban on police license-plate readers",
+      "page_id": "3f2273e2-14eb-813c-b701-c4dadb95f9a3",
+      "url": "https://app.notion.com/p/Strict-retention-limits-and-independent-audits-are-better-than-a-blanket-ban-on-police-license-plate-3f2273e214eb813cb701c4dadb95f9a3",
+      "last_edited_time": "2026-10-08T13:54:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "Former GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying\nFormer GOP Rep. David Rivera Sentenced To 10 Years For Secret Venezuela Lobbying\nFormer GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying\nFormer GOP congressman and longtime Rubio friend sentenced to 10 years for secret Venezuela lobbying | CNN Politics\nFormer GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying",
+      "Geo ID": "68b5331f8e4142509ecb0f2a321a9009",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/68b5331f8e4142509ecb0f2a321a9009",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "FARA registration requirements unfairly criminalize standard commercial consulting",
+      "page_id": "3f2273e2-14eb-810b-954c-c405f0526af4",
+      "url": "https://app.notion.com/p/FARA-registration-requirements-unfairly-criminalize-standard-commercial-consulting-3f2273e214eb810b954cc405f0526af4",
+      "last_edited_time": "2026-10-07T16:25:00.000Z",
+      "source_links": [
+        {
+          "text": "Former GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/c7e2a4bc3a4b43e2b1b343a25aeca9b1",
+          "form": "rich_text"
+        },
+        {
+          "text": "Former GOP Rep. David Rivera Sentenced To 10 Years For Secret Venezuela Lobbying",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/31f72f3587a949aaa013291cdcf0c650",
+          "form": "rich_text"
+        },
+        {
+          "text": "Former GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3829193e6c8d4a60a6666c851fcfbe2f",
+          "form": "rich_text"
+        },
+        {
+          "text": "Former GOP congressman and longtime Rubio friend sentenced to 10 years for secret Venezuela lobbying | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/7f14ce7e5b144d1db33f48d0083b7b6e",
+          "form": "rich_text"
+        },
+        {
+          "text": "Former GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/9498370b5ab447c89d4edc1b69085401",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Former GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/c7e2a4bc3a4b43e2b1b343a25aeca9b1"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Former GOP Rep. David Rivera Sentenced To 10 Years For Secret Venezuela Lobbying",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/31f72f3587a949aaa013291cdcf0c650"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Former GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3829193e6c8d4a60a6666c851fcfbe2f"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Former GOP congressman and longtime Rubio friend sentenced to 10 years for secret Venezuela lobbying | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/7f14ce7e5b144d1db33f48d0083b7b6e"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Former GOP Rep. David Rivera sentenced to 10 years for secret Venezuela lobbying",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/9498370b5ab447c89d4edc1b69085401"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Bail set for ICE officer accused of lying and assault in non-fatal shooting in Minneapolis | CNN\nBail set for ICE officer accused of lying and assault in non-fatal shooting in Minneapolis",
+      "Geo ID": "d0a7d718d597445aa30cd8998e660a2d",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/d0a7d718d597445aa30cd8998e660a2d",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Enforcement, deportations & ICE/CBP\nCriminal justice\nU.S. state vs. federal power conflicts",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Minnesota has the legal authority to prosecute ICE agent Christian Castro",
+      "page_id": "3f2273e2-14eb-818c-8768-d0693c9856fe",
+      "url": "https://app.notion.com/p/Minnesota-has-the-legal-authority-to-prosecute-ICE-agent-Christian-Castro-3f2273e214eb818c8768d0693c9856fe",
+      "last_edited_time": "2026-10-07T16:27:00.000Z",
+      "source_links": [
+        {
+          "text": "Bail set for ICE officer accused of lying and assault in non-fatal shooting in Minneapolis | CNN",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/f3a390e2b513459f9ebfa65527164831",
+          "form": "rich_text"
+        },
+        {
+          "text": "Bail set for ICE officer accused of lying and assault in non-fatal shooting in Minneapolis",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/67b6000e25aa455bab079c811ed77c8e",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Bail set for ICE officer accused of lying and assault in non-fatal shooting in Minneapolis | CNN",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/f3a390e2b513459f9ebfa65527164831"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Bail set for ICE officer accused of lying and assault in non-fatal shooting in Minneapolis",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/67b6000e25aa455bab079c811ed77c8e"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "15a43c9490f697b3847a1f4f74e93ec0",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/15a43c9490f697b3847a1f4f74e93ec0",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Trump Kennedy Center demolition dispute",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The Kennedy Center should accept Trump-led fundraising to avoid collapse",
+      "page_id": "3f2273e2-14eb-819b-9162-dc07015dac61",
+      "url": "https://app.notion.com/p/The-Kennedy-Center-should-accept-Trump-led-fundraising-to-avoid-collapse-3f2273e214eb819b9162dc07015dac61",
+      "last_edited_time": "2026-10-08T15:04:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "Supreme Court Allows ICE to Restart Third-Country Removals",
+      "Geo ID": "b71d1622cdea4ab3a088cc9c6c124dad",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/b71d1622cdea4ab3a088cc9c6c124dad",
+      "Claim quality tags — verified": [
+        "765273e2-14eb-8345-8bd7-819ebe81bd9e"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Refugees & displacement",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The Supreme Court's procedural instructions in the deportation case grant the government excessive leeway",
+      "page_id": "3f2273e2-14eb-81f9-9caa-df9c76576249",
+      "url": "https://app.notion.com/p/The-Supreme-Court-s-procedural-instructions-in-the-deportation-case-grant-the-government-excessive-l-3f2273e214eb81f99caadf9c76576249",
+      "last_edited_time": "2026-10-07T16:27:00.000Z",
+      "source_links": [
+        {
+          "text": "Supreme Court Allows ICE to Restart Third-Country Removals",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/43fdcdca38794f14ababe54aad9b4387",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Supreme Court Allows ICE to Restart Third-Country Removals",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/43fdcdca38794f14ababe54aad9b4387"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Federal immigration officer shoots, injures man in Austin, city officials say\nVenezuelan Door Dash driver shot and wounded by ICE agent in Austin, Texas, officials say | CNN\nICE agent wounds man in Austin, Texas, shooting, city officials say | Reuters\nMan shot and wounded by immigration officer in Austin\nICE agent shoots and wounds man in Austin, Texas, officials say\nICE agent shoots and wounds man at traffic stop in Austin, Texas, officials say",
+      "Geo ID": "e36091ff4ad74376b3a2c0236e2b55c3",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/e36091ff4ad74376b3a2c0236e2b55c3",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Austin ICE shooting investigation\nEnforcement, deportations & ICE/CBP",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "ICE should halt its immigration enforcement surge in Austin",
+      "page_id": "3f2273e2-14eb-8118-bc6b-d09a33e3d234",
+      "url": "https://app.notion.com/p/ICE-should-halt-its-immigration-enforcement-surge-in-Austin-3f2273e214eb8118bc6bd09a33e3d234",
+      "last_edited_time": "2026-10-07T16:28:00.000Z",
+      "source_links": [
+        {
+          "text": "Federal immigration officer shoots, injures man in Austin, city officials say",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ad757988e7b04fd496a37978fe2068c3",
+          "form": "rich_text"
+        },
+        {
+          "text": "Venezuelan Door Dash driver shot and wounded by ICE agent in Austin, Texas, officials say | CNN",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/0185a11995be4f24a8856611f94d98ba",
+          "form": "rich_text"
+        },
+        {
+          "text": "ICE agent wounds man in Austin, Texas, shooting, city officials say | Reuters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/83552dc3a2514ee09d9419b527e1ff2f",
+          "form": "rich_text"
+        },
+        {
+          "text": "Man shot and wounded by immigration officer in Austin",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/698918dc292d4f439466c3ebc1269966",
+          "form": "rich_text"
+        },
+        {
+          "text": "ICE agent shoots and wounds man in Austin, Texas, officials say",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6183864cda0748c2b7ec88685b7432d8",
+          "form": "rich_text"
+        },
+        {
+          "text": "ICE agent shoots and wounds man at traffic stop in Austin, Texas, officials say",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1ba4f03478e245d9afe4cbf4a4bc0c3d",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Federal immigration officer shoots, injures man in Austin, city officials say",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ad757988e7b04fd496a37978fe2068c3"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Venezuelan Door Dash driver shot and wounded by ICE agent in Austin, Texas, officials say | CNN",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/0185a11995be4f24a8856611f94d98ba"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "ICE agent wounds man in Austin, Texas, shooting, city officials say | Reuters",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/83552dc3a2514ee09d9419b527e1ff2f"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Man shot and wounded by immigration officer in Austin",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/698918dc292d4f439466c3ebc1269966"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "ICE agent shoots and wounds man in Austin, Texas, officials say",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6183864cda0748c2b7ec88685b7432d8"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "ICE agent shoots and wounds man at traffic stop in Austin, Texas, officials say",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1ba4f03478e245d9afe4cbf4a4bc0c3d"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "In ‘unusual arrangement,’ Rhodes continues to drive FAR overhaul - Federal News Network",
+      "Geo ID": "ff8b957918b74c1fad49d868af4865f1",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ff8b957918b74c1fad49d868af4865f1",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Using special government employees to lead major regulatory overhauls undermines accountability",
+      "page_id": "3f2273e2-14eb-8131-a5ef-d5c30062c643",
+      "url": "https://app.notion.com/p/Using-special-government-employees-to-lead-major-regulatory-overhauls-undermines-accountability-3f2273e214eb8131a5efd5c30062c643",
+      "last_edited_time": "2026-10-07T16:28:00.000Z",
+      "source_links": [
+        {
+          "text": "In ‘unusual arrangement,’ Rhodes continues to drive FAR overhaul - Federal News Network",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/361f7ee98b024828a145af20370f7f4f",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "In ‘unusual arrangement,’ Rhodes continues to drive FAR overhaul - Federal News Network",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/361f7ee98b024828a145af20370f7f4f"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "1017f5815d49d8ac29c3dfd0860777be",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1017f5815d49d8ac29c3dfd0860777be",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "War powers",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "A Senate war-powers resolution restrains escalation without weakening American deterrence",
+      "page_id": "3f2273e2-14eb-819c-94f8-df8dcca6e290",
+      "url": "https://app.notion.com/p/A-Senate-war-powers-resolution-restrains-escalation-without-weakening-American-deterrence-3f2273e214eb819c94f8df8dcca6e290",
+      "last_edited_time": "2026-10-08T15:07:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "Trump Promises to Lift Tariffs on Irish Whiskey After Appeals\nTrump says he plans to lift tariffs on Irish whiskey\nTrump Pledges to Rescind 10% Tariff on Irish Whiskey\nTurns out you really do only have to ask: Trump says he will remove tariffs on Irish whiskey after visit to Ireland\nTrump scraps tariffs on Irish whiskey during visit to country",
+      "Geo ID": "669dd107886c4c848a925f726779ffd4",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/669dd107886c4c848a925f726779ffd4",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Trade policy\nGovernment ethics\nTariffs & duties",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "US trade tariffs should not be adjusted based on personal appeals",
+      "page_id": "3f2273e2-14eb-8168-8c96-dda625c84a5e",
+      "url": "https://app.notion.com/p/US-trade-tariffs-should-not-be-adjusted-based-on-personal-appeals-3f2273e214eb81688c96dda625c84a5e",
+      "last_edited_time": "2026-10-07T16:25:00.000Z",
+      "source_links": [
+        {
+          "text": "Trump Promises to Lift Tariffs on Irish Whiskey After Appeals",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/95231a8e47b94664a83a08a600bc7def",
+          "form": "rich_text"
+        },
+        {
+          "text": "Trump says he plans to lift tariffs on Irish whiskey",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/92fada628b7642f2b4a455673979f8d0",
+          "form": "rich_text"
+        },
+        {
+          "text": "Trump Pledges to Rescind 10% Tariff on Irish Whiskey",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/61c40a23df4b4cf196371a52dcb65c4e",
+          "form": "rich_text"
+        },
+        {
+          "text": "Turns out you really do only have to ask: Trump says he will remove tariffs on Irish whiskey after visit to Ireland",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2fb8b8b779874118a84422a8e852af72",
+          "form": "rich_text"
+        },
+        {
+          "text": "Trump scraps tariffs on Irish whiskey during visit to country",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/c2a65989b1094d99ad16a990468e7d03",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Trump Promises to Lift Tariffs on Irish Whiskey After Appeals",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/95231a8e47b94664a83a08a600bc7def"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Trump says he plans to lift tariffs on Irish whiskey",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/92fada628b7642f2b4a455673979f8d0"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Trump Pledges to Rescind 10% Tariff on Irish Whiskey",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/61c40a23df4b4cf196371a52dcb65c4e"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Turns out you really do only have to ask: Trump says he will remove tariffs on Irish whiskey after visit to Ireland",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2fb8b8b779874118a84422a8e852af72"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Trump scraps tariffs on Irish whiskey during visit to country",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/c2a65989b1094d99ad16a990468e7d03"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Nearly 1,400 laid off at Ohio factory days before Trump rally. Now a former supporter will help elect Democrats: 'Something has to change politically' | Fortune\nA gut punch in Ohio: Nearly 1,400 laid off at truck factory just days before Trump rally\nOhio truck factory lays off 1,400 days before Trump midterm rally in the area",
+      "Geo ID": "410054a2d5cc4c748fcb2b532312912d",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/410054a2d5cc4c748fcb2b532312912d",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Trade agreements & blocs\nProtectionism vs free trade",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "Free trade agreements are the primary cause of industrial decline in the Dayton region",
+      "page_id": "3f2273e2-14eb-81fe-8fdf-d1d83dc89bc8",
+      "url": "https://app.notion.com/p/Free-trade-agreements-are-the-primary-cause-of-industrial-decline-in-the-Dayton-region-3f2273e214eb81fe8fdfd1d83dc89bc8",
+      "last_edited_time": "2026-10-07T16:24:00.000Z",
+      "source_links": [
+        {
+          "text": "Nearly 1,400 laid off at Ohio factory days before Trump rally. Now a former supporter will help elect Democrats: 'Something has to change politically' | Fortune",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ee7d7c5f721741ee8211e0a6e4f18315",
+          "form": "rich_text"
+        },
+        {
+          "text": "A gut punch in Ohio: Nearly 1,400 laid off at truck factory just days before Trump rally",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ea3e0ef5a24b4cab81a7c5a47cb55ab4",
+          "form": "rich_text"
+        },
+        {
+          "text": "Ohio truck factory lays off 1,400 days before Trump midterm rally in the area",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/86c30ea6eef14b589b37e07115cade6d",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Nearly 1,400 laid off at Ohio factory days before Trump rally. Now a former supporter will help elect Democrats: 'Something has to change politically' | Fortune",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ee7d7c5f721741ee8211e0a6e4f18315"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "A gut punch in Ohio: Nearly 1,400 laid off at truck factory just days before Trump rally",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/ea3e0ef5a24b4cab81a7c5a47cb55ab4"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Ohio truck factory lays off 1,400 days before Trump midterm rally in the area",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/86c30ea6eef14b589b37e07115cade6d"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "Republicans ramp up spending as Democrats target key congressional seats\nRepublicans fear two key Senate races are slipping from their grasp | CNN Politics\nRepublicans fear two key Senate races are slipping from their grasp | CNN Politics",
+      "Geo ID": "5a106a2715fe461da5d19d8cf66fd7ae",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/5a106a2715fe461da5d19d8cf66fd7ae",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "U.S. swing states & battlegrounds\nU.S. campaign strategy & political advertising",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The Republican Party should stop investing campaign resources in North Carolina and Georgia",
+      "page_id": "3f2273e2-14eb-811a-9ab3-cf1cde084226",
+      "url": "https://app.notion.com/p/The-Republican-Party-should-stop-investing-campaign-resources-in-North-Carolina-and-Georgia-3f2273e214eb811a9ab3cf1cde084226",
+      "last_edited_time": "2026-10-07T16:25:00.000Z",
+      "source_links": [
+        {
+          "text": "Republicans ramp up spending as Democrats target key congressional seats",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2538dea590f043ddaa84c03bbaba981d",
+          "form": "rich_text"
+        },
+        {
+          "text": "Republicans fear two key Senate races are slipping from their grasp | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8c01f0b2d1f6417ba0cf69ab310e4472",
+          "form": "rich_text"
+        },
+        {
+          "text": "Republicans fear two key Senate races are slipping from their grasp | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/dfc37bed27f54b3c9c80b7c3f74303eb",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "Republicans ramp up spending as Democrats target key congressional seats",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2538dea590f043ddaa84c03bbaba981d"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Republicans fear two key Senate races are slipping from their grasp | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8c01f0b2d1f6417ba0cf69ab310e4472"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Republicans fear two key Senate races are slipping from their grasp | CNN Politics",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/dfc37bed27f54b3c9c80b7c3f74303eb"
+        }
+      ]
+    },
+    {
+      "Geo Sources": "",
+      "Geo ID": "92f57020ce349b27b5e56f54068cbc05",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/92f57020ce349b27b5e56f54068cbc05",
+      "Claim quality tags — verified": [
+        "713273e2-14eb-8315-b9ce-81a44ba6cc5d"
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "Trump’s AI Force proposal",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The AI Force should enforce binding safety standards",
+      "page_id": "3f2273e2-14eb-81d4-b633-d8b4e88af8ad",
+      "url": "https://app.notion.com/p/The-AI-Force-should-enforce-binding-safety-standards-3f2273e214eb81d4b633d8b4e88af8ad",
+      "last_edited_time": "2026-10-08T14:05:00.000Z",
+      "source_links": [],
+      "source_pieces": []
+    },
+    {
+      "Geo Sources": "White House TV pool resumes coverage of Trump after CNN regains access\nNetworks share coverage of Trump after CNN's credentials are restored\nUS TV networks to resume Trump coverage after CNN access restored\nUS TV networks to resume coverage of Trump events, CNN says",
+      "Geo ID": "5c9d133e54864197a585599669353aff",
+      "Review status": null,
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/5c9d133e54864197a585599669353aff",
+      "Claim quality tags — verified": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Challenged tags notes": "",
+      "Geo Name source": "This space",
+      "Geo Topics": "White House press-access ban",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Related people": "",
+      "Proposed Tags": [],
+      "Geo Opposing arguments": "",
+      "Proposed rename": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Proposed Topics": "",
+      "Editors challenging the QA tags": [],
+      "Review notes": "",
+      "Geo Name": "The press pool was justified in suspending coverage in solidarity with banned networks",
+      "page_id": "3f2273e2-14eb-8124-940e-ed8c1f806298",
+      "url": "https://app.notion.com/p/The-press-pool-was-justified-in-suspending-coverage-in-solidarity-with-banned-networks-3f2273e214eb8124940eed8c1f806298",
+      "last_edited_time": "2026-10-07T16:25:00.000Z",
+      "source_links": [
+        {
+          "text": "White House TV pool resumes coverage of Trump after CNN regains access",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/c9ea9647796a459483cff554bd5def79",
+          "form": "rich_text"
+        },
+        {
+          "text": "Networks share coverage of Trump after CNN's credentials are restored",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2d764f02174f42f1b88517ea2de3a6d4",
+          "form": "rich_text"
+        },
+        {
+          "text": "US TV networks to resume Trump coverage after CNN access restored",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/102bfa675d07403280157f775fba229d",
+          "form": "rich_text"
+        },
+        {
+          "text": "US TV networks to resume coverage of Trump events, CNN says",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/91e0cb1140e5451483fe5ddbe3de91a1",
+          "form": "rich_text"
+        }
+      ],
+      "source_pieces": [
+        {
+          "text": "White House TV pool resumes coverage of Trump after CNN regains access",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/c9ea9647796a459483cff554bd5def79"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "Networks share coverage of Trump after CNN's credentials are restored",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/2d764f02174f42f1b88517ea2de3a6d4"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "US TV networks to resume Trump coverage after CNN access restored",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/102bfa675d07403280157f775fba229d"
+        },
+        {
+          "text": "\n",
+          "href": null
+        },
+        {
+          "text": "US TV networks to resume coverage of Trump events, CNN says",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/91e0cb1140e5451483fe5ddbe3de91a1"
+        }
+      ]
+    }
+  ]
+}
