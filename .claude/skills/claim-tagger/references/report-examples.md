@@ -32,7 +32,7 @@ Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing i
 | Lessons waiting | none |
 | Last run | none yet |
 
-Next: decide the 2 rows in Your queue (link).
+Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).
 
 ### tag (demo)
 

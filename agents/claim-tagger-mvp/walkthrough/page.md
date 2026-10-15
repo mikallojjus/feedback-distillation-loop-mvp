@@ -30,7 +30,7 @@ These two were picked for the demo; for real, a row appears only when the agent 
 | Lessons waiting | none |
 | Last run | none yet |
 
-The sentence starts with "Demo · " and names this practice page, as every report in the demo does. Its Next line points at Your queue, but the agent has not read the claims yet: do step 2 first.
+The sentence starts with "Demo · " and names this practice page, as every report in the demo does. Its Next line points at step 2, because the agent has not read the claims yet.
 
 ## Step 2 · The agent reads the claims
 
