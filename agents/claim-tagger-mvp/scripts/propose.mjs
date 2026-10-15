@@ -13,7 +13,7 @@
 // reads (majority; unsure when any read was ask_editor or failed, when the reads disagree, or when the mean p is inside the band):
 //   Agent proposal    Applies / Does not apply when sure, Can't tell when not
 //   Agent confidence  max(p, 1 - p) to two decimals (0.5 is a coin flip; Your queue sorts lowest first)
-//   Agent reason      the reason of the last read in at most queue.reason_max_words words, then " · <rule> · <k>/<n> runs agreed"
+//   Agent reason      the reason of the last read in at most queue.reason_max_words words, then " · <rule> · <k> of <n> runs agree"
 // The plan: a Tag decisions row for every unsure cell that has no row; the four agent columns of every undecided row whose values changed (a decided
 // row is never touched here); and Agent tags and Agent notes on the Claims copy, only where they differ from what the pull holds. Agent tags are the
 // tags that apply and do not wait for an editor, plus every tag an editor decided Applies (an editor always wins). Agent notes are two lines:
@@ -63,8 +63,8 @@ export function cellVerdict(runLines, tagName, { rerun, reasonMaxWords = 40 } = 
   const confidence = v.p_mean === null ? 0.5 : round2(Math.max(v.p_mean, 1 - v.p_mean));
   const lines = runLines.filter(Boolean).length;
   const reason = last
-    ? [capWords(last.reason, reasonMaxWords), last.rule_ref, `${v.agreed}/${v.runs} runs agreed`].filter(Boolean).join(' · ')
-    : `The agent could not read this claim · 0/${Math.max(lines, 1)} runs agreed`;
+    ? [capWords(last.reason, reasonMaxWords), last.rule_ref, `${v.agreed} of ${v.runs} runs agree`].filter(Boolean).join(' · ')
+    : `The agent could not read this claim · 0 of ${Math.max(lines, 1)} runs agree`;
   return { proposal, confidence, reason, unsure: v.unsure, decision: v.decision, runs: v.runs, agreed: v.agreed, rule_ref: last?.rule_ref ?? null };
 }
 

@@ -518,7 +518,7 @@ test('the compliant page converts: the callout first, seven step headings, two v
   ]);
   assert.equal(blocks.at(-1).type, 'toggle');
   const help = blocks.at(-1).toggle.children;
-  assert.equal(help.filter((b) => b.type === 'bulleted_list_item').length, 12, 'ten words and two lines of "If something stops"');
+  assert.equal(help.filter((b) => b.type === 'bulleted_list_item').length, 13, 'ten words and three lines of "If something stops"');
   const why = help.find((b) => b.type === 'table');
   assert.equal(why.table.table_width, 2);
   assert.equal(why.table.children.length, 5, 'a header and four values');
@@ -899,7 +899,7 @@ test('rule i (closing lines): Step 7 ends with the three "adds later" lines and 
   assert.deepEqual(summary(lint(page)), [`i@${lineNo(page, '## Step 7')}`, `i@${lineNo(page, '## Step 7')}`]);
 });
 
-test('rule j (help): the Why wrong table has two columns and four values; the words list ten lines; "If something stops" two', () => {
+test('rule j (help): the Why wrong table has two columns and four values; the words list ten lines; "If something stops" three', () => {
   const emptyRow = '| (empty) | The agent was right, or no reason given: no rule change; the row counts as an earlier decision. |\n';
   // the table
   let page = swap(OK, emptyRow, '');
@@ -930,13 +930,17 @@ test('rule j (help): the Why wrong table has two columns and four values; the wo
   page = swap(OK, word, `${word}- **Extra**: one too many.\n`);
   assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, 'Words used on this page')}`]);
   assert.match(lint(page).problems[0].detail, /has 11 lines/);
-  // the stop list
-  const stop = '- Claude says the usage limit is reached: wait until your Claude allowance is back, then type the same command again; it continues where it stopped.\n';
+  // the stop list: the paused line, the allowance line and the line for a rulebook text edited by hand
+  const stop = '- Claude says your Claude allowance ran out: wait until your Claude allowance is back, then type the same command again; it continues where it stopped.\n';
   page = swap(OK, stop, '');
   assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, 'If something stops')}`]);
-  assert.match(lint(page).problems[0].detail, /"If something stops" list has 1 lines; it has exactly 2/);
-  page = swap(OK, stop, `${stop}- A third line.\n`);
+  assert.match(lint(page).problems[0].detail, /"If something stops" list has 2 lines; it has exactly 3/);
+  const edited = page.slice(page.indexOf('- Claude says the rulebook text was edited by hand'));
+  page = swap(swap(OK, stop, ''), edited, '');
+  assert.match(lint(page).problems[0].detail, /"If something stops" list has 1 lines; it has exactly 3/);
+  page = swap(OK, stop, `${stop}- A fourth line.\n`);
   assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, 'If something stops')}`]);
+  assert.match(lint(page).problems[0].detail, /"If something stops" list has 4 lines; it has exactly 3/);
   // labels missing
   page = swap(OK, '**Words used on this page.**', '**Words.**');
   assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '## Help')}`]);

@@ -21,8 +21,10 @@
 // committed; only then does a run of its own (runs/<run-id>-record) set the rule change Live with "PASS: examples a/a, earlier b/b, yours c/c" and give Agent settings
 // the new edition and "Promote · <date time> · PASS"; then follow-up runs by itself (runs/<run-id>-followup). If the second step fails the rule is live, the report
 // says so, and the same command finishes the job without a second edition.
-// FAIL: the rulebook does not change; the rule change gets "FAIL: '<claim>' now <answer>" and Agent settings the summary; one sentence for Editor wording is asked
-// from the distill model and goes into the report and card.md only, never into Notion. HOLD writes the same two rows.
+// FAIL: the rulebook does not change; the rule change gets "FAIL: '<claim>' now <answer>" and Agent settings the summary. Editor wording is the whole rule, so
+// the editor is handed the whole text: one sentence is asked from the distill model for the first claim that came out wrong (an example claim, an earlier
+// decision or one of the editor's own rows, whichever it is), and the report's Next line and card.md give the rule as it was tested, a space and that sentence.
+// Both go into the report and card.md only, never into Notion. HOLD writes the same two rows.
 //
 // The lock runs/PROMOTING.json { run_id, lesson, phase } is taken at the start and removed on every exit; one younger than two hours from another run
 // refuses the command (exit 2).
@@ -36,7 +38,7 @@ import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:f
 import { dirname, join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf } from './lib/config.mjs';
-import { answerWord, cutText, plural, practiceLink, quoted, stampOf, viewLink } from './lib/editor-words.mjs';
+import { answerWord, cutText, plural, practiceLink, quoted, quotedWhole, stampOf, viewLink } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
 import { forceRuns, readAnswers } from './lib/answers.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
@@ -159,8 +161,11 @@ const resultLine = (checks) => `examples ${checks.canaries.passed}/${checks.cana
 
 const cleanMiss = ({ id, claim, expected, got }) => ({ id, claim, expected, got });
 
-/** card.md: the same figures as card.json for the engineer, in plain words. The sentence for Editor wording (FAIL only) is here and in the report, never in Notion. */
-export function cardMarkdown(card, { sentence = null, ruleLabel = '', nowWording = false } = {}) {
+/**
+ * card.md: the same figures as card.json for the engineer, in plain words. The sentence for Editor wording (FAIL only) and the whole text the report hands the
+ * editor for Editor wording (`wholeText`: the rule as it was tested, a space, the sentence) are here and in the report, never in Notion.
+ */
+export function cardMarkdown(card, { sentence = null, wholeText = null, ruleLabel = '', nowWording = false } = {}) {
   const c = card.checks;
   const line = (name, passed, total, what) => `| ${name} | ${verdictWords(passed, total)} ${what} |`;
   const out = [
@@ -187,6 +192,7 @@ export function cardMarkdown(card, { sentence = null, ruleLabel = '', nowWording
     for (const f of card.flips) out.push(`- "${cutText(f.claim ?? f.id, 80).replace(/"/g, "'")}": ${answerWord(f.from)} to ${answerWord(f.to)}`);
   }
   if (sentence) out.push('', `Suggested sentence for Editor wording: "${sentence}"`);
+  if (sentence && wholeText) out.push(`Whole text for Editor wording (the rule as it was tested, a space, the sentence): "${wholeText}"`);
   return `${out.join('\n')}\n`;
 }
 
@@ -416,8 +422,10 @@ export async function promote(opts = {}) {
 
       // ---- FAIL
       if (verdict === 'FAIL') {
+        // for the first claim that came out wrong, whatever kind it is: an example claim, an earlier decision or one of the editor's own rows
         const asked = await askForWording(ctx, { tag, n, current: liveText, proposed: candidateText, claim: first.claim, expected: first.expected });
-        writeTextAtomic(join(ctx.runDir, 'card.md'), cardMarkdown(card, { sentence: asked.sentence, ruleLabel, nowWording: fromEditor }));
+        const wholeText = asked.sentence === null ? null : `${candidateText} ${asked.sentence}`; // Editor wording is the whole rule: the rule as tested, then the sentence
+        writeTextAtomic(join(ctx.runDir, 'card.md'), cardMarkdown(card, { sentence: asked.sentence, wholeText, ruleLabel, nowWording: fromEditor }));
         if (asked.sentence === null) ctx.record.wording_failed = asked.why;
         const result = `FAIL: '${cutText(first.claim, 60)}' now ${answerWord(first.got)}`;
         const plan = newPlan({ runId: ctx.runId, script: 'promote', rubricEdition: live.edition, config: ctx.config, now: ctx.now });
@@ -433,9 +441,9 @@ export async function promote(opts = {}) {
           header: CHECK_HEADER,
           rows: rowsFor(''),
           next: asked.sentence === null
-            ? `Next: in Lessons waiting (${link}), write your own wording in Editor wording so that ${quoted(first.claim)} keeps its answer, then type /claim-tagger promote again.`
-            : `Next: in Lessons waiting (${link}), paste this sentence into Editor wording or edit it: "${asked.sentence}" Then type /claim-tagger promote again.`,
-          details: { verdict, card, sentence: asked.sentence, first },
+            ? `Next: in Lessons waiting (${link}), open the change and write all of ${ruleLabel} in Editor wording so that ${quoted(first.claim)} keeps its answer; then type /claim-tagger promote again.`
+            : `Next: in Lessons waiting (${link}), open the change and put this whole text into Editor wording: ${quotedWhole(wholeText)}; then type /claim-tagger promote again.`,
+          details: { verdict, card, sentence: asked.sentence, text: wholeText, first },
         };
       }
 

@@ -161,7 +161,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   const st = await status(h5);
   assert.equal(st.exit, 0);
   assert.equal(st.report.sentence, 'Status: nothing is paused; 2 rows and 0 rule changes wait for you.'.replace('2 rows and 0 rule changes wait', '2 rows wait'));
-  assert.match(st.report.rows[0][1], /^13 Issue tags, edition 2026-10-16\.2, same as Notion$/);
+  assert.match(st.report.rows[0][1], /^13 tags, edition 2026-10-16\.2$/);
   assert.match(st.report.rows[2][1], /^none$/);
 
   // rollback and restore
@@ -186,7 +186,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   await requestLogIsClean(w);
 });
 
-test('the FAIL branch: a candidate that turns an example claim the wrong way leaves the rulebook alone, gives the editor one sentence, and the rows are not marked', async () => {
+test('the FAIL branch: a candidate that turns an example claim the wrong way leaves the rulebook alone, gives the editor the whole text for Editor wording, and the rows are not marked', async () => {
   const w = await productionWorld({ flipExample: true });
   await untilApproved(w);
   const rulebookBefore = w.row('rulebook', 'Context-dependent')['When to use'];
@@ -199,14 +199,17 @@ test('the FAIL branch: a candidate that turns an example claim the wrong way lea
   assert.match(w.row('rule_changes', TITLE)['Safety check result'], /^FAIL: '.*' now Does not apply$/);
   assert.equal(w.row('rule_changes', TITLE)['Editor wording'], '', 'the agent never writes Editor wording');
   assert.match(failed.report.sentence, /^Promote: FAIL, rule 4 is unchanged: the new wording turns ".*" to Does not apply\.$/);
-  assert.match(failed.report.next, /paste this sentence into Editor wording or edit it: "A reference to one particular thing that the claim does not name, such as a title alone, still fails the test\." Then type \/claim-tagger promote again\.$/);
-  assert.ok(readFileSync(join(failed.runDir, 'card.md'), 'utf8').includes('still fails the test'));
+  const SENTENCE = 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.';
+  assert.match(failed.report.next, /^Next: in Lessons waiting \(.*\), open the change and put this whole text into Editor wording: ".*"; then type \/claim-tagger promote again\.$/);
+  assert.ok(failed.report.next.includes(`"${NEW_TEXT} ${SENTENCE}"`), 'the rule as it was tested, a space, the sentence: Editor wording is the whole rule');
+  assert.ok(readFileSync(join(failed.runDir, 'card.md'), 'utf8').includes(`"${NEW_TEXT} ${SENTENCE}"`));
   for (const text of [U1, U2]) assert.equal(w.row('tag_decisions', keyOf(text))['Follow-up'], null);
   for (const req of w.writes()) assert.ok(!JSON.stringify(req.body ?? {}).includes('still fails the test'), 'the sentence is not sent to Notion');
   assert.equal(existsSync(join(w.root, 'runs', 'PROMOTING.json')), false);
 
-  // the editor words the rule themselves with the sentence, the lesson is checked again and passes
-  const wording = `${NEW_TEXT} A reference to one particular thing that the claim does not name still fails the test.`;
+  // the editor puts the whole text of the report into Editor wording, the lesson is checked again and passes
+  const wording = /put this whole text into Editor wording: "(.*)"; then type/.exec(failed.report.next)[1];
+  assert.equal(wording, `${NEW_TEXT} ${SENTENCE}`);
   w.fake.editRow(w.row('rule_changes', TITLE).page_id, { 'Editor wording': wording });
   w.overrides([{ when: 'still fails the test', table: { [U1]: no, [U2]: no } }]);
   const h2 = w.hooks();

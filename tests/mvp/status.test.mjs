@@ -1,8 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { countsOf, main, status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
 import { readJson } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
+import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { claimText, makeWorld } from './helpers/loop-world.mjs';
 
@@ -26,7 +28,7 @@ test('status, nothing waits: the sentence, the table of four rows and a Next tha
   assert.equal(report.sentence, 'Status: nothing is paused and nothing waits for you.');
   assert.deepEqual(report.header, ['Where', 'Now', '']);
   assert.deepEqual(report.rows, [
-    ['Rulebook', '13 Issue tags, edition 2026-10-16.1, same as Notion', ''],
+    ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
     ['Your queue', 'nothing waits', ''],
     ['Lessons waiting', 'none', ''],
     ['Last run', 'Tag · 15 Oct 11:20 · 3 claims', ''],
@@ -119,7 +121,7 @@ test('status leaves the rulebook files alone: an edit to a tag without rules is 
   w.fake.editRow(w.ids.tag.Wordy, { Description: 'Changed.' });
   const r = await status(w.hooks());
   assert.equal(r.exit, 0);
-  assert.equal(r.report.rows[0][1], '13 Issue tags, edition 2026-10-16.1, Notion differs on Wordy (taken over at the next run)');
+  assert.equal(r.report.rows[0][1], '13 tags, edition 2026-10-16.1, Notion differs on Wordy (taken over at the next run)');
   assert.equal(w.rubric().edition, '2026-10-16.1');
 });
 
@@ -130,7 +132,7 @@ test('status says plainly when Notion has other tag rows than the saved edition,
   const h = w.hooks();
   const r = await status(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
-  assert.equal(r.report.rows[0][1], '13 Issue tags, edition 2026-10-16.1, Notion has other tag rows: Hedged and Wordier; Notion lacks tag rows: Wordy');
+  assert.equal(r.report.rows[0][1], '13 tags, edition 2026-10-16.1, Notion has other tag rows: Hedged and Wordier; Notion lacks tag rows: Wordy');
   assert.deepEqual(lintReport(r.markdown), []);
 });
 
@@ -168,6 +170,63 @@ test('status in a practice profile starts with "Demo · "', async () => {
   const r = await status(w.hooks());
   assert.ok(r.markdown.startsWith('Demo · Status: nothing is paused and nothing waits for you.'), r.markdown);
   assert.equal(r.report.demo, true);
+});
+
+// the practice page of step 1: one tag in the rulebook, two rows that wait, no rule change, no run yet
+const PRACTICE_TITLE = 'Claim tagger demo · 15 Oct 10:42';
+const ONE_TAG = [JSON.parse(readFileSync(join(codeRoot(), 'setup', 'taxonomy-issue.json'), 'utf8')).rows.find((r) => r.Name === 'Context-dependent')];
+const practicePage = (extra = {}) => makeWorld({
+  claims: 7, rulebook: ONE_TAG, queue: [open(1), open(2)], demo: true, configure: (c) => { c.demo_title = PRACTICE_TITLE; }, ...extra,
+});
+
+test('status on a practice page names the page and shows the rows of step 1 of the page: "1 tag, edition <e>", "2 rows, lowest confidence first", "none", "none yet"', async () => {
+  const w = await practicePage();
+  const h = w.hooks();
+  const r = await status(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const report = assertReport(h, r);
+  assert.equal(report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.`);
+  assert.ok(r.markdown.startsWith(`Demo · Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.\n`), r.markdown);
+  assert.deepEqual(report.header, ['Where', 'Now', '']);
+  assert.deepEqual(report.rows, [
+    ['Rulebook', '1 tag, edition 2026-10-16.1', ''],
+    ['Your queue', '2 rows, lowest confidence first', ''],
+    ['Lessons waiting', 'none', ''],
+    ['Last run', 'none yet', ''],
+  ]);
+  assert.match(report.next, /^Next: decide the 2 rows in Your queue \(https:\/\/www\.notion\.so\//);
+});
+
+test('the table of Step 1 on the practice page is what status prints on a practice page: the same header and the same rows', async () => {
+  const page = readFileSync(join(codeRoot(), 'walkthrough', 'page.md'), 'utf8').replace(/\r\n?/g, '\n');
+  const step1 = page.slice(page.indexOf('## Step 1'), page.indexOf('## Step 2'));
+  const cells = (row) => row.split('|').slice(1, -1).map((c) => c.trim());
+  const [header, , ...rows] = step1.split('\n').filter((l) => l.startsWith('|')).map(cells);
+  const w = await practicePage();
+  const r = await status(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.deepEqual(header, r.report.header.slice(0, 2));
+  assert.deepEqual(rows.map((row) => row.map((c) => c.replace('{{edition}}', '2026-10-16.1'))), r.report.rows.map((row) => row.slice(0, 2)));
+});
+
+test('on a practice page the commands in the report are the demo ones, and a practice profile without a title names no page', async () => {
+  const lessons = [lesson('Ready', 'Approved')];
+  const demo = await makeWorld({ claims: 2, demo: true, lessons });
+  assert.equal((await status(demo.hooks())).report.next, 'Next: type /claim-tagger demo promote to check the approved rule change.');
+  const production = await makeWorld({ claims: 2, lessons });
+  assert.equal((await status(production.hooks())).report.next, 'Next: type /claim-tagger promote to check the approved rule change.');
+  assert.equal((await status(demo.hooks())).report.sentence, 'Status: nothing is paused; 1 rule change waits for you.', 'no demo_title in the profile: nothing to name');
+  const titled = await practicePage({ lessons });
+  assert.equal((await status(titled.hooks())).report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows and 1 rule change wait for you.`);
+});
+
+test('a practice page title that the report lint refuses is left out of the sentence: the report is written all the same, and the run record says why', async () => {
+  const w = await makeWorld({ claims: 2, demo: true, configure: (c) => { c.demo_title = 'The database demo'; } });
+  const h = w.hooks();
+  const r = await status(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.ok(r.markdown.startsWith('Demo · Status: nothing is paused and nothing waits for you.'), r.markdown);
+  assert.ok(readJson(join(r.runDir, 'run.json')).warnings.some((x) => /does not name the practice page/.test(x)));
 });
 
 test('countsOf: open, decided, needs a note, lessons by status', () => {

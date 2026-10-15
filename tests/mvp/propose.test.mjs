@@ -49,15 +49,15 @@ const writesTo = (w, table) => w.writes().filter((r) => r.path.includes(w.DB[tab
 
 // ---- the verdict of one cell ------------------------------------------------------------------------------------------------------
 
-test('cellVerdict: a sure answer gives a proposal, the confidence max(p, 1 - p) and the reason with its rule and how many runs agreed', () => {
+test('cellVerdict: a sure answer gives a proposal, the confidence max(p, 1 - p) and the reason with its rule and how many runs agree', () => {
   const apply = cellVerdict([line('apply', 0.9), null, null], 'Context-dependent', { rerun: RERUN });
   assert.deepEqual(
     [apply.proposal, apply.confidence, apply.unsure, apply.reason],
-    ['Applies', 0.9, false, 'Reason apply 0.9. · Context-dependent rule 2 · 1/1 runs agreed'],
+    ['Applies', 0.9, false, 'Reason apply 0.9. · Context-dependent rule 2 · 1 of 1 runs agree'],
   );
   const no = cellVerdict([line('do_not_apply', 0.1), line('do_not_apply', 0.2), null], 'Context-dependent', { rerun: RERUN });
   assert.deepEqual([no.proposal, no.confidence, no.unsure, no.agreed, no.runs], ['Does not apply', 0.85, false, 2, 2]);
-  assert.equal(no.reason, 'Reason do_not_apply 0.2. · 2/2 runs agreed', 'a reason without a rule has no rule part; the last read speaks');
+  assert.equal(no.reason, 'Reason do_not_apply 0.2. · 2 of 2 runs agree', 'a reason without a rule has no rule part; the last read speaks');
 });
 
 test('cellVerdict: ask_editor, a p inside the band, reads that disagree and a failed read are all unsure and give Can\'t tell', () => {
@@ -67,12 +67,21 @@ test('cellVerdict: ask_editor, a p inside the band, reads that disagree and a fa
   assert.deepEqual([band.proposal, band.confidence, band.unsure], ["Can't tell", 0.6, true]);
   const split = cellVerdict([line('do_not_apply', 0.45), line('apply', 0.55), line('apply', 0.65)], 'Context-dependent', { rerun: RERUN });
   assert.deepEqual([split.proposal, split.confidence, split.unsure, split.agreed, split.runs], ["Can't tell", 0.55, true, 2, 3]);
-  assert.match(split.reason, /Context-dependent rule 2 · 2\/3 runs agreed$/);
+  assert.match(split.reason, /Context-dependent rule 2 · 2 of 3 runs agree$/);
   const failed = cellVerdict([errorLine(), null, null], 'Context-dependent', { rerun: RERUN });
   assert.deepEqual([failed.proposal, failed.confidence, failed.unsure], ["Can't tell", 0.5, true]);
-  assert.equal(failed.reason, 'The agent could not read this claim · 0/1 runs agreed');
+  assert.equal(failed.reason, 'The agent could not read this claim · 0 of 1 runs agree');
   const later = cellVerdict([line('do_not_apply', 0.1), errorLine(), null], 'Context-dependent', { rerun: RERUN });
   assert.equal(later.unsure, true, 'a later read that failed makes the cell unsure');
+});
+
+test('cellVerdict: the practice page shows the Agent reason in the form propose writes ("<k> of <n> runs agree")', () => {
+  const unanimous = cellVerdict([line('apply', 0.85), line('apply', 0.85), line('apply', 0.85)], 'Context-dependent', { rerun: RERUN });
+  assert.match(unanimous.reason, / · Context-dependent rule 2 · 3 of 3 runs agree$/);
+  const page = readFileSync(new URL('../../agents/claim-tagger-mvp/walkthrough/page.md', import.meta.url), 'utf8');
+  const cells = page.split('\n').filter((l) => l.includes('runs agree'));
+  assert.equal(cells.length, 2, 'the two rows of Step 2');
+  for (const cell of cells) assert.match(cell, / · Context-dependent rule 4 · 3 of 3 runs agree \|$/);
 });
 
 test('cellVerdict: the reason is cut to reason_max_words words', () => {
@@ -130,11 +139,11 @@ test('propose: every unsure cell gets a row and no confident one does; the row h
     [c03.Claim, c03.Tag, c03['Agent proposal'], c03['Agent confidence'], c03['Rulebook edition'], c03['Tag outcome'], c03['Why wrong'], c03['Your reasoning']],
     [claimText(3), 'Context-dependent', "Can't tell", 0.5, '2026-10-16.1', null, null, ''],
   );
-  assert.equal(c03['Agent reason'], 'Two rules pull apart. · 2/2 runs agreed');
+  assert.equal(c03['Agent reason'], 'Two rules pull apart. · 2 of 2 runs agree');
   assert.match(c03['Claim link'], /^https:\/\/www\.notion\.so\//, 'the link is the claim row in the Claims copy');
   const c05 = w.row('tag_decisions', 'c05::Context-dependent');
   assert.deepEqual([c05['Agent proposal'], c05['Agent confidence']], ["Can't tell", 0.55]);
-  assert.match(c05['Agent reason'], / · Context-dependent rule 1 · 2\/3 runs agreed$/);
+  assert.match(c05['Agent reason'], / · Context-dependent rule 1 · 2 of 3 runs agree$/);
   const report = assertReport(h, r);
   assert.equal(report.demo, false);
   assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
@@ -250,6 +259,20 @@ test('propose: in a practice profile the sentence starts with "Demo · " and rep
   assert.equal(r.report.demo, true);
   assert.deepEqual(lintReport(r.markdown), []);
   assert.equal(readJson(join(r.runDir, 'report.json')).demo, true);
+  assert.equal(r.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.', 'no demo_title in the profile: no page to name');
+});
+
+test('propose on a practice page: the first sentence ends with the practice page, and the commands in the report are the demo ones', async () => {
+  const title = 'Claim tagger demo · 15 Oct 10:42';
+  const w = await makeWorld({ claims: 3, demo: true, configure: (c) => { c.demo_title = title; } });
+  w.table(Object.fromEntries([1, 2, 3].map((i) => [claimText(i), { decision: 'do_not_apply', p: 0.1 }])));
+  await w.judge();
+  const h = w.hooks();
+  const r = await propose(h);
+  const report = assertReport(h, r);
+  assert.equal(report.sentence, `Tag: the agent read 3 claims for Context-dependent; nothing waits for you (practice page ${title}).`);
+  assert.ok(r.markdown.startsWith(`Demo · Tag: the agent read 3 claims for Context-dependent; nothing waits for you (practice page ${title}).\n`), r.markdown);
+  assert.equal(report.next, 'Next: nothing waits for you; type /claim-tagger demo tag when new claims arrive.');
 });
 
 test('propose --plan-only: the plan is checked and written, nothing is sent to Notion, and the report says so', async () => {

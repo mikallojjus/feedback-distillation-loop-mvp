@@ -7,6 +7,7 @@
 //   capWords(text, max)               -> at most `max` words in one line; a cut text ends in "..."
 //   cutText(text, max = 60)           -> one line of at most `max` characters; a cut text ends in "..."
 //   quoted(text, max?)                -> "the text cut and in double quotes" (inner double quotes become single ones), exempt from the report lint
+//   quotedWhole(text)                 -> the same, never cut: for text an editor is to copy whole (the complete wording of a rule)
 //   stampOf(date)                     -> "15 Oct 11:20" (local time): the date part of a Last run summary
 //   answerWord(decision)              -> Applies / Does not apply / Can't tell for apply / do_not_apply / ask_editor
 //   notionUrl(id)                     -> https://www.notion.so/<the 32 hex digits>
@@ -14,6 +15,13 @@
 //   viewLink(config, name)            -> the link to a view: your_queue, needs_your_note, lessons_waiting or rulebook. config.notion.views.<name>
 //                                        may hold a view id, a link, or { id, url }; without it the link is the table's own
 //   practiceLink(config)              -> the link to the practice page of a demo profile (else the Lessons waiting view)
+//   practiceTitle(config)             -> the title of the practice page a demo profile acts on (config.demo_title, written by the walkthrough
+//                                        runner), else null: outside a demo, or when the profile has no title
+//   namePracticePage(config, sentence) -> the first sentence of a demo report naming that page: "Status: ..." becomes "Status of the practice page
+//                                        <title>: ...", any other sentence gets " (practice page <title>)" before its final period; unchanged
+//                                        without a title, and when it already names the page
+//   demoCommands(text)                -> the slash commands of a report in their demo form: "/claim-tagger promote" -> "/claim-tagger demo promote"
+//                                        (a command that already says demo is left alone, so it can run twice)
 
 import { tableEntry } from './config.mjs';
 import { normId } from './notion-values.mjs';
@@ -42,6 +50,11 @@ export function cutText(text, max = 60) {
 /** A claim or title for a sentence: cut, double quotes inside it made single, and put in double quotes (the lint leaves quoted text alone). */
 export function quoted(text, max = 60) {
   return `"${cutText(text, max).replace(/["“”]/g, "'")}"`;
+}
+
+/** Like quoted, but the whole text: for a text the editor has to copy complete. Inner double quotes become single ones so the report lint still leaves it alone. */
+export function quotedWhole(text) {
+  return `"${squash(text).replace(/["“”]/g, "'")}"`;
 }
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -100,4 +113,27 @@ export function practiceLink(config) {
   const n = config?.notion ?? {};
   const page = [n.pages?.demo, n.pages?.practice, n.demo_page_id, n.page_id].find(isSet);
   return page ? notionUrl(page) : viewLink(config, 'lessons_waiting');
+}
+
+// ---- the practice page in a demo's reports -------------------------------------------------------------------------------------------
+
+/** The title of the practice page a demo profile acts on, or null (not a demo, or no demo_title in the profile). */
+export function practiceTitle(config) {
+  if (config?.demo !== true) return null;
+  const title = squash(config.demo_title);
+  return title === '' ? null : title;
+}
+
+/** The first sentence of a report, naming the practice page in a demo (see the header); the sentence as it is anywhere else. */
+export function namePracticePage(config, sentence) {
+  const text = String(sentence ?? '');
+  const title = practiceTitle(config);
+  if (title === null || text === '' || text.includes(`practice page ${title}`)) return text;
+  if (text.startsWith('Status:')) return `Status of the practice page ${title}:${text.slice('Status:'.length)}`;
+  return text.endsWith('.') ? `${text.slice(0, -1)} (practice page ${title}).` : `${text} (practice page ${title})`;
+}
+
+/** The slash commands of a report as an editor on a practice page types them: "/claim-tagger tag" -> "/claim-tagger demo tag". */
+export function demoCommands(text) {
+  return String(text ?? '').replace(/\/claim-tagger (?!demo\b)(?=[a-z])/g, '/claim-tagger demo ');
 }

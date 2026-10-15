@@ -2,13 +2,18 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import {
-  answerWord, capWords, cutText, listNames, notionUrl, plural, practiceLink, quoted, stampOf, tableLink, viewLink,
+  answerWord, capWords, cutText, demoCommands, listNames, namePracticePage, notionUrl, plural, practiceLink, practiceTitle, quoted, quotedWhole, stampOf, tableLink, viewLink,
 } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport, renderReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 
+// A config for the link tests: the agent's own, but with no views and with the claims table not made yet, whatever the live config.json holds after setup.
+const SETUP_PLACEHOLDER = '<setup>';
 const base = () => {
   const c = structuredClone(loadConfig(codeRoot()));
+  delete c.notion.views;
+  c.notion.claims[0].database_id = SETUP_PLACEHOLDER;
+  c.notion.claims[0].data_source_id = SETUP_PLACEHOLDER;
   c.notion.rulebook.database_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   c.notion.databases.tag_decisions.database_id = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
   c.notion.databases.rule_changes.database_id = 'cccccccccccccccccccccccccccccccc';
@@ -57,7 +62,7 @@ test('notionUrl and tableLink: the plain address of a table, dashes taken out', 
   assert.equal(notionUrl('aaaaaaaa-aaaa-AAAA-aaaa-aaaaaaaaaaaa'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
   const c = base();
   assert.equal(tableLink(c, 'rulebook'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-  assert.equal(tableLink(structuredClone(loadConfig(codeRoot())), 'claims_copy'), `https://www.notion.so/${loadConfig(codeRoot()).notion.parent_page_id}`, 'a table that setup has not made yet points at the page');
+  assert.equal(tableLink(c, 'claims_copy'), `https://www.notion.so/${loadConfig(codeRoot()).notion.parent_page_id}`, 'a table that setup has not made yet points at the page');
 });
 
 test('viewLink: a view id gives ?v=, a link is used as it is, an object works, and without a view the table\'s own link is used', () => {
@@ -76,4 +81,54 @@ test('practiceLink: the practice page of a demo profile, else the Lessons waitin
   assert.equal(practiceLink(c), 'https://www.notion.so/cccccccccccccccccccccccccccccccc');
   c.notion.page_id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
   assert.equal(practiceLink(c), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
+});
+
+test('quotedWhole: the whole text in double quotes, never cut, inner double quotes made single, on one line, and the report lint leaves it alone', () => {
+  const rule = 'Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent. '.repeat(3).trim();
+  assert.ok([...rule].length > 300);
+  assert.equal(quotedWhole(rule), `"${rule}"`, 'a long text is not cut');
+  assert.equal(quotedWhole('A reference such as "the market"\nstays whole “here”.'), '"A reference such as \'the market\' stays whole \'here\'."');
+  assert.equal(quotedWhole(null), '""');
+  const md = renderReport({ sentence: 'Promote: FAIL.', next: `Next: put this whole text into Editor wording: ${quotedWhole('Two weeks, $2.87 million {x}, the database, G20 and the rubric gate.')}; then type /claim-tagger promote again.` });
+  assert.deepEqual(lintReport(md), []);
+});
+
+test('practiceTitle: the title of the practice page, only for a demo profile that has one', () => {
+  assert.equal(practiceTitle({ demo: true, demo_title: 'Claim tagger demo · 15 Oct 10:42' }), 'Claim tagger demo · 15 Oct 10:42');
+  assert.equal(practiceTitle({ demo: true, demo_title: '  Two\nlines  ' }), 'Two lines');
+  assert.equal(practiceTitle({ demo: true }), null);
+  assert.equal(practiceTitle({ demo: true, demo_title: '   ' }), null);
+  assert.equal(practiceTitle({ demo_title: 'Not a demo' }), null, 'a profile that is not a demo names no page');
+  assert.equal(practiceTitle({ demo: false, demo_title: 'x' }), null);
+  assert.equal(practiceTitle(null), null);
+});
+
+test('namePracticePage: "Status of the practice page <title>: ..." for a status sentence, " (practice page <title>)" before the final period for any other, unchanged without a title', () => {
+  const demo = { demo: true, demo_title: 'Claim tagger demo · 15 Oct 10:42' };
+  assert.equal(
+    namePracticePage(demo, 'Status: nothing is paused; 2 rows wait for you.'),
+    'Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; 2 rows wait for you.',
+  );
+  assert.equal(
+    namePracticePage(demo, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed.'),
+    'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger demo · 15 Oct 10:42).',
+  );
+  assert.equal(namePracticePage(demo, 'Tag stopped: your Claude allowance ran out'), 'Tag stopped: your Claude allowance ran out (practice page Claim tagger demo · 15 Oct 10:42)', 'no final period: the page is added at the end');
+  const once = namePracticePage(demo, 'Distill: one rule change drafted from your 2 notes.');
+  assert.equal(namePracticePage(demo, once), once, 'a sentence that names the page already is left alone');
+  assert.equal(namePracticePage({ demo: true }, 'Status: x.'), 'Status: x.');
+  assert.equal(namePracticePage({ demo_title: 'x' }, 'Status: x.'), 'Status: x.');
+  assert.equal(namePracticePage(demo, ''), '');
+  assert.equal(namePracticePage(demo, undefined), '');
+  // a sentence that names the page passes the report lint
+  assert.deepEqual(lintReport(renderReport({ demo: true, sentence: namePracticePage(demo, 'Status: nothing is paused; 2 rows wait for you.'), next: 'Next: nothing.' })), []);
+});
+
+test('demoCommands: every slash command of the claim tagger gets "demo", once', () => {
+  assert.equal(demoCommands('Next: type /claim-tagger promote again; it continues where it stopped.'), 'Next: type /claim-tagger demo promote again; it continues where it stopped.');
+  assert.equal(demoCommands('type `/claim-tagger follow-up` or /claim-tagger status'), 'type `/claim-tagger demo follow-up` or /claim-tagger demo status');
+  assert.equal(demoCommands(demoCommands('type /claim-tagger tag')), 'type /claim-tagger demo tag', 'a command that says demo already is left alone');
+  assert.equal(demoCommands('type /claim-tagger demo tag'), 'type /claim-tagger demo tag');
+  assert.equal(demoCommands('Next: nothing; the demo is complete.'), 'Next: nothing; the demo is complete.');
+  assert.equal(demoCommands(undefined), '');
 });

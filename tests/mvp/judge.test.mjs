@@ -1165,7 +1165,7 @@ test('the usage window stops the run with exit 75 at once, writes nothing for th
   assert.deepEqual(callsOf(r).map((c) => [c.status, c.items]), [['ok', 8], ['usage_window', 4]]);
   assert.match(r.io.errs.join('\n'), /judge: to continue: node agents\/claim-tagger-mvp\/scripts\/judge\.mjs --resume /);
   const report = assertReport(r);
-  assert.equal(report.sentence, 'Judge stopped: the usage limit was reached after 8 of 12 claims; nothing was written to Notion.');
+  assert.equal(report.sentence, 'Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion.');
   assert.deepEqual(report.rows, [['Claims read', '8', ''], ['Still waiting', '4', '']]);
   assert.equal(report.next, 'Next: when your Claude allowance is back, type /claim-tagger tag again; it continues where it stopped');
 
@@ -1184,7 +1184,7 @@ test('a usage window on the very first call stops with exit 75 and leaves no sto
   assert.equal(r.fakeState.calls, 2, 'two lanes, one batch each, then no new batch starts');
   assert.deepEqual(callsOf(r).map((c) => c.status), ['usage_window', 'usage_window']);
   assert.equal(readdirSync(join(root, 'runs', 'judgments', key16Of(r))).filter((f) => f.startsWith('run-')).length, 0);
-  assert.equal(assertReport(r).sentence, 'Judge stopped: the usage limit was reached after 0 of 12 claims; nothing was written to Notion.');
+  assert.equal(assertReport(r).sentence, 'Judge stopped: your Claude allowance ran out after 0 of 12 claims; nothing was written to Notion.');
 });
 
 test('a reply from another model than the pinned one stops the run with exit 4 and is not kept', async () => {
@@ -1652,7 +1652,7 @@ test('as a program: the exit code is the process exit code, the report is on std
   assert.equal(b.status, 75, b.stderr);
   assert.match(b.stderr, /judge: to continue: node agents\/claim-tagger-mvp\/scripts\/judge\.mjs --resume \S+/);
   const runId = /--resume (\S+)/.exec(b.stderr)[1];
-  assert.match(b.stdout, /^Judge stopped: the usage limit was reached after 4 of 6 claims/);
+  assert.match(b.stdout, /^Judge stopped: your Claude allowance ran out after 4 of 6 claims/);
 
   const c = run(['--resume', runId]);
   assert.equal(c.status, 0, c.stderr);

@@ -202,4 +202,5 @@ Archive this page by hand when you no longer need it.
 **If something stops.**
 
 - Claude says "paused": untick Paused in Agent settings (the last table on this page), then type the command again.
-- Claude says the usage limit is reached: wait until your Claude allowance is back, then type the same command again; it continues where it stopped.
+- Claude says your Claude allowance ran out: wait until your Claude allowance is back, then type the same command again; it continues where it stopped.
+- Claude says the rulebook text was edited by hand: put When to use back as it was (the report links the Rulebook), or ask the engineer; then type the command again. Anything else: send the engineer the whole report.

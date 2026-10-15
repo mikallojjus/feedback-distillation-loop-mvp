@@ -444,7 +444,7 @@
       "enter": {
         "Tag outcome": "Does not apply",
         "Why wrong": "Rule unclear",
-        "Your reasoning": "Rule 4 is too strict: \"the larger public health problem\" is general; the claim reads fine."
+        "Your reasoning": "Rule 4 does not say whether a general reference such as 'the larger public health problem' counts as a definite reference; it should not: the claim reads fine."
       },
       "calibrate": {
         "agent": "apply",
@@ -458,7 +458,7 @@
       "enter": {
         "Tag outcome": "Does not apply",
         "Why wrong": "Rule unclear",
-        "Your reasoning": "Rule 4 is too strict: the claim reads well without a date or names for the debate."
+        "Your reasoning": "Rule 4 does not say that a debate named by its state and office is identified enough; it is."
       },
       "calibrate": {
         "agent": "apply",

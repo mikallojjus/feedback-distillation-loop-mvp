@@ -1154,7 +1154,7 @@ function reportFor(ctx) {
     const after = `after ${s.read} of ${plural(s.total, 'claim')}`;
     const rowsStopped = [['Claims read', String(s.read), ''], ['Still waiting', String(s.total - s.read), '']];
     const why = {
-      usage_window: `the usage limit was reached ${after}`,
+      usage_window: `your Claude allowance ran out ${after}`,
       transient: `Claude kept answering with an error ${after}`,
       spawn: 'the claude program could not be started',
       model_mismatch: `a different model than the pinned one answered ${after}, so that answer was not kept`,

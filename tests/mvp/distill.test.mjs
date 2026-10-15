@@ -382,7 +382,7 @@ test('distill: a usage window stops the run with exit 75 and writes nothing; rep
   const h = w.hooks();
   const r = await distill(h);
   assert.equal(r.exit, 75);
-  assert.equal(assertReport(h, r).sentence, 'Distill stopped: the usage limit was reached; nothing was written to Notion.');
+  assert.equal(assertReport(h, r).sentence, 'Distill stopped: your Claude allowance ran out; nothing was written to Notion.');
   assert.equal(r.report.next, 'Next: when your Claude allowance is back, type /claim-tagger distill again; it continues where it stopped.');
   assert.equal(w.writes().length, 0);
 

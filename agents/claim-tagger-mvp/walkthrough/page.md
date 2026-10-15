@@ -1,5 +1,5 @@
 Callout: You type four commands yourself (status, tag, distill and promote); the follow-up runs by itself after a PASS, and the engineer sets things up and fixes what breaks.
-A practice copy of the editor feedback loop: its own rulebook (one tag), 7 real claims, its own queue. Nothing here changes the real tables or Geo. Do the steps in order; you can stop after any step and come back. Commands go into Claude Code, opened in the geo-agents folder.
+A practice copy of the editor feedback loop: its own rulebook (one tag), 7 real claims, its own queue. Nothing here changes the real tables or Geo. Do the steps in order; you can stop after any step and come back. Commands go into Claude Code, opened in the geo-agents folder. Commands act on the newest practice page under Demos; if one was made after yours, ask the engineer before you continue.
 
 Rule 4 of Context-dependent reads: "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent." Editors read more loosely: a claim that reads well on its own does not need the tag, even when it says "the larger public health problem".
 
@@ -23,14 +23,14 @@ These two were picked for the demo; for real, a row appears only when the agent 
 
 **Explaining the outputs.** No table changes. Claude replies with one sentence, this table and a "Next:" line:
 
-| What | Now |
+| Where | Now |
 |---|---|
-| Rulebook | edition {{edition}}, 1 tag |
-| Waiting for you | 2 rows in Your queue |
-| Rule changes | none |
-| Paused | no |
+| Rulebook | 1 tag, edition {{edition}} |
+| Your queue | 2 rows, lowest confidence first |
+| Lessons waiting | none |
+| Last run | none yet |
 
-The sentence starts with "Demo · ", as every report in the demo does, and the Next line gives the command of step 2.
+The sentence starts with "Demo · " and names this practice page, as every report in the demo does. Its Next line points at Your queue, but the agent has not read the claims yet: do step 2 first.
 
 ## Step 2 · The agent reads the claims
 
@@ -46,8 +46,8 @@ The sentence starts with "Demo · ", as every report in the demo does, and the N
 
 | Claim | Agent proposal | Agent confidence | Agent reason |
 |---|---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | Applies | 0.85 | "the larger public health problem": which one? · Context-dependent rule 4 · 3/3 runs agreed |
-| Georgia's gubernatorial debate should be moderated by… | Applies | 0.80 | "Georgia's gubernatorial debate": which debate? · Context-dependent rule 4 · 3/3 runs agreed |
+| The focus on the COVID-19 vaccine ignored the larger public… | Applies | 0.85 | "the larger public health problem": which one? · Context-dependent rule 4 · 3 of 3 runs agree |
+| Georgia's gubernatorial debate should be moderated by… | Applies | 0.80 | "Georgia's gubernatorial debate": which debate? · Context-dependent rule 4 · 3 of 3 runs agree |
 
 Both rows also record the rulebook edition they used (Rulebook edition {{edition}}). They wait for you although the agent is fairly sure: they were picked for the demo.
 
@@ -71,7 +71,7 @@ The agent agrees with all 5 earlier decisions; their rows are not touched, so th
 
 **Existing status.** Both rows show Applies, citing rule 4 (step 2).
 
-**Doing the work.** In Your queue, just below, fill in three columns on each row. Tag outcome: Does not apply. Why wrong: Rule unclear. Your reasoning, on the COVID-19 row: "Rule 4 is too strict: 'the larger public health problem' is general; the claim reads fine." On the Georgia row: "Rule 4 is too strict: the claim reads well without a date or names for the debate." What each Why wrong value makes happen is explained in Help at the bottom of the page.
+**Doing the work.** In Your queue, just below, fill in three columns on each row. Tag outcome: Does not apply. Why wrong: Rule unclear. Your reasoning, on the COVID-19 row: "Rule 4 does not say whether a general reference such as 'the larger public health problem' counts as a definite reference; it should not: the claim reads fine." On the Georgia row: "Rule 4 does not say that a debate named by its state and office is identified enough; it is." What each Why wrong value makes happen is explained in Help at the bottom of the page.
 
 {{view:Your queue}}
 
@@ -81,8 +81,8 @@ The agent agrees with all 5 earlier decisions; their rows are not touched, so th
 
 | Claim | Tag outcome | Why wrong | Your reasoning |
 |---|---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | Does not apply | Rule unclear | Rule 4 is too strict: "the larger public health problem" is general; the claim reads fine. |
-| Georgia's gubernatorial debate should be moderated by… | Does not apply | Rule unclear | Rule 4 is too strict: the claim reads well without a date or names for the debate. |
+| The focus on the COVID-19 vaccine ignored the larger public… | Does not apply | Rule unclear | Rule 4 does not say whether a general reference counts as a definite one; it should not. |
+| Georgia's gubernatorial debate should be moderated by… | Does not apply | Rule unclear | Rule 4 does not say that a debate named by its state and office is identified enough; it is. |
 
 The agent is not involved and no other table changes. Both rows leave Your queue when the page reloads; they stay in Tag decisions at the bottom.
 
@@ -100,9 +100,9 @@ The agent is not involved and no other table changes. Both rows leave Your queue
 
 | Lesson | Rule | Status | Supporting rows |
 |---|---|---|---|
-| General references pass the rule 4 test | Context-dependent rule 4 | Proposed | The focus on the COVID-19 vaccine…; Georgia's gubernatorial debate… |
+| General references pass the rule 4 test | Context-dependent rule 4 | Proposed | The focus on the COVID-19 vaccine… · 78dd7750…::Context-dependent |
 
-Current text holds today's rule 4. Proposed text keeps it and adds one sentence, for example: "A general reference that any reader understands, such as 'the larger public health problem', passes the test." Supporting rows lists the two rows the draft rests on.
+Current text holds today's rule 4. Proposed text keeps it and adds one sentence, for example: "A general reference that any reader understands, such as 'the larger public health problem', passes the test." Supporting rows lists the two rows the draft rests on, one line each (the table shows the first). Each Supporting rows line ends with the row's key, the claim's id and the tag; you can skip it.
 
 The Rulebook does not change: a draft changes nothing until you approve it and it passes the safety check.
 
@@ -112,7 +112,7 @@ The Rulebook does not change: a draft changes nothing until you approve it and i
 
 **Existing status.** The draft from step 4 is Proposed.
 
-**Doing the work.** In Lessons waiting, just below, read Current text and Proposed text side by side; the cells wrap, so you read both in place. If the draft says what you meant, set Status to Approved right there. If not, open the row and write your own rule 4 in Editor wording first; your wording is then tested instead of the draft.
+**Doing the work.** In Lessons waiting, just below, read Current text and Proposed text side by side; the cells wrap, so you read both in place. If the draft says what you meant, set Status to Approved right there. If not, open the row, write all of rule 4 as you want it in Editor wording, then set Status to Approved; your wording is tested instead of the draft.
 
 {{view:Lessons waiting}}
 
@@ -154,13 +154,13 @@ The Rulebook does not change: a draft changes nothing until you approve it and i
 
 Your 2 rows are now earlier decisions: every future safety check tests a new rule against them.
 
-**If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Melania Trump should not host her initiative's G20 event…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence and quotes that claim; its Next line hands you one sentence for Editor wording, written from that claim.
+**If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Melania Trump should not host her initiative's G20 event…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence and quotes that claim; its Next line hands you the whole text for Editor wording: the rule as it was tested, with a sentence written from that claim added at the end.
 
-1. Open the change in Lessons waiting. In Editor wording, paste the proposed sentence or edit it so that the claim named in Safety check result keeps its answer; one added sentence is usually enough, for example: "A reference to one particular thing the claim does not name, such as 'her initiative', still fails the test." You may also write your own wording, or reject the change.
+1. Open the change in Lessons waiting. Editor wording must hold all of rule 4: put the whole text the report gives you into it (the rule as it was tested, with the added sentence at the end), or write all of rule 4 as you want it. Edit the added sentence if it does not say what you mean. You may also reject the change.
 2. Type `/claim-tagger demo promote` again.
 3. If it fails again, set Status to Rejected. The rule stays as it was, the demo ends here, and the safety check has done its job.
 
-The same steps cover the other kind of failure ("your row is not fixed yet"): the report quotes that row and proposes a sentence for it in the same way.
+The same three steps apply when the check names one of your own rows instead of an example claim: the Safety check result then reads like "FAIL: 'Georgia's gubernatorial debate should be moderated by…' now Applies", and the report proposes a sentence for that row in the same way.
 
 ## Step 7 · The agent re-checks your rows
 
@@ -168,7 +168,7 @@ The same steps cover the other kind of failure ("your row is not fixed yet"): th
 
 **Existing status.** You decided both rows in step 3 and the new rule 4 went live in step 6; in step 2 the agent had answered Applies on both rows, which was its proposal and not yet a tag on the claims.
 
-**Doing the work.** Nothing to type: the follow-up ran by itself at the end of the safety check, re-reading your two rows with the new rule 4 and reusing its own answers. Open Tag decisions at the bottom of the page and the Claims table.
+**Doing the work.** Nothing to type: the follow-up ran by itself at the end of the safety check. It takes the answers the check already gave for your two rows under the new rule 4, so there was nothing more to wait for. Open Tag decisions at the bottom of the page and the Claims table.
 
 **Explaining the outputs.**
 
@@ -198,7 +198,7 @@ Archive this page by hand when you no longer need it.
 
 ## The tables
 
-- **Rulebook**: one row per tag (here one). The agent changes When to use only after a passed safety check.
+- **Rulebook**: one row per tag (here one). The agent changes When to use only after a passed safety check. Do not edit When to use by hand: every command then stops until the text is put back.
 - **Claims**: one row per claim, shaped like the real claims table. The agent writes only Agent tags and Agent notes.
 - **Tag decisions**: one row per claim and tag that a person decides. You type in Tag outcome, Why wrong and Your reasoning; the agent fills the rest. Needs your note lists the rows where you chose a reason but left Your reasoning empty.
 - **Rule changes**: one row per proposed rule change. You set Status and may write Editor wording.
@@ -224,16 +224,17 @@ Archive this page by hand when you no longer need it.
 
 - **Rulebook**: the numbered rules for each tag, kept in When to use; it changes only after a passed safety check.
 - **Edition**: the rulebook's version, a date plus a count ({{edition}}); it goes up when a rule changes.
-- **Safety check**: the test a rule change must pass before it is used: example claims, earlier decisions and your rows must all come out right.
-- **Earlier decision**: a claim an editor already decided; the agent must keep getting it right.
-- **Example claim**: one of the tag's 6 examples in the Rulebook, or one of the 5 examples of its opposite tag, Self-contained; it must always come out right.
+- **Safety check**: the test a rule change must pass before it is used: example claims, earlier decisions and your rows must all come out right; its result, PASS or FAIL, is written in Safety check result.
+- **Earlier decision**: a claim an editor already decided (here the 5 from the audit of 9 October, when editors checked the agent's tags on real claims); the agent must keep getting it right.
+- **Example claim**: one of the tag's 6 examples in the Rulebook, or one of the 5 examples of its opposite tag, Self-contained, which the agent keeps in its own files (they are not on this page); it must always come out right.
 - **Agent proposal**: the agent's answer for one claim and one tag: Applies, Does not apply or Can't tell.
 - **Tag outcome**: your decision on a row; it always wins over the agent's answer.
 - **Why wrong**: your reason the agent was wrong; the table above says what each value makes happen.
 - **Follow-up**: after a PASS, the agent re-checks the rows the change rests on and marks each Fixed or Still wrong.
-- **Practice page**: this page, a copy of the feedback loop with its own small tables, where you run the whole cycle once without touching anything real.
+- **Queue**: the Tag decisions table. Your queue shows its rows that wait for you; Needs your note the ones where you chose a reason but wrote no note. Lessons waiting shows the Rule changes not yet decided.
 
 **If something stops.**
 
 - Claude says "paused": untick Paused in Agent settings (the last table on this page), then type the command again.
-- Claude says the usage limit is reached: wait until your Claude allowance is back, then type the same command again; it continues where it stopped.
+- Claude says your Claude allowance ran out: wait until your Claude allowance is back, then type the same command again; it continues where it stopped.
+- Claude says the rulebook text was edited by hand: put When to use back as it was (the report links the Rulebook), or ask the engineer; then type the command again. Anything else: send the engineer the whole report.

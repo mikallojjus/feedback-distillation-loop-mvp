@@ -8,6 +8,8 @@
 //   withRun({ script, label, opts, args, resume }, body)   open the run, load the config, call body(ctx), write the report and run.json, print the
 //                                                          report, return { exit, runId, runDir, report, ...details }. body returns
 //                                                          { exit?, sentence, header?, rows?, next, details? } or throws a LoopExit.
+//                                                          On a practice page (a demo profile) the report says "/claim-tagger demo <command>" and
+//                                                          its first sentence names the practice page (reportWords, editor-words.mjs).
 //   class LoopExit(code, message, { sentence, header, rows, next })   end the run with an exit code and the words of its report
 //   takePull(ctx, { pullId })          pull every table (or load --pull <id>), set ctx.pull (loadPull) and put its id into run.json
 //   needTables(ctx, ...tables)         LoopExit(2) unless the pull holds those tables
@@ -35,7 +37,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { cutText, listNames, quoted, viewLink } from './editor-words.mjs';
+import { cutText, demoCommands, listNames, namePracticePage, quoted, viewLink } from './editor-words.mjs';
 import { claudeVersion, findClaudeBin, runClaude, withTransientRetry } from './claude.mjs';
 import { isDemo, loadConfig } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
@@ -168,15 +170,35 @@ function describeFailure(ctx, e) {
   return { exit: EXIT.ERROR, message: `unexpected error: ${e?.stack ?? e?.message ?? e}`, sentence: `${ctx.label} stopped on an unexpected error.` };
 }
 
+/**
+ * The words of a report as the editor reads them. On a practice page (a demo profile) the commands are the demo ones ("/claim-tagger demo promote",
+ * so that nobody runs the real command from the practice page) and the first sentence names the practice page (editor-words.mjs). The sentence
+ * without the page's name comes second: a title the report lint refuses must not cost the editor the report.
+ */
+function reportWords(ctx, sentence, next) {
+  if (!ctx.demo) return { sentences: [sentence], next };
+  const plain = demoCommands(sentence);
+  return { sentences: [...new Set([namePracticePage(ctx.config, plain), plain])], next: demoCommands(next) };
+}
+
 function finishRun(ctx, out) {
   const exit = out.exit ?? EXIT.OK;
-  const sentence = out.sentence ?? `${ctx.label} stopped on an unexpected error.`;
-  const next = out.next ?? ENGINEER;
+  const words = reportWords(ctx, out.sentence ?? `${ctx.label} stopped on an unexpected error.`, out.next ?? ENGINEER);
+  const next = words.next;
+  const why = (err) => oneLine(err.problems ? err.problems.join('; ') : err.message);
   let written = null;
-  try {
-    written = writeReport(ctx.runDir, { demo: ctx.demo, sentence, header: out.header, rows: out.rows ?? [], next });
-  } catch (err) {
-    ctx.warnings.push(`report.md was not written as planned: ${oneLine(err.problems ? err.problems.join('; ') : err.message)}`);
+  let problem = null;
+  for (const sentence of words.sentences) {
+    try {
+      written = writeReport(ctx.runDir, { demo: ctx.demo, sentence, header: out.header, rows: out.rows ?? [], next });
+      if (problem) ctx.warnings.push(`the sentence of report.md does not name the practice page, because that did not pass the report lint: ${why(problem)}`);
+      break;
+    } catch (err) {
+      problem ??= err;
+    }
+  }
+  if (!written) {
+    ctx.warnings.push(`report.md was not written as planned: ${why(problem)}`);
     try {
       written = writeReport(ctx.runDir, { demo: false, sentence: `${ctx.label} finished.`, rows: [], next: ENGINEER });
     } catch {
@@ -581,7 +603,7 @@ export function modelStop(ctx, res, { wrote = false, again = ctx.again } = {}) {
   const code = STOP_CODES[res?.errorKind];
   if (code === undefined) return null;
   const why = {
-    usage_window: 'the usage limit was reached',
+    usage_window: 'your Claude allowance ran out',
     transient: 'Claude kept answering with an error',
     spawn: 'the claude program could not be started',
     model_mismatch: 'a different model than the pinned one answered',

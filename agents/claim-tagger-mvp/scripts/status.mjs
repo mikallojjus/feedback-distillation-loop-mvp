@@ -7,9 +7,12 @@
 //   --json        print the counts as JSON (for the engineer) instead of the report; the report files are written all the same
 //
 // The report. "Status: nothing is paused; N rows and M rule changes wait for you." (", more than fit one sitting" when N is above queue.sitting_rows), a table with
-// the Rulebook (tags, edition, whether Notion agrees), Your queue, Lessons waiting and the last run, and one Next line: decide the rows / start at the top of Your
-// queue / approve or reject the rule change / check the approved one / read new claims. A paused agent ends with the refusal report (exit 3), a drift of the rulebook text
-// on a judged tag with the drift report (exit 4, naming the tag and the column and telling the editor to ask the engineer to restore the rulebook text).
+// the Rulebook ("<n> tags, edition <e>"; "1 tag, edition <e>" on a practice page), Your queue ("<n> rows, lowest confidence first"), Lessons waiting and the last run
+// (the Last run summary, else "none yet"), and one Next line: decide the rows / start at the top of Your queue / approve or reject the rule change / check the approved
+// one / read new claims. The Rulebook row does not say that Notion agrees: a drift of the rulebook text on a judged tag is checked before the report and ends the command
+// with the drift report (exit 4, naming the tag and the column and telling the editor to ask the engineer to restore the rulebook text); only a difference that does
+// not stop the command (a tag without rules edited or added in Notion) or a drift check that could not run is said in the row. A paused agent ends with the refusal
+// report (exit 3). On a practice page the sentence starts "Status of the practice page <title>:" (loop.mjs).
 //
 // Exit codes: 0 ok, 2 invalid, 3 paused, 4 drift or an invalid rulebook file.
 //
@@ -98,10 +101,10 @@ export async function status(opts = {}) {
       edited.length ? `Notion differs on ${listNames(edited)} (taken over at the next run)` : null,
       added.length ? `Notion has other tag rows: ${listNames(added)}` : null,
       missing.length ? `Notion lacks tag rows: ${listNames(missing)}` : null,
+      drift && typeof drift.skipped === 'string' ? 'not compared with Notion' : null,
     ].filter(Boolean).join('; ');
-    const workTag = ctx.config.notion.rulebook.work_tag;
     const rulebook = rubric
-      ? `${plural(rubric.tags.length, `${workTag} tag`)}, edition ${rubric.edition}, ${notionSays || (drift && typeof drift.skipped === 'string' ? 'not compared with Notion' : 'same as Notion')}`
+      ? `${plural(rubric.tags.length, 'tag')}, edition ${rubric.edition}${notionSays ? `, ${notionSays}` : ''}`
       : 'no edition yet';
     const lessonsCell = m === 0 ? 'none' : [
       proposed ? `${plural(proposed, 'rule change')} to approve` : null,

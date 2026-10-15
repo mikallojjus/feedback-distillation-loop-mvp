@@ -29,6 +29,9 @@ const storeDirs = (w) => {
   return readdirSync(base).filter((d) => /^[0-9a-f]{16}$/.test(d)).map((d) => join(base, d));
 };
 const flipExample = { [EXAMPLE_1]: { decision: 'do_not_apply', p: 0.1 } };
+const SENTENCE = 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.'; // the fake wording call's stock reply
+const wordingCalls = (w) => w.calls().filter((c) => /prompts[\\/]wording\.md$/.test(c.systemPromptFile));
+const lessonsLink = (w) => `https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003`;
 const young = (w, body) => {
   mkdirSync(join(w.root, 'runs'), { recursive: true });
   writeFileSync(lockFile(w), `${JSON.stringify(body)}\n`);
@@ -253,12 +256,13 @@ test('promote PASS: in production the rubric folder is committed with the editio
   assert.equal((await promote(w6.hooks({ noCommit: false }))).exit, 0, 'a test folder is never committed, with no git given');
 });
 
-test('promote PASS: in a practice profile Next points at step 7 of the practice page, and the sentence starts with "Demo · "', async () => {
-  const w = await promoteWorld({ world: { demo: true, configure: (c) => { c.notion.page_id = 'a1b2c3d4e5f60718293a4b5c6d7e8f90'; } } });
+test('promote PASS: in a practice profile Next points at step 7 of the practice page, the sentence starts with "Demo · " and ends with the practice page', async () => {
+  const w = await promoteWorld({ world: { demo: true, configure: (c) => { c.notion.page_id = 'a1b2c3d4e5f60718293a4b5c6d7e8f90'; c.demo_title = 'Claim tagger demo · 15 Oct 10:42'; } } });
   const h = w.hooks();
   const r = await promote(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assert.ok(r.markdown.startsWith('Demo · Promote: PASS, rule 4'), r.markdown);
+  assert.equal(r.report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger demo · 15 Oct 10:42).');
   assert.equal(r.report.next, 'Next: look at step 7 on the practice page (https://www.notion.so/a1b2c3d4e5f60718293a4b5c6d7e8f90); the demo is then complete.');
   assert.deepEqual(lintReport(r.markdown), []);
 });
@@ -272,7 +276,7 @@ test('promote PASS: with no row left in Your queue Next says nothing waits; with
 
 // ---- FAIL ----------------------------------------------------------------------------------------------------------------------------------
 
-test('promote FAIL: an example that flips leaves the rulebook alone, writes only the two rows, and proposes one sentence for the report and the card, never for Notion', async () => {
+test('promote FAIL: an example that flips leaves the rulebook alone, writes only the two rows, and hands the editor the whole text for Editor wording in the report and the card, never in Notion', async () => {
   const w = await promoteWorld({ overrides: flipExample });
   const copyBefore = w.row('rulebook', 'Context-dependent')['When to use'];
   const h = w.hooks();
@@ -305,7 +309,8 @@ test('promote FAIL: an example that flips leaves the rulebook alone, writes only
   const report = assertReport(h, r);
   assert.equal(report.sentence, `Promote: FAIL, rule 4 is unchanged: the new wording turns "${cut}" to Does not apply.`);
   assert.deepEqual(report.rows, [['Example claims', '10 of 11 right', ''], ['Earlier decisions', '2 of 2 still right', ''], ['Your 2 rows', '2 of 2 now right', '']]);
-  assert.equal(report.next, `Next: in Lessons waiting (https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003), paste this sentence into Editor wording or edit it: "A reference to one particular thing that the claim does not name, such as a title alone, still fails the test." Then type /claim-tagger promote again.`);
+  assert.equal(report.next, `Next: in Lessons waiting (${lessonsLink(w)}), open the change and put this whole text into Editor wording: "${NEW_TEXT} ${SENTENCE}"; then type /claim-tagger promote again.`,
+    'Editor wording is the whole rule: the text that was tested (the lesson\'s proposed text), a space, the proposed sentence');
 
   // the card and the wording call
   const card = readJson(join(r.runDir, 'card.json'));
@@ -314,7 +319,8 @@ test('promote FAIL: an example that flips leaves the rulebook alone, writes only
   assert.deepEqual(card.checks.canaries.failures.map((m) => [m.id, m.expected, m.got]), [['canary-1', 'apply', 'do_not_apply']]);
   const md = readFileSync(join(r.runDir, 'card.md'), 'utf8');
   assert.match(md, /Suggested sentence for Editor wording: "A reference to one particular thing/);
-  const wording = w.calls().filter((c) => /prompts[\\/]wording\.md$/.test(c.systemPromptFile));
+  assert.ok(md.includes(`Whole text for Editor wording (the rule as it was tested, a space, the sentence): "${NEW_TEXT} ${SENTENCE}"`), md);
+  const wording = wordingCalls(w);
   assert.equal(wording.length, 1);
   assert.equal(wording[0].args[wording[0].args.indexOf('--model') + 1], 'claude-opus-5-5');
   assert.ok(wording[0].stdin.includes(`<claim answer="Applies">${EXAMPLE_1.replace(/&/g, '&amp;')}</claim>`), 'the failing claim goes in as data, with the answer it must keep');
@@ -331,8 +337,9 @@ test('promote FAIL: when the sentence cannot be written the report says so and g
   assert.equal(r.exit, 11);
   const report = assertReport(h, r);
   assert.match(report.sentence, /; a suggested sentence could not be written\.$/);
-  assert.match(report.next, new RegExp(`^Next: in Lessons waiting \\(.*\\), write your own wording in Editor wording so that "${EXAMPLE_1.slice(0, 20)}.*" keeps its answer, then type /claim-tagger promote again\\.$`));
+  assert.match(report.next, new RegExp(`^Next: in Lessons waiting \\(.*\\), open the change and write all of rule 4 in Editor wording so that "${EXAMPLE_1.slice(0, 20)}.*" keeps its answer; then type /claim-tagger promote again\\.$`));
   assert.equal(w.calls().filter((c) => /wording\.md$/.test(c.systemPromptFile)).length, 2, 'two attempts');
+  assert.ok(!/Whole text for Editor wording/.test(readFileSync(join(r.runDir, 'card.md'), 'utf8')), 'no sentence, no whole text');
   assert.match(w.row('rule_changes', TITLE)['Safety check result'], /^FAIL: /);
   assert.ok(readJson(join(r.runDir, 'run.json')).wording_failed);
 });
@@ -352,7 +359,55 @@ test('promote FAIL: a sentence of more than 30 words is refused, one of exactly 
   const exact = await promoteWorld({ overrides: flipExample });
   exact.setEnv('FAKE_LOOP_WORDING', `"${Array.from({ length: 30 }, (_, i) => `word${i}`).join(' ')}"`);
   const ok = await promote(exact.hooks());
-  assert.match(ok.report.next, /paste this sentence into Editor wording or edit it: "word0 word1[^"]* word29"/, 'quotes the model put around the sentence are taken off');
+  assert.ok(ok.report.next.includes(`Editor wording: "${NEW_TEXT} word0 word1 `), ok.report.next);
+  assert.match(ok.report.next, /word28 word29"; then type \/claim-tagger promote again\.$/, 'quotes the model put around the sentence are taken off');
+});
+
+test('promote FAIL: the whole text is the Editor wording that was tested when there is one (numbering dropped), else the proposed text; double quotes inside it become single ones in the report, and stay as they are in the card', async () => {
+  const wording = '4. Test: a general reference such as "the market" needs no answer; every other definite reference must point at one specific thing.';
+  const w = await promoteWorld({ wording, mark: 'needs no answer; every other definite reference', overrides: flipExample });
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 11, h.io.errs.join('\n'));
+  const report = assertReport(h, r);
+  const tested = 'Test: a general reference such as "the market" needs no answer; every other definite reference must point at one specific thing.';
+  assert.equal(report.next, `Next: in Lessons waiting (${lessonsLink(w)}), open the change and put this whole text into Editor wording: "${tested.replace(/"/g, "'")} ${SENTENCE}"; then type /claim-tagger promote again.`);
+  assert.ok(readFileSync(join(r.runDir, 'card.md'), 'utf8').includes(`: "${tested} ${SENTENCE}"`));
+  assert.ok(wordingCalls(w)[0].stdin.includes(`<proposed_text>${tested}</proposed_text>`), 'the wording call got the text that was tested');
+  assert.equal(w.row('rule_changes', TITLE)['Editor wording'], wording, 'the editor\'s field is untouched');
+});
+
+test('promote FAIL: the wording call runs for an earlier decision that broke and for one of the editor\'s own rows, and the report hands over the whole text for each', async () => {
+  const wholeText = `"${NEW_TEXT} ${SENTENCE}"`;
+  const earlier = await promoteWorld({ overrides: { [claimText(3)]: { decision: 'do_not_apply', p: 0.1 } } }); // claim 3 was decided Applies
+  const re = await promote(earlier.hooks());
+  assert.equal(re.exit, 11);
+  assert.equal(wordingCalls(earlier).length, 1, 'asked for an earlier decision as for an example');
+  assert.ok(wordingCalls(earlier)[0].stdin.includes(`<claim answer="Applies">${claimText(3)}</claim>`));
+  assert.equal(re.report.next, `Next: in Lessons waiting (${lessonsLink(earlier)}), open the change and put this whole text into Editor wording: ${wholeText}; then type /claim-tagger promote again.`);
+
+  const yours = await promoteWorld({ overrides: { [claimText(2)]: { decision: 'apply', p: 0.9 } } }); // row 2 was decided Does not apply
+  const ry = await promote(yours.hooks());
+  assert.equal(ry.exit, 11);
+  assert.equal(yours.row('rule_changes', TITLE)['Safety check result'], `FAIL: '${claimText(2)}' now Applies`);
+  assert.equal(wordingCalls(yours).length, 1, 'asked for one of the editor\'s own rows as well');
+  assert.ok(wordingCalls(yours)[0].stdin.includes(`<claim answer="Does not apply">${claimText(2)}</claim>`));
+  assert.equal(ry.report.next, `Next: in Lessons waiting (${lessonsLink(yours)}), open the change and put this whole text into Editor wording: ${wholeText}; then type /claim-tagger promote again.`);
+  assert.ok(readFileSync(join(ry.runDir, 'card.md'), 'utf8').includes(`Whole text for Editor wording (the rule as it was tested, a space, the sentence): ${wholeText}`));
+});
+
+test('promote FAIL on a practice page: the command is the demo one, and the first sentence names the practice page', async () => {
+  const title = 'Claim tagger demo · 15 Oct 10:42';
+  const w = await promoteWorld({ overrides: flipExample, world: { demo: true, configure: (c) => { c.demo_title = title; } } });
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 11, h.io.errs.join('\n'));
+  const report = assertReport(h, r);
+  const cut = EXAMPLE_1.length > 60 ? `${EXAMPLE_1.slice(0, 57)}...` : EXAMPLE_1;
+  assert.equal(report.sentence, `Promote: FAIL, rule 4 is unchanged: the new wording turns "${cut}" to Does not apply (practice page ${title}).`);
+  assert.ok(r.markdown.startsWith('Demo · Promote: FAIL, rule 4 is unchanged'), r.markdown);
+  assert.equal(report.next, `Next: in Lessons waiting (${lessonsLink(w)}), open the change and put this whole text into Editor wording: "${NEW_TEXT} ${SENTENCE}"; then type /claim-tagger demo promote again.`);
+  assert.equal(readJson(join(r.runDir, 'run.json')).exit_code, 11);
 });
 
 test('promote FAIL: an earlier decision that was right and breaks is named, and counts against "still right"', async () => {
@@ -608,7 +663,7 @@ test('promote: a paused agent (exit 3) and a drift of the rulebook text in Notio
 
 test('promote: a usage window ends the run with exit 75 and nothing is written; repeated errors are exit 1; another model than the pinned one is exit 4', async () => {
   for (const [mode, exit, sentence] of [
-    ['usage-window', 75, 'Promote stopped: the usage limit was reached; nothing was written to Notion.'],
+    ['usage-window', 75, 'Promote stopped: your Claude allowance ran out; nothing was written to Notion.'],
     ['transient-always', 1, 'Promote stopped: Claude kept answering with an error; nothing was written to Notion.'],
     ['wrong-model', 4, 'Promote stopped: a different model than the pinned one answered; nothing was written to Notion.'],
   ]) {
