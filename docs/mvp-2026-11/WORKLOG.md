@@ -100,3 +100,11 @@ Done: `setup.mjs structure --from-proposal` (5 tables, 58 columns, 4 views, 2 su
 Verified: request logs: builder 34 requests (11 writes: 2 pages, 5 tables, 4 views), rulebook 13 writes, claims 50, seed-audit 10, settings 1, verify 0 writes; `verify.json` ok with no differences; the parent page fetched through the connector shows the three sub-pages and five tables.
 
 Next: the real run on the copy (pull, judge, propose), the walkthrough runner, the editor-review fixes, the two skills' headless checks, the verifier.
+
+### 12. The real run on the copy (acceptance check 4) (2026-10-15)
+
+Done: `pull --all` (13, 50, 10, 0, 1 rows; drift 0), `judge --items claims` with the live model (50 claims, 9 calls, 4 unsure after 5 re-reads, no transient error, no usage window), `propose` (2 new queue rows for the unsure cells, both Can't tell at confidence 0.61 and 0.67 with the rule cited; 5 claims tagged Context-dependent; Agent tags and Agent notes written on all 50 claims in the two-line form; Agent settings edition and Last run summary). Evidence in `evidence/06-real-run/` (plan, ledger, request log, reports, the judge's calls, the queue read back).
+
+Verified: the ledger shows 53 ops done with read_back ok (50 claims_copy updates, 2 tag_decisions creates, 1 agent_settings update); the plan's properties are only Agent tags, Agent notes, the nine agent columns of Tag decisions and the two agent columns of Agent settings (no editor column); the request log shows 53 writes and 53 reads; a fresh pull shows 12 queue rows (10 decided from the audit, 2 open with Tag outcome, Why wrong and Your reasoning empty), the longest Agent notes cell is 2 lines, `evals/cases.jsonl` holds the 10 earlier decisions.
+
+Next: the drift and pause checks on the live tables (acceptance 9 and 10) after the editor-review fixes land; the walkthrough runner; the evals and calibration; the headless check; the verifier.
