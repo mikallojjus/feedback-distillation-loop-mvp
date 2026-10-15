@@ -58,7 +58,7 @@ import { normId, sameValue } from './lib/notion-values.mjs';
 import { ROOT_ENV, codeFile, codeRoot, isMain, runId as makeRunId } from './lib/paths.mjs';
 import { PlanError, applyPlan, checkPlan, isDemoRoot, newPlan } from './lib/plan.mjs';
 import { buildReport, lintReport, renderReport, writeReport } from './lib/report.mjs';
-import { buildRubric, nextEdition, readRubric, verifyRubric, writeEdition } from './lib/rubric.mjs';
+import { buildRubric, compareEditions, nextEdition, readEdition, readRubric, verifyRubric, writeEdition } from './lib/rubric.mjs';
 import { InputError, SETTINGS_NAME, claimLink, claimOps, protectedInLinks, rulebookOps, unknownOptions, withLinkedSources } from './lib/setup-steps.mjs';
 import { loadPull, latestPullId, pull, readOnlyFetch, richTextPieces } from './pull.mjs';
 import * as dp from './lib/demo-profile.mjs';
@@ -908,7 +908,10 @@ export async function verifyDemo(ctx, { loaded, fresh }) {
       const check = verifyRubric(rubric);
       if (!check.ok) add(`the rulebook file is not valid: ${check.errors[0]}`);
       if (rubric.tags.length !== 1 || rubric.tags[0].name !== tag || !rubric.tags[0].judged) add('the rulebook should hold the one judged tag');
-      if (rubric.edition !== demo.edition) add(`the rulebook edition is ${rubric.edition} and the page says ${demo.edition}`);
+      // the page names the edition it was built with; a passed safety check moves the rulebook on, and that first edition then sits in the history
+      if (rubric.edition !== demo.edition && (compareEditions(rubric.edition, demo.edition) < 0 || !readEdition(ctx.demoRoot, demo.edition))) {
+        add(`the rulebook edition is ${rubric.edition} and the page was built with ${demo.edition}, which is not an earlier edition of this rulebook`);
+      }
     }
   } catch (e) {
     add(`the rulebook file cannot be read: ${oneLine(e.message, 120)}`);

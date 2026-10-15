@@ -1,17 +1,17 @@
 Callout: You type four commands yourself (status, tag, distill and promote); the follow-up runs by itself after a PASS, and the engineer sets things up and fixes what breaks.
 A practice copy of the editor feedback loop: its own rulebook (one tag), 7 real claims, its own queue. Nothing here changes the real tables or Geo. Do the steps in order; you can stop after any step and come back. Commands go into Claude Code, opened in the geo-agents folder. Commands act on the newest practice page under Demos; if one was made after yours, ask the engineer before you continue.
 
-Rule 4 of Context-dependent reads: "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent." Editors read more loosely: a claim that reads well on its own does not need the tag, even when it says "the larger public health problem".
+Rule 3 of Context-dependent says that a descriptive definite which names a kind of thing but not which one ("the Bitcoin ETF", "the new model") makes the claim Context-dependent: the reader must already know which one is meant. Editors read it with two gaps: a group every reader knows by its standing role, such as the press pool, is identified, and a capitalised phrase that names no body readers know, such as the AI Force, is not.
 
-| Claim | Rule 4's test | The editor |
+| Claim | Rule 3, read strictly | The editor |
 |---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | Tag: which problem? | No tag: a general remark |
 | The press pool was justified in suspending coverage… | Tag: which press pool? | No tag: everyone knows it |
+| The AI Force should enforce binding safety standards | Can't tell: a name, or a kind? | Tag: which body is that? |
 | Excluding CNN from Air Force One violates the federal court… | Tag: which order? | Tag: 'Which court order?' |
 
-The first two wait for you: you decide them, the agent drafts a clearer rule 4, you approve it, and a safety check makes sure the earlier decisions still come out right before the new rule is used.
+The first two wait for you: you decide them, the agent drafts a clearer rule 3, you approve it, and a safety check makes sure the earlier decisions still come out right before the new rule is used.
 
-These two were picked for the demo; for real, a row appears only when the agent is unsure.
+The press pool row was picked for the demo; for real, a row appears only when the agent is unsure, as the AI Force row does.
 
 ## Step 1 · Meet the demo
 
@@ -46,32 +46,32 @@ The sentence starts with "Demo · " and names this practice page, as every repor
 
 | Claim | Agent proposal | Agent confidence | Agent reason |
 |---|---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | Applies | 0.80 | "the larger public health problem": which one? · Context-dependent rule 2 · 3 of 3 runs agree |
-| The press pool was justified in suspending coverage… | Applies | 0.75 | "the press pool": which one? · Context-dependent rule 3 · 3 of 3 runs agree |
+| The press pool was justified in suspending coverage… | Applies | 0.80 | "the press pool": which one? · Context-dependent rule 3 · 3 of 3 runs agree |
+| The AI Force should enforce binding safety standards | Can't tell | 0.50 | "The AI Force": a name, or a kind of body? · Context-dependent rule 3 · 2 of 3 runs agree |
 
-The COVID-19 row cites rule 2 and the press pool row rule 3: two kinds of definite reference that fail rule 4's test. Both rows also record the rulebook edition they used (Rulebook edition {{edition}}). They wait for you although the agent is fairly sure: they were picked for the demo.
+Both rows cite rule 3, the rule on descriptive definites: the agent is fairly sure about the press pool and cannot decide the AI Force. Both rows also record the rulebook edition they used (Rulebook edition {{edition}}). The press pool row waits for you although the agent is fairly sure, because it was picked for the demo; the AI Force row waits because the agent is unsure, as a row does for real.
 
 **Claims** (Agent notes is two short lines per claim; the table shows the line break as a slash)
 
 | Geo Name | Agent tags | Agent notes |
 |---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | (empty) | no tags / 1 waits for an editor · edition {{edition}} |
 | The press pool was justified in suspending coverage… | (empty) | no tags / 1 waits for an editor · edition {{edition}} |
+| The AI Force should enforce binding safety standards | (empty) | no tags / 1 waits for an editor · edition {{edition}} |
 | Excluding CNN from Air Force One violates the federal court… | Context-dependent | Context-dependent / nothing waits for an editor · edition {{edition}} |
 | The Dallas convention is the unofficial launch of JD Vance’s… | Context-dependent | Context-dependent / nothing waits for an editor · edition {{edition}} |
 | A contractor's enforcement of safety restrictions constitutes… | (empty) | no tags / nothing waits for an editor · edition {{edition}} |
 | Relocating the Kennedy Center Honors to a sports arena… | (empty) | no tags / nothing waits for an editor · edition {{edition}} |
 | December stopgap funding rewards Congress for avoiding a… | (empty) | no tags / nothing waits for an editor · edition {{edition}} |
 
-The agent agrees with all 5 earlier decisions; their rows are not touched, so their Agent proposal still shows what the agent said before the audit of 9 October. On your 2 rows the agent follows rule 4, but a tag that waits for you is not written to Agent tags yet; it is counted in Agent notes and sits in Your queue. Confidence, rule and reason are in the Tag decisions rows above, not in Agent notes.
+The agent agrees with all 5 earlier decisions; their rows are not touched, so their Agent proposal still shows what the agent said before the audit of 9 October. On your 2 rows the agent follows rule 3, but a tag that waits for you is not written to Agent tags yet; it is counted in Agent notes and sits in Your queue. Confidence, rule and reason are in the Tag decisions rows above, not in Agent notes.
 
 ## Step 3 · Decide your two rows (you, as the editor)
 
-**Goal of the step.** Record your decision on both rows, and say that rule 4, not the agent, is the problem.
+**Goal of the step.** Record your decision on both rows, and say that rule 3, not the agent, is the problem.
 
-**Existing status.** Both rows show Applies, citing a rule of the rulebook (step 2).
+**Existing status.** The press pool row shows Applies and the AI Force row Can't tell, both citing rule 3 (step 2).
 
-**Doing the work.** In Your queue, just below, fill in three columns on each row. Tag outcome: Does not apply. Why wrong: Rule unclear. Your reasoning, on the COVID-19 row: "Rule 4 does not say whether a general reference such as 'the larger public health problem' counts as a definite reference; it should not: the claim reads fine." On the press pool row: "Rule 4 does not say that a body every reader knows, such as the press pool, counts as identified; it does: the claim reads well." What each Why wrong value makes happen is explained in Help at the bottom of the page.
+**Doing the work.** In Your queue, just below, fill in three columns on each row. Press pool row: Tag outcome Does not apply, Why wrong Rule unclear, Your reasoning "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well." AI Force row: Tag outcome Applies, Why wrong Rule unclear, Your reasoning "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context." What each Why wrong value makes happen is explained in Help at the bottom of the page.
 
 {{view:Your queue}}
 
@@ -81,16 +81,16 @@ The agent agrees with all 5 earlier decisions; their rows are not touched, so th
 
 | Claim | Tag outcome | Why wrong | Your reasoning |
 |---|---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | Does not apply | Rule unclear | Rule 4 does not say whether a general reference counts as a definite one; it should not. |
-| The press pool was justified in suspending coverage… | Does not apply | Rule unclear | Rule 4 does not say that a body every reader knows (the press pool) counts as identified; it does. |
+| The press pool was justified in suspending coverage… | Does not apply | Rule unclear | Rule 3 does not say that a group every reader knows by its role counts as identified; it does. |
+| The AI Force should enforce binding safety standards | Applies | Rule unclear | Rule 3 does not say that a name-like phrase for an unknown body is still a kind, not which; it is. |
 
 The agent is not involved and no other table changes. Both rows leave Your queue when the page reloads; they stay in Tag decisions at the bottom.
 
-## Step 4 · The agent drafts a clearer rule 4
+## Step 4 · The agent drafts a clearer rule 3
 
-**Goal of the step.** Turn your two notes into one proposed rewording of rule 4.
+**Goal of the step.** Turn your two notes into one proposed rewording of rule 3.
 
-**Existing status.** Rule changes is empty; your 2 rows carry Rule unclear and a sentence that names rule 4 (step 3).
+**Existing status.** Rule changes is empty; your 2 rows carry Rule unclear and a sentence that names rule 3 (step 3).
 
 **Doing the work.** Type `/claim-tagger demo distill`. It is a short wait.
 
@@ -100,9 +100,9 @@ The agent is not involved and no other table changes. Both rows leave Your queue
 
 | Lesson | Rule | Status | Supporting rows |
 |---|---|---|---|
-| General references pass the rule 4 test | Context-dependent rule 4 | Proposed | The focus on the COVID-19 vaccine… · 78dd7750…::Context-dependent |
+| Known groups count as identified, unknown names do not | Context-dependent rule 3 | Proposed | The press pool was justified in suspending coverage… · 5c9d133e…::Context-dependent |
 
-Current text holds today's rule 4. Proposed text keeps it and adds one sentence, for example: "A general reference that any reader understands, such as 'the larger public health problem', passes the test." Supporting rows lists the two rows the draft rests on, one line each (the table shows the first). Each Supporting rows line ends with the row's key, the claim's id and the tag; you can skip it.
+Current text holds today's rule 3. Proposed text keeps it and adds what your two notes say, for example: "A group readers know by its standing role, such as a press corps, counts as identified; a capitalised phrase that names no body readers know does not." Supporting rows lists the two rows the draft rests on, one line each (the table shows the first). Each Supporting rows line ends with the row's key, the claim's id and the tag; you can skip it.
 
 The Rulebook does not change: a draft changes nothing until you approve it and it passes the safety check.
 
@@ -112,7 +112,7 @@ The Rulebook does not change: a draft changes nothing until you approve it and i
 
 **Existing status.** The draft from step 4 is Proposed.
 
-**Doing the work.** In Lessons waiting, just below, read Current text and Proposed text side by side; the cells wrap, so you read both in place. If the draft says what you meant, set Status to Approved right there. If not, open the row, write all of rule 4 as you want it in Editor wording, then set Status to Approved; your wording is tested instead of the draft.
+**Doing the work.** In Lessons waiting, just below, read Current text and Proposed text side by side; the cells wrap, so you read both in place. If the draft says what you meant, set Status to Approved right there. If not, open the row, write all of rule 3 as you want it in Editor wording, then set Status to Approved; your wording is tested instead of the draft.
 
 {{view:Lessons waiting}}
 
@@ -122,29 +122,29 @@ The Rulebook does not change: a draft changes nothing until you approve it and i
 
 | Lesson | Editor wording | Status |
 |---|---|---|
-| General references pass the rule 4 test | (empty: the draft is tested) | Approved |
+| Known groups count as identified, unknown names do not | (empty: the draft is tested) | Approved |
 
 ## Step 6 · The safety check
 
-**Goal of the step.** Test the approved rule 4 against everything already decided, and switch to it only if nothing breaks.
+**Goal of the step.** Test the approved rule 3 against everything already decided, and switch to it only if nothing breaks.
 
-**Existing status.** The Rulebook still has today's rule 4; the change is Approved (step 5).
+**Existing status.** The Rulebook still has today's rule 3; the change is Approved (step 5).
 
-**Doing the work.** Type `/claim-tagger demo promote`. This is the longest wait of the seven steps: the agent reads the 11 example claims, the 5 earlier decisions and your 2 rows, once with each version of rule 4, and twice more any claim whose answer differs between the two versions. When the check passes, the same command re-checks your two rows (step 7).
+**Doing the work.** Type `/claim-tagger demo promote`. This is the longest wait of the seven steps: the agent reads the 10 example claims, the 5 earlier decisions and your 2 rows, once with each version of rule 3, and twice more any claim whose answer differs between the two versions. When the check passes, the same command re-checks your two rows (step 7).
 
 **Explaining the outputs.** When the check passes, Claude's report says PASS in its sentence, its table counts what came out right (the example claims, the earlier decisions and your rows), and its Next line points at step 7. These tables change:
 
 **Rulebook**
 
-| Name | When to use, rule 4 |
+| Name | When to use, rule 3 |
 |---|---|
-| Context-dependent | Today's test, plus: "A general reference that any reader understands … passes the test." |
+| Context-dependent | Today's rule, plus: "a group known by its role is identified; an unknown name-like phrase is not." |
 
 **Rule changes**
 
 | Lesson | Status | Safety check result |
 |---|---|---|
-| General references pass the rule 4 test | Live | PASS: examples 11/11, earlier 5/5, yours 2/2 |
+| Known groups count as identified, unknown names do not | Live | PASS: examples 10/10, earlier 5/5, yours 2/2 |
 
 **Agent settings**
 
@@ -154,9 +154,9 @@ The Rulebook does not change: a draft changes nothing until you approve it and i
 
 Your 2 rows are now earlier decisions: every future safety check tests a new rule against them.
 
-**If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Excluding CNN from Air Force One violates the federal court…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence and quotes that claim; its Next line hands you the whole text for Editor wording: the rule as it was tested, with a sentence written from that claim added at the end. For example, the added sentence reads: "A reference to one particular thing the claim does not name, such as 'the federal court order', still fails the test."
+**If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Excluding CNN from Air Force One violates the federal court…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence and quotes that claim; its Next line hands you the whole text for Editor wording: the rule as it was tested, with a sentence written from that claim added at the end. For example, the added sentence reads: "A definite that names one particular order, case or document the claim does not identify still makes the claim Context-dependent."
 
-1. Open the change in Lessons waiting. Editor wording must hold all of rule 4: put the whole text the report gives you into it (the rule as it was tested, with the added sentence at the end), or write all of rule 4 as you want it. Edit the added sentence if it does not say what you mean. You may also reject the change.
+1. Open the change in Lessons waiting. Editor wording must hold all of rule 3: put the whole text the report gives you into it (the rule as it was tested, with the added sentence at the end), or write all of rule 3 as you want it. Edit the added sentence if it does not say what you mean. You may also reject the change.
 2. Type `/claim-tagger demo promote` again.
 3. If it fails again, set Status to Rejected. The rule stays as it was, the demo ends here, and the safety check has done its job.
 
@@ -166,9 +166,9 @@ The same three steps apply when the check names one of your own rows instead of 
 
 **Goal of the step.** Confirm that the agent now agrees with your two decisions.
 
-**Existing status.** You decided both rows in step 3 and the new rule 4 went live in step 6; in step 2 the agent had answered Applies on both rows, which was its proposal and not yet a tag on the claims.
+**Existing status.** You decided both rows in step 3 and the new rule 3 went live in step 6; in step 2 the agent had answered Applies on the press pool row and Can't tell on the AI Force row, which were its proposals and not yet tags on the claims.
 
-**Doing the work.** Nothing to type: the follow-up ran by itself at the end of the safety check. It takes the answers the check already gave for your two rows under the new rule 4, so there was nothing more to wait for. Open Tag decisions at the bottom of the page and the Claims table.
+**Doing the work.** Nothing to type: the follow-up ran by itself at the end of the safety check. It takes the answers the check already gave for your two rows under the new rule 3, so there was nothing more to wait for. Open Tag decisions at the bottom of the page and the Claims table.
 
 **Explaining the outputs.**
 
@@ -176,17 +176,17 @@ The same three steps apply when the check names one of your own rows instead of 
 
 | Claim | Tag outcome | Follow-up |
 |---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | Does not apply | Fixed |
 | The press pool was justified in suspending coverage… | Does not apply | Fixed |
+| The AI Force should enforce binding safety standards | Applies | Fixed |
 
 **Claims** (your 2 claims)
 
 | Geo Name | Agent tags | Agent notes |
 |---|---|---|
-| The focus on the COVID-19 vaccine ignored the larger public… | (empty) | no tags / nothing waits for an editor · the next edition |
 | The press pool was justified in suspending coverage… | (empty) | no tags / nothing waits for an editor · the next edition |
+| The AI Force should enforce binding safety standards | Context-dependent | Context-dependent / nothing waits for an editor · the next edition |
 
-Agent notes now names the next edition, the one the safety check put in force. Your queue no longer lists your two rows. They stay in Tag decisions at the bottom of the page, where Agent proposal still shows what the agent said in step 2 and Follow-up shows what it says now. That is one full cycle: your two notes became a clearer rule 4, it was tested against every earlier decision before it went live, and your two rows are earlier decisions now, checked by every future safety check.
+Agent notes now names the next edition, the one the safety check put in force, and the AI Force claim carries the tag you decided. Your queue no longer lists your two rows. They stay in Tag decisions at the bottom of the page, where Agent proposal still shows what the agent said in step 2 and Follow-up shows what it says now. That is one full cycle: your two notes became a clearer rule 3, it was tested against every earlier decision before it went live, and your two rows are earlier decisions now, checked by every future safety check.
 
 **What the full version adds later:**
 
@@ -226,7 +226,7 @@ Archive this page by hand when you no longer need it.
 - **Edition**: the rulebook's version, a date plus a count ({{edition}}); it goes up when a rule changes.
 - **Safety check**: the test a rule change must pass before it is used: example claims, earlier decisions and your rows must all come out right; its result, PASS or FAIL, is written in Safety check result.
 - **Earlier decision**: a claim an editor already decided (here the 5 from the audit of 9 October, when editors checked the agent's tags on real claims); the agent must keep getting it right.
-- **Example claim**: one of the tag's 6 examples in the Rulebook, or one of the 5 examples of its opposite tag, Self-contained, which the agent keeps in its own files (they are not on this page); it must always come out right.
+- **Example claim**: one of the tag's 6 examples in the Rulebook, or one of 4 examples of its opposite tag, Self-contained, which the agent keeps in its own files (they are not on this page); it must always come out right.
 - **Agent proposal**: the agent's answer for one claim and one tag: Applies, Does not apply or Can't tell.
 - **Tag outcome**: your decision on a row; it always wins over the agent's answer.
 - **Why wrong**: your reason the agent was wrong; the table above says what each value makes happen.

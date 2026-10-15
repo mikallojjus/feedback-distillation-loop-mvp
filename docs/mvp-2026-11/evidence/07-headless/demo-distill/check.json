@@ -1,0 +1,56 @@
+{
+  "prompt": "/claim-tagger demo distill",
+  "ok": true,
+  "status": "pass",
+  "exit_code": 0,
+  "signal": null,
+  "timed_out": false,
+  "started_at": "2026-10-15T15:24:59.713Z",
+  "finished_at": "2026-10-15T15:25:27.539Z",
+  "duration_ms": 27826,
+  "claude": {
+    "bin": "C:\\Users\\John Malkovich\\.local\\bin\\claude.exe",
+    "command": "C:\\Users\\John Malkovich\\.local\\bin\\claude.exe",
+    "version": "2.1.296",
+    "model": "claude-fable-5-1",
+    "style": "Explanatory"
+  },
+  "args": [
+    "-p",
+    "/claim-tagger demo distill",
+    "--settings",
+    "X:\\work\\geo-agents\\docs\\mvp-2026-11\\evidence\\07-headless\\demo-distill\\headless-settings.json",
+    "--permission-mode",
+    "acceptEdits",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "cwd": "X:\\work\\geo-agents",
+  "settings": "X:\\work\\geo-agents\\docs\\mvp-2026-11\\evidence\\07-headless\\demo-distill\\headless-settings.json",
+  "problems": [],
+  "final": "Demo · Distill: one rule change drafted from your 2 notes (practice page Claim tagger practice · calibration 4).\n\n| What | Result |\n|---|---|\n| Rule change | \"Well-known bodies and general phrases count as identified\" |\n| Rule | Context-dependent rule 4, Proposed |\n| Rests on | your 2 rows |\n\nNext: read it in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e), where the current and the proposed text sit side by side, and approve it or write your own wording.",
+  "stats": {
+    "turns": 2,
+    "tool_calls": 1,
+    "bash_calls": 1,
+    "notion_reads": 0,
+    "notion_writes": 0
+  },
+  "tools": [
+    {
+      "name": "Bash",
+      "summary": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run distill"
+    }
+  ],
+  "info": {
+    "events": 13,
+    "skipped_lines": 0,
+    "results": 1,
+    "style": "Explanatory",
+    "model": "claude-fable-5-1",
+    "cli_version": "2.1.296",
+    "denials": [],
+    "notes": []
+  }
+}

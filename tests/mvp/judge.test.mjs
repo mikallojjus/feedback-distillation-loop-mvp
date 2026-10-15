@@ -931,6 +931,11 @@ test('a reply that is not JSON gets a second attempt for its batch, and nothing 
   const retried = calls.find((c) => c.attempts === 2);
   assert.equal(retried.status, 'ok');
   assert.ok(retried.usage.output > 0);
+  const rejected = readFileSync(join(r.runDir, 'rejected', `batch-${retried.batch}-attempt-1.md`), 'utf8');
+  assert.match(rejected, /^# Rejected reply\n\nbatch \d+, attempt 1, \d+ claim\(s\): /, 'the refused reply is kept, named by batch and attempt');
+  assert.match(rejected, /## Why\n\n- the reply is not valid JSON/);
+  assert.match(rejected, /## Reply as received\n\n\S/, 'with the text as it came');
+  assert.deepEqual(readdirSync(join(r.runDir, 'rejected')), [`batch-${retried.batch}-attempt-1.md`], 'only the refused attempt is kept');
   const batchLines = cellRows(root, key16, 1).filter((l) => l.call.batch === retried.batch);
   assert.ok(batchLines.length > 0 && batchLines.every((l) => l.call.attempt === 2), 'the lines say which attempt they came from');
   assert.equal(readJson(join(root, 'fake-state.json')).calls, 5);
@@ -949,6 +954,7 @@ test('a batch that fails both attempts is written as error lines; the run goes o
   assert.equal(lines.length, 10);
   assert.ok(lines.every((l) => l.status === 'error' && l.tags.length === 0 && /not valid JSON/.test(l.error) && l.call.attempt === 2));
   assert.deepEqual(callsOf(r).map((c) => [c.status, c.attempts]), [['error', 2], ['error', 2]]);
+  assert.equal(readdirSync(join(r.runDir, 'rejected')).length, 4, 'two batches, two attempts each: every refused reply is kept');
   assert.deepEqual(runJson(r).counts, { items: 10, read: 0, unsure: 0, reread: 0, failed: 10, failed_reread: 0 });
   assert.equal(runJson(r).exit_code, 2);
   const report = assertReport(r);

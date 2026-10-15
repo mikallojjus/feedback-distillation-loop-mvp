@@ -177,8 +177,8 @@ export function nextEdition(previous, today = new Date()) {
   return m && m[1] >= day ? `${m[1]}.${Number(m[2]) + 1}` : `${day}.1`;
 }
 
-// Orders 'YYYY-MM-DD.n' editions: by day, then by n as a number (so .10 comes after .9).
-function compareEditions(a, b) {
+/** Orders 'YYYY-MM-DD.n' editions: negative when a is earlier than b; by day, then by n as a number (so .10 comes after .9). */
+export function compareEditions(a, b) {
   const [dayA, nA] = a.split('.');
   const [dayB, nB] = b.split('.');
   return dayA < dayB ? -1 : dayA > dayB ? 1 : Math.sign(Number(nA) - Number(nB));

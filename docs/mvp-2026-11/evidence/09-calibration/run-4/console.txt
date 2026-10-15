@@ -1,0 +1,144 @@
+=== headless demo tag
+headless-check: running /claim-tagger demo tag
+headless-check: PASS /claim-tagger demo tag (4 turns, 3 tool calls (3 Bash, 0 Notion reads, 0 Notion writes))
+  files: X:\work\geo-agents\docs\mvp-2026-11\evidence\07-headless\demo-tag
+--- final message ---
+Demo · Tag: the agent read 7 claims for Context-dependent; 2 wait for you (practice page Claim tagger practice · calibration 4).
+
+| What | Result |
+|---|---|
+| Claims read | 7 |
+| Tagged Context-dependent | 2 claims |
+| New rows in Your queue | none |
+
+Next: decide the 2 rows in Your queue (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb8125acccdfb73efeb2ad).
+---
+headless tag exit 0
+=== decide
+walkthrough: acting as the editor on practice page 20261015-1822-2f2298 (decision D31): Tag decisions 78dd775028795b65bb5c4945eda1c3bb::Context-dependent: Tag outcome, Why wrong, Your reasoning
+Walkthrough: acting as the editor, the row "The focus on the COVID-19 vaccine ignored the larger publ..." now reads Does not apply (Rule unclear).
+
+| Column | Now |
+|---|---|
+| Tag outcome | Does not apply |
+| Why wrong | Rule unclear |
+| Your reasoning | "Rule 4 does not say whether a general reference such as 'the larger public health problem' counts..." |
+
+Next: open Your queue (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb8125acccdfb73efeb2ad) and decide your two rows.
+decide exit 0
+walkthrough: acting as the editor on practice page 20261015-1822-2f2298 (decision D31): Tag decisions 5c9d133e54864197a585599669353aff::Context-dependent: Tag outcome, Why wrong, Your reasoning
+Walkthrough: acting as the editor, the row "The press pool was justified in suspending coverage in so..." now reads Does not apply (Rule unclear).
+
+| Column | Now |
+|---|---|
+| Tag outcome | Does not apply |
+| Why wrong | Rule unclear |
+| Your reasoning | "Rule 4 does not say that a body every reader knows, such as the press pool, counts as identified;..." |
+
+Next: type /claim-tagger demo distill.
+decide exit 0
+=== headless demo distill
+headless-check: running /claim-tagger demo distill
+headless-check: PASS /claim-tagger demo distill (2 turns, 1 tool calls (1 Bash, 0 Notion reads, 0 Notion writes))
+  files: X:\work\geo-agents\docs\mvp-2026-11\evidence\07-headless\demo-distill
+--- final message ---
+Demo · Distill: one rule change drafted from your 2 notes (practice page Claim tagger practice · calibration 4).
+
+| What | Result |
+|---|---|
+| Rule change | "Well-known bodies and general phrases count as identified" |
+| Rule | Context-dependent rule 4, Proposed |
+| Rests on | your 2 rows |
+
+Next: read it in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e), where the current and the proposed text sit side by side, and approve it or write your own wording.
+---
+headless distill exit 0
+=== approve
+walkthrough: acting as the editor on practice page 20261015-1822-2f2298 (decision D31): Rule changes Well-known bodies and general phrases count as identified: Status
+Walkthrough: acting as the editor, the rule change "Well-known bodies and general phrases count as identified" is now Approved.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+
+Next: type /claim-tagger demo promote.
+approve exit 0
+=== headless demo promote
+headless-check: running /claim-tagger demo promote
+headless-check: PASS /claim-tagger demo promote (2 turns, 1 tool calls (1 Bash, 0 Notion reads, 0 Notion writes))
+  files: X:\work\geo-agents\docs\mvp-2026-11\evidence\07-headless\demo-promote
+--- final message ---
+Demo · Promote: FAIL, rule 4 is unchanged: the new wording leaves "The press pool was justified in suspending coverage in so..." at Applies (practice page Claim tagger practice · calibration 4).
+
+| Check | Result |
+|---|---|
+| Example claims | 11 of 11 right |
+| Earlier decisions | 5 of 5 still right |
+| Your 2 rows | 0 of 2 now right |
+
+Next: in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e), open the change and put this whole text into Editor wording: "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? A definite that names a standing institution or body readers commonly know by that name, or a general, abstract phrase that points at no single event, document or item, counts as identified. A definite naming one particular event, meeting, order, product or fund that the sentence does not pin down does not count as identified. If any answer is no, tag Context-dependent. A definite naming a standing collective known by its function, such as a press corps or newsroom, counts as identified even when its members or occasion go unstated."; then type /claim-tagger demo promote again.
+---
+headless promote exit 0
+=== verify and where
+{"ok":true,"problems":[],"counts":{"canaries":11,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":12,"table_row":39,"heading_2":8,"numbered_list_item":3,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"tag_decisions":7,"decided":7,"open":0,"rule_changes":1,"agent_settings":1,"linked_views":2,"tab_views":2,"fallback":null,"steps":7,"fresh":false}}
+verify exit 0
+Walkthrough: you are at step 6, The safety check; it did not pass.
+
+Next: open Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e) and write the rule as you want it in Editor wording.
+where exit 0
+=== approve with the proposed wording (FAIL branch)
+walkthrough: acting as the editor on practice page 20261015-1822-2f2298 (decision D31): Rule changes Well-known bodies and general phrases count as identified: Editor wording
+Walkthrough: acting as the editor, the Editor wording of the rule change "Well-known bodies and general phrases count as identified" is now filled in.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+| Editor wording | "Test: could a reader who sees only this sentence say which specific thing each definite reference..." |
+
+Next: open Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e) and write the rule as you want it in Editor wording.
+approve exit 0
+=== promote again
+Demo · Promote: FAIL, rule 4 is unchanged: the new wording leaves "The focus on the COVID-19 vaccine ignored the larger publ..." at Applies (practice page Claim tagger practice · calibration 4).
+
+| Check | Result |
+|---|---|
+| Example claims | 11 of 11 right |
+| Earlier decisions | 5 of 5 still right |
+| Your 2 rows | 1 of 2 now right |
+
+Next: in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e), open the change and put this whole text into Editor wording: "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? A definite that names a standing institution or body readers commonly know by that name, or a general, abstract phrase that points at no single event, document or item, counts as identified. A definite naming one particular event, meeting, order, product or fund that the sentence does not pin down does not count as identified. If any answer is no, tag Context-dependent. A definite naming a standing collective known by its function, such as a press corps or newsroom, counts as identified even when its members or occasion go unstated. A definite naming a widely known product type, like a vaccine against a named disease, or a broad public concern counts as identified, as does unattributed general attention to it."; then type /claim-tagger demo promote again.
+promote exit 11
+{"ok":true,"problems":[],"counts":{"canaries":11,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":12,"table_row":39,"heading_2":8,"numbered_list_item":3,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"tag_decisions":7,"decided":7,"open":0,"rule_changes":1,"agent_settings":1,"linked_views":2,"tab_views":2,"fallback":null,"steps":7,"fresh":false}}
+verify exit 0
+Walkthrough: you are at step 6, The safety check; it did not pass.
+
+Next: open Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e) and write the rule as you want it in Editor wording.
+where exit 0
+=== approve with the second proposed wording (FAIL branch, second time)
+walkthrough: acting as the editor on practice page 20261015-1822-2f2298 (decision D31): Rule changes Well-known bodies and general phrases count as identified: Editor wording
+Walkthrough: acting as the editor, the Editor wording of the rule change "Well-known bodies and general phrases count as identified" is now filled in.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+| Editor wording | "Test: could a reader who sees only this sentence say which specific thing each definite reference..." |
+
+Next: open Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e) and write the rule as you want it in Editor wording.
+approve exit 0
+=== promote, third time
+Demo · Promote: FAIL, rule 4 is unchanged: the new wording leaves "The shift to domestic chips supports Beijing's ambitions..." at Applies (practice page Claim tagger practice · calibration 4).
+
+| Check | Result |
+|---|---|
+| Example claims | 10 of 11 right |
+| Earlier decisions | 5 of 5 still right |
+| Your 2 rows | 2 of 2 now right |
+
+Next: in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e), open the change and put this whole text into Editor wording: "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? A definite that names a standing institution or body readers commonly know by that name, or a general, abstract phrase that points at no single event, document or item, counts as identified. A definite naming one particular event, meeting, order, product or fund that the sentence does not pin down does not count as identified. If any answer is no, tag Context-dependent. A definite naming a standing collective known by its function, such as a press corps or newsroom, counts as identified even when its members or occasion go unstated. A definite naming a widely known product type, like a vaccine against a named disease, or a broad public concern counts as identified, as does unattributed general attention to it. A definite naming a broad, ongoing trend or shift whose content the sentence itself spells out, such as a move toward a named kind of goods, counts as identified."; then type /claim-tagger demo promote again.
+promote exit 11
+{"ok":true,"problems":[],"counts":{"canaries":11,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":12,"table_row":39,"heading_2":8,"numbered_list_item":3,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"tag_decisions":7,"decided":7,"open":0,"rule_changes":1,"agent_settings":1,"linked_views":2,"tab_views":2,"fallback":null,"steps":7,"fresh":false}}
+verify exit 0
+Walkthrough: you are at step 6, The safety check; it did not pass.
+
+Next: open Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e) and write the rule as you want it in Editor wording.
+where exit 0

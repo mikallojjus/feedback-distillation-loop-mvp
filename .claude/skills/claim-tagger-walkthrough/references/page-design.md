@@ -22,4 +22,6 @@ On the page (also on `preview.md` for a dry run): the seven step headings with t
 
 In the tables: five inline tables with the practice titles; Rulebook 1 row, Context-dependent, Status Verified, with the taxonomy's columns; Claims 7 rows with Agent tags and Agent notes empty at creation; Tag decisions 7 rows on Context-dependent, exactly 5 carrying Tag outcome (with Agent proposal, Why wrong and Your reasoning as the manifest has them) and the 2 open rows carrying no Tag outcome, Why wrong or Agent proposal; Rule changes empty with the column Safety check result; Agent settings 1 row with Rulebook edition set.
 
+In the profile: the rulebook holds the one judged tag, and its edition is the page's edition or a later one whose history still holds the page's edition (a passed safety check moves the rulebook on; the page keeps naming the edition it was built with).
+
 `W verify --json` prints `{ ok, problems, counts }`; the walkthrough's evals grade with it.

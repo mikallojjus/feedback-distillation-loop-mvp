@@ -1,0 +1,118 @@
+Demo · Status of the practice page Claim tagger practice · calibration 3: nothing is paused; 2 rows wait for you.
+
+| Where | Now |
+|---|---|
+| Rulebook | 1 tag, edition 2026-10-15.1 |
+| Your queue | 2 rows, lowest confidence first |
+| Lessons waiting | none |
+| Last run | Practice page · 15 Oct 18:21 · built |
+
+Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).
+status exit 0
+pull 20261015T152332Z-pull: rulebook 1, claims_copy 7, tag_decisions 7, rule_changes 0, agent_settings 1; drift 0 difference(s); duplicates 0; paused no
+pull exit 0
+Demo · Judge: read 7 claims for Context-dependent; 0 unsure (practice page Claim tagger practice · calibration 3).
+
+| What | Result |
+|---|---|
+| Claims read | 7 |
+| Unsure | 0 |
+| Re-read | 0 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here)
+judge exit 0
+Demo · Tag: the agent read 7 claims for Context-dependent; 2 wait for you (practice page Claim tagger practice · calibration 3).
+
+| What | Result |
+|---|---|
+| Claims read | 7 |
+| Tagged Context-dependent | 2 claims |
+| New rows in Your queue | none |
+
+Next: decide the 2 rows in Your queue (https://app.notion.com/p/Claim-tagger-practice-calibration-3-3fa273e214eb81968229c07bd9d76417#3fa273e214eb81b2bc22ca448903d0de).
+propose exit 0
+walkthrough: acting as the editor on practice page 20261015-1821-f6e85f (decision D31): Tag decisions 78dd775028795b65bb5c4945eda1c3bb::Context-dependent: Tag outcome, Why wrong, Your reasoning
+Walkthrough: acting as the editor, the row "The focus on the COVID-19 vaccine ignored the larger publ..." now reads Does not apply (Rule unclear).
+
+| Column | Now |
+|---|---|
+| Tag outcome | Does not apply |
+| Why wrong | Rule unclear |
+| Your reasoning | "Rule 4 does not say whether a general reference such as 'the larger public health problem' counts..." |
+
+Next: open Your queue (https://app.notion.com/p/Claim-tagger-practice-calibration-3-3fa273e214eb81968229c07bd9d76417#3fa273e214eb81b2bc22ca448903d0de) and decide your two rows.
+decide exit 0
+walkthrough: acting as the editor on practice page 20261015-1821-f6e85f (decision D31): Tag decisions 5c9d133e54864197a585599669353aff::Context-dependent: Tag outcome, Why wrong, Your reasoning
+Walkthrough: acting as the editor, the row "The press pool was justified in suspending coverage in so..." now reads Does not apply (Rule unclear).
+
+| Column | Now |
+|---|---|
+| Tag outcome | Does not apply |
+| Why wrong | Rule unclear |
+| Your reasoning | "Rule 4 does not say that a body every reader knows, such as the press pool, counts as identified;..." |
+
+Next: type /claim-tagger demo distill.
+decide exit 0
+Demo · Distill: one rule change drafted from your 2 notes (practice page Claim tagger practice · calibration 3).
+
+| What | Result |
+|---|---|
+| Rule change | "Well-known bodies and general problems count as identified" |
+| Rule | Context-dependent rule 4, Proposed |
+| Rests on | your 2 rows |
+
+Next: read it in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-3-3fa273e214eb81968229c07bd9d76417#3fa273e214eb810e9604f5f55ecfd484), where the current and the proposed text sit side by side, and approve it or write your own wording.
+distill exit 0
+walkthrough: acting as the editor on practice page 20261015-1821-f6e85f (decision D31): Rule changes Well-known bodies and general problems count as identified: Status
+Walkthrough: acting as the editor, the rule change "Well-known bodies and general problems count as identified" is now Approved.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+
+Next: type /claim-tagger demo promote.
+approve exit 0
+Demo · Promote: FAIL, rule 4 is unchanged: the new wording leaves "The press pool was justified in suspending coverage in so..." at Applies (practice page Claim tagger practice · calibration 3).
+
+| Check | Result |
+|---|---|
+| Example claims | 11 of 11 right |
+| Earlier decisions | 5 of 5 still right |
+| Your 2 rows | 1 of 2 now right |
+
+Next: in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-3-3fa273e214eb81968229c07bd9d76417#3fa273e214eb810e9604f5f55ecfd484), open the change and put this whole text into Editor wording: "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent. A definite counts as identified when it names a standing body or institution that readers commonly know by that name, or when it speaks of a general problem, focus or trend rather than one particular event, meeting, document, product or set of items. A definite naming a familiar standing group or role, such as a press corps, jury or union, counts as identified even when the sentence judges one of its actions."; then type /claim-tagger demo promote again.
+promote exit 11
+{"ok":true,"problems":[],"counts":{"canaries":11,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":12,"table_row":39,"heading_2":8,"numbered_list_item":3,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"tag_decisions":7,"decided":7,"open":0,"rule_changes":1,"agent_settings":1,"linked_views":2,"tab_views":2,"fallback":null,"steps":7,"fresh":false}}
+verify exit 0
+Walkthrough: you are at step 6, The safety check; it did not pass.
+
+Next: open Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-3-3fa273e214eb81968229c07bd9d76417#3fa273e214eb810e9604f5f55ecfd484) and write the rule as you want it in Editor wording.
+where exit 0
+=== approve with the proposed wording (FAIL branch)
+walkthrough: acting as the editor on practice page 20261015-1821-f6e85f (decision D31): Rule changes Well-known bodies and general problems count as identified: Editor wording
+Walkthrough: acting as the editor, the Editor wording of the rule change "Well-known bodies and general problems count as identified" is now filled in.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+| Editor wording | "Test: could a reader who sees only this sentence say which specific thing each definite reference..." |
+
+Next: open Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-3-3fa273e214eb81968229c07bd9d76417#3fa273e214eb810e9604f5f55ecfd484) and write the rule as you want it in Editor wording.
+approve exit 0
+=== promote again
+Demo · Promote: PASS, rule 4 now uses your approved wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger practice · calibration 3).
+
+| Check | Result |
+|---|---|
+| Example claims | 11 of 11 right |
+| Earlier decisions | 5 of 5 still right |
+| Your 2 rows | 2 of 2 now right, marked Fixed |
+
+Next: look at step 7 on the practice page (https://www.notion.so/3fa273e214eb81968229c07bd9d76417); the demo is then complete.
+promote exit 0
+{"ok":false,"problems":["the rulebook edition is 2026-10-15.2 and the page says 2026-10-15.1"],"counts":{"canaries":11,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":12,"table_row":39,"heading_2":8,"numbered_list_item":3,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"tag_decisions":7,"decided":7,"open":0,"rule_changes":1,"agent_settings":1,"linked_views":2,"tab_views":2,"fallback":null,"steps":7,"fresh":false}}
+verify exit 2
+Walkthrough: you have been through all seven steps of the practice page.
+
+Next: nothing to type; archive the page by hand when you no longer need it.
+where exit 0

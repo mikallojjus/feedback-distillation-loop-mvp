@@ -16,7 +16,7 @@ import { blockText, lintPage } from '../../agents/claim-tagger-mvp/scripts/lib/n
 import { BUILDER_API_VERSION, countRequests, createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
-import { nextEdition, readRubric } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
+import { nextEdition, readRubric, writeEdition } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { notionUrl, quoted, stampOf } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.mjs';
 import { PlanError, applyPlan, checkPlan, isDemoRoot, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { createFakeNotion } from './fixtures/fake-notion.mjs';
@@ -593,7 +593,7 @@ test('start builds the page: one page, five tables, the text in order, two linke
   assert.equal(rubric.source.database_id.replace(/-/g, ''), demo.databases.rulebook.database_id);
   assert.match(readFileSync(join(dir, 'rubric', 'CHANGELOG.md'), 'utf8'), new RegExp(`edition ${EDITION} · practice page ${id}`));
   const canaries = lines(join(dir, 'evals', 'canaries.jsonl'));
-  assert.equal(canaries.length, 11);
+  assert.equal(canaries.length, 10);
   assert.ok(canaries.every((c) => c.tag === TAG && ['apply', 'do_not_apply'].includes(c.expected) && c.claim && c.id));
   assert.equal(canaries.filter((c) => c.expected === 'apply').length, 6);
   assert.equal(lines(join(dir, 'evals', 'cases.jsonl')).length, 5, 'the five earlier decisions are the cases');
@@ -1311,6 +1311,19 @@ test('verify reads a page that has moved on: once a command has run, the rows th
   assert.match(human.out, /\| Rule changes \| 1 \|/);
 });
 
+test('verify accepts a rulebook that moved to a later edition after a passed safety check, and still objects when the history does not hold the edition the page names', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  const rubric = readRubric(w.dir());
+  assert.equal(rubric.edition, EDITION);
+  writeEdition(w.dir(), { ...rubric, edition: nextEdition(rubric.edition, NOW) }, { reason: 'test: what a passed safety check does' });
+  const later = JSON.parse((await w.run(['verify', '--json'])).out);
+  assert.deepEqual(later.problems, [], 'the page keeps naming the edition it was built with, and the history holds that edition');
+  rmSync(join(w.dir(), 'rubric', 'history', `${EDITION}.json`));
+  const lost = JSON.parse((await w.run(['verify', '--json'])).out);
+  assert.match(lost.problems.join('\n'), /the rulebook edition is \S+ and the page was built with \S+, which is not an earlier edition of this rulebook/);
+});
+
 test('verify says plainly when the practice page was not finished', async () => {
   const w = newWorld();
   let made = 0;
@@ -1876,18 +1889,18 @@ test('decide changes the two rows that wait and nothing else, and says why when 
     assert.match(r.err, pattern);
     assert.equal(r.out, '', 'no report of a change');
   };
-  await refused([], /decide needs --claim <key>; the rows to decide are: covid, presspool/);
+  await refused([], /decide needs --claim <key>; the rows to decide are: presspool, aiforce/);
   await refused(['--claim', ''], /decide needs --claim <key>/);
-  await refused(['--claim', 'nobody'], /"nobody" is not a claim of this practice page \(the rows to decide are: covid, presspool\)/);
+  await refused(['--claim', 'nobody'], /"nobody" is not a claim of this practice page \(the rows to decide are: presspool, aiforce\)/);
   await refused(['--claim', 'cnn'], /"cnn" is one of the earlier decisions, which are not changed/);
-  await refused(['--claim', 'covid', '--outcome', 'Maybe'], /--outcome must be Applies or Does not apply/);
-  await refused(['--claim', 'covid', '--outcome', 'Applies', '--why', 'Because'], /--why must be Agent slip, Rule unclear, Rule should change/);
-  await refused(['--claim', 'covid', '--why', 'Rule unclear'], /--why and --reasoning go with --outcome/);
-  await refused(['--claim', 'covid', '--reasoning', 'Because.'], /--why and --reasoning go with --outcome/);
-  await refused(['--claim', 'covid', '--outcome', 'Applies', '--reasoning', '  '], /--reasoning is empty/);
-  await refused(['--claim', 'covid', '--frobnicate'], /frobnicate/);
-  await refused(['--demo', 'nope', '--claim', 'covid'], /there is no practice page "nope"/);
-  await refused(['--demo', '../x', '--claim', 'covid'], /is not a practice page id/);
+  await refused(['--claim', 'presspool', '--outcome', 'Maybe'], /--outcome must be Applies or Does not apply/);
+  await refused(['--claim', 'presspool', '--outcome', 'Applies', '--why', 'Because'], /--why must be Agent slip, Rule unclear, Rule should change/);
+  await refused(['--claim', 'presspool', '--why', 'Rule unclear'], /--why and --reasoning go with --outcome/);
+  await refused(['--claim', 'presspool', '--reasoning', 'Because.'], /--why and --reasoning go with --outcome/);
+  await refused(['--claim', 'presspool', '--outcome', 'Applies', '--reasoning', '  '], /--reasoning is empty/);
+  await refused(['--claim', 'presspool', '--frobnicate'], /frobnicate/);
+  await refused(['--demo', 'nope', '--claim', 'presspool'], /there is no practice page "nope"/);
+  await refused(['--demo', '../x', '--claim', 'presspool'], /is not a practice page id/);
   assert.equal(rows(), before, 'no row was changed');
   assert.equal(w.fake.writes().length, writes, 'no request was sent');
   assert.ok(!existsSync(join(w.dir(), 'editor-actions.jsonl')), 'a refusal is not an action');
@@ -1895,7 +1908,7 @@ test('decide changes the two rows that wait and nothing else, and says why when 
 
 test('the editor actions stop where everything stops: a pause file, Paused in Agent settings, a page that is not finished, no page at all', async () => {
   const none = newWorld();
-  const noPage = await none.run(['decide', '--claim', 'covid']);
+  const noPage = await none.run(['decide', '--claim', 'presspool']);
   assert.equal(noPage.code, 2);
   assert.match(noPage.err, /there is no finished practice page yet/);
 
@@ -1903,14 +1916,14 @@ test('the editor actions stop where everything stops: a pause file, Paused in Ag
   assert.equal((await w.start()).code, 0);
   const base = patchCount(w);
   writeFileSync(join(w.dir(), 'runs', 'PAUSED'), 'a person paused it\n');
-  for (const argv of [['decide', '--claim', 'covid'], ['approve'], ['reject']]) {
+  for (const argv of [['decide', '--claim', 'presspool'], ['approve'], ['reject']]) {
     const r = await w.run(argv);
     assert.equal(r.code, 3, argv.join(' '));
     assert.match(r.err, /paused \(its pause file exists\)/);
   }
   rmSync(join(w.dir(), 'runs', 'PAUSED'));
   w.fake.editRow(w.rows('agent_settings')[0].page_id, { Paused: true });
-  for (const argv of [['decide', '--claim', 'covid'], ['approve'], ['reject']]) {
+  for (const argv of [['decide', '--claim', 'presspool'], ['approve'], ['reject']]) {
     const r = await w.run(argv);
     assert.equal(r.code, 3, argv.join(' '));
     assert.match(r.err, /Paused is ticked in Agent settings/);
@@ -1918,12 +1931,12 @@ test('the editor actions stop where everything stops: a pause file, Paused in Ag
   assert.equal(patchCount(w), base, 'nothing was written');
   assert.ok(!existsSync(join(w.dir(), 'editor-actions.jsonl')), 'a stop is not an action');
   w.fake.editRow(w.rows('agent_settings')[0].page_id, { Paused: false });
-  assert.equal((await w.run(['decide', '--claim', 'covid'])).code, 0, 'a person clears it, then it works');
+  assert.equal((await w.run(['decide', '--claim', 'presspool'])).code, 0, 'a person clears it, then it works');
 
   // a page that stopped halfway is not a practice page to act on
   const unfinished = newWorld();
   assert.equal((await unfinished.start([], crashAtDatabase(2))).code, 1);
-  const r = await unfinished.run(['decide', '--demo', unfinished.demos()[0], '--claim', 'covid']);
+  const r = await unfinished.run(['decide', '--demo', unfinished.demos()[0], '--claim', 'presspool']);
   assert.equal(r.code, 2);
   assert.match(r.err, /is not finished/);
 });
@@ -2114,7 +2127,7 @@ test('the editor actions work on a practice page only: an id that leaves the fol
   assert.equal((await w.start()).code, 0);
   const base = patchCount(w);
   const writes = w.fake.writes().length;
-  const commands = [['decide', '--claim', 'covid'], ['approve'], ['reject']];
+  const commands = [['decide', '--claim', 'presspool'], ['approve'], ['reject']];
   for (const bad of ['..', '.', '../demos', '/etc', 'a/b']) {
     for (const [command, ...rest] of commands) {
       const r = await w.run([command, '--demo', bad, ...rest]);
@@ -2133,7 +2146,7 @@ test('the editor actions work on a practice page only: an id that leaves the fol
       assert.equal(r.code, 2, `${command} --demo ${folder}: ${r.err}`);
     }
   }
-  assert.match((await w.run(['decide', '--demo', 'imposter', '--claim', 'covid'])).err, /does not hold a demo profile of that name/);
+  assert.match((await w.run(['decide', '--demo', 'imposter', '--claim', 'presspool'])).err, /does not hold a demo profile of that name/);
   assert.equal(patchCount(w), base, 'no row was changed');
   assert.equal(w.fake.writes().length, writes, 'no write was sent');
 });

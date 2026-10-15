@@ -37,6 +37,8 @@
 //
 // Files. runs/<run-id>/run.json (first and last), calls.jsonl (one line per call: group, batch, items, attempts, usage, duration_ms, cli_version,
 // status), report.json and report.md (lib/report.mjs: the sentence, the table and the Next line; no call counts, durations or dollars).
+// rejected/batch-<n>-attempt-<k>.md keeps a reply the checks refused, as it came and with the problems listed, so that a batch that failed twice
+// can be read by a person (the store's error lines name the problem, not the text that caused it).
 // On a practice page (config.demo is true) the report is worded as the loop scripts word theirs (lib/loop.mjs): the commands are the demo ones
 // ("/claim-tagger demo tag", so that nobody types the real command from the practice page) and the sentence names the practice page
 // (config.demo_title), for every stop and every result alike, the usage window (exit 75) included.
@@ -1023,6 +1025,7 @@ async function runPool(ctx, batches) {
 }
 
 const STOPS = new Set(['usage_window', 'model_mismatch', 'spawn', 'transient']);
+const REJECTED_MAX_CHARS = 40000;
 
 async function processBatch(ctx, batch) {
   const { state, run, items, n } = batch;
@@ -1035,6 +1038,15 @@ async function processBatch(ctx, batch) {
   let problems = [];
   let accepted = null;
   let stopped = null;
+
+  // A reply the checks refuse is kept as it came (runs/<run-id>/rejected/), so that a batch that fails both attempts can be read by a person.
+  const keepRejected = (attempt, text, why) => {
+    const body = String(text ?? '');
+    const shown = body.length > REJECTED_MAX_CHARS ? `${body.slice(0, REJECTED_MAX_CHARS)}\n[cut after ${REJECTED_MAX_CHARS} characters]` : body;
+    const head = `batch ${n}, attempt ${attempt}, ${items.length} claim(s): ${items.map((it) => it.id).join(', ')}`;
+    const why_ = why.map((w) => `- ${w}`).join('\n');
+    writeTextAtomic(join(ensureDir(join(ctx.runDir, 'rejected')), `batch-${n}-attempt-${attempt}.md`), `# Rejected reply\n\n${head}\n\n## Why\n\n${why_}\n\n## Reply as received\n\n${shown}\n`);
+  };
 
   const call = async () => {
     attempts++;
@@ -1063,11 +1075,13 @@ async function processBatch(ctx, batch) {
       value = extractJson(res.text);
     } catch (e) {
       problems = [`the reply is not valid JSON (${e.message})`];
+      keepRejected(attempt, res.text, problems);
       continue;
     }
     const checked = validateReply(value, { ids: items.map((it) => it.id), tagNames: state.tagNames, rubricTags: ctx.rubricTags, schema, reasonMaxWords: ctx.cfg.reasonMaxWords });
     if (!checked.ok) {
       problems = checked.errors;
+      keepRejected(attempt, res.text, problems);
       continue;
     }
     accepted = { byId: checked.byId, attempt };

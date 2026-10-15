@@ -1,0 +1,56 @@
+{
+  "prompt": "/claim-tagger demo promote",
+  "ok": true,
+  "status": "pass",
+  "exit_code": 0,
+  "signal": null,
+  "timed_out": false,
+  "started_at": "2026-10-15T15:25:33.871Z",
+  "finished_at": "2026-10-15T15:27:18.568Z",
+  "duration_ms": 104697,
+  "claude": {
+    "bin": "C:\\Users\\John Malkovich\\.local\\bin\\claude.exe",
+    "command": "C:\\Users\\John Malkovich\\.local\\bin\\claude.exe",
+    "version": "2.1.296",
+    "model": "claude-fable-5-1",
+    "style": "Explanatory"
+  },
+  "args": [
+    "-p",
+    "/claim-tagger demo promote",
+    "--settings",
+    "X:\\work\\geo-agents\\docs\\mvp-2026-11\\evidence\\07-headless\\demo-promote\\headless-settings.json",
+    "--permission-mode",
+    "acceptEdits",
+    "--output-format",
+    "stream-json",
+    "--verbose"
+  ],
+  "cwd": "X:\\work\\geo-agents",
+  "settings": "X:\\work\\geo-agents\\docs\\mvp-2026-11\\evidence\\07-headless\\demo-promote\\headless-settings.json",
+  "problems": [],
+  "final": "Demo · Promote: FAIL, rule 4 is unchanged: the new wording leaves \"The press pool was justified in suspending coverage in so...\" at Applies (practice page Claim tagger practice · calibration 4).\n\n| Check | Result |\n|---|---|\n| Example claims | 11 of 11 right |\n| Earlier decisions | 5 of 5 still right |\n| Your 2 rows | 0 of 2 now right |\n\nNext: in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-4-3fa273e214eb81e19cfbf319b2ee2f68#3fa273e214eb81e8a086d555333f219e), open the change and put this whole text into Editor wording: \"Test: could a reader who sees only this sentence say which specific thing each definite reference points at? A definite that names a standing institution or body readers commonly know by that name, or a general, abstract phrase that points at no single event, document or item, counts as identified. A definite naming one particular event, meeting, order, product or fund that the sentence does not pin down does not count as identified. If any answer is no, tag Context-dependent. A definite naming a standing collective known by its function, such as a press corps or newsroom, counts as identified even when its members or occasion go unstated.\"; then type /claim-tagger demo promote again.",
+  "stats": {
+    "turns": 2,
+    "tool_calls": 1,
+    "bash_calls": 1,
+    "notion_reads": 0,
+    "notion_writes": 0
+  },
+  "tools": [
+    {
+      "name": "Bash",
+      "summary": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run promote"
+    }
+  ],
+  "info": {
+    "events": 16,
+    "skipped_lines": 0,
+    "results": 1,
+    "style": "Explanatory",
+    "model": "claude-fable-5-1",
+    "cli_version": "2.1.296",
+    "denials": [],
+    "notes": []
+  }
+}

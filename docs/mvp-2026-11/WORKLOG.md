@@ -4,11 +4,12 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: Stage 2 (2026-10-15). Stage 1 is live in Notion under the parent page: the approved structure, 13 rulebook rows, 50 claims, 10 seeded decisions, edition 2026-10-15.1, 11 canaries; the first real run tagged the 50 claims (2 open queue rows).
+- Phase: Stage 2 (2026-10-15). Stage 1 is live in Notion under the parent page: the approved structure, 13 rulebook rows, 50 claims, 10 seeded decisions, edition 2026-10-15.2 (the restore after the drift check), 11 canaries; the first real run tagged the 50 claims (2 open queue rows).
 - Checkpoint 1 (Notion structure proposal): approved as proposed on 2026-10-15 (decision P1).
-- Checkpoint 2 (final demo): not reached. Remaining: the walkthrough runner and its evals and calibration, drift and pause checks, rollback read-back, the headless checks for the demo commands, the verifier, the artifact republish.
+- Checkpoint 2 (final demo): not reached. Remaining: the calibration of manifest 2026-10-15.3 (three runs; run 5 in flight), the rollback read-back on a passed page, the walkthrough evals under Demo tests, the verifier, the artifact republish, a fresh practice page for the product owner.
+- Done since the last state: calibration runs 2 to 4 of manifest .2 (two PASS after one wording round each, one not passed), the headless checks for the demo's tag, distill and promote (acceptance check 7), two fixes (verify after a PASS, rejected replies kept), manifest .3 with a new story (decision 37).
 - Branch `mvp-2026-11`; the last commit is the newest one in `git log`.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The builder session is closed.
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The builder session is closed. Practice pages under Demos: calibration 1 to 5 (ids in `runs/demos/`).
 - Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 1, checkpoint 1).
 - Blockers: none open (B1, the malformed token, was fixed by the product owner on 2026-10-15).
 
@@ -133,3 +134,11 @@ Done: `walkthrough.mjs` (start with dry run and resume, run, where, verify, list
 Verified: `evidence/09-calibration/run-1/` holds every report, the verify results and the where output; every editor action is logged in the demo's `editor-actions.jsonl`; the FAIL reports hand over the complete Editor wording text.
 
 Next: manifest 2026-10-15.2; three calibration runs under Demos (the headless checks for tag, distill and promote ride on one of them); the rollback check after a PASS; the evals under Demo tests; the verifier.
+
+### 16. Calibration runs 2 to 4, the headless demo checks, two fixes, manifest 2026-10-15.3 (2026-10-15)
+
+Done: three practice pages (calibration 2, 3, 4) were run end to end from manifest .2 with the agent as the editor (decision 31); run 4's tag, distill and first promote went through the headless report check (`evidence/07-headless/demo-tag`, `demo-distill`, `demo-promote`: all pass, three-part reports, one Bash call per script, no Notion writes; acceptance check 7). Run 2 reached PASS after one wording round (edition 2026-10-15.2 on its page, both rows Fixed) once its safety check got past a judge reply that twice left out the same earlier decision; run 3 reached PASS after one wording round; run 4 failed three checks in a row (the press pool row, then the COVID-19 row, then the domestic-chips example claim) and was stopped. Two fixes with tests: `verify` accepts a rulebook one or more editions ahead of the page when the page's edition is in the history (decision 35; run 3's verify had failed a healthy page), and the judge keeps every refused reply under the run's `rejected/` folder (decision 36). Manifest 2026-10-15.3 (decision 37): the open rows are the press pool claim and the AI Force claim, both on rule 3; COVID-19 retires to the alternates with its note; the domestic-chips example claim leaves the demo's example set (ten remain; a backlog row records it for production); the page text, the skill's references, the report examples and the tests follow; runs 2 to 4 are recorded in `calibration.runs`. A dry run under Demos passes the page check; calibration page 5 is built from manifest .3.
+
+Verified: `evidence/09-calibration/run-2`, `run-3`, `run-4` hold every report, verify result and where output; the judge, walkthrough and rubric test files pass (202 tests), then the walkthrough file again after the manifest change (77); `verify` on run 3's page is clean with the rulebook at edition .2 and the page at .1; no secret appears in the evidence (scan for token prefixes: none).
+
+Next: calibration runs 5 to 7 on manifest .3 (freeze when the criteria in `references/manifest.md` hold, else revise again); the rollback read-back on a passed page; the walkthrough evals under Demo tests; the verifier; the artifact republish; the product owner's practice page; checkpoint 2.
