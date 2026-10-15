@@ -30,3 +30,16 @@ One line of reason each. The product owner's decisions D1 to D35 live in `docs/a
 | # | Decision | When |
 |---|---|---|
 | P1 | The structure proposal is approved as it stands ("Approved"; the page was read back and had not been edited: last edited 2026-10-15 10:53 UTC, its creation time; content identical to `STRUCTURE.md`). The five tables, four views and three sub-pages are built exactly as proposed. | 2026-10-15 |
+
+## Decisions for the walkthrough (settling the design's open points)
+
+| # | Decision | Reason |
+|---|---|---|
+| 21 | The four help pieces are: the one line under the story on why the two rows wait, the Why wrong table, the words list, and the "If something stops" help; the Help toggle at the bottom holds the last three. | The brief counts four; the design's toggle holds three and the fourth sits under the story. |
+| 22 | A dry run of `start` writes only `preview.md` and `setup-plan.json` under the demo folder and sends GET requests only; the profile (config, rubric, canaries) is written on a real start. | The design says both "writes nothing" and "writes the profile"; the smallest footprint wins. |
+| 23 | `start` exits 2 for an unreachable parent and 2 for a protected parent (with different messages); exit 4 stays reserved for drift and model mismatch. | CLAUDE.md fixes the meaning of exit 4. |
+| 24 | Practice pages made for the walkthrough skill's evals go under the sub-page "Demo tests"; calibration demos and the product owner's practice page go under "Demos". The skill still asks for a parent link every time; test runs name the parent in the prompt. | Decision D24 (always ask) and D31 (evals under Demo tests). |
+| 25 | The `where` mapping treats a rule change with Status Rejected, or Live with both open rows Fixed, as "complete"; its Next line then says "nothing to type; archive the page by hand when you no longer need it". | The one-thing rule allows a Next line that says nothing is left. |
+| 26 | The Agent settings row is created with Name, Rulebook edition and Last run summary only; Paused is left at its default (unticked) and never written by any script. | Paused is editor-owned (hard rule 1); a default is not a write. |
+| 27 | The eval 2 (dry run) report's Next line reads "to build the page for real, ask again for a practice page under the same link"; the editor never types a node command. | The report rule: a command the editor types, or a Notion link. |
+| 28 | The practice page's tables are titled Rulebook, Claims, Tag decisions, Rule changes and Agent settings (no "copy" in the name); production's two copies keep "copy" because they stand in for real tables. | The design's titles; the page text says "rulebook" and "Claims table" throughout. |
