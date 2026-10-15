@@ -2,7 +2,7 @@
   "name": "geo-agents",
   "private": true,
   "type": "module",
-  "description": "Geo content-team agents, one folder per agent. First agent: claim-tagger with the editor feedback loop.",
+  "description": "Geo content-team agents, one folder per agent. Live agent: claim-tagger-mvp, the claim tagger with its editor feedback loop; claim-tagger is the previous build, read-only history.",
   "engines": { "node": ">=22" },
   "scripts": {
     "test": "node --test tests/",
