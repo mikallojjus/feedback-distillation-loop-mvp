@@ -76,3 +76,11 @@ Done: the product owner wrote "Approved". The proposal page was fetched again: `
 Verified: the request log of the dry run counted by `countRequests` (writes 0); the pick holds 50 unique Geo IDs; the taxonomy file parses with 13 rows and 1 counterpart.
 
 Next: the setup coder's hand-back (structure builder and setup subcommands); then a builder session, `setup all`, the read-back and the structure diff (acceptance check 3); the judge coder's hand-back; then the loop scripts.
+
+### 9. Judge committed; the remaining Stage 1 and Stage 2 pieces in flight (2026-10-15)
+
+Done: the judge (adaptive runs, per-group cell store, the judge prompt at version 1, the fake CLI with its error modes; 112 tests) committed. Four coders running: setup with the REST structure builder (structure file from the approved proposal, databases, views, rows, rubric edition, canaries, verify), the loop scripts (propose, distill, promote with the safety check and the automatic follow-up, followup, rollback, restore, status, preflight, the distill and wording prompts, an end-to-end loop test on the fakes), the Markdown-to-blocks converter with the practice-page lint, and the walkthrough manifest and page template (Opus, from the design and the real claims).
+
+Verified: `node --test tests/` 1,323 pass after the judge landed (the judge coder's run).
+
+Next: hand-backs in any order; then a builder session and `setup all` on the live parent page, the read-back and the structure diff (acceptance check 3); the real run on the copy (acceptance check 4); the two skills.
