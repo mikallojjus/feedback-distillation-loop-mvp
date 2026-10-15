@@ -44,3 +44,11 @@ Done: `CLAUDE.md` rules 1, 5, 10 and the agents table amended as decisions D23 a
 Verified: 18 guard decisions checked against expectations in a temporary root (all as expected); the stdin path answers deny, no opinion and deny-on-garbage. Digests complete: library, orientation, W4 (1,043 lines, with 25 contradictions to settle), artifact recipe; W3 still being written.
 
 Next: W3 digest; dry-run pull script; structure proposal; artifact scaffold.
+
+### 5. Design read; proposal and artifact drafting started (2026-10-15)
+
+Done: read the W3 digest (1,189 lines; tables, views, config, scripts, rubric, judge, propose, distill, gate, report rules, settings, 25 contradictions) and settled the points that touch the MVP as decisions 9 to 20. Checked with GET requests only that the integration token reads the parent page, the real claims table, the taxonomy and the audit table (all 200). Read the counterpart tag Self-contained's five example claims (the do-not-apply canaries). Launched: an Opus drafter for `STRUCTURE.md` and its Notion-flavoured twin, a Sonnet coder for the artifact scaffold under `docs/mvp-2026-11/report/`. The Sonnet library coder is still running.
+
+Verified: the REST request log of the access check shows four GETs and nothing else.
+
+Next: library hand-back; pull script with the read-only dry run; the proposal page in Notion; the artifact's first publish; checkpoint 1.
