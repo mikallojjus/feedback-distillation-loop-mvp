@@ -4,12 +4,13 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: Stage 0 (branch, working directory, sweeps, CLAUDE.md amendment, settings, read-only dry run, structure proposal).
-- Checkpoint 1 (Notion structure proposal): not reached.
-- Checkpoint 2 (final demo): not reached.
-- Branch `mvp-2026-11`; nothing committed on it yet.
-- Notion: nothing created. Parent page "Feedback Distillation MVP" = 3fa273e214eb805199f3d12ef01db453.
-- Artifact: not published.
+- Phase: Stage 2 (2026-10-15). Stage 1 is live in Notion under the parent page: the approved structure, 13 rulebook rows, 50 claims, 10 seeded decisions, edition 2026-10-15.1, 11 canaries; the first real run tagged the 50 claims (2 open queue rows).
+- Checkpoint 1 (Notion structure proposal): approved as proposed on 2026-10-15 (decision P1).
+- Checkpoint 2 (final demo): not reached. Remaining: the walkthrough runner and its evals and calibration, drift and pause checks, rollback read-back, the headless checks for the demo commands, the verifier, the artifact republish.
+- Branch ; last commit at the time of writing: see .
+- Notion: ids in  and STATE.md. The builder session is closed.
+- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 1, checkpoint 1).
+- Blockers: none open (B1, the malformed token, was fixed by the product owner on 2026-10-15).
 
 ## Entries
 
@@ -108,3 +109,11 @@ Done: `pull --all` (13, 50, 10, 0, 1 rows; drift 0), `judge --items claims` with
 Verified: the ledger shows 53 ops done with read_back ok (50 claims_copy updates, 2 tag_decisions creates, 1 agent_settings update); the plan's properties are only Agent tags, Agent notes, the nine agent columns of Tag decisions and the two agent columns of Agent settings (no editor column); the request log shows 53 writes and 53 reads; a fresh pull shows 12 queue rows (10 decided from the audit, 2 open with Tag outcome, Why wrong and Your reasoning empty), the longest Agent notes cell is 2 lines, `evals/cases.jsonl` holds the 10 earlier decisions.
 
 Next: the drift and pause checks on the live tables (acceptance 9 and 10) after the editor-review fixes land; the walkthrough runner; the evals and calibration; the headless check; the verifier.
+
+### 13. Review fixes, runbook, headless status check, token blocker (2026-10-15)
+
+Done: the editor persona's review of the practice page and the skill (one must: the FAIL report now hands the editor the whole Editor wording text; the rest applied by a fixer: status table on step 1, Rule unclear reasoning, drift help and a third stop line, the words list, the practice page named in demo reports, "your Claude allowance", "k of n runs agree"). `AGENT.md` and the READMEs written; the old fallback subagents removed; `commitRubric` commits the rubric paths only. The headless check of `/claim-tagger status` with the Explanatory output style passes (one Bash call, three-part final message, no insight block, no Notion write). The product owner tested a connection token (reads of every object ok) and switched `.env`; a malformed line caused 401s for a while (blocker B1, fixed the same day).
+
+Verified: `evidence/07-headless/status/` (check.json ok); status against the live tables after the fix: edition 2026-10-15.1, 2 rows waiting.
+
+Next: the walkthrough runner with the editor actions (decision 31), the test-fixture fix, drift and pause checks, evals and calibration, the verifier.

@@ -713,7 +713,7 @@ export function commitRubric(ctx, message) {
     ctx.warnings.push(`the rubric folder could not be added to git (${oneLine(add?.stderr || add?.error?.message || `exit ${add?.status}`, 200)})`);
     return { committed: false, note: 'git add failed' };
   }
-  const commit = git(['commit', '-m', message], { cwd });
+  const commit = git(['commit', '-m', message, '--', 'agents/claim-tagger-mvp/rubric'], { cwd }); // the pathspec keeps anything else that is staged out of this commit
   if (commit?.status !== 0) {
     ctx.warnings.push(`the rubric folder was not committed (${oneLine(commit?.stdout || commit?.stderr || commit?.error?.message || `exit ${commit?.status}`, 200)})`);
     return { committed: false, note: 'git commit failed' };
