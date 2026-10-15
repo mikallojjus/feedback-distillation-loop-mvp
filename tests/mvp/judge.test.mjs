@@ -11,13 +11,13 @@ import {
 } from '../../agents/claim-tagger-mvp/scripts/judge.mjs';
 import { openStore, storeKey } from '../../agents/claim-tagger-mvp/scripts/lib/cells.mjs';
 import { runClaude } from '../../agents/claim-tagger-mvp/scripts/lib/claude.mjs';
-import { loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { h16 } from '../../agents/claim-tagger-mvp/scripts/lib/hash.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { buildRubric, tagFromRow, verifyRubric, writeEdition } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { validate } from '../../agents/claim-tagger-mvp/scripts/lib/validate.mjs';
+import { placeholderConfig } from './helpers/config-fixture.mjs';
 
 const SCRIPT = fileURLToPath(new URL('../../agents/claim-tagger-mvp/scripts/judge.mjs', import.meta.url));
 const PROMPT = readFileSync(join(codeRoot(), 'prompts', 'judge.md'), 'utf8');
@@ -51,7 +51,7 @@ const RULES = [
 
 // The rulebook is built the way the rest of the agent builds it: rows of the Rulebook copy through buildRubric, written as an edition
 // (rubric.json, rubric.lock, history, changelog) by writeEdition. A tag is a spec: a name, or { name, rules, counterpart }.
-const realConfig = loadConfig(codeRoot());
+const baseConfig = placeholderConfig(); // the shipped config's tags and groups, from the fixture and not from the live config.json
 const NOW = new Date('2026-10-16T09:00:00.000Z');
 const SOURCE = { database_id: 'db-1', data_source_id: 'ds-1', read_via: 'connector', read_at: '2026-10-16T09:00:00.000Z' };
 
@@ -63,10 +63,10 @@ function rowOf(name, { rules = RULES, counterpart = null } = {}) {
   };
 }
 const specRow = (spec) => (typeof spec === 'string' ? rowOf(spec) : rowOf(spec.name, spec));
-const makeTag = (name, opts) => tagFromRow(rowOf(name, opts), realConfig);
+const makeTag = (name, opts) => tagFromRow(rowOf(name, opts), baseConfig);
 const CONTEXT = () => makeTag('Context-dependent', { counterpart: 'Self-contained' });
 const CONTEXT_SPEC = () => ({ name: 'Context-dependent', counterpart: 'Self-contained' });
-const makeRubric = (specs, edition = '2026-10-16.1') => buildRubric(specs.map(specRow), { config: realConfig, edition, now: NOW, source: SOURCE });
+const makeRubric = (specs, edition = '2026-10-16.1') => buildRubric(specs.map(specRow), { config: baseConfig, edition, now: NOW, source: SOURCE });
 
 /**
  * A state folder in a temp directory. claims: rows for norm/claims.jsonl (default n claims c01.. with claimText); tags: the specs of the rulebook;
@@ -501,7 +501,7 @@ test('loadJudgeConfig: the defaults of CONTRACTS section 2 for every key that is
   assert.deepEqual([none.judge.runs_max, none.judge.batch_size, none.judge.concurrency, none.judge.effort, none.judge.attempts_per_batch], [3, 8, 2, 'medium', 2]);
   assert.deepEqual(none.judge.rerun, { band: [0.25, 0.75], include_ask_editor: true, max_share: 0.3 });
   assert.deepEqual(none.judge.transient, { max_in_a_row: 3, backoff_ms: [30000, 120000] });
-  assert.deepEqual([none.model, none.reasonMaxWords, none.demo, none.tags.default], ['claude-sonnet-5-5', 40, false, 'text']);
+  assert.deepEqual([none.model, none.reasonMaxWords, none.demo, none.demo_title, none.tags.default], ['claude-sonnet-5-5', 40, false, null, 'text']);
 
   const { root } = makeRoot({ judge: { batch_size: 3, rerun: { max_share: 0.5 }, transient: { backoff_ms: [1, 2] } } });
   const some = loadJudgeConfig(root);
@@ -509,9 +509,9 @@ test('loadJudgeConfig: the defaults of CONTRACTS section 2 for every key that is
   assert.deepEqual(some.judge.rerun, { band: [0.25, 0.75], include_ask_editor: true, max_share: 0.5 }, 'a partial block is merged into the defaults');
   assert.deepEqual(some.judge.transient, { max_in_a_row: 3, backoff_ms: [1, 2] });
 
-  write(join(root, 'config.json'), { models: { judge: 'claude-x' }, tags: { Wordy: 'corpus' }, queue: { reason_max_words: 25 }, demo: true, judge: { groups: { G9: ['A'] } } });
+  write(join(root, 'config.json'), { models: { judge: 'claude-x' }, tags: { Wordy: 'corpus' }, queue: { reason_max_words: 25 }, demo: true, demo_title: 'A practice page', judge: { groups: { G9: ['A'] } } });
   const other = loadJudgeConfig(root);
-  assert.deepEqual([other.model, other.reasonMaxWords, other.demo, other.tags.Wordy, other.tags.default], ['claude-x', 25, true, 'corpus', 'text']);
+  assert.deepEqual([other.model, other.reasonMaxWords, other.demo, other.demo_title, other.tags.Wordy, other.tags.default], ['claude-x', 25, true, 'A practice page', 'corpus', 'text']);
   assert.deepEqual(other.judge.groups, { G9: ['A'] });
 
   write(join(root, 'config.json'), { judge: { batch_size: 0, concurrency: 'two', rerun: { band: [0.8, 0.2], max_share: 2 }, groups: { G: 'x' }, transient: { backoff_ms: [-1] } } });
@@ -1185,6 +1185,104 @@ test('a usage window on the very first call stops with exit 75 and leaves no sto
   assert.deepEqual(callsOf(r).map((c) => c.status), ['usage_window', 'usage_window']);
   assert.equal(readdirSync(join(root, 'runs', 'judgments', key16Of(r))).filter((f) => f.startsWith('run-')).length, 0);
   assert.equal(assertReport(r).sentence, 'Judge stopped: your Claude allowance ran out after 0 of 12 claims; nothing was written to Notion.');
+});
+
+// ---- a practice page: the demo commands and the page's name in every report ---------------------------------------------------------------------------
+
+const PRACTICE_TITLE = 'Claim tagger demo · 15 Oct 10:42';
+const USAGE_WINDOW = { FAKE_CLAUDE_MODE: 'usage-window', FAKE_CLAUDE_AFTER: '1' };
+/** A state folder whose config.json is the profile of a practice page (as the walkthrough runner writes it): demo, demo_id, demo_title and the judge settings given. */
+function practiceRoot(over = {}, opts = {}) {
+  const made = makeRoot(opts);
+  write(join(made.root, 'config.json'), { demo: true, demo_id: 'practice-1', demo_title: PRACTICE_TITLE, ...over });
+  return made;
+}
+
+test('on a practice page the usage window (exit 75) tells the editor to type the demo command and names the practice page', async () => {
+  const { root } = practiceRoot({ judge: { concurrency: 1 } });
+  const r = await go(root, { table: scenarioTable(), env: USAGE_WINDOW });
+  assert.equal(r.exit, 75);
+  const json = reportJson(r);
+  assert.equal(json.demo, true);
+  assert.equal(json.sentence, `Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion (practice page ${PRACTICE_TITLE}).`);
+  assert.deepEqual(json.rows, [['Claims read', '8', ''], ['Still waiting', '4', '']]);
+  assert.equal(json.next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped');
+  const md = reportMd(r);
+  assert.ok(md.startsWith(`Demo · Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion (practice page ${PRACTICE_TITLE}).\n`), md);
+  assert.ok(md.trimEnd().endsWith(json.next));
+  assert.ok(!/\/claim-tagger tag\b/.test(md), 'the real command is never named on a practice page');
+  assert.deepEqual(lintReport(md), []);
+  assert.equal(r.io.outs.join('\n').trimEnd(), md.trimEnd(), 'the script prints the report and nothing else on stdout');
+  assert.equal(runJson(r).warnings, undefined, 'nothing to warn about');
+  assert.equal(runJson(r).exit_code, 75);
+  assert.equal(runJson(r).resume, RESUME(r.runId), 'the command the engineer continues with is the same');
+});
+
+test('on a practice page with no title the commands are the demo ones and the sentence is left as it is; a title without the demo flag is no practice page', async () => {
+  const untitled = practiceRoot({ judge: { concurrency: 1 }, demo_title: undefined });
+  const a = await go(untitled.root, { table: scenarioTable(), env: USAGE_WINDOW });
+  assert.equal(a.exit, 75);
+  assert.equal(reportJson(a).sentence, 'Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion.');
+  assert.equal(reportJson(a).next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped');
+  assert.ok(reportMd(a).startsWith('Demo · Judge stopped:'));
+
+  const production = makeRoot({ judge: { concurrency: 1 } });
+  write(join(production.root, 'config.json'), { demo_title: PRACTICE_TITLE, judge: { concurrency: 1 } });
+  const b = await go(production.root, { table: scenarioTable(), env: USAGE_WINDOW });
+  assert.equal(b.exit, 75);
+  const json = assertReport(b); // demo false, no "Demo · ", no page named
+  assert.equal(json.sentence, 'Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion.');
+  assert.equal(json.next, 'Next: when your Claude allowance is back, type /claim-tagger tag again; it continues where it stopped');
+});
+
+test('on a practice page every report of the judge speaks the demo commands and names the page: a result, a transient stop, a pause, a drift', async () => {
+  const done = practiceRoot({}, { n: 4 });
+  const ok = await go(done.root, { runsMax: 1 });
+  assert.equal(ok.exit, 0, ok.io.errs.join('\n'));
+  assert.equal(reportJson(ok).sentence, `Judge: read 4 claims for Context-dependent; ${runJson(ok).counts.unsure} unsure (practice page ${PRACTICE_TITLE}).`);
+  assert.equal(reportJson(ok).next, 'Next: type /claim-tagger demo tag to finish (it continues from here)');
+
+  const flaky = practiceRoot({});
+  const transient = await go(flaky.root, { env: { FAKE_CLAUDE_MODE: 'transient-always' } });
+  assert.equal(transient.exit, 1);
+  assert.equal(reportJson(transient).sentence, `Judge stopped: Claude kept answering with an error after 0 of 12 claims; nothing was written to Notion (practice page ${PRACTICE_TITLE}).`);
+  assert.equal(reportJson(transient).next, 'Next: type /claim-tagger demo tag again in a while; it continues where it stopped');
+
+  // paused is checked before the configuration is read: the report still reads the profile, to speak the demo words
+  const paused = practiceRoot({}, { pausedFile: true });
+  const stopped = await go(paused.root);
+  assert.equal(stopped.exit, 3);
+  assert.equal(reportJson(stopped).demo, true);
+  assert.equal(reportJson(stopped).sentence, `Judge: nothing was read, because the agent is paused (practice page ${PRACTICE_TITLE}).`);
+  assert.match(reportJson(stopped).next, /^Next: a person has to clear Paused .*, then type \/claim-tagger demo tag again$/);
+  assert.ok(reportMd(stopped).startsWith('Demo · Judge: nothing was read'));
+
+  const drifted = practiceRoot({}, { drift: { judged: [{ tag: 'Context-dependent', column: 'When to use' }], adopted: [], missing: [], added: [] } });
+  const edited = await go(drifted.root);
+  assert.equal(edited.exit, 4);
+  assert.equal(reportJson(edited).sentence, `Judge: nothing was read, because the rulebook in Notion no longer matches the locked edition (Context-dependent: When to use) (practice page ${PRACTICE_TITLE}).`);
+  assert.equal(reportJson(edited).next, 'Next: undo that edit in the Rulebook copy in Notion, then type /claim-tagger demo tag again');
+
+  // a configuration that cannot be read is no practice page: the plain words, as before
+  const broken = practiceRoot({}, { pausedFile: true });
+  write(join(broken.root, 'config.json'), '{ not json');
+  const plain = await go(broken.root);
+  assert.equal(plain.exit, 3);
+  assert.equal(assertReport(plain).sentence, 'Judge: nothing was read, because the agent is paused.');
+  assert.match(reportJson(plain).next, /type \/claim-tagger tag again$/);
+  for (const r of [ok, transient, stopped, edited]) assert.deepEqual(lintReport(reportMd(r)), [], reportMd(r));
+});
+
+test('a practice page title that the report lint refuses is left out of the sentence: the report is written all the same, and the run record says why', async () => {
+  const { root } = practiceRoot({ judge: { concurrency: 1 }, demo_title: 'The database demo' });
+  const r = await go(root, { table: scenarioTable(), env: USAGE_WINDOW });
+  assert.equal(r.exit, 75);
+  assert.equal(reportJson(r).demo, true);
+  assert.equal(reportJson(r).sentence, 'Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion.');
+  assert.equal(reportJson(r).next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped');
+  assert.ok(reportMd(r).startsWith('Demo · Judge stopped:'), reportMd(r));
+  assert.deepEqual(lintReport(reportMd(r)), []);
+  assert.ok(runJson(r).warnings.some((x) => /does not name the practice page/.test(x)), JSON.stringify(runJson(r).warnings));
 });
 
 test('a reply from another model than the pinned one stops the run with exit 4 and is not kept', async () => {

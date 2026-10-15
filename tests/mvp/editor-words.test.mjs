@@ -1,16 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import {
   answerWord, capWords, cutText, demoCommands, listNames, namePracticePage, notionUrl, plural, practiceLink, practiceTitle, quoted, quotedWhole, stampOf, tableLink, viewLink,
 } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.mjs';
-import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport, renderReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
+import { placeholderConfig } from './helpers/config-fixture.mjs';
 
-// A config for the link tests: the agent's own, but with no views and with the claims table not made yet, whatever the live config.json holds after setup.
+// A config for the link tests: the agent's own as it was before setup (fixtures/config.placeholder.json, not the live config.json that setup has filled in),
+// with four tables given ids, no views and the claims table not made yet.
 const SETUP_PLACEHOLDER = '<setup>';
 const base = () => {
-  const c = structuredClone(loadConfig(codeRoot()));
+  const c = placeholderConfig();
   delete c.notion.views;
   c.notion.claims[0].database_id = SETUP_PLACEHOLDER;
   c.notion.claims[0].data_source_id = SETUP_PLACEHOLDER;
@@ -62,7 +62,7 @@ test('notionUrl and tableLink: the plain address of a table, dashes taken out', 
   assert.equal(notionUrl('aaaaaaaa-aaaa-AAAA-aaaa-aaaaaaaaaaaa'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
   const c = base();
   assert.equal(tableLink(c, 'rulebook'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-  assert.equal(tableLink(c, 'claims_copy'), `https://www.notion.so/${loadConfig(codeRoot()).notion.parent_page_id}`, 'a table that setup has not made yet points at the page');
+  assert.equal(tableLink(c, 'claims_copy'), `https://www.notion.so/${c.notion.parent_page_id}`, 'a table that setup has not made yet points at the page');
 });
 
 test('viewLink: a view id gives ?v=, a link is used as it is, an object works, and without a view the table\'s own link is used', () => {

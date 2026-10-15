@@ -4,16 +4,15 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { EXIT } from '../../agents/claim-tagger-mvp/scripts/lib/exit-codes.mjs';
 import { countRequests, createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
-import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { applyPlan, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { buildRubric, writeEdition } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import {
   LESSON_COLUMNS, QUEUE_COLUMNS, geoSourceLinks, latestPullId, loadPull, main, pickClaims, readOnlyFetch, richTextLinks, supportingKeys, tablesFor,
 } from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
 import { createFakeNotion } from './fixtures/fake-notion.mjs';
+import { placeholderConfig } from './helpers/config-fixture.mjs';
 import { TABLE_SPECS, realClaimsSpec, restProps } from './helpers/tables.mjs';
 
 // Every test runs the real client against the shared in-memory Notion, in a temporary state folder. The token is the fake's own, passed in:
@@ -51,10 +50,10 @@ const rt = (content, url) => ({ type: 'text', text: { content, ...(url ? { link:
 const richText = (...pieces) => ({ rich_text: pieces.map((p) => (typeof p === 'string' ? rt(p) : rt(p[0], p[1]))) });
 const titleOf = (s) => ({ title: [rt(s)] });
 
-/** A state folder with a config whose tables have ids (the ones named in `placeholders` keep "<setup>"), and the fake Notion behind them. */
+/** A state folder with a config whose tables have ids (the ones named in `placeholders` keep "<setup>"), and the fake Notion behind them. The config starts as it was before setup, not as the live file holds it now. */
 async function world({ placeholders = [], populate = true } = {}) {
   const root = tmp();
-  const config = structuredClone(loadConfig(codeRoot()));
+  const config = placeholderConfig();
   config.notion.requests_per_second = 1000;
   const entries = { rulebook: config.notion.rulebook, claims_copy: config.notion.claims[0], ...config.notion.databases };
   const notion = createFakeNotion();
@@ -327,9 +326,9 @@ test('a table whose id is still a placeholder is skipped and listed; a pull that
   assert.equal(existsSync(join(w.root, 'runs', 'pull', 'p1', 'norm', 'rulebook.json')), false);
   assert.equal(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'drift.json'), 'utf8')).skipped, 'no lock');
 
-  // the shipped config: nothing has been created yet, so nothing is read, no token is needed and nothing becomes LATEST
+  // the config as it was before setup: nothing has been created yet, so nothing is read, no token is needed and nothing becomes LATEST
   const fresh = tmp();
-  const shipped = loadConfig(codeRoot());
+  const shipped = placeholderConfig();
   const c = cap();
   const code = await main(['--all', '--pull-id', 'empty'], c.io, { root: fresh, config: shipped, client: null, now: NOW });
   assert.equal(code, EXIT.OK, c.err.join('\n'));
@@ -497,10 +496,10 @@ const REAL_DB = '7219756338b2416f8fa8af83d75ec47d';
 const REAL_DS = 'd1307596-e531-420f-8688-2485f3ef28ab';
 const pad = (n) => String(n).padStart(4, '0');
 
-/** The real claims table of the shipped config, filled with `count` claims: the ten audit claims first, then others with 0, 1, 2 or 3 links. */
+/** The real claims table of the shipped config (its read-only source), filled with `count` claims: the ten audit claims first, then others with 0, 1, 2 or 3 links. */
 async function realWorld({ count = 230, duplicate = false } = {}) {
   const root = tmp();
-  const config = structuredClone(loadConfig(codeRoot()));
+  const config = placeholderConfig();
   config.notion.requests_per_second = 1000;
   const notion = createFakeNotion();
   const taxonomy = notion.addDatabase({ title: 'Taxonomy', properties: restProps({ Name: 'title' }) });

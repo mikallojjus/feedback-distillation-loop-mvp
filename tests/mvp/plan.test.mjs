@@ -3,14 +3,13 @@ import assert from 'node:assert/strict';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { EXIT } from '../../agents/claim-tagger-mvp/scripts/lib/exit-codes.mjs';
 import { createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
-import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import {
   AUDIT_PREFIX, MAX_CONSECUTIVE_FAILURES, PlanError, applyPlan, checkPlan, compareWritten, newPlan, readLedger, readPlan,
 } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { createFakeNotion } from './fixtures/fake-notion.mjs';
+import { builtConfig } from './helpers/config-fixture.mjs';
 import { TABLE_SPECS, restProps } from './helpers/tables.mjs';
 
 // The tests use the shared in-memory Notion (fixtures/fake-notion.mjs) behind the real REST client, so the client's own rules run too:
@@ -43,7 +42,7 @@ const clientOver = (notion, fetchImpl = notion.fetchImpl) => createClient({ toke
 
 /** A config whose five tables have ids, a state folder, a Notion with the five tables, a client and the schemas the client reads. */
 async function world({ rows = true } = {}) {
-  const config = structuredClone(loadConfig(codeRoot()));
+  const config = builtConfig();
   config.notion.requests_per_second = 1000;
   const set = (entry, table, n) => {
     entry.database_id = DB[table];

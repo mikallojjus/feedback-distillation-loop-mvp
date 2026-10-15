@@ -37,6 +37,9 @@
 //
 // Files. runs/<run-id>/run.json (first and last), calls.jsonl (one line per call: group, batch, items, attempts, usage, duration_ms, cli_version,
 // status), report.json and report.md (lib/report.mjs: the sentence, the table and the Next line; no call counts, durations or dollars).
+// On a practice page (config.demo is true) the report is worded as the loop scripts word theirs (lib/loop.mjs): the commands are the demo ones
+// ("/claim-tagger demo tag", so that nobody types the real command from the practice page) and the sentence names the practice page
+// (config.demo_title), for every stop and every result alike, the usage window (exit 75) included.
 // Exit codes: 0 ok, 1 error (resumable), 2 invalid input or a batch that could not be read, 3 paused, 4 drift or wrong model, 75 usage window.
 //
 // Exports for the steps that follow: judge, selectItems, planReruns, classifyCell, verdictOf, groupsFor, storeInputsFor, loadJudgeConfig, loadRubric,
@@ -48,6 +51,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { claudeVersion, extractJson, findClaudeBin, runClaude, usageResetHint, withTransientRetry } from './lib/claude.mjs';
 import { STORE_LOCKED, archiveStore, openStore } from './lib/cells.mjs';
 import { capabilityOf, isDemo } from './lib/config.mjs';
+import { demoCommands, namePracticePage } from './lib/editor-words.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { h16 } from './lib/hash.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
@@ -213,7 +217,8 @@ function mergePlain(base, over) {
 
 /**
  * The judge's settings from <root>/config.json, with the defaults of CONTRACTS section 2 for every key that is absent (a state folder
- * without a config.json uses all of them): { judge, model, tags, reasonMaxWords, demo }. Throws an ExitError (exit 2) listing what is wrong.
+ * without a config.json uses all of them): { judge, model, tags, reasonMaxWords, demo, demo_title }. demo_title is the title of the practice page a
+ * demo profile acts on (null when there is none). Throws an ExitError (exit 2) listing what is wrong.
  */
 export function loadJudgeConfig(root) {
   const file = join(root, 'config.json');
@@ -256,7 +261,7 @@ export function loadJudgeConfig(root) {
   if (problems.length) throw new ExitError(EXIT.INVALID, `${file}: ${problems.join('; ')}`);
   const tags = { default: 'text', ...(isPlain(raw.tags) ? raw.tags : {}) };
   const reasonMaxWords = Number.isInteger(raw.queue?.reason_max_words) && raw.queue.reason_max_words > 0 ? raw.queue.reason_max_words : 40;
-  return { judge, model, tags, reasonMaxWords, demo: isDemo(raw) };
+  return { judge, model, tags, reasonMaxWords, demo: isDemo(raw), demo_title: typeof raw.demo_title === 'string' ? raw.demo_title : null };
 }
 
 // ---- the rulebook, the groups ------------------------------------------------------------------------------------------------
@@ -1194,6 +1199,25 @@ function exitCodeOf(ctx) {
   return EXIT.OK;
 }
 
+/**
+ * The words of the report as the editor reads them. On a practice page (a demo profile) the commands are the demo ones and the sentence names the practice
+ * page, as in lib/loop.mjs; the sentence without the page's name comes second, because a title the report lint refuses must not cost the editor the report.
+ * A run that was refused before the configuration was read (paused) reads the demo settings now; a configuration that cannot be read is no demo.
+ */
+function reportWords(ctx, parts) {
+  let settings = ctx.cfg ?? null;
+  if (!settings) {
+    try {
+      settings = loadJudgeConfig(ctx.root);
+    } catch {
+      settings = null;
+    }
+  }
+  if (settings?.demo !== true) return { demo: false, sentences: [parts.sentence], next: parts.next };
+  const plain = demoCommands(parts.sentence);
+  return { demo: true, sentences: [...new Set([namePracticePage(settings, plain), plain])], next: demoCommands(parts.next) };
+}
+
 function finish(ctx) {
   const { io, record } = ctx;
   const exit = exitCodeOf(ctx);
@@ -1202,11 +1226,21 @@ function finish(ctx) {
   const message = e ? (e instanceof ExitError ? e.message : `unexpected error: ${e.stack ?? e.message}`) : null;
 
   const parts = reportFor(ctx);
+  const words = reportWords(ctx, parts);
+  const why = (err) => oneLine(err.problems ? err.problems.join('; ') : err.message);
   let report = null;
-  try {
-    report = writeReport(ctx.runDir, { demo: ctx.cfg?.demo === true, sentence: parts.sentence, rows: parts.rows, next: parts.next }).report;
-  } catch (err) {
-    ctx.warnings.push(`report.md was not written as planned: ${oneLine(err.problems ? err.problems.join('; ') : err.message)}`);
+  let refused = null;
+  for (const sentence of words.sentences) {
+    try {
+      report = writeReport(ctx.runDir, { demo: words.demo, sentence, rows: parts.rows, next: words.next }).report;
+      if (refused) ctx.warnings.push(`the sentence of report.md does not name the practice page, because that did not pass the report lint: ${why(refused)}`);
+      break;
+    } catch (err) {
+      refused ??= err;
+    }
+  }
+  if (!report) {
+    ctx.warnings.push(`report.md was not written as planned: ${why(refused)}`);
     try {
       report = writeReport(ctx.runDir, { demo: false, sentence: 'Judge finished.', rows: [], next: 'Next: ask an engineer to look at the message the script printed' }).report;
     } catch {

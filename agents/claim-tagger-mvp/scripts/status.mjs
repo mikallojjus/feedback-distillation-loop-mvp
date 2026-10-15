@@ -12,7 +12,9 @@
 // one / read new claims. The Rulebook row does not say that Notion agrees: a drift of the rulebook text on a judged tag is checked before the report and ends the command
 // with the drift report (exit 4, naming the tag and the column and telling the editor to ask the engineer to restore the rulebook text); only a difference that does
 // not stop the command (a tag without rules edited or added in Notion) or a drift check that could not run is said in the row. A paused agent ends with the refusal
-// report (exit 3). On a practice page the sentence starts "Status of the practice page <title>:" (loop.mjs).
+// report (exit 3). On a practice page the sentence starts "Status of the practice page <title>:" (loop.mjs), and while a row that waits has no Agent proposal yet
+// (step 1 of the page) the Next line is "type /claim-tagger demo tag" (step 2) instead of "decide the rows": there is nothing to decide before the agent has read the
+// claims. In production that line is never used.
 //
 // Exit codes: 0 ok, 2 invalid, 3 paused, 4 drift or an invalid rulebook file.
 //
@@ -124,8 +126,13 @@ export async function status(opts = {}) {
     const sentence = parts.length === 0
       ? 'Status: nothing is paused and nothing waits for you.'
       : `Status: nothing is paused; ${parts.join(' and ')} ${parts.length === 1 && (n === 1 || (n === 0 && m === 1)) ? 'waits' : 'wait'} for you${counts.queue.more_than_a_sitting ? ', more than fit one sitting' : ''}.`;
+    // On a practice page the two rows that wait are seeded without the agent's side (step 1); the agent fills Agent proposal, confidence and reason when the
+    // editor types the demo tag command (step 2). Until it has, there is nothing to decide yet, so the Next line sends the editor to step 2. In production
+    // the agent has always filled its side of a row before the row waits, so this never applies there.
+    const unread = ctx.demo ? (ctx.pull.queue() ?? []).filter((r) => !r.decided && String(r['Agent proposal'] ?? '').trim() === '').length : 0;
     let next;
-    if (counts.queue.more_than_a_sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
+    if (unread > 0) next = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
+    else if (counts.queue.more_than_a_sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
     else if (n > 0) next = `Next: decide the ${plural(n, 'row')} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
     else if (proposed > 0) next = `Next: approve or reject the ${proposed === 1 ? 'rule change' : 'rule changes'} in Lessons waiting (${viewLink(ctx.config, 'lessons_waiting')}).`;
     else if (approved > 0) next = `Next: type /claim-tagger promote to check the approved ${approved === 1 ? 'rule change' : 'rule changes'}.`;

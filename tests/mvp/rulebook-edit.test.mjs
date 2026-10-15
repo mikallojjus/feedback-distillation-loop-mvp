@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { RuleEditError, oneLineRule, replaceRule, rowFromTag, ruleNumberOf, ruleText, rubricWithRule } from '../../agents/claim-tagger-mvp/scripts/lib/rulebook-edit.mjs';
 import { buildRubric, parseRules, tagFromRow, verifyRubric } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
+import { placeholderConfig } from './helpers/config-fixture.mjs';
 
-const config = loadConfig(codeRoot());
+const config = placeholderConfig();
 const NOW = new Date('2026-10-16T09:00:00.000Z');
 const taxonomy = JSON.parse(readFileSync(join(codeRoot(), 'setup', 'taxonomy-issue.json'), 'utf8'));
 const rubric = buildRubric(taxonomy.rows, { config, edition: '2026-10-16.1', now: NOW });

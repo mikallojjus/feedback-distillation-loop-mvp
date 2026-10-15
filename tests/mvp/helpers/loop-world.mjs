@@ -20,12 +20,12 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { after } from 'node:test';
 import { judge } from '../../../agents/claim-tagger-mvp/scripts/judge.mjs';
-import { loadConfig } from '../../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { codeRoot } from '../../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport } from '../../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { buildRubric, readRubric, writeEdition } from '../../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { latestPullId, loadPull, pull } from '../../../agents/claim-tagger-mvp/scripts/pull.mjs';
 import { createFakeNotion } from '../fixtures/fake-notion.mjs';
+import { builtConfig } from './config-fixture.mjs';
 import { TABLE_SPECS, restProps } from './tables.mjs';
 
 export const NOW = new Date('2026-10-16T09:00:00.000Z');
@@ -112,7 +112,7 @@ export async function makeWorld({
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-loop-'));
   dirs.push(root);
-  const config = structuredClone(loadConfig(codeRoot()));
+  const config = builtConfig(); // the config of fixtures/config.placeholder.json with ids filled in, never the live config.json
   config.notion.requests_per_second = 1000;
   const entries = { rulebook: config.notion.rulebook, claims_copy: config.notion.claims[0], ...config.notion.databases };
   Object.keys(DB).forEach((table, i) => {

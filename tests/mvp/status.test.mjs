@@ -172,12 +172,16 @@ test('status in a practice profile starts with "Demo · "', async () => {
   assert.equal(r.report.demo, true);
 });
 
-// the practice page of step 1: one tag in the rulebook, two rows that wait, no rule change, no run yet
+// the practice page of step 1: one tag in the rulebook, two rows that wait and that the agent has not read yet (no Agent proposal, confidence or reason:
+// step 2 fills them), no rule change, no run yet
 const PRACTICE_TITLE = 'Claim tagger demo · 15 Oct 10:42';
 const ONE_TAG = [JSON.parse(readFileSync(join(codeRoot(), 'setup', 'taxonomy-issue.json'), 'utf8')).rows.find((r) => r.Name === 'Context-dependent')];
+const unread = (i) => ({ Claim: claimText(i), Key: `c${String(i).padStart(2, '0')}::Context-dependent`, Tag: 'Context-dependent' });
 const practicePage = (extra = {}) => makeWorld({
-  claims: 7, rulebook: ONE_TAG, queue: [open(1), open(2)], demo: true, configure: (c) => { c.demo_title = PRACTICE_TITLE; }, ...extra,
+  claims: 7, rulebook: ONE_TAG, queue: [unread(1), unread(2)], demo: true, configure: (c) => { c.demo_title = PRACTICE_TITLE; }, ...extra,
 });
+const TAG_FIRST = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
+const DECIDE = /^Next: decide the (\d+) rows in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/;
 
 test('status on a practice page names the page and shows the rows of step 1 of the page: "1 tag, edition <e>", "2 rows, lowest confidence first", "none", "none yet"', async () => {
   const w = await practicePage();
@@ -194,7 +198,50 @@ test('status on a practice page names the page and shows the rows of step 1 of t
     ['Lessons waiting', 'none', ''],
     ['Last run', 'none yet', ''],
   ]);
-  assert.match(report.next, /^Next: decide the 2 rows in Your queue \(https:\/\/www\.notion\.so\//);
+  assert.equal(report.next, TAG_FIRST, 'the agent has not read the claims yet: the editor types the demo tag command (step 2 of the practice page), not decides the rows');
+  assert.equal(readJson(join(r.runDir, 'report.json')).next, TAG_FIRST);
+});
+
+test('on a practice page the Next line says to type the demo tag command while a row that waits has no Agent proposal yet, and points at Your queue once the agent has read them', async () => {
+  const check = async (w) => {
+    const h = w.hooks();
+    const r = await status(h);
+    assert.equal(r.exit, 0, h.io.errs.join('\n'));
+    return assertReport(h, r);
+  };
+  assert.equal((await check(await practicePage())).next, TAG_FIRST, 'step 1: neither row has a proposal');
+  assert.equal((await check(await practicePage({ queue: [open(1), unread(2)] }))).next, TAG_FIRST, 'one row without a proposal is enough');
+  assert.equal((await check(await practicePage({ queue: [{ ...unread(1), 'Agent proposal': '' }, open(2)] }))).next, TAG_FIRST, 'an empty proposal is none');
+  const read = await check(await practicePage({ queue: [open(1), open(2)] }));
+  assert.match(read.next, DECIDE, 'step 3: the agent has read both rows, the editor decides them');
+  assert.equal(DECIDE.exec(read.next)[1], '2');
+
+  // only a row that waits can be unread: a decided row without a proposal (an earlier decision) does not send the editor back to step 2
+  const earlier = await check(await practicePage({ queue: [{ ...unread(3), 'Tag outcome': 'Applies' }, decided(4), open(1), open(2)] }));
+  assert.match(earlier.next, DECIDE);
+  assert.equal(DECIDE.exec(earlier.next)[1], '2');
+  assert.equal(earlier.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.`, 'the sentence counts the rows that wait, read or not');
+
+  // unread rows come first, even when more wait than fit one sitting; with nothing to read the Next lines are the ones they always were
+  const many = await check(await practicePage({ queue: [unread(1), unread(2), unread(3), unread(4)], configure: (c) => { c.demo_title = PRACTICE_TITLE; c.queue.sitting_rows = 3; } }));
+  assert.match(many.sentence, /4 rows wait for you, more than fit one sitting\.$/);
+  assert.equal(many.next, TAG_FIRST);
+  const approved = await check(await practicePage({ queue: [decided(1), decided(2)], lessons: [lesson('Ready', 'Approved')] }));
+  assert.equal(approved.next, 'Next: type /claim-tagger demo promote to check the approved rule change.', 'nothing waits to be read: the line is the one it was');
+});
+
+test('in production the Next line stays "decide the rows" even for rows with no Agent proposal, and --json is the same on a practice page', async () => {
+  const production = await makeWorld({ claims: 2, queue: [unread(1), unread(2)] });
+  const h = production.hooks();
+  const r = await status(h);
+  const report = assertReport(h, r);
+  assert.match(report.next, DECIDE);
+  assert.ok(!/demo|step 2/.test(report.next));
+
+  const practice = await practicePage();
+  const j = practice.hooks({ json: true });
+  await status(j);
+  assert.deepEqual(JSON.parse(j.io.outs[0]).queue, { open: 2, decided: 0, needs_note: 0, sitting_rows: 20, more_than_a_sitting: false });
 });
 
 test('the table of Step 1 on the practice page is what status prints on a practice page: the same header and the same rows', async () => {

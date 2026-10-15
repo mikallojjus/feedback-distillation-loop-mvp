@@ -3,14 +3,13 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { h16 } from '../../agents/claim-tagger-mvp/scripts/lib/hash.mjs';
-import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { compareCodePoints, pyJson } from '../../agents/claim-tagger-mvp/scripts/lib/pyjson.mjs';
 import {
   DRIFT_COLUMNS, buildRubric, checkLock, computeDrift, lockOf, nextEdition, parseExamples, parseRules, readEdition, readLock, readRubric, tagFromRow, verifyRubric, writeEdition,
 } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { validate } from '../../agents/claim-tagger-mvp/scripts/lib/validate.mjs';
+import { placeholderConfig } from './helpers/config-fixture.mjs';
 
 const roots = [];
 after(() => {
@@ -22,7 +21,7 @@ function tmp() {
   return dir;
 }
 
-const config = loadConfig(codeRoot());
+const config = placeholderConfig();
 const fixtureRows = JSON.parse(readFileSync(new URL('./fixtures/rulebook-rows.json', import.meta.url), 'utf8'));
 const rows = () => structuredClone(fixtureRows);
 const rowOf = (list, name) => list.find((r) => r.Name === name);

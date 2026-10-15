@@ -1,5 +1,6 @@
-// What the setup tests share: a state folder with a config whose tables are still placeholders, the shared in-memory Notion with a parent page
-// in it, clients over it, and small input files (a taxonomy file, a claims pick, the audit file) shaped like the real ones in
+// What the setup tests share: a state folder with a config whose tables are still placeholders (the config as it was before setup, from
+// fixtures/config.placeholder.json, never the live agents/claim-tagger-mvp/config.json that setup has since filled in), the shared in-memory Notion
+// with a parent page in it, clients over it, and small input files (a taxonomy file, a claims pick, the audit file) shaped like the real ones in
 // agents/claim-tagger-mvp/setup/. Nothing here reaches the network or reads .env: every client gets the fake's own token.
 //
 //   newWorld({ structure: true })        -> { root, config, fake, parent, env, run(argv) -> { code, out, err } }
@@ -12,13 +13,12 @@ import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { loadConfig } from '../../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { BUILDER_API_VERSION, createClient } from '../../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
-import { codeRoot } from '../../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { nextEdition } from '../../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { main } from '../../../agents/claim-tagger-mvp/scripts/setup.mjs';
 import { structureFromProposal } from '../../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
 import { createFakeNotion } from '../fixtures/fake-notion.mjs';
+import { placeholderConfig } from './config-fixture.mjs';
 
 export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const STRUCTURE_MD = join(REPO_ROOT, 'docs', 'mvp-2026-11', 'STRUCTURE.md');
@@ -72,9 +72,9 @@ export function forFake(structure) {
 
 export const realStructure = () => structureFromProposal(readFileSync(STRUCTURE_MD, 'utf8'));
 
-/** A config for the tests: the real one, tables still placeholders, no waiting between requests, a parent page that exists in the fake. */
+/** A config for the tests: the one from before setup (fixtures/config.placeholder.json), tables still placeholders, no waiting between requests, a parent page that exists in the fake. */
 export function testConfig({ parent }) {
-  const config = structuredClone(loadConfig(codeRoot()));
+  const config = placeholderConfig();
   config.notion.requests_per_second = 1000;
   config.notion.parent_page_id = parent;
   return config;
@@ -86,7 +86,7 @@ export function testConfig({ parent }) {
  */
 export function newWorld({ structure = false, protectedIds = null } = {}) {
   const root = tmp('setup');
-  const probe = loadConfig(codeRoot());
+  const probe = placeholderConfig();
   const fake = createFakeNotion({ protected: protectedIds ?? [...probe.notion.protected_database_ids, ...probe.notion.protected_page_ids] });
   const parent = fake.addPage({ title: 'Feedback Distillation MVP' });
   const config = testConfig({ parent });

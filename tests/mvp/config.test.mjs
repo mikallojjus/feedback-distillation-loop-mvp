@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -8,6 +8,7 @@ import {
   capabilityOf, editorColumns, groupOf, isDemo, isProtected, loadConfig, tableEntry, validateConfig, writableProperties,
 } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
+import { builtConfig, fillIds, placeholderConfig } from './helpers/config-fixture.mjs';
 
 const roots = [];
 after(() => {
@@ -18,12 +19,18 @@ function tmp() {
   roots.push(dir);
   return dir;
 }
-/** A fresh copy of the shipped config.json, ready to be changed by one test. */
-const shipped = () => structuredClone(loadConfig(codeRoot()));
+/**
+ * A fresh copy of the config as it was before setup (fixtures/config.placeholder.json), ready to be changed by one test. Not the live config.json:
+ * setup fills its ids in, and the tests below that need placeholders must not depend on how far setup has got.
+ */
+const shipped = () => placeholderConfig();
 const problems = (config) => validateConfig(config).errors;
 const mentions = (config, text) => problems(config).some((p) => p.includes(text));
 
 // ---- the file in the repository -------------------------------------------------------------------------------------------------
+
+// The only tests that read the live agents/claim-tagger-mvp/config.json: each accepts a placeholder and a real id wherever setup fills one in.
+const PLACEHOLDER_OR_ID = /^(<.*>|[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12})$/i;
 
 test('the config.json in the agent folder is valid, before and after setup has filled in its ids', () => {
   const config = loadConfig(codeRoot());
@@ -35,17 +42,61 @@ test('the config.json in the agent folder is valid, before and after setup has f
   assert.equal(config.notion.claims[0].name, 'claims_copy');
   assert.equal(groupOf(config, 'Context-dependent'), 'G1', 'only Context-dependent has rules and is judged');
   assert.deepEqual(validateConfig(config), { ok: true, errors: [] });
+  for (const table of TABLES) {
+    const entry = tableEntry(config, table);
+    assert.match(entry.database_id, PLACEHOLDER_OR_ID, `${table}: database_id`);
+    assert.match(entry.data_source_id, PLACEHOLDER_OR_ID, `${table}: data_source_id`);
+  }
+  for (const page of ['demos', 'demo_tests']) assert.match(config.notion.pages[page], PLACEHOLDER_OR_ID, `pages.${page}`);
+  for (const [name, view] of Object.entries(config.notion.views ?? {})) {
+    assert.match(String(view?.id ?? view), PLACEHOLDER_OR_ID, `views.${name}: the id of a view that setup made`);
+  }
 });
 
-test('the editor columns of the shipped config are never in any writable set, setup or not', () => {
-  const config = shipped();
+test('the fixture the tests start from is the config before setup: valid, every id that setup fills still a placeholder, no views, a new copy every time', () => {
+  const config = placeholderConfig();
+  assert.deepEqual(validateConfig(config), { ok: true, errors: [] });
   for (const table of TABLES) {
-    for (const setup of [false, true]) {
-      const writable = writableProperties(config, table, { setup });
-      for (const column of editorColumns(config, table)) assert.ok(!writable.has(column), `${table} (setup ${setup}): ${column} is writable`);
-    }
+    const entry = tableEntry(config, table);
+    assert.match(entry.database_id, /^</, `${table}: database_id`);
+    assert.match(entry.data_source_id, /^</, `${table}: data_source_id`);
   }
-  assert.deepEqual(config.editor_columns.rule_changes_status_editor_values.filter((v) => RULE_CHANGES_AGENT_STATUS.includes(v)), [], 'Approved and Rejected are not values a script writes');
+  assert.match(config.notion.pages.demos, /^</);
+  assert.match(config.notion.pages.demo_tests, /^</);
+  assert.equal(config.notion.views, undefined, 'setup adds the views');
+  assert.equal(config.demo, false);
+  config.notion.rulebook.key = 'changed by a test';
+  config.notion.protected_database_ids.length = 0;
+  assert.equal(placeholderConfig().notion.rulebook.key, 'Name', 'what a test does to its copy never reaches the next copy');
+  assert.ok(placeholderConfig().notion.protected_database_ids.length > 0);
+
+  const built = builtConfig();
+  assert.deepEqual(validateConfig(built), { ok: true, errors: [] });
+  const ids = TABLES.flatMap((table) => [tableEntry(built, table).database_id, tableEntry(built, table).data_source_id]).concat(built.notion.pages.demos, built.notion.pages.demo_tests);
+  assert.equal(new Set(ids).size, ids.length, 'every id setup fills is different');
+  assert.ok(ids.every((id) => PLACEHOLDER_OR_ID.test(id) && !id.startsWith('<')), 'and a real one');
+  assert.equal(built.notion.pages.proposal, config.notion.pages.proposal, 'an id that was already known is kept');
+});
+
+test('the live config.json still has every key of the fixture (setup adds ids and views and removes nothing): a renamed or removed key means the fixture is stale', () => {
+  const paths = (node, prefix = '') => Object.entries(node).flatMap(([key, value]) => (
+    value !== null && typeof value === 'object' && !Array.isArray(value) ? [`${prefix}${key}`, ...paths(value, `${prefix}${key}.`)] : [`${prefix}${key}`]
+  ));
+  const live = new Set(paths(JSON.parse(readFileSync(join(codeRoot(), 'config.json'), 'utf8'))));
+  const lost = paths(placeholderConfig()).filter((p) => !live.has(p));
+  assert.deepEqual(lost, [], 'tests/mvp/fixtures/config.placeholder.json holds keys that agents/claim-tagger-mvp/config.json no longer has: update the fixture');
+});
+
+test('the editor columns of the shipped config are never in any writable set, setup or not (the live file, whatever setup has filled in, and the config before setup)', () => {
+  for (const config of [loadConfig(codeRoot()), shipped()]) {
+    for (const table of TABLES) {
+      for (const setup of [false, true]) {
+        const writable = writableProperties(config, table, { setup });
+        for (const column of editorColumns(config, table)) assert.ok(!writable.has(column), `${table} (setup ${setup}): ${column} is writable`);
+      }
+    }
+    assert.deepEqual(config.editor_columns.rule_changes_status_editor_values.filter((v) => RULE_CHANGES_AGENT_STATUS.includes(v)), [], 'Approved and Rejected are not values a script writes');
+  }
 });
 
 // ---- loadConfig ----------------------------------------------------------------------------------------------------------------
@@ -120,14 +171,7 @@ test('validateConfig: placeholders that start with "<" are accepted only where s
 
 test('validateConfig: the config after setup, with every placeholder replaced by a real id, is valid', () => {
   const config = shipped();
-  let n = 0;
-  const fill = (node) => {
-    for (const [key, value] of Object.entries(node)) {
-      if (typeof value === 'string' && value.startsWith('<')) node[key] = `5e7a0000-0000-4000-8000-${String(++n).padStart(12, '0')}`;
-      else if (value !== null && typeof value === 'object') fill(value);
-    }
-  };
-  fill(config.notion);
+  const n = fillIds(config.notion);
   assert.ok(n >= 12, `filled ${n} placeholders`);
   assert.deepEqual(problems(config), []);
   assert.equal(tableEntry(config, 'rulebook').database_id.startsWith('5e7a0000'), true);
