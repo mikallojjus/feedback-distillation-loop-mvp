@@ -117,3 +117,11 @@ Done: the editor persona's review of the practice page and the skill (one must: 
 Verified: `evidence/07-headless/status/` (check.json ok); status against the live tables after the fix: edition 2026-10-15.1, 2 rows waiting.
 
 Next: the walkthrough runner with the editor actions (decision 31), the test-fixture fix, drift and pause checks, evals and calibration, the verifier.
+
+### 14. Pause and drift checks on the live tables (acceptance checks 10 and 9) (2026-10-15)
+
+Done: a person's actions were simulated once each through the REST client in one-off commands and recorded in `evidence/08-pause-drift/by-hand-*.json`: ticking Paused in Agent settings, unticking it, and appending a sixth line to Context-dependent's When to use. While paused, `status`, `propose`, `judge` and `distill` all refused with exit 3 and a report whose Next line points at Agent settings. After the hand edit, `status` and `propose` refused with exit 4 naming "Context-dependent: When to use" and pointing at the Rulebook or the engineer's restore. `restore --list` showed the editions; `restore --edition 2026-10-15.1 --confirm` wrote the locked text back and recorded edition 2026-10-15.2 ("restored from 2026-10-15.1"); `status` then ran (exit 0).
+
+Verified: the Rulebook copy's When to use read back equals the text of edition 2026-10-15.1 and no longer holds the hand edit (`evidence/08-pause-drift/read-back.json`); the changelog and `history/` hold both editions.
+
+Next: the walkthrough runner's hand-back; the full test run for the evidence; the evals and calibration; the verifier.

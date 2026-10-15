@@ -1,0 +1,5 @@
+status: Paused is ticked in Agent settings, so a person has to untick it
+Status: nothing was done, because the agent is paused.
+
+Next: untick Paused in Agent settings (https://www.notion.so/d941cf5880bb4b4ea5de378191ab8202).
+status exit 3

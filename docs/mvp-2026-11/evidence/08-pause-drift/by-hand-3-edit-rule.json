@@ -1,0 +1,18 @@
+{
+  "action": "a person edits When to use of Context-dependent by hand (simulated through the REST client)",
+  "appended": "6. Edited by hand for the drift check.",
+  "requests": [
+    {
+      "method": "PATCH",
+      "path": "/pages/3fa273e2-14eb-81b4-ac39-c90a1930a62e",
+      "status": 200,
+      "attempt": 1
+    },
+    {
+      "method": "GET",
+      "path": "/pages/3fa273e2-14eb-81b4-ac39-c90a1930a62e",
+      "status": 200,
+      "attempt": 1
+    }
+  ]
+}

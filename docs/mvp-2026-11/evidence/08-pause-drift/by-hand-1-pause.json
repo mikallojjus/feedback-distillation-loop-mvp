@@ -1,0 +1,18 @@
+{
+  "action": "a person ticks Paused (simulated through the REST client for the acceptance check)",
+  "page": "3fa273e2-14eb-81a5-90d0-ff8df5b510f3",
+  "requests": [
+    {
+      "method": "PATCH",
+      "path": "/pages/3fa273e2-14eb-81a5-90d0-ff8df5b510f3",
+      "status": 200,
+      "attempt": 1
+    },
+    {
+      "method": "GET",
+      "path": "/pages/3fa273e2-14eb-81a5-90d0-ff8df5b510f3",
+      "status": 200,
+      "attempt": 1
+    }
+  ]
+}

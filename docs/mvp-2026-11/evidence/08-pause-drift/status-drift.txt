@@ -1,0 +1,5 @@
+status: the rulebook text in Notion no longer matches the saved edition (Context-dependent: When to use)
+Status: nothing is paused, but the rulebook text in Notion no longer matches the saved edition (Context-dependent: When to use).
+
+Next: put the rulebook text back on Context-dependent (https://www.notion.so/17b99d1873384a1bb688c0075de45f78?v=3fa273e214eb81c5af0e000c3f4d2664), or ask the engineer to restore the rulebook text.
+status exit 4

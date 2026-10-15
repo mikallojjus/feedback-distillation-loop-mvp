@@ -1,0 +1,13 @@
+{
+  "equals_edition_1": true,
+  "hand_edit_present": false,
+  "lock_edition": "2026-10-15.2",
+  "requests": [
+    {
+      "method": "GET",
+      "path": "/pages/3fa273e2-14eb-81b4-ac39-c90a1930a62e",
+      "status": 200,
+      "attempt": 1
+    }
+  ]
+}

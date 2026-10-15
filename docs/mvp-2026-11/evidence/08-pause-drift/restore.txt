@@ -1,0 +1,9 @@
+Restore: the rulebook text of edition 2026-10-15.1 is back in Notion (edition 2026-10-15.2).
+
+| What | Result |
+|---|---|
+| Tags written | Context-dependent |
+| Rulebook | edition 2026-10-15.2 |
+
+Next: type /claim-tagger status to see what is open.
+restore exit 0
