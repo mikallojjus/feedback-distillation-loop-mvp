@@ -60,3 +60,11 @@ Done: `agents/claim-tagger-mvp/scripts/setup.mjs` with `builder open --reason`, 
 Verified: a cycle against a temporary root (open, second open refused with exit 2, register, a bad id refused, status, close; the real root has no `runs/` folder afterwards).
 
 Next: hand-backs from the four coders; the proposal page; the artifact's first publish; checkpoint 1.
+
+### 7. Checkpoint 1 reached: the structure proposal is in Notion and the artifact is published (2026-10-15)
+
+Done: the Opus draft of `STRUCTURE.md` reviewed and corrected (a select value carried a parenthetical; "confidence" had two meanings; the two waiting sample rows are the audit-decided Georgia and COVID claims, now said so). Converted to the connector's dialect (`lib/notion-markdown.mjs`: pipe tables become `<table>` blocks, special characters escaped) and created as the page "Structure proposal" under the parent through the connector while a builder session was open (`https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052`); the page registered (`notion.pages.proposal`) and the session closed. The artifact scaffold (`docs/mvp-2026-11/report/`, four tabs, `gen-parts.mjs` from `STRUCTURE.md` and `BACKLOG.md`, a strict build with an added rules check) rebuilt with the final proposal and published: `https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr` (title "Claim tagger MVP", icon report; republish by the same file path).
+
+Verified: the page fetched back through the connector shows every section and all 13 tables; the strict build exits 0 (270 KB, no external loads); `builder status` shows no open session and one registered page; the config holds the page id.
+
+Next: wait for the product owner's "go" (or edits to the page); meanwhile the Stage 1 coders (foundation modules and the Notion fake, pull and plan, judge and cells) continue; after "go": read the page back, diff it against `STRUCTURE.md`, adopt edits, log the diff, build exactly that.

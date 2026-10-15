@@ -1,0 +1,77 @@
+<!-- ============================== 2 HOW TO RUN ============================== -->
+<section id="how-to-run" role="tabpanel" aria-labelledby="tab-how-to-run" hidden>
+<h2>How to run</h2>
+
+<div class="plain">
+<p class="geo-eyebrow plain-label">In short</p>
+<p>You type {{count:commands.typed}} commands yourself: status, tag, distill and promote. The follow-up runs by itself after a PASS, and the engineer sets things up and fixes what breaks. Every command ends with the same short report in three parts, and a practice page lets you try all of it before you decide a real row.</p>
+<div class="geo-callout"><div class="geo-callout-body">
+<p><strong>Planned, not built yet.</strong> None of these commands exists at this stage. This tab shows what each one will do, and it is rewritten when the loop runs.</p>
+</div></div>
+</div>
+
+<div class="sub" id="how-commands" data-title="The commands">
+<h3>What you type</h3>
+<p>You type each command in Claude Code. At this stage one person is both the editor and the rule owner.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:26%"><col style="width:46%"><col style="width:28%"></colgroup>
+<thead><tr><th scope="col">Command</th><th scope="col">What it does</th><th scope="col">Then</th></tr></thead>
+<tbody>
+<tr><td><code>/claim-tagger status</code></td><td>Shows what is waiting: rows in the queue, lessons waiting, whether the agent is paused and the current rulebook edition.</td><td>Open Your queue, or you are done.</td></tr>
+<tr><td><code>/claim-tagger tag</code></td><td>Reads the claims against the rulebook, writes its tags and notes into two columns of the claims table, and puts every answer it is unsure about in the queue, least sure first.</td><td>Decide the rows in Your queue.</td></tr>
+<tr><td><code>/claim-tagger distill</code></td><td>Turns decisions that blame a rule into proposed rule changes, called lessons, at most {{count:distill.maxLessons}} per run.</td><td>Approve or rewrite each lesson in Lessons waiting.</td></tr>
+<tr><td><code>/claim-tagger promote &lt;lesson&gt;</code></td><td>Runs the safety check on an approved lesson. On a PASS the new rule goes live and a new edition starts. On a FAIL nothing changes and one sentence is proposed for Editor wording.</td><td>After a PASS the follow-up runs by itself.</td></tr>
+</tbody>
+</table></div>
+<p>If a command stops because the agent is paused, untick Paused in Agent settings and run it again. If it stops because the usage limit is reached, wait and run the same command again: it picks up where it stopped.</p>
+<h3>Who does what</h3>
+<ul>
+<li><strong>The editor</strong> types status and tag, then decides the rows in Your queue, least sure first.</li>
+<li><strong>The rule owner</strong> approves or rewrites lessons in Lessons waiting, then types promote.</li>
+<li><strong>The engineer</strong> does the setup and the repairs, and nothing else.</li>
+<li><strong>The machine</strong> runs the follow-up after a PASS, without anyone typing.</li>
+</ul>
+</div>
+
+<div class="sub" id="how-reports" data-title="The reports">
+<h3>Every command ends with the same three parts</h3>
+<ol>
+<li><strong>One sentence</strong> about what ran and what came out.</li>
+<li><strong>One small table</strong> of at most five rows and three columns. It is left out when there is nothing to count.</li>
+<li><strong>One line that starts with "Next:"</strong> and names exactly one thing to do: a command, or a Notion link and the action.</li>
+</ol>
+<p>Nothing else is added. When more rows wait than fit one sitting, the Next line says "start at the top of Your queue". A report that comes from the practice page starts with "Demo ·".</p>
+<div class="geo-card">
+<p class="geo-card-body"><strong>1 · What ran.</strong> Tag: the agent read the {{count:plan.claimsCopy}} claims and put the answers it was unsure about in the queue.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact" style="min-width:0">
+<caption><strong>2 · The result</strong> · mock-up with example values</caption>
+<tbody>
+<tr><td>Claims read</td><td>{{count:plan.claimsCopy}}</td></tr>
+<tr><td>Rows waiting in your queue</td><td>7</td></tr>
+<tr><td>Rows already decided</td><td>{{count:audit.decided}}</td></tr>
+</tbody>
+</table></div>
+<p class="geo-card-body"><strong>3 · Next.</strong> Next: start at the top of Your queue (link).</p>
+</div>
+</div>
+
+<div class="sub" id="how-practice" data-title="The practice page">
+<h3>Try it before you decide a real row</h3>
+<p><code>/claim-tagger-walkthrough</code> builds a fresh practice page under a Notion page you name. It has its own small tables, so nothing real changes, and you can build a new one whenever you want to practise again.</p>
+<p>The page tells a small story about the Context-dependent tag: {{count:walkthrough.openRows}} rows waiting for you, {{count:walkthrough.decidedRows}} earlier decisions and the example claims that the safety check uses. You go through {{count:walkthrough.steps}} steps. Each step has the same four parts: Goal of the step, Existing status, Doing the work and Explaining the outputs.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:10%"><col style="width:58%"><col style="width:32%"></colgroup>
+<thead><tr><th scope="col">Step</th><th scope="col">What happens</th><th scope="col">Where</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>You meet the practice page.</td><td>In Claude Code</td></tr>
+<tr><td>2</td><td>The agent reads the claims.</td><td>In Claude Code</td></tr>
+<tr><td>3</td><td>You decide your two rows, as the editor.</td><td>In Notion, in Your queue</td></tr>
+<tr><td>4</td><td>The agent drafts a clearer rule from your decisions.</td><td>In Claude Code</td></tr>
+<tr><td>5</td><td>You approve the draft, as the rule owner.</td><td>In Notion, in Lessons waiting</td></tr>
+<tr><td>6</td><td>The safety check runs and, on a PASS, the new rule goes live.</td><td>In Claude Code</td></tr>
+<tr><td>7</td><td>The agent re-checks your rows.</td><td>Runs by itself</td></tr>
+</tbody>
+</table></div>
+<p>The last step has nothing to type. The page also explains why the two rows wait, how to fill in Why wrong, what each word means, and what to do when the agent is paused or the usage limit is reached.</p>
+</div>
+</section>

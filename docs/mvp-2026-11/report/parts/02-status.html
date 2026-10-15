@@ -1,0 +1,76 @@
+<!-- ============================== 1 STATUS ============================== -->
+<section id="status" role="tabpanel" aria-labelledby="tab-status">
+<h2>Status</h2>
+
+<div class="plain">
+<p class="geo-eyebrow plain-label">In short</p>
+<p><strong>The proposal stage is reached: the first of two checkpoints.</strong> The structure of the Notion tables is written up and waits for approval. Nothing has been created in Notion yet, and the loop itself is not built yet. What exists is the base it will stand on: a separate branch, the shared building blocks, the permission settings and a guard that checks every write.</p>
+<p>The MVP judges one tag, Context-dependent, on {{count:plan.claimsCopy}} real claims copied once from the U.S. Politics table. The real claims table is never written. Everything else waits in the <a href="#backlog">Backlog</a>.</p>
+<div class="geo-callout"><div class="geo-callout-body">
+<p><strong>One question for the product owner.</strong> Approve the structure proposal, or edit the proposal page and say go. Nothing is built in Notion before that.</p>
+</div></div>
+</div>
+
+<div class="sub" id="status-works" data-title="What works">
+<h3>What exists so far</h3>
+<p>Each part is marked with its state. The loop itself is the next stage.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:24%"><col style="width:52%"><col style="width:24%"></colgroup>
+<thead><tr><th scope="col">Part</th><th scope="col">What it is</th><th scope="col">State</th></tr></thead>
+<tbody>
+<tr><td>Own branch and working folder</td><td>All the MVP work is kept apart from the current agent, so the current agent and the real tables stay exactly as they are.</td><td><span class="mark mark-yes">In place</span></td></tr>
+<tr><td>Project rules</td><td>The project's hard rules, updated once for the new agent: what it may write, which tags it may judge and which tables stay protected.</td><td><span class="mark mark-yes">Done</span></td></tr>
+<tr><td>Library layer</td><td>The shared building blocks the scripts will use: the Notion client, model calls, file locations and small helpers. {{count:library.modules}} modules: {{count:library.copies}} are changed copies and {{count:library.reexports}} reuse the current agent's modules as they are.</td><td><span class="mark mark-yes">Tested</span></td></tr>
+<tr><td>Settings and guard</td><td>Permission rules for the new scripts, and a guard that checks every Notion write before it happens. It always refuses deletes and moves, protected tables and the editor's own columns.</td><td><span class="mark mark-yes">Checked</span></td></tr>
+<tr><td>Read-only look at the real tables</td><td>Read only, nothing written: the {{count:taxonomy.issueRows}} Issue rows of the taxonomy, the columns of the real claims table and the {{count:audit.decided}} Context-dependent decisions of the 9 October audit, which are saved as evidence.</td><td><span class="mark mark-yes">Done</span></td></tr>
+<tr><td>Structure proposal</td><td>Every table with its columns, the choices in each dropdown column, the {{count:plan.views}} views and sample rows. It is on the <a href="#structure">Structure</a> tab and waits for approval.</td><td><span class="mark mark-part">Waiting</span></td></tr>
+<tr><td>Notion tables</td><td>The {{count:plan.tables}} tables the agent keeps. They are built exactly as approved, once the proposal is approved.</td><td><span class="mark mark-no">Not started</span></td></tr>
+<tr><td>Loop scripts</td><td>Pull, judge, propose, distill, promote, rollback, status and setup.</td><td><span class="mark mark-no">Not built</span></td></tr>
+<tr><td>Editor skills</td><td>The commands you type, and the builder of the practice page.</td><td><span class="mark mark-no">Not built</span></td></tr>
+</tbody>
+</table></div>
+</div>
+
+<div class="sub" id="status-verified" data-title="What was verified">
+<h3>Checks that were run</h3>
+<div class="geo-stat-grid">
+<div class="geo-card"><div class="geo-stat-value">{{count:baseline.tests}}</div><div class="geo-stat-label"><strong>Tests of the current agent</strong>: all pass, kept as the baseline</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:library.tests}}</div><div class="geo-stat-label"><strong>Library tests</strong>: all pass</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:guard.checked}}</div><div class="geo-stat-label"><strong>Guard decisions checked</strong>: all as expected</div></div>
+<div class="geo-card"><div class="geo-stat-value">{{count:access.reads}}</div><div class="geo-stat-label"><strong>Reads in the access check</strong>: no writes</div></div>
+</div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:28%"><col style="width:72%"></colgroup>
+<thead><tr><th scope="col">Check</th><th scope="col">Result</th></tr></thead>
+<tbody>
+<tr><td>Existing tests</td><td>The current agent's own tests were run before any change: {{count:baseline.tests}} pass and none fail. They are the baseline the new work is measured against.</td></tr>
+<tr><td>Library layer</td><td>{{count:library.tests}} tests pass. They show that the changed copies keep the behaviour of the originals where they should, and that the reused modules are the originals themselves.</td></tr>
+<tr><td>Guard</td><td>{{count:guard.checked}} decisions were checked against what each should be, in a temporary folder, including a broken request. All came out as expected.</td></tr>
+<tr><td>Access to the real tables</td><td>The agent's Notion access can read the parent page, the real claims table, the taxonomy and the audit table. The request log of this check shows {{count:access.reads}} reads and nothing else.</td></tr>
+<tr><td>Audit evidence</td><td>The {{count:audit.decided}} decided Context-dependent rows of the audit ({{count:audit.agree}} agree, {{count:audit.disagree}} disagree) were saved, and the file reads back as valid.</td></tr>
+<tr><td>How Notion builds tables and views</td><td>Checked against Notion's own reference pages: the calls that create tables and views, and the newer version that views need.</td></tr>
+</tbody>
+</table></div>
+<p>Not verified yet: anything in Notion, because nothing is built there. The independent check of the finished loop comes before the final demo.</p>
+</div>
+
+<div class="sub" id="status-open" data-title="What is open">
+<h3>Waiting on you</h3>
+<ul>
+<li>Approve the structure proposal, or edit the proposal page and say go.</li>
+</ul>
+<h3>Not built yet</h3>
+<ul>
+<li>The {{count:plan.tables}} Notion tables and the {{count:plan.views}} views, with their sample rows, built exactly as approved.</li>
+<li>The scripts of the loop and the two skills you type into.</li>
+<li>A test of the whole loop on stand-in data, then the real run on the {{count:plan.claimsCopy}} copied claims.</li>
+<li>The independent check of the finished loop, and the final demo on a fresh practice page.</li>
+</ul>
+<h3>Open points</h3>
+<ul>
+<li>Open points about the structure are marked in the proposal itself.</li>
+<li>Nothing else is blocked on the product owner.</li>
+<li>What is deliberately left out of the MVP is on the <a href="#backlog">Backlog</a> tab, with a reason and a trigger for each item.</li>
+</ul>
+</div>
+</section>

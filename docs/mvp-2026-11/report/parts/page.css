@@ -1,0 +1,176 @@
+/* Page styles for "Claim tagger MVP", copied from the claim tagger analysis report's page.css (comments tidied, rules unchanged).
+   Layout: a sticky rail of tabs (220px) beside one wide reading column. The shell is 1480px; prose is capped at --measure,
+   tables, figures and code blocks take the full width of the column. This page has one reading layer: no page is marked
+   Technical, so the Plain / Technical rules below stay unused. Colours come only from the role tokens above. */
+:root{--code-fill:rgba(32,32,32,0.04);--measure:92ch}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){--code-fill:rgba(236,236,238,0.06)} }
+:root[data-theme="dark"]{--code-fill:rgba(236,236,238,0.06)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--surface);color:var(--ink);font-family:var(--font-sans);font-size:1.125rem;line-height:1.8125rem;text-rendering:optimizeLegibility}
+a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--ink-faint);text-underline-offset:3px;transition:color 150ms,text-decoration-color 150ms}
+a:hover{color:var(--accent);text-decoration-color:var(--accent)}
+a:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:var(--radius-sm)}
+.skip-link{position:absolute;left:var(--space-4);top:-120px;z-index:10;padding:var(--space-2) var(--space-3);border-radius:var(--radius);background:var(--inverse);color:var(--on-inverse);text-decoration:none}
+.skip-link:hover,.skip-link:focus{color:var(--on-inverse)}
+.skip-link:focus{top:calc(env(safe-area-inset-top, 0px) + var(--space-2))}
+
+.wrap{max-width:1480px;margin:0 auto;padding-block:var(--space-8) var(--space-10);padding-inline:var(--space-4);display:grid;grid-template-columns:220px minmax(0,1fr);gap:var(--space-8)}
+.wrap > .geo-pageheader{grid-column:1/-1}
+.geo-pageheader{display:flex;flex-wrap:wrap;gap:var(--space-4) var(--space-6);align-items:flex-start;justify-content:space-between}
+.geo-pageheader-main{min-width:0;flex:1 1 520px}
+.geo-pageheader-meta{line-height:1.5rem}
+.wrap .geo-pageheader-sub{max-width:72ch;text-wrap:pretty}
+.header-controls{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3) var(--space-4);margin-top:var(--space-2)}
+.layer-switch .geo-pill{min-width:84px;justify-content:center}
+.layer-hint{font-size:1rem;line-height:1.25rem;letter-spacing:-0.25px;color:var(--ink-muted);max-width:34ch}
+main, section[role="tabpanel"]{min-width:0}
+.geo-sidenav{position:sticky;top:calc(env(safe-area-inset-top, 0px) + var(--space-4));align-self:start}
+
+/* type */
+h2{margin:0 0 var(--space-3);font-size:2rem;line-height:2.5rem;font-weight:600;letter-spacing:-0.5px;text-wrap:balance}
+h3{margin:var(--space-10) 0 var(--space-3);font-size:1.4rem;line-height:1.6rem;font-weight:500;letter-spacing:-0.25px;text-wrap:balance}
+h4{margin:var(--space-6) 0 var(--space-2);font-size:1rem;line-height:1.25rem;font-weight:500;letter-spacing:-0.25px;color:var(--ink-muted)}
+p{margin:0 0 var(--space-3);max-width:var(--measure)}
+ul,ol{margin:0 0 var(--space-4);padding-left:22px;max-width:var(--measure)}
+li{margin:var(--space-1) 0}
+li::marker{color:var(--ink-muted)}
+strong{font-weight:600}
+.lede{font-size:1.25rem;line-height:1.8125rem;letter-spacing:-0.08px;max-width:var(--measure);margin-bottom:var(--space-4)}
+.small{font-size:1rem;line-height:1.375rem;letter-spacing:-0.25px;color:var(--ink-muted)}
+td code,li code,p code,dd code,h3 code,h4 code,summary code,caption code,footer code{font-family:var(--font-mono);font-size:.82em;background:var(--code-fill);border-radius:var(--radius-sm);padding:1px 5px}
+/* code: the block takes the full column and scrolls sideways only when a line is longer than the column */
+.geo-code{width:100%;max-width:100%;border:1px solid var(--border);margin:var(--space-3) 0 var(--space-4);overflow-x:auto}
+.geo-code pre{margin:0;overflow:visible}
+pre{margin:0 0 var(--space-4);max-width:100%;overflow-x:auto;font-family:var(--font-mono);font-size:.95rem;line-height:1.55;tab-size:2}
+blockquote{margin:var(--space-3) 0 var(--space-4);padding:var(--space-2) var(--space-4);border-left:2px solid var(--border-control);color:var(--ink);max-width:var(--measure)}
+blockquote p{margin:0 0 var(--space-2)}
+blockquote cite{display:block;font-style:normal;font-size:1rem;line-height:1.25rem;color:var(--ink-muted)}
+
+/* sub-pages inside a tab */
+nav.subnav{margin:var(--space-2) 0 var(--space-6)}
+nav.subnav .geo-tab{white-space:nowrap}
+@media (min-width:768px){ nav.subnav .geo-tabs-row{width:auto;flex-wrap:wrap;row-gap:var(--space-4)} } /* a long page row wraps instead of scrolling out of sight; on phones it scrolls */
+.sub{min-width:0}
+.sub > h3:first-child{margin-top:var(--space-2)}
+.sub[hidden]{display:none}
+
+/* plain and technical layers */
+.plain{margin:0 0 var(--space-6)}
+.plain-label{margin:0 0 var(--space-2)}
+.plain .answer{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:var(--space-4);margin:var(--space-4) 0}
+.plain .answer > div{min-width:0;padding:var(--space-3) var(--space-4);border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface-raised)}
+.plain .answer h4{margin-top:0}
+.plain .answer p:last-child{margin-bottom:0}
+details.tech{margin:var(--space-6) 0;border-top:1px solid var(--border-control);border-bottom:1px solid var(--border-control)}
+details.tech > summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);padding:var(--space-4) 0;cursor:pointer;font-size:1.0625rem;line-height:1.3125rem;font-weight:500;letter-spacing:-0.25px}
+details.tech > summary::-webkit-details-marker{display:none}
+details.tech > summary:focus-visible{outline:2px solid var(--ink);outline-offset:2px;border-radius:var(--radius-sm)}
+details.tech > summary .geo-eyebrow{color:var(--ink-muted);font-weight:500}
+details.tech > summary .tech-chevron{display:flex;color:var(--accent);transition:transform 300ms;flex:none}
+details.tech[open] > summary .tech-chevron{transform:rotate(180deg)}
+details.tech .geo-disclosure-body{padding-bottom:var(--space-6)}
+details.tech .geo-disclosure-body > h4:first-child, details.tech .geo-disclosure-body > h3:first-child{margin-top:0}
+.layer-band{margin:var(--space-2) 0 var(--space-4);padding:var(--space-2) var(--space-3);background:var(--surface-sunken);border-radius:var(--radius);font-size:1rem;line-height:1.375rem;letter-spacing:-0.25px;color:var(--ink-muted)}
+
+/* blocks */
+.geo-callout{margin:var(--space-4) 0;max-width:var(--measure)}
+.geo-callout p{max-width:none}
+.geo-callout p:last-child{margin-bottom:0}
+.geo-stat-grid{margin:var(--space-6) 0 var(--space-2)}
+.geo-card-grid{margin:var(--space-4) 0}
+.geo-card-title{margin-top:var(--space-1)}
+.geo-figure{margin:var(--space-6) 0}
+.geo-figure-frame{overflow-x:auto}
+.geo-figure-frame svg{min-width:0;display:block;max-width:100%;height:auto}
+.geo-figure-caption{max-width:var(--measure)}
+.svgtext{font-family:var(--font-sans);font-size:13px}
+.svgmono{font-family:var(--font-mono);font-size:11px}
+.svgsmall{font-family:var(--font-sans);font-size:11.5px}
+.geo-table-wrap{margin:var(--space-3) 0 var(--space-4);overflow-x:auto;max-width:100%}
+.geo-table{min-width:560px}
+.geo-table td{line-height:1.375rem;vertical-align:top}
+.geo-table td strong{font-weight:500}
+.geo-table th{white-space:nowrap}
+.geo-table caption{caption-side:top;text-align:left;padding:var(--space-2\.5) var(--space-2\.5) var(--space-2);font-size:1rem;line-height:1.375rem;letter-spacing:-0.25px;color:var(--ink-muted);border-bottom:1px solid var(--border)}
+.geo-table caption strong{color:var(--ink);font-weight:600}
+/* numeric columns: right-aligned tabular figures, but a long value wraps instead of stretching the table */
+.geo-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.geo-table td.num{white-space:normal;overflow-wrap:break-word}
+.geo-table .score{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.geo-table .yes{color:var(--ink)}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:var(--space-4)}
+.two > div{min-width:0}
+.two h3{margin-top:var(--space-6)}
+.geo-disclosure{margin:var(--space-6) 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.geo-disclosure-sm > summary{color:var(--ink)}
+.geo-disclosure-body h4:first-child{margin-top:0}
+
+/* inherited from the research page, unused here: option catalog */
+.opt-filters{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-3) var(--space-6);margin:var(--space-6) 0 var(--space-4)}
+.opt-filters .geo-pill{justify-content:center;min-width:32px;padding:5px var(--space-2\.5) 7px}
+.opt-list{display:grid;gap:var(--space-4);margin:var(--space-4) 0}
+.opt{min-width:0;border:1px solid var(--border);border-radius:var(--radius-lg);padding:var(--space-4);background:var(--surface-raised)}
+.opt[hidden]{display:none}
+.opt-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--space-2) var(--space-3)}
+.opt-head h4{margin:0;color:var(--ink);font-size:1.1875rem;line-height:1.4rem;font-weight:600}
+.opt-id{font-family:var(--font-mono);font-size:.8rem;color:var(--ink-muted)}
+.opt-meta{display:flex;flex-wrap:wrap;gap:var(--space-1\.5);margin:var(--space-2) 0 var(--space-3)}
+.opt p{max-width:none}
+.opt dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-1) var(--space-4);margin:var(--space-2) 0 0;font-size:1.0625rem;line-height:1.5rem}
+.opt dt{color:var(--ink-muted);font-weight:500}
+.opt dd{margin:0;min-width:0}
+.opt.geo-row-highlight{box-shadow:inset 0 0 0 2px var(--accent)}
+.geo-row-highlight td{background:var(--accent-tint)}
+.geo-glossary dt.geo-row-highlight, .geo-glossary dt.geo-row-highlight + dd{background:var(--accent-tint)}
+.scorebar{display:inline-flex;align-items:center;gap:var(--space-2);white-space:nowrap}
+.scorebar i{display:inline-block;height:6px;background:var(--accent);border-radius:3px}
+.scorebar b{font-variant-numeric:tabular-nums;font-weight:600}
+
+/* citations and terms */
+a.cite{text-decoration:none;color:var(--accent);font-size:.78em;font-weight:600;vertical-align:super;line-height:0;margin-left:1px}
+a.cite:hover{text-decoration:underline}
+dfn{font-style:normal;border-bottom:1px dotted var(--ink-muted);cursor:help}
+dfn::after{content:"*";color:var(--accent);font-weight:600;font-size:.75em;line-height:0;position:relative;top:-0.5em;margin-left:1px}
+aside.terms{margin:var(--space-10) 0 0;padding-top:var(--space-4);border-top:1px solid var(--border-control)}
+section#glossary .geo-glossary{margin-top:var(--space-3)}
+.geo-glossary dt{scroll-margin-top:80px}
+tr[id^="src-"]{scroll-margin-top:80px}
+
+/* status markers in tables (Geo status chip dot) */
+.mark{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.mark::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--border-control);flex:none}
+.mark-yes::before{background:var(--success)}
+.mark-part::before{background:var(--warning)}
+.mark-no::before{background:var(--danger)}
+
+/* notion mock table */
+.mock th{background:var(--surface-sunken)}
+.mock td{font-size:1rem;line-height:1.375rem}
+
+/* plan list */
+.plan{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:var(--space-1\.5) var(--space-4);margin:var(--space-3) 0 var(--space-4);max-width:80ch}
+.plan dt{font-weight:500;white-space:nowrap}
+.plan dd{margin:0;min-width:0}
+
+footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space-4);margin-top:var(--space-6);font-size:1rem;line-height:1.375rem;letter-spacing:-0.25px;color:var(--ink-muted)}
+
+@media (max-width:1023px){ .wrap{grid-template-columns:200px minmax(0,1fr);gap:var(--space-6)} }
+@media (max-width:767px){
+  .wrap{grid-template-columns:minmax(0,1fr);gap:var(--space-4);padding-block:var(--space-6) var(--space-8)}
+  .geo-sidenav{position:static;margin-inline:calc(-1 * var(--space-4));padding-inline:var(--space-4);background:var(--surface);border-bottom:1px solid var(--rule);display:flex;overflow-x:auto;gap:var(--space-1)}
+  .geo-sidenav-item{white-space:nowrap;flex:none}
+  body{font-size:1.0625rem;line-height:1.625rem}
+  h2{font-size:1.6rem;line-height:2rem}
+  h3{margin-top:var(--space-8)}
+  .geo-table{min-width:520px}
+  .opt dl{grid-template-columns:minmax(0,1fr)}
+  .opt dt{margin-top:var(--space-1)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* fixed-layout tables: opt in with class "packages" when the long cells should share the width evenly and read left-aligned */
+.packages{table-layout:fixed;width:100%}
+.packages td.num{text-align:left;white-space:normal;font-variant-numeric:normal}
+.packages td{white-space:normal;overflow-wrap:anywhere}
+.packages td,.packages th{word-wrap:break-word}

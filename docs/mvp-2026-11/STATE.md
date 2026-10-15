@@ -2,25 +2,31 @@
 
 | Item | Value |
 |---|---|
-| Phase | Stage 0, nearly done: the structure proposal is being drafted; code for Stage 1 has started against the proposed structure |
-| Checkpoint 1 (structure proposal) | not reached; the proposal page is not yet in Notion |
+| Phase | Checkpoint 1 reached (2026-10-15); waiting for the product owner's go; Stage 1 code continues against the proposed structure |
+| Checkpoint 1 (structure proposal) | Proposal page created and read back: https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 (page id 3fa273e214eb81ef8504cb40e3bd7052). Waiting for "go" or edits. |
 | Checkpoint 2 (final demo) | not reached |
 | Branch | `mvp-2026-11` |
-| Last commit on the branch | `fc7eaa9` contracts note |
-| Parent Notion page | "Feedback Distillation MVP", 3fa273e214eb805199f3d12ef01db453 (empty, read-only so far) |
-| Notion ids created by this build | none |
-| Artifact | not published |
-| Read-only facts | `sweeps/live-schemas.md`, `evidence/03-audit-context-dependent-decisions.json`, the REST token reads the parent page, the real claims table, the taxonomy and the audit table (GET only) |
+| Parent Notion page | "Feedback Distillation MVP", 3fa273e214eb805199f3d12ef01db453 |
+| Notion ids created by this build | page "Structure proposal" 3fa273e214eb81ef8504cb40e3bd7052 (also in `config.json` under `notion.pages.proposal`). No table yet. |
+| Artifact | https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr, "Claim tagger MVP", version 1 (checkpoint 1); rebuild with `node gen-parts.mjs && node build.mjs --strict` in `docs/mvp-2026-11/report/`, republish the same file path |
+| Builder session | closed (`runs/SETUP` absent) |
+| Read-only facts | `sweeps/live-schemas.md`, `evidence/03-audit-context-dependent-decisions.json`; the REST token reads the parent page, the real claims table, the taxonomy and the audit table (GET only) |
+
+## After "go"
+
+1. Fetch the proposal page, convert back to the repository shape, diff against `STRUCTURE.md`; adopt the product owner's edits into `STRUCTURE.md` and `setup/structure.json`; log the diff in `WORKLOG.md`.
+2. Run the read-only dry run of the real table and the 50-claim pick (`pull.mjs --source real_claims --dry-run`, then `--pick 50 --seed mvp-2026-11 --audit evidence/03-...json`); save the report and the request log under `evidence/`.
+3. Read the taxonomy's 13 rows once through the connector into `setup/taxonomy-issue.json`.
+4. `setup.mjs` builds the page tree, the five tables, the views, the rows (13 rulebook, 50 claims, 10 seeded decisions, 1 settings), the rubric edition `<date>.1` and the canaries; read back and diff against the approved structure.
 
 ## Running subagents (model, what each was asked, what it writes)
 
 | Agent | Model | Asked | Writes |
 |---|---|---|---|
-| Library coder | Sonnet | Copy `paths.mjs`, `notion-rest.mjs` (add createDatabase, createPageUnderPage, createView, retrieveView, listViews, retrieveDataSource, queryDataSource, updateDataSource, retrieveBlockChildren, requestLogger, countRequests; create-uncertain for databases and views; no delete), `claude.mjs` (usage window split from transient errors, withTransientRetry, refuse --bare and --fallback-model); shims for the unchanged modules; tests | `agents/claim-tagger-mvp/scripts/lib/`, `tests/mvp/{paths,notion-rest,claude}.test.mjs` |
-| Foundation coder | Sonnet | `lib/config.mjs`, `lib/report.mjs` (three-part report writer with lint), `lib/rubric.mjs` (rules and examples parsing, hashes, editions, lock, history, changelog, drift), the schemas, the in-memory Notion fake; tests | `agents/claim-tagger-mvp/scripts/lib/{config,report,rubric}.mjs`, `schemas/`, `tests/mvp/fixtures/fake-notion.mjs`, tests |
-| Proposal drafter | Opus | `STRUCTURE.md` and `STRUCTURE.notion.md`: five tables with columns, values, who fills what and sample rows from the audit's real claims; four views; three sub-pages; words list; open points | `docs/mvp-2026-11/STRUCTURE.md`, `STRUCTURE.notion.md` |
-| Artifact scaffold | Sonnet | `docs/mvp-2026-11/report/` from the Geo recipe: four tabs (Status, How to run, Structure, Backlog), `gen-parts.mjs` from `STRUCTURE.md` and `BACKLOG.md`, strict build | `docs/mvp-2026-11/report/` |
+| Foundation coder | Sonnet | `lib/config.mjs`, `lib/report.mjs`, `lib/rubric.mjs`, the schemas, `tests/mvp/fixtures/fake-notion.mjs`, tests | `agents/claim-tagger-mvp/scripts/lib/{config,report,rubric}.mjs`, `schemas/`, `tests/mvp/` |
+| Pull and plan coder | Sonnet | `lib/plan.mjs` (plan, check, apply, ledger, read-back, resume), `pull.mjs` (tables, dry run of the real table, the 50-claim pick), tests | `scripts/lib/plan.mjs`, `scripts/pull.mjs`, `schemas/plan.schema.json`, `tests/mvp/` |
+| Judge coder | Sonnet | `lib/cells.mjs`, `prompts/judge.md`, `judge.mjs` (adaptive runs, error classes, calls log, report), `tests/mvp/fixtures/fake-claude.mjs`, tests; may add a `fakeScript` option to `lib/claude.mjs` | `scripts/lib/cells.mjs`, `scripts/judge.mjs`, `prompts/judge.md`, `tests/mvp/` |
 
 ## Finished subagents
 
-Haiku digests in `sweeps/` (W3, W4, library, orientation, artifact recipe). Their reports are summarised in `WORKLOG.md` entries 3 to 5.
+Haiku digests in `sweeps/`; the library coder (88 tests, committed `7e5ad24`); the proposal drafter (Opus); the artifact scaffold (Sonnet).

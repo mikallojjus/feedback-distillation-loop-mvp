@@ -7,7 +7,54 @@
     "setup_page_parents": [
       "3fa273e214eb805199f3d12ef01db453"
     ],
-    "databases": {},
+    "pages": {
+      "proposal": "3fa273e214eb81ef8504cb40e3bd7052",
+      "demos": "<set by setup>",
+      "demo_tests": "<set by setup>"
+    },
+    "rulebook": {
+      "database_id": "<setup>",
+      "data_source_id": "<setup>",
+      "key": "Name",
+      "work_tag": "Issue"
+    },
+    "claims": [
+      {
+        "name": "claims_copy",
+        "label": "Claims copy",
+        "enabled": true,
+        "database_id": "<setup>",
+        "data_source_id": "<setup>",
+        "key": "Geo ID",
+        "columns": {
+          "claim": "Geo Name",
+          "link": "Geo URL",
+          "sources": "Geo Sources",
+          "is_factual": "Geo Is factual"
+        },
+        "write_columns": {
+          "tags": "Agent tags",
+          "notes": "Agent notes"
+        }
+      }
+    ],
+    "databases": {
+      "tag_decisions": {
+        "database_id": "<setup>",
+        "data_source_id": "<setup>",
+        "key": "Key"
+      },
+      "rule_changes": {
+        "database_id": "<setup>",
+        "data_source_id": "<setup>",
+        "key": "Lesson"
+      },
+      "agent_settings": {
+        "database_id": "<setup>",
+        "data_source_id": "<setup>",
+        "key": "Name"
+      }
+    },
     "sources": {
       "taxonomy": {
         "database_id": "f05273e214eb8353b0a981544507de32",
@@ -56,9 +103,83 @@
     "max_text": 1900
   },
   "editor_columns": {
-    "tag_decisions": ["Tag outcome", "Why wrong", "Your reasoning"],
-    "rule_changes": ["Editor wording"],
-    "rule_changes_status_editor_values": ["Approved", "Rejected"],
-    "agent_settings": ["Paused"]
-  }
+    "tag_decisions": [
+      "Tag outcome",
+      "Why wrong",
+      "Your reasoning"
+    ],
+    "rule_changes": [
+      "Editor wording"
+    ],
+    "rule_changes_status_editor_values": [
+      "Approved",
+      "Rejected"
+    ],
+    "agent_settings": [
+      "Paused"
+    ]
+  },
+  "models": {
+    "judge": "claude-sonnet-5-5",
+    "distill": "claude-opus-5-5"
+  },
+  "tags": {
+    "default": "text",
+    "Unsourced": "deterministic",
+    "Improperly sourced": "source",
+    "Source inaccessible": "source",
+    "Factually challenged": "source",
+    "Exact duplicate": "corpus",
+    "Semantically duplicated": "corpus"
+  },
+  "judge": {
+    "runs_max": 3,
+    "rerun": {
+      "band": [
+        0.25,
+        0.75
+      ],
+      "include_ask_editor": true,
+      "max_share": 0.3
+    },
+    "groups": {
+      "G1": [
+        "Context-dependent"
+      ]
+    },
+    "batch_size": 8,
+    "concurrency": 2,
+    "effort": "medium",
+    "max_turns": 1,
+    "timeout_ms": 300000,
+    "claude_bin": "claude",
+    "attempts_per_batch": 2,
+    "transient": {
+      "max_in_a_row": 3,
+      "backoff_ms": [
+        30000,
+        120000
+      ]
+    },
+    "prompt": "prompts/judge.md"
+  },
+  "queue": {
+    "reason_max_words": 40,
+    "sitting_rows": 20
+  },
+  "distill": {
+    "min_claims": 2,
+    "max_lessons_per_run": 3,
+    "overfit_ngram": 8,
+    "effort": "high",
+    "timeout_ms": 600000,
+    "prompt": "prompts/distill.md",
+    "wording_prompt": "prompts/wording.md"
+  },
+  "gate": {
+    "default": {
+      "flip_rejudge_runs": 2
+    }
+  },
+  "demo": false
 }

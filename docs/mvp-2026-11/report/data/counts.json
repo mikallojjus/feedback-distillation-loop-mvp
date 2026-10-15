@@ -1,0 +1,52 @@
+{
+  "_about": "Numbers for the count placeholders in parts/*.html. An entry is a plain value or { value, source, pending }; groups nest and are addressed with dots. Keys that start with an underscore are ignored by the build. Every figure names its source: a file and what was counted, or the command that produced it. A figure that is not measured yet is marked pending, and the strict build refuses a page that uses one. The file is edited by hand: recount a figure when its source changes and rewrite its source line with the new date. Sources are repository paths. Short forms: notes = docs/mvp-2026-11; brief = MVP-PROMPT.md at the repository root.",
+
+  "plan": {
+    "claimsCopy": { "value": 50, "source": "brief, section 3, Notion bullet: a mirror-shaped Claims table holding 50 real claims copied once from the U.S. Politics table (the 10 claims with Context-dependent decisions in the 9 October audit, plus 40 at random)" },
+    "tables": { "value": 5, "source": "brief, section 3, Notion bullet, counted: Rulebook copy, Claims copy, Tag decisions (the queue), Rule changes and Agent settings" },
+    "views": { "value": 4, "source": "brief, section 3, Notion bullet: four views, Your queue, Needs your note, Lessons waiting and Rulebook" }
+  },
+
+  "library": {
+    "modules": { "value": 11, "source": "agents/claim-tagger-mvp/scripts/lib/*.mjs, counted with ls on 15 October 2026: claude, exit-codes, hash, jsonl, notion-rest, notion-values, paths, pyjson, rng, stats, validate" },
+    "copies": { "value": 3, "source": "same folder: claude.mjs, notion-rest.mjs and paths.mjs are copies that differ from the originals (notes/WORKLOG.md, entry 2, names them)" },
+    "reexports": { "value": 8, "source": "same folder: exit-codes, hash, jsonl, notion-values, pyjson, rng, stats and validate each hold one export line that points at the current agent's module" },
+    "tests": { "value": 88, "source": "node --test tests/mvp on 15 October 2026: tests 88, pass 88, fail 0" }
+  },
+
+  "baseline": {
+    "tests": { "value": 865, "source": "notes/evidence/00-baseline-old-tests.txt, summary at the end: tests 865, pass 865, fail 0" }
+  },
+
+  "guard": {
+    "checked": { "value": 18, "source": "notes/WORKLOG.md, entry 4: 18 guard decisions checked against expectations in a temporary root, all as expected" }
+  },
+
+  "access": {
+    "reads": { "value": 4, "source": "notes/WORKLOG.md, entry 5: the request log of the access check shows four GET requests and nothing else" }
+  },
+
+  "taxonomy": {
+    "issueRows": { "value": 13, "source": "notes/WORKLOG.md, entry 3: the taxonomy rows whose Work tags contain Issue" }
+  },
+
+  "audit": {
+    "decided": { "value": 10, "source": "notes/evidence/03-audit-context-dependent-decisions.json, the decisions array, counted on 15 October 2026: 10 rows" },
+    "agree": { "value": 8, "source": "same file: decisions whose decision is Agree" },
+    "disagree": { "value": 2, "source": "same file: decisions whose decision is Disagree" }
+  },
+
+  "commands": {
+    "typed": { "value": 4, "source": "notes/sweeps/W4-digest.md: the practice page opens with 'You type four commands yourself (status, tag, distill and promote)'" }
+  },
+
+  "distill": {
+    "maxLessons": { "value": 3, "source": "notes/CONTRACTS.md, section 2: distill.max_lessons_per_run is 3; the brief, section 3, Distill bullet, says at most three per run" }
+  },
+
+  "walkthrough": {
+    "steps": { "value": 7, "source": "brief, section 3 and section 9: the walkthrough has seven steps in a fixed format" },
+    "openRows": { "value": 2, "source": "notes/sweeps/W4-digest.md, the story: two open rows that the editor decides at step 3" },
+    "decidedRows": { "value": 5, "source": "notes/sweeps/W4-digest.md, the story: five rows decided earlier and written at setup" }
+  }
+}
