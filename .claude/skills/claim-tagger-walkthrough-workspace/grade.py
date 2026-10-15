@@ -90,7 +90,7 @@ def verify_demo(demo_id):
 
 
 def connector_writes(transcript):
-    if not transcript or not os.path.exists(transcript):
+    if not transcript or not os.path.exists(transcript) or os.path.getsize(transcript) == 0:
         return None
     n = 0
     for line in open(transcript, encoding='utf-8', errors='replace'):
@@ -112,8 +112,26 @@ def tool_counts(transcript):
     return counts
 
 
+def eval_dir(eval_name):
+    """The eval's folder: <iteration>/<eval-name>/ as the runs were first saved, else the eval-N/ folder whose eval_metadata.json names it."""
+    direct = os.path.join(ITER, eval_name)
+    if os.path.isdir(direct):
+        return direct
+    for meta_path in glob.glob(os.path.join(ITER, 'eval-*', 'eval_metadata.json')):
+        if json.load(open(meta_path, encoding='utf-8')).get('eval_name') == eval_name:
+            return os.path.dirname(meta_path)
+    raise FileNotFoundError(f'no folder for eval {eval_name} under {ITER}')
+
+
+def run_dir(eval_name, cfg):
+    """<eval>/<config>/run-1/ when the aggregator's layout is in place, else <eval>/<config>/."""
+    base = os.path.join(eval_dir(eval_name), cfg)
+    return os.path.join(base, 'run-1') if os.path.isdir(os.path.join(base, 'run-1')) else base
+
+
 def grade(eval_name, cfg, run, meta):
-    outputs = os.path.join(ITER, eval_name, cfg, 'outputs')
+    where = run_dir(eval_name, cfg)
+    outputs = os.path.join(where, 'outputs')
     final_path = os.path.join(outputs, 'final-message.md')
     notes_path = os.path.join(outputs, 'notes.md')
     final = open(final_path, encoding='utf-8').read() if os.path.exists(final_path) else ''
@@ -124,7 +142,7 @@ def grade(eval_name, cfg, run, meta):
     three_part = bool(final) and lint == [] and parts['next_lines'] == 1 and parts['table_rows'] <= 5 and parts['table_cols'] <= 3 and parts['sentence_lines'] == 1
     three_part_evidence = f"lint problems {lint}; parts {parts}" if final else 'no final-message.md was saved'
     writes = connector_writes(run.get('transcript'))
-    writes_evidence = 'transcript not available' if writes is None else f'{writes} connector write tool call(s) found in the transcript'
+    writes_evidence = 'no transcript kept (empty or missing), so the tool calls could not be checked; the no-write conclusion rests on the demo folders, the production run folders and the notes' if writes is None else f'{writes} connector write tool call(s) found in the transcript'
     new_demos = demos_since(start)
     new_pages = [d for d in new_demos if d.get('parent', {}).get('id', '').replace('-', '') == DEMO_TESTS and d.get('state') == 'ready']
     exps = []
@@ -178,9 +196,9 @@ def grade(eval_name, cfg, run, meta):
         'claims': [],
         'user_notes_summary': {'uncertainties': [], 'needs_review': [], 'workarounds': []},
     }
-    with open(os.path.join(ITER, eval_name, cfg, 'grading.json'), 'w', encoding='utf-8') as f:
+    with open(os.path.join(where, 'grading.json'), 'w', encoding='utf-8') as f:
         json.dump(grading, f, indent=2, ensure_ascii=False)
-    with open(os.path.join(ITER, eval_name, cfg, 'timing.json'), 'w', encoding='utf-8') as f:
+    with open(os.path.join(where, 'timing.json'), 'w', encoding='utf-8') as f:
         json.dump({'total_tokens': run.get('total_tokens'), 'duration_ms': run.get('duration_ms'), 'total_duration_seconds': round(run.get('duration_ms', 0) / 1000, 1)}, f, indent=2)
     print(f"{eval_name:<40} {cfg:<14} {passed}/{len(exps)}")
     for e in exps:
@@ -192,6 +210,6 @@ if __name__ == '__main__':
     ITER = sys.argv[1]
     runs = json.load(open(sys.argv[2], encoding='utf-8'))
     for eval_name, cfgs in runs.items():
-        meta = json.load(open(os.path.join(ITER, eval_name, 'eval_metadata.json'), encoding='utf-8'))
+        meta = json.load(open(os.path.join(eval_dir(eval_name), 'eval_metadata.json'), encoding='utf-8'))
         for cfg, run in cfgs.items():
             grade(eval_name, cfg, run, meta)

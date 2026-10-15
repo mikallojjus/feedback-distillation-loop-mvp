@@ -3,7 +3,7 @@
 <h2>Backlog</h2>
 <p>One row per deferred item: what, why not now, the trigger that brings it in, effort S, M or L.</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
-<colgroup><col style="width:28%"><col style="width:28%"><col style="width:31%"><col style="width:13%"></colgroup>
+<colgroup><col style="width:25%"><col style="width:32%"><col style="width:30%"><col style="width:13%"></colgroup>
 <thead><tr><th scope="col">What</th><th scope="col">Why not now</th><th scope="col">Trigger</th><th scope="col">Effort</th></tr></thead>
 <tbody>
 <tr><td>Tag the real claims table instead of the 50-claim copy</td><td>The real table is never written in the MVP; the Geo-to-Notion refresh may drop added columns and page ids</td><td>The owner of the refresh job confirms that added columns and page ids survive a refresh; then a config change plus the one confirmed setup write</td><td><span class="geo-tag">M</span></td></tr>
@@ -19,6 +19,14 @@
 <tr><td>Calibrate the re-read band and the safety check's noise guard on the first 200 real claims</td><td>Needs the real table</td><td>The first real run</td><td><span class="geo-tag">S</span></td></tr>
 <tr><td>Python-compatible hashes</td><td>Marked Later in the analysis</td><td>A Python consumer of the run files appears</td><td><span class="geo-tag">S</span></td></tr>
 <tr><td>The old hub and sandbox under "Editorial feedback loop"</td><td>Read-only history; never touched, never deleted</td><td>Never</td><td>-</td></tr>
+<tr><td>Rotation of unseen rows in a distill group above 30 rows</td><td>The first groups are small; the newest 30 rows are taken</td><td>A tag's decided rows pass 30 and a lesson keeps missing older rows</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>The calibration run that compares the adaptive judge with a three-run reference (<code>--reference</code>)</td><td>Needs the real table's first 200 claims</td><td>The first real run on the real table</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>A warning when the Claude CLI version changes between judge runs</td><td>Recorded per call, not acted on</td><td>The example claims change answers after a CLI update</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>Clearing the Follow-up marks of a rolled-back rule change</td><td>Rollback restores the text and marks the lesson; the Fixed marks stay as history</td><td>An editor asks what Fixed means after a rollback</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>The domestic-chips example claim of Self-contained under the current rules</td><td>Under edition 2026-10-15.1 the judge reads it Applies at 0.3 to 0.8 across runs; a production safety check would fail on it whatever the lesson</td><td>The first production promote; then either rule 3 or 4 gains a line on general trends the sentence spells out, or the taxonomy owners replace the example</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>A note from distill when the editor's rule differs from the rule the agent cited</td><td>Calibration showed a lesson on rule 4 never flipping a row the agent decided under rule 3; the lesson should sit where the agent looks</td><td>An editor's lesson fails its first safety check on a row the agent decided under another rule</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>A per-claim retry when a reply leaves out one claim of a batch</td><td>Today the whole batch is asked again (two attempts), then written as errors; a two-claim batch lost the same claim four times in a row on 2026-10-15, then read fine</td><td>The rejected replies kept since decision 36 show the same claim missing more than once</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>A triggering test of the practice-page skill in real sessions</td><td>The skill-creator's description optimiser counted no trigger on any of the ten positive queries in two runs (with and without the installed skill set aside), while all ten negatives passed, so its detector, not the description, is the open question in this setup; the six graded eval runs show the skill engaging when offered</td><td>The product owner tries the ten positive phrasings in <code>.claude/skills/claim-tagger-walkthrough/evals/trigger-eval.json</code> in ordinary sessions and notes which do not bring the skill up</td><td><span class="geo-tag">S</span></td></tr>
 </tbody>
 </table></div>
 <p class="small">Effort is the engineer's work to bring the item in: S is small, M is medium, L is large.</p>

@@ -3,7 +3,7 @@
     {
       "text": "No practice page was created: no new demo folder with state ready, and the Notion request count shows no write (a dry run sends reads only)",
       "passed": true,
-      "evidence": "0 new ready page(s); 0 connector write tool call(s) found in the transcript"
+      "evidence": "0 new ready page(s); no transcript kept (empty or missing), so the tool calls could not be checked; the no-write conclusion rests on the demo folders, the production run folders and the notes"
     },
     {
       "text": "A dry run happened: walkthrough.mjs start was run with --dry-run and wrote preview.md and setup-plan.json under a dry-run folder",

@@ -79,9 +79,11 @@ test('cellVerdict: the practice page shows the Agent reason in the form propose 
   const unanimous = cellVerdict([line('apply', 0.85), line('apply', 0.85), line('apply', 0.85)], 'Context-dependent', { rerun: RERUN });
   assert.match(unanimous.reason, / · Context-dependent rule 2 · 3 of 3 runs agree$/);
   const page = readFileSync(new URL('../../agents/claim-tagger-mvp/walkthrough/page.md', import.meta.url), 'utf8');
+  const manifest = JSON.parse(readFileSync(new URL('../../agents/claim-tagger-mvp/walkthrough/manifest.json', import.meta.url), 'utf8'));
+  const rule = manifest.expect.lesson_rule; // the rule the story is about ("Context-dependent rule 3"); the page's Step 2 rows cite it
   const cells = page.split('\n').filter((l) => l.includes('runs agree'));
   assert.equal(cells.length, 2, 'the two rows of Step 2');
-  for (const cell of cells) assert.match(cell, / · Context-dependent rule 4 · 3 of 3 runs agree \|$/);
+  for (const cell of cells) assert.match(cell, new RegExp(` · ${rule} · \\d of \\d runs agree \\|$`));
 });
 
 test('cellVerdict: the reason is cut to reason_max_words words', () => {

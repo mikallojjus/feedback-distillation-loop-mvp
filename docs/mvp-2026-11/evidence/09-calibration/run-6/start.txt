@@ -1,0 +1,2 @@
+the agent is paused (the pause file exists), so no practice page was made; a person has to remove the pause first
+start exit 3

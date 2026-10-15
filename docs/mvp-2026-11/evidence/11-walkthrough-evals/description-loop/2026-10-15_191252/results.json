@@ -1,0 +1,565 @@
+{
+  "exit_reason": "max_iterations (2)",
+  "original_description": "Set up a fresh practice copy of the claim tagger's editor feedback loop in Notion and guide an editor through it: one command creates a new page under a page the editor picks, with its own one-tag rulebook (Context-dependent), seven real claims, a small decision queue, a rule-changes table and seven numbered steps, then says where the editor is and what to type next. Use this skill whenever someone wants to try, learn, practise, demo or teach the claim tagger or the editorial feedback loop, onboard a new editor, make a training or practice page, or asks \"where am I in the walkthrough/demo\", even if they never say \"walkthrough\". It never touches real claims or the real rulebook; for real tagging, distilling or promoting use /claim-tagger.",
+  "best_description": "Set up a fresh practice copy of the claim tagger's editor feedback loop in Notion and guide an editor through it: one command creates a new page under a page the editor picks, with its own one-tag rulebook (Context-dependent), seven real claims, a small decision queue, a rule-changes table and seven numbered steps, then says where the editor is and what to type next. Use this skill whenever someone wants to try, learn, practise, demo or teach the claim tagger or the editorial feedback loop, onboard a new editor, make a training or practice page, or asks \"where am I in the walkthrough/demo\", even if they never say \"walkthrough\". It never touches real claims or the real rulebook; for real tagging, distilling or promoting use /claim-tagger.",
+  "best_score": "4/8",
+  "best_train_score": "6/12",
+  "best_test_score": "4/8",
+  "final_description": "Use this skill for any learning, practice, training or demo version of the claim tagger. It applies when someone wants to make a new practice, training or walkthrough page in Notion, usually under a page link they give. It also applies when they want to start another one after finishing the last, show a team how claims get tagged and rule changes get approved, or onboard and teach a new editor. Use it too when they ask where they are or what comes next in their practice run. The skill builds a separate sandbox page with its own sample claims, queue and rulebook, then guides the editor through it step by step. Trigger whenever the request is about rehearsal, onboarding or demonstration of the claim-tagging loop, even if the word \"walkthrough\" never appears. Do not use it for real work on live claims or the real rulebook: real tagging, status, distilling, promoting or rolling back goes to /claim-tagger. Do not use it for archiving or tidying Notion pages either.",
+  "iterations_run": 2,
+  "holdout": 0.4,
+  "train_size": 12,
+  "test_size": 8,
+  "history": [
+    {
+      "iteration": 1,
+      "description": "Set up a fresh practice copy of the claim tagger's editor feedback loop in Notion and guide an editor through it: one command creates a new page under a page the editor picks, with its own one-tag rulebook (Context-dependent), seven real claims, a small decision queue, a rule-changes table and seven numbered steps, then says where the editor is and what to type next. Use this skill whenever someone wants to try, learn, practise, demo or teach the claim tagger or the editorial feedback loop, onboard a new editor, make a training or practice page, or asks \"where am I in the walkthrough/demo\", even if they never say \"walkthrough\". It never touches real claims or the real rulebook; for real tagging, distilling or promoting use /claim-tagger.",
+      "train_passed": 6,
+      "train_failed": 6,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "create a training copy of the claim tagging workflow in Notion under this page: https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "what's the next step in my practice run of the tagger?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "start another walkthrough, the last one is finished",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "make a fresh walkthrough page so I can show the team how rule changes get approved",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "set up a practice page for the tagging loop",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "onboard our new editor to the claim tagger",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "promote the approved Wordy rule change",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "add a new tag to the taxonomy",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "show me the status of the claim tagger",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "tag this week's claims",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "roll back the last rule change",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "archive the old walkthrough pages in Notion",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        }
+      ],
+      "test_passed": 4,
+      "test_failed": 4,
+      "test_total": 8,
+      "test_results": [
+        {
+          "query": "I'm new to the QA team, how do I learn the claim tagging process without touching real claims",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "where am I in the claim tagger demo",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "I want to try the editorial feedback loop on some sample claims before doing it for real",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "demo the claim tagger end to end for a new hire",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "make a Notion page for meeting notes",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "draft the rules for Wordy",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "what's waiting in my queue",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "explain Context-dependent rule 4",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        }
+      ],
+      "passed": 6,
+      "failed": 6,
+      "total": 12,
+      "results": [
+        {
+          "query": "create a training copy of the claim tagging workflow in Notion under this page: https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "what's the next step in my practice run of the tagger?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "start another walkthrough, the last one is finished",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "make a fresh walkthrough page so I can show the team how rule changes get approved",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "set up a practice page for the tagging loop",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "onboard our new editor to the claim tagger",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "promote the approved Wordy rule change",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "add a new tag to the taxonomy",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "show me the status of the claim tagger",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "tag this week's claims",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "roll back the last rule change",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "archive the old walkthrough pages in Notion",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "iteration": 2,
+      "description": "Use this skill for any learning, practice, training or demo version of the claim tagger. It applies when someone wants to make a new practice, training or walkthrough page in Notion, usually under a page link they give. It also applies when they want to start another one after finishing the last, show a team how claims get tagged and rule changes get approved, or onboard and teach a new editor. Use it too when they ask where they are or what comes next in their practice run. The skill builds a separate sandbox page with its own sample claims, queue and rulebook, then guides the editor through it step by step. Trigger whenever the request is about rehearsal, onboarding or demonstration of the claim-tagging loop, even if the word \"walkthrough\" never appears. Do not use it for real work on live claims or the real rulebook: real tagging, status, distilling, promoting or rolling back goes to /claim-tagger. Do not use it for archiving or tidying Notion pages either.",
+      "train_passed": 6,
+      "train_failed": 6,
+      "train_total": 12,
+      "train_results": [
+        {
+          "query": "create a training copy of the claim tagging workflow in Notion under this page: https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "what's the next step in my practice run of the tagger?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "start another walkthrough, the last one is finished",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "make a fresh walkthrough page so I can show the team how rule changes get approved",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "set up a practice page for the tagging loop",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "onboard our new editor to the claim tagger",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "promote the approved Wordy rule change",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "add a new tag to the taxonomy",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "show me the status of the claim tagger",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "tag this week's claims",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "roll back the last rule change",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "archive the old walkthrough pages in Notion",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        }
+      ],
+      "test_passed": 4,
+      "test_failed": 4,
+      "test_total": 8,
+      "test_results": [
+        {
+          "query": "I'm new to the QA team, how do I learn the claim tagging process without touching real claims",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "I want to try the editorial feedback loop on some sample claims before doing it for real",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "where am I in the claim tagger demo",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "demo the claim tagger end to end for a new hire",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "make a Notion page for meeting notes",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "draft the rules for Wordy",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "what's waiting in my queue",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "explain Context-dependent rule 4",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        }
+      ],
+      "passed": 6,
+      "failed": 6,
+      "total": 12,
+      "results": [
+        {
+          "query": "create a training copy of the claim tagging workflow in Notion under this page: https://www.notion.so/3fa273e214eb81c2b223dcc2331b7051",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "what's the next step in my practice run of the tagger?",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "start another walkthrough, the last one is finished",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "make a fresh walkthrough page so I can show the team how rule changes get approved",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "set up a practice page for the tagging loop",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "onboard our new editor to the claim tagger",
+          "should_trigger": true,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": false
+        },
+        {
+          "query": "promote the approved Wordy rule change",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "add a new tag to the taxonomy",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "show me the status of the claim tagger",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "tag this week's claims",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "roll back the last rule change",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        },
+        {
+          "query": "archive the old walkthrough pages in Notion",
+          "should_trigger": false,
+          "trigger_rate": 0.0,
+          "triggers": 0,
+          "runs": 2,
+          "pass": true
+        }
+      ]
+    }
+  ]
+}

@@ -13,7 +13,7 @@
     {
       "text": "No Notion write happened (no connector write tool call, no plan applied)",
       "passed": true,
-      "evidence": "0 connector write tool call(s) found in the transcript; production run folders with done ops since start: []"
+      "evidence": "no transcript kept (empty or missing), so the tool calls could not be checked; the no-write conclusion rests on the demo folders, the production run folders and the notes; production run folders with done ops since start: []"
     },
     {
       "text": "The reply is short and plain: no Insight blocks, no file paths, no run ids",
