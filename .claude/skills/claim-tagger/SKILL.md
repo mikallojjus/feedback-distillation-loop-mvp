@@ -1,111 +1,77 @@
 ---
 name: claim-tagger
-description: Run the claim tagger's editor feedback loop against the Notion page "Editorial feedback loop" - tag claims, distill editor decisions into proposed rule changes, gate and promote approved changes, follow up, or show status. Use when an editor or engineer asks to run the tagging loop, check what is waiting, tag claims, distill feedback, promote or roll back a lesson, or asks about the agent's state. Subcommands - status, tag, distill, promote, follow-up, setup.
+description: Run the claim tagger's editor feedback loop against the Notion page "Feedback Distillation MVP" - tag the copied claims on Context-dependent, show what waits in the queue, turn the editor's decisions into a proposed rule change, run the safety check and switch to an approved change, repeat the follow-up, roll back a change, or show the agent's state. Use when an editor or engineer asks to run the tagging loop, check what is waiting, tag claims, distill feedback, promote or roll back a rule change, or asks about the agent's state. Subcommands - status, tag, distill, promote, follow-up, rollback, setup, demo <subcommand>.
 ---
 
-# /claim-tagger
+# Claim tagger
 
-The editor-facing entry point of the claim tagger (`agents/claim-tagger/`). Every subcommand is a fixed sequence of scripts. The scripts are deterministic and do all Notion reads and writes themselves through the integration token in `.env`; you run them in order, read their one-line summaries and exit codes, and report in plain words. You never write a Notion field by hand, never edit a plan file, and never touch an editor-owned field (Tag outcome, Why wrong, Your reasoning, Decided by, Decided at, Editor wording, Approved by, Status Approved/Rejected, Paused, Paused by, Reason, Weekly cap, Owner).
+**Output style.** For as long as this skill runs, its report format (section "Reporting style") replaces your output style. Do not write Insight blocks, tips or other educational notes before, between or after the commands, and do not explain the scripts, the code or your choices: the editor asked for a result, and will ask if they want the why.
 
-Read `agents/claim-tagger/AGENT.md` once per session before the first subcommand. Run every command from the repository root. `S` below means `agents/claim-tagger/scripts`.
+## What this skill does and never does
 
-## Exit codes
-
-0 ok · 1 error (read the message; retry once if it looks transient) · 2 invalid input or nothing to do (report it; a `plan.mjs check` on a run with no plan is "nothing to do") · 3 paused (stop: a person must untick Paused in Agent settings or run `status.mjs --unpause --confirm`) · 4 rubric drift or model mismatch (stop and report; `status.mjs` explains) · 5 trust breaker (stop; report the changed editor field from `runs/PAUSED`) · 10 gate HOLD · 11 gate FAIL (both are results, not errors) · 75 usage window (tell the user when to resume: `node S/judge.mjs --resume --run-id <id>` or `node S/promote.mjs --lesson <lesson> --resume --run-id <id>`; a run remembers its own arguments) · 2 also when `runs/PROMOTE.lock` belongs to another promote (continue it with `--resume --run-id <id>` or `node S/promote.mjs --abort <id>`) · 4 also when a select option the scripts rely on is missing in Notion.
-
-## Preflight (every subcommand)
-
-```
-node S/status.mjs --check
-```
-
-Stops on PAUSED, lock mismatch, drift or an unfinished promote, and reports whether an integration token is configured. Never read, grep or print `.env`; if the check says no token is configured, say so and stop: every write goes through the token in this version.
-
-## The apply step (used below as "A")
-
-```
-node S/plan.mjs check --run <run-id>
-node S/apply.mjs --run <run-id>
-```
-
-`apply.mjs` pulls the touched databases before and after, writes, reads back and verifies; its summary line ends with "verify clean (pre <pull>, post <pull>)". It does not print the editor-field count: an editor field that changed on a row the plan touched makes it exit 5 (trust breaker) instead, so exit 0 with "verify clean" means no editor field changed (`verify.mjs --run <run-id>` prints the count, "editor fields changed: 0", if someone asks). On exit 1 run `apply.mjs --run <run-id> --retry` once; on exit 5 stop and report the trust breaker.
+- Every subcommand runs one or more scripts under `agents/claim-tagger-mvp/scripts/` with the Bash tool, from the repository root, exactly as listed below, one command at a time, each waited for before the next. Nothing else is run: no other tools, no file reads, no shell pipes.
+- The scripts do the work and write Notion themselves, through the REST client, by applying a plan and reading every write back. You never write Notion through the connector, never create, move or delete a page, never fill an editor column (Tag outcome, Why wrong, Your reasoning, Editor wording, Paused, the Status values Approved and Rejected), and never edit files under `agents/claim-tagger-mvp/runs/` or `agents/claim-tagger-mvp/rubric/`.
+- You never pass `--bare`, `--fallback-model`, `--unpause` or `--confirm`; `rollback` is the one subcommand whose command line carries `--confirm`, and the permission prompt it raises is the person's confirmation.
+- A script that stops (exit 1 or 75) is resumed by running the same subcommand again, later; the scripts continue from their own records. Never start a second run for the same step and never repeat a command more than once in a row.
+- A refusal because the agent is paused (exit 3) or because the rulebook text was edited by hand (exit 4) also arrives as a printed report: relay it and stop.
+- The last thing a script prints is its report. Your final message is that printed report, verbatim and complete, and nothing else: no words before it, no words after it.
 
 ## Subcommands
 
-### `status`
+| You are asked | Commands, in order |
+|---|---|
+| status (what waits, which edition is in force) | `node agents/claim-tagger-mvp/scripts/status.mjs` |
+| tag (read the claims, fill the queue) | `node agents/claim-tagger-mvp/scripts/pull.mjs --all` then `node agents/claim-tagger-mvp/scripts/judge.mjs --items claims` then `node agents/claim-tagger-mvp/scripts/propose.mjs` |
+| distill (draft rule changes from the editor's decisions) | `node agents/claim-tagger-mvp/scripts/distill.mjs` |
+| promote <lesson> (the safety check, then the switch to the approved rule; the follow-up runs by itself after a PASS) | `node agents/claim-tagger-mvp/scripts/promote.mjs --lesson "<the rule change's title>"`; when the editor names no title, run it without `--lesson` and the script takes the only Approved rule change |
+| follow-up <lesson> (repeat the automatic last step of a promote that stopped before it) | `node agents/claim-tagger-mvp/scripts/followup.mjs --lesson "<the rule change's title>"` |
+| rollback <lesson> (put the earlier rule text back) | `node agents/claim-tagger-mvp/scripts/rollback.mjs --lesson "<the rule change's title>" --confirm` |
+| setup | Engineer only; the sequence is in `agents/claim-tagger-mvp/AGENT.md`. Never run it for an editor; say that setup is the engineer's step. |
+| demo <subcommand> | See Demo mode. |
 
-```
-node S/pull.mjs --all
-node S/status.mjs
-```
+For `tag`, the report to relay is the one `propose.mjs` prints; what `pull.mjs` and `judge.mjs` print is not shown. When `judge.mjs` stops with exit 75 (the usage window), relay the report it printed and stop; it tells the editor to type the same command again later.
 
-Report: rubric version and hash and whether the Rulebook matches; paused or not; queue counts by stage and the Needs-your-note count; lessons by status; the last run cards; anything unfinished and its resume command.
+## Demo mode
 
-### `tag [--limit n] [--runs 1|3] [--dry-run] [--resume <run-id>]`
-
-```
-node S/pull.mjs --all
-node S/judge.mjs --items claims [--limit n] [--runs n] [--run-id <id>] [--resume]     (background; poll `status.mjs --run <id>`)
-node S/propose.mjs --run <judge-run-id> --pull <pull-id> --out-run <id>-propose
-A on <id>-propose                                                                 (skipped with --dry-run)
-node S/run-card.mjs --tag <judge-run-id> --propose <id>-propose --run-id <id>-card
-A on <id>-card
-node S/pull.mjs --all
-node S/cases-sync.mjs --run-id <id>-cases          (then A on <id>-cases when it wrote a plan)
-```
-
-To continue a stopped judge run: `node S/judge.mjs --resume --run-id <id>` with no other arguments (the run remembers them; a gate run is continued through `promote.mjs --resume` instead). `judge.mjs` takes minutes (about 50 seconds per 8 claims); never start a second judge on the same run. If its summary says `cells=0`, every claim already has its judgments under the current rubric (judgments are cached by rubric and model): say so, and run `propose.mjs` against the latest tag run listed by `status.mjs` instead of judging again. Report the propose summary (claims judged, rows queued, held by cap, readiness counts, cost) and link "Your queue" on the hub page.
-
-### `distill`
-
-```
-node S/pull.mjs --all
-node S/distill.mjs --run-id <id>
-A on <id>
-node S/pull.mjs --all
-node S/distill.mjs --link --run <id>
-A on <id>-link
-node S/pull.mjs --all
-node S/cases-sync.mjs --run-id <id>-cases          (then A on <id>-cases when it wrote a plan)
-```
-
-Report each proposed lesson (title, tag, rule, supporting rows) and say: "rule owner: set Status = Approved or Rejected in Lessons waiting, or rewrite the text in Editor wording".
-
-### `promote <lesson>` (a Lesson ID such as LS-1, or the lesson title)
-
-```
-node S/pull.mjs --all
-node S/promote.mjs --lesson <lesson> --run-id <id>        (background; exit 0 PASS, 10 HOLD, 11 FAIL)
-A on <id>
-node S/promote.mjs --finalize <id>                        (PASS only, after A verified clean)
-A on <id>-cases                                           (PASS only: activates the lesson's cases)
-git add agents/claim-tagger/rubric agents/claim-tagger/evals && git commit -m "rubric <version>: <lesson> (gate PASS, <id>)"
-```
-
-A regression case that flips between the baseline and the candidate (broken or fixed) is judged again with `gate.reconfirm_runs` extra runs per rubric before it counts; the card lists each reconfirmed case as confirmed or noise, and the verdict after reconfirmation is the one that counts. On HOLD or FAIL only the card plan is applied; the Rulebook is untouched and the lesson stays Approved with its Gate result filled in (a planted demo lesson is marked Rolled back). Print `runs/<id>/card.md` verbatim. Only one promote runs at a time (`runs/PROMOTE.lock`); a stopped gate run continues with `node S/promote.mjs --lesson <lesson> --resume --run-id <id>`. A PASS plan is accepted by `plan.mjs check` and `apply.mjs` only with its evidence on disk (runs/PROMOTING.json, a non-smoke PASS card and the candidate rubric whose hashes match the card and the live rubric); a plan file is never edited by hand. Other forms: `promote.mjs --abort <id>` after a failed apply; `promote.mjs --rollback <lesson> --confirm` restores the previous version of the most recent Live lesson (then A on its run and a commit).
-
-### `follow-up <lesson>`
-
-```
-node S/pull.mjs --all
-node S/followup.mjs --lesson <lesson> --run-id <id>
-A on <id>
-```
-
-Report the Fixed and Still wrong counts.
-
-### `setup` (engineer, one-time; already done for the trial page)
-
-The six databases, formulas and views were created through the connector on 13 October 2026 (ids in `config.json`; the as-built statements are in `schemas/notion/as-built.md`). Before anything else, `node S/probe.mjs` must report every protected real database as not reachable (exit 4 names one the token can reach: stop and tell the engineer to disconnect the integration from that page). Seeding needs the marker file `agents/claim-tagger/runs/SETUP`, which the engineer creates from a terminal (Claude Code cannot write under runs/) and deletes afterwards. Seeding: `node S/pull.mjs --all`, then for phase 1, 2 and 3: `node S/seed.mjs --phase <n>`, A on the phase run, `node S/pull.mjs --all`. Then `node S/rubric-init.mjs` if `rubric/rubric.json` does not exist, and `cases-sync.mjs`.
-
-## Sandbox mode (the walkthrough)
-
-When the user says "sandbox" or "walkthrough" (for example `/claim-tagger sandbox status`, or "run the walkthrough tag step"), every subcommand above runs against the walkthrough sandbox instead of the trial: write each script call `node S/<name>.mjs <args>` as `node S/sandbox.mjs <name> <args>`. The sandbox is `agents/claim-tagger/sandbox/` (its own config.json, rubric/, evals/, runs/) and six small databases under the Notion page Walkthrough inside Editorial feedback loop; the trial's databases, rubric and cases are never read or written in this mode. Everything else is unchanged: preflight, the apply step, exit codes, the trust breaker. Two differences: after a promote PASS, do not run `git add`/`git commit` (the engineer commits the sandbox after the walkthrough, if at all); and link the Walkthrough page's views (Your queue, Lessons waiting, Latest runs) instead of the hub's. Say "sandbox" in every report so nobody mistakes a walkthrough result for a trial result.
-
-## Evidence
-
-After each step of a demo or review run: `node S/snapshot.mjs --step <n> --label <text>` copies the latest pull into `docs/mvp-2026-10/evidence/notion/`.
+A practice page, made by `/claim-tagger-walkthrough`, has its own small tables under the Demos sub-page. The demo subcommands run the same scripts against the newest practice page through the walkthrough runner: replace `node agents/claim-tagger-mvp/scripts/<x>.mjs` with `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run <x>` and keep the arguments. `promote` and `followup` without `--lesson` take the demo's only Approved (or Live) rule change. Every demo report starts with "Demo · ", and its links point at the practice page's views. Steps 3 and 5 of the practice page happen in Notion: never fill those columns for the editor; the report's Next line links the view. Step 7 needs no command, because the follow-up runs by itself after a PASS; `demo follow-up` only repeats it after a run that stopped early. No git commit happens after a demo promote.
 
 ## Reporting style
 
-One short paragraph in plain words: what changed, what waits for whom, where to look (link the hub views), and the cost. Numbers go in a short table when there are more than two. Never paste JSON at the user unless asked.
+Editors read these reports between other tasks. Every report, errors included, has exactly three parts and nothing else:
+
+1. **One sentence**: what ran and what came out, in plain words. Start with "Demo · " when the demo ran.
+2. **One table**, at most five rows and three columns, with the figures that matter for this subcommand (see the examples in `references/report-examples.md`). Leave it out when there is nothing to count.
+3. **One line starting "Next:"** with exactly one thing to do: a command to type, or a Notion link and the action to take there. When more rows wait than fit one sitting (a setting, default 20), the sentence gives the count and the line says "start at the top of Your queue (link)", not "decide the N rows".
+
+Leave out everything else: headings, how the scripts work, the commands you ran, retries and incidents (if one changed the result, say so in a few words inside the sentence), file paths, run ids, JSON, and any duration, dollar amount or model-call count (they stay in the run record). Add one row, "Usage", only when the share of the usage window that the run took is known. For a stopped run, "Next:" is the same slash command; the skill resumes the run itself. While a step takes a while, say once what is happening, with no duration ("Reading 7 claims."), then nothing until the report.
+
+The scripts write the report in exactly this shape. Relay it as printed; do not reword, shorten or extend it.
+
+## Two examples
+
+Status, when more rows wait than fit one sitting:
+
+Status: nothing is paused; 46 rows and 1 rule change wait for you, more than fit one sitting.
+
+| Where | Now |
+|---|---|
+| Rulebook | 13 Issue tags, edition 2026-11-04.2, same as Notion |
+| Your queue | 46 rows, lowest confidence first (the view shows the count) |
+| Lessons waiting | 1 rule change to approve |
+| Last run | Tag · 4 Nov 09:12 · 214 claims |
+
+Next: start at the top of Your queue (link).
+
+Promote, when it passes, in a demo:
+
+Demo · promote: PASS, rule 4 now uses your approved wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed.
+
+| Check | Result |
+|---|---|
+| Example claims | 11 of 11 right |
+| Earlier decisions | 5 of 5 still right |
+| Your 2 rows | 2 of 2 now right, marked Fixed |
+
+Next: look at step 7 on the practice page (link); the demo is then complete.
+
+All the examples are in `references/report-examples.md`.
