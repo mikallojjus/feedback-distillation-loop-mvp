@@ -1,0 +1,16 @@
+{
+  "run_id": "20261015T134326Z-setup-seed-audit",
+  "script": "setup.mjs",
+  "args": [
+    "seed-audit",
+    "--from",
+    "docs/mvp-2026-11/evidence/03-audit-context-dependent-decisions.json"
+  ],
+  "started_at": "2026-10-15T13:43:26.741Z",
+  "finished_at": "2026-10-15T13:43:38.074Z",
+  "exit_code": 0,
+  "rubric_edition": null,
+  "pull_id": "20261015T134326Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs seed-audit --from docs/mvp-2026-11/evidence/03-audit-context-dependent-decisions.json",
+  "note": "seeded from the audit of 9 October"
+}

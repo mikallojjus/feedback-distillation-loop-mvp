@@ -1,0 +1,13 @@
+{
+  "run_id": "20261015T134228Z-setup-views",
+  "script": "setup.mjs",
+  "args": [
+    "views"
+  ],
+  "started_at": "2026-10-15T13:42:28.157Z",
+  "finished_at": "2026-10-15T13:42:32.419Z",
+  "exit_code": 0,
+  "rubric_edition": null,
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs views"
+}

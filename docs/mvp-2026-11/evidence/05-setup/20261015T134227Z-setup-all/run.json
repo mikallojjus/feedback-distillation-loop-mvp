@@ -1,0 +1,76 @@
+{
+  "run_id": "20261015T134227Z-setup-all",
+  "script": "setup.mjs",
+  "args": [
+    "all",
+    "--taxonomy",
+    "agents/claim-tagger-mvp/setup/taxonomy-issue.json",
+    "--claims",
+    "agents/claim-tagger-mvp/setup/claims-pick.json",
+    "--audit",
+    "docs/mvp-2026-11/evidence/03-audit-context-dependent-decisions.json"
+  ],
+  "started_at": "2026-10-15T13:42:27.180Z",
+  "finished_at": "2026-10-15T13:43:48.970Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-15.1",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs all --taxonomy agents/claim-tagger-mvp/setup/taxonomy-issue.json --claims agents/claim-tagger-mvp/setup/claims-pick.json --audit docs/mvp-2026-11/evidence/03-audit-context-dependent-decisions.json",
+  "steps": [
+    {
+      "step": "api-check",
+      "run_id": "20261015T134227Z-setup-api-check",
+      "exit_code": 0
+    },
+    {
+      "step": "pages",
+      "run_id": "20261015T134228Z-setup-pages",
+      "exit_code": 0
+    },
+    {
+      "step": "databases",
+      "run_id": "20261015T134228Z-setup-databases",
+      "exit_code": 0
+    },
+    {
+      "step": "views",
+      "run_id": "20261015T134228Z-setup-views",
+      "exit_code": 0
+    },
+    {
+      "step": "rulebook",
+      "run_id": "20261015T134232Z-setup-rulebook",
+      "exit_code": 0
+    },
+    {
+      "step": "claims",
+      "run_id": "20261015T134248Z-setup-claims",
+      "exit_code": 0
+    },
+    {
+      "step": "seed-audit",
+      "run_id": "20261015T134326Z-setup-seed-audit",
+      "exit_code": 0
+    },
+    {
+      "step": "rubric",
+      "run_id": "20261015T134338Z-setup-rubric",
+      "exit_code": 0
+    },
+    {
+      "step": "canaries",
+      "run_id": "20261015T134338Z-setup-canaries",
+      "exit_code": 0
+    },
+    {
+      "step": "settings",
+      "run_id": "20261015T134338Z-setup-settings",
+      "exit_code": 0
+    },
+    {
+      "step": "verify",
+      "run_id": "20261015T134339Z-setup-verify",
+      "exit_code": 0
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "run_id": "20261015T134248Z-setup-claims",
+  "script": "setup.mjs",
+  "args": [
+    "claims",
+    "--from",
+    "agents/claim-tagger-mvp/setup/claims-pick.json"
+  ],
+  "started_at": "2026-10-15T13:42:48.319Z",
+  "finished_at": "2026-10-15T13:43:26.739Z",
+  "exit_code": 0,
+  "rubric_edition": null,
+  "pull_id": "20261015T134248Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs claims --from agents/claim-tagger-mvp/setup/claims-pick.json"
+}

@@ -1,0 +1,13 @@
+{
+  "run_id": "20261015T132619Z-setup-verify",
+  "script": "setup.mjs",
+  "args": [
+    "verify"
+  ],
+  "started_at": "2026-10-15T13:26:19.058Z",
+  "finished_at": "2026-10-15T13:26:29.780Z",
+  "exit_code": 2,
+  "rubric_edition": null,
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs verify"
+}

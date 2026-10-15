@@ -1,0 +1,421 @@
+{
+  "edition": "2026-10-15.1",
+  "built_at": "2026-10-15T13:43:38.079Z",
+  "source": {
+    "database_id": "f05273e214eb8353b0a981544507de32",
+    "data_source_id": "b65273e2-14eb-8362-86a6-870ea8d632f4",
+    "read_via": "connector",
+    "read_at": "2026-10-15T11:40:00.000Z"
+  },
+  "tags": [
+    {
+      "name": "Context-dependent",
+      "page_id": "3fa273e2-14eb-81b4-ac39-c90a1930a62e",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": "Self-contained",
+      "description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
+      "when_to_use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent."
+        },
+        {
+          "n": 2,
+          "text": "A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named."
+        },
+        {
+          "n": 3,
+          "text": "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
+        },
+        {
+          "n": 4,
+          "text": "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent."
+        },
+        {
+          "n": 5,
+          "text": "Do not use for indefinites, time expressions, generics, or definites the claim itself resolves."
+        }
+      ],
+      "example_claims": [
+        "Open AI's initiative went well with the target group.",
+        "He said the new model outperforms its predecessor.",
+        "The company's revenue grew 40% after the launch.",
+        "Core Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.",
+        "The Commodity Futures Trading Commission did not comment specifically on the discussions.",
+        "The Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts."
+      ],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-09-10",
+      "evidence": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+      "work_tags": [
+        "Pipeline benchmark check",
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:af49109ca891789f"
+    },
+    {
+      "name": "Exact duplicate",
+      "page_id": "3fa273e2-14eb-819b-8bcb-e51bbc9ab025",
+      "category": null,
+      "polarity": null,
+      "status": null,
+      "counterpart": null,
+      "description": "Exactly the same claim already exists in one of the canonical spaces",
+      "when_to_use": "",
+      "rules": [],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "corpus",
+      "judged": false,
+      "tag_hash": "sha256:33f5bfb52a305685"
+    },
+    {
+      "name": "Factually challenged",
+      "page_id": "3fa273e2-14eb-81f2-a095-f23bd85e7e53",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "A claim that is contradicted or disputed by the evidence — its own attached source, or another source in the space, asserts the opposite of or materially undercuts the claim. Distinct from Improperly sourced (source simply does not cover the claim) — here the evidence actively pushes against it.",
+      "when_to_use": "Requires reading the source and, ideally, the wider record (source-reading tag); coverage-limited.\n1. Fires when evidence contradicts or materially disputes the claim's assertion.\n2. Does not fire merely because a source fails to support the claim (that is Improperly sourced).\n3. NOT-CHECKABLE where no source is attached or the host blocks fetching.\n4. STILL PROPOSED: on the 10 Sep fresh sample this tag fired on zero factual claims (curated claims are rarely contradicted by their own sources), so the definition is not yet exercised on a real positive case. Keep; validate on a claim that is genuinely contradicted before marking Verified.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Fires when evidence contradicts or materially disputes the claim's assertion."
+        },
+        {
+          "n": 2,
+          "text": "Does not fire merely because a source fails to support the claim (that is Improperly sourced)."
+        },
+        {
+          "n": 3,
+          "text": "NOT-CHECKABLE where no source is attached or the host blocks fetching."
+        },
+        {
+          "n": 4,
+          "text": "STILL PROPOSED: on the 10 Sep fresh sample this tag fired on zero factual claims (curated claims are rarely contradicted by their own sources), so the definition is not yet exercised on a real positive case. Keep; validate on a claim that is genuinely contradicted before marking Verified."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "source",
+      "judged": false,
+      "tag_hash": "sha256:a71dc3170b63686b"
+    },
+    {
+      "name": "Improper capitalization",
+      "page_id": "3fa273e2-14eb-813f-8895-d5dffb1b09e5",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "A claim whose text breaks sentence casing: mid-sentence capitals on words that are not proper nouns, proper nouns left lowercase, or all-caps emphasis.",
+      "when_to_use": "",
+      "rules": [],
+      "example_claims": [
+        "peace Is Better than War.",
+        "The Company Announced Record Profits In The Third Quarter.",
+        "bitcoin's supply is CAPPED at 21 million coins."
+      ],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": false,
+      "tag_hash": "sha256:6e5514d1f3545011"
+    },
+    {
+      "name": "Improperly sourced",
+      "page_id": "3fa273e2-14eb-81a2-b0d6-d13094df2a1b",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": null,
+      "description": "A claim whose attached source, when read, does not actually support the claim's assertion — the source is present but the specific figure, event, or statement the claim makes is absent from or not established by it. Distinct from Unsourced, where no source is attached at all.",
+      "when_to_use": "Requires reading the source (source-reading tag), so it is coverage-limited, not a text-only judgment.\n1. Fires when the source is fetched and read and does not carry the claim's specific assertion (\"the price points the claim cites are not in the article\", \"the country coverage the claim states is not mentioned\").\n2. Does not fire when the source supports the claim's core assertion even if a minor secondary detail is unstated (treat that as supported).\n3. No attached source is Unsourced. An attached source that cannot be read is . Access failure alone never justifies Improperly sourced, Factually challenged, Unverified, or a contradiction verdict; never report unread content as a pass.\n4. Applies to factual claims; an opinion has no supporting source in the ordinary sense.\n5. Validated 10 Sep on a source-reading pass over the fresh sample: 71% of sourced claims were checkable; the tag fired correctly on every checkable mismatch.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Fires when the source is fetched and read and does not carry the claim's specific assertion (\"the price points the claim cites are not in the article\", \"the country coverage the claim states is not mentioned\")."
+        },
+        {
+          "n": 2,
+          "text": "Does not fire when the source supports the claim's core assertion even if a minor secondary detail is unstated (treat that as supported)."
+        },
+        {
+          "n": 3,
+          "text": "No attached source is Unsourced. An attached source that cannot be read is . Access failure alone never justifies Improperly sourced, Factually challenged, Unverified, or a contradiction verdict; never report unread content as a pass."
+        },
+        {
+          "n": 4,
+          "text": "Applies to factual claims; an opinion has no supporting source in the ordinary sense."
+        },
+        {
+          "n": 5,
+          "text": "Validated 10 Sep on a source-reading pass over the fresh sample: 71% of sourced claims were checkable; the tag fired correctly on every checkable mismatch."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-09-10",
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "source",
+      "judged": false,
+      "tag_hash": "sha256:cb55c30e4c69d570"
+    },
+    {
+      "name": "Incorrect grammar",
+      "page_id": "3fa273e2-14eb-8166-9556-c7f45fee1750",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "Does not follow proper punctuation and grammar.",
+      "when_to_use": "",
+      "rules": [],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": false,
+      "tag_hash": "sha256:7137976617fdbe2e"
+    },
+    {
+      "name": "Multi-sentence",
+      "page_id": "3fa273e2-14eb-81df-a87e-c795555ffa33",
+      "category": "Format",
+      "polarity": "Classification",
+      "status": "Proposed",
+      "counterpart": "One sentence",
+      "description": "A claim written as two sentences.",
+      "when_to_use": "",
+      "rules": [],
+      "example_claims": [
+        "Anthropic released Claude Fable 5. It is the company's most capable model.",
+        "Inflation fell across the eurozone in 2024. The European Central Bank cut rates in response.",
+        "Geo stores claims as entities. Each claim can be debated."
+      ],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": false,
+      "tag_hash": "sha256:05f37de75c72c933"
+    },
+    {
+      "name": "Poor wording",
+      "page_id": "3fa273e2-14eb-8185-b6a1-c37e1a6e6639",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "The claim is poorly articulated and difficult to understand",
+      "when_to_use": "",
+      "rules": [],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": false,
+      "tag_hash": "sha256:98cbd43770b3614f"
+    },
+    {
+      "name": "Semantically duplicated",
+      "page_id": "3fa273e2-14eb-8161-92ad-e4ba742d73e5",
+      "category": null,
+      "polarity": null,
+      "status": null,
+      "counterpart": null,
+      "description": "A claim that states exactly the same thing already exists in one of the canonical spaces, even if worded differently",
+      "when_to_use": "",
+      "rules": [],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "corpus",
+      "judged": false,
+      "tag_hash": "sha256:a257f5ba8dcaea50"
+    },
+    {
+      "name": "Source inaccessible",
+      "page_id": "3fa273e2-14eb-81b4-b226-c5c22aa7778e",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": null,
+      "description": "One or more attached sources cannot be accessed for review, so their contents cannot be assessed. This records an access problem without judging the claim’s truth, support, or contradiction.",
+      "when_to_use": "1. Use when an attached source cannot be read after reasonable access attempts, such as a blocked host, paywall, login requirement, dead link, or unreadable document.\n2. Identify the inaccessible source and any accessible sources separately; one blocked source does not mean all sources are blocked.\n3. If no source is attached, use Unsourced instead.\n4. Inaccessibility alone does not justify Improperly sourced, Factually challenged, Unverified, or a contradiction verdict. A separate readable source may independently justify another tag.\n5. Remove this access flag when the source becomes readable, then assess its support separately.\nEditorial rule confirmed by Mohammed on 11 October 2026; not an accuracy benchmark.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when an attached source cannot be read after reasonable access attempts, such as a blocked host, paywall, login requirement, dead link, or unreadable document."
+        },
+        {
+          "n": 2,
+          "text": "Identify the inaccessible source and any accessible sources separately; one blocked source does not mean all sources are blocked."
+        },
+        {
+          "n": 3,
+          "text": "If no source is attached, use Unsourced instead."
+        },
+        {
+          "n": 4,
+          "text": "Inaccessibility alone does not justify Improperly sourced, Factually challenged, Unverified, or a contradiction verdict. A separate readable source may independently justify another tag."
+        },
+        {
+          "n": 5,
+          "text": "Remove this access flag when the source becomes readable, then assess its support separately."
+        }
+      ],
+      "example_claims": [
+        "Access-limited examples from the audit, without a support verdict:",
+        "— attached source content could not be read.",
+        "— attached source content could not be read.",
+        "— one attached source remained unread; another was accessible."
+      ],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-10-11",
+      "evidence": "https://app.notion.com/p/3f4273e214eb81ae9272c6f1e48bbd6c",
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "source",
+      "judged": false,
+      "tag_hash": "sha256:c85f324dd58c4321"
+    },
+    {
+      "name": "Trailing period",
+      "page_id": "3fa273e2-14eb-8104-8c7a-d312f47ad581",
+      "category": "Format",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "A single-sentence claim whose title ends with a period, contrary to Geo’s claim-title formatting convention. The issue concerns the final punctuation, not the claim’s meaning or factual accuracy.",
+      "when_to_use": "",
+      "rules": [],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": false,
+      "tag_hash": "sha256:efbb2ac4a39ffeeb"
+    },
+    {
+      "name": "Unsourced",
+      "page_id": "3fa273e2-14eb-815a-af6f-f9d35c806f92",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": null,
+      "description": "A claim that has no Source relation attached on Geo. It is a completeness flag on the claim's provenance, independent of whether the claim is Factual or Opinion and of whether the content is correct; it only records that nothing backs the claim yet.",
+      "when_to_use": "Deterministic, not a language judgment: read the Claim's Sources relation on Geo, do not read the text.\n1. Fires when the Sources relation is empty.\n2. Does not fire when at least one Source is attached, regardless of whether that source actually supports the claim (that is Improperly sourced).\n3. Nature-agnostic: a claim can be Factual and Unsourced, or Opinion and Unsourced.\n4. Verified 10 Sep on a fresh 100-claim crypto sample: 9/100 unsourced; 91 carried a Source with a resolvable Web URL.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Fires when the Sources relation is empty."
+        },
+        {
+          "n": 2,
+          "text": "Does not fire when at least one Source is attached, regardless of whether that source actually supports the claim (that is Improperly sourced)."
+        },
+        {
+          "n": 3,
+          "text": "Nature-agnostic: a claim can be Factual and Unsourced, or Opinion and Unsourced."
+        },
+        {
+          "n": 4,
+          "text": "Verified 10 Sep on a fresh 100-claim crypto sample: 9/100 unsourced; 91 carried a Source with a resolvable Web URL."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": "Implemented differently",
+      "geo_tag_id": "Not a tag on Geo: derived from the Claim having no Sources relation attached.",
+      "verified_on": "2026-09-10",
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "deterministic",
+      "judged": false,
+      "tag_hash": "sha256:cec26b68385b0a80"
+    },
+    {
+      "name": "Wordy",
+      "page_id": "3fa273e2-14eb-81c7-a8b0-cbd23f356964",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": "Word-efficient",
+      "description": "A claim containing unnecessary words, redundant qualifiers, or drawn-out constructions. The same meaning would survive a clearly shorter rewrite.",
+      "when_to_use": "",
+      "rules": [],
+      "example_claims": [
+        "It is generally the case that Anthropic can be considered to be a company in the AI industry.",
+        "In terms of its overall effect, sleep deprivation is something that has a tendency to negatively impact the process of making decisions.",
+        "At the end of the day, the phenomenon of inflation basically works to reduce, over time, the purchasing power that money has."
+      ],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": false,
+      "tag_hash": "sha256:b53ab3bd92a2dbaf"
+    }
+  ],
+  "rubric_hash": "sha256:704a01cc3190e98c"
+}

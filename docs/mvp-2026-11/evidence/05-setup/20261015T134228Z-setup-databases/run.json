@@ -1,0 +1,13 @@
+{
+  "run_id": "20261015T134228Z-setup-databases",
+  "script": "setup.mjs",
+  "args": [
+    "databases"
+  ],
+  "started_at": "2026-10-15T13:42:28.152Z",
+  "finished_at": "2026-10-15T13:42:28.155Z",
+  "exit_code": 0,
+  "rubric_edition": null,
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs databases"
+}

@@ -2,14 +2,14 @@
 
 | Item | Value |
 |---|---|
-| Phase | Stage 1 (structure approved 2026-10-15): building setup, the loop scripts and the walkthrough pieces; the Notion tables are created once setup is verified on the fakes |
+| Phase | Stage 1: the structure, rows, edition 2026-10-15.1 and canaries are live under the parent page (2026-10-15); next the real run on the copy, then Stage 2 (walkthrough) |
 | Checkpoint 1 (structure proposal) | Approved as proposed on 2026-10-15 (decision P1); page https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 |
 | Checkpoint 2 (final demo) | not reached |
 | Branch | `mvp-2026-11` |
 | Parent Notion page | "Feedback Distillation MVP", 3fa273e214eb805199f3d12ef01db453 |
-| Notion ids created by this build | page "Structure proposal" 3fa273e214eb81ef8504cb40e3bd7052 (`config.json` `notion.pages.proposal`). No table yet. |
+| Notion ids created by this build | pages: Structure proposal 3fa273e214eb81ef8504cb40e3bd7052, Demos 3fa273e214eb81ada268f4b511182378, Demo tests 3fa273e214eb81c2b223dcc2331b7051; tables: Rulebook copy 17b99d1873384a1bb688c0075de45f78, Claims copy a0e77c4711044d87bc3e38296d2ea5d5, Tag decisions b77d1b758c414293b14837fdd1af4754, Rule changes ce293cfbd61a4cc680ab3567bac6da38, Agent settings d941cf5880bb4b4ea5de378191ab8202; views and data sources in config.json |
 | Artifact | https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr, "Claim tagger MVP", version 1 (checkpoint 1); rebuild with `node gen-parts.mjs && node build.mjs --strict` in `docs/mvp-2026-11/report/`, republish the same file path |
-| Builder session | closed (`runs/SETUP` absent) |
+| Builder session | closed after setup (runs/SETUP absent) |
 | Inputs ready for setup | `setup/taxonomy-issue.json` (13 rows + Self-contained, connector read 2026-10-15), `setup/claims-pick.json` (50 claims, seed `mvp-2026-11`), `evidence/03-audit-context-dependent-decisions.json` (10 seeded decisions), `evidence/04-dry-run-real-claims/` (34 requests, 0 writes) |
 
 ## Stage 1 run order (after the setup coder's hand-back)

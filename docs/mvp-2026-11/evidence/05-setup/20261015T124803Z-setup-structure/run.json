@@ -1,0 +1,15 @@
+{
+  "run_id": "20261015T124803Z-setup-structure",
+  "script": "setup.mjs",
+  "args": [
+    "structure",
+    "--from-proposal",
+    "docs/mvp-2026-11/STRUCTURE.md"
+  ],
+  "started_at": "2026-10-15T12:48:03.908Z",
+  "finished_at": "2026-10-15T12:48:03.919Z",
+  "exit_code": 0,
+  "rubric_edition": null,
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs structure --from-proposal docs/mvp-2026-11/STRUCTURE.md"
+}

@@ -1,0 +1,11 @@
+{"id":"canary-1","tag":"Context-dependent","claim":"Open AI's initiative went well with the target group.","expected":"apply","source":"example claims of Context-dependent"}
+{"id":"canary-2","tag":"Context-dependent","claim":"He said the new model outperforms its predecessor.","expected":"apply","source":"example claims of Context-dependent"}
+{"id":"canary-3","tag":"Context-dependent","claim":"The company's revenue grew 40% after the launch.","expected":"apply","source":"example claims of Context-dependent"}
+{"id":"canary-4","tag":"Context-dependent","claim":"Core Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.","expected":"apply","source":"example claims of Context-dependent"}
+{"id":"canary-5","tag":"Context-dependent","claim":"The Commodity Futures Trading Commission did not comment specifically on the discussions.","expected":"apply","source":"example claims of Context-dependent"}
+{"id":"canary-6","tag":"Context-dependent","claim":"The Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts.","expected":"apply","source":"example claims of Context-dependent"}
+{"id":"canary-7","tag":"Context-dependent","claim":"OpenAI released GPT-5 in August 2025.","expected":"do_not_apply","source":"example claims of Self-contained"}
+{"id":"canary-8","tag":"Context-dependent","claim":"The shift to domestic chips supports Beijing's ambitions to substitute American technology.","expected":"do_not_apply","source":"example claims of Self-contained"}
+{"id":"canary-9","tag":"Context-dependent","claim":"Nvidia reported record data-center revenue, and the company raised its full-year guidance.","expected":"do_not_apply","source":"example claims of Self-contained"}
+{"id":"canary-10","tag":"Context-dependent","claim":"A security researcher disclosed a race condition in the Ledger Ethereum app.","expected":"do_not_apply","source":"example claims of Self-contained"}
+{"id":"canary-11","tag":"Context-dependent","claim":"Water boils at 100 degrees Celsius at sea level.","expected":"do_not_apply","source":"example claims of Self-contained"}

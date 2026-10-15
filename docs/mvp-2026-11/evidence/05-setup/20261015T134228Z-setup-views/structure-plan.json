@@ -1,0 +1,1175 @@
+{
+  "parent_page_id": "3fa273e214eb805199f3d12ef01db453",
+  "pages": [
+    {
+      "key": "demos",
+      "title": "Demos",
+      "text": "Practice pages made by the walkthrough; never deleted."
+    },
+    {
+      "key": "demo_tests",
+      "title": "Demo tests",
+      "text": "Test runs of the walkthrough skill."
+    }
+  ],
+  "databases": [
+    {
+      "table": "rulebook",
+      "title": "Rulebook copy",
+      "body": {
+        "parent": {
+          "type": "page_id",
+          "page_id": "3fa273e214eb805199f3d12ef01db453"
+        },
+        "title": [
+          {
+            "type": "text",
+            "text": {
+              "content": "Rulebook copy"
+            }
+          }
+        ],
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Name": {
+              "type": "title",
+              "title": {},
+              "description": "The tag's name; one row per tag."
+            },
+            "Category": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Nature",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "Form",
+                    "color": "purple"
+                  },
+                  {
+                    "name": "Quality",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Style",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Tone",
+                    "color": "orange"
+                  },
+                  {
+                    "name": "Format",
+                    "color": "pink"
+                  },
+                  {
+                    "name": "Meaning",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Usage",
+                    "color": "gray"
+                  },
+                  {
+                    "name": "Check",
+                    "color": "red"
+                  }
+                ]
+              },
+              "description": "The tag's group."
+            },
+            "Counterpart": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The opposite tag it pairs with (Self-contained for Context-dependent)."
+            },
+            "Description": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "One or two sentences describing a claim that carries the tag."
+            },
+            "Evidence": {
+              "type": "url",
+              "url": {},
+              "description": "The report the tag's verification rests on."
+            },
+            "Example Claims": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Claims that show the tag, one per line."
+            },
+            "Geo Status": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Existing in Geo",
+                    "color": "green"
+                  },
+                  {
+                    "name": "To be created",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Implemented differently",
+                    "color": "orange"
+                  }
+                ]
+              },
+              "description": "Whether the tag exists in Geo."
+            },
+            "Geo Tag ID": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The tag's id in Geo."
+            },
+            "Polarity": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Classification",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "Positive",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Issue",
+                    "color": "red"
+                  }
+                ]
+              },
+              "description": "Kept as in the taxonomy; the agent does not use it."
+            },
+            "Status": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Verified",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Proposed",
+                    "color": "yellow"
+                  }
+                ]
+              },
+              "description": "Whether the tag is verified."
+            },
+            "Verified on": {
+              "type": "date",
+              "date": {},
+              "description": "When the tag was verified."
+            },
+            "When to use": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The numbered rules the agent applies; a tag is judged only when this holds rules."
+            },
+            "Work tags": {
+              "type": "multi_select",
+              "multi_select": {
+                "options": [
+                  {
+                    "name": "Pipeline benchmark check",
+                    "color": "gray"
+                  },
+                  {
+                    "name": "Issue",
+                    "color": "orange"
+                  }
+                ]
+              },
+              "description": "The work the tag belongs to; every row here has Issue."
+            },
+            "Created": {
+              "type": "created_time",
+              "created_time": {},
+              "description": "When the row was made."
+            },
+            "Created by": {
+              "type": "created_by",
+              "created_by": {},
+              "description": "Who made the row."
+            },
+            "Last edited": {
+              "type": "last_edited_time",
+              "last_edited_time": {},
+              "description": "When the row last changed."
+            },
+            "Last edited by": {
+              "type": "last_edited_by",
+              "last_edited_by": {},
+              "description": "Who last changed the row."
+            }
+          }
+        }
+      }
+    },
+    {
+      "table": "claims_copy",
+      "title": "Claims copy",
+      "body": {
+        "parent": {
+          "type": "page_id",
+          "page_id": "3fa273e214eb805199f3d12ef01db453"
+        },
+        "title": [
+          {
+            "type": "text",
+            "text": {
+              "content": "Claims copy"
+            }
+          }
+        ],
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Geo Name": {
+              "type": "title",
+              "title": {},
+              "description": "The claim text."
+            },
+            "Geo ID": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The claim's identity in Geo; the queue's Key starts with it."
+            },
+            "Geo URL": {
+              "type": "url",
+              "url": {},
+              "description": "The claim's page in Geo."
+            },
+            "Geo Sources": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The claim's sources, as Geo lists them."
+            },
+            "Geo Tags": {
+              "type": "multi_select",
+              "multi_select": {
+                "options": [
+                  {
+                    "name": "Debate",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Democracy & Media",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Economy",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Featured",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Immigration",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Main claim",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Politics",
+                    "color": "default"
+                  },
+                  {
+                    "name": "debate claim",
+                    "color": "default"
+                  }
+                ]
+              },
+              "description": "The claim's tags in Geo."
+            },
+            "Geo Topics": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The claim's topics in Geo."
+            },
+            "Geo Score": {
+              "type": "number",
+              "number": {
+                "format": "number"
+              },
+              "description": "The claim's score in Geo."
+            },
+            "Geo Supporting arguments": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Arguments for the claim, as in Geo."
+            },
+            "Geo Opposing arguments": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Arguments against the claim, as in Geo."
+            },
+            "Geo Related people": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "People linked to the claim in Geo."
+            },
+            "Geo Related projects": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Projects linked to the claim in Geo."
+            },
+            "Geo Is factual": {
+              "type": "checkbox",
+              "checkbox": {},
+              "description": "Ticked when Geo marks the claim as factual."
+            },
+            "Geo Name source": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "This space",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Other space (fallback)",
+                    "color": "orange"
+                  }
+                ]
+              },
+              "description": "Which space the claim's name was taken from."
+            },
+            "Agent tags": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The tags that apply and are not waiting for an editor, comma-separated, or empty."
+            },
+            "Agent notes": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "At most two short lines: line 1 the tags that apply or \"no tags\"; line 2 how many tags wait for an editor, what was not checked, and the rulebook edition, joined with \" · \"."
+            }
+          }
+        }
+      }
+    },
+    {
+      "table": "tag_decisions",
+      "title": "Tag decisions",
+      "body": {
+        "parent": {
+          "type": "page_id",
+          "page_id": "3fa273e214eb805199f3d12ef01db453"
+        },
+        "title": [
+          {
+            "type": "text",
+            "text": {
+              "content": "Tag decisions"
+            }
+          }
+        ],
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Claim": {
+              "type": "title",
+              "title": {},
+              "description": "The claim text."
+            },
+            "Key": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The claim's Geo ID, two colons, the tag; one row per claim and tag."
+            },
+            "Tag": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Context-dependent",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Exact duplicate",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Factually challenged",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Improper capitalization",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Improperly sourced",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Incorrect grammar",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Multi-sentence",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Poor wording",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Semantically duplicated",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Source inaccessible",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Trailing period",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Unsourced",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Wordy",
+                    "color": "default"
+                  }
+                ]
+              },
+              "description": "The tag the row is about."
+            },
+            "Agent proposal": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Applies",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Does not apply",
+                    "color": "red"
+                  },
+                  {
+                    "name": "Can't tell",
+                    "color": "yellow"
+                  }
+                ]
+              },
+              "description": "The agent's answer."
+            },
+            "Agent confidence": {
+              "type": "number",
+              "number": {
+                "format": "number"
+              },
+              "description": "How sure the agent is of its answer, from 0.5 (a coin flip) to 1 (certain); the queue is sorted by it, lowest first."
+            },
+            "Agent reason": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "At most 40 words, then the rule cited and how many runs agreed."
+            },
+            "Claim link": {
+              "type": "url",
+              "url": {},
+              "description": "Link to the claim's row in the Claims copy."
+            },
+            "Rulebook edition": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The edition the proposal was made under."
+            },
+            "Follow-up": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Fixed",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Still wrong",
+                    "color": "red"
+                  }
+                ]
+              },
+              "description": "Set after a safety check PASS, on the rows the change rests on."
+            },
+            "Tag outcome": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Applies",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Does not apply",
+                    "color": "red"
+                  }
+                ]
+              },
+              "description": "The editor's decision; empty means the row waits."
+            },
+            "Why wrong": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Agent slip",
+                    "color": "gray"
+                  },
+                  {
+                    "name": "Rule unclear",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Rule should change",
+                    "color": "orange"
+                  }
+                ]
+              },
+              "description": "The editor's reason the agent was wrong."
+            },
+            "Your reasoning": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The editor's words; \"rule 4\" typed here names the rule."
+            }
+          }
+        }
+      }
+    },
+    {
+      "table": "rule_changes",
+      "title": "Rule changes",
+      "body": {
+        "parent": {
+          "type": "page_id",
+          "page_id": "3fa273e214eb805199f3d12ef01db453"
+        },
+        "title": [
+          {
+            "type": "text",
+            "text": {
+              "content": "Rule changes"
+            }
+          }
+        ],
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Lesson": {
+              "type": "title",
+              "title": {},
+              "description": "A short name for the change."
+            },
+            "Tag": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Context-dependent",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Exact duplicate",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Factually challenged",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Improper capitalization",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Improperly sourced",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Incorrect grammar",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Multi-sentence",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Poor wording",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Semantically duplicated",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Source inaccessible",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Trailing period",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Unsourced",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Wordy",
+                    "color": "default"
+                  }
+                ]
+              },
+              "description": "The tag the change is about."
+            },
+            "Rule": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Which rule, for example \"Context-dependent rule 3\"."
+            },
+            "Kind": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Clarify wording",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "Change the rule",
+                    "color": "purple"
+                  },
+                  {
+                    "name": "Initial rules",
+                    "color": "gray"
+                  }
+                ]
+              },
+              "description": "What kind of change."
+            },
+            "Current text": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The rule's text now."
+            },
+            "Proposed text": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The text the agent proposes."
+            },
+            "Safety check result": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "For example \"PASS: examples 11/11, earlier 10/10, yours 2/2\" or \"FAIL: 'Excluding CNN from Air Force One violates the federal court order' now Does not apply\"."
+            },
+            "Supporting rows": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "One line per decided row the change rests on: the claim shortened, \" · \", the row's Key."
+            },
+            "Editor wording": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The rule as the editor words it; when filled, the safety check tests it instead of the Proposed text. Never written by the agent."
+            },
+            "Status": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Proposed",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Approved",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "Rejected",
+                    "color": "red"
+                  },
+                  {
+                    "name": "Live",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Rolled back",
+                    "color": "gray"
+                  }
+                ]
+              },
+              "description": "The editor sets Approved and Rejected; the agent sets Proposed, Live and Rolled back."
+            }
+          }
+        }
+      }
+    },
+    {
+      "table": "agent_settings",
+      "title": "Agent settings",
+      "body": {
+        "parent": {
+          "type": "page_id",
+          "page_id": "3fa273e214eb805199f3d12ef01db453"
+        },
+        "title": [
+          {
+            "type": "text",
+            "text": {
+              "content": "Agent settings"
+            }
+          }
+        ],
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Name": {
+              "type": "title",
+              "title": {},
+              "description": "The row's name, Claim tagger."
+            },
+            "Paused": {
+              "type": "checkbox",
+              "checkbox": {},
+              "description": "Ticked by a person, every command then refuses; cleared by a person."
+            },
+            "Rulebook edition": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The edition in force: a date plus a count, such as 2026-10-16.1; it goes up when a rule changes."
+            },
+            "Last run summary": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "One short line, such as \"Promote · 16 Oct 11:20 · PASS\"."
+            }
+          }
+        }
+      }
+    }
+  ],
+  "views": [
+    {
+      "table": "tag_decisions",
+      "name": "Your queue",
+      "columns": [
+        "Claim",
+        "Agent proposal",
+        "Agent reason",
+        "Tag outcome",
+        "Why wrong",
+        "Your reasoning"
+      ],
+      "hidden": [
+        "Key",
+        "Tag",
+        "Agent confidence",
+        "Claim link",
+        "Rulebook edition",
+        "Follow-up"
+      ],
+      "wrap": false,
+      "body": {
+        "name": "Your queue",
+        "type": "table",
+        "filter": {
+          "property": "Tag outcome",
+          "select": {
+            "is_empty": true
+          }
+        },
+        "sorts": [
+          {
+            "property": "Agent confidence",
+            "direction": "ascending"
+          }
+        ],
+        "configuration": {
+          "type": "table",
+          "wrap_cells": false,
+          "properties": [
+            {
+              "name": "Claim",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Agent proposal",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Agent reason",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Tag outcome",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Why wrong",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Your reasoning",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Key",
+              "visible": false
+            },
+            {
+              "name": "Tag",
+              "visible": false
+            },
+            {
+              "name": "Agent confidence",
+              "visible": false
+            },
+            {
+              "name": "Claim link",
+              "visible": false
+            },
+            {
+              "name": "Rulebook edition",
+              "visible": false
+            },
+            {
+              "name": "Follow-up",
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "table": "tag_decisions",
+      "name": "Needs your note",
+      "columns": [
+        "Claim",
+        "Tag outcome",
+        "Why wrong",
+        "Your reasoning"
+      ],
+      "hidden": [
+        "Key",
+        "Tag",
+        "Agent proposal",
+        "Agent confidence",
+        "Agent reason",
+        "Claim link",
+        "Rulebook edition",
+        "Follow-up"
+      ],
+      "wrap": false,
+      "body": {
+        "name": "Needs your note",
+        "type": "table",
+        "filter": {
+          "and": [
+            {
+              "or": [
+                {
+                  "property": "Why wrong",
+                  "select": {
+                    "equals": "Rule unclear"
+                  }
+                },
+                {
+                  "property": "Why wrong",
+                  "select": {
+                    "equals": "Rule should change"
+                  }
+                }
+              ]
+            },
+            {
+              "property": "Your reasoning",
+              "rich_text": {
+                "is_empty": true
+              }
+            }
+          ]
+        },
+        "sorts": [
+          {
+            "property": "Agent confidence",
+            "direction": "ascending"
+          }
+        ],
+        "configuration": {
+          "type": "table",
+          "wrap_cells": false,
+          "properties": [
+            {
+              "name": "Claim",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Tag outcome",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Why wrong",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Your reasoning",
+              "visible": true,
+              "wrap": false
+            },
+            {
+              "name": "Key",
+              "visible": false
+            },
+            {
+              "name": "Tag",
+              "visible": false
+            },
+            {
+              "name": "Agent proposal",
+              "visible": false
+            },
+            {
+              "name": "Agent confidence",
+              "visible": false
+            },
+            {
+              "name": "Agent reason",
+              "visible": false
+            },
+            {
+              "name": "Claim link",
+              "visible": false
+            },
+            {
+              "name": "Rulebook edition",
+              "visible": false
+            },
+            {
+              "name": "Follow-up",
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "table": "rule_changes",
+      "name": "Lessons waiting",
+      "columns": [
+        "Lesson",
+        "Current text",
+        "Proposed text",
+        "Status"
+      ],
+      "hidden": [
+        "Tag",
+        "Rule",
+        "Kind",
+        "Safety check result",
+        "Supporting rows",
+        "Editor wording"
+      ],
+      "wrap": true,
+      "body": {
+        "name": "Lessons waiting",
+        "type": "table",
+        "filter": {
+          "or": [
+            {
+              "property": "Status",
+              "select": {
+                "equals": "Proposed"
+              }
+            },
+            {
+              "property": "Status",
+              "select": {
+                "equals": "Approved"
+              }
+            }
+          ]
+        },
+        "configuration": {
+          "type": "table",
+          "wrap_cells": true,
+          "properties": [
+            {
+              "name": "Lesson",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Current text",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Proposed text",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Tag",
+              "visible": false
+            },
+            {
+              "name": "Rule",
+              "visible": false
+            },
+            {
+              "name": "Kind",
+              "visible": false
+            },
+            {
+              "name": "Safety check result",
+              "visible": false
+            },
+            {
+              "name": "Supporting rows",
+              "visible": false
+            },
+            {
+              "name": "Editor wording",
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "table": "rulebook",
+      "name": "Rulebook",
+      "columns": [
+        "Name",
+        "Category",
+        "Status",
+        "When to use",
+        "Example Claims"
+      ],
+      "hidden": [
+        "Counterpart",
+        "Description",
+        "Evidence",
+        "Geo Status",
+        "Geo Tag ID",
+        "Polarity",
+        "Verified on",
+        "Work tags",
+        "Created",
+        "Created by",
+        "Last edited",
+        "Last edited by"
+      ],
+      "wrap": true,
+      "body": {
+        "name": "Rulebook",
+        "type": "table",
+        "configuration": {
+          "type": "table",
+          "wrap_cells": true,
+          "properties": [
+            {
+              "name": "Name",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Category",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "When to use",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Example Claims",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Counterpart",
+              "visible": false
+            },
+            {
+              "name": "Description",
+              "visible": false
+            },
+            {
+              "name": "Evidence",
+              "visible": false
+            },
+            {
+              "name": "Geo Status",
+              "visible": false
+            },
+            {
+              "name": "Geo Tag ID",
+              "visible": false
+            },
+            {
+              "name": "Polarity",
+              "visible": false
+            },
+            {
+              "name": "Verified on",
+              "visible": false
+            },
+            {
+              "name": "Work tags",
+              "visible": false
+            },
+            {
+              "name": "Created",
+              "visible": false
+            },
+            {
+              "name": "Created by",
+              "visible": false
+            },
+            {
+              "name": "Last edited",
+              "visible": false
+            },
+            {
+              "name": "Last edited by",
+              "visible": false
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

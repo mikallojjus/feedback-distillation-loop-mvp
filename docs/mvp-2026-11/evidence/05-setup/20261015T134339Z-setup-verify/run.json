@@ -1,0 +1,19 @@
+{
+  "run_id": "20261015T134339Z-setup-verify",
+  "script": "setup.mjs",
+  "args": [
+    "verify",
+    "--taxonomy",
+    "agents/claim-tagger-mvp/setup/taxonomy-issue.json",
+    "--claims",
+    "agents/claim-tagger-mvp/setup/claims-pick.json",
+    "--audit",
+    "docs/mvp-2026-11/evidence/03-audit-context-dependent-decisions.json"
+  ],
+  "started_at": "2026-10-15T13:43:39.379Z",
+  "finished_at": "2026-10-15T13:43:48.966Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-15.1",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs verify --taxonomy agents/claim-tagger-mvp/setup/taxonomy-issue.json --claims agents/claim-tagger-mvp/setup/claims-pick.json --audit docs/mvp-2026-11/evidence/03-audit-context-dependent-decisions.json"
+}

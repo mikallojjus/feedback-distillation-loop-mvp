@@ -92,3 +92,11 @@ Done: the loop scripts (propose, distill, promote with the safety check, the PAS
 Verified: the loop coder's `node --test tests/` run: 1,750 tests pass, 0 fail.
 
 Next: the setup coder's hand-back; the live setup; the walkthrough runner; `AGENT.md` and `README.md`; the real run; the headless check; the verifier.
+
+### 11. Stage 1 setup done in Notion: the approved structure, the rows, edition 2026-10-15.1 (2026-10-15)
+
+Done: `setup.mjs structure --from-proposal` (5 tables, 58 columns, 4 views, 2 sub-pages), `preview` reviewed, `api-check` (one GET under Notion-Version 2026-03-11: ok), a builder session, `build` (the sub-pages Demos and Demo tests, the five tables and the four views, all through REST; the views were accepted, no fallback), `verify` (structure equal: no column, type, option or view difference; only the rows missing), then `all` (13 Rulebook copy rows, 50 Claims copy rows, 10 seeded audit decisions marked "seeded from the audit of 9 October", rubric edition 2026-10-15.1 with lock, history and changelog, 11 canaries, 1 Agent settings row; every row read back ok; final verify: no differences), the session closed. Ids are in `config.json`; evidence in `evidence/05-setup/` (verify, request logs, plans, ledgers).
+
+Verified: request logs: builder 34 requests (11 writes: 2 pages, 5 tables, 4 views), rulebook 13 writes, claims 50, seed-audit 10, settings 1, verify 0 writes; `verify.json` ok with no differences; the parent page fetched through the connector shows the three sub-pages and five tables.
+
+Next: the real run on the copy (pull, judge, propose), the walkthrough runner, the editor-review fixes, the two skills' headless checks, the verifier.

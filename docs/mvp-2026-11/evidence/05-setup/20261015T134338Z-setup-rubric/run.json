@@ -1,0 +1,15 @@
+{
+  "run_id": "20261015T134338Z-setup-rubric",
+  "script": "setup.mjs",
+  "args": [
+    "rubric",
+    "--from",
+    "agents/claim-tagger-mvp/setup/taxonomy-issue.json"
+  ],
+  "started_at": "2026-10-15T13:43:38.076Z",
+  "finished_at": "2026-10-15T13:43:38.096Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-15.1",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs rubric --from agents/claim-tagger-mvp/setup/taxonomy-issue.json"
+}
