@@ -52,3 +52,11 @@ Done: read the W3 digest (1,189 lines; tables, views, config, scripts, rubric, j
 Verified: the REST request log of the access check shows four GETs and nothing else.
 
 Next: library hand-back; pull script with the read-only dry run; the proposal page in Notion; the artifact's first publish; checkpoint 1.
+
+### 6. Builder session commands (2026-10-15)
+
+Done: `agents/claim-tagger-mvp/scripts/setup.mjs` with `builder open --reason`, `builder close`, `builder status` and `register page|database --id --name`. Opening writes `runs/SETUP`; registering writes `runs/builder/pages.json` or `databases.json`, a log line, and a registered page's id into `config.json` under `notion.pages`. The connector guard allows a content page write only while the marker exists and the target is registered; the structure proposal page will be created this way. The full setup subcommands (tables, rows, views) come in Stage 1 and extend this file.
+
+Verified: a cycle against a temporary root (open, second open refused with exit 2, register, a bad id refused, status, close; the real root has no `runs/` folder afterwards).
+
+Next: hand-backs from the four coders; the proposal page; the artifact's first publish; checkpoint 1.
