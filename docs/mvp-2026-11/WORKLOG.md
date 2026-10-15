@@ -28,3 +28,11 @@ Done: committed the untracked inputs and the working directory (`44f716d`). Node
 Verified: test summary line read from the run output; API facts quoted from the reference pages.
 
 Next: sweep digests; CLAUDE.md amendment (one commit); settings; the read-only dry run; the structure proposal.
+
+### 3. Live reads through the connector (2026-10-15)
+
+Done: read-only. The taxonomy's schema and its 13 Issue rows (the rows whose Work tags contain "Issue": Context-dependent, Exact duplicate, Factually challenged, Improper capitalization, Improperly sourced, Incorrect grammar, Multi-sentence, Poor wording, Semantically duplicated, Source inaccessible, Trailing period, Unsourced, Wordy; a Polarity filter gives a different set of 12 that includes Hypothetical and Predictive, so the copy is defined by Work tags). The real claims table's schema (22 columns; `sweeps/live-schemas.md`). The 9 October audit lives in "Claims to review" (protected); its 10 decided Context-dependent rows (8 Agree, 2 Disagree: Georgia and COVID) are saved in `evidence/03-audit-context-dependent-decisions.json` with the mapping to Applies / Does not apply. The library digest arrived (`sweeps/lib-digest.md`); the Sonnet coder building the new library layer was told to refuse the two forbidden CLI flags in code.
+
+Verified: counts from a grouped SQL query (10 assessed and decided, 48 assessed still to review); the JSON file parses.
+
+Next: remaining digests; CLAUDE.md; settings; dry run; proposal.
