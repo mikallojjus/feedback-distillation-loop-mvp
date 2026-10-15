@@ -7,8 +7,8 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 - Phase: Stage 2 (2026-10-15). Stage 1 is live in Notion under the parent page: the approved structure, 13 rulebook rows, 50 claims, 10 seeded decisions, edition 2026-10-15.1, 11 canaries; the first real run tagged the 50 claims (2 open queue rows).
 - Checkpoint 1 (Notion structure proposal): approved as proposed on 2026-10-15 (decision P1).
 - Checkpoint 2 (final demo): not reached. Remaining: the walkthrough runner and its evals and calibration, drift and pause checks, rollback read-back, the headless checks for the demo commands, the verifier, the artifact republish.
-- Branch ; last commit at the time of writing: see .
-- Notion: ids in  and STATE.md. The builder session is closed.
+- Branch `mvp-2026-11`; the last commit is the newest one in `git log`.
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The builder session is closed.
 - Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 1, checkpoint 1).
 - Blockers: none open (B1, the malformed token, was fixed by the product owner on 2026-10-15).
 

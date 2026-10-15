@@ -85,7 +85,7 @@ test('rollback: the commit of the rubric folder in production, and none with --n
   };
   const w = await afterPass();
   assert.equal((await rollback(w.hooks({ lesson: TITLE, confirm: true, git, noCommit: false }))).exit, 0);
-  assert.deepEqual(gitCalls, [['add', 'agents/claim-tagger-mvp/rubric'], ['commit', '-m', `rulebook edition 2026-10-16.3: rolled back ${TITLE}`]]);
+  assert.deepEqual(gitCalls, [['add', 'agents/claim-tagger-mvp/rubric'], ['commit', '-m', `rulebook edition 2026-10-16.3: rolled back ${TITLE}`, '--', 'agents/claim-tagger-mvp/rubric']]);
   gitCalls.length = 0;
   const w2 = await afterPass();
   assert.equal((await rollback(w2.hooks({ lesson: TITLE, confirm: true, git, noCommit: true }))).exit, 0);

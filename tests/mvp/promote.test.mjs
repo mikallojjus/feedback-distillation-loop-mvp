@@ -234,7 +234,7 @@ test('promote PASS: in production the rubric folder is committed with the editio
   const w = await promoteWorld();
   const r = await promote(w.hooks({ git, noCommit: false }));
   assert.equal(r.exit, 0);
-  assert.deepEqual(gitCalls, [['add', 'agents/claim-tagger-mvp/rubric'], ['commit', '-m', `rulebook edition 2026-10-16.2: ${TITLE}`]]);
+  assert.deepEqual(gitCalls, [['add', 'agents/claim-tagger-mvp/rubric'], ['commit', '-m', `rulebook edition 2026-10-16.2: ${TITLE}`, '--', 'agents/claim-tagger-mvp/rubric']]);
 
   gitCalls.length = 0;
   const w2 = await promoteWorld();

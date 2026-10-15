@@ -184,11 +184,11 @@ test('restore: the rubric folder is committed whenever a new edition was recorde
   };
   const w = await afterPass();
   assert.equal((await restore(w.hooks({ edition: '2026-10-16.1', confirm: true, git, noCommit: false }))).exit, 0);
-  assert.deepEqual(gitCalls, [['add', 'agents/claim-tagger-mvp/rubric'], ['commit', '-m', 'rulebook edition 2026-10-16.3: restored from 2026-10-16.1']]);
+  assert.deepEqual(gitCalls, [['add', 'agents/claim-tagger-mvp/rubric'], ['commit', '-m', 'rulebook edition 2026-10-16.3: restored from 2026-10-16.1', '--', 'agents/claim-tagger-mvp/rubric']]);
   gitCalls.length = 0;
   w.fake.editRow(w.ids.tag['Context-dependent'], { 'When to use': `${when(w)}\n6. By hand.` });
   assert.equal((await restore(w.hooks({ edition: '2026-10-16.3', confirm: true, git, noCommit: false }))).exit, 0);
-  assert.deepEqual(gitCalls, [['add', 'agents/claim-tagger-mvp/rubric'], ['commit', '-m', 'rulebook edition 2026-10-16.4: restored from 2026-10-16.3']], 'also the answer to a drift');
+  assert.deepEqual(gitCalls, [['add', 'agents/claim-tagger-mvp/rubric'], ['commit', '-m', 'rulebook edition 2026-10-16.4: restored from 2026-10-16.3', '--', 'agents/claim-tagger-mvp/rubric']], 'also the answer to a drift');
   gitCalls.length = 0;
   assert.equal((await restore(w.hooks({ edition: '2026-10-16.4', confirm: true, git, noCommit: false }))).exit, 0);
   assert.deepEqual(gitCalls, [], 'nothing to put back, nothing recorded');
