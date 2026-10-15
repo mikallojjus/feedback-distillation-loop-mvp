@@ -30,7 +30,9 @@
 //    versions) from a schema problem.
 //  - The pinned model must appear in the envelope's modelUsage; a silent fallback to another model would make every
 //    judgment irreproducible, so a missing or different model is errorKind "model_mismatch".
-//  - Tests: `spawnImpl` replaces child_process.spawn; `driver: "fake"` runs tests/fixtures/fake-claude.mjs in-process.
+//  - Tests: `spawnImpl` replaces child_process.spawn; `driver: "fake"` runs a fake CLI in-process. Which script: the `fakeScript` option;
+//    else `bin` when it is a path that ends in fake-claude.mjs (how the older tests start the old fixture); else the MVP fixture
+//    tests/mvp/fixtures/fake-claude.mjs.
 
 import { spawn, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
@@ -60,8 +62,11 @@ const SCRUBBED_ENV = ['CLAUDECODE', 'CLAUDE_CODE_ENTRYPOINT'];
 const OUTPUT_CAP = 20000; // characters of stdout kept in a result (the full text is in `text`)
 const KILL_GRACE_MS = 5000;
 
-/** The fake CLI used by the tests and by `judge.mjs --driver fake`. */
+/** The OLD agent's fake CLI. Kept as an export (the old module has it and tests compare); the `driver: "fake"` path no longer falls back to it. */
 export const FAKE_CLAUDE_SCRIPT = join(repoRoot(), 'tests', 'fixtures', 'fake-claude.mjs');
+
+// The fake CLI that `driver: "fake"` runs when neither `fakeScript` nor a `bin` that ends in fake-claude.mjs names one.
+const DEFAULT_FAKE_SCRIPT = join(repoRoot(), 'tests', 'mvp', 'fixtures', 'fake-claude.mjs');
 
 const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const cap = (s, n = OUTPUT_CAP) => (s.length > n ? `${s.slice(0, n)}... [${s.length - n} more characters]` : s);
@@ -347,8 +352,10 @@ function runProcess({ command, args, input, env, timeoutMs, spawnImpl }) {
   });
 }
 
-async function runFakeInProcess({ bin, args, input, env, timeoutMs, fakeState }) {
-  const script = typeof bin === 'string' && /fake-claude\.mjs$/i.test(bin) ? resolve(bin) : FAKE_CLAUDE_SCRIPT;
+async function runFakeInProcess({ bin, args, input, env, timeoutMs, fakeState, fakeScript }) {
+  let script = DEFAULT_FAKE_SCRIPT;
+  if (typeof fakeScript === 'string' && fakeScript !== '') script = resolve(fakeScript);
+  else if (typeof bin === 'string' && /fake-claude\.mjs$/i.test(bin)) script = resolve(bin);
   let mod;
   try {
     mod = await import(pathToFileURL(script).href);
@@ -452,19 +459,21 @@ function interpret(proc, { model, timeoutMs, wallMs }) {
  * `durationMs` wall-clock time of the call, `raw` the parsed result element (stdout and stderr are kept, capped).
  *
  * options: bin (default "claude"), driver ("cli" | "fake"), model, systemPromptFile, prompt (stdin), effort, maxTurns (1),
- * timeoutMs (300000), extraArgs, env (default process.env, scrubbed), spawnImpl (tests), fakeState (the fake's call log).
+ * timeoutMs (300000), extraArgs, env (default process.env, scrubbed), spawnImpl (tests), fakeState (the fake's call log),
+ * fakeScript (driver "fake" only: the path of the fake CLI to run in-process; default tests/mvp/fixtures/fake-claude.mjs, or `bin`
+ * when that is a path ending in fake-claude.mjs).
  */
 export async function runClaude(options = {}) {
   const {
     bin = 'claude', driver = 'cli', model, systemPromptFile, prompt = '', effort, maxTurns = 1, timeoutMs = 300000,
-    extraArgs = [], env = process.env, spawnImpl = spawn, fakeState,
+    extraArgs = [], env = process.env, spawnImpl = spawn, fakeState, fakeScript,
   } = options;
   const args = buildArgs({ model, systemPromptFile, effort, maxTurns, extraArgs });
   const childEnv = scrubEnv(env);
   const started = Date.now();
   let proc;
   if (driver === 'fake') {
-    proc = await runFakeInProcess({ bin, args, input: prompt, env: childEnv, timeoutMs, fakeState });
+    proc = await runFakeInProcess({ bin, args, input: prompt, env: childEnv, timeoutMs, fakeState, fakeScript });
   } else {
     let target;
     try {
