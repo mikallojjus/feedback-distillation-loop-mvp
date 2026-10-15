@@ -131,3 +131,13 @@ Every script ends by writing `report.json` `{ "demo": false, "sentence": "...", 
 ## 13. Editor-facing words
 
 table (not database); queue (the Tag decisions table); Your queue (the view); rulebook and Rulebook copy; edition and "Rulebook edition"; safety check and "Safety check result"; practice page; canaries are called "examples" in anything a person reads. No personal names anywhere a person reads. No shorthand codes.
+
+## 14. Decisions taken by the coders and adopted (2026-10-15)
+
+- `rubric.lock` has a fourth key `columns { <name>: { Description, "Example Claims" (parsed, one per line), Counterpart } }`, because drift compares four columns.
+- `computeDrift(lock, rows, { config })`: a tag is judged when its locked text holds rules and (with a config) it is a text tag in a judge group; otherwise a change is `adopted`. `added` and `missing` hold names; `judged` holds one entry per differing column.
+- Reports: `header` is its own field (default `["What", "Result", ""]`), `rows` are body rows; the lint also requires a one-line first sentence and exactly one Next line, last. Text inside double quotes (straight or curly) is exempt from the word and character rules, so scripts quote claim text in sentences and cells. "second" counts as a time word.
+- `parseRules`: a numberless line continues the rule above it when a later rule follows; after the last rule it continues only until a blank line, a "Note:" label, or a rule that ended with a sentence mark; the rest is the note.
+- `buildRubric` and `computeDrift` skip rows without a Name. `writeEdition` only moves forward and never rewrites an existing edition with other rules, so a stop halfway is re-run safely.
+- The fake Notion: the token must equal `fake.token` (else 401); data-source and database-create routes need Notion-Version 2025-09-03 or later and views 2026-03-11 (else 400); requests are all-or-nothing; filters and sorts are evaluated; protected ids hide everything beneath them; `editRow(pageId, plain)` is an editor's edit and is not logged as a write.
+- `config.mjs` refuses a config whose read-only sources are not in the protected list or whose own tables are.

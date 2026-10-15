@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Safety check card (runs/<run-id>/card.json)",
+  "description": "The result of the simple safety check of a proposed rule change. PASS: every example holds, no earlier decision newly fails and every supporting row comes out as the editor decided. FAIL: any of those breaks. HOLD: there was nothing to evaluate.",
+  "type": "object",
+  "required": ["mode", "verdict", "checks", "flips", "editions"],
+  "properties": {
+    "mode": { "type": "string", "const": "simple" },
+    "verdict": { "type": "string", "enum": ["PASS", "FAIL", "HOLD"] },
+    "lesson": { "type": ["string", "null"], "description": "The title of the lesson." },
+    "tag": { "type": ["string", "null"] },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["canaries", "cases", "supporting"],
+      "properties": {
+        "canaries": {
+          "type": "object",
+          "required": ["passed", "total", "failures"],
+          "properties": {
+            "passed": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 },
+            "failures": { "type": "array", "items": { "$ref": "#/definitions/miss" } }
+          }
+        },
+        "cases": {
+          "type": "object",
+          "required": ["passed", "total", "newly_failing"],
+          "properties": {
+            "passed": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 },
+            "newly_failing": { "type": "array", "items": { "$ref": "#/definitions/miss" } }
+          }
+        },
+        "supporting": {
+          "type": "object",
+          "required": ["passed", "total", "failures"],
+          "properties": {
+            "passed": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 },
+            "failures": { "type": "array", "items": { "$ref": "#/definitions/miss" } }
+          }
+        }
+      }
+    },
+    "flips": {
+      "type": "array",
+      "description": "Every item whose decision differs between the baseline and the candidate edition.",
+      "items": {
+        "type": "object",
+        "required": ["id", "from", "to"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "tag": { "type": ["string", "null"] },
+          "claim": { "type": ["string", "null"] },
+          "from": { "type": "string" },
+          "to": { "type": "string" }
+        }
+      }
+    },
+    "editions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["baseline", "candidate"],
+      "properties": {
+        "baseline": { "type": "string", "minLength": 1 },
+        "candidate": { "type": "string", "minLength": 1 }
+      }
+    },
+    "usage": {
+      "type": ["object", "null"],
+      "properties": {
+        "input": { "type": "integer", "minimum": 0 },
+        "cache_write": { "type": "integer", "minimum": 0 },
+        "cache_read": { "type": "integer", "minimum": 0 },
+        "output": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "definitions": {
+    "miss": {
+      "type": "object",
+      "required": ["id", "claim"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1, "description": "An example id, or the key of the row: Geo ID, two colons, tag." },
+        "claim": { "type": "string" },
+        "expected": { "type": ["string", "null"] },
+        "got": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

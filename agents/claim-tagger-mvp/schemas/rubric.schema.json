@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Rulebook edition (rubric/rubric.json and rubric/history/<edition>.json)",
+  "description": "One edition of the rulebook: the tags of the Rulebook copy with the numbered rules parsed from When to use. The hashes are checked by verifyRubric() in scripts/lib/rubric.mjs; definitions/lock describes rubric/rubric.lock and is validated through a { definitions, $ref } wrapper.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["edition", "built_at", "source", "tags", "rubric_hash"],
+  "properties": {
+    "edition": { "$ref": "#/definitions/edition" },
+    "built_at": { "$ref": "#/definitions/timestamp" },
+    "source": { "$ref": "#/definitions/source" },
+    "tags": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/tag" }, "description": "One entry per Rulebook copy row, sorted by name." },
+    "rubric_hash": { "$ref": "#/definitions/hash" }
+  },
+  "definitions": {
+    "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{16}$" },
+    "edition": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}\\.\\d+$", "description": "YYYY-MM-DD.n: a new day restarts at .1." },
+    "timestamp": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["database_id", "data_source_id", "read_via", "read_at"],
+      "properties": {
+        "database_id": { "type": "string", "minLength": 1 },
+        "data_source_id": { "type": "string", "minLength": 1 },
+        "read_via": { "type": "string", "minLength": 1, "description": "connector or rest." },
+        "read_at": { "$ref": "#/definitions/timestamp" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "text"],
+      "properties": {
+        "n": { "type": "integer", "minimum": 1 },
+        "text": { "type": "string", "minLength": 1, "description": "One rule on one line; a judgment cites it as 'Tag rule n'." }
+      }
+    },
+    "tag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "page_id", "category", "polarity", "status", "counterpart", "description", "when_to_use", "rules", "example_claims", "geo_status", "geo_tag_id", "verified_on", "evidence", "work_tags", "capability", "judged", "tag_hash"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "page_id": { "type": ["string", "null"] },
+        "category": { "type": ["string", "null"] },
+        "polarity": { "type": ["string", "null"] },
+        "status": { "type": ["string", "null"] },
+        "counterpart": { "type": ["string", "null"] },
+        "description": { "type": "string" },
+        "when_to_use": { "type": "string", "description": "The raw text of the column; a preamble and a note are kept here and are not rules." },
+        "rules": { "type": "array", "items": { "$ref": "#/definitions/rule" } },
+        "example_claims": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "geo_status": { "type": ["string", "null"] },
+        "geo_tag_id": { "type": ["string", "null"] },
+        "verified_on": { "type": ["string", "null"] },
+        "evidence": { "type": ["string", "null"] },
+        "work_tags": { "type": "array", "items": { "type": "string" } },
+        "capability": { "type": "string", "enum": ["text", "deterministic", "source", "corpus"] },
+        "judged": { "type": "boolean", "description": "True when rules.length > 0 and the capability is text." },
+        "tag_hash": { "$ref": "#/definitions/hash" }
+      }
+    },
+    "lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edition", "rubric_hash", "locked_at", "tags", "text", "columns"],
+      "description": "rubric/rubric.lock. tags: the tag hash per name. text: the locked When to use per name (what a restore writes back). columns: the other columns the drift check compares, per name.",
+      "properties": {
+        "edition": { "$ref": "#/definitions/edition" },
+        "rubric_hash": { "$ref": "#/definitions/hash" },
+        "locked_at": { "$ref": "#/definitions/timestamp" },
+        "tags": { "type": "object", "additionalProperties": { "$ref": "#/definitions/hash" } },
+        "text": { "type": "object", "additionalProperties": { "type": "string" } },
+        "columns": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["Description", "Example Claims", "Counterpart"],
+            "properties": {
+              "Description": { "type": "string" },
+              "Example Claims": { "type": "string", "description": "The parsed examples, one per line." },
+              "Counterpart": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

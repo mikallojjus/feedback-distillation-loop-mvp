@@ -1,0 +1,111 @@
+[
+  {
+    "Name": "Context-dependent",
+    "Category": "Quality",
+    "Counterpart": "Self-contained",
+    "Description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
+    "Example Claims": "Open AI's initiative went well with the target group.\nHe said the new model outperforms its predecessor.\nThe company's revenue grew 40% after the launch.\nCore Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.\nThe Commodity Futures Trading Commission did not comment specifically on the discussions.\nThe Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts.",
+    "When to use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+    "Polarity": "Issue",
+    "Status": "Verified",
+    "Geo Status": "To be created",
+    "Geo Tag ID": null,
+    "Work tags": [
+      "Issue",
+      "Pipeline benchmark check"
+    ],
+    "Verified on": "2026-09-10",
+    "Evidence": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+    "page_id": "765273e214eb83458bd7819ebe81bd9e"
+  },
+  {
+    "Name": "Improperly sourced",
+    "Category": "Quality",
+    "Counterpart": null,
+    "Description": "A claim whose attached source, when read, does not actually support the claim's assertion — the source is present but the specific figure, event, or statement the claim makes is absent from or not established by it. Distinct from Unsourced, where no source is attached at all.",
+    "Example Claims": "",
+    "When to use": "Requires reading the source (source-reading tag), so it is coverage-limited, not a text-only judgment.\n1. Fires when the source is fetched and read and does not carry the claim's specific assertion ('the price points the claim cites are not in the article', 'the country coverage the claim states is not mentioned').\n2. Does not fire when the source supports the claim's core assertion even if a minor secondary detail is unstated (treat that as supported).\n3. No attached source is Unsourced. An attached source that cannot be read is Source inaccessible. Access failure alone never justifies Improperly sourced, Factually challenged, Unverified, or a contradiction verdict; never report unread content as a pass.\n4. Applies to factual claims; an opinion has no supporting source in the ordinary sense.\n5. Validated 10 Sep on a source-reading pass over the fresh sample: 71% of sourced claims were checkable; the tag fired correctly on every checkable mismatch.",
+    "Polarity": "Issue",
+    "Status": "Verified",
+    "Geo Status": "To be created",
+    "Geo Tag ID": null,
+    "Work tags": [
+      "Issue"
+    ],
+    "Verified on": "2026-09-10",
+    "Evidence": null,
+    "page_id": "461273e214eb822cb6de81aa194dfc07"
+  },
+  {
+    "Name": "Source inaccessible",
+    "Category": "Quality",
+    "Counterpart": null,
+    "Description": "One or more attached sources cannot be accessed for review, so their contents cannot be assessed. This records an access problem without judging the claim's truth, support, or contradiction.",
+    "Example Claims": "",
+    "When to use": "1. Use when an attached source cannot be read after reasonable access attempts, such as a blocked host, paywall, login requirement, dead link, or unreadable document.\n2. Identify the inaccessible source and any accessible sources separately; one blocked source does not mean all sources are blocked.\n3. If no source is attached, use Unsourced instead.\n4. Inaccessibility alone does not justify Improperly sourced, Factually challenged, Unverified, or a contradiction verdict. A separate readable source may independently justify another tag.\n5. Remove this access flag when the source becomes readable, then assess its support separately.\nNote: Editorial rule confirmed by the editor on 11 October 2026; not an accuracy benchmark.",
+    "Polarity": "Issue",
+    "Status": "Verified",
+    "Geo Status": "To be created",
+    "Geo Tag ID": null,
+    "Work tags": [
+      "Issue"
+    ],
+    "Verified on": "2026-10-11",
+    "Evidence": "https://app.notion.com/p/3f4273e214eb81ae9272c6f1e48bbd6c",
+    "page_id": "3f6273e214eb81c3b06ad421d3eff8a9"
+  },
+  {
+    "Name": "Unsourced",
+    "Category": "Quality",
+    "Counterpart": null,
+    "Description": "A claim that has no Source relation attached on Geo. It is a completeness flag on the claim's provenance, independent of whether the claim is Factual or Opinion and of whether the content is correct; it only records that nothing backs the claim yet.",
+    "Example Claims": "",
+    "When to use": "Deterministic, not a language judgment: read the Claim's Sources relation on Geo, do not read the text.\n1. Fires when the Sources relation is empty.\n2. Does not fire when at least one Source is attached, regardless of whether that source actually supports the claim (that is Improperly sourced).\n3. Nature-agnostic: a claim can be Factual and Unsourced, or Opinion and Unsourced.\n4. Verified 10 Sep on a fresh 100-claim crypto sample: 9/100 unsourced; 91 carried a Source with a resolvable Web URL.",
+    "Polarity": "Issue",
+    "Status": "Verified",
+    "Geo Status": "Implemented differently",
+    "Geo Tag ID": "Not a tag on Geo: derived from the Claim having no Sources relation attached.",
+    "Work tags": [
+      "Issue"
+    ],
+    "Verified on": "2026-09-10",
+    "Evidence": null,
+    "page_id": "713273e214eb8315b9ce81a44ba6cc5d"
+  },
+  {
+    "Name": "Wordy",
+    "Category": "Quality",
+    "Counterpart": null,
+    "Description": "A claim that uses more words than its meaning needs.",
+    "Example Claims": null,
+    "When to use": null,
+    "Polarity": "Issue",
+    "Status": "Proposed",
+    "Geo Status": "To be created",
+    "Geo Tag ID": null,
+    "Work tags": [
+      "Issue"
+    ],
+    "Verified on": null,
+    "Evidence": null,
+    "page_id": "5d0273e214eb8123a1b2c3d4e5f60718"
+  },
+  {
+    "Name": "Exact duplicate",
+    "Category": null,
+    "Counterpart": null,
+    "Description": null,
+    "Example Claims": null,
+    "When to use": null,
+    "Polarity": null,
+    "Status": null,
+    "Geo Status": null,
+    "Geo Tag ID": null,
+    "Work tags": [
+      "Issue"
+    ],
+    "Verified on": null,
+    "Evidence": null,
+    "page_id": "5d1273e214eb8123a1b2c3d4e5f60719"
+  }
+]

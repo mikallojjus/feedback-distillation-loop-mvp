@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Cell store line (runs/judgments/<key16>/run-<n>.jsonl)",
+  "description": "One judged item in one run: what the judge said about each tag of the group. The last line for an item wins. definitions/meta describes the store's meta.json (the inputs the folder name hashes).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "item_hash", "status", "tags", "call"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1, "description": "The Geo ID of the claim." },
+    "item_hash": { "$ref": "#/definitions/hash" },
+    "status": { "type": "string", "enum": ["ok", "error"] },
+    "error": { "type": "string", "description": "Why the item has no usable answer; only with status error." },
+    "tags": { "type": "array", "items": { "$ref": "#/definitions/cellTag" } },
+    "call": { "$ref": "#/definitions/call" }
+  },
+  "definitions": {
+    "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{16}$" },
+    "decision": { "type": "string", "enum": ["apply", "do_not_apply", "ask_editor"] },
+    "cellTag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "decision", "p", "rule_ref", "reason"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "decision": { "$ref": "#/definitions/decision" },
+        "p": { "type": "number", "minimum": 0, "maximum": 1 },
+        "rule_ref": { "type": ["string", "null"], "description": "For example 'Context-dependent rule 3'." },
+        "reason": { "type": "string" }
+      }
+    },
+    "usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input", "cache_write", "cache_read", "output"],
+      "properties": {
+        "input": { "type": "integer", "minimum": 0 },
+        "cache_write": { "type": "integer", "minimum": 0 },
+        "cache_read": { "type": "integer", "minimum": 0 },
+        "output": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "batch", "attempt", "cli_version", "usage"],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "batch": { "type": "integer", "minimum": 0 },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "cli_version": { "type": ["string", "null"] },
+        "usage": { "$ref": "#/definitions/usage" }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["driver", "model", "effort", "pass", "prompt_version", "group", "tags"],
+      "properties": {
+        "driver": { "type": "string", "minLength": 1 },
+        "model": { "type": "string", "minLength": 1 },
+        "effort": { "type": "string", "minLength": 1 },
+        "pass": { "type": "string", "const": "text" },
+        "prompt_version": { "type": "string", "minLength": 1 },
+        "group": { "type": "string", "minLength": 1 },
+        "tags": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "tag_hash"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "tag_hash": { "$ref": "#/definitions/hash" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

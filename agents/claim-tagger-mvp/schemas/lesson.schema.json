@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lesson (a Rule changes row)",
+  "description": "One row of the Rule changes table as plain values: the ten columns, keyed by their Notion names, plus the optional fields a pull adds. Safety check result, Supporting rows and Editor wording are empty until they are filled. Editor wording and the Status values Approved and Rejected are written by an editor, never by a script.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["Lesson", "Tag", "Rule", "Kind", "Current text", "Proposed text", "Status"],
+  "properties": {
+    "Lesson": { "type": "string", "minLength": 1, "description": "The lesson title; unique, it identifies the row." },
+    "Tag": { "type": "string", "minLength": 1 },
+    "Rule": { "type": "string", "minLength": 1, "description": "For example Context-dependent rule 4, or Wordy when to use." },
+    "Kind": { "type": "string", "enum": ["Clarify wording", "Change the rule", "Initial rules"] },
+    "Current text": { "type": ["string", "null"], "description": "The text in force; empty for Initial rules." },
+    "Proposed text": { "type": "string", "minLength": 1 },
+    "Safety check result": { "type": ["string", "null"], "description": "For example PASS: examples 11/11, earlier 5/5, yours 2/2." },
+    "Supporting rows": { "type": ["string", "null"], "description": "One line per decided row: the claim shortened, a middle dot, the key of the row." },
+    "Editor wording": { "type": ["string", "null"] },
+    "Status": { "type": "string", "enum": ["Proposed", "Approved", "Rejected", "Live", "Rolled back"] },
+    "page_id": { "type": ["string", "null"] },
+    "created": { "type": ["string", "null"] },
+    "supporting_keys": { "type": "array", "items": { "type": "string" }, "description": "The keys cited in Supporting rows." }
+  }
+}

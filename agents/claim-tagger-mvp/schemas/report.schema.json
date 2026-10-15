@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Report (runs/<run-id>/report.json)",
+  "description": "The three parts of every report: one sentence, an optional table of at most five rows of three cells, one Next line. report.md is rendered from this by renderReport() in scripts/lib/report.mjs and linted before it is written.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["demo", "sentence", "next"],
+  "properties": {
+    "demo": { "type": "boolean", "description": "True: report.md starts the sentence with 'Demo · '." },
+    "sentence": { "type": "string", "minLength": 1, "pattern": "^[^\\r\\n]+$", "description": "One line, without the Demo prefix." },
+    "header": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "string", "pattern": "^[^\\r\\n]*$" },
+      "description": "The header row of the table. The third cell is empty for a two-column table."
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "string", "pattern": "^[^\\r\\n]*$" } },
+      "description": "Body rows of exactly three cells (the third is empty in a two-column table). Left out when there is nothing to count."
+    },
+    "next": { "type": "string", "pattern": "^Next: [^\\r\\n]*[^\\s\\r\\n][^\\r\\n]*$", "description": "One line that starts with 'Next: '." }
+  }
+}
