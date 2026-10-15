@@ -84,3 +84,11 @@ Done: the judge (adaptive runs, per-group cell store, the judge prompt at versio
 Verified: `node --test tests/` 1,323 pass after the judge landed (the judge coder's run).
 
 Next: hand-backs in any order; then a builder session and `setup all` on the live parent page, the read-back and the structure diff (acceptance check 3); the real run on the copy (acceptance check 4); the two skills.
+
+### 10. The loop, the page blocks and lint, the headless tooling and the skill are committed (2026-10-15)
+
+Done: the loop scripts (propose, distill, promote with the safety check, the PASS and FAIL writes, the wording sentence and the automatic follow-up; followup; rollback; restore; status; preflight; the distill and wording prompts; an end-to-end loop test on the fakes; 169 tests), the Markdown-to-blocks converter with the practice-page lint (68 tests; the drafted page passes with no problems), the transcript checker and the headless runner (115 tests; the runner forces the Explanatory output style and grades the final message), the walkthrough manifest and page (Opus draft, reviewed; alternates filled from the dry run; decision 29), and `.claude/skills/claim-tagger/SKILL.md` rewritten for the MVP agent with the output-style override, the subcommand command lines, demo mode, the reporting style and the examples (`references/report-examples.md`). Coder decisions are recorded in `CONTRACTS.md` section 14.
+
+Verified: the loop coder's `node --test tests/` run: 1,750 tests pass, 0 fail.
+
+Next: the setup coder's hand-back; the live setup; the walkthrough runner; `AGENT.md` and `README.md`; the real run; the headless check; the verifier.

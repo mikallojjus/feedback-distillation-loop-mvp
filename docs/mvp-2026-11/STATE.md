@@ -24,10 +24,7 @@
 | Agent | Model | Asked | Writes |
 |---|---|---|---|
 | Setup coder | Sonnet | `lib/notion-build.mjs` (structure from the proposal, databases and views through REST 2026-03-11, verify), `setup.mjs` subcommands (structure, preview, api-check, pages, databases, views, rulebook, claims, seed-audit, rubric, canaries, settings, verify, all) | `scripts/lib/notion-build.mjs`, `scripts/setup.mjs`, `setup/structure.json`, tests |
-| Loop coder | Sonnet | `propose`, `distill`, `promote` (safety check, PASS and FAIL writes, automatic follow-up, wording sentence), `followup`, `rollback`, `restore`, `status`, `lib/preflight.mjs`, the distill and wording prompts, the end-to-end loop test | `scripts/*.mjs`, `prompts/`, tests |
-| Blocks coder | Sonnet | `lib/notion-blocks.mjs`: Markdown to REST blocks with markers, preview, the practice-page lint | `scripts/lib/notion-blocks.mjs`, tests |
-| Walkthrough drafter | Opus | `walkthrough/manifest.json` and `walkthrough/page.md` from the design, the real claims and the taxonomy read | `agents/claim-tagger-mvp/walkthrough/`, `docs/mvp-2026-11/WALKTHROUGH-DRAFT-NOTES.md` |
 
 ## Finished subagents
 
-Haiku digests in `sweeps/`; library coder (88 tests); foundation coder (195 tests); pull and plan coder (63 tests); judge coder (112 tests); proposal drafter (Opus); artifact scaffold (Sonnet). Suite: 1,323 tests pass.
+Haiku digests in `sweeps/`; library coder (88 tests); foundation coder (195 tests); pull and plan coder (63 tests); judge coder (112 tests); loop coder (169 tests); blocks and lint coder (68 tests); headless tooling coder (115 tests); proposal drafter and walkthrough drafter (Opus); artifact scaffold (Sonnet). Suite: 1,750 tests pass.
