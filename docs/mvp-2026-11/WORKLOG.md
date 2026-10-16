@@ -156,3 +156,11 @@ Done: the independent verifier re-ran acceptance checks 1, 3, 5, 7, 8 and 10 and
 Verified: `evidence/01-tests/node-test-spec.txt` (1,854 pass, 0 fail); `VERIFICATION.md`; the grader's verdicts unchanged after the layout fix (with the skill 12 of 12, without 8 of 12); the strict build's check list; no secret in the committed files (the verifier's inspection and the engineer's scan).
 
 Next: the product owner deletes the pause file, builds a fresh practice page and runs the seven steps; then calibration runs 6 and 7 and the unpaused practice-page eval; the MVP is agreed when the product owner says so.
+
+### 19. Revision: decisions on the claims table (2026-10-16)
+
+Done: the product owner reviewed the Tag decisions queue after checkpoint 2 and asked for the editor's decisions to live on the claims table, with the queue reduced to an agent-written ledger (decision P2). The specification is `CLAIMS-REVIEW.md`: the claims table gains Agent confidence and the real table's four review columns, the views move to the claims table, a decision is read from Review status and the verified relation (decision 42), disagreements are shown and never applied (decision 43). Implementation started: scripts and tests first, then the live structure change and the migration of the twelve existing decisions, then the walkthrough, then the documents and the artifact.
+
+Verified: nothing yet; this entry opens the work.
+
+Next: the scripts coder's hand-back; the live migration (needs the pause file deleted by the product owner); the walkthrough; the documents; the artifact.
