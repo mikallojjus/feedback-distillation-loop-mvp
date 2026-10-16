@@ -3,8 +3,8 @@ name: claim-tagger-walkthrough
 description: >-
   Set up a fresh practice copy of the claim tagger's editor feedback loop in Notion and guide an editor through it:
   one command creates a new page under a page the editor picks, with its own one-tag rulebook (Context-dependent),
-  seven real claims, a small decision queue, a rule-changes table and seven numbered steps, then says where the editor
-  is and what to type next. Use this skill whenever someone wants to try, learn, practise, demo or teach the claim
+  seven real claims that the editor decides on a Claims table like the real one, a rule-changes table and seven
+  numbered steps, then says where the editor is and what to type next. Use this skill whenever someone wants to try, learn, practise, demo or teach the claim
   tagger or the editorial feedback loop, onboard a new editor, make a training or practice page, or asks "where am I
   in the walkthrough/demo", even if they never say "walkthrough". It never touches real claims or the real rulebook;
   for real tagging, distilling or promoting use /claim-tagger.
@@ -18,7 +18,7 @@ description: >-
 
 ## What it does and never does
 
-- Every Notion write comes from `W`, which builds the practice page from a plan it writes first and reads every row back. You never write Notion through the connector, never create, move, archive or delete a page, never fill an editor column (Tag outcome, Why wrong, Your reasoning, Editor wording, Paused, Approved, Rejected), and never read or write the production tables or `agents/claim-tagger-mvp/runs/`. The decided rows a new practice page starts with are written by the script's own setup plan, not by you.
+- Every Notion write comes from `W`, which builds the practice page from a plan it writes first and reads every row back. You never write Notion through the connector, never create, move, archive or delete a page, never fill an editor column (on the Claims table Claim quality tags — verified, Review status, Why wrong and Challenged tags notes; on Rule changes Editor wording and the Status values Approved and Rejected; on Agent settings Paused), and never read or write the production tables or `agents/claim-tagger-mvp/runs/`. The five claims a new practice page starts Reviewed, and the ledger rows that go with them, are written by the script's own setup plan, not by you.
 - You never pass `--confirm`, `--bare`, `--fallback-model` or `--unpause`.
 - The last thing `W` prints is a report in the shape of "Reporting style". Your final message is that report, verbatim and complete, and nothing else.
 
@@ -34,7 +34,7 @@ Run `W where` and relay its sentence and its "Next:" line. `W list` names every 
 
 ## Running the steps
 
-The steps of the page are `/claim-tagger demo status`, `demo tag`, `demo distill` and `demo promote`; run them exactly as the claim-tagger skill's "Demo mode" says (`W run <script> ...`, against the newest practice page). Steps 3 and 5 happen in Notion: never fill those columns for the editor; link the view instead (Your queue for step 3, Lessons waiting for step 5). Step 7 needs no command: the follow-up runs by itself at the end of a passed safety check, and the promote report's Next line points at step 7; `/claim-tagger demo follow-up` only repeats it after a run that stopped early, and `W where` says when.
+The steps of the page are `/claim-tagger demo status`, `demo tag`, `demo distill` and `demo promote`; run them exactly as the claim-tagger skill's "Demo mode" says (`W run <script> ...`, against the newest practice page). Steps 3 and 5 happen in Notion: never fill those columns for the editor; link the table or view instead. Step 3 is the Claims table: the editor decides the two claims whose Review status is To review, and Your queue lists only the one the agent is unsure about (the AI Force claim), so `W where` links the Claims table and says which claims to decide. Step 5 is Lessons waiting. Step 7 needs no command: the follow-up runs by itself at the end of a passed safety check, and the promote report's Next line points at step 7; `/claim-tagger demo follow-up` only repeats it after a run that stopped early, and `W where` says when.
 
 ## Reporting style
 
@@ -52,20 +52,19 @@ Walkthrough: your practice page is ready under Editor onboarding.
 
 | Table | Now |
 |---|---|
-| Rulebook | 1 tag, Context-dependent |
-| Claims | 7 |
-| Tag decisions | 7: 5 decided earlier, 2 for you |
+| Rulebook | 1 tag |
+| Claims | 7: 5 reviewed earlier, 2 for you |
 | Rule changes | empty |
 
 Next: open Claim tagger practice · 15 Oct 10:42 (link) and follow step 1.
 
-Walkthrough: you are at step 3, deciding your two rows.
+Walkthrough: you are at step 3, Decide your two claims.
 
-Next: fill in your 2 rows in Your queue (link).
+Next: open Claims (link) and decide the two claims whose Review status is To review.
 
 ## References, read only when needed
 
-- `references/manifest.md`: the practice page's content (the seven claims, the five earlier decisions, the two open rows, the example claims), how to change it, and the calibration a change must pass.
-- `references/page-design.md`: the page template, the fixed format of the seven steps, the table limits, the banned words, and what `W verify` checks.
+- `references/manifest.md`: the practice page's content (the seven claims, the five claims Reviewed earlier, the two claims the editor decides, the example claims), how to change it, and the calibration a change must pass.
+- `references/page-design.md`: the page template, the fixed format of the seven steps, the table limits, the banned words, the tables and views of the page, and what `W verify` checks.
 - `references/troubleshooting.md`: a stop halfway, a stop when the allowance ran out, a run that stopped before step 7, a FAIL at step 6, a paused agent, a hand edit to the rulebook.
 - `references/report-examples.md`: every report, as the editor sees it.

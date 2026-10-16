@@ -1008,7 +1008,7 @@ test('rule k (captions): a manifest without a steps list is a problem, not a ski
   assert.deepEqual(lint(OK, { steps: [{ n: 1, affects: [null, 3, undefined] }, { n: 2 }] }).problems, []);
 });
 
-test('rule l (views): Your queue inside Step 3 and Lessons waiting inside Step 5, or none; only the four view names', () => {
+test('rule l (views): Your queue inside Step 3 and Lessons waiting inside Step 5, or none; only the five view names', () => {
   const queue = '{{view:Your queue}}';
   const waiting = '{{view:Lessons waiting}}';
   assert.deepEqual(lint(swap(swap(OK, `${queue}\n\n`, ''), `${waiting}\n\n`, '')).problems, [], 'no views at all is the no-views fallback');
@@ -1018,7 +1018,10 @@ test('rule l (views): Your queue inside Step 3 and Lessons waiting inside Step 5
   assert.match(lint(page).problems[0].detail, /\{\{view:Lessons waiting\}\} is missing; the page has both linked views or none/);
   page = swap(OK, `${queue}\n\n`, '');
   assert.deepEqual(summary(lint(page)), [`l@${lineNo(page, waiting)}`]);
-  // a third view
+  // a third view, or a fourth: the views of the Claims table that are tabs are not placed on the page
+  page = swap(OK, '- **Goal of the step.** Turn your two notes', `{{view:Agent disagreed}}\n\n- **Goal of the step.** Turn your two notes`);
+  assert.deepEqual(summary(lint(page)), [`l@${lineNo(page, 'Agent disagreed}}')}`]);
+  assert.match(lint(page).problems[0].detail, /not placed on the page; only Your queue \(Step 3\) and Lessons waiting \(Step 5\) are/);
   page = swap(OK, '- **Goal of the step.** Turn your two notes', `{{view:Needs your note}}\n\n- **Goal of the step.** Turn your two notes`);
   assert.deepEqual(summary(lint(page)), [`l@${lineNo(page, 'Needs your note}}')}`]);
   assert.match(lint(page).problems[0].detail, /not placed on the page; only Your queue \(Step 3\) and Lessons waiting \(Step 5\) are/);
@@ -1032,10 +1035,10 @@ test('rule l (views): Your queue inside Step 3 and Lessons waiting inside Step 5
   page = swap(swap(OK, `${waiting}\n\n`, ''), '{{tables}}', `{{tables}}\n\n${waiting}`);
   assert.deepEqual(summary(lint(page)), [`l@${lineNo(page, waiting)}`]);
   assert.match(lint(page).problems[0].detail, /sits outside the steps; it belongs inside Step 5/);
-  // a name that is not one of the four, or is written in another case
+  // a name that is not one of the five (the third is a view of the Claims table since the revision of 16 October), or is written in another case
   page = swap(OK, queue, '{{view:Inbox}}');
   assert.deepEqual(summary(lint(page)), [`l@${lineNo(page, '{{view:Inbox}}')}`, `l@${lineNo(page, '{{view:Inbox}}')}`]);
-  assert.match(lint(page).problems[0].detail, /\{\{view:Inbox\}\} is not one of the four view names \(Your queue, Needs your note, Lessons waiting, Rulebook\)/);
+  assert.match(lint(page).problems[0].detail, /\{\{view:Inbox\}\} is not one of the five view names \(Your queue, Needs your note, Agent disagreed, Lessons waiting, Rulebook\)/);
   assert.match(lint(page).problems[1].detail, /\{\{view:Your queue\}\} is missing/);
   page = swap(OK, queue, '{{view:your queue}}');
   assert.deepEqual(summary(lint(page)), [`l@${lineNo(page, '{{view:your queue}}')}`, `l@${lineNo(page, '{{view:your queue}}')}`]);
@@ -1056,8 +1059,8 @@ test('rule l (views): "Decide these rows" and "Approve this change" are retired 
   at = lineNo(page, 'open Approve this change');
   assert.deepEqual(summary(lint(page)), [`c@${at}`, `l@${at}`]);
   assert.match(lint(page).problems.find((p) => p.rule === 'l').detail, /retired view name "Approve this change"/);
-  // the four names in plain text are all fine
-  assert.deepEqual(lint(withSafe('Your queue, Needs your note, Lessons waiting and Rulebook are the views.')).problems, []);
+  // the five names in plain text are all fine
+  assert.deepEqual(lint(withSafe('Your queue, Needs your note, Agent disagreed, Lessons waiting and Rulebook are the views.')).problems, []);
 });
 
 test('rule m (tables placeholder): {{tables}} appears exactly once, after Step 7', () => {

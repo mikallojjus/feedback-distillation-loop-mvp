@@ -11,9 +11,10 @@
 //   pageModel(template, values)                -> what the page is made of: blocks before the tables, the two view slots, the Help toggle
 //   expectedContent(model, fallbackKeys)       -> the top-level content blocks the page must hold, in order
 //   annotatedPreview(model, { ... })           -> preview.md: the rendered template with a comment under each marker, and the fallback paragraphs
-//   rulebookRow(manifest) / queueOps(manifest, claimLinks) / openKeys(manifest) / queueKey(claim, tag)
-//                                              -> the Rulebook row, the creates of Tag decisions, the keys of the two rows that wait, a row's key
-//   stepOf({ queue, lessons, openKeys })       -> where the editor is: { step, branch, lesson } (the mapping of the design)
+//   rulebookRow(manifest) / claimEditorCells(manifest, claim, tagPages) / ledgerOps(manifest, claimLinks) / openKeys(manifest) / openClaims(manifest) / queueKey(claim, tag)
+//                                              -> the Rulebook row, the editor's four columns of a claim as the cells of its create, the creates of Tag decisions (the
+//                                                 ledger: the five decided claims only), the ledger keys of the claims that wait, those claims, a ledger row's key
+//   stepOf({ claims, ledger, lessons, open })  -> where the editor is: { step, branch, lesson } (the mapping of the design, read from the claims' Review status)
 //   placementFetch(inner)                      -> a fetch that spells two placements the Notion client cannot (see the function)
 //   bufferedLog()                              -> a request log that starts in memory and moves to its file when the folder exists
 //   demosDir / demoDir / listDemos / pickDemo  -> the demos under <root>/runs/demos
@@ -28,6 +29,7 @@ import { blockText, parseInline, renderPreview, splitAtMarkers, toBlocks } from 
 import { AUTOMATIC_TYPES, validateStructure, viewKey } from './notion-build.mjs';
 import { normId } from './notion-values.mjs';
 import { stampOf } from './editor-words.mjs';
+import { decisionsFor } from './decisions.mjs';
 
 // ---- names -------------------------------------------------------------------------------------------------------------------------
 
@@ -35,23 +37,32 @@ import { stampOf } from './editor-words.mjs';
 export const PRACTICE_TITLES = Object.freeze({
   rulebook: 'Rulebook', claims_copy: 'Claims', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings',
 });
-/** The four view names of the page (production's), by their config key. */
+/** The five view names of the page (production's), by their config key. The two views of the ledger (Tag decisions) are not on a practice page. */
 export const VIEW_NAMES = Object.freeze({
-  your_queue: 'Your queue', needs_your_note: 'Needs your note', lessons_waiting: 'Lessons waiting', rulebook: 'Rulebook',
+  your_queue: 'Your queue', needs_your_note: 'Needs your note', agent_disagreed: 'Agent disagreed', lessons_waiting: 'Lessons waiting', rulebook: 'Rulebook',
 });
 /** The two linked views: placed inside a step, a view of this table. */
-export const LINKED_VIEWS = Object.freeze({ your_queue: 'tag_decisions', lessons_waiting: 'rule_changes' });
-/** The two views that are tabs of their table; `position` is where the tab goes (the table's own first view stays first for Tag decisions). */
-export const TAB_VIEWS = Object.freeze({ rulebook: { table: 'rulebook', position: 'start' }, needs_your_note: { table: 'tag_decisions', position: 'end' } });
+export const LINKED_VIEWS = Object.freeze({ your_queue: 'claims_copy', lessons_waiting: 'rule_changes' });
+/** The three views that are tabs of their table; `position` is where the tab goes (the table's own first view stays first for the Claims). */
+export const TAB_VIEWS = Object.freeze({
+  rulebook: { table: 'rulebook', position: 'start' },
+  needs_your_note: { table: 'claims_copy', position: 'end' },
+  agent_disagreed: { table: 'claims_copy', position: 'end' },
+});
 /** What stands in a step where its linked view could not be made. */
 export const FALLBACK_TEXT = Object.freeze({
-  your_queue: 'Scroll to Tag decisions at the bottom of this page; your two rows are the ones without a Tag outcome.',
+  your_queue: 'Scroll to Claims in the tables further down this page; your two claims are the ones whose Review status is To review.',
   lessons_waiting: 'Scroll to Rule changes at the bottom of this page and open the row with Status Proposed.',
+});
+/** The editor's four columns of a claim (the real table's names; config.json editor_columns.claims_copy lists the same four). */
+export const CLAIM_COLUMNS = Object.freeze({
+  verified: 'Claim quality tags — verified', review_status: 'Review status', why_wrong: 'Why wrong', notes: 'Challenged tags notes',
 });
 /** The block types the page template can make (anything else on the page, a table or a linked view, is not template text). */
 export const CONTENT_TYPES = new Set(['paragraph', 'heading_1', 'heading_2', 'heading_3', 'bulleted_list_item', 'numbered_list_item', 'quote', 'divider', 'callout', 'table', 'toggle']);
 
-const OUTCOMES = ['Applies', 'Does not apply'];
+const PROPOSALS = ['Applies', 'Does not apply', "Can't tell"];
+const WHY_WRONG = ['Agent slip', 'Rule unclear', 'Rule should change'];
 const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const two = (n) => String(n).padStart(2, '0');
 const isRealId = (v) => typeof v === 'string' && /^[0-9a-f]{32}$/.test(normId(v.trim()));
@@ -114,6 +125,7 @@ export const sha256Of = (data) => createHash('sha256').update(data).digest('hex'
 
 function manifestProblems(m) {
   const out = [];
+  const C = CLAIM_COLUMNS;
   const bad = (msg) => out.push(msg);
   if (!isPlain(m)) return ['the manifest is not a JSON object'];
   if (typeof m.manifest_version !== 'string' || m.manifest_version === '') bad('manifest_version is missing');
@@ -153,10 +165,29 @@ function manifestProblems(m) {
       if (!isPlain(r) || !keys.has(r.claim)) return bad(`${label}[${i}].claim names no claim of the manifest`);
       if (placed.has(r.claim)) bad(`${label}[${i}]: the claim ${r.claim} is both decided and open, or listed twice`);
       placed.set(r.claim, label);
+      const at = `${label}[${i}] (${r.claim})`;
+      const tagsOf = (list, where) => {
+        if (!Array.isArray(list) || list.some((t) => typeof t !== 'string' || t !== m.tag?.Name)) bad(`${where}: ${C.verified} must be a list of tag names; the page has one tag, ${m.tag?.Name ?? 'none'}`);
+      };
       if (label === 'decided') {
-        if (!OUTCOMES.includes(r['Tag outcome'])) bad(`decided[${i}] (${r.claim}): Tag outcome must be one of ${OUTCOMES.join(', ')}`);
-        if (typeof r['Your reasoning'] !== 'string') bad(`decided[${i}] (${r.claim}): Your reasoning is missing`);
-        if (typeof r['Agent proposal'] !== 'string') bad(`decided[${i}] (${r.claim}): Agent proposal is missing`);
+        // a claim an editor has Reviewed: the page creates it in this state (the agent's pre-audit answer goes to the ledger row)
+        if (!PROPOSALS.includes(r['Agent proposal'])) bad(`${at}: Agent proposal must be one of ${PROPOSALS.join(', ')}`);
+        tagsOf(r[C.verified], at);
+        if (r[C.review_status] !== 'Reviewed') bad(`${at}: ${C.review_status} must be Reviewed`);
+        if (!WHY_WRONG.includes(r[C.why_wrong])) bad(`${at}: ${C.why_wrong} must be one of ${WHY_WRONG.join(', ')}`);
+        if (typeof r[C.notes] !== 'string' || r[C.notes].trim() === '') bad(`${at}: ${C.notes} is missing (it carries the words of the audit)`);
+      } else {
+        // a claim the editor still has to decide: created To review with the other three columns empty; `enter` is what the editor types
+        if (r[C.review_status] !== undefined && r[C.review_status] !== 'To review') bad(`${at}: ${C.review_status} is To review when the page is made`);
+        if (r.enter !== undefined) {
+          if (!isPlain(r.enter)) bad(`${at}: enter must be an object`);
+          else {
+            tagsOf(r.enter[C.verified], `${at}.enter`);
+            if (r.enter[C.review_status] !== 'Reviewed') bad(`${at}.enter: ${C.review_status} must be Reviewed`);
+            if (!WHY_WRONG.includes(r.enter[C.why_wrong])) bad(`${at}.enter: ${C.why_wrong} must be one of ${WHY_WRONG.join(', ')}`);
+            if (typeof r.enter[C.notes] !== 'string' || r.enter[C.notes].trim() === '') bad(`${at}.enter: ${C.notes} is missing`);
+          }
+        }
       }
     });
   }
@@ -392,28 +423,66 @@ export function rulebookRow(manifest) {
   return tag;
 }
 
-/** The key of the queue row of a claim: "<Geo ID>::<tag>". */
+/** The key of the ledger row of a claim: "<Geo ID>::<tag>". */
 export const queueKey = (claim, tag) => `${claim['Geo ID']}::${tag}`;
 
 /**
- * The creates for Tag decisions: one row per claim in the order of the manifest, with Claim, Key, Tag and the link to the claim's row; the decided
- * rows (decision 29) also carry Agent proposal, Tag outcome, Why wrong and Your reasoning. `claimLinks` maps a Geo ID to the link of its row.
+ * The editor's four columns of a claim as the cells of its create. A decided claim (the manifest's decided entry) is created Reviewed, with its verified tags, Why wrong and
+ * the audit's words; an open claim is created with Review status To review and the other three empty. `tagPages` maps a tag name to the page id of its row in the
+ * Rulebook (the relation holds page ids); a tag it does not know is an error. The names of the columns are CLAIM_COLUMNS.
  */
-export function queueOps(manifest, claimLinks) {
+export function claimEditorCells(manifest, claim, tagPages) {
+  const C = CLAIM_COLUMNS;
+  const d = manifest.decided.find((x) => x.claim === claim.key);
+  const cells = {};
+  if (!d) {
+    cells[C.review_status] = 'To review';
+    return cells;
+  }
+  const ids = d[C.verified].map((name) => {
+    if (!tagPages?.[name]) throw new ManifestError(`the claim ${claim.key} names the tag ${name} in ${C.verified}, which has no row in the Rulebook of the page`);
+    return tagPages[name];
+  });
+  if (ids.length) cells[C.verified] = ids;
+  cells[C.review_status] = d[C.review_status];
+  cells[C.why_wrong] = d[C.why_wrong];
+  cells[C.notes] = d[C.notes];
+  return cells;
+}
+
+/**
+ * What the ledger holds for a decided claim, as the tag step copies it (lib/decisions.mjs decisionsFor): the proposal the agent made before the audit, the editor's
+ * outcome (Applies when the tag is among the verified tags), Why wrong and the words. Decided under stays empty (the audit gave no edition).
+ */
+export function ledgerCopy(manifest, claim) {
+  const C = CLAIM_COLUMNS;
   const tag = manifest.tag.Name;
-  const decided = new Map(manifest.decided.map((d) => [d.claim, d]));
-  return manifest.claims.map((claim) => {
+  const d = manifest.decided.find((x) => x.claim === claim.key);
+  if (!d) return null;
+  const row = { Key: queueKey(claim, tag), Tag: tag, 'Agent proposal': d['Agent proposal'] };
+  const reviewed = { geo_id: claim['Geo ID'], review_status: d[C.review_status], verified_tags: d[C.verified], why_wrong: d[C.why_wrong], challenged_notes: d[C.notes] };
+  const [decision] = decisionsFor(reviewed, [row]);
+  return {
+    'Agent proposal': d['Agent proposal'], 'Tag outcome': decision.outcome, 'Why wrong': decision.why_wrong, 'Your reasoning': decision.reasoning,
+  };
+}
+
+/**
+ * The creates for Tag decisions (the agent's ledger): one row for each decided claim, in the order of the manifest, with Claim, Key, Tag, the link to the claim's row and
+ * the copy of the decision (Agent proposal, Tag outcome, Why wrong, Your reasoning). The two open claims have no row: the tag step makes them.
+ * `claimLinks` maps a Geo ID to the link of its row.
+ */
+export function ledgerOps(manifest, claimLinks) {
+  const tag = manifest.tag.Name;
+  return manifest.claims.filter((claim) => manifest.decided.some((d) => d.claim === claim.key)).map((claim) => {
     const properties = { Claim: claim['Geo Name'], Key: queueKey(claim, tag), Tag: tag };
     if (claimLinks[claim['Geo ID']]) properties['Claim link'] = claimLinks[claim['Geo ID']];
-    const d = decided.get(claim.key);
-    if (d) {
-      for (const column of ['Agent proposal', 'Tag outcome', 'Why wrong', 'Your reasoning']) if (typeof d[column] === 'string' && d[column] !== '') properties[column] = d[column];
-    }
+    for (const [column, value] of Object.entries(ledgerCopy(manifest, claim))) if (typeof value === 'string' && value !== '') properties[column] = value;
     return { key: properties.Key, properties };
   });
 }
 
-/** The keys of the rows that wait for the editor (the manifest's open rows), and of the rows decided earlier. */
+/** The ledger keys of the claims that wait for the editor (the manifest's open claims), and of the claims decided earlier. */
 export function openKeys(manifest) {
   const open = new Set(manifest.open.map((o) => o.claim));
   const tag = manifest.tag.Name;
@@ -423,31 +492,45 @@ export function openKeys(manifest) {
   };
 }
 
+/** The claims that wait for the editor, in the order of the manifest: [{ claim: 'presspool', geo_id, key (the ledger key) }]. */
+export function openClaims(manifest) {
+  const tag = manifest.tag.Name;
+  return manifest.open.map((o) => {
+    const claim = manifest.claims.find((c) => c.key === o.claim);
+    return { claim: claim.key, geo_id: claim['Geo ID'], key: queueKey(claim, tag) };
+  });
+}
+
 // ---- where the editor is ------------------------------------------------------------------------------------------------------------
 
 const text = (v) => (typeof v === 'string' ? v.trim() : v === null || v === undefined ? '' : String(v).trim());
 const byCreated = (a, b) => text(b.created).localeCompare(text(a.created));
 
 /**
- * The mapping of the design (W4 9.3), from a pull of the demo's tables: queue = the rows of Tag decisions (Key, Agent proposal, Tag outcome, Follow-up),
- * lessons = the rows of Rule changes (Lesson, Status, Safety check result), openKeys = the keys of the two rows that wait for the editor.
- *   { step: 2 }                          the open rows have no Agent proposal yet
- *   { step: 3 }                          they have a proposal and no Tag outcome
- *   { step: 4 }                          both are decided and there is no rule change
+ * The mapping of the design (W4 9.3), from a pull of the demo's tables: claims = the rows of the Claims (geo_id, review_status, agent_notes), ledger = the rows of Tag
+ * decisions (Key, Follow-up), lessons = the rows of Rule changes (Lesson, Status, Safety check result), open = the two claims that wait for the editor
+ * (openClaims: geo_id and ledger key). An editor's decision is a claim whose Review status is Reviewed.
+ *   { step: 2 }                          a claim of the two is not Reviewed and the agent has not written Agent notes on it yet
+ *   { step: 3 }                          they have notes and one of them is not Reviewed
+ *   { step: 4 }                          both are Reviewed and there is no rule change
  *   { step: 5, lesson }                  a rule change is Proposed
  *   { step: 6, lesson }                  Approved, no Safety check result yet
  *   { step: 6, branch: 'not-passed' }    Approved, with a result that is not a PASS
- *   { step: 7, branch: 'stopped' }       Live, and a row of the two has no Follow-up
+ *   { step: 7, branch: 'stopped' }       Live, and the ledger row of one of the two has no Follow-up
  *   { step: 7, branch: 'read' }          Live, every row has a Follow-up and one of them is Still wrong
  *   { step: 'complete' }                 Live with both Fixed, or the rule change was Rejected or rolled back
- *   { problem }                          one of the two rows is not in the queue
+ *   { problem }                          one of the two claims is not in Claims
  */
-export function stepOf({ queue = [], lessons = [], openKeys: keys = [] }) {
-  const byKey = new Map(queue.map((r) => [text(r.Key), r]));
-  const open = keys.map((k) => byKey.get(k));
-  if (open.length === 0 || open.some((r) => !r)) return { problem: `a row that waits for the editor is not in Tag decisions (${keys.filter((k) => !byKey.has(k)).join(', ') || 'none are known'})` };
-  if (open.some((r) => text(r['Agent proposal']) === '')) return { step: 2 };
-  if (open.some((r) => text(r['Tag outcome']) === '')) return { step: 3 };
+export function stepOf({ claims = [], ledger = [], lessons = [], open = [] }) {
+  const byId = new Map(claims.map((c) => [text(c.geo_id), c]));
+  const rows = open.map((o) => byId.get(o.geo_id));
+  if (open.length === 0 || rows.some((r) => !r)) {
+    const missing = open.filter((o) => !byId.has(o.geo_id)).map((o) => o.claim ?? o.geo_id);
+    return { problem: `a claim that waits for the editor is not in Claims (${missing.join(', ') || 'none are known'})` };
+  }
+  const reviewed = (c) => text(c.review_status) === 'Reviewed';
+  if (rows.some((c) => !reviewed(c) && text(c.agent_notes) === '')) return { step: 2 };
+  if (rows.some((c) => !reviewed(c))) return { step: 3 };
   const mine = [...lessons].sort(byCreated);
   const approved = mine.find((l) => l.Status === 'Approved');
   if (approved) return text(approved['Safety check result']) === '' ? { step: 6, lesson: approved } : { step: 6, branch: 'not-passed', lesson: approved };
@@ -455,8 +538,10 @@ export function stepOf({ queue = [], lessons = [], openKeys: keys = [] }) {
   if (proposed) return { step: 5, lesson: proposed };
   const live = mine.find((l) => l.Status === 'Live');
   if (live) {
-    if (open.some((r) => text(r['Follow-up']) === '')) return { step: 7, branch: 'stopped', lesson: live };
-    if (open.some((r) => text(r['Follow-up']) !== 'Fixed')) return { step: 7, branch: 'read', lesson: live };
+    const byKey = new Map(ledger.map((r) => [text(r.Key), r]));
+    const follow = open.map((o) => text(byKey.get(o.key)?.['Follow-up']));
+    if (follow.some((f) => f === '')) return { step: 7, branch: 'stopped', lesson: live };
+    if (follow.some((f) => f !== 'Fixed')) return { step: 7, branch: 'read', lesson: live };
     return { step: 'complete', lesson: live };
   }
   if (mine.length > 0) return { step: 'complete', lesson: mine[0] }; // Rejected or Rolled back: the safety check did its job and the demo ends

@@ -49,8 +49,9 @@
 //   k captions       with a manifest: every table in a step's `affects` has a bold caption line `**<Table>**` in that step; always: the
 //                    caption `**Agent settings**` appears in Step 6 only
 //   l views          exactly two {{view:...}} lines, Your queue inside Step 3 and Lessons waiting inside Step 5 (or none, the no-views
-//                    fallback); the only view names are Your queue, Needs your note, Lessons waiting and Rulebook ("Decide these rows" and
-//                    "Approve this change" are retired)
+//                    fallback); the only view names are Your queue, Needs your note, Agent disagreed, Lessons waiting and Rulebook
+//                    ("Decide these rows" and "Approve this change" are retired; the first three are views of the Claims table since the
+//                    revision of 16 October, which added Agent disagreed to the names)
 //   m tables-marker  {{tables}} appears exactly once, after Step 7 (and before the Help section)
 // Text inside double quotes (straight or curly) is exempt from d and e, because a claim may say "G20" or "two weeks". A step runs from its
 // heading to the next heading of level 1 or 2, the next `---` line or the {{tables}} line. A manifest is { steps: [{ n, affects: [...] }] }.
@@ -547,7 +548,7 @@ const RETIRED = Object.freeze([
 ].map((r) => ({ ...r, rx: new RegExp(`\\b${escapeRegExp(r.name)}\\b`, 'gi') })));
 const BANNED_RX = BANNED_PHRASES.map((phrase) => ({ phrase, rx: new RegExp(`\\b${escapeRegExp(phrase)}\\b`, 'gi') }));
 const NOTE_PREFIX = /^(?:Ready|Fix needed)\b/;
-const VIEW_NAMES = Object.freeze(['Your queue', 'Needs your note', 'Lessons waiting', 'Rulebook']);
+const VIEW_NAMES = Object.freeze(['Your queue', 'Needs your note', 'Agent disagreed', 'Lessons waiting', 'Rulebook']);
 const PLACED_VIEWS = Object.freeze({ 'Your queue': 3, 'Lessons waiting': 5 });
 
 const NUMBER_WORDS = 'one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|few|several|couple(?:[ \\t]+of)?';
@@ -840,7 +841,7 @@ function checkViews(lines, steps, add) {
   for (const p of placed) {
     const retired = RETIRED.find((r) => r.kind === 'view' && r.name.toLowerCase() === p.name.toLowerCase());
     if (retired) add('l', p.line, `{{view:${p.name}}} is a retired view name; the view is now called ${retired.use}`);
-    else if (!VIEW_NAMES.includes(p.name)) add('l', p.line, `{{view:${p.name}}} is not one of the four view names (${VIEW_NAMES.join(', ')})`);
+    else if (!VIEW_NAMES.includes(p.name)) add('l', p.line, `{{view:${p.name}}} is not one of the five view names (${VIEW_NAMES.join(', ')})`);
     else if (PLACED_VIEWS[p.name] === undefined) add('l', p.line, `{{view:${p.name}}} is not placed on the page; only Your queue (Step 3) and Lessons waiting (Step 5) are`);
     else if (p.step !== PLACED_VIEWS[p.name]) {
       add('l', p.line, `{{view:${p.name}}} sits ${p.step === null ? 'outside the steps' : `in Step ${p.step}`}; it belongs inside Step ${PLACED_VIEWS[p.name]}`);

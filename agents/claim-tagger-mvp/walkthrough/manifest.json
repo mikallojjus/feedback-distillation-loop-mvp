@@ -1,5 +1,5 @@
 {
-  "manifest_version": "2026-10-15.3",
+  "manifest_version": "2026-10-16.1",
   "calibration": {
     "status": "pending",
     "runs": [
@@ -570,51 +570,62 @@
     {
       "claim": "cnn",
       "Agent proposal": "Does not apply",
-      "Tag outcome": "Applies",
+      "Claim quality tags — verified": [
+        "Context-dependent"
+      ],
+      "Review status": "Reviewed",
       "Why wrong": "Agent slip",
-      "Your reasoning": "From the audit of 9 October: the editor agreed; no reasoning was recorded",
+      "Challenged tags notes": "From the audit of 9 October: the editor agreed; no reasoning was recorded",
       "source": "audit of 9 October"
     },
     {
       "claim": "dallas",
       "Agent proposal": "Does not apply",
-      "Tag outcome": "Applies",
+      "Claim quality tags — verified": [
+        "Context-dependent"
+      ],
+      "Review status": "Reviewed",
       "Why wrong": "Agent slip",
-      "Your reasoning": "From the audit of 9 October: the editor agreed; no reasoning was recorded.",
+      "Challenged tags notes": "From the audit of 9 October: the editor agreed; no reasoning was recorded.",
       "source": "audit of 9 October"
     },
     {
       "claim": "contractor",
       "Agent proposal": "Applies",
-      "Tag outcome": "Does not apply",
+      "Claim quality tags — verified": [],
+      "Review status": "Reviewed",
       "Why wrong": "Agent slip",
-      "Your reasoning": "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’",
+      "Challenged tags notes": "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’",
       "source": "audit of 9 October"
     },
     {
       "claim": "kennedy",
       "Agent proposal": "Applies",
-      "Tag outcome": "Does not apply",
+      "Claim quality tags — verified": [],
+      "Review status": "Reviewed",
       "Why wrong": "Agent slip",
-      "Your reasoning": "From the audit of 9 October: the editor agreed; no reasoning was recorded",
+      "Challenged tags notes": "From the audit of 9 October: the editor agreed; no reasoning was recorded",
       "source": "audit of 9 October"
     },
     {
       "claim": "stopgap",
       "Agent proposal": "Applies",
-      "Tag outcome": "Does not apply",
+      "Claim quality tags — verified": [],
+      "Review status": "Reviewed",
       "Why wrong": "Agent slip",
-      "Your reasoning": "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it.",
+      "Challenged tags notes": "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it.",
       "source": "audit of 9 October"
     }
   ],
   "open": [
     {
       "claim": "presspool",
+      "Review status": "To review",
       "enter": {
-        "Tag outcome": "Does not apply",
+        "Claim quality tags — verified": [],
+        "Review status": "Reviewed",
         "Why wrong": "Rule unclear",
-        "Your reasoning": "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well."
+        "Challenged tags notes": "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well."
       },
       "calibrate": {
         "agent": "apply",
@@ -625,10 +636,14 @@
     },
     {
       "claim": "aiforce",
+      "Review status": "To review",
       "enter": {
-        "Tag outcome": "Applies",
+        "Claim quality tags — verified": [
+          "Context-dependent"
+        ],
+        "Review status": "Reviewed",
         "Why wrong": "Rule unclear",
-        "Your reasoning": "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context."
+        "Challenged tags notes": "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context."
       },
       "calibrate": {
         "agent": [
@@ -693,10 +708,16 @@
     ],
     "rulebook_rows": 1,
     "claims": 7,
-    "queue_rows": 7,
-    "open_rows": 2,
-    "decided_rows": 5,
+    "ledger_rows": 5,
+    "reviewed_claims": 5,
+    "open_claims": 2,
     "linked_views": 2,
+    "tab_views": 3,
+    "claims_views": [
+      "Your queue",
+      "Needs your note",
+      "Agent disagreed"
+    ],
     "lesson_rule": "Context-dependent rule 3",
     "gate": "PASS"
   },
@@ -712,16 +733,15 @@
       "title": "The agent reads the claims",
       "command": "/claim-tagger demo tag",
       "affects": [
-        "Tag decisions",
         "Claims"
       ]
     },
     {
       "n": 3,
-      "title": "Decide your two rows",
+      "title": "Decide your two claims",
       "command": null,
       "affects": [
-        "Tag decisions"
+        "Claims"
       ]
     },
     {
@@ -752,10 +772,9 @@
     },
     {
       "n": 7,
-      "title": "The agent re-checks your rows",
+      "title": "The agent re-checks your claims",
       "command": null,
       "affects": [
-        "Tag decisions",
         "Claims"
       ]
     }
