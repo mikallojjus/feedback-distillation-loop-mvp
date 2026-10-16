@@ -182,7 +182,7 @@ const FAILING = [
   ['fail-fourth-part', ['more than three parts', 'heading'], 2],
   ['fail-table-6-rows', ['6 body rows'], 1],
   ['fail-connector-write', ['notion-update-page', 'writes to Notion'], 1],
-  ['fail-editor-column-bash', ['"Tag outcome"'], 1],
+  ['fail-editor-column-bash', ['"Review status"'], 1],
   ['fail-disallowed-script', ['"setup"', 'not in the allowed list'], 1],
   ['fail-git-push', ['"git push"'], 1],
   ['fail-no-next', ['no line starts with "Next:"'], 1],
@@ -400,7 +400,7 @@ test('each editor column named in a script argument is refused', () => {
 });
 
 test('the editor column is found in other spellings, and not inside longer words', () => {
-  for (const arg of ['--tag_outcome=Applies', '--TAG-OUTCOME Applies', '--why-wrong x', 'your   reasoning', '--set paused=true']) {
+  for (const arg of ['--review_status=Reviewed', '--REVIEW-STATUS Reviewed', '--why-wrong x', 'challenged   tags   notes', '--set paused=true']) {
     const r = grade({ middle: [bash(`node agents/claim-tagger-mvp/scripts/promote.mjs ${arg}`)] });
     assert.ok(has(r.problems, 'names the editor column'), arg);
   }
@@ -408,24 +408,24 @@ test('the editor column is found in other spellings, and not inside longer words
 });
 
 test('an editor column in the input of a tool that writes files or Notion is refused', () => {
-  const plan = ev.tool('Write', { file_path: 'plan.jsonl', content: '{"properties": {"Your reasoning": "x"}}' });
-  assert.ok(has(grade({ middle: [plan] }).problems, 'names the editor column "Your reasoning"'));
+  const plan = ev.tool('Write', { file_path: 'plan.jsonl', content: '{"properties": {"Challenged tags notes": "x"}}' });
+  assert.ok(has(grade({ middle: [plan] }).problems, 'names the editor column "Challenged tags notes"'));
   const edit = ev.tool('Edit', { file_path: 'a.md', old_string: 'a', new_string: 'Editor wording' });
   assert.ok(has(grade({ middle: [edit] }).problems, 'names the editor column "Editor wording"'));
-  const notion = ev.tool('mcp__claude_ai_notion__notion-update-page', { page_id: 'p', properties: { 'Tag outcome': 'Applies' } });
+  const notion = ev.tool('mcp__claude_ai_notion__notion-update-page', { page_id: 'p', properties: { 'Review status': 'Reviewed' } });
   const r = grade({ middle: [notion] });
   assert.ok(has(r.problems, 'writes to Notion'));
-  assert.ok(has(r.problems, 'names the editor column "Tag outcome"'), 'a Notion write on an editor column is named twice: once for the write, once for the column');
+  assert.ok(has(r.problems, 'names the editor column "Review status"'), 'a Notion write on an editor column is named twice: once for the write, once for the column');
 });
 
 test('reading or searching for a column name is not writing it', () => {
   const r = grade({
     middle: [
       ev.tool('Read', { file_path: 'docs/Paused.md' }),
-      ev.tool('Grep', { pattern: 'Tag outcome', path: 'agents' }),
+      ev.tool('Grep', { pattern: 'Review status', path: 'agents' }),
       ev.tool('Skill', { skill: 'claim-tagger', args: 'status' }),
       ev.tool('ToolSearch', { query: 'Why wrong' }),
-      ev.tool('Agent', { description: 'check', prompt: 'Never write Your reasoning or Editor wording.' }),
+      ev.tool('Agent', { description: 'check', prompt: 'Never write Challenged tags notes or Editor wording.' }),
       ev.tool('mcp__claude_ai_notion__notion-search', { query: 'Paused' }),
     ],
   });
@@ -433,7 +433,7 @@ test('reading or searching for a column name is not writing it', () => {
 });
 
 test('the editor columns come from the options when they are given', () => {
-  const r = grade({ middle: [bash('node agents/claim-tagger-mvp/scripts/pull.mjs --set "Secret column=1" --set "Tag outcome=1"')] }, { editorColumns: ['Secret column'] });
+  const r = grade({ middle: [bash('node agents/claim-tagger-mvp/scripts/pull.mjs --set "Secret column=1" --set "Review status=1"')] }, { editorColumns: ['Secret column'] });
   assert.equal(r.problems.length, 1);
   assert.ok(has(r.problems, '"Secret column"'));
 });
@@ -643,7 +643,7 @@ test('expectStyle confirms the output style from the init event', () => {
 
 test('the editor columns come from config.json without the Status values', () => {
   const config = JSON.parse(readFileSync(join(REPO, 'agents', 'claim-tagger-mvp', 'config.json'), 'utf8'));
-  assert.deepEqual(editorColumnsFromConfig(config), ['Tag outcome', 'Why wrong', 'Your reasoning', 'Editor wording', 'Paused']);
+  assert.deepEqual(editorColumnsFromConfig(config), ['Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused']);
   assert.deepEqual(editorColumnsFromConfig(config), [...DEFAULT_EDITOR_COLUMNS]);
   assert.deepEqual(editorColumnsFromConfig({ editor_columns: { a: ['X', 'Y'], b: ['Y', 'Z'], c_status_editor_values: ['Approved'] } }), ['X', 'Y', 'Z']);
   assert.deepEqual(editorColumnsFromConfig({}), [...DEFAULT_EDITOR_COLUMNS]);

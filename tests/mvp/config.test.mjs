@@ -335,12 +335,12 @@ test('isProtected is false for anything that is not an id string, and for a conf
 test('writableProperties: the sets of CONTRACTS section 8', () => {
   const config = shipped();
   assert.deepEqual([...writableProperties(config, 'tag_decisions')].sort(),
-    ['Agent confidence', 'Agent proposal', 'Agent reason', 'Claim', 'Claim link', 'Follow-up', 'Key', 'Rulebook edition', 'Tag'].sort());
+    ['Agent confidence', 'Agent proposal', 'Agent reason', 'Claim', 'Claim link', 'Decided under', 'Follow-up', 'Key', 'Rulebook edition', 'Tag', 'Tag outcome', 'Why wrong', 'Your reasoning'].sort());
   assert.deepEqual([...writableProperties(config, 'rule_changes')].sort(),
     ['Current text', 'Kind', 'Lesson', 'Proposed text', 'Rule', 'Safety check result', 'Status', 'Supporting rows', 'Tag'].sort());
   assert.deepEqual([...writableProperties(config, 'agent_settings')].sort(), ['Last run summary', 'Rulebook edition']);
   assert.deepEqual([...writableProperties(config, 'rulebook')], ['When to use']);
-  assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(), ['Agent notes', 'Agent tags']);
+  assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(), ['Agent confidence', 'Agent notes', 'Agent reasons', 'Agent tags']);
 });
 
 test('writableProperties: a setup create may fill more', () => {
@@ -350,19 +350,19 @@ test('writableProperties: a setup create may fill more', () => {
   assert.deepEqual([...rulebook].sort(), [...RULEBOOK_COLUMNS].sort());
   assert.equal(rulebook.size, 13);
   const claims = writableProperties(config, 'claims_copy', { setup: true });
-  assert.deepEqual([...claims].sort(), [...CLAIMS_COPY_COLUMNS, 'Agent notes', 'Agent tags'].sort());
-  assert.equal(claims.size, 15);
+  assert.deepEqual([...claims].sort(), [...CLAIMS_COPY_COLUMNS, 'Agent confidence', 'Agent notes', 'Agent reasons', 'Agent tags'].sort());
+  assert.equal(claims.size, 17, 'the four editor columns of the claims are not among them');
   assert.deepEqual([...writableProperties(config, 'tag_decisions', { setup: true })].sort(), [...writableProperties(config, 'tag_decisions')].sort(), 'tag decisions have no setup extras');
   assert.deepEqual([...writableProperties(config, 'rule_changes', { setup: true })].sort(), [...writableProperties(config, 'rule_changes')].sort());
 });
 
 test('writableProperties follows the configured column names and key columns', () => {
   const config = shipped();
-  config.notion.claims[0].write_columns = { tags: 'Tags by agent', notes: 'Notes by agent' };
+  config.notion.claims[0].write_columns = { tags: 'Tags by agent', notes: 'Notes by agent', confidence: 'How sure', reasons: 'Why so' };
   config.notion.claims[0].key = 'Claim ID';
   config.notion.claims[0].columns.claim = 'Claim text';
   config.notion.databases.agent_settings.key = 'Setting';
-  assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(), ['Notes by agent', 'Tags by agent']);
+  assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(), ['How sure', 'Notes by agent', 'Tags by agent', 'Why so']);
   const setup = writableProperties(config, 'claims_copy', { setup: true });
   assert.ok(setup.has('Claim ID') && setup.has('Claim text') && setup.has('Geo Name'));
   assert.ok(writableProperties(config, 'agent_settings', { setup: true }).has('Setting'));
@@ -371,8 +371,8 @@ test('writableProperties follows the configured column names and key columns', (
 test('writableProperties gives a new Set every time and refuses an unknown table', () => {
   const config = shipped();
   const a = writableProperties(config, 'tag_decisions');
-  a.add('Tag outcome');
-  assert.ok(!writableProperties(config, 'tag_decisions').has('Tag outcome'), 'changing one result never changes the next');
+  a.add('Tag outcome copy');
+  assert.ok(!writableProperties(config, 'tag_decisions').has('Tag outcome copy'), 'changing one result never changes the next');
   assert.throws(() => writableProperties(config, 'runs'), /unknown table "runs"/);
   assert.throws(() => writableProperties(config, undefined), /unknown table/);
 });
@@ -381,11 +381,11 @@ test('writableProperties gives a new Set every time and refuses an unknown table
 
 test('editorColumns lists what only an editor writes', () => {
   const config = shipped();
-  assert.deepEqual(editorColumns(config, 'tag_decisions'), ['Tag outcome', 'Why wrong', 'Your reasoning']);
+  assert.deepEqual(editorColumns(config, 'claims_copy'), ['Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes']);
   assert.deepEqual(editorColumns(config, 'rule_changes'), ['Editor wording']);
   assert.deepEqual(editorColumns(config, 'agent_settings'), ['Paused']);
   assert.deepEqual(editorColumns(config, 'rulebook'), []);
-  assert.deepEqual(editorColumns(config, 'claims_copy'), []);
+  assert.deepEqual(editorColumns(config, 'tag_decisions'), [], 'the ledger has none: its copies of a decision belong to the agent');
   editorColumns(config, 'rule_changes').push('Status');
   assert.deepEqual(editorColumns(config, 'rule_changes'), ['Editor wording'], 'a copy, not the config array');
   assert.throws(() => editorColumns(config, 'runs'), /unknown table "runs"/);
@@ -415,4 +415,54 @@ test('groupOf finds the judge group of a tag', () => {
   config.judge.groups.G2 = ['Wordy', 'Poor wording'];
   assert.equal(groupOf(config, 'Poor wording'), 'G2');
   assert.equal(groupOf({}, 'Wordy'), null);
+});
+
+// ---- the claims table's own columns (CLAIMS-REVIEW.md, section 1) -----------------------------------------------------------------
+
+test('the claims entry names the four editor columns and the four agent columns, and a config that lacks one is refused with its name', () => {
+  const config = shipped();
+  const claims = config.notion.claims[0];
+  assert.deepEqual(claims.write_columns, { tags: 'Agent tags', notes: 'Agent notes', confidence: 'Agent confidence', reasons: 'Agent reasons' });
+  assert.deepEqual([claims.columns.verified, claims.columns.review_status, claims.columns.why_wrong, claims.columns.notes],
+    ['Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes']);
+  assert.deepEqual(config.editor_columns.claims_copy, ['Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes']);
+  assert.equal(config.editor_columns.tag_decisions, undefined, 'the ledger has no editor column');
+
+  for (const key of ['verified', 'review_status', 'why_wrong', 'notes']) {
+    const bad = shipped();
+    delete bad.notion.claims[0].columns[key];
+    assert.ok(mentions(bad, `notion.claims[0].columns.${key}: expected a non-empty string`), key);
+  }
+  for (const key of ['tags', 'notes', 'confidence', 'reasons']) {
+    const bad = shipped();
+    delete bad.notion.claims[0].write_columns[key];
+    assert.ok(mentions(bad, `notion.claims[0].write_columns.${key}: expected a non-empty string`), key);
+  }
+  const noList = shipped();
+  delete noList.editor_columns.claims_copy;
+  assert.ok(mentions(noList, 'editor_columns.claims_copy: expected an array'));
+});
+
+test('an editor column of the claims must be listed in editor_columns, and an agent column must not be', () => {
+  const unlisted = shipped();
+  unlisted.editor_columns.claims_copy = unlisted.editor_columns.claims_copy.filter((c) => c !== 'Review status');
+  assert.ok(mentions(unlisted, 'notion.claims[0].columns.review_status: "Review status" is not listed in editor_columns.claims_copy'));
+  const writable = shipped();
+  writable.editor_columns.claims_copy.push('Agent confidence');
+  assert.ok(mentions(writable, 'notion.claims[0].write_columns.confidence: "Agent confidence" is an editor column'));
+  const old = shipped();
+  old.editor_columns.tag_decisions = ['Tag outcome'];
+  assert.deepEqual(problems(old), [], 'an older config that still lists the ledger columns is only checked for its shape');
+  old.editor_columns.tag_decisions = 'Tag outcome';
+  assert.ok(mentions(old, 'editor_columns.tag_decisions: expected an array'));
+});
+
+test('the claims\' editor columns are never writable, with setup or without; the ledger\'s copies of a decision are', () => {
+  const config = shipped();
+  for (const setup of [false, true]) {
+    const claims = writableProperties(config, 'claims_copy', { setup });
+    for (const column of ['Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes']) assert.ok(!claims.has(column), `${column} (setup ${setup})`);
+    const ledger = writableProperties(config, 'tag_decisions', { setup });
+    for (const column of ['Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under']) assert.ok(ledger.has(column), `${column} (setup ${setup})`);
+  }
 });

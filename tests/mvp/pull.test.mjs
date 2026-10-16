@@ -61,7 +61,9 @@ async function world({ placeholders = [], populate = true } = {}) {
     if (placeholders.includes(table)) continue;
     entry.database_id = DB[table];
     entry.data_source_id = `c200000000000000000000000000000${Object.keys(DB).indexOf(table) + 1}`;
-    notion.addDatabase({ id: entry.database_id, dataSourceId: entry.data_source_id, title: table, properties: restProps(TABLE_SPECS[table]) });
+    const spec = { ...TABLE_SPECS[table] };
+    if (table === 'claims_copy' && placeholders.includes('rulebook')) delete spec['Claim quality tags — verified']; // no Rulebook copy for the relation to point at
+    notion.addDatabase({ id: entry.database_id, dataSourceId: entry.data_source_id, title: table, properties: restProps(spec, config.notion.rulebook.data_source_id) });
   }
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
   const client = createClient({ token: notion.token, fetchImpl: notion.fetchImpl, requestsPerSecond: 1000, sleep: noSleep });
@@ -100,7 +102,12 @@ async function fill(w) {
       },
     });
     ids.claim2 = notion.addRow(DB.claims_copy, { 'Geo Name': 'Claim two has no sources', 'Geo ID': 'geo-2', 'Geo URL': 'https://www.geobrowser.io/space/s/geo-2' });
-    ids.claim3 = notion.addRow(DB.claims_copy, { 'Geo Name': 'Claim three is written out', 'Geo ID': 'geo-3', 'Geo Sources': '[Written out](https://www.geobrowser.io/space/s/entity-c)<br>https://example.com/bare.' });
+    ids.claim3 = notion.addRow(DB.claims_copy, {
+      'Geo Name': 'Claim three is written out', 'Geo ID': 'geo-3', 'Geo Sources': '[Written out](https://www.geobrowser.io/space/s/entity-c)<br>https://example.com/bare.',
+      'Agent tags': 'Context-dependent', 'Agent reasons': 'Context-dependent: A pronoun with no antecedent. · Context-dependent rule 1 · 2 of 2 runs agree', 'Agent notes': 'Context-dependent\nnothing waits for an editor · edition 2026-10-16.1', 'Agent confidence': 0.81,
+      ...(w.config.notion.rulebook.database_id === DB.rulebook ? { 'Claim quality tags — verified': [ids['tag:Context-dependent']] } : {}),
+      'Review status': 'Reviewed', 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Context-dependent: rule 3 does not say so.',
+    });
   }
   if (w.config.notion.databases.tag_decisions.database_id === DB.tag_decisions) {
     ids.open = notion.addRow(DB.tag_decisions, { Claim: 'Claim one has two sources', Key: 'geo-1::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'Unsure', 'Claim link': 'https://www.geobrowser.io/space/s/geo-1', 'Rulebook edition': '2026-10-16.1' });
@@ -214,7 +221,8 @@ test('the norm files: claims with their links, the rulebook copy as plain rows, 
   const claims = p.claims();
   assert.deepEqual(claims.map((c) => c.geo_id), ['geo-1', 'geo-2', 'geo-3']);
   const one = claims[0];
-  assert.deepEqual(Object.keys(one), ['table', 'geo_id', 'page_id', 'notion_url', 'claim', 'geo_url', 'sources_text', 'source_links', 'is_factual', 'agent_tags', 'agent_notes', 'last_edited']);
+  assert.deepEqual(Object.keys(one), ['table', 'geo_id', 'page_id', 'notion_url', 'claim', 'geo_url', 'sources_text', 'source_links', 'is_factual', 'agent_tags', 'agent_notes',
+    'agent_confidence', 'agent_reasons', 'verified_tags', 'review_status', 'why_wrong', 'challenged_notes', 'last_edited']);
   assert.equal(one.table, 'claims_copy');
   assert.equal(one.claim, 'Claim one has two sources');
   assert.equal(one.geo_url, 'https://www.geobrowser.io/space/s/geo-1');
@@ -228,6 +236,16 @@ test('the norm files: claims with their links, the rulebook copy as plain rows, 
   assert.deepEqual(claims[1].source_links, []);
   assert.equal(claims[1].is_factual, false);
   assert.equal(claims[1].agent_tags, '');
+  // the editor's four columns and the agent's confidence: empty on an open claim, and the relation read as tag names on a Reviewed one
+  assert.deepEqual([one.agent_confidence, one.agent_reasons, one.verified_tags, one.review_status, one.why_wrong, one.challenged_notes], [null, '', [], null, null, '']);
+  const three = claims[2];
+  assert.equal(three.agent_confidence, 0.81);
+  assert.equal(three.agent_reasons, 'Context-dependent: A pronoun with no antecedent. · Context-dependent rule 1 · 2 of 2 runs agree');
+  assert.deepEqual(three.verified_tags, ['Context-dependent'], 'the relation is resolved to tag names through the page ids of the Rulebook copy');
+  assert.equal(three.review_status, 'Reviewed');
+  assert.equal(three.why_wrong, 'Rule unclear');
+  assert.equal(three.challenged_notes, 'Context-dependent: rule 3 does not say so.');
+  assert.equal(p.queue().every((q) => 'Decided under' in q), true, 'the ledger has Decided under');
   assert.deepEqual(claims[2].source_links, [{ text: 'Written out', href: 'https://www.geobrowser.io/space/s/entity-c' }, { text: '', href: 'https://example.com/bare' }]);
 
   // the rulebook copy: the rows with the work tag, as the plain shape the rubric build takes
@@ -912,4 +930,47 @@ test('the command line refuses a mix of modes, an unknown flag and a source it d
   const help = await run(w, ['--help']);
   assert.equal(help.code, EXIT.OK);
   assert.match(help.out.join('\n'), /--dry-run \[--run-id <id>\]/);
+});
+
+// ---- the editor's columns of a claim (CLAIMS-REVIEW.md) -----------------------------------------------------------------------------------
+
+test('a reference in Claim quality tags — verified that is no tag of the rulebook is left out of verified_tags and said in a warning; a tag with no Issue work tag still counts', async () => {
+  const w = await world();
+  const stray = w.ids.claim2; // a row of the Claims copy, not of the Rulebook copy
+  w.notion.editRow(w.ids.claim3, { 'Claim quality tags — verified': [w.ids['tag:Context-dependent'], w.ids.otherTag, stray] });
+  const r = await run(w, ['--all', '--pull-id', 'p1']);
+  assert.equal(r.code, EXIT.OK);
+  const three = loadPull(w.root, 'p1', { config: w.config }).claims().find((c) => c.geo_id === 'geo-3');
+  assert.deepEqual(three.verified_tags, ['Context-dependent', 'Not an issue tag'], 'every row of the Rulebook copy names a tag, also one the rulebook file leaves out');
+  assert.ok(r.err.some((l) => /claims_copy: 1 reference\(s\) in Claim quality tags — verified name no tag of the rulebook/.test(l)), r.err.join('\n'));
+  assert.match(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'pull.json'), 'utf8')).warnings.join(' '), /name no tag of the rulebook/);
+});
+
+test('a pull of the claims alone reads the relation through the page ids of the rulebook edition in force', async () => {
+  const w = await world();
+  assert.equal((await run(w, ['--tables', 'rulebook', '--pull-id', 'p0'])).code, EXIT.OK);
+  writeEdition(w.root, buildRubric(loadPull(w.root, 'p0', { config: w.config }).rulebook(), { config: w.config, edition: '2026-10-16.1', now: new Date('2026-10-16T09:00:00.000Z') }), { reason: 'test edition' });
+  const r = await run(w, ['--tables', 'claims_copy', '--pull-id', 'p1']);
+  assert.equal(r.code, EXIT.OK);
+  const claims = loadPull(w.root, 'p1', { config: w.config }).claims();
+  assert.deepEqual(claims.find((c) => c.geo_id === 'geo-3').verified_tags, ['Context-dependent']);
+  assert.deepEqual(r.err.filter((l) => /name no tag/.test(l)), []);
+  // without an edition the ids cannot be read: said, not guessed
+  const bare = await world();
+  const none = await run(bare, ['--tables', 'claims_copy', '--pull-id', 'p1']);
+  assert.deepEqual(loadPull(bare.root, 'p1', { config: bare.config }).claims().find((c) => c.geo_id === 'geo-3').verified_tags, []);
+  assert.ok(none.err.some((l) => /name no tag of the rulebook/.test(l)));
+});
+
+test('every claim and every ledger row of a pull fits its schema; a value the schema does not know is a warning, not a stop', async () => {
+  const w = await world();
+  const clean = await run(w, ['--all', '--pull-id', 'p1']);
+  assert.equal(clean.code, EXIT.OK);
+  assert.deepEqual(clean.err.filter((l) => /does not fit schemas/.test(l)), []);
+  w.notion.editRow(w.ids.claim2, { 'Review status': 'Done' });
+  w.notion.editRow(w.ids.open, { 'Tag outcome': 'Maybe' });
+  const odd = await run(w, ['--all', '--pull-id', 'p2']);
+  assert.equal(odd.code, EXIT.OK, 'the pull still completes');
+  assert.ok(odd.err.some((l) => /the claim geo-2 does not fit schemas\/claim-row\.schema\.json \(.*review_status/.test(l)), odd.err.join('\n'));
+  assert.ok(odd.err.some((l) => /the row geo-1::Context-dependent does not fit schemas\/ledger-row\.schema\.json/.test(l)));
 });

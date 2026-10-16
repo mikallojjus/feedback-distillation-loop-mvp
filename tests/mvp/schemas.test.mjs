@@ -17,9 +17,9 @@ const hash = 'sha256:0123456789abcdef';
 
 // ---- all of them ---------------------------------------------------------------------------------------------------------------------
 
-test('the folder holds the seven schemas the contracts name, each in the subset the validator supports', () => {
+test('the folder holds the nine schemas the contracts name, each in the subset the validator supports', () => {
   const files = readdirSync(dir).filter((f) => f.endsWith('.schema.json')).sort();
-  assert.deepEqual(files, ['card', 'cell', 'judge-reply', 'lesson', 'plan', 'report', 'rubric'].map((n) => `${n}.schema.json`));
+  assert.deepEqual(files, ['card', 'cell', 'claim-row', 'judge-reply', 'ledger-row', 'lesson', 'plan', 'report', 'rubric'].map((n) => `${n}.schema.json`));
   for (const file of files) {
     const schema = JSON.parse(readFileSync(new URL(file, dir), 'utf8'));
     assertSchema(schema); // throws on a keyword the validator does not know: a typo would switch a check off
@@ -244,4 +244,57 @@ test('report: the parts of report.json', () => {
   bad(report, { demo: 'no', sentence: 'Done.', next: 'Next: x.' }, /demo: expected boolean/);
   bad(report, { demo: false, sentence: 'Done.', next: 'Next: x.', title: 'Report' }, /title: unexpected property/);
   bad(report, { demo: false, sentence: 'Done.', rows: [], header: ['a', 'b', ''], next: 'Next: x.' }, /rows: must have at least 1 items/);
+});
+
+// ---- claim row and ledger row (CLAIMS-REVIEW.md) --------------------------------------------------------------------------------------
+
+const claimRow = load('claim-row');
+const claimOf = (over = {}) => ({
+  table: 'claims_copy', geo_id: 'g1', page_id: '0a9e0000-0000-4000-8000-000000000001', notion_url: 'https://www.notion.so/x', claim: 'The AI Force should enforce binding safety standards',
+  geo_url: null, sources_text: '', source_links: [], is_factual: false, agent_tags: '', agent_notes: 'no tags\n1 waits for an editor · edition 2026-10-16.1', agent_confidence: 0.65,
+  agent_reasons: "Context-dependent: Two rules pull apart. · 2 of 2 runs agree", verified_tags: [], review_status: null, why_wrong: null, challenged_notes: '', last_edited: '2026-10-16T09:00:00.000Z', ...over,
+});
+
+test('claim row: an open claim, a Reviewed claim and one that has never been read', () => {
+  ok(claimRow, claimOf());
+  ok(claimRow, claimOf({ agent_tags: 'Context-dependent', verified_tags: ['Context-dependent'], review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: 'Context-dependent: rule 3 is unclear.' }));
+  ok(claimRow, claimOf({ agent_notes: '', agent_confidence: null, review_status: 'To review' }));
+  for (const why of ['Agent slip', 'Rule unclear', 'Rule should change']) ok(claimRow, claimOf({ review_status: 'Reviewed', why_wrong: why }), why);
+});
+
+test('claim row: what makes a row invalid', () => {
+  bad(claimRow, claimOf({ review_status: 'Done' }), /review_status: expected one of "To review", "Reviewed", null/);
+  bad(claimRow, claimOf({ why_wrong: 'Bad luck' }), /why_wrong: expected one of/);
+  bad(claimRow, claimOf({ agent_confidence: 0.2 }), /agent_confidence: must be >= 0.5/);
+  bad(claimRow, claimOf({ agent_confidence: 1.1 }), /agent_confidence: must be <= 1/);
+  bad(claimRow, claimOf({ verified_tags: 'Context-dependent' }), /verified_tags: expected array/);
+  bad(claimRow, claimOf({ verified_tags: [''] }), /verified_tags\[0\]: must be at least 1 characters/);
+  bad(claimRow, claimOf({ geo_id: '' }), /geo_id: must be at least 1 characters/);
+  bad(claimRow, claimOf({ challenged_notes: undefined }), /challenged_notes: missing required property/);
+  bad(claimRow, claimOf({ agent_reasons: undefined }), /agent_reasons: missing required property/);
+  bad(claimRow, claimOf({ agent_reasons: null }), /agent_reasons: expected string/);
+  bad(claimRow, claimOf({ decided: true }), /decided: unexpected property/);
+});
+
+const ledgerRow = load('ledger-row');
+const ledgerOf = (over = {}) => ({
+  Claim: 'The AI Force should enforce binding safety standards', Key: 'g1::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.65,
+  'Agent reason': 'A capitalised phrase · Context-dependent rule 3 · 2 of 2 runs agree', 'Claim link': 'https://www.notion.so/x', 'Rulebook edition': '2026-10-16.1', 'Follow-up': null,
+  'Tag outcome': null, 'Why wrong': null, 'Your reasoning': null, 'Decided under': null, page_id: '0a9e0000-0000-4000-8000-000000000002', last_edited: null, decided: false, ...over,
+});
+
+test('ledger row: a proposal, and a proposal with the copy of the decision', () => {
+  ok(ledgerRow, ledgerOf());
+  ok(ledgerRow, ledgerOf({ 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Context-dependent: rule 3 is unclear.', 'Decided under': '2026-10-16.1', decided: true, 'Follow-up': 'Fixed' }));
+  ok(ledgerRow, ledgerOf({ 'Agent proposal': null, 'Agent confidence': null, 'Rulebook edition': null }), 'a row seeded from the audit has no proposal columns');
+});
+
+test('ledger row: what makes a row invalid', () => {
+  bad(ledgerRow, ledgerOf({ 'Tag outcome': 'Maybe' }), /\["Tag outcome"\]: expected one of "Applies", "Does not apply", null/);
+  bad(ledgerRow, ledgerOf({ 'Agent proposal': 'Applies?' }), /\["Agent proposal"\]: expected one of/);
+  bad(ledgerRow, ledgerOf({ 'Follow-up': 'Done' }), /\["Follow-up"\]: expected one of/);
+  bad(ledgerRow, ledgerOf({ Key: '' }), /Key: must be at least 1 characters/);
+  bad(ledgerRow, ledgerOf({ decided: 'yes' }), /decided: expected boolean/);
+  bad(ledgerRow, ledgerOf({ 'Decided by': 'someone' }), /\["Decided by"\]: unexpected property/);
+  bad(ledgerRow, ledgerOf({ page_id: undefined }), /page_id: missing required property/);
 });

@@ -91,7 +91,7 @@ test('a write that fails stops the run with exit 1 and the same command finishes
 
   const again = await propose(w.hooks());
   assert.equal(again.exit, 0);
-  assert.deepEqual(w.rows('tag_decisions').map((r) => r.Key).sort(), ['c02::Context-dependent', 'c04::Context-dependent', 'c05::Context-dependent']);
+  assert.deepEqual(w.rows('tag_decisions').map((r) => r.Key).sort(), [1, 2, 3, 4, 5, 6].map((i) => `c0${i}::Context-dependent`));
   for (let i = 1; i <= 6; i++) assert.notEqual(w.row('claims_copy', `c0${i}`)['Agent notes'], '', `claim ${i} has its notes now`);
 });
 
@@ -104,7 +104,7 @@ test('a create whose answer was lost is never sent twice: the next run finds the
   assert.ok(created >= 1, 'the create that was lost did land');
   const again = await propose(w.hooks());
   assert.equal(again.exit, 0);
-  assert.deepEqual(w.rows('tag_decisions').map((r) => r.Key).sort(), ['c02::Context-dependent', 'c04::Context-dependent', 'c05::Context-dependent'], 'one row per key');
+  assert.deepEqual(w.rows('tag_decisions').map((r) => r.Key).sort(), [1, 2, 3, 4, 5, 6].map((i) => `c0${i}::Context-dependent`), 'one row per key');
   const posts = w.requests().filter((r) => r.method === 'POST' && r.path === '/pages' && r.status === 200);
   assert.equal(posts.length + 1 >= 3, true);
 });
@@ -132,11 +132,28 @@ test('two judged tags in two groups: each has its own cells, its own row for an 
   const h = w.hooks();
   const r = await propose(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
-  assert.deepEqual(w.rows('tag_decisions').map((x) => x.Key).sort(), ['c03::Context-dependent', 'c03::Wordy']);
+  assert.deepEqual(w.rows('tag_decisions').map((x) => x.Key).sort(), [1, 2, 3, 4].flatMap((i) => [`c0${i}::Context-dependent`, `c0${i}::Wordy`]), 'a ledger row for every claim and every judged tag');
+  assert.deepEqual(w.rows('claims_copy').map((c) => [c['Geo ID'], c['Agent confidence']]).sort(), [['c01', 0.9], ['c02', 0.9], ['c03', 0.5], ['c04', 0.9]], 'the lowest confidence among the judged tags');
   assert.equal(w.row('claims_copy', 'c01')['Agent tags'], 'Context-dependent, Wordy');
   assert.equal(w.row('claims_copy', 'c01')['Agent notes'], 'Context-dependent, Wordy\nnothing waits for an editor · not checked: 4 source tags, 2 duplicate tags, 5 tags without rules · edition 2026-10-16.1');
   assert.equal(w.row('claims_copy', 'c03')['Agent notes'].split('\n')[1].startsWith('2 wait for an editor'), true);
-  assert.equal(r.report.sentence, 'Tag: the agent read 4 claims for Context-dependent and Wordy; 2 wait for you.');
+  assert.equal(r.report.sentence, 'Tag: the agent read 4 claims for Context-dependent and Wordy; 1 waits for you.', 'Your queue lists claims: c03 waits once, for two tags');
   assert.deepEqual(r.report.rows.slice(0, 3).map((x) => x[0]), ['Claims read', 'Tagged Context-dependent', 'Tagged Wordy']);
+  clean(h, r);
+});
+
+test('two judged tags: Agent reasons has one line per tag, in tag order, each the reason its ledger row holds', async () => {
+  const { default: taxonomy } = await import('../../agents/claim-tagger-mvp/setup/taxonomy-issue.json', { with: { type: 'json' } });
+  const rows = taxonomy.rows.map((r) => (r.Name === 'Wordy' ? { ...r, 'When to use': '1. A sentence that says the same thing twice is Wordy.\n2. A sentence with filler words that add nothing is Wordy.' } : r));
+  const w = await makeWorld({ claims: 2, rulebook: rows, configure: (c) => { c.judge.groups.G2 = ['Wordy']; } });
+  w.table({ ...sure(2), [claimText(1)]: { decision: 'apply', p: 0.9 } });
+  assert.equal((await w.judge()).exit, 0);
+  const h = w.hooks();
+  const r = await propose(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const cd = w.row('tag_decisions', 'c01::Context-dependent')['Agent reason'];
+  const wordy = w.row('tag_decisions', 'c01::Wordy')['Agent reason'];
+  assert.equal(w.row('claims_copy', 'c01')['Agent reasons'], `Context-dependent: ${cd}\nWordy: ${wordy}`);
+  assert.equal(w.row('claims_copy', 'c02')['Agent reasons'].split('\n').length, 2);
   clean(h, r);
 });

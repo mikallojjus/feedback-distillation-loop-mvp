@@ -10,7 +10,7 @@ description: Run the claim tagger's editor feedback loop against the Notion page
 ## What this skill does and never does
 
 - Every subcommand runs one or more scripts under `agents/claim-tagger-mvp/scripts/` with the Bash tool, exactly as listed below, one command at a time, each waited for before the next. The working directory is already the repository root: type the command alone, with nothing before or after it (no `cd`, no `&&`, no pipes, no redirection). Nothing else is run: no other tools, no file reads.
-- The scripts do the work and write Notion themselves, through the REST client, by applying a plan and reading every write back. You never write Notion through the connector, never create, move or delete a page, never fill an editor column (Tag outcome, Why wrong, Your reasoning, Editor wording, Paused, the Status values Approved and Rejected), and never edit files under `agents/claim-tagger-mvp/runs/` or `agents/claim-tagger-mvp/rubric/`.
+- The scripts do the work and write Notion themselves, through the REST client, by applying a plan and reading every write back. You never write Notion through the connector, never create, move or delete a page, never fill an editor column (on the claims table Claim quality tags — verified, Review status, Why wrong and Challenged tags notes; Editor wording, Paused, the Status values Approved and Rejected), and never edit files under `agents/claim-tagger-mvp/runs/` or `agents/claim-tagger-mvp/rubric/`.
 - You never pass `--bare`, `--fallback-model`, `--unpause` or `--confirm`; `rollback` is the one subcommand whose command line carries `--confirm`, and the permission prompt it raises is the person's confirmation.
 - A script that stops (exit 1 or 75) is resumed by running the same subcommand again, later; the scripts continue from their own records. Never start a second run for the same step and never repeat a command more than once in a row.
 - A refusal because the agent is paused (exit 3) or because the rulebook text was edited by hand (exit 4) also arrives as a printed report: relay it and stop.
@@ -21,7 +21,7 @@ description: Run the claim tagger's editor feedback loop against the Notion page
 | You are asked | Commands, in order |
 |---|---|
 | status (what waits, which edition is in force) | `node agents/claim-tagger-mvp/scripts/status.mjs` |
-| tag (read the claims, fill the queue) | `node agents/claim-tagger-mvp/scripts/pull.mjs --all` then `node agents/claim-tagger-mvp/scripts/judge.mjs --items claims` then `node agents/claim-tagger-mvp/scripts/propose.mjs` |
+| tag (read the claims, write the agent's side of the claims table and copy the editor's decisions into its ledger) | `node agents/claim-tagger-mvp/scripts/pull.mjs --all` then `node agents/claim-tagger-mvp/scripts/judge.mjs --items claims` then `node agents/claim-tagger-mvp/scripts/propose.mjs` |
 | distill (draft rule changes from the editor's decisions) | `node agents/claim-tagger-mvp/scripts/distill.mjs` |
 | promote <lesson> (the safety check, then the switch to the approved rule; the follow-up runs by itself after a PASS) | `node agents/claim-tagger-mvp/scripts/promote.mjs --lesson "<the rule change's title>"`; when the editor names no title, run it without `--lesson` and the script takes the only Approved rule change |
 | follow-up <lesson> (repeat the automatic last step of a promote that stopped before it) | `node agents/claim-tagger-mvp/scripts/followup.mjs --lesson "<the rule change's title>"` |

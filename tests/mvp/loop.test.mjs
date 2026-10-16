@@ -28,7 +28,8 @@ const randoms = PICK.rows.slice(10);
 const [U1, U2, U3, U4, A1] = randoms.slice(0, 5).map((r) => normalizeClaim(r['Geo Name']));
 const idOf = (text) => PICK.rows.find((r) => normalizeClaim(r['Geo Name']) === text)['Geo ID'];
 const keyOf = (text) => `${idOf(text)}::Context-dependent`;
-const forbiddenColumns = ['Tag outcome', 'Why wrong', 'Your reasoning', 'Editor wording', 'Paused'];
+// the editor's columns: no write names one (Why wrong is the editor's on a claim and the agent's copy on the ledger, so a write to a claim is checked apart)
+const forbiddenColumns = ['Claim quality tags — verified', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
 const EXAMPLE_1 = taxonomyCanaries()[0].claim;
 
 /** The production-shaped world with the fake CLI's answers; `flipExample` makes the candidate answer an example wrongly. */
@@ -53,14 +54,17 @@ async function productionWorld({ flipExample = false, wrongBoth = true, configur
   return w;
 }
 
-/** judge, propose, two rows decided by the editor, distill, approved by the editor. Returns the pages the editor touched. */
+/** The editor decides two claims in Your queue: no tag, Rule unclear, with a note that names rule 4. */
+function decideTwo(w) {
+  for (const text of [U1, U2]) w.review(idOf(text), { tags: [], why: 'Rule unclear', notes: 'Rule 4 should let general references pass.' });
+}
+
+/** judge, propose, two claims decided by the editor, distill, approved by the editor. Returns the pages the editor touched. */
 async function untilApproved(w) {
   assert.equal((await w.judge()).exit, 0);
   const tagged = await propose(w.hooks());
   assert.equal(tagged.exit, 0, tagged.markdown);
-  const decide = { 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Rule 4 should let general references pass.' };
-  w.fake.editRow(w.row('tag_decisions', keyOf(U1)).page_id, decide);
-  w.fake.editRow(w.row('tag_decisions', keyOf(U2)).page_id, decide);
+  decideTwo(w);
   const drafted = await distill(w.hooks());
   assert.equal(drafted.exit, 0, drafted.markdown);
   const lesson = w.row('rule_changes', TITLE);
@@ -94,8 +98,10 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   const w = await productionWorld();
   assert.equal(w.rows('rulebook').length, 13);
   assert.equal(w.rows('claims_copy').length, 50);
-  assert.equal(w.rows('tag_decisions').length, 10, 'the audit decisions are seeded as decided rows');
+  assert.equal(w.rows('tag_decisions').length, 10, 'the audit decisions are seeded as decided ledger rows');
+  assert.equal(w.rows('claims_copy').filter((c) => c['Review status'] === 'Reviewed').length, 10, 'and carried over to their claims');
   assert.equal(w.rows('agent_settings').length, 1);
+  const auditBefore = w.rows('tag_decisions').map((r) => JSON.stringify(r)).sort();
 
   // tag: judge, then propose
   assert.equal((await w.judge()).exit, 0);
@@ -103,25 +109,34 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   const tagged = await propose(h1);
   assert.equal(tagged.exit, 0, h1.io.errs.join('\n'));
   assert.equal(tagged.report.sentence, 'Tag: the agent read 50 claims for Context-dependent; 4 wait for you.');
-  assert.deepEqual(w.rows('tag_decisions').filter((r) => !r['Tag outcome']).map((r) => r.Key).sort(), [U1, U2, U3, U4].map(keyOf).sort(), 'every unsure cell has a row and no confident one does');
-  assert.equal(w.rows('tag_decisions').filter((r) => r['Tag outcome']).length, 10, 'the decided rows are untouched');
+  assert.equal(w.rows('tag_decisions').length, 50, 'a ledger row for every claim the agent judged');
+  assert.deepEqual(w.rows('tag_decisions').filter((r) => !r['Tag outcome'] && r['Agent proposal'] === "Can't tell").map((r) => r.Key).sort(), [U1, U2, U3, U4].map(keyOf).sort(), 'every unsure cell waits in Your queue');
+  assert.equal(w.rows('tag_decisions').filter((r) => r['Tag outcome']).length, 10, 'only the audit rows hold a decision');
+  assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome']).map((r) => JSON.stringify(r)).sort(), auditBefore, 'the decided rows are untouched');
   assert.equal(w.row('claims_copy', idOf(A1))['Agent tags'], 'Context-dependent');
   assert.equal(w.row('claims_copy', idOf(U1))['Agent tags'], '');
   assert.match(w.row('claims_copy', idOf(U1))['Agent notes'], /^no tags\n1 waits for an editor · not checked: /);
   for (const c of w.rows('claims_copy')) assert.ok(c['Agent notes'].split('\n').length <= 2);
   const queueBefore = w.rows('tag_decisions').filter((r) => r['Tag outcome']).map((r) => JSON.stringify(r));
+  assert.equal(w.row('claims_copy', idOf(U1))['Agent confidence'], 0.5);
+  assert.equal(w.row('claims_copy', idOf(U1))['Agent reasons'], `Context-dependent: ${w.row('tag_decisions', keyOf(U1))['Agent reason']}`, 'the claim shows the reason the ledger holds');
+  assert.match(w.row('claims_copy', idOf(U1))['Agent reasons'], /^Context-dependent: Two readings\. · 2 of 2 runs agree$/);
+  assert.equal(w.row('claims_copy', idOf(A1))['Agent confidence'], 0.9);
   assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'].startsWith('Tag · '), true);
 
-  // the editor decides two rows: Rule unclear, naming rule 4
-  const decide = { 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Rule 4 should let general references pass.' };
-  w.fake.editRow(w.row('tag_decisions', keyOf(U1)).page_id, decide);
-  w.fake.editRow(w.row('tag_decisions', keyOf(U2)).page_id, decide);
+  // the editor decides two claims in Your queue: Rule unclear, naming rule 4
+  decideTwo(w);
+  assert.equal(w.row('tag_decisions', keyOf(U1))['Tag outcome'], null, 'the ledger has no copy of the decision yet');
 
-  // distill: one lesson
+  // distill: copies the two decisions to the ledger, then drafts one lesson
   const h2 = w.hooks();
   const drafted = await distill(h2);
   assert.equal(drafted.exit, 0, h2.io.errs.join('\n'));
   assert.equal(drafted.report.sentence, 'Distill: one rule change drafted from your 2 notes.');
+  for (const text of [U1, U2]) {
+    const row = w.row('tag_decisions', keyOf(text));
+    assert.deepEqual([row['Tag outcome'], row['Why wrong'], row['Your reasoning'], row['Decided under']], ['Does not apply', 'Rule unclear', 'Rule 4 should let general references pass.', '2026-10-16.1']);
+  }
   const lesson = w.row('rule_changes', TITLE);
   assert.deepEqual([lesson.Status, lesson.Rule, lesson['Current text'], lesson['Proposed text']], ['Proposed', 'Context-dependent rule 4', RULE4, NEW_TEXT]);
   assert.equal(lesson['Supporting rows'].split('\n').length, 2);
@@ -138,13 +153,14 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
     ['Earlier decisions', '9 of 9 still right', ''],
     ['Your 2 rows', '2 of 2 now right, marked Fixed', ''],
   ]);
-  assert.equal(passed.report.next, `Next: decide the remaining 2 rows in Your queue (https://www.notion.so/${w.DB.tag_decisions}?v=e3000000000000000000000000000001).`);
+  assert.equal(passed.report.next, `Next: decide the remaining 2 rows in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000001).`);
   assert.equal(w.row('rule_changes', TITLE).Status, 'Live');
   assert.equal(w.row('rule_changes', TITLE)['Safety check result'], 'PASS: examples 11/11, earlier 9/9, yours 2/2');
   assert.equal(w.row('rulebook', 'Context-dependent')['When to use'].split('\n')[3], `4. ${NEW_TEXT}`);
   assert.equal(w.rubric().edition, '2026-10-16.2');
   for (const text of [U1, U2]) assert.equal(w.row('tag_decisions', keyOf(text))['Follow-up'], 'Fixed');
   assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome'] && !/^From the audit/.test(r['Your reasoning'])).length, 2);
+  for (const text of [U1, U2]) assert.match(w.row('claims_copy', idOf(text))['Agent notes'], /^no tags\nnothing waits for an editor · not checked/, 'the follow-up wrote the notes of the claim with the editor\'s set');
   // the audit rows were not touched at all
   assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome']).filter((r) => /^From the audit/.test(r['Your reasoning'])).map((r) => JSON.stringify(r)).sort(), queueBefore.sort());
 
@@ -272,6 +288,7 @@ test('an edited judged tag in Notion stops every script with exit 4, and restore
 async function requestLogIsClean(w) {
   const protectedIds = [...w.config.notion.protected_database_ids, ...w.config.notion.protected_page_ids].map((id) => id.replace(/-/g, ''));
   const own = new Set(Object.values(w.DB));
+  const claimPages = new Set(Object.values(w.ids.claim).map((id) => id.replace(/-/g, '')));
   for (const req of w.requests()) {
     const text = JSON.stringify(req).replace(/-/g, '');
     for (const id of protectedIds) assert.ok(!text.includes(id), `a request names the protected id ${id}`);
@@ -281,13 +298,16 @@ async function requestLogIsClean(w) {
     assert.ok(req.status === 200, `${req.method} ${req.path} -> ${req.status}`);
     const props = Object.keys(req.body?.properties ?? {});
     for (const col of forbiddenColumns) assert.ok(!props.includes(col), `${col} is an editor column`);
+    if (req.method === 'PATCH' && claimPages.has(req.path.split('/').at(-1).replace(/-/g, ''))) assert.ok(!props.includes('Why wrong'), 'Why wrong on a claim is the editor\'s');
     if (req.method === 'POST') {
       assert.equal(req.path, '/pages');
       assert.ok(own.has(req.body.parent.database_id.replace(/-/g, '')), 'a row is created only in one of the five tables');
     }
     if (props.includes('Status')) assert.ok(['Proposed', 'Live', 'Rolled back'].includes(req.body.properties.Status.select.name), 'only the Status values the agent may write');
-    // the claims table takes the two write columns and nothing else
-    if (props.includes('Agent tags') || props.includes('Agent notes')) assert.ok(props.every((p) => p === 'Agent tags' || p === 'Agent notes'), props.join(','));
+    // the claims table takes the three write columns and nothing else
+    if (props.includes('Agent tags') || props.includes('Agent notes') || props.includes('Agent confidence') || props.includes('Agent reasons')) {
+      if (claimPages.has(req.path.split('/').at(-1).replace(/-/g, ''))) assert.ok(props.every((p) => ['Agent tags', 'Agent notes', 'Agent confidence', 'Agent reasons'].includes(p)), props.join(','));
+    }
   }
   // every run folder has its run.json written first and last
   const runs = join(w.root, 'runs');

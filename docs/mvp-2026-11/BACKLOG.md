@@ -4,7 +4,7 @@ One row per deferred item: what, why not now, the trigger that brings it in, eff
 
 | What | Why not now | Trigger | Effort |
 |---|---|---|---|
-| Tag the real claims table instead of the 50-claim copy | The real table is never written in the MVP (decision D27); the Geo-to-Notion refresh may drop added columns and page ids | The owner of the refresh job confirms that added columns and page ids survive a refresh; then a config change plus the one confirmed setup write | M |
+| Tag the real claims table instead of the 50-claim copy | The real table is never written in the MVP (decision D27); the Geo-to-Notion refresh may drop added columns and page ids; from 16 October the decisions live on the claims table, so Why wrong and Agent confidence (new columns) and the real table's own review columns must survive a refresh | The owner of the refresh job confirms that added columns and page ids survive a refresh; then a config change plus the one confirmed setup write | M |
 | The other 12 tags, rules drafted one tag at a time | Only Context-dependent is judged in the MVP (decision D35); nine tags have no rules yet | The Context-dependent loop has passed one safety check on the copy and the editor picks the next tag | S per tag |
 | The source pass (Improperly sourced, Factually challenged) and the Geo source resolver | Needs fetched source text and the verified Geo query, none of which the Context-dependent loop uses | A source tag is chosen for drafting | M |
 | Source inaccessible decided in code from the fetch result | Same dependency on the source fetch | Same as the source pass | S |

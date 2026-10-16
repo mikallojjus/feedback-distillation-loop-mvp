@@ -33,7 +33,7 @@ const GUARDED = /notion-(create-pages|update-page|create-database|update-data-so
 const ALWAYS_DENIED = new Set(['move-pages', 'duplicate-page', 'delete-pages', 'delete-databases', 'delete-comment', 'restore-pages', 'update-folder', 'create-folder']);
 const SCHEMA_TOOLS = new Set(['create-database', 'update-data-source', 'create-view', 'update-view']);
 const UUID = /[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/gi;
-const DEFAULT_EDITOR_NAMES = ['Tag outcome', 'Why wrong', 'Your reasoning', 'Editor wording', 'Paused'];
+const DEFAULT_EDITOR_NAMES = ['Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused'];
 const DEFAULT_EDITOR_STATUS = ['Approved', 'Rejected'];
 
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -91,9 +91,10 @@ export function decide(input, root = AGENT_ROOT) {
   const toolInput = isObject(input?.tool_input) ? input.tool_input : {};
   const config = readJsonSafe(join(root, 'config.json')) ?? {};
   const protectedIds = new Set([...(config.notion?.protected_database_ids ?? []), ...(config.notion?.protected_page_ids ?? [])].map(normId));
-  const editorNames = [
-    ...(config.editor_columns?.tag_decisions ?? []), ...(config.editor_columns?.rule_changes ?? []), ...(config.editor_columns?.agent_settings ?? []),
-  ];
+  // every list of config.editor_columns (claims_copy, rule_changes, agent_settings, whatever the config names) except the Status values
+  const editorNames = Object.entries(isObject(config.editor_columns) ? config.editor_columns : {})
+    .filter(([key, list]) => !key.endsWith('_status_editor_values') && Array.isArray(list))
+    .flatMap(([, list]) => list.filter((n) => typeof n === 'string'));
   const names = editorNames.length ? editorNames : DEFAULT_EDITOR_NAMES;
   const statusValues = config.editor_columns?.rule_changes_status_editor_values ?? DEFAULT_EDITOR_STATUS;
 

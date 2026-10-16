@@ -8,6 +8,8 @@
 //   await w.pull() / await w.judge(opts)           pull every table / pull, then judge the claims (items: 'claims') under the fake CLI
 //   w.table(obj) / w.overrides(list) / w.setEnv(k, v)   the fake CLI's answers (see fixtures/fake-claude-loop.mjs)
 //   w.rows(table) / w.row(table, key)              plain rows of a table in the fake Notion
+//   w.editClaim(geoId, plain)                      an editor works on a claim: plain values of the Claims copy; "Claim quality tags — verified" takes tag names
+//   w.review(geoId, { tags, why, notes })          an editor Reviews a claim: the verified tags, Why wrong, Challenged tags notes and Review status Reviewed
 //   w.rubric()                                     rubric/rubric.json of the state folder
 //   w.calls() / w.callsWith(text)                  what the fake CLI was asked: all calls / the calls whose system prompt holds the text
 //   w.requests()                                   every request the fake saw; w.writes() the ones that are not reads
@@ -46,6 +48,9 @@ export const DB = {
 export const VIEWS = {
   your_queue: 'e3000000000000000000000000000001',
   needs_your_note: 'e3000000000000000000000000000002',
+  agent_disagreed: 'e3000000000000000000000000000005',
+  your_queue_ledger: 'e3000000000000000000000000000006',
+  needs_your_note_ledger: 'e3000000000000000000000000000007',
   lessons_waiting: 'e3000000000000000000000000000003',
   rulebook: 'e3000000000000000000000000000004',
 };
@@ -100,7 +105,9 @@ const jsonl = (rows) => `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`;
  * Build a world. Options:
  *   claims      a number n (claims c01.. with claimText), a list of { id, text }, or 'pick' (the 50 claims of setup/claims-pick.json)
  *   rulebook    rows of the Rulebook copy (default: the 13 Issue rows of setup/taxonomy-issue.json); false: no rows and no edition
- *   queue       rows of Tag decisions as plain values;  audit: true seeds the 10 audit decisions as decided rows (Why wrong "Agent slip")
+ *   queue       rows of Tag decisions (the ledger) as plain values;  audit: true seeds the 10 audit decisions the way the setup leaves them: as decided
+ *               ledger rows (Why wrong "Agent slip") and on their claims (Reviewed, the Applies tags verified, Agent slip, the audit's words in Challenged tags notes)
+ *   claimRows   { geoId: plain values } added to the claims after they are made (see w.editClaim)
  *   lessons     rows of Rule changes as plain values
  *   settings    false: no Agent settings row; an object: its values (Name, Paused, ...)
  *   canaries    true (default): write evals/canaries.jsonl from the taxonomy; a list: those rows; false: none
@@ -108,7 +115,7 @@ const jsonl = (rows) => `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`;
  *   configure   (config) => void, to change the config before it is written
  */
 export async function makeWorld({
-  claims = 12, rulebook, queue = [], audit = false, lessons = [], settings = {}, canaries = true, edition = '2026-10-16.1', demo = false, configure,
+  claims = 12, rulebook, queue = [], audit = false, lessons = [], settings = {}, canaries = true, edition = '2026-10-16.1', demo = false, configure, claimRows = {},
 } = {}) {
   const root = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-loop-'));
   dirs.push(root);
@@ -129,7 +136,7 @@ export async function makeWorld({
 
   const fake = createFakeNotion({ protected: [...config.notion.protected_database_ids, ...config.notion.protected_page_ids] });
   for (const table of Object.keys(DB)) {
-    fake.addDatabase({ id: DB[table], dataSourceId: entries[table].data_source_id, title: table, properties: restProps(TABLE_SPECS[table]) });
+    fake.addDatabase({ id: DB[table], dataSourceId: entries[table].data_source_id, title: table, properties: restProps(TABLE_SPECS[table], entries.rulebook.data_source_id) });
   }
   const ids = { tag: {}, claim: {}, queue: {}, lesson: {}, settings: null };
 
@@ -148,14 +155,32 @@ export async function makeWorld({
     });
   }
 
+  const tagIds = (names) => (names ?? []).map((n) => {
+    if (!ids.tag[n]) throw new Error(`makeWorld: there is no tag "${n}" in the Rulebook copy`);
+    return ids.tag[n];
+  });
+  const editClaim = (geoId, plain) => {
+    if (!ids.claim[geoId]) throw new Error(`makeWorld: there is no claim "${geoId}"`);
+    const { 'Claim quality tags — verified': verified, ...rest } = plain;
+    fake.editRow(ids.claim[geoId], { ...rest, ...(verified === undefined ? {} : { 'Claim quality tags — verified': tagIds(verified) }) });
+  };
+  for (const [geoId, plain] of Object.entries(claimRows)) editClaim(geoId, plain);
+
   if (audit) {
     for (const d of AUDIT.decisions) {
       const key = `${d.geo_id}::Context-dependent`;
       ids.queue[key] = fake.addRow(DB.tag_decisions, {
         Claim: d.claim, Key: key, Tag: 'Context-dependent', 'Agent proposal': d.agent_tags?.includes('Context-dependent') ? 'Applies' : 'Does not apply',
-        'Claim link': `https://www.notion.so/${d.claim_page}`, 'Tag outcome': d.outcome, 'Why wrong': 'Agent slip',
+        'Claim link': `https://www.notion.so/${d.claim_page}`, 'Tag outcome': d.outcome,
+        'Why wrong': (d.agent_tags?.includes('Context-dependent') ? 'Applies' : 'Does not apply') === d.outcome ? null : 'Agent slip',
         'Your reasoning': `From the audit of 9 October: ${d.reasoning}`,
       });
+      if (ids.claim[d.geo_id]) {
+        editClaim(d.geo_id, {
+          'Claim quality tags — verified': d.outcome === 'Applies' ? ['Context-dependent'] : [], 'Review status': 'Reviewed', 'Why wrong': 'Agent slip',
+          'Challenged tags notes': `From the audit of 9 October: ${d.reasoning}`,
+        });
+      }
     }
   }
   for (const q of queue) ids.queue[q.Key] = fake.addRow(DB.tag_decisions, q);
@@ -202,6 +227,10 @@ export async function makeWorld({
       if (value === undefined || value === null) delete world.env[key];
       else world.env[key] = value;
     },
+    editClaim,
+    review: (geoId, { tags = [], why = null, notes = '' } = {}) => editClaim(geoId, {
+      'Claim quality tags — verified': tags, 'Review status': 'Reviewed', 'Why wrong': why, 'Challenged tags notes': notes,
+    }),
     rows: (table) => fake.plainRows(DB[table]),
     row(table, key) {
       const keyColumn = { rulebook: 'Name', claims_copy: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name' }[table];

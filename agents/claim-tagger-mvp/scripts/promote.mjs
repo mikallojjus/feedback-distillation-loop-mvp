@@ -51,6 +51,7 @@ import { newPlan, readLedger } from './lib/plan.mjs';
 import { nextEdition, writeEdition } from './lib/rubric.mjs';
 import { RuleEditError, oneLineRule, ruleNumberOf, rubricWithRule } from './lib/rulebook-edit.mjs';
 import { validate } from './lib/validate.mjs';
+import { claimWaits } from './lib/decisions.mjs';
 import { followUp } from './followup.mjs';
 import { selectItems } from './judge.mjs';
 
@@ -528,8 +529,7 @@ export async function promote(opts = {}) {
       const marks = fu.stillWrong === 0
         ? `marked ${rowsWord(fu.results.length)} Fixed`
         : `marked ${fu.fixed} of your ${plural(fu.results.length, 'row')} Fixed and ${fu.stillWrong} Still wrong`;
-      const queue = ctx.pull.queue() ?? [];
-      const open = queue.filter((r) => !r.decided).length;
+      const open = (ctx.pull.claims() ?? []).filter((c) => claimWaits(c)).length;
       const sitting = ctx.config.queue?.sitting_rows ?? 20;
       let next;
       if (ctx.demo) next = `Next: look at step 7 on the practice page (${practiceLink(ctx.config)}); the demo is then complete.`;

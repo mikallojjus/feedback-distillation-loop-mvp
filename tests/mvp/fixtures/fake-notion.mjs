@@ -19,7 +19,7 @@
 //   GET /pages/{id}  POST /pages  PATCH /pages/{id}  GET /pages/{id}/properties/{property}
 //   GET /databases/{id}  POST /databases  POST /databases/{id}/query  GET /databases/{id}/views
 //   GET /data_sources/{id}  POST /data_sources/{id}/query  PATCH /data_sources/{id}
-//   POST /views  GET /views?database_id=  GET /views/{id}
+//   POST /views  GET /views?database_id=  GET /views/{id}  PATCH /views/{id} (name, filter, sorts, configuration)
 //   GET /blocks/{id}/children  PATCH /blocks/{id}/children
 // Checks: Authorization (401 unauthorized), Notion-Version (400 missing_version; an unknown version 400 validation_error), ids that do not
 // exist or are protected (404 object_not_found; an id of the wrong kind 400), properties that do not exist or do not fit their type (400
@@ -880,6 +880,26 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
     return viewObject(view, { full: false });
   }
 
+  function patchViewRoute(id, body) {
+    requireVersion(VIEW_VERSION, 'Views');
+    const view = getView(id);
+    const allowed = ['name', 'filter', 'sorts', 'configuration'];
+    const unknown = Object.keys(body).find((k) => !allowed.includes(k));
+    if (unknown) throw validation(`body.${unknown} should not be present; this fake updates the name, the filter, the sorts and the configuration of a view.`);
+    if (Object.keys(body).length === 0) throw validation('body should hold a name, a filter, sorts or a configuration.');
+    const ds = getDataSource(view.data_source_id);
+    if (body.name !== undefined && (typeof body.name !== 'string' || body.name.trim() === '')) throw validation('body.name should be a non-empty string.');
+    if (body.filter !== undefined && body.filter !== null) checkFilter(ds, body.filter, 'filter');
+    if (body.sorts !== undefined && body.sorts !== null) {
+      if (!Array.isArray(body.sorts) || body.sorts.length > 100) throw validation('sorts should be an array of at most 100 items.');
+      sortRows([], ds, body.sorts);
+    }
+    if (body.configuration !== undefined && body.configuration !== null) checkConfiguration(ds, view.type, body.configuration);
+    for (const k of allowed) if (body[k] !== undefined) view[k] = clone(body[k]);
+    view.last_edited_time = stamp();
+    return viewObject(view, { full: true });
+  }
+
   function listViewsRoute(query, databaseId = null) {
     requireVersion(VIEW_VERSION, 'Views');
     const fromDs = query.get('data_source_id');
@@ -922,6 +942,7 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
       requireVersion(VIEW_VERSION, 'Views');
       return viewObject(getView(id), { full: true });
     }
+    if (method === 'PATCH' && kind === 'views' && id && !sub) return patchViewRoute(id, body);
 
     if (kind === 'blocks' && id && sub === 'children' && segments.length === 3) {
       const parent = getBlockParent(id);

@@ -235,6 +235,50 @@
           "type": "rich_text",
           "options": [],
           "description": "At most two short lines: line 1 the tags that apply or \"no tags\"; line 2 how many tags wait for an editor, what was not checked, and the rulebook edition, joined with \" · \"."
+        },
+        {
+          "name": "Agent confidence",
+          "type": "number",
+          "options": [],
+          "description": "How sure the agent is: the lowest confidence among the tags it judged on the claim, from 0.5 (a coin flip) to 1 (certain). Your queue is sorted by it, lowest first."
+        },
+        {
+          "name": "Agent reasons",
+          "type": "rich_text",
+          "options": [],
+          "description": "Why the agent proposed what it did: one line per judged tag, \"<Tag>: <reason> · <rule cited> · <k> of <n> runs agree\", so you can decide without opening the agent's record."
+        },
+        {
+          "name": "Claim quality tags — verified",
+          "type": "relation",
+          "options": [],
+          "description": "The tags you confirm on the claim, from the Rulebook copy (the real table has a column of this name). Applies for a tag that is in it, Does not apply for a judged tag that is not, once Review status is Reviewed.",
+          "relation_to": "rulebook"
+        },
+        {
+          "name": "Review status",
+          "type": "select",
+          "options": [
+            "To review",
+            "Reviewed"
+          ],
+          "description": "To review or Reviewed. A claim is decided once it is Reviewed; anything else leaves it open."
+        },
+        {
+          "name": "Why wrong",
+          "type": "select",
+          "options": [
+            "Agent slip",
+            "Rule unclear",
+            "Rule should change"
+          ],
+          "description": "Why the agent was wrong on this claim: one value for the claim. Agent slip, Rule unclear or Rule should change."
+        },
+        {
+          "name": "Challenged tags notes",
+          "type": "rich_text",
+          "options": [],
+          "description": "Your words. A line that starts with a tag name and a colon belongs to that tag; \"rule 4\" typed here names the rule."
         }
       ]
     },
@@ -323,7 +367,7 @@
             "Applies",
             "Does not apply"
           ],
-          "description": "The editor's decision; empty means the row waits."
+          "description": "Copied by the agent from the claim once an editor has Reviewed it: Applies when the tag is in Claim quality tags — verified, else Does not apply."
         },
         {
           "name": "Why wrong",
@@ -333,13 +377,19 @@
             "Rule unclear",
             "Rule should change"
           ],
-          "description": "The editor's reason the agent was wrong."
+          "description": "Copied by the agent from the claim, for a tag whose outcome differs from the proposal."
         },
         {
           "name": "Your reasoning",
           "type": "rich_text",
           "options": [],
-          "description": "The editor's words; \"rule 4\" typed here names the rule."
+          "description": "Copied by the agent from Challenged tags notes: the tag's own line, else the whole text."
+        },
+        {
+          "name": "Decided under",
+          "type": "rich_text",
+          "options": [],
+          "description": "The edition the proposal you saw was made under, recorded when the agent copies your decision from the claim."
         }
       ]
     },
@@ -465,6 +515,57 @@
   "views": [
     {
       "name": "Your queue",
+      "table": "claims_copy",
+      "filter": "Review status is not Reviewed, and Agent notes contains for an editor, and Agent notes does not contain nothing waits",
+      "sort": "Agent confidence, lowest first",
+      "columns": [
+        "Geo Name",
+        "Agent tags",
+        "Agent confidence",
+        "Agent notes",
+        "Agent reasons",
+        "Claim quality tags — verified",
+        "Review status",
+        "Why wrong",
+        "Challenged tags notes"
+      ],
+      "wrap": true
+    },
+    {
+      "name": "Needs your note",
+      "table": "claims_copy",
+      "filter": "Why wrong is not empty, and Challenged tags notes is empty",
+      "sort": "Agent confidence, lowest first",
+      "columns": [
+        "Geo Name",
+        "Agent tags",
+        "Claim quality tags — verified",
+        "Review status",
+        "Why wrong",
+        "Challenged tags notes"
+      ],
+      "wrap": true
+    },
+    {
+      "name": "Agent disagreed",
+      "table": "claims_copy",
+      "filter": "Agent notes contains disagrees",
+      "sort": "Agent confidence, lowest first",
+      "columns": [
+        "Geo Name",
+        "Agent tags",
+        "Agent confidence",
+        "Agent notes",
+        "Agent reasons",
+        "Claim quality tags — verified",
+        "Review status",
+        "Why wrong",
+        "Challenged tags notes"
+      ],
+      "wrap": true
+    },
+    {
+      "name": "Your queue (ledger)",
       "table": "tag_decisions",
       "filter": "Tag outcome is empty",
       "sort": "Agent confidence, lowest first",
@@ -476,10 +577,11 @@
         "Why wrong",
         "Your reasoning"
       ],
-      "wrap": false
+      "wrap": false,
+      "renamed_from": "Your queue"
     },
     {
-      "name": "Needs your note",
+      "name": "Needs your note (ledger)",
       "table": "tag_decisions",
       "filter": "Why wrong is Rule unclear or Rule should change, and Your reasoning is empty",
       "sort": "Agent confidence, lowest first",
@@ -489,7 +591,8 @@
         "Why wrong",
         "Your reasoning"
       ],
-      "wrap": false
+      "wrap": false,
+      "renamed_from": "Needs your note"
     },
     {
       "name": "Lessons waiting",

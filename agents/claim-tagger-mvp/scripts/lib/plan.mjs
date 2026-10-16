@@ -35,7 +35,7 @@ import { decodePage, encodeProperties, normId, sameValue } from './notion-values
 import { agentRoot, codeFile } from './paths.mjs';
 import { validate } from './validate.mjs';
 
-/** The start of "Your reasoning" on a row that a setup plan seeds from the audit: the one way a script writes the editor's three columns. */
+/** The start of "Challenged tags notes" on a claim that the setup seeds from the audit: the one way a setup plan writes the editor's four claims columns. */
 export const AUDIT_PREFIX = 'From the audit of 9 October';
 /** Consecutive failed ops after which applyPlan stops (a resumed run goes on from there). */
 export const MAX_CONSECUTIVE_FAILURES = 3;
@@ -44,8 +44,8 @@ const DEFAULT_KEYS = Object.freeze({
   rulebook: 'Name', claims_copy: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name',
 });
 
-/** The tables whose rows an agent acting as the editor on a practice page may update (decision D31): the queue and the rule changes. */
-export const DEMO_EDITOR_TABLES = Object.freeze(['tag_decisions', 'rule_changes']);
+/** The tables whose rows an agent acting as the editor on a practice page may update (decision D31): the claims (the four editor columns) and the rule changes. */
+export const DEMO_EDITOR_TABLES = Object.freeze(['claims_copy', 'rule_changes']);
 
 /** True when `root` is the state folder of a practice page: a folder directly under .../runs/demos/ (letter case is ignored, as on Windows). */
 export function isDemoRoot(root) {
@@ -75,6 +75,14 @@ const short = (v, n = 60) => {
   return s.length > n ? `${s.slice(0, n - 1)}…` : s;
 };
 const toPlain = (value) => JSON.parse(JSON.stringify(value)); // what a plan file will hold: no undefined, no Date, no class instance
+
+function tableEntryOrNull(config, table) {
+  try {
+    return tableEntry(config, table);
+  } catch {
+    return null;
+  }
+}
 
 function keyColumn(config, table) {
   try {
@@ -229,15 +237,16 @@ const SCHEMA_WORDS = new Map([
  * Everything that can be known about a plan without a request. Returns { ok, problems, counts }; problems are sentences naming the op
  * (1-based) that broke the rule:
  *   the table is one of the five; every line fits schemas/plan.schema.json; every property is in the table's writable set
- *   (config.writableProperties, and with `setup` a create may fill what the one-time setup fills); an editor column is refused, except
- *   on a setup create into tag_decisions whose "Your reasoning" starts with AUDIT_PREFIX, or on a create when config.demo is true and
- *   <root>/runs/SETUP exists; Status on rule_changes is Proposed, Live or Rolled back; no string anywhere holds a protected id (dashes
+ *   (config.writableProperties, and with `setup` a create may fill what the one-time setup fills); an editor column (the four of the claims
+ *   copy, Editor wording, Paused; the ledger has none) is refused, except on a setup create or update of a claim whose "Challenged tags notes"
+ *   starts with AUDIT_PREFIX (the seeding of the audit's decisions, hard rule 1), or on a create when config.demo is true and
+ *   <root>/runs/SETUP exists (a practice page's build); Status on rule_changes is Proposed, Live or Rolled back; no string anywhere holds a protected id (dashes
  *   ignored) and no op targets a protected table; an update has a page_id and a create has none; a create carries its key column; a key
  *   appears once per table; the header counts match the ops.
  *
  * `demoEditor: true` is decision D31, the demo-only exception to hard rule 1: an agent may act as the editor on a practice page. It allows,
- * and only when config.demo is true and `root` is a folder directly under runs/demos/ (isDemoRoot), an UPDATE on tag_decisions to write the
- * editor's columns (Tag outcome, Why wrong, Your reasoning) and an UPDATE on rule_changes to write Editor wording and a Status that is one of
+ * and only when config.demo is true and `root` is a folder directly under runs/demos/ (isDemoRoot), an UPDATE on claims_copy to write the
+ * editor's four columns (Claim quality tags — verified, Review status, Why wrong, Challenged tags notes) and an UPDATE on rule_changes to write Editor wording and a Status that is one of
  * config.editor_columns.rule_changes_status_editor_values (Approved, Rejected). Without the option, on a production config, outside
  * runs/demos/, on a create, and on any other table or column, every editor column and those two Status values stay refused.
  */
@@ -301,13 +310,14 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot(), dem
       return;
     }
     const editor = new Set(editorColumns(config, op.table));
-    const reasoning = op.properties['Your reasoning'];
-    const seeded = setup && op.op === 'create' && op.table === 'tag_decisions' && typeof reasoning === 'string' && reasoning.startsWith(AUDIT_PREFIX);
+    const notesColumn = tableEntryOrNull(config, 'claims_copy')?.columns?.notes ?? 'Challenged tags notes';
+    const challenged = op.properties[notesColumn];
+    const seeded = setup && op.table === 'claims_copy' && typeof challenged === 'string' && challenged.startsWith(AUDIT_PREFIX);
     const mayWriteEditor = seeded || (demoOpen && op.op === 'create') || (editorMayUpdate && op.op === 'update' && DEMO_EDITOR_TABLES.includes(op.table));
     for (const name of Object.keys(op.properties)) {
       const base = name.endsWith(':end') ? name.slice(0, -4) : name; // the end of a date goes with its start
       if (editor.has(base)) {
-        if (!mayWriteEditor) add(`"${name}" is a column only an editor writes; no script may (the one exception is the setup seeding the audit, or a demo's setup, when it creates the row)`);
+        if (!mayWriteEditor) add(`"${name}" is a column only an editor writes; no script may (the exceptions are the setup seeding the audit's decisions on the claims, and a practice page's build when it creates the row)`);
         continue;
       }
       if (!writable.has(base)) add(`"${name}" is not a column this plan may write to ${op.table}`);

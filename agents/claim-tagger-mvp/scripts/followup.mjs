@@ -8,11 +8,12 @@
 //   --lesson       the title of the rule change; it must be Live. Without it: the only Live rule change (two or more: exit 2, naming them)
 //   --pull, --driver, --run-id, --runs-max, --plan-only   as for the other loop scripts
 //
-// What it does. The supporting rows of the lesson are decided rows, so each is one of the earlier decisions the safety check keeps in evals/cases.jsonl
-// (item case-<key>). They are judged under the rulebook in force: right after a PASS that rulebook is the candidate the check judged, so every answer is
+// What it does. The supporting rows of the lesson are rows of the ledger (Tag decisions) that hold a decision, so each is one of the earlier decisions the
+// safety check keeps in evals/cases.jsonl (item case-<key>). They are judged under the rulebook in force: right after a PASS that rulebook is the candidate the check judged, so every answer is
 // already in the store and nothing is asked. A row whose answer is what the editor decided is Fixed, any other Still wrong. The plan writes
 //   Tag decisions    Follow-up on the supporting rows (the only column a decided row accepts), where it differs from the pulled value
-//   Claims copy      Agent tags and Agent notes of the claims of those rows, worked out again with the editor's decisions (an editor always wins)
+//   Claims copy      Agent tags, Agent notes and Agent reasons (the line of each tag that was checked again, the others kept) of the claims of those rows, worked out again: a claim an editor has Reviewed gets the editor's verified set (an editor
+//                    always wins) and "disagrees with your decision on <tag>" where the agent's answer under the rule now in force still differs from it
 //   Agent settings   the edition and "Follow-up · <date time> · n Fixed, m Still wrong" (left out when promote runs the follow-up)
 //
 // Exit codes: 0 ok, 1 stopped, 2 invalid (the lesson is not Live, a supporting row is not decided any more), 3 paused, 4 drift, 75 usage window.
@@ -20,7 +21,8 @@
 // Exports: followUp, main, USAGE.
 
 import { EXIT } from './lib/exit-codes.mjs';
-import { plural, quoted, stampOf, tableLink } from './lib/editor-words.mjs';
+import { answerWord, plural, quoted, stampOf, tableLink } from './lib/editor-words.mjs';
+import { disagreementsIn, isReviewed } from './lib/decisions.mjs';
 import { readAnswers } from './lib/answers.mjs';
 import { tableEntry } from './lib/config.mjs';
 import {
@@ -29,7 +31,7 @@ import {
 import { isMain } from './lib/paths.mjs';
 import { newPlan } from './lib/plan.mjs';
 import { normaliseText } from './lib/notion-values.mjs';
-import { claimColumns, notCheckedParts, tagsOfCell } from './propose.mjs';
+import { claimColumns, notCheckedParts, reasonsOfCell, tagsOfCell } from './propose.mjs';
 import { groupsFor, selectItems } from './judge.mjs';
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/followup.mjs [--lesson "<title>"] [--pull <pull-id>] [--driver cli|fake] [--run-id <id>] [--runs-max <n>] [--plan-only]';
@@ -58,7 +60,7 @@ export async function followUp(ctx, { tag, keys, rubric, summary = true }) {
   const answers = readAnswers(ctx, rubric, tag, items);
   const results = wanted.map((c) => {
     const got = answers.get(c.id)?.decision ?? null;
-    return { key: c.key, claim: c.claim, expected: c.expected, got, status: got === c.expected ? 'Fixed' : 'Still wrong' };
+    return { key: c.key, claim: c.claim, expected: c.expected, got, status: got === c.expected ? 'Fixed' : 'Still wrong', reason: answers.get(c.id)?.reason ?? null };
   });
   const fixed = results.filter((r) => r.status === 'Fixed').length;
   const stillWrong = results.length - fixed;
@@ -77,21 +79,34 @@ export async function followUp(ctx, { tag, keys, rubric, summary = true }) {
   const notChecked = notCheckedParts(rubric, new Set(judgedNames));
   const writeColumns = tableEntry(ctx.config, 'claims_copy').write_columns;
   const claims = new Map((ctx.pull.claims() ?? []).map((c) => [c.geo_id, c]));
-  const rowsOfClaim = new Map();
-  for (const r of queue) {
-    const at = String(r.Key ?? '').lastIndexOf('::');
-    if (at < 0 || !r.Tag) continue;
-    const id = r.Key.slice(0, at);
-    if (!rowsOfClaim.has(id)) rowsOfClaim.set(id, new Map());
-    rowsOfClaim.get(id).set(r.Tag, r.decided ? { decided: true, outcome: r['Tag outcome'] } : { open: true });
-  }
   let claimUpdates = 0;
   for (const id of [...new Set(keys.map((k) => k.slice(0, k.lastIndexOf('::'))))]) {
     const claim = claims.get(id);
     if (!claim) continue;
-    const cols = claimColumns({ judgedNames, rows: rowsOfClaim.get(id) ?? new Map(), currentTags: tagsOfCell(claim.agent_tags), notChecked, edition: rubric.edition });
+    // the answers under the rule now in force, for the tags of this claim that were checked again (the others keep what Agent tags and Agent notes say)
+    const verdicts = new Map();
+    const reasons = new Map();
+    for (const r of results) {
+      const at = r.key.lastIndexOf('::');
+      if (r.key.slice(0, at) !== id || r.got === null) continue;
+      verdicts.set(r.key.slice(at + 2), answerWord(r.got));
+      if (r.reason) reasons.set(r.key.slice(at + 2), r.reason);
+    }
+    const cols = claimColumns({
+      judgedNames,
+      verdicts,
+      reviewed: isReviewed(claim),
+      verifiedTags: claim.verified_tags ?? [],
+      currentTags: tagsOfCell(claim.agent_tags),
+      currentDisagrees: disagreementsIn(claim.agent_notes),
+      notChecked,
+      edition: rubric.edition,
+      reasons,
+      currentReasons: reasonsOfCell(claim.agent_reasons, judgedNames),
+    });
     const props = {};
     if (!sameText(claim.agent_tags, cols.agent_tags)) props[writeColumns.tags] = cols.agent_tags;
+    if (!sameText(claim.agent_reasons, cols.agent_reasons)) props[writeColumns.reasons] = cols.agent_reasons;
     if (!sameText(claim.agent_notes, cols.agent_notes)) props[writeColumns.notes] = cols.agent_notes;
     if (Object.keys(props).length) {
       plan.update('claims_copy', id, claim.page_id, props);

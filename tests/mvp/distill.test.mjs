@@ -438,3 +438,63 @@ test('distill: a bad command line is refused with the usage', async () => {
 });
 
 void distillCalls;
+
+// ---- decisions made on the claims (CLAIMS-REVIEW.md) --------------------------------------------------------------------------------------
+
+/** An open ledger row: the proposal the agent made and the editor saw, with no copy of a decision. */
+const openRow = (i, over = {}) => ({
+  Claim: claimText(i), Key: keyOf(i), Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Agent confidence': 0.55,
+  'Agent reason': 'Maybe it is one thing. · Context-dependent rule 2 · 2/3 runs agreed', 'Rulebook edition': '2026-10-16.1', ...over,
+});
+
+test('distill: decisions the editor made on the claims since the last tag step are copied to the ledger in the same plan, and the groups are made from them', async () => {
+  const w = await makeWorld({ claims: 4, queue: [openRow(1), openRow(2), openRow(3)] });
+  for (const i of [1, 2]) w.review(claimId(i), { tags: [], why: 'Rule unclear', notes: 'Rule 4 should let general references pass.' });
+  w.review(claimId(3), { tags: ['Context-dependent'], why: null, notes: '' }); // the agent was right: nothing to copy but the outcome
+  const h = w.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(w.rows('rule_changes').length, 1, 'two claims decided Rule unclear on rule 4 make one lesson');
+  const one = w.row('tag_decisions', keyOf(1));
+  assert.deepEqual([one['Tag outcome'], one['Why wrong'], one['Your reasoning'], one['Decided under']], ['Does not apply', 'Rule unclear', 'Rule 4 should let general references pass.', '2026-10-16.1']);
+  assert.deepEqual([one['Agent proposal'], one['Agent confidence']], ['Applies', 0.55], 'the proposal the editor saw is not touched');
+  const three = w.row('tag_decisions', keyOf(3));
+  assert.deepEqual([three['Tag outcome'], three['Why wrong'], three['Your reasoning']], ['Applies', null, ''], 'a tag the agent got right carries no Why wrong and no words');
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  assert.deepEqual(plan.map((op) => [op.table, op.op]).sort(), [['agent_settings', 'update'], ['rule_changes', 'create'], ['tag_decisions', 'update'], ['tag_decisions', 'update'], ['tag_decisions', 'update']].sort());
+  assert.ok(plan.filter((op) => op.table === 'tag_decisions').every((op) => Object.keys(op.properties).every((k) => ['Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under'].includes(k))));
+  assert.equal(readJson(join(r.runDir, 'run.json')).counts.decisions_copied, 3);
+  assert.equal(w.rows('claims_copy').filter((c) => c['Review status'] === 'Reviewed').length, 3, 'the claims are as the editor left them');
+  for (const req of w.writes()) assert.ok(!Object.keys(req.body?.properties ?? {}).includes('Review status'), 'no write names a claim\'s Review status');
+});
+
+test('distill: claims that are not Reviewed give no decision, even with a tag in the relation, and a second run copies nothing again', async () => {
+  const w = await makeWorld({ claims: 4, queue: [openRow(1), openRow(2)] });
+  w.editClaim(claimId(1), { 'Claim quality tags — verified': [], 'Review status': 'To review', 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 4 should let general references pass.' });
+  w.editClaim(claimId(2), { 'Claim quality tags — verified': [], 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 4 should let general references pass.' });
+  const r = await distill(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.equal(r.report.sentence, 'Distill: no rule change to draft; no row is decided yet.');
+  assert.equal(w.row('tag_decisions', keyOf(1))['Tag outcome'], null);
+  assert.equal(w.rows('rule_changes').length, 0);
+
+  w.review(claimId(1), { tags: [], why: 'Rule unclear', notes: 'Rule 4 should let general references pass.' });
+  w.review(claimId(2), { tags: [], why: 'Rule unclear', notes: 'Rule 4 should let general references pass.' });
+  assert.equal((await distill(w.hooks())).exit, 0);
+  const again = await distill(w.hooks({ rows: undefined }));
+  assert.equal(again.exit, 0);
+  assert.equal(readJson(join(again.runDir, 'run.json')).counts?.decisions_copied ?? 0, 0);
+  assert.equal(w.rows('rule_changes').length, 1, 'the lesson waits already: no second one');
+});
+
+test('distill --plan-only copies nothing: the plan holds the ledger updates and the report says so', async () => {
+  const w = await makeWorld({ claims: 4, queue: [openRow(1), openRow(2)] });
+  for (const i of [1, 2]) w.review(claimId(i), { tags: [], why: 'Rule unclear', notes: 'Rule 4 should let general references pass.' });
+  const before = w.writes().length;
+  const r = await distill(w.hooks({ planOnly: true }));
+  assert.equal(r.exit, 0);
+  assert.equal(w.writes().length, before, 'nothing was sent');
+  assert.equal(w.row('tag_decisions', keyOf(1))['Tag outcome'], null);
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  assert.equal(plan.filter((op) => op.table === 'tag_decisions').length, 2);
+});

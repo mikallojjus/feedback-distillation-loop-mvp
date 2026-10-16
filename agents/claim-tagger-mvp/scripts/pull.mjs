@@ -12,13 +12,18 @@
 //
 // runs/pull/<pull-id>/
 //   schema/<table>.json   the retrieveDatabase answer          raw/<table>.jsonl   every page object, one per line
-//   norm/claims.jsonl     { table, geo_id, page_id, notion_url, claim, geo_url, sources_text, source_links [{ text, href }], is_factual, agent_tags, agent_notes, last_edited }
+//   norm/claims.jsonl     { table, geo_id, page_id, notion_url, claim, geo_url, sources_text, source_links [{ text, href }], is_factual, agent_tags, agent_notes,
+//                           agent_confidence (a number or null), agent_reasons (text), verified_tags (Claim quality tags — verified as tag names), review_status (To review, Reviewed
+//                           or null), why_wrong (or null), challenged_notes (text), last_edited }
+//                         The relation is resolved to names through the page ids of the Rulebook copy's rows (this pull's, else the ones in rubric/rubric.json);
+//                         an id that names no tag of the rulebook is left out and said in a warning.
 //   norm/rulebook.json    [ { <every column by its Notion name>, page_id } ] for the rows that carry the work tag (config notion.rulebook.work_tag)
-//   norm/queue.jsonl      the twelve columns of Tag decisions by their Notion names + page_id, last_edited, decided (Tag outcome is set)
+//   norm/queue.jsonl      the thirteen columns of Tag decisions (the agent's ledger) by their Notion names + page_id, last_edited, decided (Tag outcome is set)
 //   norm/lessons.jsonl    the ten columns of Rule changes + page_id, created, supporting_keys (the trailing <geo_id>::<tag> of each Supporting rows line)
 //   norm/settings.json    { page_id, name, paused, rulebook_edition, last_run_summary }
 //   drift.json            computeDrift(lock, rulebook rows), or { skipped: ... }        requests.jsonl   the request log       pull.json   the manifest
-// and evals/cases.jsonl is rewritten from the decided queue rows whenever tag_decisions is pulled.
+// and evals/cases.jsonl is rewritten from the decided ledger rows whenever tag_decisions is pulled. The decision itself is the editor's, made on the claim
+// (CLAIMS-REVIEW.md, section 2); decisionsFor (lib/decisions.mjs, exported here too) derives it for every judged tag, and propose copies it to the ledger.
 //
 // runs/dry-run/<run-id>/ (--dry-run): schema.json, rows.jsonl (one plain row per page: every column by its Notion name, plus page_id, url,
 // last_edited_time, source_links, source_pieces), report.json, report.md, requests.jsonl. The client behind it cannot send a write, and the run ends
@@ -37,10 +42,14 @@ import { EXIT } from './lib/exit-codes.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { BUILDER_API_VERSION, clientFromConfig, countRequests, requestLogger } from './lib/notion-rest.mjs';
 import { decodePage, normId } from './lib/notion-values.mjs';
-import { agentRoot, isMain, repoRoot as defaultRepoRoot, runId as makeRunId, safeName } from './lib/paths.mjs';
+import { agentRoot, codeFile, isMain, repoRoot as defaultRepoRoot, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { mulberry32, sample, seedFromString } from './lib/rng.mjs';
-import { computeDrift, readLock } from './lib/rubric.mjs';
+import { computeDrift, readLock, readRubric } from './lib/rubric.mjs';
+import { claimWaits, decisionsFor, disagreementsIn, isReviewed, parseTagNotes, waitsForEditor } from './lib/decisions.mjs';
+import { validate } from './lib/validate.mjs';
+
+export { claimWaits, decisionsFor, disagreementsIn, isReviewed, parseTagNotes, waitsForEditor };
 
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/pull.mjs --all | --tables <rulebook,claims_copy,tag_decisions,rule_changes,agent_settings> [--pull-id <id>]',
@@ -58,6 +67,7 @@ const ALIASES = Object.freeze({
 });
 export const QUEUE_COLUMNS = Object.freeze([
   'Claim', 'Key', 'Tag', 'Agent proposal', 'Agent confidence', 'Agent reason', 'Claim link', 'Rulebook edition', 'Follow-up', 'Tag outcome', 'Why wrong', 'Your reasoning',
+  'Decided under',
 ]);
 export const LESSON_COLUMNS = Object.freeze([
   'Lesson', 'Tag', 'Rule', 'Kind', 'Current text', 'Proposed text', 'Safety check result', 'Supporting rows', 'Editor wording', 'Status',
@@ -66,6 +76,13 @@ const SETTINGS_COLUMNS = Object.freeze(['Name', 'Paused', 'Rulebook edition', 'L
 const AUDIT_PREFIX = 'From the audit of 9 October';
 
 // ---- small helpers -------------------------------------------------------------------------------------------------------------
+
+const rowSchemas = new Map();
+function rowSchema(name) {
+  const file = codeFile(agentRoot(), 'schemas', `${name}.schema.json`);
+  if (!rowSchemas.has(file)) rowSchemas.set(file, readJson(file));
+  return rowSchemas.get(file);
+}
 
 const isSet = (id) => typeof id === 'string' && id.trim() !== '' && !id.trim().startsWith('<');
 const text = (v) => (typeof v === 'string' ? v : v === null || v === undefined ? '' : String(v));
@@ -287,16 +304,44 @@ function indexRows(table, keyColumn, decoded) {
   return { rows, duplicates, empty };
 }
 
-function claimsNorm(entry, table, decoded, pagesById, warnings) {
+const numberOrNull = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+// page id (dashes and case ignored) -> tag name: from the rows of the Rulebook copy this pull read, else from the pages of the rulebook edition in force
+function tagNamesById(config, decodedRulebook, root) {
+  const byId = new Map();
+  if (decodedRulebook) {
+    const key = safeEntry(config, 'rulebook')?.key || 'Name';
+    for (const row of decodedRulebook) {
+      const name = text(row.props[key]).trim();
+      if (name !== '') byId.set(normId(row.page_id), name);
+    }
+  } else {
+    try {
+      for (const t of readRubric(root)?.tags ?? []) if (t.page_id && t.name) byId.set(normId(t.page_id), t.name);
+    } catch {
+      // no edition yet, or a rulebook file that fails its own checks: the caller's preflight says so; the relation stays unresolved
+    }
+  }
+  return byId;
+}
+
+function claimsNorm(entry, table, decoded, pagesById, warnings, tagNames = new Map()) {
   const keyColumn = entry.key;
   const cols = entry.columns ?? {};
   const writeCols = entry.write_columns ?? {};
   const { rows, duplicates, empty } = indexRows(table, keyColumn, decoded);
   if (empty.length) warnings.push(`${table}: ${empty.length} row(s) without a ${keyColumn} were left out of the norm file`);
+  let unresolved = 0;
   const out = rows.map(({ key, row }) => {
     const p = row.props;
     const raw = pagesById.get(normId(row.page_id));
     const links = geoSourceLinks(raw?.properties?.[cols.sources]?.rich_text, text(p[cols.sources]));
+    const verified = [];
+    for (const id of Array.isArray(p[cols.verified]) ? p[cols.verified] : []) {
+      const name = tagNames.get(normId(id));
+      if (name === undefined) unresolved += 1;
+      else if (!verified.includes(name)) verified.push(name);
+    }
     return {
       table: entry.name ?? table,
       geo_id: key,
@@ -309,9 +354,16 @@ function claimsNorm(entry, table, decoded, pagesById, warnings) {
       is_factual: p[cols.is_factual] ?? null,
       agent_tags: text(p[writeCols.tags]),
       agent_notes: text(p[writeCols.notes]),
+      agent_confidence: numberOrNull(p[writeCols.confidence]),
+      agent_reasons: text(p[writeCols.reasons]),
+      verified_tags: verified.sort(byCodePoints),
+      review_status: text(p[cols.review_status]).trim() || null,
+      why_wrong: text(p[cols.why_wrong]).trim() || null,
+      challenged_notes: text(p[cols.notes]),
       last_edited: row.last_edited_time ?? null,
     };
   });
+  if (unresolved) warnings.push(`${table}: ${unresolved} reference(s) in ${cols.verified} name no tag of the rulebook (their page ids are not among the Rulebook copy's rows), so they were left out`);
   return { out, duplicates };
 }
 
@@ -509,13 +561,21 @@ export async function pull({
     writeJsonAtomic(norm(NORM_FILES.rulebook), out);
   }
   if (decoded.claims_copy) {
-    const { out, duplicates: d } = claimsNorm(safeEntry(config, 'claims_copy'), 'claims_copy', decoded.claims_copy, pagesById.claims_copy, warnings);
+    const { out, duplicates: d } = claimsNorm(safeEntry(config, 'claims_copy'), 'claims_copy', decoded.claims_copy, pagesById.claims_copy, warnings, tagNamesById(config, decoded.rulebook, root));
     duplicates.push(...d);
+    for (const row of out) {
+      const bad = validate(rowSchema('claim-row'), row).errors;
+      if (bad.length) warnings.push(`claims_copy: the claim ${row.geo_id} does not fit schemas/claim-row.schema.json (${bad.slice(0, 2).join('; ')})`);
+    }
     writeTextAtomic(norm(NORM_FILES.claims_copy), jsonl(out));
   }
   if (decoded.tag_decisions) {
     const { out, duplicates: d } = queueNorm(safeEntry(config, 'tag_decisions'), 'tag_decisions', decoded.tag_decisions, warnings);
     duplicates.push(...d);
+    for (const row of out) {
+      const bad = validate(rowSchema('ledger-row'), row).errors;
+      if (bad.length) warnings.push(`tag_decisions: the row ${row.Key} does not fit schemas/ledger-row.schema.json (${bad.slice(0, 2).join('; ')})`);
+    }
     queueRows = out;
     writeTextAtomic(norm(NORM_FILES.tag_decisions), jsonl(out));
   }

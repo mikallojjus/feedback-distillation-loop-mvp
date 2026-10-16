@@ -15,7 +15,8 @@
 // What the client can do. Everything goes through one request function that sends GET, POST and PATCH and nothing else:
 //   reads    retrievePage, retrieveDatabase, retrievePropertyItem, retrieveBlockChildren (new), retrieveDataSource (new), retrieveView (new),
 //            listViews (new), queryDatabase / queryAll, queryDataSource / queryDataSourceAll (new; all pages of a query, following the cursor)
-//   writes   createPage (a row), createPageUnderPage (new), createDatabase (new), createView (new), updatePage, updateDataSource (new), appendBlocks
+//   writes   createPage (a row), createPageUnderPage (new), createDatabase (new), createView (new), updatePage, updateDataSource (new), updateView (new:
+//            rename a view, or change its filter, sorts or configuration), appendBlocks
 // There is deliberately no call that takes anything away: nothing removes, hides or moves a page, a database, a view or a block out of
 // sight (hard rule 8: rows are superseded, never removed), and a test reads this file's source to keep it so.
 //
@@ -425,10 +426,28 @@ export function createClient({
     return request('PATCH', `/data_sources/${enc(dataSourceId)}`, body);
   }
 
+  /**
+   * New. PATCH /views/{id}: give a view another name, or another filter, sorts or configuration; only what is given is sent. A null is refused here (the API takes a
+   * null filter or sorts to mean "clear it", and nothing in this client takes anything away). The setup uses it to rename the two old views of Tag decisions.
+   * Needs BUILDER_API_VERSION.
+   */
+  async function updateView(viewId, { name, filter, sorts, configuration } = {}) {
+    const body = {};
+    const given = { name, filter, sorts, configuration };
+    for (const [key, value] of Object.entries(given)) {
+      if (value === undefined) continue;
+      if (value === null) throw new TypeError(`updateView: ${key} is null, which would clear it; this client never takes anything away (hard rule 8)`);
+      body[key] = value;
+    }
+    if (Object.keys(body).length === 0) throw new TypeError('updateView: give a name, a filter, sorts or a configuration');
+    if (body.name !== undefined && (typeof body.name !== 'string' || body.name.trim() === '')) throw new TypeError('updateView: the name must be a non-empty string');
+    return request('PATCH', `/views/${enc(requireId('updateView: viewId', viewId))}`, body);
+  }
+
   return {
     queryDatabase, queryAll, retrieveDatabase, retrievePage, retrievePropertyItem, createPage, updatePage, appendBlocks,
     createDatabase, createPageUnderPage, createView, retrieveView, listViews, retrieveDataSource, queryDataSource, queryDataSourceAll,
-    updateDataSource, retrieveBlockChildren,
+    updateDataSource, updateView, retrieveBlockChildren,
   };
 }
 

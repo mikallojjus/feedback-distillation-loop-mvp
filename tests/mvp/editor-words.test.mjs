@@ -67,9 +67,17 @@ test('notionUrl and tableLink: the plain address of a table, dashes taken out', 
 
 test('viewLink: a view id gives ?v=, a link is used as it is, an object works, and without a view the table\'s own link is used', () => {
   const c = base();
-  assert.equal(viewLink(c, 'your_queue'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
-  c.notion.views = { your_queue: '11111111-1111-1111-1111-111111111111', lessons_waiting: 'https://www.notion.so/x?v=1', rulebook: { id: '22222222222222222222222222222222' }, needs_your_note: { url: 'https://example.org/v' } };
-  assert.equal(viewLink(c, 'your_queue'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb?v=11111111111111111111111111111111');
+  assert.equal(viewLink(c, 'your_queue'), `https://www.notion.so/${c.notion.parent_page_id}`, 'the Claims copy is the table of Your queue; while it is not made the link goes to the page');
+  assert.equal(viewLink(c, 'your_queue_ledger'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'the old view of the ledger is a view of Tag decisions');
+  c.notion.claims[0].database_id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
+  assert.equal(viewLink(c, 'your_queue'), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
+  assert.equal(viewLink(c, 'agent_disagreed'), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
+  c.notion.views = {
+    your_queue: '11111111-1111-1111-1111-111111111111', lessons_waiting: 'https://www.notion.so/x?v=1', rulebook: { id: '22222222222222222222222222222222' }, needs_your_note: { url: 'https://example.org/v' },
+    your_queue_ledger: '33333333-3333-3333-3333-333333333333',
+  };
+  assert.equal(viewLink(c, 'your_queue'), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee?v=11111111111111111111111111111111');
+  assert.equal(viewLink(c, 'your_queue_ledger'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb?v=33333333333333333333333333333333');
   assert.equal(viewLink(c, 'lessons_waiting'), 'https://www.notion.so/x?v=1');
   assert.equal(viewLink(c, 'rulebook'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?v=22222222222222222222222222222222');
   assert.equal(viewLink(c, 'needs_your_note'), 'https://example.org/v');

@@ -120,7 +120,7 @@ test('promote PASS: the new text goes live in the Rulebook copy and in a new edi
   const report = assertReport(h, r);
   assert.equal(report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed.');
   assert.deepEqual(report.rows, [['Example claims', '11 of 11 right', ''], ['Earlier decisions', '2 of 2 still right', ''], ['Your 2 rows', '2 of 2 now right, marked Fixed', '']]);
-  assert.equal(report.next, `Next: decide the remaining 1 row in Your queue (https://www.notion.so/${w.DB.tag_decisions}?v=e3000000000000000000000000000001).`);
+  assert.equal(report.next, `Next: decide the remaining 1 row in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000001).`);
 
   // the card
   const card = readJson(join(r.runDir, 'card.json'));

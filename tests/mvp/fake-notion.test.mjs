@@ -1324,3 +1324,34 @@ test('a client with the wrong token gets the fake\'s 401, and one without a vers
   await assert.rejects(() => wrong.retrievePage(root), (e) => e.status === 401 && e.code === 'unauthorized');
   assert.equal(fake.requests.length, 1, 'a 401 is not retried');
 });
+
+test('PATCH /views/{id} renames a view and changes its filter, sorts or configuration, and nothing else; an empty or foreign body is a 400', async () => {
+  const { fake, db, ds } = world();
+  const ids = fake.database(db).properties;
+  const made = await post(fake, '/views', {
+    database_id: db, data_source_id: ds, name: 'Your queue', type: 'table', filter: { property: 'Tag', select: { equals: 'Wordy' } },
+    configuration: { type: 'table', properties: [{ property_id: ids.Claim.id, visible: true }] },
+  }, { version: VIEWS });
+  const id = made.body.id;
+  const renamed = await patch(fake, `/views/${id}`, { name: 'Your queue (ledger)' }, { version: VIEWS });
+  assert.equal(renamed.status, 200, JSON.stringify(renamed.body));
+  assert.equal(renamed.body.name, 'Your queue (ledger)');
+  assert.equal(renamed.body.id, id, 'the same view');
+  const full = (await get(fake, `/views/${id}`, { version: VIEWS })).body;
+  assert.deepEqual([full.name, full.filter, full.configuration.properties.length], ['Your queue (ledger)', { property: 'Tag', select: { equals: 'Wordy' } }, 1], 'only the name changed');
+  assert.deepEqual(fake.views(db).map((v) => v.name), ['Your queue (ledger)']);
+
+  const both = await patch(fake, `/views/${id}`, { filter: { property: 'Tag', select: { equals: 'Context-dependent' } }, sorts: [{ property: 'Confidence', direction: 'descending' }] }, { version: VIEWS });
+  assert.equal(both.status, 200);
+  assert.deepEqual(fake.views(db)[0].sorts, [{ property: 'Confidence', direction: 'descending' }]);
+  assert.deepEqual(fake.views(db)[0].filter, { property: 'Tag', select: { equals: 'Context-dependent' } });
+
+  assert.equal((await patch(fake, `/views/${id}`, {}, { version: VIEWS })).status, 400, 'nothing to change');
+  assert.equal((await patch(fake, `/views/${id}`, { name: '  ' }, { version: VIEWS })).status, 400);
+  assert.equal((await patch(fake, `/views/${id}`, { type: 'board' }, { version: VIEWS })).status, 400, 'the type of a view is not changed');
+  assert.equal((await patch(fake, `/views/${id}`, { filter: { property: 'Nope', select: { equals: 'x' } } }, { version: VIEWS })).status, 400, 'a filter on a column the table lacks');
+  assert.equal((await patch(fake, `/views/${id}`, { name: 'x' })).status, 400, 'views need 2026-03-11');
+  assert.equal((await patch(fake, '/views/nope', { name: 'x' }, { version: VIEWS })).status, 404);
+  assert.equal(fake.views(db)[0].name, 'Your queue (ledger)', 'a refused change changed nothing');
+  assert.equal(fake.writes().filter((r) => r.method === 'PATCH' && r.path.startsWith('/views/')).length, 8, 'every attempt is on the log, refused ones included');
+});

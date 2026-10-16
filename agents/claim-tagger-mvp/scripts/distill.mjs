@@ -1,8 +1,12 @@
 #!/usr/bin/env node
-// Distill: turns the editors' "the rule is the problem" decisions into proposed rule changes. It reads the decided rows of Tag decisions, groups the
-// ones whose Why wrong is Rule unclear or Rule should change by (tag, the rule they cite), asks the distill model once per group for at most three
-// patterns, checks every reply, and writes a Rule changes row (Status Proposed) per kept lesson. It never changes a rule: a rule changes only through
-// an Approved lesson, a safety check PASS and the promote step.
+// Distill: turns the editors' "the rule is the problem" decisions into proposed rule changes. It reads the decided rows of Tag decisions (the agent's
+// ledger, which holds a copy of every decision an editor made on a claim), groups the ones whose Why wrong is Rule unclear or Rule should change by (tag, the
+// rule they cite), asks the distill model once per group for at most three patterns, checks every reply, and writes a Rule changes row (Status Proposed) per
+// kept lesson. It never changes a rule: a rule changes only through an Approved lesson, a safety check PASS and the promote step.
+//
+// The copy of a decision is made by the tag step; a claim an editor Reviewed since the last tag step has none yet. So distill first brings the ledger up to date:
+// for every Reviewed claim, the ledger rows of its judged tags get the copy (Tag outcome, Why wrong, Your reasoning, Decided under; lib/decisions.mjs), in the same
+// plan, and the groups are made from the rows as they will be then. Nothing else of the ledger is touched, and no column of the claim is written.
 //
 //   node agents/claim-tagger-mvp/scripts/distill.mjs [--pull <pull-id>] [--plan-only] [--driver cli|fake] [--run-id <id>] [--rows <n>]
 //
@@ -31,6 +35,7 @@
 
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf } from './lib/config.mjs';
+import { syncDecisions } from './lib/decisions.mjs';
 import { cutText, plural, quoted, stampOf, viewLink } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
 import { LoopExit, addSettingsOp, applyStep, assertApplied, callModel, judgeSettings, liveRubric, modelStop, needTables, parseCli, readEvals, resumeLine, runPreflight, takePull, withRun } from './lib/loop.mjs';
@@ -289,7 +294,7 @@ export async function distill(opts = {}) {
     const rowCap = ctx.opts.rows ?? DEFAULT_ROW_CAP;
     if (!Number.isInteger(rowCap) || rowCap < 1) throw new LoopExit(EXIT.INVALID, `--rows needs a whole number from 1, got ${rowCap}`, { sentence: 'Distill: nothing was done, because --rows needs a whole number.', next: 'Next: ask the engineer to look at the message the script printed.' });
 
-    const queue = ctx.pull.queue() ?? [];
+    const { changes: copies, rows: queue } = syncDecisions(ctx.pull.claims() ?? [], ctx.pull.queue() ?? []);
     const lessons = ctx.pull.lessons() ?? [];
     const openLessons = lessons.filter((l) => l.Status === 'Proposed' || l.Status === 'Approved');
     const { groups, counts } = buildGroups({ queue, rubric, config: ctx.config, minClaims: cfg.min_claims, rowCap, openLessons });
@@ -358,6 +363,7 @@ export async function distill(opts = {}) {
 
     const plan = newPlan({ runId: ctx.runId, script: 'distill', rubricEdition: rubric.edition, config: ctx.config, now: ctx.now });
     const lessonSchema = readJson(codeFile(ctx.root, 'schemas', 'lesson.schema.json'));
+    for (const c of copies) plan.update('tag_decisions', c.key, c.page_id, c.changes);
     for (const k of kept) {
       const row = {
         Lesson: k.title, Tag: k.tag, Rule: k.rule, Kind: k.kind, 'Current text': k.current, 'Proposed text': k.text, Status: 'Proposed', 'Supporting rows': supportingCell(k.rows, maxText),
@@ -410,7 +416,7 @@ export async function distill(opts = {}) {
       rows,
       next: `Next: read ${one ? 'it' : 'them'} in Lessons waiting (${link}), where the current and the proposed text sit side by side, and approve ${one ? 'it' : 'each one'} or write your own wording.`,
       details,
-      counts: { lessons: kept.length, groups: groups.length },
+      counts: { lessons: kept.length, groups: groups.length, decisions_copied: copies.length },
     };
   });
 }

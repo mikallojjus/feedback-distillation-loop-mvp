@@ -6,6 +6,49 @@ To approve, say go as it stands, or edit this page first and then say go; the bu
 
 Sample rows use real claims from the audit of 9 October, with claims and ids shortened; the values in them are illustrations, not results.
 
+## Revision of 16 October: decisions on the claims table
+
+After the second checkpoint the product owner asked that editors decide tags where they work, on the claims table, as on the real table. The sections below this one are the approved proposal of 15 October and stay as history; this section is what is built from 16 October on, and the specification is in the notes (decisions P2, 42 and 43).
+
+**Claims copy** gains four editor columns and two agent columns. The editor's outcome is the verified relation plus Review status: Reviewed with the tag in the relation means Applies, Reviewed without it means Does not apply, anything else is still open.
+
+| Column | Type | Who fills it | Meaning |
+|---|---|---|---|
+| Agent confidence | number | the agent | The lowest confidence among the tags the agent judged on the claim, 0.5 to 1; Your queue sorts by it. |
+| Agent reasons | text | the agent | One line per judged tag: the tag, the agent's reason in at most 40 words, the rule cited and how many runs agreed. |
+| Claim quality tags — verified | relation to the Rulebook copy | the editor | The tags the editor confirms on the claim; the real table's column of the same name. |
+| Review status | select | the editor | To review, Reviewed. A claim is decided once it is Reviewed. |
+| Why wrong | select | the editor | Agent slip, Rule unclear, Rule should change: why the agent's tag was wrong; one value for the claim. |
+| Challenged tags notes | text | the editor | The editor's words. A line that starts with a tag name and a colon belongs to that tag. |
+
+| Geo Name | Agent tags | Agent confidence | Agent notes | Claim quality tags — verified | Review status | Why wrong | Challenged tags notes |
+|---|---|---|---|---|---|---|---|
+| The press pool was justified in suspending coverage… | empty | 0.75 | no tags / 1 waits for an editor · edition 2026-10-16.1 | empty | Reviewed | Rule unclear | Context-dependent: rule 3 does not say that a group every reader knows by its role counts as identified; it does. |
+| The AI Force should enforce binding safety standards | empty | 0.65 | no tags / 1 waits for an editor · edition 2026-10-16.1 | Context-dependent | Reviewed | Rule unclear | Context-dependent: a capitalised phrase that names no body readers know is still a kind of thing, not which one. |
+| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.93 | Context-dependent / nothing waits for an editor · edition 2026-10-16.1 | Context-dependent | Reviewed | empty | empty |
+| Relocating the Kennedy Center Honors to a sports arena… | empty | 0.92 | no tags / nothing waits for an editor · edition 2026-10-16.1 | empty | To review | empty | empty |
+
+**Tag decisions** becomes the agent's ledger: one row per claim and tag the agent judged, written and superseded by the agent only. The columns keep their names; Tag outcome, Why wrong and Your reasoning are copies the agent makes from the claims table once a claim is Reviewed, and a new column Decided under records the edition the editor's decision was made against. Editors do not write to it; the practice page shows it at the bottom with one line of explanation.
+
+| Key | Tag | Agent proposal | Agent confidence | Tag outcome | Why wrong | Decided under | Follow-up |
+|---|---|---|---|---|---|---|---|
+| 5c9d133e…::Context-dependent | Context-dependent | Applies | 0.75 | Does not apply | Rule unclear | 2026-10-16.1 | Fixed |
+| 92f57020…::Context-dependent | Context-dependent | Can't tell | 0.65 | Applies | Rule unclear | 2026-10-16.1 | Fixed |
+| fc0cb0da…::Context-dependent | Context-dependent | Applies | 0.93 | Applies | empty | 2026-10-16.1 | empty |
+| 89fcfb7f…::Context-dependent | Context-dependent | Does not apply | 0.92 | empty | empty | empty | empty |
+
+**Views.** The editor's views move to the Claims copy; Lessons waiting and Rulebook stay where they are; the two old views on Tag decisions are renamed with "(ledger)" and kept.
+
+| View | Table | Filter | Sort |
+|---|---|---|---|
+| Your queue | Claims copy | Review status is not Reviewed, Agent notes contains "for an editor" and does not contain "nothing waits" | Agent confidence, lowest first |
+| Needs your note | Claims copy | Why wrong is set, and Challenged tags notes is empty | Agent confidence, lowest first |
+| Agent disagreed | Claims copy | Agent notes contains "disagrees" | Agent confidence, lowest first |
+| Lessons waiting | Rule changes | Status is Proposed or Approved | none |
+| Rulebook | Rulebook copy | all rows | none |
+
+**Reruns.** A rerun judges only new or changed claims and tags with a new edition. The agent never reopens a Reviewed claim: where its new proposal differs from the editor's set, Agent tags keeps the editor's set and Agent notes says "disagrees with your decision on <tag>", which the Agent disagreed view lists.
+
 ## At a glance
 
 | Table | Rows at setup | Who writes to it |

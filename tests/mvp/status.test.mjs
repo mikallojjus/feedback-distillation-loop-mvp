@@ -15,12 +15,17 @@ function assertReport(h, r) {
   assert.ok(!/\bcalls?\b|token|duration|\$|\.mjs|--[a-z]|runs\//i.test(r.markdown), r.markdown);
   return r.report;
 }
-const open = (i) => ({ Claim: claimText(i), Key: `c${String(i).padStart(2, '0')}::Context-dependent`, Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'Unsure.' });
-const decided = (i, over = {}) => ({ ...open(i), 'Tag outcome': 'Does not apply', 'Why wrong': 'Agent slip', 'Your reasoning': 'Fine.', ...over });
+// the rows that wait are claims of the Claims copy: a claim whose Agent notes say that a tag waits and that an editor has not Reviewed
+const WAITS = 'no tags\n1 waits for an editor · edition 2026-10-16.1';
+const NOTHING = 'no tags\nnothing waits for an editor · edition 2026-10-16.1';
+const id = (i) => `c${String(i).padStart(2, '0')}`;
+const waiting = (...ns) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent notes': WAITS, 'Agent confidence': 0.5 }]));
+const read = (...ns) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent notes': NOTHING, 'Agent confidence': 0.9 }]));
+const reviewed = (ns, over = {}) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent notes': NOTHING, 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'Fine.', ...over }]));
 const lesson = (title, Status, over = {}) => ({ Lesson: title, Tag: 'Context-dependent', Rule: 'Context-dependent rule 4', Kind: 'Clarify wording', 'Current text': 'x', 'Proposed text': 'y', Status, ...over });
 
 test('status, nothing waits: the sentence, the table of four rows and a Next that reads new claims', async () => {
-  const w = await makeWorld({ claims: 3, queue: [decided(1)], settings: { 'Last run summary': 'Tag · 15 Oct 11:20 · 3 claims' } });
+  const w = await makeWorld({ claims: 3, claimRows: { ...reviewed([1]), ...read(2, 3) }, settings: { 'Last run summary': 'Tag · 15 Oct 11:20 · 3 claims' } });
   const h = w.hooks();
   const r = await status(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
@@ -39,7 +44,7 @@ test('status, nothing waits: the sentence, the table of four rows and a Next tha
 });
 
 test('status, rows and a rule change wait: both counted in the sentence, Next points at Your queue', async () => {
-  const w = await makeWorld({ claims: 4, queue: [open(1), open(2), open(3), decided(4)], lessons: [lesson('A proposed change', 'Proposed')] });
+  const w = await makeWorld({ claims: 4, claimRows: { ...waiting(1, 2, 3), ...reviewed([4]) }, lessons: [lesson('A proposed change', 'Proposed')] });
   const h = w.hooks();
   const r = await status(h);
   const report = assertReport(h, r);
@@ -48,10 +53,26 @@ test('status, rows and a rule change wait: both counted in the sentence, Next po
   assert.deepEqual(report.rows[2], ['Lessons waiting', '1 rule change to approve', '']);
   assert.deepEqual(report.rows[3], ['Last run', 'none yet', '']);
   assert.match(report.next, /^Next: decide the 3 rows in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/);
+  assert.ok(report.next.includes(w.DB.claims_copy), 'Your queue is a view of the Claims copy');
+});
+
+test('status counts a claim by what its Agent notes say: "nothing waits for an editor" and a Reviewed claim do not wait, "2 wait for an editor" does', async () => {
+  const w = await makeWorld({
+    claims: 5,
+    claimRows: {
+      ...waiting(1),
+      [id(2)]: { 'Agent notes': 'no tags\n2 wait for an editor · edition 2026-10-16.1', 'Review status': 'To review' },
+      ...read(3),
+      ...reviewed([4], { 'Agent notes': WAITS }),
+    },
+  });
+  const r = await status(w.hooks());
+  assert.equal(r.report.sentence, 'Status: nothing is paused; 2 rows wait for you.', 'c01 and c02; c03 says nothing waits, c04 is Reviewed, c05 was not read');
+  assert.deepEqual(r.report.rows[1], ['Your queue', '2 rows, lowest confidence first', '']);
 });
 
 test('status, more rows wait than fit one sitting: the count is in the sentence and Next says where to start', async () => {
-  const w = await makeWorld({ claims: 5, queue: [open(1), open(2), open(3), open(4)], lessons: [lesson('A proposed change', 'Proposed')], configure: (c) => { c.queue.sitting_rows = 3; } });
+  const w = await makeWorld({ claims: 5, claimRows: waiting(1, 2, 3, 4), lessons: [lesson('A proposed change', 'Proposed')], configure: (c) => { c.queue.sitting_rows = 3; } });
   const h = w.hooks();
   const r = await status(h);
   const report = assertReport(h, r);
@@ -81,8 +102,8 @@ test('status, only rule changes wait: approve or reject; an approved one is read
   assert.deepEqual((await status(both.hooks())).report.rows.find((x) => x[0] === 'Lessons waiting'), ['Lessons waiting', '1 rule change to approve, 1 approved, ready to check', '']);
 });
 
-test('status, a decided row that names a rule problem and has no note shows in the table', async () => {
-  const w = await makeWorld({ claims: 3, queue: [decided(1, { 'Why wrong': 'Rule unclear', 'Your reasoning': '' }), decided(2, { 'Why wrong': 'Rule should change', 'Your reasoning': 'Rule 4.' })] });
+test('status, a Reviewed claim with a Why wrong and no Challenged tags notes shows in the table', async () => {
+  const w = await makeWorld({ claims: 3, claimRows: { ...reviewed([1], { 'Why wrong': 'Rule unclear', 'Challenged tags notes': '' }), ...reviewed([2], { 'Why wrong': 'Rule should change', 'Challenged tags notes': 'Rule 4.' }) } });
   const r = await status(w.hooks());
   assert.deepEqual(r.report.rows.find((x) => x[0] === 'Needs your note'), ['Needs your note', '1 row', '']);
   assert.equal(r.report.rows.length, 5);
@@ -137,13 +158,14 @@ test('status says plainly when Notion has other tag rows than the saved edition,
 });
 
 test('status --json prints the counts as JSON instead of the report, after the report files are written', async () => {
-  const w = await makeWorld({ claims: 3, queue: [open(1), open(2), decided(3, { 'Why wrong': 'Rule unclear', 'Your reasoning': '' })], lessons: [lesson('A', 'Proposed'), lesson('B', 'Live', { Rule: 'Context-dependent rule 2' })] });
+  const w = await makeWorld({ claims: 3, claimRows: { ...waiting(1, 2), ...reviewed([3], { 'Why wrong': 'Rule unclear', 'Challenged tags notes': '' }) }, lessons: [lesson('A', 'Proposed'), lesson('B', 'Live', { Rule: 'Context-dependent rule 2' })] });
   const h = w.hooks({ json: true });
   const r = await status(h);
   assert.equal(r.exit, 0);
   assert.equal(h.io.outs.length, 1);
   const json = JSON.parse(h.io.outs[0]);
   assert.deepEqual(json.queue, { open: 2, decided: 1, needs_note: 1, sitting_rows: 20, more_than_a_sitting: false });
+  assert.match(json.table, new RegExp(w.DB.claims_copy), 'the table the counts are about is the Claims copy');
   assert.deepEqual(json.lessons, { Proposed: 1, Approved: 0, Rejected: 0, Live: 1, 'Rolled back': 0 });
   assert.deepEqual([json.edition, json.tags, json.same_as_notion, json.paused], ['2026-10-16.1', 13, true, false]);
   assert.ok(readJson(join(r.runDir, 'report.json')).sentence.startsWith('Status: nothing is paused; 2 rows and 1 rule change wait'));
@@ -172,29 +194,29 @@ test('status in a practice profile starts with "Demo · "', async () => {
   assert.equal(r.report.demo, true);
 });
 
-// the practice page of step 1: one tag in the rulebook, two rows that wait and that the agent has not read yet (no Agent proposal, confidence or reason:
-// step 2 fills them), no rule change, no run yet
+// the practice page of step 1: one tag in the rulebook, five claims an editor has Reviewed and two that are still open and that the agent has not read yet (no Agent
+// tags, notes or confidence: step 2 fills them), no rule change, no run yet
 const PRACTICE_TITLE = 'Claim tagger demo · 15 Oct 10:42';
 const ONE_TAG = [JSON.parse(readFileSync(join(codeRoot(), 'setup', 'taxonomy-issue.json'), 'utf8')).rows.find((r) => r.Name === 'Context-dependent')];
-const unread = (i) => ({ Claim: claimText(i), Key: `c${String(i).padStart(2, '0')}::Context-dependent`, Tag: 'Context-dependent' });
-const practicePage = (extra = {}) => makeWorld({
-  claims: 7, rulebook: ONE_TAG, queue: [unread(1), unread(2)], demo: true, configure: (c) => { c.demo_title = PRACTICE_TITLE; }, ...extra,
+const earlier = reviewed([3, 4, 5, 6, 7], { 'Agent notes': '' });
+const practicePage = ({ claimRows = {}, ...extra } = {}) => makeWorld({
+  claims: 7, rulebook: ONE_TAG, claimRows: { ...earlier, ...claimRows }, demo: true, configure: (c) => { c.demo_title = PRACTICE_TITLE; }, ...extra,
 });
 const TAG_FIRST = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
 const DECIDE = /^Next: decide the (\d+) rows in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/;
 
-test('status on a practice page names the page and shows the rows of step 1 of the page: "1 tag, edition <e>", "2 rows, lowest confidence first", "none", "none yet"', async () => {
+test('status on a practice page names the page and shows step 1: "1 tag, edition <e>", nothing in Your queue until the agent has read the two open claims, "none", "none yet"', async () => {
   const w = await practicePage();
   const h = w.hooks();
   const r = await status(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   const report = assertReport(h, r);
-  assert.equal(report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.`);
-  assert.ok(r.markdown.startsWith(`Demo · Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.\n`), r.markdown);
+  assert.equal(report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused and nothing waits for you.`);
+  assert.ok(r.markdown.startsWith(`Demo · Status of the practice page ${PRACTICE_TITLE}: nothing is paused and nothing waits for you.\n`), r.markdown);
   assert.deepEqual(report.header, ['Where', 'Now', '']);
   assert.deepEqual(report.rows, [
     ['Rulebook', '1 tag, edition 2026-10-16.1', ''],
-    ['Your queue', '2 rows, lowest confidence first', ''],
+    ['Your queue', 'nothing waits', ''],
     ['Lessons waiting', 'none', ''],
     ['Last run', 'none yet', ''],
   ]);
@@ -202,36 +224,36 @@ test('status on a practice page names the page and shows the rows of step 1 of t
   assert.equal(readJson(join(r.runDir, 'report.json')).next, TAG_FIRST);
 });
 
-test('on a practice page the Next line says to type the demo tag command while a row that waits has no Agent proposal yet, and points at Your queue once the agent has read them', async () => {
+test('on a practice page the Next line says to type the demo tag command while a claim that is still open has no Agent notes yet, and points at Your queue once the agent has read them', async () => {
   const check = async (w) => {
     const h = w.hooks();
     const r = await status(h);
     assert.equal(r.exit, 0, h.io.errs.join('\n'));
     return assertReport(h, r);
   };
-  assert.equal((await check(await practicePage())).next, TAG_FIRST, 'step 1: neither row has a proposal');
-  assert.equal((await check(await practicePage({ queue: [open(1), unread(2)] }))).next, TAG_FIRST, 'one row without a proposal is enough');
-  assert.equal((await check(await practicePage({ queue: [{ ...unread(1), 'Agent proposal': '' }, open(2)] }))).next, TAG_FIRST, 'an empty proposal is none');
-  const read = await check(await practicePage({ queue: [open(1), open(2)] }));
-  assert.match(read.next, DECIDE, 'step 3: the agent has read both rows, the editor decides them');
-  assert.equal(DECIDE.exec(read.next)[1], '2');
+  assert.equal((await check(await practicePage())).next, TAG_FIRST, 'step 1: neither open claim has been read');
+  assert.equal((await check(await practicePage({ claimRows: waiting(1) }))).next, TAG_FIRST, 'one claim that is not read yet is enough');
+  assert.equal((await check(await practicePage({ claimRows: { ...waiting(1), [id(2)]: { 'Agent notes': '  ' } } }))).next, TAG_FIRST, 'empty notes are none');
+  const both = await check(await practicePage({ claimRows: waiting(1, 2) }));
+  assert.match(both.next, DECIDE, 'step 3: the agent has read both claims, the editor decides them');
+  assert.equal(DECIDE.exec(both.next)[1], '2');
+  assert.equal(both.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.`);
 
-  // only a row that waits can be unread: a decided row without a proposal (an earlier decision) does not send the editor back to step 2
-  const earlier = await check(await practicePage({ queue: [{ ...unread(3), 'Tag outcome': 'Applies' }, decided(4), open(1), open(2)] }));
-  assert.match(earlier.next, DECIDE);
-  assert.equal(DECIDE.exec(earlier.next)[1], '2');
-  assert.equal(earlier.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.`, 'the sentence counts the rows that wait, read or not');
+  // only a claim that is still open can be unread: a Reviewed claim without notes (an earlier decision) does not send the editor back to step 2
+  const noEarlier = await check(await practicePage({ claimRows: { ...waiting(1, 2), ...reviewed([3], { 'Agent notes': '' }) } }));
+  assert.match(noEarlier.next, DECIDE);
+  assert.equal(DECIDE.exec(noEarlier.next)[1], '2');
 
-  // unread rows come first, even when more wait than fit one sitting; with nothing to read the Next lines are the ones they always were
-  const many = await check(await practicePage({ queue: [unread(1), unread(2), unread(3), unread(4)], configure: (c) => { c.demo_title = PRACTICE_TITLE; c.queue.sitting_rows = 3; } }));
-  assert.match(many.sentence, /4 rows wait for you, more than fit one sitting\.$/);
-  assert.equal(many.next, TAG_FIRST);
-  const approved = await check(await practicePage({ queue: [decided(1), decided(2)], lessons: [lesson('Ready', 'Approved')] }));
+  // unread claims come first, even when more wait than fit one sitting; with nothing to read the Next lines are the ones they always were
+  const many = await check(await practicePage({ claims: 9, claimRows: { ...waiting(1, 2, 8), [id(9)]: {} }, configure: (c) => { c.demo_title = PRACTICE_TITLE; c.queue.sitting_rows = 2; } }));
+  assert.match(many.sentence, /3 rows wait for you, more than fit one sitting\.$/);
+  assert.equal(many.next, TAG_FIRST, 'c09 is not read yet');
+  const approved = await check(await practicePage({ claimRows: reviewed([1, 2]), lessons: [lesson('Ready', 'Approved')] }));
   assert.equal(approved.next, 'Next: type /claim-tagger demo promote to check the approved rule change.', 'nothing waits to be read: the line is the one it was');
 });
 
-test('in production the Next line stays "decide the rows" even for rows with no Agent proposal, and --json is the same on a practice page', async () => {
-  const production = await makeWorld({ claims: 2, queue: [unread(1), unread(2)] });
+test('in production the Next line stays "decide the rows" even when other claims have no Agent notes yet, and --json is the same on a practice page', async () => {
+  const production = await makeWorld({ claims: 3, claimRows: waiting(1, 2) }); // c03 is open and not read: in production that is not step 2 of a practice page
   const h = production.hooks();
   const r = await status(h);
   const report = assertReport(h, r);
@@ -241,7 +263,7 @@ test('in production the Next line stays "decide the rows" even for rows with no 
   const practice = await practicePage();
   const j = practice.hooks({ json: true });
   await status(j);
-  assert.deepEqual(JSON.parse(j.io.outs[0]).queue, { open: 2, decided: 0, needs_note: 0, sitting_rows: 20, more_than_a_sitting: false });
+  assert.deepEqual(JSON.parse(j.io.outs[0]).queue, { open: 0, decided: 5, needs_note: 0, sitting_rows: 20, more_than_a_sitting: false });
 });
 
 test('the table of Step 1 on the practice page is what status prints on a practice page: the same header and the same rows', async () => {
@@ -253,17 +275,21 @@ test('the table of Step 1 on the practice page is what status prints on a practi
   const r = await status(w.hooks());
   assert.equal(r.exit, 0);
   assert.deepEqual(header, r.report.header.slice(0, 2));
-  assert.deepEqual(rows.map((row) => row.map((c) => c.replace('{{edition}}', '2026-10-16.1'))), r.report.rows.map((row) => row.slice(0, 2)));
+  // Your queue is the row that changed shape (CLAIMS-REVIEW.md, section 1): the two open claims are not in the view until the agent has read them. The row of the page is
+  // brought in line with it by the revision of the practice page (section 4); the other three rows are what they were.
+  const same = (list) => list.filter((row) => row[0] !== 'Your queue');
+  assert.deepEqual(same(rows).map((row) => row.map((c) => c.replace('{{edition}}', '2026-10-16.1'))), same(r.report.rows.map((row) => row.slice(0, 2))));
+  assert.deepEqual(r.report.rows.find((row) => row[0] === 'Your queue').slice(0, 2), ['Your queue', 'nothing waits']);
 });
 
 test('on a practice page the commands in the report are the demo ones, and a practice profile without a title names no page', async () => {
   const lessons = [lesson('Ready', 'Approved')];
-  const demo = await makeWorld({ claims: 2, demo: true, lessons });
+  const demo = await makeWorld({ claims: 2, demo: true, lessons, claimRows: read(1, 2) });
   assert.equal((await status(demo.hooks())).report.next, 'Next: type /claim-tagger demo promote to check the approved rule change.');
-  const production = await makeWorld({ claims: 2, lessons });
+  const production = await makeWorld({ claims: 2, lessons, claimRows: read(1, 2) });
   assert.equal((await status(production.hooks())).report.next, 'Next: type /claim-tagger promote to check the approved rule change.');
   assert.equal((await status(demo.hooks())).report.sentence, 'Status: nothing is paused; 1 rule change waits for you.', 'no demo_title in the profile: nothing to name');
-  const titled = await practicePage({ lessons });
+  const titled = await practicePage({ lessons, claimRows: waiting(1, 2) });
   assert.equal((await status(titled.hooks())).report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows and 1 rule change wait for you.`);
 });
 
@@ -278,7 +304,11 @@ test('a practice page title that the report lint refuses is left out of the sent
 
 test('countsOf: open, decided, needs a note, lessons by status', () => {
   const c = countsOf({
-    queue: [{ decided: false }, { decided: true, 'Why wrong': 'Rule unclear', 'Your reasoning': ' ' }, { decided: true, 'Why wrong': 'Agent slip' }],
+    claims: [
+      { agent_notes: WAITS, review_status: null, why_wrong: null, challenged_notes: '' },
+      { agent_notes: NOTHING, review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: ' ' },
+      { agent_notes: WAITS, review_status: 'Reviewed', why_wrong: 'Agent slip', challenged_notes: 'Fine.' },
+    ],
     lessons: [{ Status: 'Proposed' }, { Status: 'Approved' }, { Status: 'Live' }],
     settings: { last_run_summary: 'x' },
     sitting: 1,

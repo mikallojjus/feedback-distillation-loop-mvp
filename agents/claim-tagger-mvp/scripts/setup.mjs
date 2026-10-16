@@ -15,10 +15,13 @@
 //   setup.mjs verify [--taxonomy f] [--claims f] [--audit f]   read everything back and list the differences -> runs/builder/verify.json
 //
 //   The build (needs the session: runs/SETUP)
-//   setup.mjs pages | databases | views | build           the sub-pages, the five tables, the four views (build = all three), resumable
+//   setup.mjs pages | databases | views | build           the sub-pages, the five tables and the columns a table lacks, the views (build = all three), resumable;
+//                                                         a view of an older build that the structure renames is renamed, not made again
 //   setup.mjs rulebook [--from setup/taxonomy-issue.json] the 13 rows of the Rulebook copy (a setup plan, applied and read back)
 //   setup.mjs claims [--from setup/claims-pick.json]      the 50 rows of the Claims copy, Geo Sources with its links
-//   setup.mjs seed-audit [--from <audit json>]            the audit's ten decisions as decided rows of Tag decisions
+//   setup.mjs seed-audit [--from <audit json>]            the audit's ten decisions as decided rows of Tag decisions (the agent's ledger)
+//   setup.mjs migrate-decisions                           the decisions in Tag decisions carried over, once, to the claims they are about (Reviewed, the verified tags, the
+//                                                         audit's words); Decided under on the ledger rows; Agent confidence on the claims that wait
 //   setup.mjs rubric [--from setup/taxonomy-issue.json]   rubric/ edition <today>.1 from the taxonomy file (local files only)
 //   setup.mjs canaries [--from setup/taxonomy-issue.json] evals/canaries.jsonl (local file only)
 //   setup.mjs settings                                    the one Agent settings row (run rubric first)
@@ -58,7 +61,7 @@ export const USAGE = [
   '       setup.mjs register page|database --id <id> --name <role>',
   '       setup.mjs structure --from-proposal <STRUCTURE.md> | preview | api-check | verify [--taxonomy f] [--claims f] [--audit f]',
   '       setup.mjs pages | databases | views | build            (needs a builder session)',
-  '       setup.mjs rulebook [--from f] | claims [--from f] | seed-audit [--from f] | rubric [--from f] | canaries [--from f] | settings',
+  '       setup.mjs rulebook [--from f] | claims [--from f] | seed-audit [--from f] | migrate-decisions | rubric [--from f] | canaries [--from f] | settings',
   '       setup.mjs all --taxonomy <f> --claims <f> --audit <f>',
 ].join('\n');
 
@@ -112,13 +115,14 @@ const COMMANDS = {
   rulebook: { setup: true, options: FROM },
   claims: { setup: true, options: FROM },
   'seed-audit': { setup: true, options: FROM },
+  'migrate-decisions': { setup: true },
   rubric: { setup: true, options: FROM },
   canaries: { setup: true, options: FROM },
   settings: { setup: true },
   all: { setup: true, options: INPUTS },
 };
 
-const ALL_STEPS = ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'seed-audit', 'rubric', 'canaries', 'settings', 'verify'];
+const ALL_STEPS = ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'];
 
 const quote = (s) => (/[\s"']/.test(s) ? `"${s.replace(/"/g, '\\"')}"` : s);
 const resumeCommand = (argv) => `node agents/claim-tagger-mvp/scripts/setup.mjs ${argv.map(quote).join(' ')}`.trim();
@@ -225,6 +229,8 @@ async function dispatch(name, values, ctx) {
       return steps.stepClaims(ctx, { from: path(values.from) });
     case 'seed-audit':
       return steps.stepSeedAudit(ctx, { from: path(values.from) ?? defaultAudit(root) });
+    case 'migrate-decisions':
+      return steps.stepMigrateDecisions(ctx);
     case 'rubric':
       return steps.stepRubric(ctx, { from: path(values.from) });
     case 'canaries':

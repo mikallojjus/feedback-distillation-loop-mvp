@@ -10,10 +10,12 @@
 //   isProtected(config, id)                     -> true when the id is in protected_database_ids or protected_page_ids (dashes and case ignored)
 //   writableProperties(config, table, { setup }) -> Set of the column names a plan may write to that table (CONTRACTS section 8); with
 //                                                  setup: true also what a create made by the one-time setup may fill
-//   editorColumns(config, table)                -> the columns only an editor writes (no script ever does); [] for rulebook and claims_copy
+//   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the two exceptions of hard rule 1):
+//                                                  four on claims_copy, Editor wording on rule_changes, Paused on agent_settings; [] for the others
+//                                                  (tag_decisions, the agent's ledger, has none)
 //   capabilityOf(config, tag)                   -> text, deterministic, source or corpus (config.tags, with its default)
 //   groupOf(config, tag)                        -> the judge group the tag belongs to (config.judge.groups), or null
-//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_COPY_COLUMNS, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
+//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_COPY_COLUMNS, CLAIMS_EDITOR_KEYS, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
 //              RULE_CHANGES_AGENT_STATUS (the Status values a script may write; Approved and Rejected belong to the editor,
 //              see config.editor_columns.rule_changes_status_editor_values)
 //
@@ -42,8 +44,16 @@ export const CLAIMS_COPY_COLUMNS = Object.freeze([
   'Geo Related people', 'Geo Related projects', 'Geo Is factual', 'Geo Name source',
 ]);
 
+/** The keys of notion.claims[].columns that name the four columns an editor fills on the Claims copy (they must also be listed in editor_columns.claims_copy). */
+export const CLAIMS_EDITOR_KEYS = Object.freeze(['verified', 'review_status', 'why_wrong', 'notes']);
+/** The keys of notion.claims[].write_columns: the four columns the agent fills on the Claims copy (Agent tags, Agent notes, Agent confidence, Agent reasons). */
+export const CLAIMS_WRITE_KEYS = Object.freeze(['tags', 'notes', 'confidence', 'reasons']);
+
+// Tag decisions is the agent's ledger: Tag outcome, Why wrong, Your reasoning and Decided under are copies the agent makes from the Claims copy
+// (propose, and the setup migration); no editor writes there, so they are agent columns now.
 export const TAG_DECISIONS_WRITABLE = Object.freeze([
   'Claim', 'Key', 'Tag', 'Agent proposal', 'Agent confidence', 'Agent reason', 'Claim link', 'Rulebook edition', 'Follow-up',
+  'Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under',
 ]);
 export const RULE_CHANGES_WRITABLE = Object.freeze([
   'Lesson', 'Tag', 'Rule', 'Kind', 'Current text', 'Proposed text', 'Safety check result', 'Supporting rows', 'Status',
@@ -146,8 +156,8 @@ export function validateConfig(config) {
       text(`${path}.label`, c.label);
       bool(`${path}.enabled`, c.enabled);
       table(path, c);
-      if (obj(`${path}.columns`, c.columns)) for (const k of ['claim', 'link', 'sources', 'is_factual']) text(`${path}.columns.${k}`, c.columns[k]);
-      if (obj(`${path}.write_columns`, c.write_columns)) for (const k of ['tags', 'notes']) text(`${path}.write_columns.${k}`, c.write_columns[k]);
+      if (obj(`${path}.columns`, c.columns)) for (const k of ['claim', 'link', 'sources', 'is_factual', ...CLAIMS_EDITOR_KEYS]) text(`${path}.columns.${k}`, c.columns[k]);
+      if (obj(`${path}.write_columns`, c.write_columns)) for (const k of CLAIMS_WRITE_KEYS) text(`${path}.write_columns.${k}`, c.write_columns[k]);
     }, { min: 1 });
     if (Array.isArray(n.claims)) {
       if (!n.claims.some((c) => c?.enabled === true)) bad('notion.claims', 'no entry is enabled');
@@ -189,10 +199,27 @@ export function validateConfig(config) {
     }
   }
 
-  // editor_columns
+  // editor_columns: four on the Claims copy, Editor wording and the two Status values on Rule changes, Paused on Agent settings. The ledger (Tag decisions)
+  // has none; an old config that still lists one is only checked for its shape.
   if (obj('editor_columns', config.editor_columns)) {
-    for (const k of ['tag_decisions', 'rule_changes', 'rule_changes_status_editor_values', 'agent_settings']) {
+    for (const k of ['claims_copy', 'rule_changes', 'rule_changes_status_editor_values', 'agent_settings']) {
       list(`editor_columns.${k}`, config.editor_columns[k], (path, v) => text(path, v));
+    }
+    if (config.editor_columns.tag_decisions !== undefined) list('editor_columns.tag_decisions', config.editor_columns.tag_decisions, (path, v) => text(path, v));
+    // the claims table must name every column it needs: the four editor columns are the ones editor_columns.claims_copy lists, and none of the agent's
+    if (Array.isArray(n?.claims) && Array.isArray(config.editor_columns.claims_copy)) {
+      n.claims.forEach((c, i) => {
+        if (!isPlain(c)) return;
+        const listed = new Set(config.editor_columns.claims_copy);
+        for (const k of CLAIMS_EDITOR_KEYS) {
+          const name = c.columns?.[k];
+          if (typeof name === 'string' && name.trim() !== '' && !listed.has(name)) bad(`notion.claims[${i}].columns.${k}`, `"${name}" is not listed in editor_columns.claims_copy`);
+        }
+        for (const k of CLAIMS_WRITE_KEYS) {
+          const name = c.write_columns?.[k];
+          if (typeof name === 'string' && listed.has(name)) bad(`notion.claims[${i}].write_columns.${k}`, `"${name}" is an editor column (editor_columns.claims_copy), so the agent could never write it`);
+        }
+      });
     }
   }
 
@@ -316,12 +343,13 @@ export function isProtected(config, id) {
 
 /**
  * The column names a plan may write to a table (CONTRACTS section 8), as a new Set each time.
- *   tag_decisions    Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Claim link, Rulebook edition, Follow-up
+ *   tag_decisions    Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Claim link, Rulebook edition, Follow-up and the copies of the
+ *                    editor's decision (Tag outcome, Why wrong, Your reasoning, Decided under)
  *   rule_changes     Lesson, Tag, Rule, Kind, Current text, Proposed text, Safety check result, Supporting rows, Status
  *                    (the Status values are limited to RULE_CHANGES_AGENT_STATUS)
  *   agent_settings   Rulebook edition, Last run summary; with setup also the key column (Name)
  *   rulebook         When to use; with setup every column of the copy
- *   claims_copy      the two write columns (Agent tags, Agent notes); with setup also every copied column
+ *   claims_copy      the four write columns (Agent tags, Agent notes, Agent confidence, Agent reasons); with setup also every copied column
  * Editor columns are never in these sets. A setup plan that seeds the audit, or a demo profile's setup, is the only way one is
  * written, and that exception is checked by the plan code, not here.
  */
@@ -345,8 +373,9 @@ export function writableProperties(config, table, { setup = false } = {}) {
       break;
     case 'claims_copy': {
       const entry = tableEntry(config, 'claims_copy');
-      add(entry.write_columns.tags, entry.write_columns.notes);
-      if (setup) add(entry.key, ...Object.values(entry.columns), ...CLAIMS_COPY_COLUMNS);
+      add(...Object.values(entry.write_columns));
+      const editor = new Set(editorColumns(config, 'claims_copy'));
+      if (setup) add(entry.key, ...Object.values(entry.columns).filter((c) => !editor.has(c)), ...CLAIMS_COPY_COLUMNS);
       break;
     }
     default:
@@ -355,7 +384,7 @@ export function writableProperties(config, table, { setup = false } = {}) {
   return set;
 }
 
-/** The columns of a table that only an editor writes (config.editor_columns): [] for the tables that have none. */
+/** The columns of a table that only an editor writes (config.editor_columns): [] for the tables that have none (the ledger has none). */
 export function editorColumns(config, table) {
   if (!TABLES.includes(table)) throw new Error(`editorColumns: unknown table "${table}" (expected one of ${TABLES.join(', ')})`);
   return [...(config?.editor_columns?.[table] ?? [])];

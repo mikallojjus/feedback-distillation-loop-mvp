@@ -2,8 +2,9 @@
 // check (promote) and the follow-up use it; propose reads the store itself because it needs every read of every claim.
 //
 //   groupInfo(ctx, rubric, tag)                    -> { jc, group, version, body, inputs }: the judge group of the tag in that rulebook, the prompt version, the store inputs
-//   readAnswers(ctx, rubric, tag, items)           -> Map(id -> { decision, runs, p, unsure }): the verdict over the reads the store holds for each item
-//                                                      (decision apply / do_not_apply / ask_editor, or null when the item has no usable read)
+//   readAnswers(ctx, rubric, tag, items)           -> Map(id -> { decision, runs, p, unsure, reason }): the verdict over the reads the store holds for each item
+//                                                      (decision apply / do_not_apply / ask_editor, or null when the item has no usable read); reason is the text of
+//                                                      the Agent reason of that verdict ("<reason> · <rule cited> · <k> of <n> runs agree"), null without a read
 //   forceRuns(ctx, { rubric, tag, items, upTo })   -> { reads, usage }: makes sure every item has ok reads in runs 2 to `upTo` in the store of that rulebook, asking the
 //                                                      judge model for the ones that are missing (the adaptive runs of judge() only re-read unsure items, so a flipped item
 //                                                      that was sure on both sides needs this). Reads are written to the store like any other, so asking again costs nothing.
@@ -19,6 +20,7 @@ import { extractJson } from './claude.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { h16 } from './hash.mjs';
 import { readJson, writeTextAtomic } from './jsonl.mjs';
+import { reasonLine } from './editor-words.mjs';
 import { LoopExit, addUsage, callModel, cliVersionOf, judgeSettings, modelStop, usageOf } from './loop.mjs';
 import { codeFile } from './paths.mjs';
 import { buildUserMessage, groupsFor, readPromptVersion, renderSystemPrompt, storeInputsFor, validateReply, verdictOf } from '../judge.mjs';
@@ -52,11 +54,11 @@ export function readAnswers(ctx, rubric, tag, items) {
     });
     const entries = per.filter((l) => l?.status === 'ok').map((l) => l.tags.find((t) => t.name === tag)).filter(Boolean);
     if (!entries.length) {
-      out.set(it.id, { decision: null, runs: 0, p: null, unsure: true });
+      out.set(it.id, { decision: null, runs: 0, p: null, unsure: true, reason: null });
       continue;
     }
     const v = verdictOf(entries, jc.judge.rerun, { hadError: per.some((l) => l?.status === 'error') });
-    out.set(it.id, { decision: v.decision, runs: v.runs, p: v.p_mean, unsure: v.unsure });
+    out.set(it.id, { decision: v.decision, runs: v.runs, p: v.p_mean, unsure: v.unsure, reason: reasonLine(entries[entries.length - 1], v.agreed, v.runs, ctx.config.queue?.reason_max_words ?? jc.reasonMaxWords) });
   }
   return out;
 }

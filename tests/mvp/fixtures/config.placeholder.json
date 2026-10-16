@@ -30,11 +30,17 @@
           "claim": "Geo Name",
           "link": "Geo URL",
           "sources": "Geo Sources",
-          "is_factual": "Geo Is factual"
+          "is_factual": "Geo Is factual",
+          "verified": "Claim quality tags — verified",
+          "review_status": "Review status",
+          "why_wrong": "Why wrong",
+          "notes": "Challenged tags notes"
         },
         "write_columns": {
           "tags": "Agent tags",
-          "notes": "Agent notes"
+          "notes": "Agent notes",
+          "confidence": "Agent confidence",
+          "reasons": "Agent reasons"
         }
       }
     ],
@@ -103,10 +109,11 @@
     "max_text": 1900
   },
   "editor_columns": {
-    "tag_decisions": [
-      "Tag outcome",
+    "claims_copy": [
+      "Claim quality tags — verified",
+      "Review status",
       "Why wrong",
-      "Your reasoning"
+      "Challenged tags notes"
     ],
     "rule_changes": [
       "Editor wording"

@@ -84,7 +84,7 @@ test('followup: the claims of the rows get Agent tags and Agent notes again, wit
   assert.equal(c01['Agent tags'], '', 'the editor decided Does not apply, so the tag is not written');
   assert.equal(c01['Agent notes'], 'no tags\nnothing waits for an editor · not checked: 4 source tags, 2 duplicate tags, 6 tags without rules · edition 2026-10-16.1');
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
-  for (const op of plan.filter((o) => o.table === 'claims_copy')) assert.ok(Object.keys(op.properties).every((k) => k === 'Agent tags' || k === 'Agent notes'));
+  for (const op of plan.filter((o) => o.table === 'claims_copy')) assert.ok(Object.keys(op.properties).every((k) => ['Agent tags', 'Agent notes', 'Agent reasons'].includes(k)));
   for (const op of plan.filter((o) => o.table === 'tag_decisions')) assert.deepEqual(Object.keys(op.properties), ['Follow-up'], 'the only column a decided row accepts');
 });
 
@@ -155,4 +155,51 @@ test('followup --plan-only writes a plan and nothing else; a paused agent stops 
   assert.equal(await main(['--nope'], io), 2);
   assert.equal(await main(['--help'], io), 0);
   assert.match(io.outs.join('\n'), /--lesson/);
+});
+
+test('followup: on a Reviewed claim Agent tags are the editor\'s set, and a row that still comes out wrong is named after "disagrees with your decision on"', async () => {
+  const w = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: { decision: 'apply', p: 0.9 } } });
+  w.review('c01', { tags: [], why: 'Rule unclear', notes: 'Rule 4 should let general references pass.' });
+  w.review('c02', { tags: [], why: 'Rule unclear', notes: 'Rule 4 again: this reference is general too.' });
+  w.fake.editRow(w.ids.claim.c02, { 'Agent tags': 'Context-dependent', 'Agent notes': 'Context-dependent\nnothing waits for an editor · edition 2026-10-01.1' });
+  const r = await followup(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.equal(w.row('tag_decisions', keyOf(1))['Follow-up'], 'Fixed');
+  assert.equal(w.row('tag_decisions', keyOf(2))['Follow-up'], 'Still wrong');
+  const rest = 'not checked: 4 source tags, 2 duplicate tags, 6 tags without rules · edition 2026-10-16.1';
+  const c01 = w.row('claims_copy', 'c01');
+  assert.deepEqual([c01['Agent tags'], c01['Agent notes']], ['', `no tags\nnothing waits for an editor · ${rest}`], 'the agent agrees with the editor');
+  const c02 = w.row('claims_copy', 'c02');
+  assert.deepEqual([c02['Agent tags'], c02['Agent notes']], ['', `no tags\nnothing waits for an editor · disagrees with your decision on Context-dependent · ${rest}`], 'the editor\'s set wins, and the note says where the agent differs');
+  assert.deepEqual([c02['Review status'], c02['Why wrong'], c02['Challenged tags notes']], ['Reviewed', 'Rule unclear', 'Rule 4 again: this reference is general too.'], 'the editor\'s columns are as they were');
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  for (const op of plan.filter((o) => o.table === 'claims_copy')) assert.ok(Object.keys(op.properties).every((k) => ['Agent tags', 'Agent notes', 'Agent reasons'].includes(k)), 'a follow-up does not write the confidence');
+  for (const op of plan.filter((o) => o.table === 'tag_decisions')) assert.deepEqual(Object.keys(op.properties), ['Follow-up'], 'the only column of the ledger the follow-up writes');
+});
+
+test('followup: a claim that is not Reviewed keeps its other tags and takes the answer under the rule in force for the tag it checked again', async () => {
+  const w = await promoteWorld({ status: 'Live', base: { [claimText(1)]: { decision: 'apply', p: 0.9 }, [claimText(2)]: wrong } });
+  const r = await followup(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.equal(w.row('claims_copy', 'c01')['Agent tags'], 'Context-dependent', 'the agent applies it now and nobody has Reviewed the claim');
+  assert.match(w.row('claims_copy', 'c01')['Agent notes'], /^Context-dependent\nnothing waits for an editor · not checked/);
+  assert.equal(w.row('claims_copy', 'c02')['Agent tags'], '');
+  assert.match(w.row('claims_copy', 'c02')['Agent notes'], /^no tags\n1 waits for an editor · not checked/, 'an agent that cannot tell makes the claim wait');
+});
+
+test('followup rewrites the Agent reasons of the claims it checks again: the line of the tag under the rule now in force, in the form propose writes', async () => {
+  const w = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: no } });
+  w.fake.editRow(w.ids.claim.c01, { 'Agent reasons': 'Context-dependent: An old reason. · 1 of 1 runs agree' });
+  const r = await followup(w.hooks());
+  assert.equal(r.exit, 0);
+  const c01 = w.row('claims_copy', 'c01');
+  assert.match(c01['Agent reasons'], /^Context-dependent: .+ · \d of \d runs agree$/);
+  assert.doesNotMatch(c01['Agent reasons'], /An old reason/);
+  assert.equal(c01['Agent reasons'].split('\n').length, 1, 'one line for the one tag');
+  assert.match(w.row('claims_copy', 'c02')['Agent reasons'], /^Context-dependent: /, 'a claim that had none gets its line');
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  for (const op of plan.filter((o) => o.table === 'claims_copy')) assert.ok('Agent reasons' in op.properties && !('Agent confidence' in op.properties));
+  const again = await followup(w.hooks());
+  assert.equal(again.exit, 0);
+  assert.equal(readJsonl(join(again.runDir, 'plan.jsonl')).rows.filter((o) => o.table === 'claims_copy').length, 0, 'a second follow-up finds the columns as they should be');
 });

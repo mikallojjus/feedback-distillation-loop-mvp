@@ -4,6 +4,8 @@
 // agents/claim-tagger-mvp/setup/. Nothing here reaches the network or reads .env: every client gets the fake's own token.
 //
 //   newWorld({ structure: true })        -> { root, config, fake, parent, env, run(argv) -> { code, out, err } }
+//   realStructure(), revisedStructure()   the approved proposal of 15 October read from docs/mvp-2026-11/STRUCTURE.md (the old shape), and the structure the build uses since
+//                                         16 October: agents/claim-tagger-mvp/setup/structure.json (the claims carry the editor's columns, the ledger Decided under, seven views)
 //   builderClient(fake), restClient(fake) clients over the fake (builder version 2026-03-11 / default 2022-06-28), paced at 1000 a second
 //   FAKE_HAS_USER_COLUMNS, forFake(structure)   the fake may not know created_by / last_edited_by columns: forFake removes them when it does not
 //   smallTaxonomy(), fullTaxonomy(), makePick({ audit, extra }), writeInputs(dir, ...)
@@ -71,6 +73,7 @@ export function forFake(structure) {
 }
 
 export const realStructure = () => structureFromProposal(readFileSync(STRUCTURE_MD, 'utf8'));
+export const revisedStructure = () => JSON.parse(readFileSync(join(REPO_ROOT, 'agents', 'claim-tagger-mvp', 'setup', 'structure.json'), 'utf8'));
 
 /** A config for the tests: the one from before setup (fixtures/config.placeholder.json), tables still placeholders, no waiting between requests, a parent page that exists in the fake. */
 export function testConfig({ parent }) {
@@ -82,7 +85,7 @@ export function testConfig({ parent }) {
 
 /**
  * A state folder, a fake Notion with a parent page, and a way to run setup.mjs commands against them.
- * `structure: true` also writes setup/structure.json from the real proposal (without the columns the fake cannot build).
+ * `structure: true` also writes setup/structure.json from the revised structure (without the columns the fake cannot build).
  */
 export function newWorld({ structure = false, protectedIds = null } = {}) {
   const root = tmp('setup');
@@ -93,7 +96,7 @@ export function newWorld({ structure = false, protectedIds = null } = {}) {
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
   if (structure) {
     mkdirSync(join(root, 'setup'), { recursive: true });
-    writeFileSync(join(root, 'setup', 'structure.json'), `${JSON.stringify(forFake(realStructure()), null, 2)}\n`);
+    writeFileSync(join(root, 'setup', 'structure.json'), `${JSON.stringify(forFake(revisedStructure()), null, 2)}\n`);
   }
   const env = { root, fetchImpl: fake.fetchImpl, token: fake.token, sleep: noSleep, now: NOW, repoRoot: root };
   const w = { root, config, fake, parent, env };

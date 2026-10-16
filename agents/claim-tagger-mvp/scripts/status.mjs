@@ -16,6 +16,10 @@
 // (step 1 of the page) the Next line is "type /claim-tagger demo tag" (step 2) instead of "decide the rows": there is nothing to decide before the agent has read the
 // claims. In production that line is never used.
 //
+// The rows that wait are claims of the Claims copy (CLAIMS-REVIEW.md, section 3): a claim whose Agent notes say "<n> wait(s) for an editor" and whose Review status is not
+// Reviewed. "nothing waits for an editor" holds the same words, so the count reads the number in front of them (lib/decisions.mjs). Needs your note counts the claims that have
+// a Why wrong and no Challenged tags notes. Your queue is the view of the Claims copy.
+//
 // Exit codes: 0 ok, 2 invalid, 3 paused, 4 drift or an invalid rulebook file.
 //
 // Exports: status, countsOf, main, USAGE.
@@ -23,6 +27,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
+import { claimWaits, isReviewed } from './lib/decisions.mjs';
 import { listNames, plural, quoted, tableLink, viewLink } from './lib/editor-words.mjs';
 import { LOCK_STALE_MS, LoopExit, parseCli, resumeLine, takePull, withRun } from './lib/loop.mjs';
 import { isMain } from './lib/paths.mjs';
@@ -30,16 +35,15 @@ import { preflight, refusedReport } from './lib/preflight.mjs';
 import { readRubric } from './lib/rubric.mjs';
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/status.mjs [--pull <pull-id>] [--json] [--run-id <id>]';
-const RULE_WHY = new Set(['Rule unclear', 'Rule should change']);
 
-/** The counts the report and --json are made of, from the pull's queue, lessons and settings. */
-export function countsOf({ queue = [], lessons = [], settings = null, sitting = 20 }) {
-  const open = queue.filter((r) => !r.decided).length;
-  const needsNote = queue.filter((r) => RULE_WHY.has(r['Why wrong']) && String(r['Your reasoning'] ?? '').trim() === '').length;
+/** The counts the report and --json are made of, from the pull's claims, lessons and settings. */
+export function countsOf({ claims = [], lessons = [], settings = null, sitting = 20 }) {
+  const open = claims.filter((c) => claimWaits(c)).length;
+  const needsNote = claims.filter((c) => c.why_wrong && String(c.challenged_notes ?? '').trim() === '').length;
   const byStatus = { Proposed: 0, Approved: 0, Rejected: 0, Live: 0, 'Rolled back': 0 };
   for (const l of lessons) byStatus[l.Status] = (byStatus[l.Status] ?? 0) + 1;
   return {
-    queue: { open, decided: queue.length - open, needs_note: needsNote, sitting_rows: sitting, more_than_a_sitting: open > sitting },
+    queue: { open, decided: claims.filter((c) => isReviewed(c)).length, needs_note: needsNote, sitting_rows: sitting, more_than_a_sitting: open > sitting },
     lessons: byStatus,
     waiting_lessons: byStatus.Proposed + byStatus.Approved,
     last_run: settings?.last_run_summary ?? null,
@@ -88,7 +92,8 @@ export async function status(opts = {}) {
       rubric = null;
     }
     const sitting = ctx.config.queue?.sitting_rows ?? 20;
-    const counts = countsOf({ queue: ctx.pull.queue() ?? [], lessons: ctx.pull.lessons() ?? [], settings: ctx.pull.settings(), sitting });
+    const claims = ctx.pull.claims() ?? [];
+    const counts = countsOf({ claims, lessons: ctx.pull.lessons() ?? [], settings: ctx.pull.settings(), sitting });
     const n = counts.queue.open;
     const proposed = counts.lessons.Proposed;
     const approved = counts.lessons.Approved;
@@ -126,10 +131,10 @@ export async function status(opts = {}) {
     const sentence = parts.length === 0
       ? 'Status: nothing is paused and nothing waits for you.'
       : `Status: nothing is paused; ${parts.join(' and ')} ${parts.length === 1 && (n === 1 || (n === 0 && m === 1)) ? 'waits' : 'wait'} for you${counts.queue.more_than_a_sitting ? ', more than fit one sitting' : ''}.`;
-    // On a practice page the two rows that wait are seeded without the agent's side (step 1); the agent fills Agent proposal, confidence and reason when the
-    // editor types the demo tag command (step 2). Until it has, there is nothing to decide yet, so the Next line sends the editor to step 2. In production
-    // the agent has always filled its side of a row before the row waits, so this never applies there.
-    const unread = ctx.demo ? (ctx.pull.queue() ?? []).filter((r) => !r.decided && String(r['Agent proposal'] ?? '').trim() === '').length : 0;
+    // On a practice page the two claims that are still open are seeded without the agent's side (step 1); the agent fills Agent tags, Agent notes and Agent confidence when
+    // the editor types the demo tag command (step 2). Until it has, there is nothing to decide yet, so the Next line sends the editor to step 2. In production
+    // the agent has always filled its side of a claim before the claim waits, so this never applies there.
+    const unread = ctx.demo ? claims.filter((c) => !isReviewed(c) && String(c.agent_notes ?? '').trim() === '').length : 0;
     let next;
     if (unread > 0) next = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
     else if (counts.queue.more_than_a_sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
@@ -147,7 +152,7 @@ export async function status(opts = {}) {
       lessons: counts.lessons,
       last_run: counts.last_run,
       promoting,
-      table: tableLink(ctx.config, 'tag_decisions'),
+      table: tableLink(ctx.config, 'claims_copy'),
     };
     return {
       exit: EXIT.OK, sentence, header: ['Where', 'Now', ''], rows, next, details: { counts, json }, ...(ctx.opts.json ? { print: JSON.stringify(json, null, 2) } : {}),

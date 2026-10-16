@@ -85,7 +85,7 @@ test('the client offers exactly the old calls and the new ones, and nothing that
   const client = createClient({ token: TOKEN, fetchImpl: async () => json({}) });
   assert.deepEqual(Object.keys(client).sort(), [
     'appendBlocks', 'createDatabase', 'createPage', 'createPageUnderPage', 'createView', 'listViews', 'queryAll', 'queryDataSource', 'queryDataSourceAll',
-    'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'updateDataSource', 'updatePage',
+    'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'updateDataSource', 'updatePage', 'updateView',
   ]);
   for (const name of Object.keys(client)) assert.doesNotMatch(name, /delete|remove|archive|trash|restore/i, name);
 });
@@ -478,6 +478,32 @@ test('updateDataSource and updatePage keep their retries: an update can be repea
   await r.client.updateDataSource('ds', { title: 'T' });
   assert.equal(r.calls.length, 2);
   assert.deepEqual(r.sleeps, [BACKOFF_MS[0]]);
+});
+
+// ---- updateView --------------------------------------------------------------------------------------------------------------------
+
+test('updateView: PATCH /views/{id} with only what is given (the name, a filter, sorts or a configuration), on the builder version', async () => {
+  const r = rig([json({ object: 'view', id: 'v-1', name: 'Your queue (ledger)' })], { apiVersion: BUILDER_API_VERSION });
+  await r.client.updateView('v 1', { name: 'Your queue (ledger)' });
+  const c = r.calls[0];
+  assert.equal(c.url, `${API_BASE}/views/v%201`);
+  assert.equal(c.method, 'PATCH');
+  assert.equal(c.headers['Notion-Version'], '2026-03-11');
+  assert.deepEqual(c.body, { name: 'Your queue (ledger)' });
+  const filter = { property: 'Tag outcome', select: { is_empty: true } };
+  await r.client.updateView('v-1', { filter, sorts: [{ property: 'Agent confidence', direction: 'ascending' }], configuration: { type: 'table', wrap_cells: false } });
+  assert.deepEqual(Object.keys(r.calls[1].body).sort(), ['configuration', 'filter', 'sorts']);
+});
+
+test('updateView refuses a null (it would clear the filter), an empty update, an empty name and a missing id, before any request', async () => {
+  const r = rig([json({ object: 'view', id: 'v-1' })], { apiVersion: BUILDER_API_VERSION });
+  await assert.rejects(() => r.client.updateView('v-1', { filter: null }), (e) => e instanceof TypeError && /filter is null/.test(e.message) && /hard rule 8/.test(e.message));
+  await assert.rejects(() => r.client.updateView('v-1', { sorts: null }), TypeError);
+  await assert.rejects(() => r.client.updateView('v-1', {}), (e) => e instanceof TypeError && /give a name/.test(e.message));
+  await assert.rejects(() => r.client.updateView('v-1'), TypeError);
+  await assert.rejects(() => r.client.updateView('v-1', { name: '  ' }), (e) => e instanceof TypeError && /name must be a non-empty string/.test(e.message));
+  await assert.rejects(() => r.client.updateView('', { name: 'x' }), (e) => e instanceof TypeError && /viewId is required/.test(e.message));
+  assert.equal(r.calls.length, 0, 'nothing was sent');
 });
 
 // ---- the request log -----------------------------------------------------------------------------------------------------------------

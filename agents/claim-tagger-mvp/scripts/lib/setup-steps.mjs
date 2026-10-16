@@ -8,17 +8,20 @@
 //   buildCanaries(taxonomy)                                  -> the rows of evals/canaries.jsonl
 //   richTextFromPieces(pieces), withLinkedSources(client, byGeoId)   -> Geo Sources with its links (plans carry plain text only)
 //   stepStructure(ctx, parts), stepApiCheck(ctx), stepRulebook(ctx, { from }), stepClaims(ctx, { from }), stepSeedAudit(ctx, { from }),
-//   stepSettings(ctx), stepRubric(ctx, { from }), stepCanaries(ctx, { from }), stepVerify(ctx, { taxonomy, claims, audit })
+//   stepMigrateDecisions(ctx), stepSettings(ctx), stepRubric(ctx, { from }), stepCanaries(ctx, { from }), stepVerify(ctx, { taxonomy, claims, audit })
 //                                                            -> { code, lines, errors?, ... }; the caller prints and records the run
+//   migrationOps(claims, ledger, tagPages, columns)           -> the plan of migrate-decisions, pure: { claimOps, ledgerOps, summary }
 //
 // ctx = { root, config, now, run: { id, dir, update(fields) }, log(line), warn(line), restClient(), builderClient({ logFile }) }. Every Notion write is
 // a plan applied by lib/plan.mjs (hard rule 1): checked before the first request, sent in order with a ledger, read back page by page.
-// The three editor columns of Tag decisions are written only by seed-audit, through a setup plan whose "Your reasoning" starts with the
-// audit prefix; Paused is never written (an unticked box is what a new row has).
+// The four editor columns of the Claims copy are written only by migrate-decisions, through a setup plan whose "Challenged tags notes" starts with the
+// audit prefix (the one-time seeding exception of hard rule 1: the audit's decisions of 9 October move from the ledger to the claims they are about).
+// seed-audit writes the audit's decisions into the ledger (Tag decisions), whose columns are the agent's; Paused is never written (an unticked box is
+// what a new row has).
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CLAIMS_COPY_COLUMNS, RULEBOOK_COLUMNS, TABLES, tableEntry } from './config.mjs';
+import { CLAIMS_COPY_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './jsonl.mjs';
 import { StructureError, AUTOMATIC_TYPES, loadStructure, planStructure, runStructure, verifyStructure, viewKey, viewUrl } from './notion-build.mjs';
@@ -410,8 +413,11 @@ export async function stepStructure(ctx, parts) {
   const viewList = Object.values(result.views).flatMap((v) => Object.values(v));
   const said = (made, already) => `${made} made${already ? `, ${already} there already` : ''}`;
   if (parts.includes('pages')) lines.push(`pages: ${said(result.created.pages, there(result.pages))}`);
-  if (parts.includes('databases')) lines.push(`tables: ${said(result.created.databases, there(result.databases))}`);
-  if (parts.includes('views')) lines.push(`views: ${said(result.created.views, there(viewList.map((v) => v)))}`);
+  if (parts.includes('databases')) {
+    lines.push(`tables: ${said(result.created.databases, there(result.databases))}`);
+    lines.push(`columns: ${result.created.columns} added${Object.keys(result.columns).length ? ` (${Object.entries(result.columns).map(([t, names]) => `${t}: ${names.join(', ')}`).join('; ')})` : ''}`);
+  }
+  if (parts.includes('views')) lines.push(`views: ${said(result.created.views, there(viewList.map((v) => v)))}${result.created.renamed ? `, ${result.created.renamed} renamed` : ''}`);
   for (const w of result.warnings) ctx.warn(w);
   let code = result.code;
   const failed = Object.entries(result.views).flatMap(([table, views]) => Object.entries(views).filter(([, v]) => v.status === 'failed').map(([name, v]) => ({ table, name, message: v.message })));
@@ -472,7 +478,8 @@ export async function stepClaims(ctx, { from } = {}) {
   const { root, config } = ctx;
   const pick = readPick(from ?? defaultPath(root, 'claims-pick.json'));
   const entry = tableEntry(config, 'claims_copy');
-  const ops = claimOps(pick, columnsOf(root, 'claims_copy'), { keyColumn: entry.key, skip: Object.values(entry.write_columns ?? {}) });
+  // the agent's columns and the editor's four stay empty: a picked row carries the real table's own Review status, notes and relation to the taxonomy, none of which is copied
+  const ops = claimOps(pick, columnsOf(root, 'claims_copy'), { keyColumn: entry.key, skip: [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims_copy')] });
   const sourcesColumn = entry.columns?.sources ?? 'Geo Sources';
   const byGeoId = new Map();
   for (const row of pick.rows) if (hrefsOf(row.source_pieces).length) byGeoId.set(row[entry.key], row.source_pieces);
@@ -499,6 +506,130 @@ export async function stepSeedAudit(ctx, { from } = {}) {
   writeJsonAtomic(defaultPath(root, 'audit-decisions.json'), audit);
   if (done.code === EXIT.OK && done.created > 0) done.lines.push(`seed-audit: ${AUDIT_NOTE}`);
   return done;
+}
+
+/**
+ * What migrate-decisions writes (CLAIMS-REVIEW.md, section 3), worked out from the pull. `claims` are the rows of norm/claims.jsonl, `ledger` the rows of norm/queue.jsonl,
+ * `tagPages` maps a tag name to the page id of its Rulebook copy row, `columns` is the claims entry's `columns` and `write_columns`.
+ *   a claim with ledger rows that hold a decision from the audit (Your reasoning starts with the audit prefix) and no decision of its own yet gets, on the claim:
+ *   Claim quality tags — verified (the tags with outcome Applies), Review status Reviewed, Why wrong (the ledger's, else Agent slip) and Challenged tags notes (the rows'
+ *   Your reasoning, which carries "From the audit of 9 October"); and on each of those ledger rows Decided under, the edition the row's proposal was made under (when it
+ *   records one). A claim whose ledger rows have a confidence and no Agent confidence of its own gets the lowest of them (the open rows).
+ *   Left alone: a claim that is Reviewed or has any editor column filled already (carried over, or an editor's own work), and a decided ledger row that is not from the
+ *   audit (an editor decides on the claim, never a script).
+ * Returns { claimOps: [{ key, page_id, properties, expect }], ledgerOps: [{ key, page_id, properties }], summary }.
+ */
+export function migrationOps(claims, ledger, tagPages, columns) {
+  const byGeo = new Map();
+  for (const row of ledger) {
+    const at = text(row.Key).lastIndexOf('::');
+    if (at < 0) continue;
+    const geo = text(row.Key).slice(0, at);
+    if (!byGeo.has(geo)) byGeo.set(geo, []);
+    byGeo.get(geo).push(row);
+  }
+  const summary = { carried: 0, alreadyCarried: 0, notFromAudit: 0, noClaim: 0, decidedUnder: 0, confidence: 0 };
+  const claimOps = [];
+  const ledgerOps = [];
+  for (const [geo, rows] of [...byGeo].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    const claim = claims.find((c) => c.geo_id === geo);
+    if (!claim) {
+      summary.noClaim += rows.length;
+      continue;
+    }
+    const decided = rows.filter((r) => r.decided);
+    const audit = decided.filter((r) => text(r['Your reasoning']).startsWith(AUDIT_PREFIX));
+    summary.notFromAudit += decided.length - audit.length;
+    const properties = {};
+    const hasEditorWork = claim.review_status !== null || claim.verified_tags.length > 0 || claim.why_wrong !== null || text(claim.challenged_notes).trim() !== '';
+    if (audit.length && hasEditorWork) summary.alreadyCarried += 1;
+    if (audit.length && !hasEditorWork) {
+      const applies = audit.filter((r) => r['Tag outcome'] === 'Applies').map((r) => r.Tag);
+      const missing = applies.filter((t) => !tagPages[t]);
+      if (missing.length) throw new InputError(`the claim ${geo} was decided Applies for ${missing.join(', ')}, which has no row in the Rulebook copy`);
+      properties[columns.verified] = applies.map((t) => tagPages[t]);
+      properties[columns.review_status] = 'Reviewed';
+      properties[columns.why_wrong] = audit.map((r) => r['Why wrong']).find((w) => w) ?? 'Agent slip';
+      properties[columns.notes] = audit.map((r) => text(r['Your reasoning'])).join('\n');
+      summary.carried += 1;
+      for (const r of audit) {
+        const edition = text(r['Rulebook edition']).trim();
+        if (edition !== '' && text(r['Decided under']).trim() === '') {
+          ledgerOps.push({ key: r.Key, page_id: r.page_id, properties: { 'Decided under': edition } });
+          summary.decidedUnder += 1;
+        }
+      }
+    }
+    const confidences = rows.map((r) => r['Agent confidence']).filter((v) => typeof v === 'number');
+    if (confidences.length && claim.agent_confidence === null) {
+      properties[columns.confidence] = Math.round(Math.min(...confidences) * 100) / 100;
+      summary.confidence += 1;
+    }
+    if (Object.keys(properties).length) {
+      const editor = Object.hasOwn(properties, columns.review_status);
+      claimOps.push({ key: geo, page_id: claim.page_id, properties, ...(editor ? { expect: { [columns.review_status]: null } } : {}) });
+    }
+  }
+  return { claimOps, ledgerOps, summary };
+}
+
+/**
+ * Carry the 12 earlier rows of Tag decisions over to the claims, once (hard rule 1, the one-time seeding exception): see migrationOps. A plan of updates, checked with setup: true
+ * (the editor columns are accepted only on a claim whose Challenged tags notes start with the audit prefix), applied with the ledger, read back page by page. A second run finds
+ * everything done and writes nothing.
+ */
+export async function stepMigrateDecisions(ctx) {
+  const { root, config } = ctx;
+  const entry = tableEntry(config, 'claims_copy');
+  const ready = await readyPull(ctx, ['claims_copy', 'tag_decisions', 'rulebook']);
+  if (ready.stop) return { code: ready.stop.code, lines: [], errors: ready.stop.lines };
+  const tagPages = {};
+  const rulebookKey = tableEntry(config, 'rulebook').key;
+  for (const d of ready.loaded.decoded('rulebook')) tagPages[text(d.props[rulebookKey]).trim()] = d.page_id;
+  const columns = {
+    verified: entry.columns.verified, review_status: entry.columns.review_status, why_wrong: entry.columns.why_wrong, notes: entry.columns.notes, confidence: entry.write_columns.confidence,
+  };
+  const { claimOps, ledgerOps, summary } = migrationOps(ready.loaded.claims() ?? [], ready.loaded.queue() ?? [], tagPages, columns);
+  if (summary.carried > 0) ctx.run.update({ note: AUDIT_NOTE });
+  const unknown = unknownOptions(root, 'claims_copy', claimOps);
+  if (unknown.length) {
+    return { code: EXIT.INVALID, lines: [], errors: ['migrate-decisions: nothing was written, because Notion would add options that the approved structure does not have:', ...unknown.map((u) => `  ${u}`)] };
+  }
+  const said = `${summary.carried} claim(s) carried over, ${summary.decidedUnder} ledger row(s) got Decided under, ${summary.confidence} claim(s) got Agent confidence`;
+  const left = [
+    summary.alreadyCarried ? `${summary.alreadyCarried} were carried over already` : null,
+    summary.notFromAudit ? `${summary.notFromAudit} decided ledger row(s) are not from the audit and were left (an editor decides on the claim)` : null,
+    summary.noClaim ? `${summary.noClaim} ledger row(s) have no claim in the Claims copy` : null,
+  ].filter(Boolean);
+  if (claimOps.length + ledgerOps.length === 0) {
+    return { code: EXIT.OK, lines: [`migrate-decisions: nothing to carry over${left.length ? `; ${left.join('; ')}` : ''}`], summary };
+  }
+
+  const plan = newPlan({ runId: ctx.run.id, script: 'setup.mjs', rubricEdition: readRubric(root)?.edition ?? null, config, now: ctx.now });
+  for (const op of claimOps) plan.update('claims_copy', op.key, op.page_id, op.properties, op.expect ? { expect: op.expect } : {});
+  for (const op of ledgerOps) plan.update('tag_decisions', op.key, op.page_id, op.properties);
+  const checked = checkPlan(plan, config, { setup: true, root });
+  if (!checked.ok) return { code: EXIT.INVALID, lines: [], errors: ['the plan was refused and nothing was sent:', ...checked.problems.map((p) => `  ${p}`)] };
+  let result;
+  try {
+    const log = (line) => {
+      if (!/: done \(read-back ok\)$/.test(line)) ctx.log(line);
+    };
+    result = await applyPlan({ plan, dir: ctx.run.dir, client: ctx.restClient(), config, schemas: ready.schemas, pulled: ready.pulled, setup: true, root, now: ctx.now, log });
+  } catch (e) {
+    if (e instanceof PlanError) return { code: EXIT.INVALID, lines: [], errors: [e.message, ...e.problems.map((p) => `  ${p}`)] };
+    throw e;
+  }
+  if (result.code === EXIT.OK) {
+    return { code: EXIT.OK, lines: [`migrate-decisions: ${said}; read back ok${left.length ? `; ${left.join('; ')}` : ''}`, `migrate-decisions: ${AUDIT_NOTE}`], summary, result };
+  }
+  return {
+    code: result.code,
+    lines: [],
+    errors: [`migrate-decisions: ${result.done} of ${plan.ops.length} write(s) done; ${result.code === EXIT.INVALID ? 'a read-back differed' : 'the run stopped'}`, ...describeFailures(result).map((l) => `  ${l}`), 'run the same command again: it pulls first and sends only what is not there'],
+    summary,
+    result,
+  };
 }
 
 /** The one Agent settings row; the edition is the one the rubric step wrote. Paused is not written: a new row is unticked. */
@@ -645,7 +776,8 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
     if (rows.length !== pick.rows.length) add('claims_copy', 'row count', `${rows.length} rows in the Claims copy, ${pick.rows.length} in the pick`);
     for (const id of wantIds) if (!byId.has(id)) add('claims_copy', 'missing row', `the claim ${id} is not in the Claims copy`);
     for (const id of byId.keys()) if (!wantIds.includes(id)) add('claims_copy', 'extra row', `the claim ${id} is in the Claims copy but not in the pick`);
-    const geoColumns = columnsOf(root, 'claims_copy').filter((c) => !Object.values(entry.write_columns ?? {}).includes(c) && c !== entry.key);
+    const notGeo = [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims_copy')];
+    const geoColumns = columnsOf(root, 'claims_copy').filter((c) => !notGeo.includes(c) && c !== entry.key);
     for (const want of pick.rows) {
       const got = byId.get(want[entry.key]);
       if (!got) continue;
@@ -681,6 +813,28 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
       if (!text(got.props['Your reasoning']).startsWith(AUDIT_PREFIX)) add('tag_decisions', 'seeded row', `${key}: Your reasoning does not start with "${AUDIT_PREFIX}"`);
     }
     if (rows.length < audit.decisions.length) add('tag_decisions', 'row count', `${rows.length} rows in Tag decisions, at least ${audit.decisions.length} seeded decisions expected`);
+  }
+
+  // the audit's decisions on the claims themselves (migrate-decisions): Reviewed, the Applies tags in the relation, the audit prefix in the notes
+  if (audit && data.claims_copy) {
+    const entry = tableEntry(config, 'claims_copy');
+    const rulebookKey = tableEntry(config, 'rulebook').key;
+    const names = new Map((data.rulebook?.rows ?? []).map((r) => [normId(r.page_id), text(r.props[rulebookKey]).trim()]));
+    const byId = new Map(data.claims_copy.rows.map((r) => [text(r.props[entry.key]).trim(), r]));
+    for (const d of audit.decisions) {
+      const got = byId.get(d.geo_id);
+      if (!got) continue; // the missing claim is reported above
+      const p = got.props;
+      const here = `${d.geo_id}`;
+      if (text(p[entry.columns.review_status]) !== 'Reviewed') {
+        add('claims_copy', 'migrated decision', `${here}: Review status is ${short(p[entry.columns.review_status] ?? null)}, not "Reviewed"; run "setup.mjs migrate-decisions"`);
+        continue;
+      }
+      const tags = (p[entry.columns.verified] ?? []).map((id) => names.get(normId(id)) ?? id).sort();
+      const wantTags = d.outcome === 'Applies' ? [TAG] : [];
+      if (JSON.stringify(tags) !== JSON.stringify(wantTags)) add('claims_copy', 'migrated decision', `${here}: ${entry.columns.verified} holds ${short(tags)}, the audit decided ${short(wantTags)}`);
+      if (!text(p[entry.columns.notes]).startsWith(AUDIT_PREFIX)) add('claims_copy', 'migrated decision', `${here}: ${entry.columns.notes} does not start with "${AUDIT_PREFIX}"`);
+    }
   }
 
   if (data.agent_settings) {

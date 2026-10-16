@@ -20,7 +20,8 @@ const decidedRow = (i, outcome, why, reasoning) => ({
 });
 
 /**
- * Options: wording (the Editor wording), status (the lesson's Status, default Approved), title, open (a number of undecided queue rows to add),
+ * Options: wording (the Editor wording), status (the lesson's Status, default Approved), title, open (a number of claims that wait in Your queue: a ledger row
+ * for the proposal and Agent notes that say a tag waits),
  * overrides (answers of the candidate, by claim text, laid over the base ones), base (answers of the rulebook in force, by claim text, laid over the scenario's),
  * lessonRows (more Rule changes rows), mark (the text that marks the candidate, default MARK), world (options for makeWorld).
  */
@@ -33,7 +34,9 @@ export async function promoteWorld({
     decidedRow(3, 'Applies', 'Agent slip', 'The pronoun has no antecedent.'),
     decidedRow(4, 'Does not apply', 'Agent slip', 'It names its subject.'),
   ];
+  const claimRows = {};
   for (let k = 0; k < open; k++) {
+    claimRows[claimId(5 + k)] = { 'Agent notes': 'no tags\n1 waits for an editor · edition 2026-10-16.1', 'Agent confidence': 0.5 };
     queue.push({
       Claim: claimText(5 + k), Key: keyOf(5 + k), Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'Unsure. · 2/2 runs agreed', 'Rulebook edition': '2026-10-16.1',
     });
@@ -43,7 +46,7 @@ export async function promoteWorld({
     Lesson: title, Tag: 'Context-dependent', Rule: 'Context-dependent rule 4', Kind: 'Clarify wording', 'Current text': RULE4, 'Proposed text': text, 'Supporting rows': lines,
     'Editor wording': wording, Status: status,
   };
-  const w = await makeWorld({ claims: 12, queue, lessons: [lesson, ...lessonRows], ...world });
+  const w = await makeWorld({ claims: 12, queue, claimRows, lessons: [lesson, ...lessonRows], ...world });
   const table = {};
   for (const c of taxonomyCanaries()) table[c.claim] = c.expected === 'apply' ? { decision: 'apply', p: 0.9 } : { decision: 'do_not_apply', p: 0.1 };
   table[claimText(1)] = { decision: 'ask_editor', p: 0.5, rule_ref: null, reason: 'Two readings.' };

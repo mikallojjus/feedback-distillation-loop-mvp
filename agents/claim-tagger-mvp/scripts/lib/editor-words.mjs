@@ -5,6 +5,7 @@
 //   plural(n, one, many?)             -> "1 row" / "3 rows" (many defaults to one + "s")
 //   listNames(names)                  -> "A", "A and B", "A, B and C"
 //   capWords(text, max)               -> at most `max` words in one line; a cut text ends in "..."
+//   reasonLine({ reason, rule_ref }, agreed, runs, max) -> the text of an Agent reason: the reason in at most `max` words, the rule cited, "<k> of <n> runs agree"
 //   cutText(text, max = 60)           -> one line of at most `max` characters; a cut text ends in "..."
 //   quoted(text, max?)                -> "the text cut and in double quotes" (inner double quotes become single ones), exempt from the report lint
 //   quotedWhole(text)                 -> the same, never cut: for text an editor is to copy whole (the complete wording of a rule)
@@ -12,7 +13,8 @@
 //   answerWord(decision)              -> Applies / Does not apply / Can't tell for apply / do_not_apply / ask_editor
 //   notionUrl(id)                     -> https://www.notion.so/<the 32 hex digits>
 //   tableLink(config, table)          -> the link to a table of the agent (rulebook, claims_copy, tag_decisions, rule_changes, agent_settings)
-//   viewLink(config, name)            -> the link to a view: your_queue, needs_your_note, lessons_waiting or rulebook. config.notion.views.<name>
+//   viewLink(config, name)            -> the link to a view: your_queue, needs_your_note, agent_disagreed (all three on the Claims copy), your_queue_ledger,
+//                                        needs_your_note_ledger (the two old views of Tag decisions), lessons_waiting or rulebook. config.notion.views.<name>
 //                                        may hold a view id, a link, or { id, url }; without it the link is the table's own
 //   practiceLink(config)              -> the link to the practice page of a demo profile (else the Lessons waiting view)
 //   practiceTitle(config)             -> the title of the practice page a demo profile acts on (config.demo_title, written by the walkthrough
@@ -39,6 +41,11 @@ const squash = (text) => String(text ?? '').replace(/[\u0000-\u001f\u007f]+/g, '
 export function capWords(text, max) {
   const words = squash(text).split(' ').filter(Boolean);
   return words.length <= max ? words.join(' ') : `${words.slice(0, max).join(' ')}...`;
+}
+
+/** The text of an Agent reason (the ledger's column, and a line of the claim's Agent reasons): "<reason> · <rule cited> · <k> of <n> runs agree". */
+export function reasonLine(entry, agreed, runs, max = 40) {
+  return [capWords(entry.reason, max), entry.rule_ref, `${agreed} of ${runs} runs agree`].filter(Boolean).join(' · ');
 }
 
 export function cutText(text, max = 60) {
@@ -81,7 +88,10 @@ const isSet = (id) => typeof id === 'string' && id.trim() !== '' && !id.trim().s
 
 export const notionUrl = (id) => `https://www.notion.so/${hex32(id)}`;
 
-const VIEW_TABLE = Object.freeze({ your_queue: 'tag_decisions', needs_your_note: 'tag_decisions', lessons_waiting: 'rule_changes', rulebook: 'rulebook' });
+const VIEW_TABLE = Object.freeze({
+  your_queue: 'claims_copy', needs_your_note: 'claims_copy', agent_disagreed: 'claims_copy',
+  your_queue_ledger: 'tag_decisions', needs_your_note_ledger: 'tag_decisions', lessons_waiting: 'rule_changes', rulebook: 'rulebook',
+});
 
 function databaseIdOf(config, table) {
   try {

@@ -4,24 +4,33 @@
 // PATCH only (lib/notion-rest.mjs), and every id the builder learns is recorded at once (runs/builder/*.json and config.json), so a run that
 // stops halfway is finished by running it again.
 //
-//   structureFromProposal(markdown)            -> { tables: { rulebook|claims_copy|tag_decisions|rule_changes|agent_settings: { title, columns: [{ name, type, options, description }] } },
-//                                                   views: [{ name, table, filter, sort, columns, wrap }], pages: ["Demos", "Demo tests"] }
+//   structureFromProposal(markdown)            -> { tables: { rulebook|claims_copy|tag_decisions|rule_changes|agent_settings: { title, columns: [{ name, type, options, description, relation_to? }] } },
+//                                                   views: [{ name, table, filter, sort, columns, wrap, renamed_from? }], pages: ["Demos", "Demo tests"] }
 //                                                  Throws StructureError (exit 2) naming the table and column when a type word is unknown, a table
-//                                                  section or a "Values:" list is missing, or a view cannot be read.
+//                                                  section or a "Values:" list is missing, or a view cannot be read. (The approved text of the proposal has no relation
+//                                                  column and no renamed view; the revision of 16 October is written into setup/structure.json directly.)
+//                                                  A relation column names the table it points at in relation_to; a view that was another view of the same table under an
+//                                                  older name says so in renamed_from, and the builder renames that view instead of making a new one.
 //   validateStructure(structure), loadStructure(root), saveStructure(root, structure), structurePath(root), countStructure(structure)
-//   planStructure(structure, config)           -> { parent_page_id, pages: [{ key, title, text }], databases: [{ table, title, body }], views: [{ table, name, columns, hidden, wrap, body }] }
-//                                                  body of a database is the POST /databases body; body of a view is the POST /views body without the ids
+//   planStructure(structure, config)           -> { parent_page_id, pages: [{ key, title, text }], databases: [{ table, title, body }], columns: [{ table, name, type, relation_to, body }],
+//                                                   views: [{ table, name, columns, hidden, wrap, renamed_from, body }] }
+//                                                  body of a database is the POST /databases body (relation columns left out: the table they point at may not exist yet);
+//                                                  columns lists every column but the title, so that what a table lacks can be added (PATCH data source); body of a view is the
+//                                                  POST /views body without the ids
 //   completeViewBody(viewPlan, dataSource, { databaseId }) -> the POST /views body, property ids filled from the created data source
-//   runStructure({ plan, client, root, config, log, parts }) -> { ok, code, stopped, pages, databases, views, warnings, created }
+//   runStructure({ plan, client, root, config, log, parts }) -> { ok, code, stopped, pages, databases, columns, views, warnings, created }
 //   verifyStructure({ client, config, structure })  -> { ok, differences: [{ table, kind, detail }], views: { <table>: { <view name>: <view id> } } }
 //   renderPreview(structure)                   -> Markdown for the dry run
 //   parseViewFilter(text, table, where), parseViewSort(text, table, where)
 //   viewKey(name), viewUrl(databaseId, viewId) -> 'your_queue'; 'https://www.notion.so/<database id>?v=<view id>' (ids without dashes)
 //
+// Columns. After the tables exist, runStructure adds every column of the structure that a table lacks (updateDataSource): a table made by an earlier build gains the
+// columns of a later revision, and the relation columns, which need the table they point at, are added this way too. A column that is there is never changed or removed.
+//
 // Where the ids go. Pages: config.json notion.pages.<key> (demos, demo_tests) and runs/builder/pages.json. Tables: notion.rulebook, notion.claims[0],
 // notion.databases.<table> (database_id, data_source_id) and runs/builder/databases.json (the table's id and its data source's, under <table> and
-// <table>_data_source). Views: config.json notion.views.<key> = { id, url } for each view that exists (your_queue, needs_your_note, lessons_waiting,
-// rulebook); the key is left out for a view that could not be made, so the scripts fall back to the table's address. runs/builder/state.json keeps
+// <table>_data_source). Views: config.json notion.views.<key> = { id, url } for each view that exists (your_queue, needs_your_note, agent_disagreed, your_queue_ledger,
+// needs_your_note_ledger, lessons_waiting, rulebook); the key is left out for a view that could not be made, so the scripts fall back to the table's address. runs/builder/state.json keeps
 // what the last run found, the views that failed included ("views": "failed: <message>").
 //
 // The client must be a builder client (clientFromConfig(config, { apiVersion: BUILDER_API_VERSION })): database creates, data sources and views
@@ -64,7 +73,7 @@ export const TYPE_WORDS = Object.freeze({
   'last edited time': 'last_edited_time',
   'last edited by': 'last_edited_by',
 });
-export const COLUMN_TYPES = Object.freeze([...new Set(Object.values(TYPE_WORDS))]);
+export const COLUMN_TYPES = Object.freeze([...new Set(Object.values(TYPE_WORDS)), 'relation']);
 /** Columns Notion fills by itself: compared by type only, never written. */
 export const AUTOMATIC_TYPES = Object.freeze(['created_time', 'created_by', 'last_edited_time', 'last_edited_by']);
 export const DESCRIPTION_MAX = 280;
@@ -86,6 +95,8 @@ export const OPTION_COLORS = Object.freeze({
   },
   claims_copy: {
     'Geo Name source': { 'This space': 'green', 'Other space (fallback)': 'orange' },
+    'Review status': { 'To review': 'yellow', Reviewed: 'green' },
+    'Why wrong': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
   },
   tag_decisions: {
     'Agent proposal': { Applies: 'green', 'Does not apply': 'red', "Can't tell": 'yellow' },
@@ -244,23 +255,39 @@ const byLengthDesc = (a, b) => b.length - a.length;
 const leaf = (column, condition) => ({ property: column.name, [column.type]: condition });
 
 /**
- * The data-source query filter for a view's "Rows shown" text, or null for "all rows". The words it reads: "<Column> is empty",
- * "<Column> is <A> or <B>", clauses joined by ", and ". Values must be options of the column.
+ * The data-source query filter for a view's "Rows shown" text, or null for "all rows". The words it reads: "<Column> is empty", "<Column> is not empty",
+ * "<Column> is <A> or <B>", "<Column> is not <A>" (a select), "<Column> contains <text>" and "<Column> does not contain <text>" (a text column), clauses
+ * joined by ", and ". Values of a select must be options of the column.
  */
 export function parseViewFilter(text, table, where = 'view') {
   const source = String(text ?? '').trim();
   if (source === '' || /^(all rows|none|no filter)$/i.test(source)) return null;
   const columns = table.columns;
   const names = columns.map((c) => c.name).sort(byLengthDesc);
-  const split = new RegExp(`,?\\s+and\\s+(?=(?:${names.map(escapeRe).join('|')})\\s+is\\s)`, 'i');
+  const split = new RegExp(`,?\\s+and\\s+(?=(?:${names.map(escapeRe).join('|')})\\s+(?:is|contains|does not contain)\\s)`, 'i');
   const parts = source.split(split).map((c) => c.trim()).filter(Boolean);
   const clauses = parts.map((clause) => {
-    const name = names.find((n) => clause.startsWith(`${n} is `));
-    if (!name) throw new StructureError(`${where}: cannot read the filter "${clause}"; it should read "<column> is empty" or "<column> is <value> or <value>"`);
+    const name = names.find((n) => clause.startsWith(`${n} is `) || clause.startsWith(`${n} contains `) || clause.startsWith(`${n} does not contain `));
+    if (!name) {
+      throw new StructureError(`${where}: cannot read the filter "${clause}"; it should read "<column> is empty", "<column> is <value> or <value>", "<column> is not <value>", "<column> contains <text>" or "<column> does not contain <text>"`);
+    }
     const column = columns.find((c) => c.name === name);
+    const textual = column.type === 'rich_text' || column.type === 'title' || column.type === 'url';
+    const positive = clause.startsWith(`${name} contains `);
+    if (positive || clause.startsWith(`${name} does not contain `)) {
+      if (!textual) throw new StructureError(`${where}: "contains" needs a text column, and "${name}" is a ${column.type}`);
+      const needle = clause.slice(name.length + (positive ? 10 : 18)).trim().replace(/^"(.*)"$/, '$1');
+      if (needle === '') throw new StructureError(`${where}: "${clause}" names no text to look for`);
+      return leaf(column, { [positive ? 'contains' : 'does_not_contain']: needle });
+    }
     const rest = clause.slice(name.length + 4).trim();
     if (/^empty$/i.test(rest)) return leaf(column, { is_empty: true });
     if (/^not empty$/i.test(rest)) return leaf(column, { is_not_empty: true });
+    if (column.type === 'select' && /^not\s/i.test(rest)) {
+      const value = rest.slice(4).trim();
+      if (!column.options.includes(value)) throw new StructureError(`${where}: "${value}" is not a value of "${name}" (values: ${column.options.join(', ')})`);
+      return leaf(column, { does_not_equal: value });
+    }
     let values;
     if (column.type === 'select' || column.type === 'multi_select') {
       values = [];
@@ -271,7 +298,7 @@ export function parseViewFilter(text, table, where = 'view') {
         values.push(option);
         left = left === option ? '' : left.slice(option.length + 4).trim();
       }
-    } else if (column.type === 'rich_text' || column.type === 'title' || column.type === 'url') {
+    } else if (textual) {
       values = [rest];
     } else {
       throw new StructureError(`${where}: a filter on a ${column.type} column ("${name}") cannot be read from words`);
@@ -391,6 +418,9 @@ export function validateStructure(structure) {
       if ((c.type === 'select' || c.type === 'multi_select') && c.options.length === 0) bad(`table "${t.title}", column "${c.name}": a select needs its values`);
       if (c.type !== 'select' && c.type !== 'multi_select' && c.options.length > 0) bad(`table "${t.title}", column "${c.name}": only a select has options`);
       if (typeof c.description !== 'string' || [...c.description].length > DESCRIPTION_MAX) bad(`table "${t.title}", column "${c.name}": the description must be text of at most ${DESCRIPTION_MAX} characters`);
+      if (c.type === 'relation') {
+        if (!TABLES.includes(c.relation_to) || c.relation_to === key) bad(`table "${t.title}", column "${c.name}": a relation names another of the five tables in relation_to`);
+      } else if (c.relation_to !== undefined) bad(`table "${t.title}", column "${c.name}": only a relation has relation_to`);
     }
     if (t.columns.filter((c) => c.type === 'title').length !== 1) bad(`table "${t.title}" needs exactly one title column`);
   }
@@ -405,6 +435,7 @@ export function validateStructure(structure) {
     if (!Array.isArray(v.columns) || v.columns.length === 0) bad(`${where}: no columns are shown`);
     for (const c of v.columns) if (!structure.tables[v.table].columns.some((x) => x.name === c)) bad(`${where}: the table has no column "${c}"`);
     if (typeof v.wrap !== 'boolean') bad(`${where}: wrap must be true or false`);
+    if (v.renamed_from !== undefined && (typeof v.renamed_from !== 'string' || v.renamed_from === '' || v.renamed_from === v.name)) bad(`${where}: renamed_from must be another name of a view of the same table`);
     parseViewFilter(v.filter, structure.tables[v.table], where);
     parseViewSort(v.sort, structure.tables[v.table], where);
   }
@@ -446,7 +477,8 @@ export const viewUrl = (databaseId, viewId) => `https://www.notion.so/${normId(d
 
 function propertyConfig(table, column) {
   const body = {};
-  if (column.type === 'number') body.number = { format: 'number' };
+  if (column.type === 'relation') body.relation = { single_property: {} }; // the data source id of the table it points at is added with the column, once that table exists
+  else if (column.type === 'number') body.number = { format: 'number' };
   else if (column.type === 'select' || column.type === 'multi_select') {
     body[column.type] = { options: column.options.map((name) => ({ name, color: OPTION_COLORS[table]?.[column.name]?.[name] ?? 'default' })) };
   } else body[column.type] = {};
@@ -470,6 +502,7 @@ export function viewPlan(structure, view) {
     columns: [...view.columns],
     hidden,
     wrap: view.wrap,
+    renamed_from: view.renamed_from ?? null,
     body: {
       name: view.name,
       type: 'table',
@@ -494,7 +527,7 @@ export function planStructure(structure, config) {
     databases: TABLES.map((table) => {
       const t = structure.tables[table];
       const properties = {};
-      for (const column of t.columns) properties[column.name] = propertyConfig(table, column);
+      for (const column of t.columns) if (column.type !== 'relation') properties[column.name] = propertyConfig(table, column);
       return {
         table,
         title: t.title,
@@ -506,6 +539,9 @@ export function planStructure(structure, config) {
         },
       };
     }),
+    columns: TABLES.flatMap((table) => structure.tables[table].columns
+      .filter((c) => c.type !== 'title')
+      .map((c) => ({ table, name: c.name, type: c.type, relation_to: c.relation_to ?? null, body: propertyConfig(table, c) }))),
     views: structure.views.map((v) => viewPlan(structure, v)),
   };
 }
@@ -730,6 +766,47 @@ async function buildDatabases(ctx) {
   }
 }
 
+// Add the columns a table lacks (updateDataSource, one call per table): the columns of a revision that came after the table was made, and every relation column, which
+// needs the table it points at. A column that is there is left as it is, whatever it holds; nothing is changed or removed.
+async function buildColumns(ctx) {
+  const { plan, client, config, log, result } = ctx;
+  for (const table of TABLES) {
+    const wanted = (plan.columns ?? []).filter((c) => c.table === table);
+    if (wanted.length === 0) continue;
+    const entry = tableEntry(config, table);
+    if (!realId(entry.database_id) || !realId(entry.data_source_id)) continue; // buildDatabases stopped the run already
+    let dataSource;
+    try {
+      dataSource = await client.retrieveDataSource(entry.data_source_id);
+    } catch (e) {
+      stopWith(ctx, `the columns of "${table}"`, e);
+      return;
+    }
+    const missing = wanted.filter((c) => !dataSource.properties?.[c.name]);
+    if (missing.length === 0) continue;
+    const properties = {};
+    for (const c of missing) {
+      if (c.relation_to) {
+        const target = tableEntry(config, c.relation_to);
+        if (!realId(target.data_source_id)) {
+          stopWith(ctx, `the column "${c.name}" of "${table}"`, new Error(`the table "${c.relation_to}" it points at is not created yet`));
+          return;
+        }
+        properties[c.name] = { ...c.body, relation: { data_source_id: normId(target.data_source_id), single_property: {} } };
+      } else properties[c.name] = c.body;
+    }
+    try {
+      await client.updateDataSource(entry.data_source_id, { properties });
+    } catch (e) {
+      stopWith(ctx, `the columns of "${table}"`, e);
+      return;
+    }
+    result.columns[table] = missing.map((c) => c.name);
+    result.created.columns += missing.length;
+    log(`table "${table}": ${missing.length} column(s) added (${missing.map((c) => c.name).join(', ')})`);
+  }
+}
+
 // name -> view id for the views a table already has
 async function existingViews(client, databaseId) {
   const out = new Map();
@@ -774,6 +851,29 @@ async function buildViews(ctx) {
         mine[v.name] = { id: have.get(v.name), status: 'exists', url: link.url };
         previous = have.get(v.name);
         log(`view "${v.name}": already there`);
+        continue;
+      }
+      if (v.renamed_from && have.has(v.renamed_from)) {
+        // the table has this view under its older name: give it the new one (its filter, sorts and columns are the structure's own; verify compares them)
+        const id = have.get(v.renamed_from);
+        try {
+          await client.updateView(id, { name: v.name });
+        } catch (e) {
+          if (e?.name === 'NotionError' && (e.status === 400 || e.status === 404)) {
+            mine[v.name] = { id: null, status: 'failed', message: String(e.message) };
+            log(`view "${v.renamed_from}": could not be renamed to "${v.name}" (${e.message})`);
+            continue;
+          }
+          stopWith(ctx, `the view "${v.renamed_from}" of "${table}" (its new name)`, e);
+          return;
+        }
+        have.delete(v.renamed_from);
+        have.set(v.name, id);
+        previous = id;
+        const link = recordView(ctx, v, entry.database_id, id);
+        mine[v.name] = { id, status: 'renamed', url: link.url };
+        result.created.renamed += 1;
+        log(`view "${v.renamed_from}": renamed to "${v.name}" (${id})`);
         continue;
       }
       const body = completeViewBody(v, dataSource, { databaseId: entry.database_id });
@@ -841,11 +941,14 @@ export async function runStructure({ plan, client, root = agentRoot(), config, l
   if (!client || typeof client.createDatabase !== 'function') throw new TypeError('runStructure: a Notion client is required');
   if (!config) throw new TypeError('runStructure: the config is required');
   if (isProtected(config, plan.parent_page_id)) throw new StructureError('the parent page is on the protected list of config.json; the builder never builds there');
-  const result = { ok: true, code: EXIT.OK, stopped: null, pages: {}, databases: {}, views: {}, warnings: [], created: { pages: 0, databases: 0, views: 0 } };
+  const result = { ok: true, code: EXIT.OK, stopped: null, pages: {}, databases: {}, columns: {}, views: {}, warnings: [], created: { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0 } };
   const ctx = { plan, client, root, config, log, result, children: null };
   try {
     if (parts.includes('pages')) await buildPages(ctx);
-    if (result.ok && parts.includes('databases')) await buildDatabases(ctx);
+    if (result.ok && parts.includes('databases')) {
+      await buildDatabases(ctx);
+      if (result.ok) await buildColumns(ctx);
+    }
     if (result.ok && parts.includes('views')) await buildViews(ctx);
   } finally {
     writeState(ctx);
@@ -893,7 +996,7 @@ function canonFilter(filter, nameOf) {
 
 const canonSorts = (sorts, nameOf) => (Array.isArray(sorts) ? sorts : []).map((s) => (s.property !== undefined ? { property: nameOf(s.property), direction: s.direction } : { timestamp: s.timestamp, direction: s.direction }));
 
-function compareColumns(add, key, t, dataSource) {
+function compareColumns(add, key, t, dataSource, config) {
   const actual = dataSource?.properties ?? {};
   for (const c of t.columns) {
     const def = actual[c.name];
@@ -904,6 +1007,18 @@ function compareColumns(add, key, t, dataSource) {
     if (def.type !== c.type) {
       add(key, 'type', `"${c.name}" is ${def.type} in Notion but ${c.type} in the structure`);
       continue;
+    }
+    if (c.type === 'relation') {
+      let target = null;
+      try {
+        target = tableEntry(config, c.relation_to).data_source_id;
+      } catch {
+        target = null;
+      }
+      const found = def.relation?.data_source_id ?? null;
+      if (realId(target) && (found === null || normId(found) !== normId(target))) {
+        add(key, 'relation', `"${c.name}" points at ${found ? normId(found) : 'no table'} in Notion, not at the ${c.relation_to} table (${normId(target)})`);
+      }
     }
     if (c.type === 'select' || c.type === 'multi_select') {
       const have = new Set((def[c.type]?.options ?? []).map((o) => o.name));
@@ -980,7 +1095,7 @@ export async function verifyStructure({ client, config, structure } = {}) {
       add(key, 'missing table', `"${t.title}" cannot be read (${e.message})`);
       continue;
     }
-    compareColumns(add, key, t, dataSource);
+    compareColumns(add, key, t, dataSource, config);
     const wanted = structure.views.filter((v) => v.table === key);
     if (wanted.length) await compareViews(add, key, structure, wanted, entry, client, dataSource, seen);
   }
@@ -1004,11 +1119,13 @@ export function renderPreview(structure) {
     const t = structure.tables[key];
     lines.push(`## ${t.title} (${t.columns.length} columns)`, '');
     lines.push('| Column | Type | Options | Meaning |', '|---|---|---|---|');
-    for (const c of t.columns) lines.push(`| ${cell(c.name)} | ${c.type} | ${cell(c.options.join(', '))} | ${cell(c.description)} |`);
+    for (const c of t.columns) lines.push(`| ${cell(c.name)} | ${c.type} | ${cell(c.relation_to ? `points at the ${structure.tables[c.relation_to].title}` : c.options.join(', '))} | ${cell(c.description)} |`);
     const views = structure.views.filter((v) => v.table === key);
     if (views.length) {
       lines.push('', 'Views:', '');
-      for (const v of views) lines.push(`- **${v.name}**: rows shown: ${v.filter}; sorted by: ${v.sort}; columns: ${v.columns.join(', ')}${v.wrap ? '; cells wrap' : ''}`);
+      for (const v of views) {
+        lines.push(`- **${v.name}**${v.renamed_from ? ` (the view "${v.renamed_from}" of an earlier build is renamed to this)` : ''}: rows shown: ${v.filter}; sorted by: ${v.sort}; columns: ${v.columns.join(', ')}${v.wrap ? '; cells wrap' : ''}`);
+      }
     }
     lines.push('');
   }
