@@ -4,12 +4,11 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: checkpoint 2 reached (2026-10-15 evening). The MVP is built, tested (1,854 tests pass) and run live; the independent verifier re-ran checks 1, 3, 5, 7, 8 and 10 (`VERIFICATION.md`); the artifact is republished. The MVP is agreed when the product owner runs the seven steps on a fresh practice page and says so.
-- Checkpoint 1 (Notion structure proposal): approved as proposed on 2026-10-15 (decision P1).
-- Blockers: B2, `agents/claim-tagger-mvp/runs/PAUSED` (set by the engineer for the evals; its removal was refused; a person deletes it). While it exists no practice page can be built and no production command runs. Waiting on it: calibration runs 6 and 7 of manifest .3, the unpaused practice-page eval, the owner's fresh practice page.
+- Phase: the revision of 16 October (decisions on the claims table, decision P2) is built and tested (1,935 tests pass) and waits for its live step. Checkpoint 2 was reached on 2026-10-15; the MVP is agreed when the product owner runs the seven steps on a fresh practice page and says so.
+- Live step pending: delete `agents/claim-tagger-mvp/runs/PAUSED` (a person; blocker B2), then the engineer runs, in a builder session, `setup.mjs build` (adds the columns and views to the Claims copy, renames the two ledger views), `setup.mjs migrate-decisions` (carries the twelve existing decisions over), `setup.mjs verify`, closes the session, and builds a fresh practice page for the product owner. The five older practice pages keep the old shape and cannot be verified against the new one.
 - Branch `mvp-2026-11`; the last commit is the newest one in `git log`.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The builder session is closed. Practice pages under Demos: calibration 1 to 5 (ids in `runs/demos/`); calibration 5 (3fa273e214eb81169e15d8bf8a00be98) shows a completed cycle.
-- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 2, checkpoint 2).
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The builder session is closed.
+- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 3, the revision).
 
 ## Entries
 
@@ -164,3 +163,11 @@ Done: the product owner reviewed the Tag decisions queue after checkpoint 2 and 
 Verified: nothing yet; this entry opens the work.
 
 Next: the scripts coder's hand-back; the live migration (needs the pause file deleted by the product owner); the walkthrough; the documents; the artifact.
+
+### 20. The revision built: decisions on the claims table (2026-10-16)
+
+Done: two coders implemented `CLAIMS-REVIEW.md`. Scripts: the Claims copy carries four agent columns (Agent tags, Agent notes, Agent confidence, Agent reasons; decision 44) and the real table's four editor columns; the decision is read from Review status and the verified relation (decision 42); propose writes the agent's side and copies decisions into the ledger, distill brings the ledger up to date first (decision 46), a disagreement is shown and never applied (decision 43), a claim marked To review waits whatever the confidence (decision 48); status counts from the claims; the plan check and the guard treat the claims' four editor columns as the editor's and the ledger as the agent's; setup gains the revised structure (65 columns, seven views) and a `migrate-decisions` step for the twelve existing rows. Practice page: the Claims table has the agent and editor columns, the five decided claims are created Reviewed with the audit values, the two open ones To review, the ledger holds the five audit copies, `decide` writes the four editor columns, Your queue is the linked view of step 3 on the Claims table, the ledger is shown at the bottom with one line and explained nowhere else (decision 49). CLAUDE.md hard rules 1 and 10, `STRUCTURE.md` (a revision section with sample rows), `CONTRACTS.md`, `AGENT.md`, the two skills and their references, `BACKLOG.md` and the artifact's Status, How to run and Structure tabs follow. Older practice pages keep the old shape.
+
+Verified: `node --test tests/`: 1,935 tests pass, 0 fail (`evidence/01-tests/`); the practice page and the manifest pass the page check in a dry run on the fakes (a test covers it); the artifact's strict build passes every check. Not yet verified live: the migration and a fresh practice page wait for the pause file to be deleted.
+
+Next: the product owner deletes the pause file; the engineer runs the live step (build, migrate-decisions, verify) and builds a fresh practice page; the product owner runs the seven steps; then calibration runs 6 and 7 of the story and the unpaused practice-page eval.

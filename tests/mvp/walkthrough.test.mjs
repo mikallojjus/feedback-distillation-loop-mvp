@@ -14,6 +14,7 @@ import { CLAIMS_COPY_COLUMNS, editorColumns, loadConfig, validateConfig } from '
 import * as dp from '../../agents/claim-tagger-mvp/scripts/lib/demo-profile.mjs';
 import { blockText, lintPage } from '../../agents/claim-tagger-mvp/scripts/lib/notion-blocks.mjs';
 import { viewPlan } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
+import { claimColumns } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
 import { BUILDER_API_VERSION, countRequests, createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
@@ -1696,7 +1697,7 @@ test('where says which step the editor is at and the one thing to do, for every 
   agentHasRead(w);
   r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 3, ${title(3)}.`);
-  assert.equal(r.next, `Next: open Claims (${claimsTable}) and decide the two claims whose Review status is To review.`);
+  assert.equal(r.next, `Next: open Your queue (${view('your_queue')}) and decide your two claims.`);
   // one claim decided
   decide(open[0]);
   assert.match((await where()).sentence, /step 3,/);
@@ -1731,7 +1732,7 @@ test('where says which step the editor is at and the one thing to do, for every 
   w.fake.editRow(ledgerRow(open[1]).page_id, { 'Follow-up': 'Still wrong' });
   r = await where();
   assert.match(r.sentence, /^Walkthrough: you are at step 7, /);
-  assert.equal(r.next, `Next: open Claims (${claimsTable}) and read Agent notes; a claim that says the agent disagrees with your decision needs a clearer rule.`);
+  assert.equal(r.next, `Next: add a note in Challenged tags notes on the claims in Agent disagreed (${view('agent_disagreed')}).`);
   // both fixed: complete
   w.fake.editRow(ledgerRow(open[1]).page_id, { 'Follow-up': 'Fixed' });
   r = await where();
@@ -1767,7 +1768,7 @@ test('where reads the step from the Review status of the two claims: the ledger 
   assert.match(await stepLine(), /step 3,/);
 });
 
-test('where on a page without views points at the table instead of the view', async () => {
+test('where on a page without views points at the Claims table instead of Your queue, and at the Rule changes table instead of Lessons waiting', async () => {
   const w = newWorld();
   w.fake.failNext('POST', /^\/views$/, 400, 30);
   assert.equal((await w.start()).code, 0);
@@ -1778,7 +1779,7 @@ test('where on a page without views points at the table instead of the view', as
   assert.match(first.out, /you are at step 2, /);
   agentHasRead(w);
   const r = await w.run(['where']);
-  assert.match(r.out, new RegExp(`Next: open Claims \\(${claimsTable.replace(/\./g, '\\.')}\\) and decide the two claims whose Review status is To review\\.`));
+  assert.match(r.out, new RegExp(`Next: open Claims \\(${claimsTable.replace(/\./g, '\\.')}\\) and decide your two claims\\.`));
   // the step that links Lessons waiting falls back to the Rule changes table
   const { manifest } = real();
   for (const o of manifest.open) {
@@ -1790,7 +1791,41 @@ test('where on a page without views points at the table instead of the view', as
   assert.match(five.out, new RegExp(`Next: open Rule changes \\(https://www\\.notion\\.so/${demo.databases.rule_changes.database_id}\\) and set Status to Approved\\.`));
 });
 
-test('the table of Step 1 is what status prints on a page that has just been built, and the Next line sends the editor to the tag step; after the tag step Your queue lists what waits', async () => {
+test('the Claims table of step 2 and the words of the story are what the tag step writes: both claims are To review, so every tag waits and none is written to Agent tags', () => {
+  const { manifest, template } = real();
+  const page = dp.pageModel(template.text, { edition: EDITION, date: dp.dateWord(NOW) }).rendered;
+  const step2 = page.slice(page.indexOf('## Step 2'), page.indexOf('## Step 3'));
+  const cells = (row) => row.split('|').slice(1, -1).map((c) => c.trim());
+  const rows = step2.split('\n').filter((l) => l.startsWith('|')).map(cells);
+  const header = rows.findIndex((r) => r[0] === 'Geo Name' && r[1] === 'Agent tags');
+  assert.ok(header >= 0);
+  const table = rows.slice(header + 2, header + 2 + manifest.claims.length);
+  assert.equal(table.length, manifest.claims.length);
+  const open = new Set(manifest.open.map((o) => o.claim));
+  const decided = new Map(manifest.decided.map((d) => [d.claim, d]));
+  const proposals = { presspool: 'Applies', aiforce: "Can't tell" };
+  manifest.claims.forEach((c, i) => {
+    const d = decided.get(c.key);
+    // what the tag step writes for this claim (propose.mjs claimColumns): a claim To review waits whatever the proposal; a Reviewed claim gets the editor's set
+    const written = open.has(c.key)
+      ? claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, proposals[c.key]]]), toReview: true, edition: EDITION })
+      : claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, d['Claim quality tags — verified'].includes(TAG) ? 'Applies' : 'Does not apply']]), reviewed: true, verifiedTags: d['Claim quality tags — verified'], edition: EDITION });
+    const [name, tags, , notes] = table[i];
+    assert.equal(name, c.short, c.key);
+    assert.equal(tags, written.agent_tags || '(empty)', `${c.key}: Agent tags`);
+    assert.equal(notes, written.agent_notes.replace('\n', ' / '), `${c.key}: Agent notes`);
+  });
+  assert.deepEqual(table.filter((r) => r[3].includes('1 waits for an editor')).map((r) => r[0]), manifest.open.map((o) => manifest.claims.find((c) => c.key === o.claim).short), 'the two claims for the editor are the two that wait');
+  // the story: both wait in Your queue, and the line that rule g asks for says why the press pool claim is there
+  const story = page.slice(0, page.indexOf('## Step 1'));
+  assert.match(story, /The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so it waits in Your queue like the AI Force claim, which waits because the agent is unsure\./);
+  const step3 = page.slice(page.indexOf('## Step 3'), page.indexOf('## Step 4'));
+  assert.match(step3, /In Your queue, just below, fill in four columns on each of your two claims\./);
+  assert.ok(!/not in it|in the Claims table, in The tables/.test(step3), 'both claims are decided in Your queue');
+  assert.ok(!/which here is the AI Force claim/.test(step3));
+});
+
+test('the table of Step 1 is what status prints on a page that has just been built, and the Next line sends the editor to the tag step; after the tag step both claims wait in Your queue', async () => {
   const { status } = await import('../../agents/claim-tagger-mvp/scripts/status.mjs');
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
@@ -1811,13 +1846,13 @@ test('the table of Step 1 is what status prints on a page that has just been bui
   assert.deepEqual(printed.at(-1), ['Last run', 'none yet'], 'the build writes no Last run summary: no command has run');
   assert.equal(fresh.report.next, 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).');
 
-  // the tag step has run: the AI Force claim waits for an editor, the press pool claim does not (the agent is fairly sure of it)
+  // the tag step has run: both claims are To review, so both wait for an editor, the press pool claim although the agent is fairly sure of it
   agentHasRead(w);
   const read = await status(hooks());
-  assert.equal(read.report.sentence, `Status of the practice page ${demo.title}: nothing is paused; 1 row waits for you.`);
-  assert.deepEqual(read.report.rows[1].slice(0, 2), ['Your queue', '1 row, lowest confidence first']);
-  assert.match(read.report.next, /^Next: decide the 1 row in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}(\?v=[0-9a-f]{32}|#[0-9a-f]{32})\)\.$/);
-  assert.equal(manifest.open.length, 2, 'two claims are the editor\'s, and status counts one of them: the page says so in step 3');
+  assert.equal(read.report.sentence, `Status of the practice page ${demo.title}: nothing is paused; 2 rows wait for you.`);
+  assert.deepEqual(read.report.rows[1].slice(0, 2), ['Your queue', '2 rows, lowest confidence first']);
+  assert.match(read.report.next, /^Next: decide the 2 rows in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}(\?v=[0-9a-f]{32}|#[0-9a-f]{32})\)\.$/);
+  assert.equal(manifest.open.length, 2, 'the two claims of the story are the two that status counts');
 });
 
 test('where names the demo it was asked about; an unknown one is exit 2; with no practice page at all it asks for one', async () => {
@@ -2069,23 +2104,24 @@ function addProposed(w, over = {}) {
 const lessonByTitle = (w, title) => w.rows('rule_changes').find((r) => r.Lesson === title);
 
 /**
- * The state after step 2, as the tag step leaves it: the agent's columns on the claims (the press pool tagged and nothing waits on it, the AI Force with no tag and
- * one tag that waits for an editor), a ledger row for each of the two with the proposal, and a new Last run summary (a pull of the page then says step 3).
+ * The state after step 2, as the tag step leaves it: both claims are To review, so every tag the agent judged on them waits and none is written to Agent tags
+ * (claimColumns of propose.mjs says what is written), a ledger row for each of the two with the proposal, and a new Last run summary (a pull of the page then says step 3).
  */
 function agentHasRead(w, id) {
   const { manifest } = real();
   const edition = w.demo(id).edition;
   const reads = {
-    presspool: { proposal: 'Applies', tags: TAG, confidence: 0.8, waits: false },
-    aiforce: { proposal: "Can't tell", tags: '', confidence: 0.5, waits: true },
+    presspool: { proposal: 'Applies', confidence: 0.8 },
+    aiforce: { proposal: "Can't tell", confidence: 0.5 },
   };
   for (const o of manifest.open) {
     const claim = manifest.claims.find((c) => c.key === o.claim);
     const read = reads[o.claim] ?? reads.aiforce;
     const reason = `${claim.short.replace(/…$/, '')}: which one? · Context-dependent rule 3 · 3 of 3 runs agree`;
+    const columns = claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, read.proposal]]), toReview: true, edition });
     w.fake.editRow(w.rowBy('claims_copy', 'Geo ID', claim['Geo ID'], id).page_id, {
-      'Agent tags': read.tags,
-      'Agent notes': `${read.tags || 'no tags'}\n${read.waits ? '1 waits for an editor' : 'nothing waits for an editor'} · edition ${edition}`,
+      'Agent tags': columns.agent_tags,
+      'Agent notes': columns.agent_notes,
       'Agent confidence': read.confidence,
       'Agent reasons': `${TAG}: ${reason}`,
     });
@@ -2246,7 +2282,7 @@ test('decide enters the manifest values for one of the two claims, writes the fo
   assert.ok(first.out.includes('| Review status | Reviewed |'));
   assert.ok(first.out.includes(`| Why wrong | ${enter['Why wrong']} |`));
   assert.ok(first.out.includes(`| Challenged tags notes | ${quoted(enter['Challenged tags notes'], 100)} |`));
-  assert.match(lastLine(first.out), /^Next: open Claims \(https:\/\/www\.notion\.so\/\S+\) and decide the two claims whose Review status is To review\.$/);
+  assert.match(lastLine(first.out), /^Next: open Your queue \(https:\/\/www\.notion\.so\/\S+\) and decide your two claims\.$/);
   assert.equal(lastLine(first.out), lastLine((await w.run(['where'])).out), 'the Next line is the one where gives');
   assert.ok(!first.out.includes('D31'), 'the report holds no code');
   assert.ok(first.err.includes(`acting as the editor on practice page ${id} (decision D31): Claims `), 'the engineer is told whose hand it is');

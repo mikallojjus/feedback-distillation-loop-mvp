@@ -23,7 +23,7 @@ Next: start at the top of Your queue (link).
 
 ### status (demo, step 1)
 
-Nothing waits yet: Your queue lists the claims the agent is unsure about, and the agent has not read the claims.
+Nothing waits yet: Your queue lists a claim only once the agent has read it.
 
 Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused and nothing waits for you.
 
@@ -38,30 +38,32 @@ Next: type /claim-tagger demo tag so that the agent reads the claims first (step
 
 ### status (demo, after the tag step)
 
-Only the AI Force claim waits in Your queue: the agent was fairly sure about the press pool claim, which is still To review in the Claims table. `walkthrough.mjs where` names both claims (see the last example).
+Both claims of the editor are To review, so after the tag step both wait in Your queue.
 
-Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; 1 row waits for you.
+Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; 2 rows wait for you.
 
 | Where | Now |
 |---|---|
 | Rulebook | 1 tag, edition 2026-10-15.1 |
-| Your queue | 1 row, lowest confidence first |
+| Your queue | 2 rows, lowest confidence first |
 | Lessons waiting | none |
 | Last run | Tag · 15 Oct 10:50 · 7 claims |
 
-Next: decide the 1 row in Your queue (link).
+Next: decide the 2 rows in Your queue (link).
 
 ### tag (demo)
 
-Demo · Tag: the agent read 7 claims for Context-dependent; 1 waits for you (practice page Claim tagger demo · 15 Oct 10:42).
+Both claims of the editor are To review, so no tag is written on them and both wait; the other five are Reviewed and keep the editor's tags.
+
+Demo · Tag: the agent read 7 claims for Context-dependent; 2 wait for you (practice page Claim tagger demo · 15 Oct 10:42).
 
 | What | Result |
 |---|---|
 | Claims read | 7 |
-| Tagged Context-dependent | 3 claims |
-| New rows in Your queue | 1, lowest confidence first |
+| Tagged Context-dependent | 2 claims |
+| New rows in Your queue | 2, lowest confidence first |
 
-Next: decide the 1 row in Your queue (link).
+Next: decide the 2 rows in Your queue (link).
 
 ### tag (real claims, the first run: Context-dependent only)
 
@@ -152,8 +154,14 @@ Next: in Notion, open that page, choose the connections menu and add the claim t
 
 ### Walkthrough: where
 
-Your queue lists only the claims the agent is unsure about, and the press pool claim is not one of them, so the line links the Claims table, where both of the editor's claims are To review.
+Without the linked view (Notion refused it) the line links the Claims table instead.
 
 Walkthrough: you are at step 3, Decide your two claims.
 
-Next: open Claims (link) and decide the two claims whose Review status is To review.
+Next: open Your queue (link) and decide your two claims.
+
+### Walkthrough: where, when a follow-up marked a claim Still wrong
+
+Walkthrough: you are at step 7, The agent re-checks your claims.
+
+Next: add a note in Challenged tags notes on the claims in Agent disagreed (link).

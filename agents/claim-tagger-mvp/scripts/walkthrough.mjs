@@ -1493,8 +1493,9 @@ function whereParts(ctx, st) {
   switch (st.step) {
     case 2: return { sentence: `${head}.`, next: `Next: type ${command(2)}.` };
     case 3: {
-      // both claims are To review in the Claims table; Your queue lists only the claims the agent is unsure about, so it is not the link for both
-      return { sentence: `${head}.`, next: `Next: open Claims (${tableLink(ctx.config, 'claims_copy')}) and decide the two claims whose Review status is To review.` };
+      // both claims are To review, so every tag the agent judged on them waits and both are in Your queue (a view of the Claims table; without the view, the table)
+      const l = link('your_queue', 'claims_copy');
+      return { sentence: `${head}.`, next: `Next: open ${l.name} (${l.href}) and decide your two claims.` };
     }
     case 4: return { sentence: `${head}.`, next: `Next: type ${command(4)}.` };
     case 5: {
@@ -1510,7 +1511,8 @@ function whereParts(ctx, st) {
     }
     default: {
       if (st.branch === 'stopped') return { sentence: `${head}; the run stopped before it re-checked your claims.`, next: 'Next: type /claim-tagger demo follow-up.' };
-      return { sentence: `${head}.`, next: `Next: open Claims (${tableLink(ctx.config, 'claims_copy')}) and read Agent notes; a claim that says the agent disagrees with your decision needs a clearer rule.` };
+      const l = link('agent_disagreed', 'claims_copy');
+      return { sentence: `${head}.`, next: `Next: add a note in Challenged tags notes on the claims in ${l.name} (${l.href}).` };
     }
   }
 }

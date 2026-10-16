@@ -22,8 +22,8 @@
   },
 
   "tests": {
-    "full": { "value": 1854, "source": "notes/evidence/01-tests/node-test-spec.txt (to be refreshed after the revision of 16 October)", "pending": true },
-    "files": { "value": 33, "source": "tests/mvp/*.test.mjs counted with ls on 15 October 2026" }
+    "full": { "value": 1935, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1935, pass 1935, fail 0 (node --test tests/ on 16 October 2026, after the revision)" },
+    "files": { "value": 34, "source": "tests/mvp/*.test.mjs counted with ls on 16 October 2026" }
   },
 
   "guard": {

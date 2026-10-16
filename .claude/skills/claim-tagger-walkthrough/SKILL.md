@@ -34,7 +34,7 @@ Run `W where` and relay its sentence and its "Next:" line. `W list` names every 
 
 ## Running the steps
 
-The steps of the page are `/claim-tagger demo status`, `demo tag`, `demo distill` and `demo promote`; run them exactly as the claim-tagger skill's "Demo mode" says (`W run <script> ...`, against the newest practice page). Steps 3 and 5 happen in Notion: never fill those columns for the editor; link the table or view instead. Step 3 is the Claims table: the editor decides the two claims whose Review status is To review, and Your queue lists only the one the agent is unsure about (the AI Force claim), so `W where` links the Claims table and says which claims to decide. Step 5 is Lessons waiting. Step 7 needs no command: the follow-up runs by itself at the end of a passed safety check, and the promote report's Next line points at step 7; `/claim-tagger demo follow-up` only repeats it after a run that stopped early, and `W where` says when.
+The steps of the page are `/claim-tagger demo status`, `demo tag`, `demo distill` and `demo promote`; run them exactly as the claim-tagger skill's "Demo mode" says (`W run <script> ...`, against the newest practice page). Steps 3 and 5 happen in Notion: never fill those columns for the editor; link the table or view instead. Step 3 is Your queue, a view of the Claims table: both claims of the editor are To review, so after the tag step both wait there (the press pool claim although the agent is fairly sure of it), and `W where` links it. Step 5 is Lessons waiting. Step 7 needs no command: the follow-up runs by itself at the end of a passed safety check, and the promote report's Next line points at step 7; `/claim-tagger demo follow-up` only repeats it after a run that stopped early, and `W where` says when.
 
 ## Reporting style
 
@@ -60,7 +60,7 @@ Next: open Claim tagger practice · 15 Oct 10:42 (link) and follow step 1.
 
 Walkthrough: you are at step 3, Decide your two claims.
 
-Next: open Claims (link) and decide the two claims whose Review status is To review.
+Next: open Your queue (link) and decide your two claims.
 
 ## References, read only when needed
 
