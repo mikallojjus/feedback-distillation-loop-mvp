@@ -324,3 +324,17 @@ test('status: a bad command line is refused with the usage', async () => {
   assert.equal(await main(['--help'], io), 0);
   assert.match(io.outs.join('\n'), /--json/);
 });
+
+test('status counts a claim marked To review the way propose wrote it: it waits whatever the confidence, and a Reviewed claim does not', async () => {
+  const w = await makeWorld({
+    claims: 4,
+    claimRows: {
+      [id(1)]: { 'Agent notes': WAITS, 'Agent confidence': 0.9, 'Review status': 'To review' }, // a confident answer on a claim marked To review: propose wrote "1 waits for an editor"
+      [id(2)]: { 'Agent notes': NOTHING, 'Agent confidence': 0.9 }, // Review status empty and a confident answer
+      [id(3)]: { 'Agent notes': NOTHING, 'Agent confidence': 0.9, 'Review status': 'Reviewed' },
+    },
+  });
+  const r = await status(w.hooks());
+  assert.equal(r.report.sentence, 'Status: nothing is paused; 1 row waits for you.');
+  assert.deepEqual(r.report.rows[1], ['Your queue', '1 row, lowest confidence first', '']);
+});

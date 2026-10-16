@@ -46,10 +46,10 @@ import { agentRoot, codeFile, isMain, repoRoot as defaultRepoRoot, runId as make
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { mulberry32, sample, seedFromString } from './lib/rng.mjs';
 import { computeDrift, readLock, readRubric } from './lib/rubric.mjs';
-import { claimWaits, decisionsFor, disagreementsIn, isReviewed, parseTagNotes, waitsForEditor } from './lib/decisions.mjs';
+import { claimWaits, decisionsFor, disagreementsIn, isReviewed, isToReview, parseTagNotes, waitsForEditor } from './lib/decisions.mjs';
 import { validate } from './lib/validate.mjs';
 
-export { claimWaits, decisionsFor, disagreementsIn, isReviewed, parseTagNotes, waitsForEditor };
+export { claimWaits, decisionsFor, disagreementsIn, isReviewed, isToReview, parseTagNotes, waitsForEditor };
 
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/pull.mjs --all | --tables <rulebook,claims_copy,tag_decisions,rule_changes,agent_settings> [--pull-id <id>]',

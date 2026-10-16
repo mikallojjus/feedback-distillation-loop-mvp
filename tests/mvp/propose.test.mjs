@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cellVerdict, claimColumns, main, notCheckedParts, openClaimCount, propose, reasonsOfCell, tagsOfCell } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
+import { status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
@@ -46,6 +47,7 @@ async function judged(opts = {}) {
   return w;
 }
 
+const statusOf = (w) => status(w.hooks());
 const writesTo = (w, table) => w.writes().filter((r) => r.path.includes(w.DB[table]) || (r.method === 'PATCH' && r.path.startsWith('/pages/')));
 const CD = 'Context-dependent';
 /** The claims an editor Reviewed in the tests below: c05 (the agent could not tell) decided Applies, c08 (could not tell) Does not apply, c10 (the agent applies it) Does not apply. */
@@ -551,4 +553,82 @@ test('propose: an unread claim keeps its Agent reasons, and a second run writes 
   const again = await propose(w.hooks());
   const plan = readJsonl(join(again.runDir, 'plan.jsonl')).rows;
   assert.deepEqual(plan[0].plan.counts, { creates: 0, updates: 1 }, 'only the settings line');
+});
+
+// ---- Review status To review: every judged tag waits (CLAIMS-REVIEW.md, section 3) ---------------------------------------------------------
+
+test('claimColumns: on a claim marked To review every judged tag waits and none is written to Agent tags; with Review status empty only Can\'t tell waits; a Reviewed claim never waits', () => {
+  const base = { judgedNames: [CD, 'Wordy'], edition: 'e', verdicts: new Map([[CD, 'Applies'], ['Wordy', 'Does not apply']]) };
+  const open = claimColumns({ ...base, toReview: true });
+  assert.deepEqual([open.agent_tags, open.waits], ['', 2]);
+  assert.equal(open.agent_notes, 'no tags\n2 wait for an editor · edition e');
+  const one = claimColumns({ judgedNames: [CD], edition: 'e', verdicts: new Map([[CD, 'Applies']]), toReview: true });
+  assert.equal(one.agent_notes, 'no tags\n1 waits for an editor · edition e');
+  const empty = claimColumns({ ...base });
+  assert.deepEqual([empty.agent_tags, empty.waits], [CD, 0], 'Review status empty: a sure answer does not wait');
+  const cant = claimColumns({ ...base, verdicts: new Map([[CD, "Can't tell"], ['Wordy', 'Does not apply']]) });
+  assert.equal(cant.waits, 1, 'Review status empty: Can\'t tell waits');
+  const reviewed = claimColumns({ ...base, reviewed: true, toReview: true, verifiedTags: [CD] });
+  assert.deepEqual([reviewed.waits, reviewed.agent_tags], [0, CD], 'a Reviewed claim never waits, whatever else is said');
+});
+
+test('propose: a claim marked To review waits whatever the confidence; the same claim with Review status empty does not; a Reviewed claim never waits', async () => {
+  const w = await judged({
+    claimRows: {
+      c10: { 'Review status': 'To review' }, // the agent applies the tag with 0.9
+      c01: { 'Review status': 'To review' }, // the agent does not apply it, with 0.9
+      c08: { 'Review status': 'Reviewed', 'Challenged tags notes': 'Looked at it.' }, // the agent could not tell, but the editor has decided
+    },
+  });
+  const h = w.hooks();
+  const r = await propose(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const rest = 'not checked: 4 source tags, 2 duplicate tags, 6 tags without rules · edition 2026-10-16.1';
+
+  const c10 = w.row('claims_copy', 'c10');
+  assert.equal(c10['Agent tags'], '', 'a claim that waits has no tag written, even one the agent is sure of');
+  assert.equal(c10['Agent notes'], `no tags\n1 waits for an editor · ${rest}`);
+  assert.equal(c10['Agent confidence'], 0.9, 'confidence and reasons are written as usual');
+  assert.match(c10['Agent reasons'], /^Context-dependent: .+ · \d of \d runs agree$/);
+  assert.equal(w.row('tag_decisions', 'c10::Context-dependent')['Agent proposal'], 'Applies', 'the ledger holds the proposal as it was made');
+  const c01 = w.row('claims_copy', 'c01');
+  assert.equal(c01['Agent notes'], `no tags\n1 waits for an editor · ${rest}`);
+  assert.equal(c01['Agent confidence'], 0.9);
+
+  // the same kind of claim with Review status empty
+  assert.equal(w.row('claims_copy', 'c02')['Agent notes'], `no tags\nnothing waits for an editor · ${rest}`);
+  assert.equal(w.row('claims_copy', 'c02')['Review status'], null);
+  // a Reviewed claim never waits, also where the agent could not tell
+  assert.equal(w.row('claims_copy', 'c08')['Agent notes'], `no tags\nnothing waits for an editor · ${rest}`);
+  // c03 (ask_editor) and c05 (a read that flips) wait as before
+  for (const id of ['c03', 'c05']) assert.match(w.row('claims_copy', id)['Agent notes'], /^no tags\n1 waits for an editor/, id);
+
+  const report = assertReport(h, r);
+  assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 4 wait for you.', 'c10, c01, c03 and c05');
+  assert.deepEqual(report.rows.find((x) => x[0] === 'New rows in Your queue'), ['New rows in Your queue', '4, lowest confidence first', '']);
+});
+
+test('propose: a claim that QA marks To review lands in Your queue on the next run, and leaves it when it is Reviewed', async () => {
+  const w = await judged();
+  const first = await propose(w.hooks());
+  assert.match(w.row('claims_copy', 'c02')['Agent notes'], /^no tags\nnothing waits for an editor/);
+  assert.equal(first.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
+
+  w.editClaim('c02', { 'Review status': 'To review' });
+  const second = await propose(w.hooks());
+  assert.equal(second.exit, 0);
+  assert.match(w.row('claims_copy', 'c02')['Agent notes'], /^no tags\n1 waits for an editor/);
+  assert.equal(second.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 4 wait for you.');
+  assert.deepEqual(second.report.rows.find((x) => x[0] === 'New rows in Your queue'), ['New rows in Your queue', '1, lowest confidence first', ''], 'only c02 is new in the queue');
+  const status = await statusOf(w);
+  assert.equal(status.report.sentence, 'Status: nothing is paused; 4 rows wait for you.', 'status counts the claims the way Your queue lists them');
+
+  w.review('c02', { tags: [], why: 'Agent slip', notes: '' });
+  const third = await propose(w.hooks());
+  assert.match(w.row('claims_copy', 'c02')['Agent notes'], /^no tags\nnothing waits for an editor/);
+  assert.equal(third.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
+
+  // a second run with nothing changed writes only the settings line
+  const again = await propose(w.hooks());
+  assert.deepEqual(readJsonl(join(again.runDir, 'plan.jsonl')).rows[0].plan.counts, { creates: 0, updates: 1 });
 });

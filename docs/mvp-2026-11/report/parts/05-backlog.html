@@ -3,10 +3,10 @@
 <h2>Backlog</h2>
 <p>One row per deferred item: what, why not now, the trigger that brings it in, effort S, M or L.</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
-<colgroup><col style="width:25%"><col style="width:33%"><col style="width:29%"><col style="width:13%"></colgroup>
+<colgroup><col style="width:24%"><col style="width:35%"><col style="width:28%"><col style="width:13%"></colgroup>
 <thead><tr><th scope="col">What</th><th scope="col">Why not now</th><th scope="col">Trigger</th><th scope="col">Effort</th></tr></thead>
 <tbody>
-<tr><td>Tag the real claims table instead of the 50-claim copy</td><td>The real table is never written in the MVP; the Geo-to-Notion refresh may drop added columns and page ids</td><td>The owner of the refresh job confirms that added columns and page ids survive a refresh; then a config change plus the one confirmed setup write</td><td><span class="geo-tag">M</span></td></tr>
+<tr><td>Tag the real claims table instead of the 50-claim copy</td><td>The real table is never written in the MVP; the Geo-to-Notion refresh may drop added columns and page ids; from 16 October the decisions live on the claims table, so Why wrong and Agent confidence (new columns) and the real table's own review columns must survive a refresh</td><td>The owner of the refresh job confirms that added columns and page ids survive a refresh; then a config change plus the one confirmed setup write</td><td><span class="geo-tag">M</span></td></tr>
 <tr><td>The other 12 tags, rules drafted one tag at a time</td><td>Only Context-dependent is judged in the MVP; nine tags have no rules yet</td><td>The Context-dependent loop has passed one safety check on the copy and the editor picks the next tag</td><td><span class="geo-tag">S</span> per tag</td></tr>
 <tr><td>The source pass (Improperly sourced, Factually challenged) and the Geo source resolver</td><td>Needs fetched source text and the verified Geo query, none of which the Context-dependent loop uses</td><td>A source tag is chosen for drafting</td><td><span class="geo-tag">M</span></td></tr>
 <tr><td>Source inaccessible decided in code from the fetch result</td><td>Same dependency on the source fetch</td><td>Same as the source pass</td><td><span class="geo-tag">S</span></td></tr>

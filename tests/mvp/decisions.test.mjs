@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  claimWaits, decisionChanges, decisionProps, decisionsFor, disagreementsIn, isReviewed, parseTagNotes, syncDecisions, waitsForEditor,
+  claimWaits, decisionChanges, decisionProps, decisionsFor, disagreementsIn, isReviewed, isToReview, parseTagNotes, syncDecisions, waitsForEditor,
 } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
 import * as pull from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
 
@@ -139,4 +139,11 @@ test('pull.mjs exports the same functions, so a caller that reads a pull has the
   assert.equal(pull.waitsForEditor, waitsForEditor);
   assert.equal(pull.disagreementsIn, disagreementsIn);
   assert.equal(pull.parseTagNotes, parseTagNotes);
+});
+
+test('isToReview: only Review status To review; empty, Reviewed and anything else are not', () => {
+  assert.equal(isToReview(claim({ review_status: 'To review' })), true);
+  for (const status of [null, '', undefined, 'Reviewed', 'to review']) assert.equal(isToReview(claim({ review_status: status })), false, String(status));
+  assert.equal(pull.isToReview, isToReview);
+  assert.equal(isReviewed(claim({ review_status: 'To review' })), false);
 });

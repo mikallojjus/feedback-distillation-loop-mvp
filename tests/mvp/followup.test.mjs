@@ -66,7 +66,7 @@ test('followup: rows that still come out wrong are marked Still wrong, the repor
   const report = assertReport(h, r);
   assert.equal(report.sentence, 'Follow-up, repeated by hand: the agent agrees with 1 of your 2 decisions; 1 still comes out wrong.');
   assert.deepEqual(report.rows.map((x) => x[1]).sort(), ['Fixed', 'Still wrong']);
-  assert.match(report.next, /^Next: add a note in Your reasoning on the rows marked Still wrong \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\)\.$/);
+  assert.equal(report.next, `Next: add a note in Challenged tags notes on the claims in Agent disagreed (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000005).`, 'the view Agent disagreed of the Claims copy');
   assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'], `Follow-up · ${stampOf(NOW)} · 1 Fixed, 1 Still wrong`);
 
   const both = await promoteWorld({ status: 'Live' }); // under the rule in force both rows are Can't tell
@@ -202,4 +202,21 @@ test('followup rewrites the Agent reasons of the claims it checks again: the lin
   const again = await followup(w.hooks());
   assert.equal(again.exit, 0);
   assert.equal(readJsonl(join(again.runDir, 'plan.jsonl')).rows.filter((o) => o.table === 'claims_copy').length, 0, 'a second follow-up finds the columns as they should be');
+});
+
+test('followup: without a recorded view the Next line for rows that are still wrong links the Claims copy itself', async () => {
+  const w = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: wrong }, world: { configure: (c) => { delete c.notion.views.agent_disagreed; } } });
+  const r = await followup(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.equal(r.report.next, `Next: add a note in Challenged tags notes on the claims in Agent disagreed (https://www.notion.so/${w.DB.claims_copy}).`);
+});
+
+test('followup: on a claim marked To review the tag that was checked again waits, whatever the answer, and is not written to Agent tags', async () => {
+  const w = await promoteWorld({ status: 'Live', base: { [claimText(1)]: { decision: 'apply', p: 0.9 }, [claimText(2)]: no } });
+  w.editClaim('c01', { 'Review status': 'To review' });
+  const r = await followup(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.equal(w.row('claims_copy', 'c01')['Agent tags'], '');
+  assert.match(w.row('claims_copy', 'c01')['Agent notes'], /^no tags\n1 waits for an editor · not checked/);
+  assert.match(w.row('claims_copy', 'c02')['Agent notes'], /^no tags\nnothing waits for an editor · not checked/, 'Review status empty and a sure answer: nothing waits');
 });

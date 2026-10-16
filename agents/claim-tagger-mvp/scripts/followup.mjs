@@ -21,8 +21,8 @@
 // Exports: followUp, main, USAGE.
 
 import { EXIT } from './lib/exit-codes.mjs';
-import { answerWord, plural, quoted, stampOf, tableLink } from './lib/editor-words.mjs';
-import { disagreementsIn, isReviewed } from './lib/decisions.mjs';
+import { answerWord, plural, quoted, stampOf, viewLink } from './lib/editor-words.mjs';
+import { disagreementsIn, isReviewed, isToReview } from './lib/decisions.mjs';
 import { readAnswers } from './lib/answers.mjs';
 import { tableEntry } from './lib/config.mjs';
 import {
@@ -96,6 +96,7 @@ export async function followUp(ctx, { tag, keys, rubric, summary = true }) {
       judgedNames,
       verdicts,
       reviewed: isReviewed(claim),
+      toReview: isToReview(claim),
       verifiedTags: claim.verified_tags ?? [],
       currentTags: tagsOfCell(claim.agent_tags),
       currentDisagrees: disagreementsIn(claim.agent_notes),
@@ -155,7 +156,7 @@ export async function followup(opts = {}) {
       ? `Follow-up, repeated by hand: the agent now agrees with ${decisionWords(n)}.`
       : `Follow-up, repeated by hand: the agent agrees with ${out.fixed} of your ${plural(n, 'decision')}; ${out.stillWrong} still ${out.stillWrong === 1 ? 'comes' : 'come'} out wrong.`;
     const next = out.stillWrong > 0
-      ? `Next: add a note in Your reasoning on the rows marked Still wrong (${tableLink(ctx.config, 'tag_decisions')}).`
+      ? `Next: add a note in Challenged tags notes on the claims in Agent disagreed (${viewLink(ctx.config, 'agent_disagreed')}).`
       : (ctx.demo ? 'Next: nothing; the demo is complete.' : 'Next: type /claim-tagger status to see what is open.');
     return {
       exit: EXIT.OK, sentence, header, rows: shown, next, details: { results: out.results, fixed: out.fixed, stillWrong: out.stillWrong, lesson: lesson.Lesson },

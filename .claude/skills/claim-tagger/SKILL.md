@@ -64,7 +64,7 @@ Next: start at the top of Your queue (link).
 
 Promote, when it passes, in a demo:
 
-Demo · promote: PASS, rule 3 now uses your approved wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed.
+Demo · Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed.
 
 | Check | Result |
 |---|---|

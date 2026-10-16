@@ -2,6 +2,8 @@
 // (norm/claims.jsonl and norm/queue.jsonl); nothing here reads or writes a file or Notion.
 //
 //   isReviewed(claim)                      -> true when the claim's Review status is Reviewed: the only state in which it has a decision
+//   isToReview(claim)                      -> true when the claim's Review status is To review: every judged tag of such a claim waits for the editor, whatever the
+//                                             agent's confidence (propose and the follow-up write the notes that way; a claim with Review status empty waits only for a tag the agent could not tell)
 //   waitsForEditor(notes)                  -> true when Agent notes line 2 says "<n> wait(s) for an editor" ("nothing waits for an editor" is not that)
 //   claimWaits(claim)                      -> true for a claim that waits in Your queue: it says so and is not Reviewed
 //   disagreementsIn(notes)                 -> the tags Agent notes says the agent disagrees with the editor on ("disagrees with your decision on A, B")
@@ -26,7 +28,12 @@ export const REVIEWED = 'Reviewed';
 const WAITS = /(?:^|\s)\d+ waits? for an editor\b/i;
 const DISAGREES = /\bdisagrees with your decision on ([^·\n]+)/i;
 
+export const TO_REVIEW = 'To review';
+
 export const isReviewed = (claim) => text(claim?.review_status).trim() === REVIEWED;
+
+/** A claim marked To review (by the editor, or by QA on the real table): every judged tag of it waits for an editor, whatever the confidence. */
+export const isToReview = (claim) => text(claim?.review_status).trim() === TO_REVIEW;
 
 /** "1 waits for an editor" and "2 wait for an editor" say that tags wait; "nothing waits for an editor" says the opposite, though it holds the same words. */
 export const waitsForEditor = (notes) => WAITS.test(text(notes));

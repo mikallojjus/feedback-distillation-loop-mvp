@@ -22,7 +22,7 @@
   },
 
   "tests": {
-    "full": { "value": 1854, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1854, pass 1854, fail 0 (node --test tests/ on 15 October 2026 at 19:50, after the propose test took the rule from the manifest)" },
+    "full": { "value": 1854, "source": "notes/evidence/01-tests/node-test-spec.txt (to be refreshed after the revision of 16 October)", "pending": true },
     "files": { "value": 33, "source": "tests/mvp/*.test.mjs counted with ls on 15 October 2026" }
   },
 
@@ -96,6 +96,10 @@
 
   "backlog": {
     "rows": { "value": 21, "source": "notes/BACKLOG.md: table rows counted on 15 October 2026 (after the row on the triggering test)" }
+  },
+
+  "revision": {
+    "views": { "value": 7, "source": "agents/claim-tagger-mvp/setup/structure.json, views counted on 16 October 2026: Your queue, Needs your note and Agent disagreed on the Claims copy, Lessons waiting, Rulebook, and the two renamed ledger views" }
   },
 
   "verify": {

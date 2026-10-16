@@ -25,7 +25,8 @@
 //   line 1  the same tags, or "no tags"
 //   line 2  "<n> wait(s) for an editor" or "nothing waits for an editor", " · disagrees with your decision on <tags>" when it does, " · not checked: <counts by kind>"
 //           when a tag was not checked, " · edition <e>"
-// A claim waits for an editor (Your queue) when a judged tag's proposal is Can't tell and the claim is not Reviewed. The plan ends with the Agent settings row: the
+// A claim waits for an editor (Your queue) when its Review status is To review (every judged tag waits, whatever the confidence, and none is written to Agent tags) or, with Review
+// status empty, when a judged tag's proposal is Can't tell; a Reviewed claim never waits. The plan ends with the Agent settings row: the
 // edition and "Tag · <date time> · <n> claims". Nothing here writes Review status, Claim quality tags — verified, Why wrong or Challenged tags notes of a claim (hard rule 1).
 //
 // Exit codes: 0 ok, 1 stopped (the same command continues), 2 invalid (nothing read yet, a refused plan, a read-back that differed), 3 paused,
@@ -41,7 +42,7 @@ import { newPlan } from './lib/plan.mjs';
 import { openStore } from './lib/cells.mjs';
 import { tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
-import { claimWaits, decisionChanges, decisionProps, decisionsFor, disagreementsIn, isReviewed } from './lib/decisions.mjs';
+import { claimWaits, decisionChanges, decisionProps, decisionsFor, disagreementsIn, isReviewed, isToReview } from './lib/decisions.mjs';
 import { listNames, plural, reasonLine, stampOf, viewLink } from './lib/editor-words.mjs';
 import {
   LoopExit, addSettingsOp, applyStep, assertApplied, judgeSettings, liveRubric, needTables, parseCli, resumeLine, runPreflight, takePull, withRun,
@@ -105,11 +106,12 @@ export function notCheckedParts(rubric, judgedNames) {
  * with no entry was not read in this run and keeps its place in `currentTags` (and, on a Reviewed claim, in `currentDisagrees`). A claim that is not Reviewed
  * (`reviewed` false) gets the tags whose proposal is Applies, and every tag whose proposal is Can't tell waits for an editor. A Reviewed claim gets the editor's
  * set, `verifiedTags`, nothing waits, and every tag whose proposal is sure and differs from the editor's decision is listed after "disagrees with your decision on".
- * `notChecked` is notCheckedParts' text. `reasons` maps a tag to the text of its Agent reason in this run; a judged tag without one keeps its line from
+ * A claim marked To review (`toReview`) is the editor's to look at: every judged tag of it waits, whatever the proposal, and none is written to Agent tags (the tags of a claim
+ * whose Review status is empty wait only when the proposal is Can't tell). `notChecked` is notCheckedParts' text. `reasons` maps a tag to the text of its Agent reason in this run; a judged tag without one keeps its line from
  * `currentReasons` (the pulled Agent reasons, read by reasonsOfCell). Returns { tags: [names], agent_tags, agent_notes, agent_reasons, waits, disagrees: [names] }.
  */
 export function claimColumns({
-  judgedNames, verdicts = new Map(), reviewed = false, verifiedTags = [], currentTags = [], currentDisagrees = [], notChecked = '', edition, reasons = new Map(), currentReasons = new Map(),
+  judgedNames, verdicts = new Map(), reviewed = false, toReview = false, verifiedTags = [], currentTags = [], currentDisagrees = [], notChecked = '', edition, reasons = new Map(), currentReasons = new Map(),
 }) {
   const names = [...new Set(judgedNames)].sort(compareCodePoints);
   const tags = [];
@@ -123,6 +125,8 @@ export function claimColumns({
         if ((proposal === 'Applies') !== verifiedTags.includes(tag)) disagrees.push(tag);
       } else if (proposal === undefined && currentDisagrees.includes(tag)) disagrees.push(tag);
     }
+  } else if (toReview) {
+    waits = names.length;
   } else {
     for (const tag of names) {
       const proposal = verdicts.get(tag);
@@ -283,6 +287,7 @@ export async function propose(opts = {}) {
         judgedNames: judgedList,
         verdicts: proposals,
         reviewed,
+        toReview: isToReview(claim),
         verifiedTags: claim.verified_tags ?? [],
         currentTags: tagsOfCell(claim.agent_tags),
         currentDisagrees: disagreementsIn(claim.agent_notes),

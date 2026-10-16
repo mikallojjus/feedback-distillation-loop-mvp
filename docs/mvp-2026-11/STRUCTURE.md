@@ -21,21 +21,34 @@ After the second checkpoint the product owner asked that editors decide tags whe
 | Why wrong | select | the editor | Agent slip, Rule unclear, Rule should change: why the agent's tag was wrong; one value for the claim. |
 | Challenged tags notes | text | the editor | The editor's words. A line that starts with a tag name and a colon belongs to that tag. |
 
-| Geo Name | Agent tags | Agent confidence | Agent notes | Claim quality tags — verified | Review status | Why wrong | Challenged tags notes |
-|---|---|---|---|---|---|---|---|
-| The press pool was justified in suspending coverage… | empty | 0.75 | no tags / 1 waits for an editor · edition 2026-10-16.1 | empty | Reviewed | Rule unclear | Context-dependent: rule 3 does not say that a group every reader knows by its role counts as identified; it does. |
-| The AI Force should enforce binding safety standards | empty | 0.65 | no tags / 1 waits for an editor · edition 2026-10-16.1 | Context-dependent | Reviewed | Rule unclear | Context-dependent: a capitalised phrase that names no body readers know is still a kind of thing, not which one. |
-| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.93 | Context-dependent / nothing waits for an editor · edition 2026-10-16.1 | Context-dependent | Reviewed | empty | empty |
-| Relocating the Kennedy Center Honors to a sports arena… | empty | 0.92 | no tags / nothing waits for an editor · edition 2026-10-16.1 | empty | To review | empty | empty |
+The agent's side of four sample rows, as the tag run leaves them:
+
+| Geo Name | Agent tags | Agent confidence | Agent notes | Agent reasons |
+|---|---|---|---|---|
+| The press pool was justified in suspending coverage… | empty | 0.75 | no tags / 1 waits for an editor · edition 2026-10-16.1 | Context-dependent: "the press pool": which one? · rule 3 · 3 of 3 runs agree |
+| The AI Force should enforce binding safety standards | empty | 0.65 | no tags / 1 waits for an editor · edition 2026-10-16.1 | Context-dependent: "The AI Force": a name, or a kind of body? · rule 3 · 2 of 3 runs agree |
+| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.93 | Context-dependent / nothing waits for an editor · edition 2026-10-16.1 | Context-dependent: "the federal court order": which order? · rule 2 · 3 of 3 runs agree |
+| Relocating the Kennedy Center Honors to a sports arena… | empty | 0.92 | no tags / nothing waits for an editor · edition 2026-10-16.1 | Context-dependent: "the awards" points back to the Honors · rule 5 · 3 of 3 runs agree |
+
+The editor's side of the same rows, after review:
+
+| Geo Name | Claim quality tags — verified | Review status | Why wrong | Challenged tags notes |
+|---|---|---|---|---|
+| The press pool was justified in suspending coverage… | empty | Reviewed | Rule unclear | Context-dependent: rule 3 does not say that a group every reader knows by its role counts as identified; it does. |
+| The AI Force should enforce binding safety standards | Context-dependent | Reviewed | Rule unclear | Context-dependent: a capitalised phrase that names no body readers know is still a kind of thing, not which one. |
+| Excluding CNN from Air Force One violates the federal court… | Context-dependent | Reviewed | empty | empty |
+| Relocating the Kennedy Center Honors to a sports arena… | empty | To review | empty | empty |
 
 **Tag decisions** becomes the agent's ledger: one row per claim and tag the agent judged, written and superseded by the agent only. The columns keep their names; Tag outcome, Why wrong and Your reasoning are copies the agent makes from the claims table once a claim is Reviewed, and a new column Decided under records the edition the editor's decision was made against. Editors do not write to it; the practice page shows it at the bottom with one line of explanation.
 
-| Key | Tag | Agent proposal | Agent confidence | Tag outcome | Why wrong | Decided under | Follow-up |
-|---|---|---|---|---|---|---|---|
-| 5c9d133e…::Context-dependent | Context-dependent | Applies | 0.75 | Does not apply | Rule unclear | 2026-10-16.1 | Fixed |
-| 92f57020…::Context-dependent | Context-dependent | Can't tell | 0.65 | Applies | Rule unclear | 2026-10-16.1 | Fixed |
-| fc0cb0da…::Context-dependent | Context-dependent | Applies | 0.93 | Applies | empty | 2026-10-16.1 | empty |
-| 89fcfb7f…::Context-dependent | Context-dependent | Does not apply | 0.92 | empty | empty | empty | empty |
+| Key | Agent proposal | Agent confidence | Tag outcome | Why wrong | Follow-up |
+|---|---|---|---|---|---|
+| 5c9d133e…::Context-dependent | Applies | 0.75 | Does not apply | Rule unclear | Fixed |
+| 92f57020…::Context-dependent | Can't tell | 0.65 | Applies | Rule unclear | Fixed |
+| fc0cb0da…::Context-dependent | Applies | 0.93 | Applies | empty | empty |
+| 89fcfb7f…::Context-dependent | Does not apply | 0.92 | empty | empty | empty |
+
+Each row also carries Tag (Context-dependent on every row above), Agent reason, Rulebook edition, Your reasoning (the copied note) and Decided under (2026-10-16.1 on the three decided rows, empty on the open one).
 
 **Views.** The editor's views move to the Claims copy; Lessons waiting and Rulebook stay where they are; the two old views on Tag decisions are renamed with "(ledger)" and kept.
 
