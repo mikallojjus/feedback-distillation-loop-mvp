@@ -309,6 +309,15 @@ test('lint: an Insight block marker', () => {
   assert.ok(!has(lintReport(renderReport({ sentence: 'We gained an insight.', next: 'Next: x.' })), 'Insight block marker'));
 });
 
+test('lint: a link is an address, not prose: its slug may repeat a title word for word, and the text around it is still checked', () => {
+  const link = 'https://app.notion.com/p/Claim-tagger-practice-verification-21-Oct-second-run-400273e214eb816b85a4e515e5770030';
+  assert.deepEqual(lintReport(renderReport({ sentence: 'Walkthrough: your practice page is ready under Demo tests.', next: `Next: open "Claim tagger practice · verification 21 Oct, second run" (${link}) and follow step 1.` })), []);
+  const cell = lintReport(renderReport({ sentence: 'Rows.', rows: [[`Week 3 onboarding (https://app.notion.com/p/Week-3-onboarding-day-400273e214eb816b85a4e515e5770031)`, 'ready', 'step 1']], next: 'Next: x.' })).filter((p) => p.includes('duration'));
+  assert.deepEqual(cell.map((p) => p.replace(/^line \d+ /, '')), ['holds a duration word: "Week"'], 'the unquoted title is found once; the slug ("Week", "day") is not read');
+  const around = lintReport(renderReport({ sentence: `It took two weeks (${link}).`, next: 'Next: x.' }));
+  assert.ok(has(around, 'duration word: "weeks"'), around.join(' | '));
+});
+
 test('lint: quoted claim text is not checked for words and characters, and everything outside the quotes still is', () => {
   const claim = "Melania Trump should not host her initiative's G20 event for two weeks, a $2.87 million fee";
   assert.deepEqual(lintReport(renderReport({ demo: true, sentence: `promote: FAIL, the new wording turns "${claim}" to Does not apply.`, next: 'Next: type `/claim-tagger demo promote`.' })), []);

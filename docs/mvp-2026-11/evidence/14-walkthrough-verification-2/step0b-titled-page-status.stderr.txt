@@ -1,0 +1,1 @@
+status: warning: the sentence of report.md does not name the practice page, because that did not pass the report lint: line 1 holds a duration word: "second"

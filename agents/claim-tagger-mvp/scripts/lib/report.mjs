@@ -83,6 +83,7 @@ const HEADING = /^\s{0,3}(?:#{1,6}(?:\s|$)|={3,}\s*$|-{3,}\s*$)/;
 const BACKSLASH = /\\(?!\|)/; // "\|" is how a table cell holds a pipe
 const DRIVE_PATH = /\b[A-Za-z]:\//;
 const QUOTED = /"[^"\n]*"|“[^”\n]*”/g; // quoted claim text: "like this" or “like this”
+const LINK = /https?:\/\/[^\s)\]]+/g; // a link is an address, not prose: its slug may repeat a page title word for word ("second-run"), which is not a duration
 const shown = (line) => (line.length > 60 ? `${line.slice(0, 57)}...` : line);
 
 /** What is wrong with a report's Markdown, as plain sentences; an empty array means it may be shown. */
@@ -102,7 +103,7 @@ export function lintReport(markdown) {
   lines.forEach((whole, i) => {
     const at = `line ${i + 1}`;
     if (HEADING.test(whole)) problems.push(`${at} is a heading or a rule line: "${shown(whole)}"`);
-    const line = whole.replace(QUOTED, '""'); // the rest is checked without what is quoted
+    const line = whole.replace(QUOTED, '""').replace(LINK, 'https://link'); // the rest is checked without what is quoted or linked
     if (line.includes('runs/')) problems.push(`${at} names a run folder (runs/): "${shown(line)}"`);
     if (line.includes('.mjs')) problems.push(`${at} names a script file (.mjs): "${shown(line)}"`);
     if (BACKSLASH.test(line) || DRIVE_PATH.test(line)) problems.push(`${at} holds a file path: "${shown(line)}"`);

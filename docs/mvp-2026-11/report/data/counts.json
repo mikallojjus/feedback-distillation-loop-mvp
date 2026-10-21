@@ -22,8 +22,8 @@
   },
 
   "tests": {
-    "full": { "value": 1935, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1935, pass 1935, fail 0 (node --test tests/ on 16 October 2026, after the revision)" },
-    "files": { "value": 34, "source": "tests/mvp/*.test.mjs counted with ls on 16 October 2026" }
+    "full": { "value": 1945, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1945, pass 1945, fail 0 (node --test tests/ on 21 October 2026, after the verification fixes)" },
+    "files": { "value": 34, "source": "tests/mvp/*.test.mjs counted with ls on 21 October 2026" }
   },
 
   "guard": {

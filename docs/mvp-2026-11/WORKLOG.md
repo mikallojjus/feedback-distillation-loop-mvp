@@ -4,12 +4,12 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: the revision of 16 October (decisions on the claims table, decision P2) is live on the copy since 2026-10-21: the Claims copy has its new columns and views, the twelve decisions are carried over, the first tag run under the new shape has written the agent's columns, and a fresh practice page waits for the product owner. Checkpoint 2 was reached on 2026-10-15; the MVP is agreed when the product owner runs the seven steps and says so.
-- Blockers: none open (B2, the pause file, was cleared by the product owner on 2026-10-21).
+- Phase: the revision of 16 October is live on the copy and verified twice end to end on fresh practice pages (2026-10-21); the first verification's eleven findings are fixed and confirmed, the second's new finding (a title word read as a duration) is fixed. 1,945 tests pass. The product owner's page "Claim tagger practice · product owner, 21 Oct afternoon" (400273e214eb8147a715e29c018b0206, profile 20261021-1348-aae97a) is the page the demo commands reach; the MVP is agreed when the product owner runs its seven steps and says so.
+- Blockers: none open.
 - Branch `mvp-2026-11`; the last commit is the newest one in `git log`.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md (the three Claims copy views were recorded by the build of 2026-10-21). The builder session is closed. The product owner's practice page: "Claim tagger practice · product owner" (https://app.notion.com/p/Claim-tagger-practice-product-owner-400273e214eb81cda86ae10987b9bf8c, profile 20261021-1225-8517e5). The five calibration pages keep the old shape.
-- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 4, the revision live).
-- Still to do: calibration runs 6 and 7 of the story on the new shape, the unpaused practice-page eval, a second independent verification of the revision.
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. Under Demo tests: the two verification pages and one page with the misread title, all left in place. Under Demos: the owner's two pages and the five calibration pages of the old shape.
+- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 5).
+- Still to do: calibration runs 6 and 7 of the story on the new shape (the two verification runs count towards it: both passed on the draft), the unpaused practice-page eval, a second independent verification of the loop's acceptance checks.
 
 ## Entries
 
@@ -180,3 +180,11 @@ Done: after the product owner deleted the pause file, a builder session ran `set
 Verified: every migration op read back ok; `setup verify` found no structure difference and every audit claim Reviewed with the audit's values; the tag run's ledger read back; the practice page passes `verify`.
 
 Next: the product owner runs the seven steps on the fresh page; then calibration runs 6 and 7 of the story on the new shape, the unpaused practice-page eval, and a second independent verification.
+
+### 22. Two verification runs of the walkthrough, the findings fixed (2026-10-21)
+
+Done: an independent verifier built a fresh practice page under Demo tests and went through the seven steps as the editor (`evidence/13-walkthrough-verification/`): every command exited 0, every report passed the three-part check, the safety check passed on the first try and the follow-up marked both rows Fixed. It raised eleven findings; the engineer fixed ten (the eleventh is the model's own wording): the demo commands' default page is the newest readable page under Demos (decision 50), `where` names step 1 on a fresh page (51), demo runs record wrapped resume lines (52), step 2 of the page shows figures the tag step can produce and says they vary, the tag and status reports say "decide your N claims", the judge's stop lines end with a full stop, the promote report links the page like the others, the practice page's audit notes say which way the editor went, the follow-up writes Agent confidence, `list` and `decide` end with a Next line that fits. A second verifier re-ran the walkthrough on another fresh page (`evidence/14-walkthrough-verification-2/`): worked end to end again, PASS on the draft, nine findings confirmed fixed, one partly (by design) and one not applicable; it found that a page title holding a word the report check reads as a duration ("second run") made `start` report a stop after building the page and then broke `list` for everyone, which is fixed by reading links as addresses (decision 53). A second practice page was built for the product owner under Demos and is the page the commands reach. Three cosmetic points went to the backlog.
+
+Verified: `node --test tests/`: 1,945 tests pass, 0 fail (`evidence/01-tests/`); `list` works live again with the misread title among the newest pages and still marks the owner's page; the two verification reports are in the evidence with every step's report.
+
+Next: the product owner runs the seven steps on the new page; then calibration runs 6 and 7 on the new shape, the unpaused practice-page eval, a second verification of the acceptance checks.

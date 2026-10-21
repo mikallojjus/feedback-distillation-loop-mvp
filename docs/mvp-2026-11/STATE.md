@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Phase | Revision of 16 October live on the copy since 2026-10-21 (1,935 tests pass; build, migrate-decisions and verify done; first tag run done; fresh practice page "Claim tagger practice · product owner" built). Checkpoint 2 was reached on 2026-10-15. Waiting: the product owner's run of the seven steps; then calibration runs 6 and 7, the unpaused practice-page eval, a second verification |
+| Phase | Revision of 16 October live on the copy (2026-10-21) and verified twice end to end on fresh practice pages; the findings fixed; 1,945 tests pass. The owner's page "Claim tagger practice · product owner, 21 Oct afternoon" is the one the demo commands reach. Waiting: the product owner's run of the seven steps; then calibration runs 6 and 7, the unpaused practice-page eval, a second verification of the acceptance checks |
 | Checkpoint 1 (structure proposal) | Approved as proposed on 2026-10-15 (decision P1); page https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 |
 | Checkpoint 2 (final demo) | message sent on 2026-10-15; the MVP is agreed when the product owner runs the seven steps and says so |
 | Branch | `mvp-2026-11` |
@@ -11,7 +11,7 @@
 | Rulebook | edition 2026-10-15.2 (the restore after the drift check; text identical to edition .1); 13 tags, Context-dependent judged; lock, history and changelog under agents/claim-tagger-mvp/rubric/ |
 | Claims and ledger | Ten claims Reviewed with the audit's decisions, the rest with the agent's columns from the first tag run of 2026-10-21; the ledger holds one row per judged claim and tag |
 | Notion token | the product owner tested a connection token on 2026-10-15 (reads of every object ok, writes untested); `.env` unchanged by the agent |
-| Artifact | https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr, "Claim tagger MVP", version 4 (the revision live); rebuild with `node gen-parts.mjs && node build.mjs --strict` in `docs/mvp-2026-11/report/`, republish the same file path |
+| Artifact | https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr, "Claim tagger MVP", version 5 (after the two verification runs); rebuild with `node gen-parts.mjs && node build.mjs --strict` in `docs/mvp-2026-11/report/`, republish the same file path |
 | Builder session | closed (`runs/SETUP` absent) |
 | Pause | none (B2 cleared by the product owner on 2026-10-21) |
 | Evidence so far | `evidence/00` baseline tests, `01` full test run, `03` audit decisions, `04` dry run (0 writes), `05` setup (verify ok), `06` real run (53 writes read back), `07-headless` (status, demo status, demo tag, demo distill, demo promote: all pass), `08` pause and drift, `09-calibration/run-1` to `run-4` (manifest .1 and .2), `run-5` (manifest .3), `10-rollback` (read back), `11-walkthrough-evals` (benchmark, review page, description loop) |

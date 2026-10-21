@@ -668,7 +668,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <tr><td>Practice page builder</td><td>Builds a practice page with its own tables, views, seven steps and help under a page you name, and says where you are. 5 pages built today, every one read back equal to its design.</td><td><span class="mark mark-yes">Run live</span></td></tr>
 <tr><td>The story on the practice page</td><td>Two rows the editor disagrees with, five earlier decisions, 10 example claims. Revised 3 times today from what the runs showed; the current version has run once and passed after the editor's wording.</td><td><span class="mark mark-part">One run; two more follow</span></td></tr>
 <tr><td>Pause, drift and allowance</td><td>Paused in Agent settings or the pause file stops every command with a report that says so; a hand edit of the rulebook text stops every command until the text is put back; a run that meets the Claude allowance stops and resumes with the same command.</td><td><span class="mark mark-yes">Checked live</span></td></tr>
-<tr><td>Independent verification</td><td>A separate reviewer re-ran 6 of the acceptance checks from the committed repository as it stood at the demo hand-over and wrote up what it found; 6 of them pass. The revision of 16 October is covered by the tests, not yet by a second review.</td><td><span class="mark mark-yes">Done for the demo</span></td></tr>
+<tr><td>Independent verification</td><td>A separate reviewer re-ran 6 of the acceptance checks from the committed repository as it stood at the demo hand-over; 6 of them pass. After the revision, two further reviewers each built a fresh practice page and went through the seven steps as an editor: both runs worked end to end, the safety check passed on the first try each time, and the first run's eleven findings were fixed and confirmed by the second (one new finding, a page title the report check misread as a duration, fixed since).</td><td><span class="mark mark-yes">Done, twice after the revision</span></td></tr>
 </tbody>
 </table></div>
 </div>
@@ -676,7 +676,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <div class="sub" id="status-verified" data-title="What was verified">
 <h3>Checks that were run</h3>
 <div class="geo-stat-grid">
-<div class="geo-card"><div class="geo-stat-value">1,935</div><div class="geo-stat-label"><strong>Tests</strong> in 34 files: all pass, on stand-in Notion and stand-in model</div></div>
+<div class="geo-card"><div class="geo-stat-value">1,945</div><div class="geo-stat-label"><strong>Tests</strong> in 34 files: all pass, on stand-in Notion and stand-in model</div></div>
 <div class="geo-card"><div class="geo-stat-value">5</div><div class="geo-stat-label"><strong>Practice pages</strong> run through the whole cycle today</div></div>
 <div class="geo-card"><div class="geo-stat-value">12/12</div><div class="geo-stat-label"><strong>Skill test assertions</strong> met with the practice-page skill, against 8/12 without it</div></div>
 <div class="geo-card"><div class="geo-stat-value">5</div><div class="geo-stat-label"><strong>Headless report checks</strong>: every command answered in three parts</div></div>
@@ -685,7 +685,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <colgroup><col style="width:28%"><col style="width:72%"></colgroup>
 <thead><tr><th scope="col">Check</th><th scope="col">Result</th></tr></thead>
 <tbody>
-<tr><td>Tests</td><td>1,935 tests pass and none fail. They run the whole loop against a stand-in Notion and a stand-in model, including every error path: an unreadable reply, a passing fault, the allowance running out, the wrong model.</td></tr>
+<tr><td>Tests</td><td>1,945 tests pass and none fail. They run the whole loop against a stand-in Notion and a stand-in model, including every error path: an unreadable reply, a passing fault, the allowance running out, the wrong model.</td></tr>
 <tr><td>Reads only against the real table</td><td>A dry run against the real claims table sent 34 requests and no write; the request log proves it.</td></tr>
 <tr><td>Setup equals the approved structure</td><td>Every table, column, dropdown choice and view was read back and compared with the approved proposal: no difference.</td></tr>
 <tr><td>The real run on the copy</td><td>The agent read the 50 claims, tagged 5 of them Context-dependent and put 2 unsure answers in the queue; every write was read back.</td></tr>
@@ -735,7 +735,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <h3>The seven steps, on a fresh practice page</h3>
 <p>The practice page has its own small tables, so nothing real changes. Build one, then follow the steps written on the page itself; each step has the same four parts: Goal of the step, Existing status, Doing the work and Explaining the outputs.</p>
 <ol>
-<li>Open your practice page "Claim tagger practice · product owner" under Demos; it was built for you on 21 October. To make another one later, ask Claude Code for a practice page and paste the link of the Demos page: <code>/claim-tagger-walkthrough</code> with the link.</li>
+<li>Open your practice page "Claim tagger practice · product owner, 21 Oct afternoon" under Demos; it was built for you on 21 October after the fixes below, and it is the page the demo commands reach. To make another one later, ask Claude Code for a practice page and paste the link of the Demos page: <code>/claim-tagger-walkthrough</code> with the link.</li>
 <li>Type <code>/claim-tagger demo status</code> (step 1 of the page).</li>
 <li>Type <code>/claim-tagger demo tag</code> (step 2): the agent reads the 7 claims and fills its side of your 2 rows.</li>
 <li>In Notion, in Your queue on the Claims table, decide your 2 claims (step 3): tick the tag in Claim quality tags — verified where it applies, choose Why wrong, write your note, then set Review status to Reviewed. The page gives you the words.</li>
@@ -1140,7 +1140,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <h2>Backlog</h2>
 <p>One row per deferred item: what, why not now, the trigger that brings it in, effort S, M or L.</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
-<colgroup><col style="width:24%"><col style="width:35%"><col style="width:28%"><col style="width:13%"></colgroup>
+<colgroup><col style="width:23%"><col style="width:36%"><col style="width:28%"><col style="width:13%"></colgroup>
 <thead><tr><th scope="col">What</th><th scope="col">Why not now</th><th scope="col">Trigger</th><th scope="col">Effort</th></tr></thead>
 <tbody>
 <tr><td>Tag the real claims table instead of the 50-claim copy</td><td>The real table is never written in the MVP; the Geo-to-Notion refresh may drop added columns and page ids; from 16 October the decisions live on the claims table, so Why wrong and Agent confidence (new columns) and the real table's own review columns must survive a refresh</td><td>The owner of the refresh job confirms that added columns and page ids survive a refresh; then a config change plus the one confirmed setup write</td><td><span class="geo-tag">M</span></td></tr>
@@ -1164,6 +1164,9 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <tr><td>A note from distill when the editor's rule differs from the rule the agent cited</td><td>Calibration showed a lesson on rule 4 never flipping a row the agent decided under rule 3; the lesson should sit where the agent looks</td><td>An editor's lesson fails its first safety check on a row the agent decided under another rule</td><td><span class="geo-tag">S</span></td></tr>
 <tr><td>A per-claim retry when a reply leaves out one claim of a batch</td><td>Today the whole batch is asked again (two attempts), then written as errors; a two-claim batch lost the same claim four times in a row on 2026-10-15, then read fine</td><td>The rejected replies kept since decision 36 show the same claim missing more than once</td><td><span class="geo-tag">S</span></td></tr>
 <tr><td>A triggering test of the practice-page skill in real sessions</td><td>The skill-creator's description optimiser counted no trigger on any of the ten positive queries in two runs (with and without the installed skill set aside), while all ten negatives passed, so its detector, not the description, is the open question in this setup; the six graded eval runs show the skill engaging when offered</td><td>The product owner tries the ten positive phrasings of the trigger test (kept with the skill's evals) in ordinary sessions and notes which do not bring the skill up</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td><code>where</code> names the page it read when no page is named</td><td>Its sentence says the step but not which page; with several pages under Demos an editor cannot tell from <code>where</code> alone</td><td>An editor asks which page <code>where</code> meant; <code>list</code> already marks the page the commands reach</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>A Can't tell reason line that says the readings disagreed</td><td>Agent reasons shows the last of the disagreeing readings, which can argue with confidence for one side while the answer is Can't tell</td><td>An editor in Your queue reads a confident reason next to a claim that waits because the agent could not tell</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>The practice page's step 2 mentions the re-read cap</td><td>A sure-looking claim can sit at 0.70 unsure without a second reading when two other claims were closer to a coin flip (re-reads are capped at 30 percent of the claims)</td><td>An editor asks why a 0.70 claim was not read again</td><td><span class="geo-tag">S</span></td></tr>
 </tbody>
 </table></div>
 <p class="small">Effort is the engineer's work to bring the item in: S is small, M is medium, L is large.</p>
