@@ -549,7 +549,7 @@ export function migrationOps(claims, ledger, tagPages, columns) {
     const audit = decided.filter((r) => text(r['Your reasoning']).startsWith(AUDIT_PREFIX));
     summary.notFromAudit += decided.length - audit.length;
     const properties = {};
-    const hasEditorWork = claim.review_status !== null || claim.verified_tags.length > 0 || claim.why_wrong !== null || text(claim.challenged_notes).trim() !== '';
+    const hasEditorWork = claim.review_status !== null || claim.verified_tags.length > 0 || text(claim.challenged_notes).trim() !== '';
     if (audit.length && hasEditorWork) summary.alreadyCarried += 1;
     if (audit.length && !hasEditorWork) {
       const applies = audit.filter((r) => r['Tag outcome'] === 'Applies').map((r) => r.Tag);
@@ -557,7 +557,6 @@ export function migrationOps(claims, ledger, tagPages, columns) {
       if (missing.length) throw new InputError(`the claim ${geo} was decided Applies for ${missing.join(', ')}, which has no row in the Rulebook copy`);
       properties[columns.verified] = applies.map((t) => tagPages[t]);
       properties[columns.review_status] = 'Reviewed';
-      properties[columns.why_wrong] = audit.map((r) => r['Why wrong']).find((w) => w) ?? 'Agent slip';
       properties[columns.notes] = audit.map((r) => text(r['Your reasoning'])).join('\n');
       summary.carried += 1;
       for (const r of audit) {
@@ -595,7 +594,7 @@ export async function stepMigrateDecisions(ctx) {
   const rulebookKey = tableEntry(config, 'rulebook').key;
   for (const d of ready.loaded.decoded('rulebook')) tagPages[text(d.props[rulebookKey]).trim()] = d.page_id;
   const columns = {
-    verified: entry.columns.verified, review_status: entry.columns.review_status, why_wrong: entry.columns.why_wrong, notes: entry.columns.notes, confidence: entry.write_columns.confidence,
+    verified: entry.columns.verified, review_status: entry.columns.review_status, notes: entry.columns.notes, confidence: entry.write_columns.confidence,
   };
   const { claimOps, ledgerOps, summary } = migrationOps(ready.loaded.claims() ?? [], ready.loaded.queue() ?? [], tagPages, columns);
   if (summary.carried > 0) ctx.run.update({ note: AUDIT_NOTE });

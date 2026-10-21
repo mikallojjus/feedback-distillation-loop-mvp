@@ -34,7 +34,7 @@
 //  d  A Notion connector write: any tool named notion-<create|update|delete|move|duplicate|restore|upload|convert|set|send|spawn|stop>-..., under
 //     any server prefix. The writes the brief names (create-pages, update-page, create-database, update-data-source, create-view, update-view,
 //     delete-*, move-pages, duplicate-page, restore-pages) are all in that family. Notion is written only by applying a plan a script produced.
-//  e  An editor column (Verified tags, Review status, Why wrong, Challenged tags notes, Editor wording, Paused; spelled with spaces, _ or -, any case) named in the input
+//  e  An editor column (Verified tags, Review status, Challenged tags notes, Editor wording, Paused; spelled with spaces, _ or -, any case) named in the input
 //     of a tool that can write (Bash, PowerShell, Write, Edit, MultiEdit, NotebookEdit, a Notion write); Bash text holding --unpause, --bare,
 //     --fallback-model, git push or curl.
 //  f  A Bash call that is not exactly `node agents/claim-tagger-mvp/scripts/<name>.mjs ...` with <name> allowed, or `git status|log|diff ...`:
@@ -56,7 +56,7 @@ import { agentRoot, isMain } from './lib/paths.mjs';
 import { lintReport, lintWords } from './lib/report.mjs';
 
 export const DEFAULT_ALLOWED_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status', 'walkthrough']);
-export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused']);
+export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused']);
 export const MAX_TABLE_ROWS = 5;
 export const MAX_TABLE_COLUMNS = 3;
 export const MAX_CHECKLIST_LINES = 5;

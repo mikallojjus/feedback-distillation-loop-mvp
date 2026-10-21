@@ -173,7 +173,7 @@ test('followup: on a Reviewed claim Agent tags are the editor\'s set, and a row 
   assert.deepEqual([c01['Agent tags'], c01['Agent status'], c01['Tags waiting'], c01['Agent edition'], c01['Agent remarks']], [[], 'Done', [], '2026-10-16.1', REMARK], 'the agent agrees with the editor');
   const c02 = w.claim('c02');
   assert.deepEqual([c02['Agent tags'], c02['Agent status'], c02['Tags waiting']], [[], 'Disagrees with your decision', []], 'the editor\'s set wins, and the status says where the agent differs');
-  assert.deepEqual([c02['Review status'], c02['Why wrong'], c02['Challenged tags notes']], ['Reviewed', 'Rule unclear', 'Rule 4 again: this reference is general too.'], 'the editor\'s columns are as they were');
+  assert.deepEqual([c02['Review status'], c02['Challenged tags notes']], ['Reviewed', 'Rule unclear. Rule 4 again: this reference is general too.'], 'the editor\'s columns are as they were (the reason word opens the note: the claims table has no Why wrong)');
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
   for (const op of plan.filter((o) => o.table === 'claims_copy')) assert.ok(Object.keys(op.properties).every((k) => WRITE_COLUMNS.includes(k)), 'only the agent\'s columns of the claim');
   for (const op of plan.filter((o) => o.table === 'tag_decisions')) assert.deepEqual(Object.keys(op.properties), ['Follow-up'], 'the only column of the ledger the follow-up writes');

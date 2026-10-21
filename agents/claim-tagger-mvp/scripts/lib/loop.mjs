@@ -13,7 +13,8 @@
 //   class LoopExit(code, message, { sentence, header, rows, next })   end the run with an exit code and the words of its report
 //   takePull(ctx, { pullId })          pull every table (or load --pull <id>), set ctx.pull (loadPull) and put its id into run.json
 //   needTables(ctx, ...tables)         LoopExit(2) unless the pull holds those tables
-//   needClaimColumns(ctx)              LoopExit(2) unless the Claims table of the pull has the seven agent columns and the editor's four with the types the scripts use (a table that setup.mjs build has not rebuilt does not)
+//   needClaimColumns(ctx)              LoopExit(2) unless the Claims table of the pull has the agent's columns (the seven of 21 October and Agent reading) and the editor's three, and the Tag decisions table the four columns of the
+//                                      reading of 22 October (Agent reading, Rule, Reading note, Read under), with the types the scripts use (a table that setup.mjs build has not rebuilt does not)
 //   runPreflight(ctx, { adopt })       lib/preflight.mjs; a refusal ends the run with its report; sets ctx.edition
 //   confirmUnchanged(ctx, { lesson, copy, tag, status })   read the Rulebook copy row and the rule change again right before they are written
 //   pickLesson(ctx, title, { status, command })   the Rule changes row to work on, or a LoopExit with a report that says why not
@@ -25,7 +26,7 @@
 //   applyStep(ctx, plan)               check, write (plan.jsonl), apply with ledger and read-back; { result, planned } (planned only: --plan-only)
 //   assertApplied(ctx, result, again)  LoopExit unless the read-back confirmed every write; `again` is the command to continue with
 //   judgeSettings(ctx)                 loadJudgeConfig(root): { judge, model, tags, reasonMaxWords, demo }
-//   callModel(ctx, {...})              one runClaude call with the transient retries of judge.transient
+//   callModel(ctx, {...})              one runClaude call with the transient retries of judge.transient; every call is one line of runs/<run-id>/calls.jsonl with its purpose (reading, distill, wording)
 //   claudeBin(ctx), cliVersionOf(ctx)  the program and its version (the fake driver has its own)
 //   modelStop(ctx, res, { wrote })     the LoopExit for a call that hit the usage window, kept failing, could not start or answered with another model
 //   runJudge(ctx, opts)                judge() with the hooks of this run and no output; throws a LoopExit when the judge did not finish
@@ -42,7 +43,7 @@ import { cutText, demoCommands, listNames, namePracticePage, quoted, viewLink } 
 import { claudeVersion, findClaudeBin, runClaude, withTransientRetry } from './claude.mjs';
 import { isDemo, loadConfig, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
-import { readJson, readJsonl, writeJsonAtomic } from './jsonl.mjs';
+import { appendJsonl, readJson, readJsonl, writeJsonAtomic } from './jsonl.mjs';
 import { clientFromConfig, requestLogger } from './notion-rest.mjs';
 import { decodePage, sameValue } from './notion-values.mjs';
 import { agentRoot, codeRoot, ensureDir, repoRoot, runId as makeRunId, safeName } from './paths.mjs';
@@ -94,6 +95,7 @@ export function parseCli(script, argv, options, usage, io = consoleIo) {
     if (values.driver !== undefined && !['cli', 'fake'].includes(values.driver)) throw new Error(`--driver must be cli or fake, got "${values.driver}"`);
     if (values['run-id'] !== undefined && !ID_RE.test(values['run-id'])) throw new Error(`--run-id may only use letters, digits, '.', '_' and '-', got "${values['run-id']}"`);
     if (values.pull !== undefined && !ID_RE.test(values.pull)) throw new Error(`--pull may only use letters, digits, '.', '_' and '-', got "${values.pull}"`);
+    if (values.readings !== undefined && !ID_RE.test(values.readings)) throw new Error(`--readings may only use letters, digits, '.', '_' and '-', got "${values.readings}"`);
     return { values };
   } catch (e) {
     io.err(`${script}: ${e.message}\n${usage}`);
@@ -316,29 +318,50 @@ export function needTables(ctx, ...tables) {
 
 /** The type each agent column of the Claims copy must have (CLAIMS-REVIEW.md section 6.1), by its key in the config's write_columns. */
 const CLAIM_COLUMN_TYPES = Object.freeze({
-  tags: 'relation', confidence: 'number', reasons: 'rich_text', status: 'select', waiting: 'relation', edition: 'rich_text', remarks: 'rich_text',
+  tags: 'relation', confidence: 'number', reasons: 'rich_text', status: 'select', waiting: 'relation', edition: 'rich_text', remarks: 'rich_text', reading: 'rich_text',
 });
-/** The type each editor column of the Claims copy must have, by its key in the config's columns. */
-const EDITOR_COLUMN_TYPES = Object.freeze({ verified: 'relation', review_status: 'select', why_wrong: 'select', notes: 'rich_text' });
+/** The type each editor column of the Claims copy must have, by its key in the config's columns. Why wrong left the editor's work (READ-DECISIONS.md, decision P4). */
+const EDITOR_COLUMN_TYPES = Object.freeze({ verified: 'relation', review_status: 'select', notes: 'rich_text' });
+/** The agent's columns of the reading of 22 October on Tag decisions (the ledger), by column name. */
+const LEDGER_READING_TYPES = Object.freeze({ 'Agent reading': 'select', Rule: 'rich_text', 'Reading note': 'rich_text', 'Read under': 'rich_text' });
 
 /**
- * Stop with exit 2 unless the Claims table of the pull has the seven agent columns and the editor's four with the types the scripts read and write (Agent tags and Tags waiting
+ * Stop with exit 2 unless the Claims table of the pull has the agent's columns (the seven of the revision of 21 October and Agent reading) and the editor's three, and the Tag decisions
+ * table the four columns of the reading of 22 October (Agent reading, Rule, Reading note, Read under), with the types the scripts read and write (Agent tags and Tags waiting
  * are relations since the revision of 21 October, and the editor's relation is Verified tags; a table that setup.mjs build has not rebuilt still has the text column Agent tags and
  * the relation under its old name). A script that reads the claims' decisions or writes the claims calls this first: without it a decision would be read from a column that is not
- * there, and every Reviewed claim would look decided as "Does not apply".
+ * there, and every Reviewed claim would look decided as "Does not apply". The message names the columns of the revision of 21 October, or those of the reading of 22 October, or both.
  */
 export function needClaimColumns(ctx) {
   const schema = ctx.pull.schema('claims_copy');
-  if (!schema?.properties) return;
-  const entry = tableEntry(ctx.config, 'claims_copy');
-  const found = (name, type) => (schema.properties[name] ? `${name} (${schema.properties[name].type}, not ${type})` : `${name} (missing)`);
-  const wrong = [
-    ...Object.entries(CLAIM_COLUMN_TYPES).filter(([key, type]) => schema.properties[entry.write_columns?.[key]]?.type !== type).map(([key, type]) => found(entry.write_columns?.[key], type)),
-    ...Object.entries(EDITOR_COLUMN_TYPES).filter(([key, type]) => schema.properties[entry.columns?.[key]]?.type !== type).map(([key, type]) => found(entry.columns?.[key], type)),
-  ];
+  const ledger = ctx.pull.schema('tag_decisions');
+  const entry = schema?.properties || ledger?.properties ? tableEntry(ctx.config, 'claims_copy') : null;
+  const found = (props, name, type) => (props[name] ? `${name} (${props[name].type}, not ${type})` : `${name} (missing)`);
+  const wrong = [];
+  const reading = [];
+  if (schema?.properties) {
+    const props = schema.properties;
+    for (const [key, type] of Object.entries(CLAIM_COLUMN_TYPES)) {
+      if (props[entry.write_columns?.[key]]?.type !== type) (key === 'reading' ? reading : wrong).push(found(props, entry.write_columns?.[key], type));
+    }
+    for (const [key, type] of Object.entries(EDITOR_COLUMN_TYPES)) {
+      if (props[entry.columns?.[key]]?.type !== type) wrong.push(found(props, entry.columns?.[key], type));
+    }
+  }
+  if (ledger?.properties) {
+    for (const [name, type] of Object.entries(LEDGER_READING_TYPES)) {
+      if (ledger.properties[name]?.type !== type) reading.push(`Tag decisions: ${found(ledger.properties, name, type)}`);
+    }
+  }
   if (wrong.length) {
-    throw new LoopExit(EXIT.INVALID, `the Claims table lacks columns of the revision of 21 October: ${wrong.join(', ')}; run setup.mjs build`, {
+    throw new LoopExit(EXIT.INVALID, `the Claims table lacks columns of the revision of 21 October: ${wrong.join(', ')}${reading.length ? `; and the columns of the reading of 22 October: ${reading.join(', ')}` : ''}; run setup.mjs build`, {
       sentence: `${ctx.label}: nothing was done, because the Claims table does not have the agent's new columns yet.`,
+      next: 'Next: ask the engineer to run the setup build, then type the same command again.',
+    });
+  }
+  if (reading.length) {
+    throw new LoopExit(EXIT.INVALID, `the tables lack the columns of the reading of 22 October: ${reading.join(', ')}; run setup.mjs build`, {
+      sentence: `${ctx.label}: nothing was done, because the tables do not have the agent's reading columns yet.`,
       next: 'Next: ask the engineer to run the setup build, then type the same command again.',
     });
   }
@@ -618,15 +641,31 @@ export function cliVersionOf(ctx) {
 }
 
 /** One headless call (lib/claude.mjs) with the transient retries of judge.transient. Returns runClaude's answer; the caller reads errorKind. */
-export async function callModel(ctx, { model, systemPromptFile, prompt, effort, timeoutMs, maxTurns = 1 }) {
+export async function callModel(ctx, {
+  model, systemPromptFile, prompt, effort, timeoutMs, maxTurns = 1, purpose = null, meta = {},
+}) {
   const j = judgeSettings(ctx).judge;
   const bin = claudeBin(ctx);
   const run = ctx.opts.runClaude ?? runClaude;
   const call = () => run({
     bin, driver: ctx.driver, model, systemPromptFile, prompt, effort, maxTurns, timeoutMs, env: ctx.env, fakeState: ctx.fakeState, fakeScript: ctx.opts.fakeScript,
   });
-  return withTransientRetry(call, { attempts: j.transient.max_in_a_row - 1, backoffMs: j.transient.backoff_ms, sleep: ctx.opts.sleep });
+  const res = await withTransientRetry(call, { attempts: j.transient.max_in_a_row - 1, backoffMs: j.transient.backoff_ms, sleep: ctx.opts.sleep });
+  // the calls record of the run: one line per call, labelled with what it was for, so that a test and the verifier can count the reading calls
+  if (ctx.runDir) {
+    try {
+      appendJsonl(join(ctx.runDir, 'calls.jsonl'), {
+        purpose: purpose ?? purposeOf(systemPromptFile), model, effort, ...meta, status: res?.errorKind ?? 'ok', usage: usageOf(res), duration_ms: res?.durationMs ?? 0,
+      });
+    } catch (e) {
+      ctx.warnings?.push(`calls.jsonl could not be written (${oneLine(e.message, 120)})`);
+    }
+  }
+  return res;
 }
+
+// what a call is for, from the system prompt it was given (prompts/reading.md, distill.md, wording.md): the file name without its extension
+const purposeOf = (file) => String(file ?? '').split(/[\\/]/).pop().replace(/\.[^.]*$/, '') || 'unknown';
 
 const STOP_CODES = { usage_window: EXIT.USAGE_WINDOW, transient: EXIT.ERROR, spawn: EXIT.ERROR, model_mismatch: EXIT.DRIFT };
 

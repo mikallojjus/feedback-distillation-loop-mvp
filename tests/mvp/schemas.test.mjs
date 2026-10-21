@@ -17,9 +17,9 @@ const hash = 'sha256:0123456789abcdef';
 
 // ---- all of them ---------------------------------------------------------------------------------------------------------------------
 
-test('the folder holds the nine schemas the contracts name, each in the subset the validator supports', () => {
+test('the folder holds the ten schemas the contracts name, each in the subset the validator supports', () => {
   const files = readdirSync(dir).filter((f) => f.endsWith('.schema.json')).sort();
-  assert.deepEqual(files, ['card', 'cell', 'claim-row', 'judge-reply', 'ledger-row', 'lesson', 'plan', 'report', 'rubric'].map((n) => `${n}.schema.json`));
+  assert.deepEqual(files, ['card', 'cell', 'claim-row', 'judge-reply', 'ledger-row', 'lesson', 'plan', 'reading-reply', 'report', 'rubric'].map((n) => `${n}.schema.json`));
   for (const file of files) {
     const schema = JSON.parse(readFileSync(new URL(file, dir), 'utf8'));
     assertSchema(schema); // throws on a keyword the validator does not know: a typo would switch a check off
@@ -252,7 +252,7 @@ const claimRow = load('claim-row');
 const claimOf = (over = {}) => ({
   table: 'claims_copy', geo_id: 'g1', page_id: '0a9e0000-0000-4000-8000-000000000001', notion_url: 'https://www.notion.so/x', claim: 'The AI Force should enforce binding safety standards',
   geo_url: null, sources_text: '', source_links: [], is_factual: false, agent_tags: [], agent_status: 'Waits for you', tags_waiting: ['Context-dependent'], agent_confidence: 0.65,
-  agent_reasons: "Context-dependent: Two rules pull apart. · 2 of 2 runs agree", agent_edition: '2026-10-16.1', agent_remarks: '', verified_tags: [], review_status: null, why_wrong: null,
+  agent_reasons: "Context-dependent: Two rules pull apart. · 2 of 2 runs agree", agent_edition: '2026-10-16.1', agent_remarks: '', agent_reading: '', verified_tags: [], review_status: null,
   challenged_notes: '', last_edited: '2026-10-16T09:00:00.000Z', ...over,
 });
 
@@ -260,16 +260,18 @@ test('claim row: an open claim, a Reviewed claim and one that has never been rea
   ok(claimRow, claimOf());
   ok(claimRow, claimOf({
     agent_tags: ['Context-dependent'], agent_status: 'Done', tags_waiting: [], agent_remarks: 'not checked: 5 tags without rules', verified_tags: ['Context-dependent'], review_status: 'Reviewed',
-    why_wrong: 'Rule unclear', challenged_notes: 'Context-dependent: Rule unclear. Rule 3 is unclear.',
+    agent_reading: 'Context-dependent: Rule unclear, rule 3 · The rule leaves this kind of case open.', challenged_notes: 'Context-dependent: Rule unclear. Rule 3 is unclear.',
   }));
   ok(claimRow, claimOf({ agent_status: null, tags_waiting: [], agent_edition: '', agent_confidence: null, review_status: 'To review' }));
   for (const status of ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read', null]) ok(claimRow, claimOf({ agent_status: status }), String(status));
-  for (const why of ['Agent slip', 'Rule unclear', 'Rule should change']) ok(claimRow, claimOf({ review_status: 'Reviewed', why_wrong: why }), why);
+  ok(claimRow, claimOf({ review_status: 'Reviewed', agent_reading: 'Nothing to read: the agent agreed with you.' }), 'the agree line');
 });
 
 test('claim row: what makes a row invalid', () => {
   bad(claimRow, claimOf({ review_status: 'Done' }), /review_status: expected one of "To review", "Reviewed", null/);
-  bad(claimRow, claimOf({ why_wrong: 'Bad luck' }), /why_wrong: expected one of/);
+  bad(claimRow, claimOf({ why_wrong: 'Rule unclear' }), /why_wrong: unexpected property/, 'the claims table has no Why wrong any more (decision P4)');
+  bad(claimRow, claimOf({ agent_reading: undefined }), /agent_reading: missing required property/);
+  bad(claimRow, claimOf({ agent_reading: null }), /agent_reading: expected string/);
   bad(claimRow, claimOf({ agent_confidence: 0.2 }), /agent_confidence: must be >= 0.5/);
   bad(claimRow, claimOf({ agent_confidence: 1.1 }), /agent_confidence: must be <= 1/);
   bad(claimRow, claimOf({ verified_tags: 'Context-dependent' }), /verified_tags: expected array/);
@@ -291,13 +293,28 @@ const ledgerRow = load('ledger-row');
 const ledgerOf = (over = {}) => ({
   Claim: 'The AI Force should enforce binding safety standards', Key: 'g1::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.65,
   'Agent reason': 'A capitalised phrase · Context-dependent rule 3 · 2 of 2 runs agree', 'Claim link': 'https://www.notion.so/x', 'Rulebook edition': '2026-10-16.1', 'Follow-up': null,
-  'Tag outcome': null, 'Why wrong': null, 'Your reasoning': null, 'Decided under': null, page_id: '0a9e0000-0000-4000-8000-000000000002', last_edited: null, decided: false, ...over,
+  'Tag outcome': null, 'Why wrong': null, 'Your reasoning': null, 'Decided under': null, 'Agent reading': null, Rule: null, 'Reading note': null, 'Read under': null,
+  page_id: '0a9e0000-0000-4000-8000-000000000002', last_edited: null, decided: false, ...over,
 });
 
 test('ledger row: a proposal, and a proposal with the copy of the decision', () => {
   ok(ledgerRow, ledgerOf());
   ok(ledgerRow, ledgerOf({ 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Context-dependent: rule 3 is unclear.', 'Decided under': '2026-10-16.1', decided: true, 'Follow-up': 'Fixed' }));
   ok(ledgerRow, ledgerOf({ 'Agent proposal': null, 'Agent confidence': null, 'Rulebook edition': null }), 'a row seeded from the audit has no proposal columns');
+});
+
+test('ledger row: the four columns of the agent\'s reading are nullable strings, and the reading is one of the three', () => {
+  ok(ledgerRow, ledgerOf({
+    'Tag outcome': 'Does not apply', decided: true, 'Agent reading': 'Rule unclear', Rule: 'Context-dependent rule 3', 'Reading note': 'without your note · The rule leaves this kind of case open.',
+    'Read under': '2026-10-16.1 · 0123abcd',
+  }));
+  for (const reading of ['Agent slip', 'Rule unclear', 'Rule should change', null]) ok(ledgerRow, ledgerOf({ 'Agent reading': reading }), String(reading));
+  ok(ledgerRow, ledgerOf({ Rule: null, 'Reading note': null, 'Read under': null }), 'no single rule is the point');
+  const { 'Agent reading': _a, Rule: _r, 'Reading note': _n, 'Read under': _u, ...old } = ledgerOf();
+  ok(ledgerRow, old, 'a pull of a table that has not got the four columns yet fills them with null; a row without them still fits');
+  bad(ledgerRow, ledgerOf({ 'Agent reading': 'Maybe' }), /\["Agent reading"\]: expected one of "Agent slip", "Rule unclear", "Rule should change", null/);
+  bad(ledgerRow, ledgerOf({ Rule: 3 }), /Rule: expected string or null/);
+  bad(ledgerRow, ledgerOf({ 'Read under': { hash: 'x' } }), /\["Read under"\]: expected string or null/);
 });
 
 test('ledger row: what makes a row invalid', () => {
@@ -308,4 +325,24 @@ test('ledger row: what makes a row invalid', () => {
   bad(ledgerRow, ledgerOf({ decided: 'yes' }), /decided: expected boolean/);
   bad(ledgerRow, ledgerOf({ 'Decided by': 'someone' }), /\["Decided by"\]: unexpected property/);
   bad(ledgerRow, ledgerOf({ page_id: undefined }), /page_id: missing required property/);
+});
+
+// ---- reading reply (READ-DECISIONS.md) ------------------------------------------------------------------------------------------------
+
+const readingReply = load('reading-reply');
+const readingOf = (over = {}) => ({ key: 'g1::Context-dependent', reading: 'Rule unclear', rule: 'Context-dependent rule 3', note: 'The rule leaves this kind of case open.', ...over });
+
+test('reading reply: {"readings": [...]} with a reading of the three, a rule or null, and a note', () => {
+  ok(readingReply, { readings: [readingOf()] });
+  ok(readingReply, { readings: [readingOf(), readingOf({ key: 'g2::Context-dependent', reading: 'Agent slip', rule: null }), readingOf({ key: 'g3::Context-dependent', reading: 'Rule should change' })] });
+  for (const reading of ['Agent slip', 'Rule unclear', 'Rule should change']) ok(readingReply, { readings: [readingOf({ reading })] }, reading);
+  bad(readingReply, {}, /readings: missing required property/);
+  bad(readingReply, { readings: [] }, /readings: must have at least 1 items/);
+  bad(readingReply, { readings: [readingOf({ reading: 'Fine' })] }, /reading: expected one of "Agent slip", "Rule unclear", "Rule should change"/);
+  bad(readingReply, { readings: [readingOf({ key: '' })] }, /key: must be at least 1 characters/);
+  bad(readingReply, { readings: [readingOf({ rule: 3 })] }, /rule: expected string or null/);
+  bad(readingReply, { readings: [readingOf({ rule: undefined })] }, /rule: missing required property/);
+  bad(readingReply, { readings: [readingOf({ note: '' })] }, /note: must be at least 1 characters/);
+  bad(readingReply, { readings: [readingOf({ note: undefined })] }, /note: missing required property/);
+  bad(readingReply, [readingOf()], /expected object/);
 });

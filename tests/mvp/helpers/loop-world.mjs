@@ -9,8 +9,11 @@
 //   w.table(obj) / w.overrides(list) / w.setEnv(k, v)   the fake CLI's answers (see fixtures/fake-claude-loop.mjs)
 //   w.rows(table) / w.row(table, key)              plain rows of a table in the fake Notion (a relation is a list of page ids)
 //   w.claim(geoId)                                 a row of the Claims copy with its three relations (Agent tags, Tags waiting, Verified tags) read as lists of tag names, sorted
-//   w.editClaim(geoId, plain)                      an editor works on a claim: plain values of the Claims copy; "Verified tags" (and the agent's "Agent tags" and "Tags waiting") take tag names
-//   w.review(geoId, { tags, why, notes })          an editor Reviews a claim: the verified tags, Why wrong, Challenged tags notes and Review status Reviewed
+//   w.editClaim(geoId, plain)                      an editor works on a claim: plain values of the Claims copy; "Verified tags" (and the agent's "Agent tags" and "Tags waiting") take tag names.
+//                                                  The claims table has no Why wrong column any more: a "Why wrong" value is written as the reason word that opens the Challenged tags notes
+//   w.review(geoId, { tags, notes, why })          an editor Reviews a claim: the verified tags, Challenged tags notes and Review status Reviewed. "why" (older tests) is the reason word the notes open with:
+//                                                  review(id, { why: 'Rule unclear', notes: 'Rule 4 ...' }) writes the notes "Rule unclear. Rule 4 ..."
+//   w.readings(table)                              the fake CLI's readings (FAKE_CLAUDE_READINGS): { "<row key>": { reading, rule, note } }; a key not in it is read Rule unclear on the rule its agent reason cites
 //   w.rubric()                                     rubric/rubric.json of the state folder
 //   w.calls() / w.callsWith(text)                  what the fake CLI was asked: all calls / the calls whose system prompt holds the text
 //   w.requests()                                   every request the fake saw; w.writes() the ones that are not reads
@@ -74,6 +77,24 @@ after(() => {
   rmSync(join(tmpdir(), `geo-agents-fake-claude-loop-${process.pid}`), { recursive: true, force: true }); // the merged answer tables of fixtures/fake-claude-loop.mjs
   assert.deepEqual(problems, [], 'a report written during the tests breaks the report lint');
 });
+
+/**
+ * The notes with the reason word an older test gave as a claim's Why wrong (the column is gone): a line that starts with a tag name and a colon takes it after the colon unless it has
+ * a reason word of its own, and notes with no such line take it at the front ("Rule unclear. The words."). This is the old rule, "the claim's Why wrong goes to every tag without a word of its own".
+ */
+export function withReasonWord(notes, why, tagNames) {
+  const known = tagNames.map((n) => n.toLowerCase());
+  const own = /^\s*(Agent slip|Rule unclear|Rule should change)\./i;
+  let tagLines = false;
+  const lines = notes.split(/\r?\n/).map((line) => {
+    const m = /^(\s*)([^:\n]+?)(\s*:\s*)(.*)$/.exec(line);
+    if (!m || !known.includes(m[2].trim().toLowerCase())) return line;
+    tagLines = true;
+    return own.test(m[4]) ? line : `${m[1]}${m[2]}${m[3]}${why}.${m[4].trim() ? ` ${m[4]}` : ''}`;
+  });
+  if (tagLines) return lines.join('\n');
+  return own.test(notes) ? notes : `${why}.${notes.trim() ? ` ${notes.trim()}` : ''}`;
+}
 
 export const claimId = (i) => `c${String(i).padStart(2, '0')}`;
 export const claimText = (i) => `The speaker said claim number ${i} about the budget.`;
@@ -169,7 +190,8 @@ export async function makeWorld({
   });
   const editClaim = (geoId, plain) => {
     if (!ids.claim[geoId]) throw new Error(`makeWorld: there is no claim "${geoId}"`);
-    const { 'Verified tags': verified, 'Agent tags': agentTags, 'Tags waiting': waiting, ...rest } = plain;
+    const { 'Verified tags': verified, 'Agent tags': agentTags, 'Tags waiting': waiting, 'Why wrong': why, ...rest } = plain;
+    if (why) rest['Challenged tags notes'] = withReasonWord(String(rest['Challenged tags notes'] ?? ''), why, Object.keys(ids.tag));
     fake.editRow(ids.claim[geoId], {
       ...rest,
       ...(verified === undefined ? {} : { 'Verified tags': tagIds(verified) }),
@@ -190,7 +212,7 @@ export async function makeWorld({
       });
       if (ids.claim[d.geo_id]) {
         editClaim(d.geo_id, {
-          'Verified tags': d.outcome === 'Applies' ? ['Context-dependent'] : [], 'Review status': 'Reviewed', 'Why wrong': 'Agent slip',
+          'Verified tags': d.outcome === 'Applies' ? ['Context-dependent'] : [], 'Review status': 'Reviewed',
           'Challenged tags notes': `From the audit of 9 October: ${d.reasoning}`,
         });
       }
@@ -235,6 +257,11 @@ export async function makeWorld({
       const file = join(root, 'fake-distill.json');
       write(file, obj);
       world.env.FAKE_LOOP_DISTILL = file;
+    },
+    readings(table) {
+      const file = join(root, 'fake-readings.json');
+      write(file, table);
+      world.env.FAKE_CLAUDE_READINGS = file;
     },
     setEnv(key, value) {
       if (value === undefined || value === null) delete world.env[key];

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Ledger row (a Tag decisions row as a pull writes it)",
-  "description": "One line of norm/queue.jsonl: a row of Tag decisions, the agent's ledger, as plain values keyed by the Notion column names. One row per claim and tag the agent judged, written and superseded by the agent only. Tag outcome, Why wrong, Your reasoning and Decided under are copies the agent makes from the claim once an editor has Reviewed it. decided is true when Tag outcome is set.",
+  "description": "One line of norm/queue.jsonl: a row of Tag decisions, the agent's ledger, as plain values keyed by the Notion column names. One row per claim and tag the agent judged, written and superseded by the agent only. Tag outcome, Why wrong, Your reasoning and Decided under are copies the agent makes from the claim once an editor has Reviewed it (Why wrong holds only the reason word the editor opened the tag's note line with, or the audit's seeding). Agent reading, Rule, Reading note and Read under are the agent's reading of a disagreement (READ-DECISIONS.md, lib/readings.mjs). decided is true when Tag outcome is set.",
   "type": "object",
   "additionalProperties": false,
   "required": ["Claim", "Key", "Tag", "page_id", "decided"],
@@ -16,9 +16,13 @@
     "Rulebook edition": { "type": ["string", "null"], "description": "The edition the proposal was made under." },
     "Follow-up": { "type": ["string", "null"], "enum": ["Fixed", "Still wrong", null] },
     "Tag outcome": { "type": ["string", "null"], "enum": ["Applies", "Does not apply", null], "description": "Copied from the claim: Applies when the tag is in its verified tags, else Does not apply." },
-    "Why wrong": { "type": ["string", "null"], "enum": ["Agent slip", "Rule unclear", "Rule should change", null], "description": "Copied from the claim, for a tag whose outcome differs from the proposal." },
+    "Why wrong": { "type": ["string", "null"], "enum": ["Agent slip", "Rule unclear", "Rule should change", null], "description": "The reason word the editor opened the tag's note line with (copied from the claim's Challenged tags notes), or the audit's seeding; not the agent's reading." },
     "Your reasoning": { "type": ["string", "null"], "description": "Copied from the claim's Challenged tags notes: the tag's own line, else the whole text." },
     "Decided under": { "type": ["string", "null"], "description": "The edition the proposal the editor saw was made under." },
+    "Agent reading": { "type": ["string", "null"], "enum": ["Agent slip", "Rule unclear", "Rule should change", null], "description": "The agent's reading of a disagreement between the editor's outcome and its proposal; empty for a row that agrees or is not read yet." },
+    "Rule": { "type": ["string", "null"], "description": "The rule the reading points at, for example Context-dependent rule 3; empty when no single rule is the point." },
+    "Reading note": { "type": ["string", "null"], "description": "One line of why; it starts with \"without your note · \" when the editor wrote no note for the tag." },
+    "Read under": { "type": ["string", "null"], "description": "The cache key of the reading, \"<edition> · <hash8>\": a row is read again only when the hash differs from the current one." },
     "page_id": { "type": "string", "minLength": 1 },
     "last_edited": { "type": ["string", "null"] },
     "decided": { "type": "boolean" }

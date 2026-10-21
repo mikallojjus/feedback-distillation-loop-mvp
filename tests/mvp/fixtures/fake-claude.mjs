@@ -19,6 +19,9 @@
 //   - without a table entry: p is spread over 0.05 to 0.95 (0.01 steps) by the hash, decision is apply when p >= 0.5.
 // A prompt that holds a line "# Distill" (in the system prompt or the message) is answered with a fixed lesson, one that holds "# Wording"
 // with one sentence; the shapes are { patterns: [{ lesson, rule, kind, proposed_text, keys }] } and { sentence }.
+// A prompt that holds a line "# Reading" is answered with {"readings": [{ key, reading, rule, note }]}: one reading per <row key="..." tag="..."> of the message.
+//   - FAKE_CLAUDE_READINGS: the path of a JSON file { "<row key>": { reading, rule, note } }. A row whose key is not in it is read Rule unclear, with the rule its <agent_reason> cites
+//     ("<Tag> rule <n>", the last one; null when it cites none) and the note "The rule leaves this kind of case open."
 //
 // FAKE_CLAUDE_MODE picks the behaviour (default ok):
 //   ok               the valid reply
@@ -28,6 +31,8 @@
 //   transient-always every call (after FAKE_CLAUDE_AFTER good ones) prints an overloaded error and exits 1
 //   usage-window     every call (after FAKE_CLAUDE_AFTER good ones) prints the CLI's "usage limit reached ... resets at 3pm" and exits 1
 //   wrong-model      the valid reply, but modelUsage names another model than --model
+// The failing modes apply to every kind of call (judge, reading, distill, wording). FAKE_CLAUDE_ONLY (a comma-separated list of reading, distill, wording, judge) limits them to those kinds: any other
+// call is answered as in mode ok, and FAKE_CLAUDE_AFTER counts only the calls of the listed kinds.
 // Other variables: FAKE_CLAUDE_STATE (a JSON file holding the counters, so they last from one process to the next; without it the counters
 // live in the `state` object that runFake is given), FAKE_CLAUDE_AFTER (how many calls succeed before a failing mode starts, default 0),
 // FAKE_CLAUDE_LOG (a JSONL file with one line per call: what the fake saw).
@@ -49,6 +54,7 @@ const DISTILL_REPLY = {
     keys: [],
   }],
 };
+const READING_NOTE = 'The rule leaves this kind of case open.';
 const WORDING_REPLY = { sentence: 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.' };
 
 const h32 = (...parts) => createHash('sha256').update(parts.join('|'), 'utf8').digest().readUInt32BE(0);
@@ -67,6 +73,13 @@ const unescapeXml = (s) => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace
 /** The claims of a user message: [{ id, text }], both unescaped. The text is escaped, so it cannot hold a "<claim" of its own. */
 export function parseClaims(message) {
   return [...String(message).matchAll(/<claim id="([^"]*)">([\s\S]*?)<\/claim>/g)].map((m) => ({ id: unescapeXml(m[1]), text: unescapeXml(m[2]) }));
+}
+
+/** The rows of a reading message: [{ key, tag, agentReason }], unescaped. Only a <row> that names its tag is one (the rows of a distill message do not). */
+export function parseRows(message) {
+  return [...String(message).matchAll(/<row key="([^"]*)" tag="([^"]*)"[^>]*>([\s\S]*?)<\/row>/g)].map((m) => ({
+    key: unescapeXml(m[1]), tag: unescapeXml(m[2]), agentReason: unescapeXml(/<agent_reason>([\s\S]*?)<\/agent_reason>/.exec(m[3])?.[1] ?? ''),
+  }));
 }
 
 /** The tags of a rendered system prompt: [{ name, rules }], rules being how many numbered rules the block lists. */
@@ -106,6 +119,26 @@ function loadTable(env) {
   const file = env.FAKE_CLAUDE_TABLE;
   if (!file) return {};
   return JSON.parse(readFileSync(file, 'utf8'));
+}
+
+/** The reading of one row of a reading message: from the FAKE_CLAUDE_READINGS table when the key is in it, else Rule unclear on the rule the agent's own reason cites. */
+export function readingAnswer(row, table = {}) {
+  if (Object.hasOwn(table, row.key)) {
+    const e = table[row.key];
+    return { key: row.key, reading: e.reading, rule: e.rule ?? null, note: e.note ?? READING_NOTE };
+  }
+  const re = new RegExp(`${row.tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+rule\\s+(\\d+)`, 'gi');
+  let last = null;
+  for (const m of row.agentReason.matchAll(re)) last = m[1];
+  return { key: row.key, reading: 'Rule unclear', rule: last === null ? null : `${row.tag} rule ${last}`, note: READING_NOTE };
+}
+
+// what a call is asking for: a reading, a distill prompt, a wording prompt, or claims to judge
+function kindOf(systemText, stdin) {
+  if (/^# Reading/m.test(systemText) || /^# Reading/m.test(stdin)) return 'reading';
+  if (/^# Distill/m.test(systemText) || /^# Distill/m.test(stdin)) return 'distill';
+  if (/^# Wording/m.test(systemText) || /^# Wording/m.test(stdin)) return 'wording';
+  return 'judge';
 }
 
 function answerFor(text, tag, table, readIndex) {
@@ -187,18 +220,28 @@ function counters(env, state) {
  */
 export async function runFake({ args = [], stdin = '', env = process.env, state = {} } = {}) {
   if (args.includes('--version')) return { stdout: `${FAKE_CLI_VERSION}\n`, stderr: '', exitCode: 0 };
-  const mode = env.FAKE_CLAUDE_MODE || 'ok';
+  const requested = env.FAKE_CLAUDE_MODE || 'ok';
   const after = Number(env.FAKE_CLAUDE_AFTER ?? 0);
   const model = flagValue(args, '--model') || 'claude-fake-0-0';
   const systemPromptFile = flagValue(args, '--system-prompt-file');
   const systemText = systemPromptFile && existsSync(systemPromptFile) ? readFileSync(systemPromptFile, 'utf8') : '';
   const claims = parseClaims(stdin);
+  const kind = kindOf(systemText, stdin);
 
   const { st, save } = counters(env, state);
   st.calls += 1;
-  const call = st.calls;
+  // FAKE_CLAUDE_ONLY limits the failing modes to some kinds of call: the others are answered in mode ok, and the count of good calls is the count of the listed kinds
+  const only = (env.FAKE_CLAUDE_ONLY ?? '').split(',').map((k) => k.trim()).filter(Boolean);
+  let mode = requested;
+  let call = st.calls;
+  if (only.length) {
+    if (only.includes(kind)) {
+      st.matching = (st.matching ?? 0) + 1;
+      call = st.matching;
+    } else mode = 'ok';
+  }
   state.log ??= [];
-  const entry = { call, mode, model, ids: claims.map((c) => c.id), texts: claims.map((c) => c.text), systemPromptFile, stdin, args };
+  const entry = { call: st.calls, mode, model, kind, ids: claims.map((c) => c.id), texts: claims.map((c) => c.text), systemPromptFile, stdin, args };
   state.log.push(entry);
   if (env.FAKE_CLAUDE_LOG) appendFileSync(env.FAKE_CLAUDE_LOG, `${JSON.stringify(entry)}\n`);
 
@@ -221,11 +264,15 @@ export async function runFake({ args = [], stdin = '', env = process.env, state 
   }
   const garbled = (mode === 'invalid-once' && call === 1) || (mode === 'invalid-always' && call > after);
 
-  // what is being asked: a distill prompt, a wording prompt, or claims to judge
+  // what is being asked: a reading, a distill prompt, a wording prompt, or claims to judge
   let result;
   if (garbled) result = NOT_JSON;
-  else if (/^# Distill/m.test(systemText) || /^# Distill/m.test(stdin)) result = JSON.stringify(DISTILL_REPLY);
-  else if (/^# Wording/m.test(systemText) || /^# Wording/m.test(stdin)) result = JSON.stringify(WORDING_REPLY);
+  else if (kind === 'reading') {
+    const table = env.FAKE_CLAUDE_READINGS ? JSON.parse(readFileSync(env.FAKE_CLAUDE_READINGS, 'utf8')) : {};
+    result = JSON.stringify({ readings: parseRows(stdin).map((row) => readingAnswer(row, table)) });
+  }
+  else if (kind === 'distill') result = JSON.stringify(DISTILL_REPLY);
+  else if (kind === 'wording') result = JSON.stringify(WORDING_REPLY);
   else {
     const tags = parseTags(systemText);
     const table = loadTable(env);

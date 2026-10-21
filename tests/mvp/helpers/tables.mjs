@@ -25,13 +25,13 @@ export const TABLE_SPECS = Object.freeze({
     'Geo Supporting arguments': 'rich_text', 'Geo Opposing arguments': 'rich_text', 'Geo Related people': 'rich_text', 'Geo Related projects': 'rich_text',
     'Geo Is factual': 'checkbox', 'Geo Name source': 'select', 'Agent tags': { type: 'relation' }, 'Agent confidence': 'number', 'Agent reasons': 'rich_text',
     'Agent status': { type: 'select', options: ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read'] }, 'Tags waiting': { type: 'relation' },
-    'Agent edition': 'rich_text', 'Agent remarks': 'rich_text',
-    'Verified tags': { type: 'relation' }, 'Review status': { type: 'select', options: ['To review', 'Reviewed'] },
-    'Why wrong': { type: 'select', options: ['Agent slip', 'Rule unclear', 'Rule should change'] }, 'Challenged tags notes': 'rich_text',
+    'Agent edition': 'rich_text', 'Agent remarks': 'rich_text', 'Agent reading': 'rich_text',
+    'Verified tags': { type: 'relation' }, 'Review status': { type: 'select', options: ['To review', 'Reviewed'] }, 'Challenged tags notes': 'rich_text',
   },
   tag_decisions: {
     Claim: 'title', Key: 'rich_text', Tag: 'select', 'Agent proposal': 'select', 'Agent confidence': 'number', 'Agent reason': 'rich_text', 'Claim link': 'url',
     'Rulebook edition': 'rich_text', 'Follow-up': 'select', 'Tag outcome': 'select', 'Why wrong': 'select', 'Your reasoning': 'rich_text', 'Decided under': 'rich_text',
+    'Agent reading': { type: 'select', options: ['Agent slip', 'Rule unclear', 'Rule should change'] }, Rule: 'rich_text', 'Reading note': 'rich_text', 'Read under': 'rich_text',
   },
   rule_changes: {
     Lesson: 'title', Tag: 'select', Rule: 'rich_text', Kind: 'select', 'Current text': 'rich_text', 'Proposed text': 'rich_text', 'Safety check result': 'rich_text',

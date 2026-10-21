@@ -14,13 +14,14 @@
 //   schema/<table>.json   the retrieveDatabase answer          raw/<table>.jsonl   every page object, one per line
 //   norm/claims.jsonl     { table, geo_id, page_id, notion_url, claim, geo_url, sources_text, source_links [{ text, href }], is_factual, agent_tags (Agent tags as tag names),
 //                           agent_status (Waits for you, Done, Disagrees with your decision, Could not read, or null), tags_waiting (Tags waiting as tag names), agent_confidence (a number
-//                           or null), agent_reasons (text), agent_edition (text), agent_remarks (text), verified_tags (Verified tags as tag names), review_status (To review, Reviewed
-//                           or null), why_wrong (or null), challenged_notes (text), last_edited }
+//                           or null), agent_reasons (text), agent_edition (text), agent_remarks (text), agent_reading (text: the agent's reading of the editor's disagreements, one line per tag),
+//                           verified_tags (Verified tags as tag names), review_status (To review, Reviewed or null), challenged_notes (text), last_edited }
+//                         The claims table has no Why wrong column any more (READ-DECISIONS.md, decision P4): a decision's reason word is the one that opens the tag's note line.
 //                         The three relations (Agent tags, Tags waiting, Verified tags) are resolved to names through the page ids of the Rulebook copy's rows (this pull's, else the
 //                         ones in rubric/rubric.json); an id that names no tag of the rulebook is left out and said in a warning. A Claims copy that still has the text column Agent tags
 //                         (setup.mjs build has not renamed it) is read the same way: its comma-separated names are the list.
 //   norm/rulebook.json    [ { <every column by its Notion name>, page_id } ] for the rows that carry the work tag (config notion.rulebook.work_tag)
-//   norm/queue.jsonl      the thirteen columns of Tag decisions (the agent's ledger) by their Notion names + page_id, last_edited, decided (Tag outcome is set)
+//   norm/queue.jsonl      the seventeen columns of Tag decisions (the agent's ledger, with Agent reading, Rule, Reading note and Read under) by their Notion names + page_id, last_edited, decided (Tag outcome is set)
 //   norm/lessons.jsonl    the ten columns of Rule changes + page_id, created, supporting_keys (the trailing <geo_id>::<tag> of each Supporting rows line)
 //   norm/settings.json    { page_id, name, paused, rulebook_edition, last_run_summary }
 //   drift.json            computeDrift(lock, rulebook rows), or { skipped: ... }        requests.jsonl   the request log       pull.json   the manifest
@@ -69,7 +70,7 @@ const ALIASES = Object.freeze({
 });
 export const QUEUE_COLUMNS = Object.freeze([
   'Claim', 'Key', 'Tag', 'Agent proposal', 'Agent confidence', 'Agent reason', 'Claim link', 'Rulebook edition', 'Follow-up', 'Tag outcome', 'Why wrong', 'Your reasoning',
-  'Decided under',
+  'Decided under', 'Agent reading', 'Rule', 'Reading note', 'Read under',
 ]);
 export const LESSON_COLUMNS = Object.freeze([
   'Lesson', 'Tag', 'Rule', 'Kind', 'Current text', 'Proposed text', 'Safety check result', 'Supporting rows', 'Editor wording', 'Status',
@@ -369,9 +370,9 @@ function claimsNorm(entry, table, decoded, pagesById, warnings, tagNames = new M
       agent_reasons: text(p[writeCols.reasons]),
       agent_edition: text(p[writeCols.edition]).trim(),
       agent_remarks: text(p[writeCols.remarks]).trim(),
+      agent_reading: text(p[writeCols.reading]).trim(),
       verified_tags: namesOf(p[cols.verified], cols.verified),
       review_status: text(p[cols.review_status]).trim() || null,
-      why_wrong: text(p[cols.why_wrong]).trim() || null,
       challenged_notes: text(p[cols.notes]),
       last_edited: row.last_edited_time ?? null,
     };

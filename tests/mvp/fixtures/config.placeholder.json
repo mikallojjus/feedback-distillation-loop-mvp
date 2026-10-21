@@ -33,7 +33,6 @@
           "is_factual": "Geo Is factual",
           "verified": "Verified tags",
           "review_status": "Review status",
-          "why_wrong": "Why wrong",
           "notes": "Challenged tags notes"
         },
         "write_columns": {
@@ -43,7 +42,8 @@
           "status": "Agent status",
           "waiting": "Tags waiting",
           "edition": "Agent edition",
-          "remarks": "Agent remarks"
+          "remarks": "Agent remarks",
+          "reading": "Agent reading"
         }
       }
     ],
@@ -115,7 +115,6 @@
     "claims_copy": [
       "Verified tags",
       "Review status",
-      "Why wrong",
       "Challenged tags notes"
     ],
     "rule_changes": [
@@ -184,7 +183,10 @@
     "effort": "high",
     "timeout_ms": 600000,
     "prompt": "prompts/distill.md",
-    "wording_prompt": "prompts/wording.md"
+    "wording_prompt": "prompts/wording.md",
+    "reading_prompt": "prompts/reading.md",
+    "reading_batch": 10,
+    "reading_effort": "medium"
   },
   "gate": {
     "default": {

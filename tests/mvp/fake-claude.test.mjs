@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extractJson, runClaude, usageResetHint } from '../../agents/claim-tagger-mvp/scripts/lib/claude.mjs';
-import { FAKE_CLI_VERSION, fallbackAnswer, parseClaims, parseTags, runFake } from './fixtures/fake-claude.mjs';
+import { FAKE_CLI_VERSION, fallbackAnswer, parseClaims, parseRows, parseTags, readingAnswer, runFake } from './fixtures/fake-claude.mjs';
 
 const FAKE = fileURLToPath(new URL('./fixtures/fake-claude.mjs', import.meta.url));
 const MODEL = 'claude-sonnet-5-5';
@@ -229,6 +229,94 @@ test('a prompt with "# Distill" gets a fixed lesson and one with "# Wording" get
   const judge = extractJson((await call({ systemFile: files().systemFile, prompt: message(['a', 'x']) })).text);
   assert.ok(judge.items, 'a judge prompt is not mistaken for either');
 });
+
+// ---- the reading prompt ---------------------------------------------------------------------------------------------------------
+
+const READING_MESSAGE = [
+  '<tag name="Context-dependent">', 'Rules:', '1. one', '</tag>', '<rows>',
+  '<row key="c1::Context-dependent" tag="Context-dependent" outcome="Does not apply" proposal="Applies" confidence="0.8">', '<claim>A claim &amp; more</claim>',
+  '<agent_reason>It names no one. · Context-dependent rule 2 · 2 of 2 runs agree</agent_reason>', '<note none="true"/>', '</row>',
+  '<row key="c2::Context-dependent" tag="Context-dependent" outcome="Applies" proposal="Can&apos;t tell" confidence="0.5">', '<claim>Another</claim>',
+  '<agent_reason>Unsure.</agent_reason>', '<note>Words.</note>', '</row>', '</rows>',
+].join('\n');
+
+function readingFile() {
+  const dir = tmp();
+  const file = join(dir, 'reading.md');
+  writeFileSync(file, '# Reading\n\nYou read disagreements.\n');
+  return { dir, file };
+}
+
+test('parseRows reads the rows of a reading message (key, tag, the agent\'s reason, unescaped); the rows of a distill message are not rows of it', () => {
+  assert.deepEqual(parseRows(READING_MESSAGE), [
+    { key: 'c1::Context-dependent', tag: 'Context-dependent', agentReason: 'It names no one. · Context-dependent rule 2 · 2 of 2 runs agree' },
+    { key: 'c2::Context-dependent', tag: 'Context-dependent', agentReason: 'Unsure.' },
+  ]);
+  assert.deepEqual(parseRows('<rows>\n<row key="c1::X" outcome="Applies" reading="Rule unclear">\n</row>\n</rows>'), []);
+  assert.deepEqual(parseRows('nothing'), []);
+});
+
+test('a prompt with "# Reading" gets {"readings": [...]}: one reading per row, Rule unclear on the rule the agent\'s reason cites, null when it cites none', async () => {
+  const { file } = readingFile();
+  const r = await call({ systemFile: file, prompt: READING_MESSAGE });
+  assert.equal(r.ok, true);
+  assert.deepEqual(extractJson(r.text), {
+    readings: [
+      { key: 'c1::Context-dependent', reading: 'Rule unclear', rule: 'Context-dependent rule 2', note: 'The rule leaves this kind of case open.' },
+      { key: 'c2::Context-dependent', reading: 'Rule unclear', rule: null, note: 'The rule leaves this kind of case open.' },
+    ],
+  });
+  const viaMessage = await call({ systemFile: join(tmp(), 'missing.md'), prompt: `# Reading\n\n${READING_MESSAGE}` });
+  assert.equal(extractJson(viaMessage.text).readings.length, 2, 'the marker may be in the message too');
+  assert.equal(readingAnswer({ key: 'k', tag: 'T', agentReason: 'T rule 1 and T rule 4' }).rule, 'T rule 4', 'the last rule the reason cites');
+  assert.equal(readingAnswer({ key: 'k', tag: 'T (x)', agentReason: 'T (x) rule 2' }).rule, 'T (x) rule 2', 'a tag name with characters of a pattern');
+});
+
+test('FAKE_CLAUDE_READINGS names a file of readings by row key; a key that is not in it gets the default', async () => {
+  const { dir, file } = readingFile();
+  const table = join(dir, 'readings.json');
+  writeFileSync(table, JSON.stringify({ 'c2::Context-dependent': { reading: 'Agent slip', rule: 'Context-dependent rule 1', note: 'Rule 1 settles it.' }, 'zz::Other': { reading: 'Rule unclear' } }));
+  const r = await call({ systemFile: file, prompt: READING_MESSAGE, env: { FAKE_CLAUDE_READINGS: table } });
+  const { readings } = extractJson(r.text);
+  assert.deepEqual(readings[1], { key: 'c2::Context-dependent', reading: 'Agent slip', rule: 'Context-dependent rule 1', note: 'Rule 1 settles it.' });
+  assert.equal(readings[0].reading, 'Rule unclear', 'the other row gets the default');
+  assert.deepEqual(readingAnswer({ key: 'zz::Other', tag: 'Other', agentReason: '' }, { 'zz::Other': { reading: 'Rule unclear' } }), { key: 'zz::Other', reading: 'Rule unclear', rule: null, note: 'The rule leaves this kind of case open.' }, 'a rule and a note left out are null and the default note');
+});
+
+test('the failing modes apply to reading calls too: words instead of JSON, an overloaded error, the usage window', async () => {
+  const { file } = readingFile();
+  const garbled = await call({ systemFile: file, prompt: READING_MESSAGE, env: { FAKE_CLAUDE_MODE: 'invalid-always' } });
+  assert.equal(garbled.ok, true);
+  assert.throws(() => extractJson(garbled.text));
+  assert.equal((await call({ systemFile: file, prompt: READING_MESSAGE, env: { FAKE_CLAUDE_MODE: 'transient-always' } })).errorKind, 'transient');
+  assert.equal((await call({ systemFile: file, prompt: READING_MESSAGE, env: { FAKE_CLAUDE_MODE: 'usage-window' } })).errorKind, 'usage_window');
+  assert.equal((await call({ systemFile: file, prompt: READING_MESSAGE, env: { FAKE_CLAUDE_MODE: 'wrong-model' } })).errorKind, 'model_mismatch');
+});
+
+test('FAKE_CLAUDE_ONLY limits the failing modes to some kinds of call: the others are answered as in mode ok, and FAKE_CLAUDE_AFTER counts the listed kinds only', async () => {
+  const { file } = readingFile();
+  const { systemFile } = files();
+  const state = {};
+  const env = { FAKE_CLAUDE_MODE: 'invalid-always', FAKE_CLAUDE_ONLY: 'reading', FAKE_CLAUDE_AFTER: '1' };
+  const answers = [];
+  for (const [sys, prompt] of [[systemFile, message(['a', 'x'])], [file, READING_MESSAGE], [systemFile, message(['b', 'y'])], [file, READING_MESSAGE], [file, READING_MESSAGE]]) {
+    answers.push(Boolean(tryJson((await call({ systemFile: sys, prompt, env, state })).text)));
+  }
+  assert.deepEqual(answers, [true, true, true, false, false], 'judge calls are never garbled; the first reading is good, the later ones are words');
+  assert.deepEqual(state.log.map((e) => e.kind), ['judge', 'reading', 'judge', 'reading', 'reading']);
+  assert.deepEqual(state.log.map((e) => e.mode), ['ok', 'invalid-always', 'ok', 'invalid-always', 'invalid-always'], 'the log shows the mode each call was answered in');
+  const both = { FAKE_CLAUDE_MODE: 'usage-window', FAKE_CLAUDE_ONLY: 'distill, reading' };
+  assert.equal((await call({ systemFile: file, prompt: READING_MESSAGE, env: both })).errorKind, 'usage_window');
+  assert.equal((await call({ systemFile, prompt: message(['a', 'x']), env: both })).errorKind, null);
+});
+
+function tryJson(text) {
+  try {
+    return extractJson(text);
+  } catch {
+    return null;
+  }
+}
 
 test('usage numbers: the first call with a system prompt writes it to the cache, the later ones read it', async () => {
   const { systemFile } = files();

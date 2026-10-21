@@ -190,7 +190,7 @@ test('two judged tags and one Reviewed claim: a line per tag in the notes, a rea
   assert.deepEqual(copy(row('c03', 'Context-dependent')), ['Applies', 'Rule should change', 'A new rule is needed.']);
   assert.deepEqual(copy(row('c03', 'Wordy')), ['Applies', 'Rule unclear', 'Rule 1.']);
   // the claim itself: the editor's columns are as they were left, and the agent says it differs on the tags it got wrong
-  assert.equal(w.row('claims_copy', 'c01')['Why wrong'], 'Agent slip', 'the editor\'s columns are never written by the agent');
+  assert.equal(w.row('claims_copy', 'c01')['Challenged tags notes'], 'Wordy: Rule unclear. It repeats itself, and rule 2 does not say so.', 'the editor\'s columns are never written by the agent');
   assert.deepEqual([w.claim('c01')['Agent tags'], w.claim('c01')['Agent status']], [['Context-dependent'], 'Disagrees with your decision'], "the editor's set is written, and the status says the agent still differs on Wordy");
   assert.deepEqual(w.claim('c01')['Tags waiting'], []);
 });

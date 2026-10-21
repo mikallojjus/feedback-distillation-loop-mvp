@@ -4,8 +4,8 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  CAPABILITIES, CLAIMS_COPY_COLUMNS, RULE_CHANGES_AGENT_STATUS, RULEBOOK_COLUMNS, TABLES,
-  capabilityOf, editorColumns, groupOf, isDemo, isProtected, loadConfig, tableEntry, validateConfig, writableProperties,
+  CAPABILITIES, CLAIMS_COPY_COLUMNS, READING_DEFAULTS, RULE_CHANGES_AGENT_STATUS, RULEBOOK_COLUMNS, TABLES,
+  capabilityOf, editorColumns, groupOf, isDemo, isProtected, loadConfig, readingSettings, tableEntry, validateConfig, writableProperties,
 } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { builtConfig, fillIds, placeholderConfig } from './helpers/config-fixture.mjs';
@@ -256,6 +256,28 @@ test('validateConfig: prompt paths stay inside the agent folder', () => {
   assert.ok(mentions(config, 'distill.wording_prompt: expected a path inside the agent folder'));
 });
 
+test('the reading settings of distill: the shipped config names them, a missing one gets its default, a bad one is refused', () => {
+  const config = shipped();
+  assert.deepEqual(readingSettings(config), { reading_prompt: 'prompts/reading.md', reading_batch: 10, reading_effort: 'medium' }, 'the shipped values are the defaults');
+  assert.deepEqual(READING_DEFAULTS, readingSettings(config));
+  assert.deepEqual(problems(config), []);
+
+  const bare = shipped();
+  for (const key of ['reading_prompt', 'reading_batch', 'reading_effort']) delete bare.distill[key];
+  assert.deepEqual(problems(bare), [], 'the three are optional');
+  assert.deepEqual(readingSettings(bare), { ...READING_DEFAULTS }, 'and a config without them gets the defaults');
+  assert.deepEqual(readingSettings({}), { ...READING_DEFAULTS }, 'also a config with no distill section at all');
+  const own = shipped();
+  Object.assign(own.distill, { reading_batch: 4, reading_effort: 'high', reading_prompt: 'prompts/other.md' });
+  assert.deepEqual(readingSettings(own), { reading_prompt: 'prompts/other.md', reading_batch: 4, reading_effort: 'high' });
+
+  const bad = shipped();
+  Object.assign(bad.distill, { reading_batch: 0, reading_effort: 'whenever', reading_prompt: '../outside.md' });
+  assert.ok(mentions(bad, 'distill.reading_batch: expected a whole number from 1'));
+  assert.ok(mentions(bad, 'distill.reading_effort: expected one of low, medium, high, xhigh, max'));
+  assert.ok(mentions(bad, 'distill.reading_prompt: expected a path inside the agent folder'));
+});
+
 test('a demo profile needs a demo_id that is safe as a folder name', () => {
   const demo = shipped();
   demo.demo = true;
@@ -335,13 +357,14 @@ test('isProtected is false for anything that is not an id string, and for a conf
 test('writableProperties: the sets of CONTRACTS section 8', () => {
   const config = shipped();
   assert.deepEqual([...writableProperties(config, 'tag_decisions')].sort(),
-    ['Agent confidence', 'Agent proposal', 'Agent reason', 'Claim', 'Claim link', 'Decided under', 'Follow-up', 'Key', 'Rulebook edition', 'Tag', 'Tag outcome', 'Why wrong', 'Your reasoning'].sort());
+    ['Agent confidence', 'Agent proposal', 'Agent reading', 'Agent reason', 'Claim', 'Claim link', 'Decided under', 'Follow-up', 'Key', 'Read under', 'Reading note', 'Rule', 'Rulebook edition', 'Tag', 'Tag outcome', 'Why wrong', 'Your reasoning'].sort(),
+    'the ledger: the proposal, the copies of a decision, and the four columns of the agent\'s reading');
   assert.deepEqual([...writableProperties(config, 'rule_changes')].sort(),
     ['Current text', 'Kind', 'Lesson', 'Proposed text', 'Rule', 'Safety check result', 'Status', 'Supporting rows', 'Tag'].sort());
   assert.deepEqual([...writableProperties(config, 'agent_settings')].sort(), ['Last run summary', 'Rulebook edition']);
   assert.deepEqual([...writableProperties(config, 'rulebook')], ['When to use']);
   assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(),
-    ['Agent confidence', 'Agent edition', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'], 'the agent writes seven columns; Agent notes is not one of them');
+    ['Agent confidence', 'Agent edition', 'Agent reading', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'], 'the agent writes eight columns; Agent notes is not one of them');
 });
 
 test('writableProperties: a setup create may fill more', () => {
@@ -351,8 +374,8 @@ test('writableProperties: a setup create may fill more', () => {
   assert.deepEqual([...rulebook].sort(), [...RULEBOOK_COLUMNS].sort());
   assert.equal(rulebook.size, 13);
   const claims = writableProperties(config, 'claims_copy', { setup: true });
-  assert.deepEqual([...claims].sort(), [...CLAIMS_COPY_COLUMNS, 'Agent confidence', 'Agent edition', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'].sort());
-  assert.equal(claims.size, 20, 'the four editor columns of the claims are not among them');
+  assert.deepEqual([...claims].sort(), [...CLAIMS_COPY_COLUMNS, 'Agent confidence', 'Agent edition', 'Agent reading', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'].sort());
+  assert.equal(claims.size, 21, 'the three editor columns of the claims are not among them');
   assert.deepEqual([...writableProperties(config, 'tag_decisions', { setup: true })].sort(), [...writableProperties(config, 'tag_decisions')].sort(), 'tag decisions have no setup extras');
   assert.deepEqual([...writableProperties(config, 'rule_changes', { setup: true })].sort(), [...writableProperties(config, 'rule_changes')].sort());
 });
@@ -360,12 +383,12 @@ test('writableProperties: a setup create may fill more', () => {
 test('writableProperties follows the configured column names and key columns', () => {
   const config = shipped();
   config.notion.claims[0].write_columns = {
-    tags: 'Tags by agent', confidence: 'How sure', reasons: 'Why so', status: 'State', waiting: 'Open tags', edition: 'Edition used', remarks: 'Remarks',
+    tags: 'Tags by agent', confidence: 'How sure', reasons: 'Why so', status: 'State', waiting: 'Open tags', edition: 'Edition used', remarks: 'Remarks', reading: 'What I read',
   };
   config.notion.claims[0].key = 'Claim ID';
   config.notion.claims[0].columns.claim = 'Claim text';
   config.notion.databases.agent_settings.key = 'Setting';
-  assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(), ['Edition used', 'How sure', 'Open tags', 'Remarks', 'State', 'Tags by agent', 'Why so']);
+  assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(), ['Edition used', 'How sure', 'Open tags', 'Remarks', 'State', 'Tags by agent', 'What I read', 'Why so']);
   const setup = writableProperties(config, 'claims_copy', { setup: true });
   assert.ok(setup.has('Claim ID') && setup.has('Claim text') && setup.has('Geo Name'));
   assert.ok(writableProperties(config, 'agent_settings', { setup: true }).has('Setting'));
@@ -384,7 +407,7 @@ test('writableProperties gives a new Set every time and refuses an unknown table
 
 test('editorColumns lists what only an editor writes', () => {
   const config = shipped();
-  assert.deepEqual(editorColumns(config, 'claims_copy'), ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes']);
+  assert.deepEqual(editorColumns(config, 'claims_copy'), ['Verified tags', 'Review status', 'Challenged tags notes'], 'three: Why wrong left the editor\'s work (decision P4)');
   assert.deepEqual(editorColumns(config, 'rule_changes'), ['Editor wording']);
   assert.deepEqual(editorColumns(config, 'agent_settings'), ['Paused']);
   assert.deepEqual(editorColumns(config, 'rulebook'), []);
@@ -422,23 +445,23 @@ test('groupOf finds the judge group of a tag', () => {
 
 // ---- the claims table's own columns (CLAIMS-REVIEW.md, section 1) -----------------------------------------------------------------
 
-test('the claims entry names the four editor columns and the seven agent columns, and a config that lacks one is refused with its name', () => {
+test('the claims entry names the three editor columns and the eight agent columns, and a config that lacks one is refused with its name', () => {
   const config = shipped();
   const claims = config.notion.claims[0];
   assert.deepEqual(claims.write_columns, {
-    tags: 'Agent tags', confidence: 'Agent confidence', reasons: 'Agent reasons', status: 'Agent status', waiting: 'Tags waiting', edition: 'Agent edition', remarks: 'Agent remarks',
+    tags: 'Agent tags', confidence: 'Agent confidence', reasons: 'Agent reasons', status: 'Agent status', waiting: 'Tags waiting', edition: 'Agent edition', remarks: 'Agent remarks', reading: 'Agent reading',
   });
-  assert.deepEqual([claims.columns.verified, claims.columns.review_status, claims.columns.why_wrong, claims.columns.notes],
-    ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes']);
-  assert.deepEqual(config.editor_columns.claims_copy, ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes']);
+  assert.deepEqual([claims.columns.verified, claims.columns.review_status, claims.columns.notes], ['Verified tags', 'Review status', 'Challenged tags notes']);
+  assert.equal(claims.columns.why_wrong, undefined, 'the claims table has no Why wrong column in the config any more');
+  assert.deepEqual(config.editor_columns.claims_copy, ['Verified tags', 'Review status', 'Challenged tags notes']);
   assert.equal(config.editor_columns.tag_decisions, undefined, 'the ledger has no editor column');
 
-  for (const key of ['verified', 'review_status', 'why_wrong', 'notes']) {
+  for (const key of ['verified', 'review_status', 'notes']) {
     const bad = shipped();
     delete bad.notion.claims[0].columns[key];
     assert.ok(mentions(bad, `notion.claims[0].columns.${key}: expected a non-empty string`), key);
   }
-  for (const key of ['tags', 'confidence', 'reasons', 'status', 'waiting', 'edition', 'remarks']) {
+  for (const key of ['tags', 'confidence', 'reasons', 'status', 'waiting', 'edition', 'remarks', 'reading']) {
     const bad = shipped();
     delete bad.notion.claims[0].write_columns[key];
     assert.ok(mentions(bad, `notion.claims[0].write_columns.${key}: expected a non-empty string`), key);
@@ -473,7 +496,8 @@ test('the claims\' editor columns are never writable, with setup or without; the
   for (const setup of [false, true]) {
     const claims = writableProperties(config, 'claims_copy', { setup });
     for (const column of ['Verified tags', 'Claim quality tags — verified', 'Agent notes', 'Review status', 'Why wrong', 'Challenged tags notes']) assert.ok(!claims.has(column), `${column} (setup ${setup})`);
+    assert.ok(claims.has('Agent reading'), `the agent's own reading column (setup ${setup})`);
     const ledger = writableProperties(config, 'tag_decisions', { setup });
-    for (const column of ['Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under']) assert.ok(ledger.has(column), `${column} (setup ${setup})`);
+    for (const column of ['Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under', 'Agent reading', 'Rule', 'Reading note', 'Read under']) assert.ok(ledger.has(column), `${column} (setup ${setup})`);
   }
 });

@@ -102,6 +102,7 @@ async function fill(w) {
         'Agent status': { select: { name: 'Waits for you' } },
         'Agent edition': richText('2026-10-16.1'),
         'Agent remarks': richText('not checked: 5 tags without rules'),
+        'Agent reading': richText('Context-dependent: Rule unclear, rule 3 · The rule leaves this kind of case open.'),
         ...(hasRulebook ? { 'Tags waiting': { relation: [{ id: ids['tag:Context-dependent'] }] } } : {}),
       },
     });
@@ -110,13 +111,13 @@ async function fill(w) {
       'Geo Name': 'Claim three is written out', 'Geo ID': 'geo-3', 'Geo Sources': '[Written out](https://www.geobrowser.io/space/s/entity-c)<br>https://example.com/bare.',
       'Agent reasons': 'Context-dependent: A pronoun with no antecedent. · Context-dependent rule 1 · 2 of 2 runs agree', 'Agent status': 'Done', 'Agent edition': '2026-10-16.1', 'Agent confidence': 0.81,
       ...(hasRulebook ? { 'Agent tags': w.textAgentTags ? 'Wordy, Context-dependent, , Wordy' : [ids['tag:Context-dependent']], 'Verified tags': [ids['tag:Context-dependent']] } : {}),
-      'Review status': 'Reviewed', 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Context-dependent: rule 3 does not say so.',
+      'Review status': 'Reviewed', 'Challenged tags notes': 'Context-dependent: rule 3 does not say so.',
     });
   }
   if (w.config.notion.databases.tag_decisions.database_id === DB.tag_decisions) {
     ids.open = notion.addRow(DB.tag_decisions, { Claim: 'Claim one has two sources', Key: 'geo-1::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'Unsure', 'Claim link': 'https://www.geobrowser.io/space/s/geo-1', 'Rulebook edition': '2026-10-16.1' });
     ids.audit = notion.addRow(DB.tag_decisions, { Claim: 'An audited claim', Key: 'aud-1::Context-dependent', Tag: 'Context-dependent', 'Rulebook edition': '2026-10-16.1', 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear', 'Your reasoning': 'From the audit of 9 October: it reads on its own.' });
-    ids.decided = notion.addRow(DB.tag_decisions, { Claim: 'A decided claim', Key: 'geo-9::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Agent confidence': 0.61, 'Rulebook edition': '2026-10-16.1', 'Tag outcome': 'Applies', 'Your reasoning': 'The pronoun has no antecedent.' });
+    ids.decided = notion.addRow(DB.tag_decisions, { Claim: 'A decided claim', Key: 'geo-9::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Agent confidence': 0.61, 'Rulebook edition': '2026-10-16.1', 'Tag outcome': 'Applies', 'Your reasoning': 'The pronoun has no antecedent.', 'Agent reading': 'Agent slip', Rule: 'Context-dependent rule 3', 'Reading note': 'Your note says so.', 'Read under': '2026-10-16.1 · 0123abcd' });
   }
   if (w.config.notion.databases.rule_changes.database_id === DB.rule_changes) {
     ids.lesson = notion.addRow(DB.rule_changes, {
@@ -226,7 +227,7 @@ test('the norm files: claims with their links, the rulebook copy as plain rows, 
   assert.deepEqual(claims.map((c) => c.geo_id), ['geo-1', 'geo-2', 'geo-3']);
   const one = claims[0];
   assert.deepEqual(Object.keys(one), ['table', 'geo_id', 'page_id', 'notion_url', 'claim', 'geo_url', 'sources_text', 'source_links', 'is_factual', 'agent_tags', 'agent_status', 'tags_waiting',
-    'agent_confidence', 'agent_reasons', 'agent_edition', 'agent_remarks', 'verified_tags', 'review_status', 'why_wrong', 'challenged_notes', 'last_edited']);
+    'agent_confidence', 'agent_reasons', 'agent_edition', 'agent_remarks', 'agent_reading', 'verified_tags', 'review_status', 'challenged_notes', 'last_edited']);
   assert.equal(one.table, 'claims_copy');
   assert.equal(one.claim, 'Claim one has two sources');
   assert.equal(one.geo_url, 'https://www.geobrowser.io/space/s/geo-1');
@@ -238,20 +239,21 @@ test('the norm files: claims with their links, the rulebook copy as plain rows, 
   assert.deepEqual(one.tags_waiting, ['Context-dependent'], 'Tags waiting is a relation too');
   assert.equal(one.agent_edition, '2026-10-16.1');
   assert.equal(one.agent_remarks, 'not checked: 5 tags without rules');
+  assert.equal(one.agent_reading, 'Context-dependent: Rule unclear, rule 3 · The rule leaves this kind of case open.', 'the reading is read as it stands; there is no why_wrong any more');
+  assert.equal('why_wrong' in one, false);
   assert.equal(one.last_edited, w.notion.page(one.page_id).last_edited_time);
   assert.equal(one.notion_url, w.notion.page(one.page_id).url);
   assert.deepEqual(claims[1].source_links, []);
   assert.equal(claims[1].is_factual, false);
-  assert.deepEqual([claims[1].agent_tags, claims[1].tags_waiting, claims[1].agent_status, claims[1].agent_edition, claims[1].agent_remarks], [[], [], null, '', ''], 'a claim the agent has not read');
-  // the editor's four columns and the agent's confidence: empty on an open claim, and the relation read as tag names on a Reviewed one
-  assert.deepEqual([one.agent_confidence, one.agent_reasons, one.verified_tags, one.review_status, one.why_wrong, one.challenged_notes], [null, '', [], null, null, '']);
+  assert.deepEqual([claims[1].agent_tags, claims[1].tags_waiting, claims[1].agent_status, claims[1].agent_edition, claims[1].agent_remarks, claims[1].agent_reading], [[], [], null, '', '', ''], 'a claim the agent has not read');
+  // the editor's three columns and the agent's confidence: empty on an open claim, and the relation read as tag names on a Reviewed one
+  assert.deepEqual([one.agent_confidence, one.agent_reasons, one.verified_tags, one.review_status, one.challenged_notes], [null, '', [], null, '']);
   const three = claims[2];
   assert.equal(three.agent_confidence, 0.81);
   assert.equal(three.agent_reasons, 'Context-dependent: A pronoun with no antecedent. · Context-dependent rule 1 · 2 of 2 runs agree');
   assert.deepEqual(three.verified_tags, ['Context-dependent'], 'the relation is resolved to tag names through the page ids of the Rulebook copy');
   assert.deepEqual([three.agent_tags, three.agent_status, three.tags_waiting], [['Context-dependent'], 'Done', []]);
   assert.equal(three.review_status, 'Reviewed');
-  assert.equal(three.why_wrong, 'Rule unclear');
   assert.equal(three.challenged_notes, 'Context-dependent: rule 3 does not say so.');
   assert.equal(p.queue().every((q) => 'Decided under' in q), true, 'the ledger has Decided under');
   assert.deepEqual(claims[2].source_links, [{ text: 'Written out', href: 'https://www.geobrowser.io/space/s/entity-c' }, { text: '', href: 'https://example.com/bare' }]);
@@ -278,6 +280,8 @@ test('the norm files: claims with their links, the rulebook copy as plain rows, 
   assert.equal(queue[1]['Agent confidence'], 0.5);
   assert.equal(queue[1]['Tag outcome'], null);
   assert.equal(queue[0]['Why wrong'], 'Rule unclear');
+  assert.deepEqual([queue[2]['Agent reading'], queue[2].Rule, queue[2]['Reading note'], queue[2]['Read under']], ['Agent slip', 'Context-dependent rule 3', 'Your note says so.', '2026-10-16.1 · 0123abcd'], 'the four columns of the reading');
+  assert.deepEqual([queue[1]['Agent reading'], queue[1].Rule, queue[1]['Reading note'], queue[1]['Read under']], [null, '', '', ''], 'an unread row holds none (a select is null, a text column is empty)');
   assert.equal(queue[1].page_id, w.ids.open);
 
   // the lessons

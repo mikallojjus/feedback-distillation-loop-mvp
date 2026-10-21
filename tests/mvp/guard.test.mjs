@@ -23,7 +23,7 @@ function rootWith(config) {
 }
 const update = (properties, extra = {}) => ({ tool_name: 'mcp__notion__notion-update-page', tool_input: { page_id: '0a9e0000-0000-4000-8000-000000000001', command: 'update_properties', properties, ...extra } });
 const create = (properties) => ({ tool_name: 'mcp__notion__notion-create-pages', tool_input: { parent: { page_id: '0a9e0000-0000-4000-8000-000000000001' }, pages: [{ properties }] } });
-const EDITOR = ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused'];
+const EDITOR = ['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
 
 test('every editor column of the shipped config is refused in a page write, in the plain name and in the connector\'s date form, in any letter case', () => {
   const root = rootWith(placeholderConfig());
@@ -81,6 +81,6 @@ test('the shipped guard imports none of the agent\'s library modules and the liv
   const source = readFileSync(join(codeRoot(), 'scripts', 'hooks', 'guard.mjs'), 'utf8');
   assert.doesNotMatch(source, /from '\.\.?\/lib\//, 'it reads config.json and the markers itself');
   const live = JSON.parse(readFileSync(join(codeRoot(), 'config.json'), 'utf8'));
-  assert.deepEqual(live.editor_columns.claims_copy, ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes']);
+  assert.deepEqual(live.editor_columns.claims_copy, ['Verified tags', 'Review status', 'Challenged tags notes']);
   assert.equal(live.editor_columns.tag_decisions, undefined);
 });

@@ -401,7 +401,7 @@ test('each editor column named in a script argument is refused', () => {
 });
 
 test('the editor column is found in other spellings, and not inside longer words', () => {
-  for (const arg of ['--review_status=Reviewed', '--REVIEW-STATUS Reviewed', '--why-wrong x', 'challenged   tags   notes', '--set paused=true']) {
+  for (const arg of ['--review_status=Reviewed', '--REVIEW-STATUS Reviewed', '--editor-wording x', 'challenged   tags   notes', '--set paused=true']) {
     const r = grade({ middle: [bash(`node agents/claim-tagger-mvp/scripts/promote.mjs ${arg}`)] });
     assert.ok(has(r.problems, 'names the editor column'), arg);
   }
@@ -644,7 +644,7 @@ test('expectStyle confirms the output style from the init event', () => {
 
 test('the editor columns come from config.json without the Status values', () => {
   const config = JSON.parse(readFileSync(join(REPO, 'agents', 'claim-tagger-mvp', 'config.json'), 'utf8'));
-  assert.deepEqual(editorColumnsFromConfig(config), ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused']);
+  assert.deepEqual(editorColumnsFromConfig(config), ['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused']);
   assert.deepEqual(editorColumnsFromConfig(config), [...DEFAULT_EDITOR_COLUMNS]);
   assert.deepEqual(editorColumnsFromConfig({ editor_columns: { a: ['X', 'Y'], b: ['Y', 'Z'], c_status_editor_values: ['Approved'] } }), ['X', 'Y', 'Z']);
   assert.deepEqual(editorColumnsFromConfig({}), [...DEFAULT_EDITOR_COLUMNS]);

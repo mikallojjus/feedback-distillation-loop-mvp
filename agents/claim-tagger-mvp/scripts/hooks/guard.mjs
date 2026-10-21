@@ -34,7 +34,7 @@ const ALWAYS_DENIED = new Set(['move-pages', 'duplicate-page', 'delete-pages', '
 const SCHEMA_TOOLS = new Set(['create-database', 'update-data-source', 'create-view', 'update-view']);
 const UUID = /[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/gi;
 // used when the config names none: the editor's columns of the Claims copy, Editor wording and Paused (the list of the shipped config.json)
-const DEFAULT_EDITOR_NAMES = ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused'];
+const DEFAULT_EDITOR_NAMES = ['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
 const DEFAULT_EDITOR_STATUS = ['Approved', 'Rejected'];
 
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);

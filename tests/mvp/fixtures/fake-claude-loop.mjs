@@ -11,6 +11,8 @@
 //   FAKE_LOOP_DISTILL     path of { "patterns": [{ "lesson", "rule"?, "kind"?, "proposed_text", "keys"?: "all" | [keys] | { "first": n } }] }; without it one pattern
 //                         that cites every row given. "rule" defaults to "<the tag> rule <the cited rule or 1>".
 //   FAKE_LOOP_WORDING     the sentence of the wording reply (default: the stock one); the word "invalid" makes the reply not JSON
+//   FAKE_CLAUDE_READINGS  path of { "<row key>": { reading, rule, note } }, passed through to the stock fake, which answers a prompt that holds a line "# Reading" with one reading per
+//                         <row key="..." tag="..."> of the message (a key not in the file is read Rule unclear on the rule its agent reason cites); FAKE_CLAUDE_ONLY works the same way
 //
 // Every call is also noted in state.log (the stock fake's log), which holds the system prompt file, so a test can tell which side asked.
 
@@ -78,6 +80,8 @@ function mergedTable(systemText, claims, env) {
 export async function runFake({ args = [], stdin = '', env = process.env, state = {} } = {}) {
   const systemPromptFile = flagValue(args, '--system-prompt-file');
   const systemText = systemPromptFile && existsSync(systemPromptFile) ? readFileSync(systemPromptFile, 'utf8') : '';
+
+  if (/^# Reading/m.test(systemText)) return stockRunFake({ args, stdin, env, state }); // the stock fake answers a reading, and the failing modes apply to it as to every call
 
   if (/^# Distill/m.test(systemText) || /^# Wording/m.test(systemText)) {
     const out = await stockRunFake({ args, stdin, env, state });

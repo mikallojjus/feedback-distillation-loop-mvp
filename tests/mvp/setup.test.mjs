@@ -662,7 +662,6 @@ test('migrate-decisions: the ten audit decisions move from the ledger to their c
     const c = claimOf(w, d.geo_id);
     assert.deepEqual(c['Verified tags'], d.outcome === 'Applies' ? [tagPage.get('Context-dependent')] : [], d.geo_id);
     assert.equal(c['Review status'], 'Reviewed');
-    assert.equal(c['Why wrong'], 'Agent slip');
     assert.equal(c['Challenged tags notes'], `${AUDIT_PREFIX}: ${d.reasoning ?? NO_REASONING}`);
   }
   assert.equal(rowsOf(w, 'claims_copy').filter((c) => c['Review status'] === 'Reviewed').length, 10);
@@ -733,7 +732,7 @@ test('migrationOps: the plan from the rows, without a request', () => {
   const claim = (geo, over = {}) => ({ geo_id: geo, page_id: `p-${geo}`, agent_confidence: null, verified_tags: [], review_status: null, why_wrong: null, challenged_notes: '', ...over });
   const row = (geo, over = {}) => ({ Key: `${geo}::Context-dependent`, Tag: 'Context-dependent', page_id: `l-${geo}`, decided: false, 'Agent confidence': null, 'Rulebook edition': null, 'Decided under': null, ...over });
   const audit = (geo, outcome, over = {}) => row(geo, { decided: true, 'Tag outcome': outcome, 'Your reasoning': `${AUDIT_PREFIX}: why`, 'Why wrong': 'Agent slip', ...over });
-  const columns = { verified: 'V', review_status: 'R', why_wrong: 'W', notes: 'N', confidence: 'C' };
+  const columns = { verified: 'V', review_status: 'R', notes: 'N', confidence: 'C' };
   const ops = migrationOps(
     [claim('a'), claim('b'), claim('c', { review_status: 'Reviewed' }), claim('d'), claim('e', { agent_confidence: 0.7 })],
     [audit('a', 'Applies', { 'Rulebook edition': '2026-10-15.1' }), audit('b', 'Does not apply'), audit('c', 'Applies'), row('d', { 'Agent confidence': 0.61 }), row('e', { 'Agent confidence': 0.55 }), row('zzz')],
@@ -741,8 +740,8 @@ test('migrationOps: the plan from the rows, without a request', () => {
     columns,
   );
   assert.deepEqual(ops.claimOps, [
-    { key: 'a', page_id: 'p-a', properties: { V: ['tag-page'], R: 'Reviewed', W: 'Agent slip', N: `${AUDIT_PREFIX}: why` }, expect: { R: null } },
-    { key: 'b', page_id: 'p-b', properties: { V: [], R: 'Reviewed', W: 'Agent slip', N: `${AUDIT_PREFIX}: why` }, expect: { R: null } },
+    { key: 'a', page_id: 'p-a', properties: { V: ['tag-page'], R: 'Reviewed', N: `${AUDIT_PREFIX}: why` }, expect: { R: null } },
+    { key: 'b', page_id: 'p-b', properties: { V: [], R: 'Reviewed', N: `${AUDIT_PREFIX}: why` }, expect: { R: null } },
     { key: 'd', page_id: 'p-d', properties: { C: 0.61 } },
   ]);
   assert.deepEqual(ops.ledgerOps, [{ key: 'a::Context-dependent', page_id: 'l-a', properties: { 'Decided under': '2026-10-15.1' } }]);

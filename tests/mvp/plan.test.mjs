@@ -234,22 +234,35 @@ test('checkPlan: setup lets a create fill what the one-time setup fills, and onl
   assert.ok(mentions(problemsOf(update, w, { setup: true }), /"Description" is not a column this plan may write to rulebook/), 'setup does not widen an update');
 });
 
-const CLAIM_EDITOR = { 'Verified tags': [], 'Review status': 'Reviewed', 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Context-dependent: rule 3 is unclear.' };
+const CLAIM_EDITOR = { 'Verified tags': [], 'Review status': 'Reviewed', 'Challenged tags notes': 'Context-dependent: rule 3 is unclear.' };
 
 test('checkPlan: an editor column is refused on every table, in every form, without the audit seed', async () => {
   const w = await world();
   const plan = newP(w);
   plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Verified tags': [] });
   plan.update('claims_copy', 'geo-b', w.ids.claimB, { 'Review status': 'Reviewed' });
-  plan.create('claims_copy', 'geo-c', { 'Why wrong': 'Rule unclear' });
   plan.create('claims_copy', 'geo-d', { 'Challenged tags notes': 'because' });
   plan.create('rule_changes', 'L', { Tag: 'Context-dependent', 'Editor wording': 'my words' });
   plan.update('agent_settings', 'claim-tagger-mvp', 'p', { Paused: true });
   const problems = problemsOf(plan, w);
-  for (const name of ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused']) {
+  for (const name of ['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused']) {
     assert.ok(mentions(problems, new RegExp(`"${name}" is a column only an editor writes`)), `${name}\n${problems.join('\n')}`);
   }
-  assert.equal(problems.filter((p) => /only an editor writes/.test(p)).length, 6, 'one problem per column, no more');
+  assert.equal(problems.filter((p) => /only an editor writes/.test(p)).length, 5, 'one problem per column, no more');
+});
+
+test('checkPlan: the claims have no Why wrong column any more, so writing one is refused as a column nobody may write; the agent\'s Agent reading is its own to write, on the claims and in the ledger', async () => {
+  const w = await world();
+  const refused = newP(w);
+  refused.update('claims_copy', 'geo-a', w.ids.claimA, { 'Why wrong': 'Rule unclear' });
+  assert.ok(mentions(problemsOf(refused, w), /"Why wrong" is not a column this plan may write to claims_copy/));
+  assert.ok(!mentions(problemsOf(refused, w), /only an editor writes/), 'and it is no editor column either');
+  const ok = newP(w);
+  ok.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent reading': 'Context-dependent: Rule unclear, rule 3 · The rule leaves this kind of case open.' });
+  ok.update('tag_decisions', 'geo-a::Context-dependent', w.ids.decision, {
+    'Agent reading': 'Rule unclear', Rule: 'Context-dependent rule 3', 'Reading note': 'The rule leaves this kind of case open.', 'Read under': `${EDITION} · 0123abcd`,
+  });
+  assert.deepEqual(problemsOf(ok, w), []);
 });
 
 test('checkPlan: the ledger (Tag decisions) has no editor column: its copy of a decision is the agent\'s to write', async () => {
@@ -268,7 +281,7 @@ test('checkPlan: the audit seed is the one exception, a setup create or update o
   const ok = newP(w);
   ok.update('claims_copy', 'geo-a', w.ids.claimA, seeded(`${AUDIT_PREFIX}: the claim reads on its own.`));
   ok.create('claims_copy', 'geo-9', seeded(`${AUDIT_PREFIX}: x`, { 'Geo Name': 'A claim' }));
-  assert.deepEqual(problemsOf(ok, w, { setup: true }), [], 'setup + audit prefix: the four columns are allowed, on an update and on a create');
+  assert.deepEqual(problemsOf(ok, w, { setup: true }), [], 'setup + audit prefix: the three columns are allowed, on an update and on a create');
   assert.ok(mentions(problemsOf(ok, w, { setup: false }), /"Review status" is a column only an editor writes/), 'no setup flag: refused');
 
   const noPrefix = newP(w);
@@ -281,7 +294,7 @@ test('checkPlan: the audit seed is the one exception, a setup create or update o
 
   const otherColumn = newP(w);
   otherColumn.update('claims_copy', 'geo-a', w.ids.claimA, seeded(`${AUDIT_PREFIX}: x`, { 'Review notes': 'someone' }));
-  assert.ok(mentions(problemsOf(otherColumn, w, { setup: true }), /"Review notes" is not a column this plan may write to claims_copy/), 'the seed opens the four columns, nothing else');
+  assert.ok(mentions(problemsOf(otherColumn, w, { setup: true }), /"Review notes" is not a column this plan may write to claims_copy/), 'the seed opens the three columns, nothing else');
 
   const wrongTable = newP(w);
   wrongTable.create('rule_changes', 'L', { Tag: 'Context-dependent', 'Editor wording': `${AUDIT_PREFIX}: x` });
@@ -802,12 +815,12 @@ test('applyPlan refuses a ledger that belongs to another plan and a plan file th
   await assert.rejects(() => apply(w2, readPlan(w2.dir)), (e) => e instanceof PlanError && /does not belong to this plan/.test(e.message));
 });
 
-test('applyPlan with setup writes the audit seed (the four editor columns of a claim) once, and refuses the same plan without setup', async () => {
+test('applyPlan with setup writes the audit seed (the three editor columns of a claim) once, and refuses the same plan without setup', async () => {
   const w = await world();
   const tag = w.notion.addRow(DB.rulebook, { Name: 'Context-dependent', 'When to use': '1. x' });
   const plan = newP(w);
   plan.update('claims_copy', 'geo-a', w.ids.claimA, {
-    'Verified tags': [tag], 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': `${AUDIT_PREFIX}: the claim makes sense on its own.`, 'Agent confidence': 0.83,
+    'Verified tags': [tag], 'Review status': 'Reviewed', 'Challenged tags notes': `${AUDIT_PREFIX}: the claim makes sense on its own.`, 'Agent confidence': 0.83,
   });
   const before = w.notion.requests.length;
   await assert.rejects(() => apply(w, plan), (e) => e instanceof PlanError && e.problems.some((p) => /only an editor writes/.test(p)));

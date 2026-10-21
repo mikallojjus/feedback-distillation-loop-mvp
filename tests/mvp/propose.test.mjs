@@ -310,7 +310,7 @@ test('propose: a claim an editor Reviewed gets the copy of the decision in the l
   assert.equal(w.claim('c10')['Agent confidence'], 0.9);
 
   // the editor's four columns are as the editor left them
-  assert.deepEqual([w.row('claims_copy', 'c05')['Review status'], w.row('claims_copy', 'c05')['Why wrong'], w.row('claims_copy', 'c05')['Challenged tags notes']], ['Reviewed', 'Rule unclear', 'Context-dependent: rule 3 does not say so.']);
+  assert.deepEqual([w.row('claims_copy', 'c05')['Review status'], w.row('claims_copy', 'c05')['Challenged tags notes']], ['Reviewed', 'Context-dependent: Rule unclear. rule 3 does not say so.'], 'the claims table has no Why wrong: the reason word is in the line');
   for (const req of w.writes()) {
     const claimIds = Object.values(w.ids.claim).map((id) => normId(id));
     if (req.method === 'PATCH' && claimIds.includes(normId(req.path.split('/').at(-1)))) {
@@ -718,7 +718,7 @@ test('propose: a reason word at the start of the tag\'s line is that tag\'s Why 
   assert.equal(r.exit, 0);
   const row = w.row('tag_decisions', 'c10::Context-dependent');
   assert.deepEqual([row['Tag outcome'], row['Why wrong'], row['Your reasoning']], ['Does not apply', 'Rule should change', 'The phrase names a body readers know.']);
-  assert.deepEqual([w.row('claims_copy', 'c10')['Why wrong'], w.row('claims_copy', 'c10')['Challenged tags notes']], ['Agent slip', `${CD}: Rule should change. The phrase names a body readers know.`]);
+  assert.equal(w.row('claims_copy', 'c10')['Challenged tags notes'], `${CD}: Rule should change. The phrase names a body readers know.`, 'the claim keeps the editor\'s own words');
   // the next run copies nothing again
   const again = await propose(w.hooks());
   assert.deepEqual(readJsonl(join(again.runDir, 'plan.jsonl')).rows[0].plan.counts, { creates: 0, updates: 1 });
