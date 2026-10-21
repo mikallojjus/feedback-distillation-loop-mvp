@@ -4,12 +4,12 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: "Read the decisions" (decision P4, `READ-DECISIONS.md`) on the branch `read-decisions-2026-11`: stages 0 to 4 done; stage 5 in its third and last loop: run 4's six findings are fixed (decisions 78 and 79) and held in run 5; run 5's one must, a promote that stopped for good after a failed extra read (15 October code), is fixed under decision 80; run 6 re-checks it on a fresh page under Demo tests. Then the artifact's two tabs, a fresh page for the product owner, and the product owner's say-so on the merge.
+- Phase: "Read the decisions" (decision P4, `READ-DECISIONS.md`) is complete on the branch `read-decisions-2026-11`: stages 0 to 5 done, the verification loop closed at its third run with no must or should finding, 2,084 tests pass, the artifact republished, the product owner's page built. Waiting: the product owner runs the seven steps on "Claim tagger practice · product owner, 22 Oct" and says whether the MVP is agreed and whether the branch may be merged into `mvp-2026-11`.
 - Blockers: none open.
-- Branch `read-decisions-2026-11`; the last commit is the newest one in `git log`.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The live copy is in the 22 October shape (`evidence/17-readings-live/`); it holds no rule change, so decision 79's hold cannot trigger there. Practice pages: calibration 6, 7 and 8 under Demos; verification 4 (and 5) under Demo tests.
-- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 6; the two tabs are rewritten in the working tree and published after run 5).
-- Still to do after the branch: the unpaused practice-page eval; a second independent verification of the acceptance checks.
+- Branch `read-decisions-2026-11`; the last commit is the newest one in `git log`. Not merged: the merge is the product owner's call.
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The live copy is in the 22 October shape (`evidence/17-readings-live/`) and holds no rule change. Practice pages: calibration 6, 7 and 8 and the product owner's page under Demos (the owner's is the newest, so the demo commands reach it); verification 4, 5 and 6 under Demo tests. The owner's page of 21 October is of the older shape and shows as "unknown" in `list`.
+- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr, republished on 22 October.
+- Still to do after the merge: the backlog rows added on the branch (twelve, size S); the unpaused practice-page eval; a second independent verification of the acceptance checks.
 
 ## Entries
 
@@ -244,3 +244,11 @@ Done: the second verifier built "Claim tagger practice · verification 5" under 
 Verified: `node --test tests/`: 2,084 tests pass, 0 fail (`evidence/01-tests/`); the page's dry run against the Demo tests page passes; the coder reverted the one-line judge fix and saw the new tests fail the way the live run did, then put it back.
 
 Next: verification run 6, the last loop the specification allows; if it has no must or should finding, the artifact's tabs, the product owner's fresh page and the final message; otherwise the findings go to BLOCKED.md and the product owner decides.
+
+### 30. Verification run 6 clean; the branch complete (2026-10-22)
+
+Done: the third verifier built "Claim tagger practice · verification 6" under Demo tests and went through the same sequence (`evidence/20-walkthrough-verification-6/`, REPORT.md saved from its message): every command exited 0 at its first try; the no-note USPS decision was read, flagged and listed and stayed out of the draft; the later note was taken verbatim with no call; the safety check passed on the agent's own draft at the first promote (examples 10 of 10, earlier decisions 6 of 6, the two rows 2 of 2); the follow-up marked only the press pool and AI Force; USPS and Georgia kept "Waits for you"; where, status and verify ended as the page says. Run 5's must could not recur live (nothing stopped) and was confirmed by the eight tests on the fakes and by replaying run 5's stuck store through the judge's plan, which no longer counts the unplanned error lines. Verdict: 0 must, 0 should, 3 nice (the distill table's "Point at a rule: none" under a sentence naming earlier decisions; the page's "0.65 or more" floor, which the Dallas claim read under once; the extra reads of the safety check keeping no refused reply), all three in BACKLOG.md. By READ-DECISIONS section 3 the loop stops. Then: the product owner's page "Claim tagger practice · product owner, 22 Oct" built under Demos (`evidence/21-owner-page/`: start ok, verify ok with no problems, list marks it as used by the demo commands, where says step 1); the artifact's Status and How to run tabs rewritten for the revision with the counts refreshed (2,084 tests in 35 files, 80 decisions, 36 backlog rows, 8 calibration pages, 3 verification runs), built with the strict checks and republished at the same link.
+
+Verified: run 6's report and step files; the owner's page verifies clean; `node build.mjs --strict` wrote the page with every check ok; the suite at 2,084 tests pass (`evidence/01-tests/`).
+
+Next: the product owner runs the seven steps on the new page and says whether the MVP is agreed and whether `read-decisions-2026-11` may be merged into `mvp-2026-11`; the engineer merges on that say-so. After that: the twelve backlog rows of the branch, the unpaused practice-page eval, a second verification of the acceptance checks.

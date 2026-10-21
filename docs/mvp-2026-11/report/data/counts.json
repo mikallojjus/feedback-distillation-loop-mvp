@@ -1,109 +1,253 @@
 {
   "_about": "Numbers for the count placeholders in parts/*.html. An entry is a plain value or { value, source, pending }; groups nest and are addressed with dots. Keys that start with an underscore are ignored by the build. Every figure names its source: a file and what was counted, or the command that produced it. A figure that is not measured yet is marked pending, and the strict build refuses a page that uses one. The file is edited by hand: recount a figure when its source changes and rewrite its source line with the new date. Sources are repository paths. Short forms: notes = docs/mvp-2026-11; brief = MVP-PROMPT.md at the repository root.",
-
   "plan": {
-    "claimsCopy": { "value": 50, "source": "brief, section 3, Notion bullet: a mirror-shaped Claims table holding 50 real claims copied once from the U.S. Politics table (the 10 claims with Context-dependent decisions in the 9 October audit, plus 40 at random); notes/evidence/06-real-run: 50 claims_copy rows updated" },
-    "tables": { "value": 5, "source": "brief, section 3, Notion bullet, counted: Rulebook copy, Claims copy, Tag decisions (the queue), Rule changes and Agent settings; notes/evidence/05-setup/verify.json: five tables, no difference" },
-    "views": { "value": 4, "source": "brief, section 3, Notion bullet: four views, Your queue, Needs your note, Lessons waiting and Rulebook; agents/claim-tagger-mvp/config.json notion.views has four entries" },
-    "rulebookRows": { "value": 13, "source": "notes/WORKLOG.md, entry 11: 13 Rulebook copy rows written and read back" },
-    "seededDecisions": { "value": 10, "source": "notes/WORKLOG.md, entry 11: 10 seeded audit decisions; notes/evidence/06-real-run: a fresh pull shows 12 queue rows, 10 decided from the audit" },
-    "openRows": { "value": 2, "source": "notes/evidence/06-real-run: 2 tag_decisions rows created for the unsure cells (Can't tell at 0.61 and 0.67)" }
+    "claimsCopy": {
+      "value": 50,
+      "source": "brief, section 3, Notion bullet: a mirror-shaped Claims table holding 50 real claims copied once from the U.S. Politics table (the 10 claims with Context-dependent decisions in the 9 October audit, plus 40 at random); notes/evidence/06-real-run: 50 claims_copy rows updated"
+    },
+    "tables": {
+      "value": 5,
+      "source": "brief, section 3, Notion bullet, counted: Rulebook copy, Claims copy, Tag decisions (the queue), Rule changes and Agent settings; notes/evidence/05-setup/verify.json: five tables, no difference"
+    },
+    "views": {
+      "value": 4,
+      "source": "brief, section 3, Notion bullet: four views, Your queue, Needs your note, Lessons waiting and Rulebook; agents/claim-tagger-mvp/config.json notion.views has four entries"
+    },
+    "rulebookRows": {
+      "value": 13,
+      "source": "notes/WORKLOG.md, entry 11: 13 Rulebook copy rows written and read back"
+    },
+    "seededDecisions": {
+      "value": 10,
+      "source": "notes/WORKLOG.md, entry 11: 10 seeded audit decisions; notes/evidence/06-real-run: a fresh pull shows 12 queue rows, 10 decided from the audit"
+    },
+    "openRows": {
+      "value": 2,
+      "source": "notes/evidence/06-real-run: 2 tag_decisions rows created for the unsure cells (Can't tell at 0.61 and 0.67)"
+    }
   },
-
   "library": {
-    "modules": { "value": 11, "source": "agents/claim-tagger-mvp/scripts/lib/*.mjs, counted with ls on 15 October 2026: claude, exit-codes, hash, jsonl, notion-rest, notion-values, paths, pyjson, rng, stats, validate (the stage 0 set; the loop added its own modules later)" },
-    "copies": { "value": 3, "source": "same folder: claude.mjs, notion-rest.mjs and paths.mjs are copies that differ from the originals (notes/WORKLOG.md, entry 2, names them)" },
-    "reexports": { "value": 8, "source": "same folder: exit-codes, hash, jsonl, notion-values, pyjson, rng, stats and validate each hold one export line that points at the current agent's module" },
-    "tests": { "value": 88, "source": "node --test tests/mvp on 15 October 2026: tests 88, pass 88, fail 0 (the stage 0 library tests)" }
+    "modules": {
+      "value": 11,
+      "source": "agents/claim-tagger-mvp/scripts/lib/*.mjs, counted with ls on 15 October 2026: claude, exit-codes, hash, jsonl, notion-rest, notion-values, paths, pyjson, rng, stats, validate (the stage 0 set; the loop added its own modules later)"
+    },
+    "copies": {
+      "value": 3,
+      "source": "same folder: claude.mjs, notion-rest.mjs and paths.mjs are copies that differ from the originals (notes/WORKLOG.md, entry 2, names them)"
+    },
+    "reexports": {
+      "value": 8,
+      "source": "same folder: exit-codes, hash, jsonl, notion-values, pyjson, rng, stats and validate each hold one export line that points at the current agent's module"
+    },
+    "tests": {
+      "value": 88,
+      "source": "node --test tests/mvp on 15 October 2026: tests 88, pass 88, fail 0 (the stage 0 library tests)"
+    }
   },
-
   "baseline": {
-    "tests": { "value": 865, "source": "notes/evidence/00-baseline-old-tests.txt, summary at the end: tests 865, pass 865, fail 0" }
+    "tests": {
+      "value": 865,
+      "source": "notes/evidence/00-baseline-old-tests.txt, summary at the end: tests 865, pass 865, fail 0"
+    }
   },
-
   "tests": {
-    "full": { "value": 1994, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1994, pass 1994, fail 0 (node --test tests/ on 21 October 2026, after the feedback round and the third verification's fixes)" },
-    "files": { "value": 34, "source": "tests/mvp/*.test.mjs counted with ls on 21 October 2026" }
+    "full": {
+      "value": 2084,
+      "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 2084, pass 2084, fail 0 (node --test tests/ on 22 October 2026, on the branch read-decisions-2026-11 after the fixes of verification run 5)"
+    },
+    "files": {
+      "value": 35,
+      "source": "tests/mvp/*.test.mjs counted with ls on 21 October 2026 evening (readings.test.mjs added by the 22 October revision)"
+    }
   },
-
   "guard": {
-    "checked": { "value": 18, "source": "notes/WORKLOG.md, entry 4: 18 guard decisions checked against expectations in a temporary root, all as expected" }
+    "checked": {
+      "value": 18,
+      "source": "notes/WORKLOG.md, entry 4: 18 guard decisions checked against expectations in a temporary root, all as expected"
+    }
   },
-
   "access": {
-    "reads": { "value": 4, "source": "notes/WORKLOG.md, entry 5: the request log of the access check shows four GET requests and nothing else" }
+    "reads": {
+      "value": 4,
+      "source": "notes/WORKLOG.md, entry 5: the request log of the access check shows four GET requests and nothing else"
+    }
   },
-
   "taxonomy": {
-    "issueRows": { "value": 13, "source": "notes/WORKLOG.md, entry 3: the taxonomy rows whose Work tags contain Issue" }
+    "issueRows": {
+      "value": 13,
+      "source": "notes/WORKLOG.md, entry 3: the taxonomy rows whose Work tags contain Issue"
+    }
   },
-
   "audit": {
-    "decided": { "value": 10, "source": "notes/evidence/03-audit-context-dependent-decisions.json, the decisions array, counted on 15 October 2026: 10 rows" },
-    "agree": { "value": 8, "source": "same file: decisions whose decision is Agree" },
-    "disagree": { "value": 2, "source": "same file: decisions whose decision is Disagree" }
+    "decided": {
+      "value": 10,
+      "source": "notes/evidence/03-audit-context-dependent-decisions.json, the decisions array, counted on 15 October 2026: 10 rows"
+    },
+    "agree": {
+      "value": 8,
+      "source": "same file: decisions whose decision is Agree"
+    },
+    "disagree": {
+      "value": 2,
+      "source": "same file: decisions whose decision is Disagree"
+    }
   },
-
   "realRun": {
-    "writes": { "value": 53, "source": "notes/evidence/06-real-run ledger: 53 ops done with read_back ok (50 claims_copy updates, 2 tag_decisions creates, 1 agent_settings update)" },
-    "tagged": { "value": 5, "source": "notes/WORKLOG.md, entry 12: 5 claims tagged Context-dependent in the first real run" },
-    "dryRunRequests": { "value": 34, "source": "notes/evidence/04-dry-run-real-claims: 34 requests, 0 writes" }
+    "writes": {
+      "value": 53,
+      "source": "notes/evidence/06-real-run ledger: 53 ops done with read_back ok (50 claims_copy updates, 2 tag_decisions creates, 1 agent_settings update)"
+    },
+    "tagged": {
+      "value": 5,
+      "source": "notes/WORKLOG.md, entry 12: 5 claims tagged Context-dependent in the first real run"
+    },
+    "dryRunRequests": {
+      "value": 34,
+      "source": "notes/evidence/04-dry-run-real-claims: 34 requests, 0 writes"
+    }
   },
-
   "commands": {
-    "typed": { "value": 4, "source": "agents/claim-tagger-mvp/walkthrough/page.md, the callout: 'You type four commands yourself (status, tag, distill and promote)'" }
+    "typed": {
+      "value": 4,
+      "source": "agents/claim-tagger-mvp/walkthrough/page.md, the callout: 'You type four commands yourself (status, tag, distill and promote)'"
+    }
   },
-
   "distill": {
-    "maxLessons": { "value": 3, "source": "notes/CONTRACTS.md, section 2: distill.max_lessons_per_run is 3; the brief, section 3, Distill bullet, says at most three per run" }
+    "maxLessons": {
+      "value": 3,
+      "source": "notes/CONTRACTS.md, section 2: distill.max_lessons_per_run is 3; the brief, section 3, Distill bullet, says at most three per run"
+    }
   },
-
   "walkthrough": {
-    "steps": { "value": 7, "source": "brief, section 3 and section 9: the walkthrough has seven steps in a fixed format; agents/claim-tagger-mvp/walkthrough/manifest.json steps has seven entries" },
-    "openRows": { "value": 2, "source": "agents/claim-tagger-mvp/walkthrough/manifest.json: open has two entries (presspool, aiforce)" },
-    "decidedRows": { "value": 5, "source": "agents/claim-tagger-mvp/walkthrough/manifest.json: decided has five entries" },
-    "claims": { "value": 7, "source": "agents/claim-tagger-mvp/walkthrough/manifest.json: claims has seven entries" },
-    "canaries": { "value": 10, "source": "agents/claim-tagger-mvp/walkthrough/manifest.json: canaries has ten entries (manifest 2026-10-15.3; the domestic-chips example of the production set is left out, canaries_note)" }
+    "steps": {
+      "value": 7,
+      "source": "brief, section 3 and section 9: the walkthrough has seven steps in a fixed format; agents/claim-tagger-mvp/walkthrough/manifest.json steps has seven entries"
+    },
+    "openRows": {
+      "value": 4,
+      "source": "agents/claim-tagger-mvp/walkthrough/manifest.json (2026-10-22.1): open has four entries (presspool, aiforce, usps, georgia)"
+    },
+    "decidedRows": {
+      "value": 5,
+      "source": "agents/claim-tagger-mvp/walkthrough/manifest.json: decided has five entries"
+    },
+    "claims": {
+      "value": 9,
+      "source": "agents/claim-tagger-mvp/walkthrough/manifest.json (2026-10-22.1): claims has nine entries"
+    },
+    "canaries": {
+      "value": 10,
+      "source": "agents/claim-tagger-mvp/walkthrough/manifest.json: canaries has ten entries (unchanged since manifest 2026-10-15.3)"
+    }
   },
-
   "calibration": {
-    "pages": { "value": 5, "source": "agents/claim-tagger-mvp/runs/demos/*/demo.json with state ready, counted on 15 October 2026: calibration 1 to 5 (manifests .1, .2, .2, .2, .3)" },
-    "passed": { "value": 3, "source": "agents/claim-tagger-mvp/walkthrough/manifest.json calibration.runs: runs 2, 3 and 5 ended in PASS (each after one wording round); runs 1 and 4 did not pass" },
-    "firstTryPasses": { "value": 0, "source": "same runs: no safety check passed on the agent's own draft; every first check was a FAIL" },
-    "storyVersions": { "value": 3, "source": "agents/claim-tagger-mvp/walkthrough/manifest.json manifest_version 2026-10-15.3: the third version of the story (decisions 33 and 37)" }
+    "pages": {
+      "value": 5,
+      "source": "the five calibration runs of the earlier story (manifest 2026-10-15.1 to .3), runs/demos state ready, counted on 15 October 2026: calibration 1 to 5"
+    },
+    "passed": {
+      "value": 6,
+      "source": "agents/claim-tagger-mvp/walkthrough/manifest.json calibration.runs: runs 2, 3 and 5 ended in PASS after the proposed wording; runs 6, 7 and 8 in PASS on the draft"
+    },
+    "firstTryPasses": {
+      "value": 0,
+      "source": "same runs: no safety check passed on the agent's own draft; every first check was a FAIL"
+    },
+    "storyVersions": {
+      "value": 4,
+      "source": "agents/claim-tagger-mvp/walkthrough/manifest.json manifest_version 2026-10-22.1: the fourth version of the story (2026-10-15.1, .2, .3, 2026-10-21.1 counted as one line of revisions; the 22 October version has four open claims)"
+    },
+    "pagesAll": {
+      "value": 8,
+      "source": "agents/claim-tagger-mvp/walkthrough/manifest.json calibration.runs: runs 1 to 5 (the earlier story) and 6 to 8 (manifest 2026-10-22.1), each on its own practice page under Demos"
+    },
+    "passedOld": {
+      "value": 3,
+      "source": "same: runs 2, 3 and 5 of the earlier story, each PASS after the wording the report proposed"
+    }
   },
-
   "headless": {
-    "checks": { "value": 5, "source": "notes/evidence/07-headless/*/check.json, counted on 15 October 2026: status, demo-status, demo-tag, demo-distill, demo-promote, every one with status pass" }
+    "checks": {
+      "value": 5,
+      "source": "notes/evidence/07-headless/*/check.json, counted on 15 October 2026: status, demo-status, demo-tag, demo-distill, demo-promote, every one with status pass"
+    }
   },
-
   "evals": {
-    "runs": { "value": 6, "source": ".claude/skills/claim-tagger-walkthrough-workspace/iteration-1/eval-*/*/run-1/grading.json, counted on 15 October 2026: three conditions, with and without the skill" },
-    "conditions": { "value": 3, "source": "same folder: eval-2 (dry run), eval-3 (a real tagging request), eval-4 (a practice page while the agent is paused)" },
-    "withSkillPassed": { "value": 12, "source": "same folder, benchmark.json: with_skill runs, passed summed over the three runs: 12 of 12 assertions" },
-    "assertions": { "value": 12, "source": "same: total assertions per configuration, four per condition" },
-    "withoutSkillPassed": { "value": 8, "source": "same folder, benchmark.json: without_skill runs, passed summed over the three runs: 8 of 12 assertions" },
-    "triggerQueries": { "value": 20, "source": ".claude/skills/claim-tagger-walkthrough/evals/trigger-eval.json: ten queries that must trigger the skill and ten that must not" }
+    "runs": {
+      "value": 6,
+      "source": ".claude/skills/claim-tagger-walkthrough-workspace/iteration-1/eval-*/*/run-1/grading.json, counted on 15 October 2026: three conditions, with and without the skill"
+    },
+    "conditions": {
+      "value": 3,
+      "source": "same folder: eval-2 (dry run), eval-3 (a real tagging request), eval-4 (a practice page while the agent is paused)"
+    },
+    "withSkillPassed": {
+      "value": 12,
+      "source": "same folder, benchmark.json: with_skill runs, passed summed over the three runs: 12 of 12 assertions"
+    },
+    "assertions": {
+      "value": 12,
+      "source": "same: total assertions per configuration, four per condition"
+    },
+    "withoutSkillPassed": {
+      "value": 8,
+      "source": "same folder, benchmark.json: without_skill runs, passed summed over the three runs: 8 of 12 assertions"
+    },
+    "triggerQueries": {
+      "value": 20,
+      "source": ".claude/skills/claim-tagger-walkthrough/evals/trigger-eval.json: ten queries that must trigger the skill and ten that must not"
+    }
   },
-
   "rollback": {
-    "editions": { "value": 3, "source": "agents/claim-tagger-mvp/runs/demos/20261015-1821-f6e85f/rubric/history: editions .1 (built), .2 (the PASS) and .3 (the rollback); notes/evidence/10-rollback/read-back-run3.json" }
+    "editions": {
+      "value": 3,
+      "source": "agents/claim-tagger-mvp/runs/demos/20261015-1821-f6e85f/rubric/history: editions .1 (built), .2 (the PASS) and .3 (the rollback); notes/evidence/10-rollback/read-back-run3.json"
+    }
   },
-
   "decisions": {
-    "logged": { "value": 63, "source": "notes/DECISIONS.md: numbered rows 1 to 63 counted on 21 October 2026, plus the product owner's decisions P1 to P3" }
+    "logged": {
+      "value": 80,
+      "source": "notes/DECISIONS.md: numbered rows 1 to 80 counted on 22 October 2026, plus the product owner's decisions P1 to P4"
+    }
   },
-
   "backlog": {
-    "rows": { "value": 21, "source": "notes/BACKLOG.md: table rows counted on 15 October 2026 (after the row on the triggering test)" }
+    "rows": {
+      "value": 36,
+      "source": "notes/BACKLOG.md: table rows counted on 22 October 2026, header excluded (twelve rows added on the branch read-decisions-2026-11)"
+    }
   },
-
   "revision": {
-    "views": { "value": 7, "source": "agents/claim-tagger-mvp/setup/structure.json, views counted on 16 October 2026: Your queue, Needs your note and Agent disagreed on the Claims copy, Lessons waiting, Rulebook, and the two renamed ledger views" }
+    "views": {
+      "value": 7,
+      "source": "agents/claim-tagger-mvp/setup/structure.json, views counted on 16 October 2026: Your queue, Needs your note and Agent disagreed on the Claims copy, Lessons waiting, Rulebook, and the two renamed ledger views"
+    }
   },
-
   "verify": {
-    "checks": { "value": 6, "source": "notes/VERIFICATION.md: acceptance checks 1, 3, 5, 7, 8 and 10 re-run by the independent verifier on 15 October 2026 (check 1 twice: at commit dd65af9 and again at a478df6)" },
-    "passed": { "value": 6, "source": "notes/VERIFICATION.md, the Checks table at commit a478df6: every re-run check has the verdict PASS (check 1 after the test was corrected); overall verdict PASS" }
+    "checks": {
+      "value": 6,
+      "source": "notes/VERIFICATION.md: acceptance checks 1, 3, 5, 7, 8 and 10 re-run by the independent verifier on 15 October 2026 (check 1 twice: at commit dd65af9 and again at a478df6)"
+    },
+    "passed": {
+      "value": 6,
+      "source": "notes/VERIFICATION.md, the Checks table at commit a478df6: every re-run check has the verdict PASS (check 1 after the test was corrected); overall verdict PASS"
+    }
+  },
+  "revision2": {
+    "pages": {
+      "value": 3,
+      "source": "agents/claim-tagger-mvp/walkthrough/manifest.json calibration.runs 6 to 8 (manifest 2026-10-22.1), on 21 October 2026 evening; notes/evidence/09-calibration/run-6 to run-8"
+    },
+    "firstTryPasses": {
+      "value": 3,
+      "source": "same runs: gate \"PASS on the draft\" in all three"
+    },
+    "auditRead": {
+      "value": 8,
+      "source": "notes/evidence/17-readings-live/readings-vs-audit.md: eight audit disagreements read, 8 of 8 Agent slip as the audit"
+    },
+    "verificationRuns": {
+      "value": 3,
+      "source": "notes/evidence/18-walkthrough-verification-4, 19-walkthrough-verification-5, 20-walkthrough-verification-6: three runs of the verification loop; the third had no must or should finding"
+    }
   }
 }

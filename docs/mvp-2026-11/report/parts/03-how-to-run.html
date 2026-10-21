@@ -6,7 +6,7 @@
 <p class="geo-eyebrow plain-label">In short</p>
 <p>You type {{count:commands.typed}} commands yourself: status, tag, distill and promote. The follow-up runs by itself after a PASS, and the engineer sets things up and fixes what breaks. Every command ends with the same short report in three parts, and a practice page lets you try all of it before you decide a real row.</p>
 <div class="geo-callout"><div class="geo-callout-body">
-<p><strong>Built and run.</strong> Every command below ran today against the Notion copy, and the whole cycle ran {{count:calibration.pages}} times on practice pages. Commands go into Claude Code, opened in the project folder.</p>
+<p><strong>Built and run.</strong> Every command below ran against the Notion copy, and the whole cycle ran {{count:calibration.pagesAll}} times on practice pages. Commands go into Claude Code, opened in the project folder.</p>
 </div></div>
 </div>
 
@@ -14,11 +14,11 @@
 <h3>The seven steps, on a fresh practice page</h3>
 <p>The practice page has its own small tables, so nothing real changes. Build one, then follow the steps written on the page itself; each step has the same four parts: Goal of the step, Existing status, Doing the work and Explaining the outputs.</p>
 <ol>
-<li>Open your practice page "Claim tagger practice · product owner, 21 Oct afternoon" under Demos; it was built for you on 21 October after the fixes below, and it is the page the demo commands reach. To make another one later, ask Claude Code for a practice page and paste the link of the Demos page: <code>/claim-tagger-walkthrough</code> with the link.</li>
+<li>Open your practice page "Claim tagger practice · product owner, 22 Oct" under Demos; it was built for you after the 22 October revision was verified, and it is the page the demo commands reach. To make another one later, ask Claude Code for a practice page and paste the link of the Demos page: <code>/claim-tagger-walkthrough</code> with the link.</li>
 <li>Type <code>/claim-tagger demo status</code> (step 1 of the page).</li>
 <li>Type <code>/claim-tagger demo tag</code> (step 2): the agent reads the {{count:walkthrough.claims}} claims and fills its side of your {{count:walkthrough.openRows}} rows.</li>
-<li>In Notion, in Your queue on the Claims table, decide your {{count:walkthrough.openRows}} claims (step 3): tick the tag in Verified tags where it applies, choose Why wrong, write your note, set Review status to Reviewed. The page gives you the words as a checklist, and Claude repeats it after the report. A decided claim stays in Your queue until the agent's next run picks it up.</li>
-<li>Type <code>/claim-tagger demo distill</code> (step 4), then approve the draft in Lessons waiting (step 5).</li>
+<li>In Notion, in Your queue on the Claims table, decide your {{count:walkthrough.openRows}} claims (step 3): tick the tag in Verified tags where it applies, write your note (one line per tag when several; if you already know the reason, start it with Agent slip., Rule unclear. or Rule should change.), set Review status to Reviewed. The page gives you the words as a checklist, and Claude repeats it after the report. A decided claim stays in Your queue until the agent's next run picks it up.</li>
+<li>Type <code>/claim-tagger demo distill</code> (step 4): the agent reads each of your decisions, writes what it made of each in the Agent reading column, and drafts a rule change from the ones that point at the rule; then approve the draft in Lessons waiting (step 5).</li>
 <li>Type <code>/claim-tagger demo promote</code> (step 6). On a PASS the follow-up runs by itself and step 7 shows your rows marked Fixed. On a FAIL the report hands you the whole text for Editor wording: paste it, then type the same command again.</li>
 </ol>
 <p>At any point, "where am I in the claim tagger demo" tells you the step you are at and the one thing to do next.</p>
@@ -31,9 +31,9 @@
 <colgroup><col style="width:26%"><col style="width:46%"><col style="width:28%"></colgroup>
 <thead><tr><th scope="col">Command</th><th scope="col">What it does</th><th scope="col">Then</th></tr></thead>
 <tbody>
-<tr><td><code>/claim-tagger status</code></td><td>Shows what is waiting: claims to review, lessons waiting, whether the agent is paused and the current rulebook edition.</td><td>Open Your queue, or you are done.</td></tr>
+<tr><td><code>/claim-tagger status</code></td><td>Shows what is waiting: claims to review, how many of your decisions the agent still has to read, how many point at a rule and how many have no note, lessons waiting, whether the agent is paused and the current rulebook edition.</td><td>Open Your queue, type distill, or you are done.</td></tr>
 <tr><td><code>/claim-tagger tag</code></td><td>Reads the claims against the rulebook and writes its side of the claims table: Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition and Agent remarks. A tag it is unsure about, or any tag on a claim marked To review, goes to Tags waiting instead of Agent tags, the status reads Waits for you, and Your queue lists those claims, least sure first. On a claim you have reviewed your tags stand; where the agent now disagrees its status says so.</td><td>Decide the claims in Your queue.</td></tr>
-<tr><td><code>/claim-tagger distill</code></td><td>Turns decisions that blame a rule into proposed rule changes, called lessons, at most {{count:distill.maxLessons}} per run.</td><td>Approve or rewrite each lesson in Lessons waiting.</td></tr>
+<tr><td><code>/claim-tagger distill</code></td><td>First reads each decision of yours that differs from its tag: Agent slip, Rule unclear or Rule should change, with the rule and one line of why, written on the claim and in its record; a note that starts with one of those words is taken as it stands, and a decision without a note is read and flagged for you. Then turns the readings that point at a rule into proposed rule changes, called lessons, at most {{count:distill.maxLessons}} per run.</td><td>Approve or rewrite each lesson in Lessons waiting; add a note where it asks for one.</td></tr>
 <tr><td><code>/claim-tagger promote</code></td><td>Runs the safety check on the approved lesson. On a PASS the new rule goes live, a new edition starts and the follow-up re-checks the rows. On a FAIL nothing changes and the report hands you the whole text for Editor wording.</td><td>Read step 7, or paste the wording and promote again.</td></tr>
 <tr><td><code>/claim-tagger follow-up</code></td><td>Repeats the follow-up by hand, only after a promote that stopped before its last step.</td><td>Read the Follow-up column.</td></tr>
 <tr><td><code>/claim-tagger rollback</code></td><td>Puts a rule back to the text it had before its change went live, as a new edition. The engineer runs it, with a confirmation.</td><td>Status shows the new edition.</td></tr>
@@ -42,7 +42,7 @@
 <p>If a command stops because the agent is paused, untick Paused in Agent settings (or delete the pause file) and run it again. If it stops because your Claude allowance ran out, wait and run the same command again: it picks up where it stopped. If it says the rulebook text was edited by hand, put the text back as it was, or ask the engineer.</p>
 <h3>Who does what</h3>
 <ul>
-<li><strong>The editor</strong> types status and tag, then decides the claims in Your queue, least sure first: Verified tags is the decision, Review status Reviewed closes the claim, Why wrong and a note say when the rule, not the agent, was at fault. After each report Claude adds a short checklist of what to do in Notion and the next command.</li>
+<li><strong>The editor</strong> types status and tag, then decides the claims in Your queue, least sure first: Verified tags is the decision, Review status Reviewed closes the claim, a note says what you saw. The agent works out whether the rule or its own reading was at fault; start the note with the reason word to overrule it. After each report Claude adds a short checklist of what to do in Notion and the next command.</li>
 <li><strong>The rule owner</strong> approves or rewrites lessons in Lessons waiting, then types promote.</li>
 <li><strong>The engineer</strong> does the setup, the rollback and the repairs, and nothing else.</li>
 <li><strong>The machine</strong> runs the follow-up after a PASS, without anyone typing.</li>
@@ -58,12 +58,12 @@
 </ol>
 <p>Nothing else is added: no run records, no durations, no costs. When more rows wait than fit one sitting, the Next line says "start at the top of Your queue". A report that comes from the practice page starts with "Demo ·" and names the page.</p>
 <div class="geo-card">
-<p class="geo-card-body"><strong>1 · What ran.</strong> Demo · Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger practice · calibration 5).</p>
+<p class="geo-card-body"><strong>1 · What ran.</strong> Demo · Promote: PASS, rule 3 now uses the new wording (edition 2026-10-21.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger practice · calibration 7).</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact" style="min-width:0">
 <caption><strong>2 · The result</strong> · as reported today</caption>
 <tbody>
 <tr><td>Example claims</td><td>10 of 10 right</td></tr>
-<tr><td>Earlier decisions</td><td>5 of 5 still right</td></tr>
+<tr><td>Earlier decisions</td><td>6 of 6 still right</td></tr>
 <tr><td>Your 2 rows</td><td>2 of 2 now right, marked Fixed</td></tr>
 </tbody>
 </table></div>
@@ -74,21 +74,21 @@
 <div class="sub" id="how-practice" data-title="The practice page">
 <h3>What the practice page holds</h3>
 <p><code>/claim-tagger-walkthrough</code> builds a fresh practice page under a Notion page you name; without a link it asks one question: "Under which Notion page should the demo go? Paste a link." The page has its own small tables, so nothing real changes, and you can build a new one whenever you want to practise again.</p>
-<p>The page tells a small story about the Context-dependent tag and its rule 3 on descriptive references: {{count:walkthrough.openRows}} claims wait for you, {{count:walkthrough.decidedRows}} earlier decisions stand, and {{count:walkthrough.canaries}} example claims guard the safety check. The agent calls the press pool claim Context-dependent and you say that everyone knows the press pool; the agent cannot decide the AI Force claim and you say that a capitalised name nobody knows still needs context. Your two notes become one clearer rule 3.</p>
+<p>The page tells a small story about the Context-dependent tag and its rule 3 on descriptive references: {{count:walkthrough.openRows}} claims wait for you, {{count:walkthrough.decidedRows}} earlier decisions stand, and {{count:walkthrough.canaries}} example claims guard the safety check. The agent calls the press pool claim Context-dependent and you say that everyone knows the press pool; it cannot decide the AI Force claim and you say that a capitalised name nobody knows still needs context; it tags the USPS ballot portal and you say it slipped, because USPS names which portal; it leaves Georgia's debate untagged and you agree. The agent reads the first two as a problem with rule 3, takes your word on the third and has nothing to read on the fourth; your two rule notes become one changed rule 3.</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
 <colgroup><col style="width:10%"><col style="width:58%"><col style="width:32%"></colgroup>
 <thead><tr><th scope="col">Step</th><th scope="col">What happens</th><th scope="col">Where</th></tr></thead>
 <tbody>
 <tr><td>1</td><td>You meet the practice page.</td><td>In Claude Code</td></tr>
 <tr><td>2</td><td>The agent reads the claims.</td><td>In Claude Code</td></tr>
-<tr><td>3</td><td>You decide your two claims, as the editor.</td><td>In Notion, in Your queue on the Claims table</td></tr>
-<tr><td>4</td><td>The agent drafts a clearer rule from your decisions.</td><td>In Claude Code</td></tr>
+<tr><td>3</td><td>You decide your four claims, as the editor.</td><td>In Notion, in Your queue on the Claims table</td></tr>
+<tr><td>4</td><td>The agent reads your decisions and drafts a changed rule from the ones that point at it.</td><td>In Claude Code</td></tr>
 <tr><td>5</td><td>You approve the draft, as the rule owner.</td><td>In Notion, in Lessons waiting</td></tr>
 <tr><td>6</td><td>The safety check runs and, on a PASS, the new rule goes live.</td><td>In Claude Code</td></tr>
 <tr><td>7</td><td>The agent re-checks your rows.</td><td>Runs by itself</td></tr>
 </tbody>
 </table></div>
-<p>The last step has nothing to type. The page also explains why the two claims wait, how to fill in Why wrong, what each word means, and what to do when the agent is paused or your Claude allowance ran out. The Tag decisions table at the bottom is the agent's own record of each decision; there is nothing to do in it.</p>
-<p><strong>What to expect at step 6.</strong> In the {{count:calibration.pages}} practice runs today the first safety check never passed on the agent's own draft: the judge kept reading the press pool claim as needing context. Each time, the wording the report proposed passed on the next try and the rule went live. Both outcomes are the loop working as designed: a draft that does not fix the row is caught before it reaches the rulebook.</p>
+<p>The last step has nothing to type. The page also explains why the four claims wait, what each reading means and how to overrule one, what each word means, and what to do when the agent is paused or your Claude allowance ran out. The Tag decisions table at the bottom is the agent's own record of each decision; there is nothing to do in it.</p>
+<p><strong>What to expect at step 6.</strong> In the {{count:revision2.pages}} practice runs of the revised story the safety check passed on the agent's own draft every time. In the {{count:calibration.pages}} runs of the earlier story it never did: the judge kept reading the press pool claim as needing context, and the wording the report proposed passed on the next try. Both outcomes are the loop working as designed: a draft that does not fix the row is caught before it reaches the rulebook.</p>
 </div>
 </section>

@@ -1,0 +1,13 @@
+=== start (the product owner's page under Demos)
+Building the page.
+walkthrough: the column order of the Claims view "Default view" was set to the review order
+Walkthrough: your practice page is ready under Demos.
+
+| Table | Now |
+|---|---|
+| Rulebook | 1 tag |
+| Claims | 9: 5 reviewed earlier, 4 for you |
+| Rule changes | empty |
+
+Next: open Claim tagger practice · product owner, 22 Oct (https://app.notion.com/p/Claim-tagger-practice-product-owner-22-Oct-400273e214eb8151af07da13419256ae) and follow step 1.
+exit 0

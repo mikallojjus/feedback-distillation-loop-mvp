@@ -646,10 +646,10 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 
 <div class="plain">
 <p class="geo-eyebrow plain-label">In short</p>
-<p><strong>The MVP is built, tested and run live: the second checkpoint, the final demo, is reached.</strong> The loop runs end to end on a copy of 50 real claims in Notion: the agent tags, the editor decides, a rule change is drafted from the decisions, a safety check tests it against every earlier decision before the rulebook changes, and the follow-up re-checks the rows. The whole cycle ran 5 times on practice pages, through to a rule going live and being rolled back again. After the demo was handed over, the product owner asked that editors decide where they work: since 16 October the decision lives on the claims table itself, in the same columns the real table has, and the former queue is the agent's own record.</p>
+<p><strong>The MVP is built, tested and run live: the second checkpoint, the final demo, is reached.</strong> The loop runs end to end on a copy of 50 real claims in Notion: the agent tags, the editor decides, a rule change is drafted from the decisions, a safety check tests it against every earlier decision before the rulebook changes, and the follow-up re-checks the rows. The whole cycle ran 8 times on practice pages, through to a rule going live and being rolled back again. After the demo was handed over, the product owner asked that editors decide where they work: since 16 October the decision lives on the claims table itself, in the same columns the real table has, and the former queue is the agent's own record. On 22 October the agent also took over the reason behind each decision: editors fill their verified tags, their notes and the status, and the agent reads every disagreement itself, tag by tag, as a slip of its own, an unclear rule or a rule that should change, and drafts from what it read.</p>
 <p>The MVP judges one tag, Context-dependent, and never writes the real claims table. Everything else waits in the <a href="#backlog">Backlog</a>.</p>
 <div class="geo-callout"><div class="geo-callout-body">
-<p><strong>What the product owner does now.</strong> Run the seven steps on the fresh practice page, as the <a href="#how-to-run">How to run</a> tab describes, and say whether the MVP is agreed.</p>
+<p><strong>What the product owner does now.</strong> Run the seven steps on the fresh practice page built for the 22 October revision, as the <a href="#how-to-run">How to run</a> tab describes, and say whether the MVP is agreed and the revision's branch may be merged.</p>
 </div></div>
 </div>
 
@@ -660,15 +660,16 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <thead><tr><th scope="col">Part</th><th scope="col">What it is</th><th scope="col">State</th></tr></thead>
 <tbody>
 <tr><td>Notion tables</td><td>The 5 tables under the page "Feedback Distillation MVP", built as approved and read back without a difference: 13 rulebook rows, 50 claims, 10 decisions from the 9 October audit, one settings row. The revision adds four editor columns and two agent columns to the claims table and moves the editor's views there (7 views in all).</td><td><span class="mark mark-yes">Built and verified</span></td></tr>
-<tr><td>Decisions on the claims table</td><td>Editors set Verified tags, Review status, Why wrong and their notes on the claim's own row; the agent reads the decision from there, copies it into its record and never writes those four columns. Its own side is seven columns a view can filter on (Agent tags as tag chips, confidence, reasons, status, the tags waiting, the edition, remarks), shown before the review columns. Live on the copy since 21 October: the new columns and views are in place, the twelve existing decisions were carried over and read back, and the first tag run under the new shape wrote the agent's columns on every claim.</td><td><span class="mark mark-yes">Live</span></td></tr>
+<tr><td>Decisions on the claims table</td><td>Editors set Verified tags, Review status and their notes on the claim's own row; the agent reads the decision from there, copies it into its record and never writes those three columns. Its own side is eight columns a view can filter on (Agent tags as tag chips, confidence, reasons, status, the tags waiting, the edition, remarks and, since 22 October, its reading of each decision), shown before the review columns. Live on the copy: the 21 October columns and views, then the 22 October revision's columns, each read back without a difference; the first tag run under the new shape wrote the agent's columns on every claim.</td><td><span class="mark mark-yes">Live</span></td></tr>
+<tr><td>The agent reads the decisions</td><td>Where an editor decided a tag differently from the agent, the agent reads the disagreement itself: Agent slip (the rule as written settles it the editor's way and the agent misread it), Rule unclear (the rule can be read both ways) or Rule should change (the rule decides against the editor), with the rule it points at and one line of why, written on the claim and in the agent's record. A note that starts with one of those words is taken as it stands, with no reading; a decision without a note is read and flagged, and a view lists it. Rule changes are drafted from the readings that point at a rule, and a reading is made again only when the decision, the note or the agent's own proposal changes. On the copy the agent read the 8 decisions of the 9 October audit once and called every one a slip of its own, as the audit had.</td><td><span class="mark mark-yes">Live and read back</span></td></tr>
 <tr><td>The loop</td><td>Pull, judge, propose, distill, promote with the safety check, follow-up, rollback, restore and status. The first real run tagged the 50 claims, put 2 rows in the queue and wrote 53 cells that were all read back.</td><td><span class="mark mark-yes">Run live</span></td></tr>
 <tr><td>The safety check</td><td>Tests an approved rule change against the example claims, the earlier decisions and the rows it rests on; PASS switches the rulebook to a new edition and runs the follow-up, FAIL leaves it alone and proposes a wording. Both outcomes happened on practice pages today.</td><td><span class="mark mark-yes">Run live</span></td></tr>
 <tr><td>Rollback</td><td>Puts a rule back to its earlier text as a new edition and marks the change Rolled back. Run on a practice page whose rule had gone live; the Notion text was read back equal to the restored text.</td><td><span class="mark mark-yes">Read back</span></td></tr>
 <tr><td>Editor commands</td><td>The commands you type, each ending in a three-part report. Checked in a headless run of Claude Code, 5 times: the report shape held and no Notion write came from the assistant itself.</td><td><span class="mark mark-yes">Checked</span></td></tr>
-<tr><td>Practice page builder</td><td>Builds a practice page with its own tables, views, seven steps and help under a page you name, and says where you are. 5 pages built today, every one read back equal to its design.</td><td><span class="mark mark-yes">Run live</span></td></tr>
-<tr><td>The story on the practice page</td><td>Two rows the editor disagrees with, five earlier decisions, 10 example claims. Revised 3 times today from what the runs showed; the current version has run once and passed after the editor's wording.</td><td><span class="mark mark-part">One run; two more follow</span></td></tr>
+<tr><td>Practice page builder</td><td>Builds a practice page with its own tables, views, seven steps and help under a page you name, and says where you are. 8 calibration pages built, every one read back equal to its design.</td><td><span class="mark mark-yes">Run live</span></td></tr>
+<tr><td>The story on the practice page</td><td>Four rows the editor decides (two where the rule is at fault, one where the agent slipped, one where the editor agrees with it), five earlier decisions, 10 example claims. Revised 4 times from what the runs showed; the current version ran 3 times and the safety check passed on the agent's own draft each time.</td><td><span class="mark mark-yes">Three runs, all passed</span></td></tr>
 <tr><td>Pause, drift and allowance</td><td>Paused in Agent settings or the pause file stops every command with a report that says so; a hand edit of the rulebook text stops every command until the text is put back; a run that meets the Claude allowance stops and resumes with the same command.</td><td><span class="mark mark-yes">Checked live</span></td></tr>
-<tr><td>Independent verification</td><td>A separate reviewer re-ran 6 of the acceptance checks from the committed repository as it stood at the demo hand-over; 6 of them pass. After the revision, two further reviewers each built a fresh practice page and went through the seven steps as an editor: both runs worked end to end, the safety check passed on the first try each time, and the first run's eleven findings were fixed and confirmed by the second (one new finding, a page title the report check misread as a duration, fixed since).</td><td><span class="mark mark-yes">Done, twice after the revision</span></td></tr>
+<tr><td>Independent verification</td><td>A separate reviewer re-ran 6 of the acceptance checks from the committed repository as it stood at the demo hand-over; 6 of them pass. After the revision, two further reviewers each built a fresh practice page and went through the seven steps as an editor: both runs worked end to end, the safety check passed on the first try each time, and the first run's eleven findings were fixed and confirmed by the second (one new finding, a page title the report check misread as a duration, fixed since). A third reviewer confirmed the feedback round of 21 October, and a fourth went through the 22 October revision on a fresh page, deciding one claim without a note on purpose to see it read and flagged: the first run found one must-finding (a draft kept resting on a decision the editor later called a slip) and five smaller ones, settled as two decisions and fixed; the second run confirmed those fixes and found one older defect (a stopped safety check that could not be resumed), fixed; the third run was clean, end to end and on the agent's own draft, with three small points left for the backlog.</td><td><span class="mark mark-yes">Done, four times after the revision</span></td></tr>
 </tbody>
 </table></div>
 </div>
@@ -676,8 +677,8 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <div class="sub" id="status-verified" data-title="What was verified">
 <h3>Checks that were run</h3>
 <div class="geo-stat-grid">
-<div class="geo-card"><div class="geo-stat-value">1,994</div><div class="geo-stat-label"><strong>Tests</strong> in 34 files: all pass, on stand-in Notion and stand-in model</div></div>
-<div class="geo-card"><div class="geo-stat-value">5</div><div class="geo-stat-label"><strong>Practice pages</strong> run through the whole cycle today</div></div>
+<div class="geo-card"><div class="geo-stat-value">2,084</div><div class="geo-stat-label"><strong>Tests</strong> in 35 files: all pass, on stand-in Notion and stand-in model</div></div>
+<div class="geo-card"><div class="geo-stat-value">8</div><div class="geo-stat-label"><strong>Practice pages</strong> run through the whole cycle</div></div>
 <div class="geo-card"><div class="geo-stat-value">12/12</div><div class="geo-stat-label"><strong>Skill test assertions</strong> met with the practice-page skill, against 8/12 without it</div></div>
 <div class="geo-card"><div class="geo-stat-value">5</div><div class="geo-stat-label"><strong>Headless report checks</strong>: every command answered in three parts</div></div>
 </div>
@@ -685,11 +686,12 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <colgroup><col style="width:28%"><col style="width:72%"></colgroup>
 <thead><tr><th scope="col">Check</th><th scope="col">Result</th></tr></thead>
 <tbody>
-<tr><td>Tests</td><td>1,994 tests pass and none fail. They run the whole loop against a stand-in Notion and a stand-in model, including every error path: an unreadable reply, a passing fault, the allowance running out, the wrong model.</td></tr>
+<tr><td>Tests</td><td>2,084 tests pass and none fail. They run the whole loop against a stand-in Notion and a stand-in model, including every error path: an unreadable reply, a passing fault, the allowance running out, the wrong model.</td></tr>
 <tr><td>Reads only against the real table</td><td>A dry run against the real claims table sent 34 requests and no write; the request log proves it.</td></tr>
 <tr><td>Setup equals the approved structure</td><td>Every table, column, dropdown choice and view was read back and compared with the approved proposal: no difference.</td></tr>
 <tr><td>The real run on the copy</td><td>The agent read the 50 claims, tagged 5 of them Context-dependent and put 2 unsure answers in the queue; every write was read back.</td></tr>
-<tr><td>A rule change that went live</td><td>On three practice pages an approved change passed its safety check: the rulebook text changed, a new edition was recorded, and the follow-up marked the editor's rows Fixed.</td></tr>
+<tr><td>A rule change that went live</td><td>On 6 practice pages an approved change passed its safety check: the rulebook text changed, a new edition was recorded, and the follow-up marked the editor's rows Fixed. On the three pages of the revised story it passed on the agent's own draft.</td></tr>
+<tr><td>The readings against the audit</td><td>The agent's reading of the 8 decisions of the 9 October audit was made first without writing anything, compared with the audit's own verdicts (every one a slip of the agent, none a rule problem) and found to agree on all of them; only then was it written, with no second reading.</td></tr>
 <tr><td>Rollback</td><td>The rule went back to its earlier text as a new edition, the change reads Rolled back, and the Notion text equals the restored text.</td></tr>
 <tr><td>The commands, headless</td><td>Status, and the practice page's status, tag, distill and promote, each run in a headless Claude Code: the final message had one sentence, one table and one Next line, and the assistant typed one command per step and wrote nothing to Notion itself.</td></tr>
 <tr><td>The practice-page skill</td><td>Three conditions, each run with and without the skill: a dry run before building, a real tagging request that must not become a walkthrough, and a request while the agent is paused. With the skill every assertion was met; without it the replies ran long, named files and commands, and once told the editor how to lift the pause.</td></tr>
@@ -703,18 +705,19 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <div class="sub" id="status-open" data-title="What is open">
 <h3>Waiting on you</h3>
 <ul>
-<li>Run the seven steps on your fresh practice page (the How to run tab names it) and say whether the MVP is agreed.</li>
+<li>Run the seven steps on your fresh practice page (the How to run tab names it) and say whether the MVP is agreed and the revision's branch may be merged into the main one.</li>
 </ul>
 <h3>What the runs showed</h3>
 <ul>
-<li>The first safety check never passed on the agent's own draft in 5 runs: the judge keeps reading the press pool claim as needing context. The wording the report proposes passed on the next try in 3 runs; in two runs the story itself was found wanting and revised.</li>
+<li>In the 5 runs of the earlier story the first safety check never passed on the agent's own draft: the judge kept reading the press pool claim as needing context. The wording the report proposed passed on the next try in 3 runs; in two runs the story itself was found wanting and revised.</li>
+<li>In the 3 runs of the revised story the safety check passed on the agent's own draft every time: the readings put the draft on the rule the editor meant, whichever rule the agent had cited when it tagged.</li>
 <li>The judge reads borderline claims differently from run to run. One example claim of the opposite tag, about a shift to domestic chips, is read as needing context under the rules in force; it stays in the real set and is left out of the practice page.</li>
-<li>Two more runs of the current story, and one skill test that needs an unpaused agent, follow once the pause is cleared.</li>
+<li>One skill test that needs an unpaused agent is still to run.</li>
 </ul>
 <h3>Not in the MVP</h3>
 <ul>
-<li>What is deliberately left out is on the <a href="#backlog">Backlog</a> tab, with a reason and a trigger for each of its 21 items.</li>
-<li>63 decisions taken during the build and after the demo are written down with their reasons in the project notes, with the product owner's three decisions beside them.</li>
+<li>What is deliberately left out is on the <a href="#backlog">Backlog</a> tab, with a reason and a trigger for each of its 36 items.</li>
+<li>80 decisions taken during the build and after the demo are written down with their reasons in the project notes, with the product owner's four decisions beside them.</li>
 </ul>
 </div>
 </section>
@@ -727,7 +730,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <p class="geo-eyebrow plain-label">In short</p>
 <p>You type 4 commands yourself: status, tag, distill and promote. The follow-up runs by itself after a PASS, and the engineer sets things up and fixes what breaks. Every command ends with the same short report in three parts, and a practice page lets you try all of it before you decide a real row.</p>
 <div class="geo-callout"><div class="geo-callout-body">
-<p><strong>Built and run.</strong> Every command below ran today against the Notion copy, and the whole cycle ran 5 times on practice pages. Commands go into Claude Code, opened in the project folder.</p>
+<p><strong>Built and run.</strong> Every command below ran against the Notion copy, and the whole cycle ran 8 times on practice pages. Commands go into Claude Code, opened in the project folder.</p>
 </div></div>
 </div>
 
@@ -735,11 +738,11 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <h3>The seven steps, on a fresh practice page</h3>
 <p>The practice page has its own small tables, so nothing real changes. Build one, then follow the steps written on the page itself; each step has the same four parts: Goal of the step, Existing status, Doing the work and Explaining the outputs.</p>
 <ol>
-<li>Open your practice page "Claim tagger practice · product owner, 21 Oct afternoon" under Demos; it was built for you on 21 October after the fixes below, and it is the page the demo commands reach. To make another one later, ask Claude Code for a practice page and paste the link of the Demos page: <code>/claim-tagger-walkthrough</code> with the link.</li>
+<li>Open your practice page "Claim tagger practice · product owner, 22 Oct" under Demos; it was built for you after the 22 October revision was verified, and it is the page the demo commands reach. To make another one later, ask Claude Code for a practice page and paste the link of the Demos page: <code>/claim-tagger-walkthrough</code> with the link.</li>
 <li>Type <code>/claim-tagger demo status</code> (step 1 of the page).</li>
-<li>Type <code>/claim-tagger demo tag</code> (step 2): the agent reads the 7 claims and fills its side of your 2 rows.</li>
-<li>In Notion, in Your queue on the Claims table, decide your 2 claims (step 3): tick the tag in Verified tags where it applies, choose Why wrong, write your note, set Review status to Reviewed. The page gives you the words as a checklist, and Claude repeats it after the report. A decided claim stays in Your queue until the agent's next run picks it up.</li>
-<li>Type <code>/claim-tagger demo distill</code> (step 4), then approve the draft in Lessons waiting (step 5).</li>
+<li>Type <code>/claim-tagger demo tag</code> (step 2): the agent reads the 9 claims and fills its side of your 4 rows.</li>
+<li>In Notion, in Your queue on the Claims table, decide your 4 claims (step 3): tick the tag in Verified tags where it applies, write your note (one line per tag when several; if you already know the reason, start it with Agent slip., Rule unclear. or Rule should change.), set Review status to Reviewed. The page gives you the words as a checklist, and Claude repeats it after the report. A decided claim stays in Your queue until the agent's next run picks it up.</li>
+<li>Type <code>/claim-tagger demo distill</code> (step 4): the agent reads each of your decisions, writes what it made of each in the Agent reading column, and drafts a rule change from the ones that point at the rule; then approve the draft in Lessons waiting (step 5).</li>
 <li>Type <code>/claim-tagger demo promote</code> (step 6). On a PASS the follow-up runs by itself and step 7 shows your rows marked Fixed. On a FAIL the report hands you the whole text for Editor wording: paste it, then type the same command again.</li>
 </ol>
 <p>At any point, "where am I in the claim tagger demo" tells you the step you are at and the one thing to do next.</p>
@@ -752,9 +755,9 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <colgroup><col style="width:26%"><col style="width:46%"><col style="width:28%"></colgroup>
 <thead><tr><th scope="col">Command</th><th scope="col">What it does</th><th scope="col">Then</th></tr></thead>
 <tbody>
-<tr><td><code>/claim-tagger status</code></td><td>Shows what is waiting: claims to review, lessons waiting, whether the agent is paused and the current rulebook edition.</td><td>Open Your queue, or you are done.</td></tr>
+<tr><td><code>/claim-tagger status</code></td><td>Shows what is waiting: claims to review, how many of your decisions the agent still has to read, how many point at a rule and how many have no note, lessons waiting, whether the agent is paused and the current rulebook edition.</td><td>Open Your queue, type distill, or you are done.</td></tr>
 <tr><td><code>/claim-tagger tag</code></td><td>Reads the claims against the rulebook and writes its side of the claims table: Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition and Agent remarks. A tag it is unsure about, or any tag on a claim marked To review, goes to Tags waiting instead of Agent tags, the status reads Waits for you, and Your queue lists those claims, least sure first. On a claim you have reviewed your tags stand; where the agent now disagrees its status says so.</td><td>Decide the claims in Your queue.</td></tr>
-<tr><td><code>/claim-tagger distill</code></td><td>Turns decisions that blame a rule into proposed rule changes, called lessons, at most 3 per run.</td><td>Approve or rewrite each lesson in Lessons waiting.</td></tr>
+<tr><td><code>/claim-tagger distill</code></td><td>First reads each decision of yours that differs from its tag: Agent slip, Rule unclear or Rule should change, with the rule and one line of why, written on the claim and in its record; a note that starts with one of those words is taken as it stands, and a decision without a note is read and flagged for you. Then turns the readings that point at a rule into proposed rule changes, called lessons, at most 3 per run.</td><td>Approve or rewrite each lesson in Lessons waiting; add a note where it asks for one.</td></tr>
 <tr><td><code>/claim-tagger promote</code></td><td>Runs the safety check on the approved lesson. On a PASS the new rule goes live, a new edition starts and the follow-up re-checks the rows. On a FAIL nothing changes and the report hands you the whole text for Editor wording.</td><td>Read step 7, or paste the wording and promote again.</td></tr>
 <tr><td><code>/claim-tagger follow-up</code></td><td>Repeats the follow-up by hand, only after a promote that stopped before its last step.</td><td>Read the Follow-up column.</td></tr>
 <tr><td><code>/claim-tagger rollback</code></td><td>Puts a rule back to the text it had before its change went live, as a new edition. The engineer runs it, with a confirmation.</td><td>Status shows the new edition.</td></tr>
@@ -763,7 +766,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <p>If a command stops because the agent is paused, untick Paused in Agent settings (or delete the pause file) and run it again. If it stops because your Claude allowance ran out, wait and run the same command again: it picks up where it stopped. If it says the rulebook text was edited by hand, put the text back as it was, or ask the engineer.</p>
 <h3>Who does what</h3>
 <ul>
-<li><strong>The editor</strong> types status and tag, then decides the claims in Your queue, least sure first: Verified tags is the decision, Review status Reviewed closes the claim, Why wrong and a note say when the rule, not the agent, was at fault. After each report Claude adds a short checklist of what to do in Notion and the next command.</li>
+<li><strong>The editor</strong> types status and tag, then decides the claims in Your queue, least sure first: Verified tags is the decision, Review status Reviewed closes the claim, a note says what you saw. The agent works out whether the rule or its own reading was at fault; start the note with the reason word to overrule it. After each report Claude adds a short checklist of what to do in Notion and the next command.</li>
 <li><strong>The rule owner</strong> approves or rewrites lessons in Lessons waiting, then types promote.</li>
 <li><strong>The engineer</strong> does the setup, the rollback and the repairs, and nothing else.</li>
 <li><strong>The machine</strong> runs the follow-up after a PASS, without anyone typing.</li>
@@ -779,12 +782,12 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 </ol>
 <p>Nothing else is added: no run records, no durations, no costs. When more rows wait than fit one sitting, the Next line says "start at the top of Your queue". A report that comes from the practice page starts with "Demo ·" and names the page.</p>
 <div class="geo-card">
-<p class="geo-card-body"><strong>1 · What ran.</strong> Demo · Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger practice · calibration 5).</p>
+<p class="geo-card-body"><strong>1 · What ran.</strong> Demo · Promote: PASS, rule 3 now uses the new wording (edition 2026-10-21.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger practice · calibration 7).</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact" style="min-width:0">
 <caption><strong>2 · The result</strong> · as reported today</caption>
 <tbody>
 <tr><td>Example claims</td><td>10 of 10 right</td></tr>
-<tr><td>Earlier decisions</td><td>5 of 5 still right</td></tr>
+<tr><td>Earlier decisions</td><td>6 of 6 still right</td></tr>
 <tr><td>Your 2 rows</td><td>2 of 2 now right, marked Fixed</td></tr>
 </tbody>
 </table></div>
@@ -795,22 +798,22 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <div class="sub" id="how-practice" data-title="The practice page">
 <h3>What the practice page holds</h3>
 <p><code>/claim-tagger-walkthrough</code> builds a fresh practice page under a Notion page you name; without a link it asks one question: "Under which Notion page should the demo go? Paste a link." The page has its own small tables, so nothing real changes, and you can build a new one whenever you want to practise again.</p>
-<p>The page tells a small story about the Context-dependent tag and its rule 3 on descriptive references: 2 claims wait for you, 5 earlier decisions stand, and 10 example claims guard the safety check. The agent calls the press pool claim Context-dependent and you say that everyone knows the press pool; the agent cannot decide the AI Force claim and you say that a capitalised name nobody knows still needs context. Your two notes become one clearer rule 3.</p>
+<p>The page tells a small story about the Context-dependent tag and its rule 3 on descriptive references: 4 claims wait for you, 5 earlier decisions stand, and 10 example claims guard the safety check. The agent calls the press pool claim Context-dependent and you say that everyone knows the press pool; it cannot decide the AI Force claim and you say that a capitalised name nobody knows still needs context; it tags the USPS ballot portal and you say it slipped, because USPS names which portal; it leaves Georgia's debate untagged and you agree. The agent reads the first two as a problem with rule 3, takes your word on the third and has nothing to read on the fourth; your two rule notes become one changed rule 3.</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
 <colgroup><col style="width:10%"><col style="width:58%"><col style="width:32%"></colgroup>
 <thead><tr><th scope="col">Step</th><th scope="col">What happens</th><th scope="col">Where</th></tr></thead>
 <tbody>
 <tr><td>1</td><td>You meet the practice page.</td><td>In Claude Code</td></tr>
 <tr><td>2</td><td>The agent reads the claims.</td><td>In Claude Code</td></tr>
-<tr><td>3</td><td>You decide your two claims, as the editor.</td><td>In Notion, in Your queue on the Claims table</td></tr>
-<tr><td>4</td><td>The agent drafts a clearer rule from your decisions.</td><td>In Claude Code</td></tr>
+<tr><td>3</td><td>You decide your four claims, as the editor.</td><td>In Notion, in Your queue on the Claims table</td></tr>
+<tr><td>4</td><td>The agent reads your decisions and drafts a changed rule from the ones that point at it.</td><td>In Claude Code</td></tr>
 <tr><td>5</td><td>You approve the draft, as the rule owner.</td><td>In Notion, in Lessons waiting</td></tr>
 <tr><td>6</td><td>The safety check runs and, on a PASS, the new rule goes live.</td><td>In Claude Code</td></tr>
 <tr><td>7</td><td>The agent re-checks your rows.</td><td>Runs by itself</td></tr>
 </tbody>
 </table></div>
-<p>The last step has nothing to type. The page also explains why the two claims wait, how to fill in Why wrong, what each word means, and what to do when the agent is paused or your Claude allowance ran out. The Tag decisions table at the bottom is the agent's own record of each decision; there is nothing to do in it.</p>
-<p><strong>What to expect at step 6.</strong> In the 5 practice runs today the first safety check never passed on the agent's own draft: the judge kept reading the press pool claim as needing context. Each time, the wording the report proposed passed on the next try and the rule went live. Both outcomes are the loop working as designed: a draft that does not fix the row is caught before it reaches the rulebook.</p>
+<p>The last step has nothing to type. The page also explains why the four claims wait, what each reading means and how to overrule one, what each word means, and what to do when the agent is paused or your Claude allowance ran out. The Tag decisions table at the bottom is the agent's own record of each decision; there is nothing to do in it.</p>
+<p><strong>What to expect at step 6.</strong> In the 3 practice runs of the revised story the safety check passed on the agent's own draft every time. In the 5 runs of the earlier story it never did: the judge kept reading the press pool claim as needing context, and the wording the report proposed passed on the next try. Both outcomes are the loop working as designed: a draft that does not fix the row is caught before it reaches the rulebook.</p>
 </div>
 </section>
 
@@ -824,7 +827,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 </div>
 <div class="sub" id="structure-revision-of-16-october-decisions-on-the" data-title="Revision of 16 October: decisions on the claims table">
 <h3>Revision of 16 October: decisions on the claims table</h3>
-<p>After the second checkpoint the product owner asked that editors decide tags where they work, on the claims table, as on the real table. The sections below this one are the approved proposal of 15 October and stay as history; this section is what is built from 16 October on, and the specification is in the notes (decisions P2, 42 and 43).</p>
+<p>After the second checkpoint the product owner asked that editors decide tags where they work, on the claims table, as on the real table. The sections from "At a glance" on are the approved proposal of 15 October and stay as history; this section is what was built from 16 October on, and the specification is in the notes (decisions P2, 42 and 43). The revision of 22 October, the next section, retires Why wrong and adds Agent reading; where the two differ, it wins.</p>
 <p><strong>Claims copy</strong> carries seven agent columns and four editor columns (the feedback round of 21 October, decision P3, replaced the two-line Agent notes by columns a view can filter on and made Agent tags a relation). The editor's outcome is the verified relation plus Review status: Reviewed with the tag in the relation means Applies, Reviewed without it means Does not apply, anything else is still open.</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
 <colgroup><col style="width:13%"><col style="width:12%"><col style="width:21%"><col style="width:54%"></colgroup>
@@ -892,6 +895,111 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 </tbody>
 </table></div>
 <p><strong>Reruns.</strong> A rerun judges only new or changed claims and tags with a new edition. The agent never reopens a Reviewed claim: where its new proposal differs from the editor's set, Agent tags keeps the editor's set and Agent status reads Disagrees with your decision, which the Agent disagreed view lists.</p>
+</div>
+<div class="sub" id="structure-revision-of-22-october-2026-the-agent-re" data-title="Revision of 22 October 2026: the agent reads the decisions (decision P4)">
+<h3>Revision of 22 October 2026: the agent reads the decisions (decision P4)</h3>
+<p>Editors no longer fill Why wrong. One value per claim could not say which of several tags was wrong for which reason, and it asked editors to diagnose the agent against a rulebook the agent keeps. From this revision the editor fills three columns on the claims table, Verified tags, Review status and Challenged tags notes, and the agent reads every disagreement itself, tag by tag. It writes what it made of each one in a new column of the claims table, Agent reading, and in four new columns of its ledger. The revision above and the approved proposal below stay as history; where they differ, this section is what is built. The live Claims copy keeps the shape of 21 October until the build of this revision. The specification is in the notes (decisions P4 and 64 to 76).</p>
+<p><strong>What the agent reads.</strong> A disagreement is a tag the agent judged on a Reviewed claim where the editor's outcome (the tag in Verified tags or not) differs from the agent's proposal, on a ledger row not marked Fixed. The agent reads each one as one of three things, names the rule it points at and says why in one line:</p>
+<ul>
+<li><strong>Agent slip</strong>: the rule as written settles it the editor's way; the agent misread it.</li>
+<li><strong>Rule unclear</strong>: the rule can honestly be read both ways on this claim.</li>
+<li><strong>Rule should change</strong>: the rule as written decides against the editor.</li>
+</ul>
+<p>A note line that opens with one of these words and a full stop (the reason word) is taken as it stands: the agent asks no model, takes the rule the note names (else the rule it cited itself) and writes "Your note says so.". A disagreement with no note at all is still read, carefully, and marked "without your note"; Needs your note lists it so that the editor can add one. A claim where the agent agreed has nothing to read. The agent reads a row again only when the editor's decision, the note or the reason word changed, or when the agent proposed again under a new edition (a tag run, or the follow-up after a rule change); a rule change alone re-reads nothing, and a row marked Fixed is never read again.</p>
+<p><strong>From readings to rule changes.</strong> The agent drafts a rule change from the rows read Rule unclear or Rule should change, at least two claims on the same rule; Agent slip rows draft nothing and stay earlier decisions. The Kind of the change follows from the readings: Change the rule when any of its rows reads Rule should change, else Clarify wording. The editor still approves or rejects it, and the safety check is unchanged.</p>
+<p><strong>Claims copy</strong> has twelve working columns, in the order of review, the agent's side first. They appear in this order on the table's own view and on the three views of the Claims copy; the Geo columns follow on the table's own view.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:13%"><col style="width:11%"><col style="width:21%"><col style="width:55%"></colgroup>
+<thead><tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Who fills it</th><th scope="col">Meaning</th></tr></thead>
+<tbody>
+<tr><td>Geo Name</td><td>title</td><td>setup</td><td>The claim text.</td></tr>
+<tr><td>Agent tags</td><td>relation to the Rulebook copy</td><td>the agent</td><td>The tags that apply and do not wait for the editor; where the claim is Reviewed, the editor's set.</td></tr>
+<tr><td>Agent confidence</td><td>number</td><td>the agent</td><td>The lowest confidence among the tags the agent judged on the claim, 0.5 to 1; Your queue sorts by it.</td></tr>
+<tr><td>Agent reasons</td><td>text</td><td>the agent</td><td>One line per judged tag: the tag, the agent's reason in at most 40 words, the rule cited and how many runs agreed.</td></tr>
+<tr><td>Agent status</td><td>select</td><td>the agent</td><td>Waits for you, Done, Disagrees with your decision, Could not read. Your queue and Agent disagreed filter on it.</td></tr>
+<tr><td>Tags waiting</td><td>relation to the Rulebook copy</td><td>the agent</td><td>The tags that wait for the editor's decision; empty when nothing waits.</td></tr>
+<tr><td>Agent edition</td><td>text</td><td>the agent</td><td>The rulebook edition the agent's columns were written under.</td></tr>
+<tr><td>Agent remarks</td><td>text</td><td>the agent</td><td>"not checked: …" when a tag could not be judged; else empty.</td></tr>
+<tr><td>Agent reading</td><td>text</td><td>the agent, when distill runs</td><td>New. What the agent made of the editor's decision: one line per tag where the two differ, in the shapes below. Empty until the agent has read the claim.</td></tr>
+<tr><td>Verified tags</td><td>relation to the Rulebook copy</td><td>the editor</td><td>The tags the editor confirms on the claim (the real table's "Claim quality tags — verified"; the config maps the name).</td></tr>
+<tr><td>Review status</td><td>select</td><td>the editor</td><td>To review, Reviewed. A claim is decided once it is Reviewed.</td></tr>
+<tr><td>Challenged tags notes</td><td>text</td><td>the editor</td><td>The editor's words, one line per tag the editor disagrees on: the tag name, a colon, then optionally a reason word and a full stop, then the words; "rule 4" names the rule. A tag the editor agrees with needs no line.</td></tr>
+</tbody>
+</table></div>
+<p>On the live copy the old column Why wrong is kept as "Why wrong (old)", hidden in every view and never written, beside "Agent tags (old)" and "Agent notes (old)"; nothing is deleted. A practice page makes none of the three.</p>
+<p>Agent reading holds one line per tag the agent read, in the order of the tag names, or one of the lines that say there is nothing to read. Only the agent writes it, and only when distill runs; it changes when the agent reads the claim again.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:44%"><col style="width:56%"></colgroup>
+<thead><tr><th scope="col">Line in Agent reading</th><th scope="col">When</th></tr></thead>
+<tbody>
+<tr><td><code>Context-dependent: Rule unclear, rule 3 · &lt;one line of why&gt;</code></td><td>The agent read the decision itself.</td></tr>
+<tr><td><code>Context-dependent: Agent slip, rule 5 · Your note says so.</code></td><td>The editor's note line opened with a reason word; the agent took it as it stands.</td></tr>
+<tr><td><code>Context-dependent: Agent slip, rule 5, without your note · &lt;one line of why&gt;</code></td><td>The editor wrote nothing for the tag; the agent read it anyway, and Needs your note lists the claim.</td></tr>
+<tr><td><code>Nothing to read: the agent agreed with you.</code></td><td>A Reviewed claim where no judged tag differs.</td></tr>
+<tr><td><code>&lt;Tag&gt;: the agent did not judge this tag, so nothing to read.</code></td><td>A note line names a rulebook tag the agent did not judge on the claim.</td></tr>
+<tr><td>empty</td><td>Not read yet: the claim is not Reviewed, or distill has not run since it was.</td></tr>
+</tbody>
+</table></div>
+<p><strong>Tag decisions</strong> (the agent's ledger) gains four columns right after Decided under, all written by the agent when distill runs. Its Why wrong keeps its name and holds only the reason word the editor opened the tag's note line with (or the audit's Agent slip on the seeded rows); Your reasoning keeps the words after it. The columns in order: Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Claim link, Rulebook edition, Follow-up, Tag outcome, Why wrong, Your reasoning, Decided under, Agent reading, Rule, Reading note, Read under.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:13%"><col style="width:10%"><col style="width:21%"><col style="width:56%"></colgroup>
+<thead><tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Who fills it</th><th scope="col">Meaning</th></tr></thead>
+<tbody>
+<tr><td>Agent reading</td><td>select</td><td>the agent</td><td>Agent slip, Rule unclear or Rule should change; empty where the agent agreed or has not read the row yet.</td></tr>
+<tr><td>Rule</td><td>text</td><td>the agent</td><td>The rule the reading points at, for example "Context-dependent rule 3".</td></tr>
+<tr><td>Reading note</td><td>text</td><td>the agent</td><td>One line of why, at most 25 words. It opens with "without your note" when the editor wrote nothing for the tag, and reads "Your note says so." when the reason word was taken as it stands.</td></tr>
+<tr><td>Read under</td><td>text</td><td>the agent</td><td>The edition in force at the reading and a short mark of what the reading rests on: the editor's outcome, the agent's proposal, the note line, the reason word and the edition the proposal was made under. The agent reads the row again only when the mark changes.</td></tr>
+</tbody>
+</table></div>
+<p>Three claims of the practice page's story after the editor's review and a distill run, under edition 2026-10-16.2 (illustrations, not results). The agent had proposed Applies at 0.75 on the press pool claim, Applies at 0.80 on the USPS claim and Does not apply at 0.85 on Georgia's.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:19%"><col style="width:18%"><col style="width:16%"><col style="width:22%"><col style="width:25%"></colgroup>
+<thead><tr><th scope="col" style="white-space:normal">Geo Name</th><th scope="col" style="white-space:normal">Verified tags</th><th scope="col" style="white-space:normal">Review status</th><th scope="col" style="white-space:normal">Challenged tags notes</th><th scope="col" style="white-space:normal">Agent reading</th></tr></thead>
+<tbody>
+<tr><td>The press pool was justified in suspending coverage…</td><td>empty</td><td>Reviewed</td><td>Context-dependent: rule 3 does not say that a group every reader knows by its role counts as identified; it does.</td><td>Context-dependent: Rule unclear, rule 3 · Rule 3 does not say whether a group readers know by its standing role counts as identified.</td></tr>
+<tr><td>The USPS ballot portal should not launch before the 2026 midterms</td><td>empty</td><td>Reviewed</td><td>Context-dependent: Agent slip. USPS names which portal, so rule 5 already settles it.</td><td>Context-dependent: Agent slip, rule 5 · Your note says so.</td></tr>
+<tr><td>Georgia's gubernatorial debate should be moderated by…</td><td>empty</td><td>Reviewed</td><td>empty</td><td>Nothing to read: the agent agreed with you.</td></tr>
+</tbody>
+</table></div>
+<p>Their rows in the ledger:</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:19%"><col style="width:19%"><col style="width:17%"><col style="width:14%"><col style="width:17%"><col style="width:14%"></colgroup>
+<thead><tr><th scope="col" style="white-space:normal">Key</th><th scope="col" style="white-space:normal">Agent proposal</th><th scope="col" style="white-space:normal">Tag outcome</th><th scope="col" style="white-space:normal">Why wrong</th><th scope="col" style="white-space:normal">Agent reading</th><th scope="col" style="white-space:normal">Rule</th></tr></thead>
+<tbody>
+<tr><td>5c9d133e…::Context-dependent</td><td>Applies</td><td>Does not apply</td><td>empty</td><td>Rule unclear</td><td>Context-dependent rule 3</td></tr>
+<tr><td>27ad00b5…::Context-dependent</td><td>Applies</td><td>Does not apply</td><td>Agent slip</td><td>Agent slip</td><td>Context-dependent rule 5</td></tr>
+<tr><td>8f9c833b…::Context-dependent</td><td>Does not apply</td><td>Does not apply</td><td>empty</td><td>empty</td><td>empty</td></tr>
+</tbody>
+</table></div>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:21%"><col style="width:34%"><col style="width:27%"><col style="width:18%"></colgroup>
+<thead><tr><th scope="col">Key</th><th scope="col">Your reasoning</th><th scope="col">Reading note</th><th scope="col">Read under</th></tr></thead>
+<tbody>
+<tr><td>5c9d133e…::Context-dependent</td><td>rule 3 does not say that a group every reader knows by its role counts as identified; it does.</td><td>Rule 3 does not say whether a group readers know by its standing role counts as identified.</td><td>2026-10-16.2 · 1f3a9c0d</td></tr>
+<tr><td>27ad00b5…::Context-dependent</td><td>USPS names which portal, so rule 5 already settles it.</td><td>Your note says so.</td><td>2026-10-16.2 · 7b20e4a9</td></tr>
+<tr><td>8f9c833b…::Context-dependent</td><td>empty</td><td>empty</td><td>empty</td></tr>
+</tbody>
+</table></div>
+<p>The press pool row, with another row read Rule unclear on rule 3, is what a clearer rule 3 is drafted from; the USPS row drafts nothing; the Georgia row is an agreement and has no reading.</p>
+<p><strong>Views.</strong> Needs your note now filters on what the agent wrote; the others keep their filters. The three views of the Claims copy show the twelve columns above in that order and hide the rest; the two ledger views show the four reading columns after Your reasoning. Lessons waiting and Rulebook are unchanged.</p>
+<div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
+<colgroup><col style="width:18%"><col style="width:14%"><col style="width:41%"><col style="width:27%"></colgroup>
+<thead><tr><th scope="col">View</th><th scope="col">Table</th><th scope="col">Filter</th><th scope="col">Sort</th></tr></thead>
+<tbody>
+<tr><td>Your queue</td><td>Claims copy</td><td>Agent status is Waits for you (a decided claim stays listed until the agent's next tag run)</td><td>Agent confidence, lowest first</td></tr>
+<tr><td>Needs your note</td><td>Claims copy</td><td>Agent reading contains "without your note"</td><td>Agent confidence, lowest first</td></tr>
+<tr><td>Agent disagreed</td><td>Claims copy</td><td>Agent status is Disagrees with your decision</td><td>Agent confidence, lowest first</td></tr>
+<tr><td>Your queue (ledger)</td><td>Tag decisions</td><td>the rows with an empty Tag outcome, unchanged</td><td>Agent confidence, lowest first</td></tr>
+<tr><td>Needs your note (ledger)</td><td>Tag decisions</td><td>Reading note contains "without your note"</td><td>Agent confidence, lowest first</td></tr>
+</tbody>
+</table></div>
+<p>Needs your note lists a claim once distill has written its Agent reading, while the status report counts a claim without a note at once, in its row Your decisions; that row shows what the agent still has to do with the decisions made, for example "3 to read, 1 without a note", and is left out when there is nothing to say.</p>
+<p><strong>The practice page</strong> of 22 October has nine claims: five decided earlier, whose ledger rows are created already read as Agent slip so that the agent reads only the editor's own decisions, and four open on Context-dependent. The press pool and AI Force claims are read Rule unclear on rule 3 and the rule change rests on them; the USPS ballot portal carries a note that opens with the reason word Agent slip and is taken as it stands; on Georgia's gubernatorial debate the editor agrees with the agent and there is nothing to read. Step 4 is where the agent reads the decisions and drafts a clearer rule 3. In Help, the table that explained Why wrong becomes a table of Agent reading and what each reading makes happen (Agent slip, Rule unclear, Rule should change, nothing to read), with one sentence on the reason word. The step texts are those of the practice page's manifest of 22 October (2026-10-22.1).</p>
+<p><strong>Words</strong> added by this revision:</p>
+<ul>
+<li><strong>Agent reading</strong>: what the agent made of an editor's decision where the two differ, per tag: Agent slip (the rule settles it the editor's way; the agent misread), Rule unclear (the rule reads both ways on this claim) or Rule should change (the rule decides against the editor), with the rule it points at and one line of why. Written only by the agent, when distill runs, on the claim and in the ledger.</li>
+<li><strong>Reason word</strong>: Agent slip, Rule unclear or Rule should change, with a full stop, at the start of a tag's line in Challenged tags notes. The agent takes it as its reading for that tag without asking a model; removing it hands the reading back to the agent.</li>
+</ul>
 </div>
 <div class="sub" id="structure-at-a-glance" data-title="At a glance">
 <h3>At a glance</h3>
@@ -1135,7 +1243,7 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <li><strong>Practice page</strong>: a page under Demos where an editor runs the whole cycle once on sample claims, without touching anything real.</li>
 <li><strong>Agent proposal</strong>: the agent's answer for one claim and one tag: Applies, Does not apply or Can't tell.</li>
 <li><strong>Tag outcome</strong>: the editor's decision on a row; it always wins over the agent's answer.</li>
-<li><strong>Why wrong</strong>: the editor's reason: Agent slip (the rule is fine, no change), Rule unclear (the agent drafts a clearer rule), Rule should change (the agent drafts a changed rule).</li>
+<li><strong>Why wrong</strong>: retired on 22 October. It was the editor's reason: Agent slip (the rule is fine, no change), Rule unclear (the agent drafts a clearer rule), Rule should change (the agent drafts a changed rule). The agent now reads each disagreement itself and writes the same three words in Agent reading; an editor who wants to give the reason opens the tag's line in Challenged tags notes with it as a reason word. On the live copy the column is kept hidden as "Why wrong (old)"; in the ledger, Why wrong holds only the reason word.</li>
 <li><strong>Follow-up</strong>: after a PASS, the agent re-checks the rows the change rests on and marks each Fixed or Still wrong.</li>
 </ul>
 <p><strong>Open points:</strong> the relation columns of both copies are left out; the real claims table's six review columns are left out; only Context-dependent is judged, and the other twelve tags wait in the rulebook.</p>
@@ -1147,10 +1255,10 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <h2>Backlog</h2>
 <p>One row per deferred item: what, why not now, the trigger that brings it in, effort S, M or L.</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
-<colgroup><col style="width:23%"><col style="width:36%"><col style="width:28%"><col style="width:13%"></colgroup>
+<colgroup><col style="width:23%"><col style="width:35%"><col style="width:29%"><col style="width:13%"></colgroup>
 <thead><tr><th scope="col">What</th><th scope="col">Why not now</th><th scope="col">Trigger</th><th scope="col">Effort</th></tr></thead>
 <tbody>
-<tr><td>Tag the real claims table instead of the 50-claim copy</td><td>The real table is never written in the MVP; the Geo-to-Notion refresh may drop added columns and page ids; from 16 October the decisions live on the claims table, so Why wrong and Agent confidence (new columns) and the real table's own review columns must survive a refresh</td><td>The owner of the refresh job confirms that added columns and page ids survive a refresh; then a config change plus the one confirmed setup write</td><td><span class="geo-tag">M</span></td></tr>
+<tr><td>Tag the real claims table instead of the 50-claim copy</td><td>The real table is never written in the MVP; the Geo-to-Notion refresh may drop added columns and page ids; from 16 October the decisions live on the claims table, so the agent's columns (eight from 22 October, Agent confidence and Agent reading among them; Why wrong is no longer needed) and the real table's own review columns must survive a refresh</td><td>The owner of the refresh job confirms that added columns and page ids survive a refresh; then a config change plus the one confirmed setup write</td><td><span class="geo-tag">M</span></td></tr>
 <tr><td>The other 12 tags, rules drafted one tag at a time</td><td>Only Context-dependent is judged in the MVP; nine tags have no rules yet</td><td>The Context-dependent loop has passed one safety check on the copy and the editor picks the next tag</td><td><span class="geo-tag">S</span> per tag</td></tr>
 <tr><td>The source pass (Improperly sourced, Factually challenged) and the Geo source resolver</td><td>Needs fetched source text and the verified Geo query, none of which the Context-dependent loop uses</td><td>A source tag is chosen for drafting</td><td><span class="geo-tag">M</span></td></tr>
 <tr><td>Source inaccessible decided in code from the fetch result</td><td>Same dependency on the source fetch</td><td>Same as the source pass</td><td><span class="geo-tag">S</span></td></tr>
@@ -1174,6 +1282,18 @@ footer{grid-column:1/-1;border-top:1px solid var(--rule);padding-top:var(--space
 <tr><td><code>where</code> names the page it read when no page is named</td><td>Its sentence says the step but not which page; with several pages under Demos an editor cannot tell from <code>where</code> alone</td><td>An editor asks which page <code>where</code> meant; <code>list</code> already marks the page the commands reach</td><td><span class="geo-tag">S</span></td></tr>
 <tr><td>A Can't tell reason line that says the readings disagreed</td><td>Agent reasons shows the last of the disagreeing readings, which can argue with confidence for one side while the answer is Can't tell</td><td>An editor in Your queue reads a confident reason next to a claim that waits because the agent could not tell</td><td><span class="geo-tag">S</span></td></tr>
 <tr><td>The practice page's step 2 mentions the re-read cap</td><td>A sure-looking claim can sit at 0.70 unsure without a second reading when two other claims were closer to a coin flip (re-reads are capped at 30 percent of the claims)</td><td>An editor asks why a 0.70 claim was not read again</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>A second judged tag on the practice page, so that a claim shows two reading lines</td><td>The agent reads each claim and tag on its own and Agent reading has one line per read tag, but the practice page has one tag with rules, Context-dependent, and four open claims on it (decision 75), so no page shows a claim with two lines</td><td>A second tag has rules in force and is judged, or an editor asks how a claim with two disputed tags is read</td><td><span class="geo-tag">M</span></td></tr>
+<tr><td>A surface per tag for crowded claims</td><td>Several readings on one claim share one cell of Agent reading today, one line per tag; with one judged tag a claim has one line at most</td><td>Claims carry readings on three or more tags, or an editor misses a line in the cell</td><td><span class="geo-tag">M</span></td></tr>
+<tr><td>Needs your note in step with the status count</td><td>The view filters on the "without your note" that distill writes into Agent reading, while the status row Your decisions counts a decision without a note at once; until distill runs, the view can be empty while status counts the claim</td><td>An editor opens Needs your note after status counted a claim without a note and finds nothing there</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>Re-read a disagreement when its proposal predates the rules in force</td><td>A reading is made with the rules as they stand; a row whose proposal was made under an older edition and that becomes stale before the agent proposes again (a changed note after a rule change, before the next tag run) is read against rules the proposal never saw, until a tag run or the follow-up proposes again under the new edition</td><td>A reading on such a row points at a rule text the agent's own reason did not cite, or an editor asks why a reading quotes the new rule</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td><code>where</code> knows the recanted case</td><td>On a practice page whose draft rests on a decision the editor later called a slip, <code>where</code> still says step 5 and "set Status to Approved"; status, distill and promote already say to reject it and distill again (decision 79)</td><td>An editor on a practice page recants a decision after the draft</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td><code>distill --plan-only</code> names a recanted draft in its sentence</td><td>The plan-only run records the recanted keys in its run record but its sentence does not say so; the real run does</td><td>The engineer reviews a plan-only run before a live distill</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td><code>start</code> prints its progress line apart from the report</td><td>"Building the page." stands right above the report sentence, so the whole output fails the report lint while the report file itself passes (verification runs 3 and 4)</td><td>The skill ever shows start's raw output instead of the report file</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>The promote Next link opens step 7, not the top of the page</td><td>The link is the page's; a block link to the step 7 heading would land the editor where the report says to look (verification runs 1 and 4)</td><td>An editor complains about scrolling</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>Lesson titles that are full sentences</td><td>The distill prompt asks for a short title in the editors' words; runs 3 and 4 produced a sentence ("A kind is identified only if readers know which one"); a check on the title's shape, or a stronger instruction, would keep titles short</td><td>A rule owner finds the titles hard to scan in Lessons waiting</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>The distill table says what a count covers when the sentence names earlier decisions</td><td>On a second distill the row "Point at a rule" reads none (this run read nothing new) under a sentence saying two decisions already have a rule change waiting (verification run 6); "none new; 2 in the rule change waiting" would say both</td><td>An editor asks why the table and the sentence disagree</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>The practice page says the earlier decisions' confidence varies</td><td>Step 2 promises "0.65 or more" for the five earlier decisions; the Dallas claim read 0.57 in verification run 6 (0.65 and 0.66 in two calibration runs); "usually 0.65 or more", or a line that the figures differ from run to run, would be exact</td><td>The next change to the page (a rebuilt page verifies against its template, so the words change with a new manifest version)</td><td><span class="geo-tag">S</span></td></tr>
+<tr><td>The safety check's extra reads keep their refused replies</td><td>A batch of the extra reads that settle a flip needed a second attempt in verification runs 5 and 6, and nothing in the run folder says why the first reply was refused; the judge keeps every refused reply (decision 36), the extra reads do not</td><td>The engineer traces a refusal of an extra read</td><td><span class="geo-tag">S</span></td></tr>
 </tbody>
 </table></div>
 <p class="small">Effort is the engineer's work to bring the item in: S is small, M is medium, L is large.</p>
