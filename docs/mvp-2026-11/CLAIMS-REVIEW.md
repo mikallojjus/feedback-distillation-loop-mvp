@@ -76,3 +76,7 @@ A line of Challenged tags notes starts with a tag name and a colon. It may start
 ### 6.5 The live step
 
 `setup.mjs build` (idempotent): rename the two text columns with "(old)", add the five new columns (Agent tags relation, Agent status, Tags waiting, Agent edition, Agent remarks), rename "Claim quality tags — verified" to "Verified tags", set the column order and visible columns on the default view and the three views, change Your queue's filter; then one tag run fills the agent's columns; `setup.mjs verify` compares.
+
+## 7. Read the decisions (decision P4, 2026-10-21)
+
+Why wrong leaves the editor's work. The agent reads every disagreement itself, per tag, as Agent slip, Rule unclear or Rule should change, and distill drafts from those readings; a reason word at the start of a note line still overrides the reading for that tag. The editor's columns on the claims table are Verified tags, Challenged tags notes and Review status; the live copy keeps the old column hidden as "Why wrong (old)" and practice pages do not create it. The practice page gets four open claims on one tag. The specification, the stages, the verification loop and decisions 64 to 76 are in `READ-DECISIONS.md`; sections 1 to 6 above stay as the history they describe.

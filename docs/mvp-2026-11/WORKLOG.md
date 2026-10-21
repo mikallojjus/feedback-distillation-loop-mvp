@@ -4,12 +4,12 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: the feedback round of 21 October (decision P3) is built, tested (1,994 tests pass), live on the copy and verified end to end on a fresh practice page; the product owner's page "Claim tagger practice · product owner, 21 Oct evening" (400273e214eb81d99593e1865b9767db, profile 20261021-1622-d913cf) carries the new columns and is the page the demo commands reach. The MVP is agreed when the product owner runs its seven steps and says so.
+- Phase: "Read the decisions" (decision P4, specification `READ-DECISIONS.md`) is being delivered on the branch `read-decisions-2026-11` off `mvp-2026-11`: stage 0 (branch, specification, decisions) is done; stages 1 to 5 (scripts, practice page and skills, documents, the live step with calibration, the verification loop) follow. On `mvp-2026-11` the feedback round of 21 October (P3) is live and verified; the product owner's page "Claim tagger practice · product owner, 21 Oct evening" (400273e214eb81d99593e1865b9767db) is the page the demo commands reach until a fresh one is built at the end of the branch.
 - Blockers: none open.
-- Branch `mvp-2026-11`; the last commit is the newest one in `git log`.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. On the Claims copy the two text columns of the first build are kept hidden as "Agent tags (old)" and "Agent notes (old)". Practice pages of the earlier shapes (15 and 16 October, and the 21 October pages built before the feedback round) stay in place and show as "unknown" in `list`.
-- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 6).
-- Still to do: calibration runs 6 and 7 of the story on the current shape (the three verification runs of 21 October all passed on the draft), the unpaused practice-page eval, a second independent verification of the acceptance checks.
+- Branch `read-decisions-2026-11`; the last commit is the newest one in `git log`. Merged into `mvp-2026-11` only on the product owner's say-so after a clean verification run.
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The live copy is still in the P3 shape until stage 4's build; the column guard (decision 61) stops every writing command of the new code until then.
+- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 6; rebuilt in stage 3).
+- Still to do after the branch: calibration runs 6 and 7 of the 21 October story are superseded by the new story's runs 6 to 8 (stage 4); the unpaused practice-page eval; a second independent verification of the acceptance checks.
 
 ## Entries
 
@@ -204,3 +204,11 @@ Done: two coders implemented `CLAIMS-REVIEW.md` section 6 (decisions 54 to 61). 
 Verified: `node --test tests/`: 1,994 tests pass, 0 fail (`evidence/01-tests/`); `setup verify` clean after the second pass (`evidence/15-feedback-round-live/`); the owner's page verifies clean and `list` marks it as the default; the verifier's report in `evidence/16-walkthrough-verification-3/`.
 
 Next: the product owner runs the seven steps on the new page; then calibration runs 6 and 7 on the current shape, the unpaused practice-page eval, a second verification of the acceptance checks.
+
+### 25. Read the decisions: the specification approved, the branch opened (2026-10-21)
+
+Done: the product owner decided that Why wrong leaves the editor's work and that the agent reads each disagreement itself, per tag (decision P4), and that the practice page gets four open claims on one tag. The specification was written in plan mode with an exploration of the distill, decisions, status and walkthrough code and a design pass, then approved: `READ-DECISIONS.md` (the feature, decisions 64 to 76, stages 0 to 5, the verifier's brief, the edge cases, the risks). The branch `read-decisions-2026-11` was created off `mvp-2026-11` at 8827ceb; `CLAIMS-REVIEW.md` section 7 points at the specification; DECISIONS.md holds P4 and 64 to 76. Two subagent tasks of the earlier stages were found still open: each was a `python3 -` probe whose heredoc the shell had collapsed, waiting on standard input, idle; the product owner stopped them. Coders on this branch are briefed to write scripts through the Write tool and never with a heredoc.
+
+Verified: `git branch --show-current` prints `read-decisions-2026-11`; the specification is in the repo word for word apart from its preamble; nothing under `agents/` changed in this entry.
+
+Next: stage 1, the scripts (the reading step in distill, the ledger and claim columns, status, the build, the fakes and the tests), on fakes only.
