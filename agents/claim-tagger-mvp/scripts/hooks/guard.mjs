@@ -33,7 +33,8 @@ const GUARDED = /notion-(create-pages|update-page|create-database|update-data-so
 const ALWAYS_DENIED = new Set(['move-pages', 'duplicate-page', 'delete-pages', 'delete-databases', 'delete-comment', 'restore-pages', 'update-folder', 'create-folder']);
 const SCHEMA_TOOLS = new Set(['create-database', 'update-data-source', 'create-view', 'update-view']);
 const UUID = /[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/gi;
-// used when the config names none: the editor's columns of the Claims copy, Editor wording and Paused (the list of the shipped config.json)
+// used when the config names none: the editor's three columns of the Claims copy (Why wrong left the editor's work with the reading of 22 October, and Agent reading is the agent's),
+// Editor wording and Paused (the list of the shipped config.json)
 const DEFAULT_EDITOR_NAMES = ['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
 const DEFAULT_EDITOR_STATUS = ['Approved', 'Rejected'];
 

@@ -8,65 +8,97 @@
 //
 // The report. "Status: nothing is paused; N rows and M rule changes wait for you." (", more than fit one sitting" when N is above queue.sitting_rows), a table with
 // the Rulebook ("<n> tags, edition <e>"; "1 tag, edition <e>" on a practice page), Your queue ("<n> rows, lowest confidence first"; when no undecided claim waits but
-// decided ones are still listed there, "<n> rows decided, waiting for the agent's next run"; else "nothing waits"), Lessons waiting and the last run (the Last run
-// summary, else "none yet"), and one Next line, the first that applies: read the claims (practice page only) / start at the top of Your queue or decide the rows /
-// type distill (at least distill.min_claims decided claims whose Why wrong says the rule is the problem and whose Tag decisions row is not marked Fixed yet, and no rule
-// change Proposed or Approved: distill has something to draft) / approve or reject the rule change / check the approved one / read new claims. The Rulebook row does not say that Notion agrees: a drift of the rulebook text on a judged tag is checked before the report and ends the command
-// with the drift report (exit 4, naming the tag and the column and telling the editor to ask the engineer to restore the rulebook text); only a difference that does
-// not stop the command (a tag without rules edited or added in Notion) or a drift check that could not run is said in the row. A paused agent ends with the refusal
-// report (exit 3). On a practice page the sentence starts "Status of the practice page <title>:" (loop.mjs), and while a row that waits has no Agent proposal yet
+// decided ones are still listed there, "<n> rows decided, waiting for the agent's next run"; else "nothing waits"), Your decisions (what the agent still has to do with the
+// decisions made: "3 to read, 1 without a note", see below; no row when all three counts are zero), Lessons waiting and the last run (the Last run summary, else "none yet"), at
+// most five rows, and one Next line, the first that applies: read the claims (practice page only) / start at the top of Your queue or decide the rows / type distill (something
+// is to read, or at least distill.min_claims claims point at a rule, and no rule change is Proposed or Approved: distill has something to read or draft) / approve or reject the
+// rule change / check the approved one / read new claims. The Rulebook row does not say that Notion agrees: a drift of the rulebook text on a judged tag is checked before the
+// report and ends the command with the drift report (exit 4, naming the tag and the column and telling the editor to ask the engineer to restore the rulebook text); only a
+// difference that does not stop the command (a tag without rules edited or added in Notion) or a drift check that could not run is said in the row. A paused agent ends with
+// the refusal report (exit 3). On a practice page the sentence starts "Status of the practice page <title>:" (loop.mjs), and while a row that waits has no Agent proposal yet
 // (step 1 of the page) the Next line is "type /claim-tagger demo tag" (step 2) instead of "decide the rows": there is nothing to decide before the agent has read the
 // claims. In production that line is never used.
 //
 // The rows that wait are claims of the Claims copy (CLAIMS-REVIEW.md, section 6.2): a claim whose Agent status is "Waits for you" and whose Review status is not Reviewed (what is
-// still to decide: Your queue may list a few more, the claims that were decided since the last tag run: queue.decided_listed counts them). Needs your note counts the claims that
-// have a Why wrong and no Challenged tags notes. queue.pending_rule_decisions counts the Reviewed claims that distill would still read: a decision (copied to the ledger the way distill copies it) with Why wrong Rule unclear or
-// Rule should change on a Tag decisions row whose Follow-up is not Fixed; Fixed means a rule change resting on the row went live and the agent now agrees, while Still wrong stays open
-// for the next lesson.
-// Your queue is the view of the Claims copy.
+// still to decide: Your queue may list a few more, the claims that were decided since the last tag run: queue.decided_listed counts them). Your queue is the view of the Claims copy.
+//
+// The decisions made (READ-DECISIONS.md, decision 74). The agent reads each disagreement between an editor's decision and its own proposal itself (distill, lib/readings.mjs), and
+// only distill makes or writes a reading, so status counts, from the ledger as distill would bring it up to date (syncDecisions) and sorted the way distill sorts it (classifyRows),
+// the Reviewed claims with an unfixed disagreement row (a row whose Follow-up is Fixed is never read):
+//   queue.to_read                  a row is stale: the editor's decision, note, reason word or the tag's rules changed since the agent last read it, or it was never read (it is read by
+//                                  distill; also a note line that opens with a reason word, which distill takes as it stands without asking a model)
+//   queue.pending_rule_decisions   a row the agent has read as a rule problem (Rule unclear or Rule should change) and that stands: distill drafts a rule change from such rows when
+//                                  at least distill.min_claims claims point at the same rule
+//   queue.needs_note               a row for which the editor wrote neither a reason word nor any words for the tag, whether the agent has read it yet or not (the claim's Agent
+//                                  reading says "without your note" once it has)
+// Each is a count of claims. The row "Your decisions" shows the parts that are not zero, in this order, "<n> to read", "<n> point(s) at a rule", "<n> without a note", for example
+// "3 to read, 1 without a note"; with all three zero there is nothing to say and the row is left out (the table of step 1 of the practice page has four rows).
 //
 // Exit codes: 0 ok, 2 invalid, 3 paused, 4 drift or an invalid rulebook file.
 //
-// Exports: status, countsOf, main, USAGE.
+// Exports: status, countsOf, readingCounts, decisionsCell, main, USAGE.
 
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { AGENT_STATUS } from './lib/config.mjs';
-import { RULE_WHY, claimWaits, isFollowedUp, isReviewed, syncDecisions } from './lib/decisions.mjs';
+import { RULE_WHY, claimWaits, isReviewed, syncDecisions } from './lib/decisions.mjs';
 import { listNames, plural, quoted, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { LOCK_STALE_MS, LoopExit, needClaimColumns, parseCli, resumeLine, takePull, withRun } from './lib/loop.mjs';
 import { isMain } from './lib/paths.mjs';
 import { preflight, refusedReport } from './lib/preflight.mjs';
+import { classifyRows, readingOfRow } from './lib/readings.mjs';
 import { readRubric } from './lib/rubric.mjs';
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/status.mjs [--pull <pull-id>] [--json] [--run-id <id>]';
 
+const NO_READING_COUNTS = Object.freeze({ to_read: 0, pending_rule_decisions: 0, needs_note: 0 });
+
 /**
- * How many Reviewed claims distill would still read: the claims with a decided Tag decisions row (the decisions are copied to the ledger rows the way distill copies them first) whose
- * Why wrong is Rule unclear or Rule should change and whose row is not marked Fixed (Still wrong stays open). A claim with no ledger row, or with only Fixed rows, is not counted.
+ * The three counts of the decisions made (see the header), from the pull's claims and ledger rows (queue), the rulebook in force and the config. Each counts claims. The ledger is brought
+ * up to date the way distill does it first (syncDecisions with the names of every tag of the rulebook), so that a decision an editor made since the last tag run counts at once. Without a
+ * rulebook there is nothing the agent could read: all three are 0.
  */
-export function pendingRuleDecisions(claims, queue) {
-  const reviewed = new Set(claims.filter((c) => isReviewed(c)).map((c) => c.geo_id));
-  const { rows } = syncDecisions(claims, queue);
-  const claimsOf = rows
-    .filter((r) => r.decided && r.Key && r.Tag && RULE_WHY.has(String(r['Why wrong'] ?? '').trim()) && !isFollowedUp(r))
-    .map((r) => String(r.Key).slice(0, String(r.Key).lastIndexOf('::')))
-    .filter((geoId) => reviewed.has(geoId));
-  return new Set(claimsOf).size;
+export function readingCounts({ claims = [], queue = [], rubric = null, config = null } = {}) {
+  if (!rubric || !Array.isArray(rubric.tags)) return { ...NO_READING_COUNTS };
+  const { rows } = syncDecisions(claims, queue, { tagNames: rubric.tags.map((t) => t.name) });
+  const classes = classifyRows({ claims, ledgerRows: rows, rubric, config });
+  const claimsOf = (items) => new Set(items.map((i) => i.claim.geo_id)).size;
+  const noNote = (item) => item.reasonWord === null && String(item.noteLine ?? '').trim() === '';
+  return {
+    to_read: claimsOf([...classes.verbatim, ...classes.toRead]),
+    pending_rule_decisions: claimsOf(classes.current.filter((item) => RULE_WHY.has(readingOfRow(item.row)?.reading))),
+    needs_note: claimsOf([...classes.toRead, ...classes.current].filter(noNote)),
+  };
 }
 
-/** The counts the report and --json are made of, from the pull's claims, lessons, ledger rows (queue) and settings. */
-export function countsOf({ claims = [], lessons = [], queue = [], settings = null, sitting = 20 }) {
+/** The cell of the row "Your decisions": the parts of the counts that are not zero, "3 to read, 1 without a note"; the empty string when all three are zero. */
+export function decisionsCell({ to_read: toRead = 0, pending_rule_decisions: pending = 0, needs_note: needsNote = 0 } = {}) {
+  return [
+    toRead > 0 ? `${toRead} to read` : null,
+    pending > 0 ? `${pending} ${pending === 1 ? 'points' : 'point'} at a rule` : null,
+    needsNote > 0 ? `${needsNote} without a note` : null,
+  ].filter(Boolean).join(', ');
+}
+
+/** The counts the report and --json are made of, from the pull's claims, lessons, ledger rows (queue), settings, and the rulebook and config the readings are counted under. */
+export function countsOf({ claims = [], lessons = [], queue = [], settings = null, sitting = 20, rubric = null, config = null }) {
   const open = claims.filter((c) => claimWaits(c)).length;
-  const needsNote = claims.filter((c) => c.why_wrong && String(c.challenged_notes ?? '').trim() === '').length;
   // decided since the last tag run: Reviewed, and the agent's status still says "Waits for you", so Your queue still lists the claim (CLAIMS-REVIEW.md, section 6.2)
   const decidedListed = claims.filter((c) => isReviewed(c) && String(c.agent_status ?? '').trim() === AGENT_STATUS.waits).length;
   const byStatus = { Proposed: 0, Approved: 0, Rejected: 0, Live: 0, 'Rolled back': 0 };
   for (const l of lessons) byStatus[l.Status] = (byStatus[l.Status] ?? 0) + 1;
+  const readings = readingCounts({ claims, queue, rubric, config });
   return {
     queue: {
-      open, decided: claims.filter((c) => isReviewed(c)).length, decided_listed: decidedListed, pending_rule_decisions: pendingRuleDecisions(claims, queue), needs_note: needsNote, sitting_rows: sitting, more_than_a_sitting: open > sitting,
+      open,
+      decided: claims.filter((c) => isReviewed(c)).length,
+      decided_listed: decidedListed,
+      to_read: readings.to_read,
+      pending_rule_decisions: readings.pending_rule_decisions,
+      needs_note: readings.needs_note,
+      sitting_rows: sitting,
+      more_than_a_sitting: open > sitting,
     },
     lessons: byStatus,
     waiting_lessons: byStatus.Proposed + byStatus.Approved,
@@ -118,7 +150,7 @@ export async function status(opts = {}) {
     }
     const sitting = ctx.config.queue?.sitting_rows ?? 20;
     const claims = ctx.pull.claims() ?? [];
-    const counts = countsOf({ claims, lessons: ctx.pull.lessons() ?? [], queue: ctx.pull.queue() ?? [], settings: ctx.pull.settings(), sitting });
+    const counts = countsOf({ claims, lessons: ctx.pull.lessons() ?? [], queue: ctx.pull.queue() ?? [], settings: ctx.pull.settings(), sitting, rubric, config: ctx.config });
     const minClaims = ctx.config.distill?.min_claims ?? 2; // distill drafts nothing from fewer decided claims
     const n = counts.queue.open;
     const proposed = counts.lessons.Proposed;
@@ -156,7 +188,9 @@ export async function status(opts = {}) {
     ];
     const promoting = promotingNow(ctx.root, ctx.now);
     if (promoting) rows[rows.length - 1][1] = `${quoted(promoting.lesson ?? 'a rule change', 40)} is being checked now; before that: ${counts.last_run ?? 'none yet'}`;
-    if (counts.queue.needs_note > 0) rows.splice(2, 0, ['Needs your note', plural(counts.queue.needs_note, 'row'), '']);
+    // what the agent still has to do with the decisions made; nothing to say when all three counts are zero, so no row (the table stays at five rows at most)
+    const decisions = decisionsCell(counts.queue);
+    if (decisions !== '') rows.splice(2, 0, ['Your decisions', decisions, '']);
 
     const parts = [n ? plural(n, 'row') : null, m ? plural(m, 'rule change') : null].filter(Boolean);
     const sentence = parts.length === 0
@@ -170,7 +204,9 @@ export async function status(opts = {}) {
     if (unread > 0) next = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
     else if (counts.queue.more_than_a_sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
     else if (n > 0) next = `Next: decide ${yourClaims(n)} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
-    else if (counts.queue.pending_rule_decisions >= minClaims && m === 0) next = 'Next: type /claim-tagger distill to draft a rule change from your decisions.'; // enough decisions that blame the rule for distill to draft from, and no rule change open (Proposed or Approved)
+    // distill has something to do while a decision is still to read (the reading is made only by distill, so even one row is enough), or while enough decisions point at a rule for it to
+    // draft from, and no rule change is open (Proposed or Approved)
+    else if ((counts.queue.to_read > 0 || counts.queue.pending_rule_decisions >= minClaims) && m === 0) next = 'Next: type /claim-tagger distill to draft a rule change from your decisions.';
     else if (proposed > 0) next = `Next: approve or reject the ${proposed === 1 ? 'rule change' : 'rule changes'} in Lessons waiting (${viewLink(ctx.config, 'lessons_waiting')}).`;
     else if (approved > 0) next = `Next: type /claim-tagger promote to check the approved ${approved === 1 ? 'rule change' : 'rule changes'}.`;
     else next = 'Next: type /claim-tagger tag to read new claims.';

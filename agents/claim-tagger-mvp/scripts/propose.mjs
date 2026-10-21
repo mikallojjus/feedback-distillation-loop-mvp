@@ -29,8 +29,11 @@
 // a claim that QA marks To review on the real table lands in Your queue on the next run); a Reviewed claim never waits. A claim that was decided keeps Waits for you until this
 // step reads the decision: the row stays in Your queue until the next tag run, by design (section 6.2). In the ledger a row per judged claim and tag is created when missing, and
 // updated when the proposal, the confidence, the reason or the edition changed. A claim an editor has Reviewed is decided (lib/decisions.mjs): there the ledger row also gets the copy of
-// the decision (Tag outcome, Why wrong, Your reasoning, Decided under), and the proposal columns of a row that is decided are never rewritten (they are what the editor saw). The plan
-// ends with the Agent settings row: the edition and "Tag · <date time> · <n> claims". Nothing here writes Review status, Verified tags, Why wrong or Challenged tags notes of a claim (hard rule 1).
+// the decision (Tag outcome, Why wrong (the reason word that opens the tag's note line), Your reasoning, Decided under), made with the names of every tag of the rulebook so that it is
+// the copy distill makes, and the proposal columns of a row that is decided are never rewritten (they are what the editor saw). The plan
+// ends with the Agent settings row: the edition and "Tag · <date time> · <n> claims". Nothing here writes Review status, Verified tags or Challenged tags notes of a claim (hard rule 1),
+// and nothing here writes or clears a reading (the claim's Agent reading, the ledger's Agent reading, Rule, Reading note and Read under): only distill makes and writes those, so a
+// tag run never undoes a reading and never makes a row look unread (READ-DECISIONS.md).
 //
 // Exit codes: 0 ok, 1 stopped (the same command continues), 2 invalid (nothing read yet, a refused plan, a read-back that differed), 3 paused,
 // 4 drift of the rulebook text in Notion.
@@ -260,6 +263,8 @@ export async function propose(opts = {}) {
       ctx.warnings.push(`${plural(orphans.length, 'decided row')} of the ledger belong${orphans.length === 1 ? 's' : ''} to claims that are not Reviewed, so ${orphans.length === 1 ? 'it does' : 'they do'} not count as decisions here (run setup.mjs migrate-decisions once to carry earlier decisions over)`);
     }
 
+    // the names of every tag of the rulebook: a note line that starts with one of them is that tag's own entry, so the copy of a decision made here is the one distill makes (same Your reasoning)
+    const tagNames = rubric.tags.map((t) => t.name);
     const plan = newPlan({ runId: ctx.runId, script: 'propose', rubricEdition: edition, config: ctx.config, now: ctx.now });
     const rerun = jc.judge.rerun;
     const tagged = new Map(judgedList.map((t) => [t, 0]));
@@ -304,7 +309,7 @@ export async function propose(opts = {}) {
         if (!existing) {
           const props = { Claim: claim.claim, Key: key, Tag: tag, ...values, 'Claim link': claim.notion_url ?? null };
           if (reviewed) {
-            const [d] = decisionsFor(claim, [{ Key: key, Tag: tag, ...values }]);
+            const [d] = decisionsFor(claim, [{ Key: key, Tag: tag, ...values }], { tagNames });
             Object.assign(props, decisionProps(d));
             copied += 1;
           }
@@ -312,7 +317,7 @@ export async function propose(opts = {}) {
           created += 1;
         } else if (reviewed) {
           // the row holds what the editor saw: only the copy of the decision is written (and only where it differs)
-          const [d] = decisionsFor(claim, [existing]);
+          const [d] = decisionsFor(claim, [existing], { tagNames });
           const changes = decisionChanges(existing, d, claim);
           if (Object.keys(changes).length) {
             plan.update('tag_decisions', key, existing.page_id, changes);

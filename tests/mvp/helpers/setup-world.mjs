@@ -5,7 +5,9 @@
 //
 //   newWorld({ structure: true })        -> { root, config, fake, parent, env, run(argv) -> { code, out, err } }
 //   realStructure(), revisedStructure()   the approved proposal of 15 October read from docs/mvp-2026-11/STRUCTURE.md (the old shape), and the structure the build uses since
-//                                         16 October: agents/claim-tagger-mvp/setup/structure.json (the claims carry the editor's columns, the ledger Decided under, seven views)
+//                                         16 October, as revised on 21 and 22 October: agents/claim-tagger-mvp/setup/structure.json (the claims carry the editor's three columns, the
+//                                         agent's eight with Agent reading, the retired "(old)" ones; the ledger Decided under and the four reading columns; seven views). The files of
+//                                         the earlier builds are fixtures/structure.16-oct.json and fixtures/structure.21-oct.json (the live copy before the reading of 22 October)
 //   builderClient(fake), restClient(fake) clients over the fake (builder version 2026-03-11 / default 2022-06-28), paced at 1000 a second
 //   FAKE_HAS_USER_COLUMNS, forFake(structure)   the fake may not know created_by / last_edited_by columns: forFake removes them when it does not
 //   smallTaxonomy(), fullTaxonomy(), makePick({ audit, extra }), writeInputs(dir, ...)

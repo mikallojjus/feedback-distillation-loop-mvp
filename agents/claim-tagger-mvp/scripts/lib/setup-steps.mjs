@@ -14,10 +14,12 @@
 //
 // ctx = { root, config, now, run: { id, dir, update(fields) }, log(line), warn(line), restClient(), builderClient({ logFile }) }. Every Notion write is
 // a plan applied by lib/plan.mjs (hard rule 1): checked before the first request, sent in order with a ledger, read back page by page.
-// The four editor columns of the Claims copy are written only by migrate-decisions, through a setup plan whose "Challenged tags notes" starts with the
-// audit prefix (the one-time seeding exception of hard rule 1: the audit's decisions of 9 October move from the ledger to the claims they are about).
+// The three editor columns of the Claims copy (Verified tags, Review status, Challenged tags notes) are written only by migrate-decisions, through a setup plan whose
+// "Challenged tags notes" starts with the audit prefix (the one-time seeding exception of hard rule 1: the audit's decisions of 9 October move from the ledger to the
+// claims they are about). Neither step writes a reading (Agent reading, Rule, Reading note, Read under) or a claim's Why wrong (the column is retired): on the live copy
+// distill reads the audit's disagreements later (READ-DECISIONS.md, decision 73).
 // seed-audit writes the audit's decisions into the ledger (Tag decisions), whose columns are the agent's; Paused is never written (an unticked box is
-// what a new row has).
+// what a new row has). The ledger's Why wrong of a seeded disagreement is the audit's Agent slip (the reason word; the ledger keeps the column, decision 64).
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -422,7 +424,9 @@ export async function stepStructure(ctx, parts) {
   }
   if (parts.includes('views')) {
     lines.push(`views: ${said(result.created.views, there(viewList.map((v) => v)))}${result.created.renamed ? `, ${result.created.renamed} renamed` : ''}`);
-    const brought = Object.entries(result.updated).flatMap(([t, views]) => Object.entries(views).map(([name, what]) => `${t}: ${name} (${what.join(', ')})`));
+    // what a view was brought to, in words: the filter, the sorts, the shown columns and their order ("column order"), whether the cells wrap
+    const inWords = (what) => what.map((x) => (x === 'columns' ? 'column order' : x)).join(', ');
+    const brought = Object.entries(result.updated).flatMap(([t, views]) => Object.entries(views).map(([name, what]) => `${t}: ${name} (${inWords(what)})`));
     const arranged = Object.entries(result.arranged).flatMap(([t, names]) => names.map((name) => `${t}: ${name} (column order)`));
     if (brought.length || arranged.length) lines.push(`views brought to the structure: ${[...brought, ...arranged].join('; ')}`);
   }
@@ -486,7 +490,7 @@ export async function stepClaims(ctx, { from } = {}) {
   const { root, config } = ctx;
   const pick = readPick(from ?? defaultPath(root, 'claims-pick.json'));
   const entry = tableEntry(config, 'claims_copy');
-  // the agent's columns and the editor's four stay empty: a picked row carries the real table's own Review status, notes and relation to the taxonomy, none of which is copied
+  // the agent's columns (Agent reading among them) and the editor's three stay empty: a picked row carries the real table's own Review status, notes and relation to the taxonomy, none of which is copied
   const ops = claimOps(pick, columnsOf(root, 'claims_copy'), { keyColumn: entry.key, skip: [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims_copy')] });
   const sourcesColumn = entry.columns?.sources ?? 'Geo Sources';
   const byGeoId = new Map();
@@ -520,9 +524,10 @@ export async function stepSeedAudit(ctx, { from } = {}) {
  * What migrate-decisions writes (CLAIMS-REVIEW.md, section 3), worked out from the pull. `claims` are the rows of norm/claims.jsonl, `ledger` the rows of norm/queue.jsonl,
  * `tagPages` maps a tag name to the page id of its Rulebook copy row, `columns` is the claims entry's `columns` and `write_columns`.
  *   a claim with ledger rows that hold a decision from the audit (Your reasoning starts with the audit prefix) and no decision of its own yet gets, on the claim:
- *   Verified tags (the tags with outcome Applies), Review status Reviewed, Why wrong (the ledger's, else Agent slip) and Challenged tags notes (the rows'
- *   Your reasoning, which carries "From the audit of 9 October"); and on each of those ledger rows Decided under, the edition the row's proposal was made under (when it
- *   records one). A claim whose ledger rows have a confidence and no Agent confidence of its own gets the lowest of them (the open rows).
+ *   Verified tags (the tags with outcome Applies), Review status Reviewed and Challenged tags notes (the rows' Your reasoning, which carries "From the audit of 9 October");
+ *   and on each of those ledger rows Decided under, the edition the row's proposal was made under (when it records one). The editor fills three claim columns since the reading
+ *   of 22 October (READ-DECISIONS.md): no Why wrong is written to the claim, and no reading either (decision 73: on the live copy distill reads the audit's disagreements later,
+ *   after a --plan-only review). A claim whose ledger rows have a confidence and no Agent confidence of its own gets the lowest of them (the open rows).
  *   Left alone: a claim that is Reviewed or has any editor column filled already (carried over, or an editor's own work), and a decided ledger row that is not from the
  *   audit (an editor decides on the claim, never a script).
  * Returns { claimOps: [{ key, page_id, properties, expect }], ledgerOps: [{ key, page_id, properties }], summary }.

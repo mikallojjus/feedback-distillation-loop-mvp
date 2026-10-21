@@ -42,8 +42,8 @@
 // Run files: plan.jsonl, ledger.jsonl, report.md, run.json, calls.jsonl (one line per model call, purpose reading or distill), readings.jsonl ({ key, hash, edition, source: "model" | "verbatim",
 // reading, rule, note, no_note } per reading made or reused this run) and rejected/reading-batch-<n>-attempt-<k>.md (a reply the checks refused, as it came, with the problems).
 //
-// Exit codes: 0 ok (also when nothing qualifies, and when some rows could not be read), 1 stopped (the same command continues), 2 invalid (also: rows were to be read and none could be),
-// 3 paused, 4 drift or another model, 75 usage window.
+// Exit codes: 0 ok (also when nothing qualifies, when some rows could not be read, and when a rule change was drafted from earlier readings although no row could be read this time),
+// 1 stopped (the same command continues), 2 invalid (also: rows were to be read, none could be, and no rule change was drafted), 3 paused, 4 drift or another model, 75 usage window.
 //
 // Exports: distill, citedRule, buildGroups, buildMessage, checkReply, ngramOverlap, supportingCell, uniqueTitle, main, USAGE.
 
@@ -568,7 +568,9 @@ export async function distill(opts = {}) {
       ]
       : (kept.length ? [['Rule change', ruleChangeCell(kept), '']] : []);
     const counted = { lessons: kept.length, groups: groups.length, decisions_copied: copies.length, readings: readN, could_not_read: unreadN };
-    const exit = toReadN > 0 && readN === 0 ? EXIT.INVALID : EXIT.OK;
+    // exit 2 only when something was to read, nothing at all could be read, and no rule change was drafted; a run that drafted one from the readings of earlier runs is a success whose sentence
+    // still says how many decisions could not be read this time (READ-DECISIONS.md, section 5)
+    const exit = toReadN > 0 && readN === 0 && kept.length === 0 ? EXIT.INVALID : EXIT.OK;
 
     if (ctx.opts.planOnly) {
       ctx.record.live_step = resumeFor(ctx.root, resumeLine('distill', [...(ctx.driver === 'fake' ? ['--driver', 'fake'] : []), '--readings', ctx.runId])); // the live step: it reuses these readings and asks the model for no row whose hash is unchanged

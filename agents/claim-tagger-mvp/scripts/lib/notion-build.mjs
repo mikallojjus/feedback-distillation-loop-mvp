@@ -28,10 +28,12 @@
 //   viewKey(name), viewUrl(databaseId, viewId) -> 'your_queue'; 'https://www.notion.so/<database id>?v=<view id>' (ids without dashes)
 //
 // Columns. After the tables exist, runStructure first renames the columns of an earlier build that the structure gives another name (a column's `renamed_from`: the text columns
-// Agent tags and Agent notes become "Agent tags (old)" and "Agent notes (old)", the relation "Claim quality tags — verified" becomes "Verified tags"; a rename is made only when the
-// old name is there with the same type and the new name is not), then adds every column of the structure that a table lacks (updateDataSource): a table made by an earlier build
-// gains the columns of a later revision, and the relation columns, which need the table they point at, are added this way too. A column that is there is never changed or
-// removed. A `retired` column (the "(old)" ones) is never made on a new table: it exists only where a rename made it, and every view hides it.
+// Agent tags and Agent notes become "Agent tags (old)" and "Agent notes (old)", the relation "Claim quality tags — verified" becomes "Verified tags", and the select Why wrong of the
+// Claims copy becomes "Why wrong (old)" (the editor no longer fills it in: the agent reads each disagreement itself, READ-DECISIONS.md; the Why wrong of Tag decisions keeps its name);
+// a rename is made only when the old name is there with the same type and the new name is not), then adds every column of the structure that a table lacks (updateDataSource): a table
+// made by an earlier build gains the columns of a later revision (Agent reading on the Claims copy; Agent reading, Rule, Reading note and Read under on Tag decisions), and the relation
+// columns, which need the table they point at, are added this way too. A column that is there is never changed or removed. A `retired` column (the "(old)" ones) is never made on a new
+// table: it exists only where a rename made it, and every view hides it.
 //
 // Views. A view the table has already is not left as it was: its filter, its sorts, its shown columns and their order, and whether cells wrap are compared with the structure and
 // patched where they differ (updateView), so that a table built by an earlier revision gets the new filter of Your queue and the new column order. The views of a table that sets
@@ -107,13 +109,13 @@ export const OPTION_COLORS = Object.freeze({
   claims_copy: {
     'Geo Name source': { 'This space': 'green', 'Other space (fallback)': 'orange' },
     'Review status': { 'To review': 'yellow', Reviewed: 'green' },
-    'Why wrong': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
     'Agent status': { 'Waits for you': 'yellow', Done: 'green', 'Disagrees with your decision': 'red', 'Could not read': 'gray' },
   },
   tag_decisions: {
     'Agent proposal': { Applies: 'green', 'Does not apply': 'red', "Can't tell": 'yellow' },
     'Tag outcome': { Applies: 'green', 'Does not apply': 'red' },
     'Why wrong': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
+    'Agent reading': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
     'Follow-up': { Fixed: 'green', 'Still wrong': 'red' },
   },
   rule_changes: {

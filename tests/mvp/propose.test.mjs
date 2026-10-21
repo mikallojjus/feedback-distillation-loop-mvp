@@ -4,6 +4,8 @@ import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { cellVerdict, claimColumns, claimProps, main, notCheckedParts, openClaimCount, propose, reasonsOfCell } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
 import { status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
+import { loadPull } from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
+import { syncDecisions } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
@@ -722,4 +724,72 @@ test('propose: a reason word at the start of the tag\'s line is that tag\'s Why 
   // the next run copies nothing again
   const again = await propose(w.hooks());
   assert.deepEqual(readJsonl(join(again.runDir, 'plan.jsonl')).rows[0].plan.counts, { creates: 0, updates: 1 });
+});
+
+test('propose copies a decision with the names of every tag of the rulebook, so a note line for a tag the agent did not judge never leaks into the judged tag, and distill finds nothing left to copy', async () => {
+  const w = await judged({
+    queue: [{ Claim: claimText(8), Key: 'c08::Context-dependent', Tag: CD, 'Agent proposal': 'Applies', 'Agent confidence': 0.6, 'Agent reason': 'old', 'Rulebook edition': '2026-10-01.1' }],
+  });
+  // Wordy is a tag of the rulebook that nobody judges: its line is its own entry, and the judged tag's text stops where it begins
+  const notes = `${CD}: Rule 3 is silent here.\nWordy: Too long, but that is another tag.`;
+  w.review('c10', { tags: [], notes }); // a ledger row is created with the decision
+  w.review('c08', { tags: [], notes }); // the row exists already: the decision is copied to it
+  const r = await propose(w.hooks());
+  assert.equal(r.exit, 0);
+  for (const geo of ['c10', 'c08']) {
+    const row = w.row('tag_decisions', `${geo}::${CD}`);
+    assert.deepEqual([row['Tag outcome'], row['Your reasoning']], ['Does not apply', 'Rule 3 is silent here.'], `${geo}: the Wordy line is not part of the reasoning for ${CD}`);
+  }
+  // distill brings the ledger up to date the same way: after the tag step it has no copy left to make (the two scripts never overwrite each other)
+  const pulled = loadPull(w.root, (await w.pull()).pullId, { config: w.config });
+  const tagNames = w.rubric().tags.map((t) => t.name);
+  assert.ok(tagNames.includes('Wordy') && tagNames.length === 13);
+  assert.deepEqual(syncDecisions(pulled.claims(), pulled.queue(), { tagNames }).changes, [], 'the copies distill would make are the ones propose made');
+});
+
+const READING_LEDGER = ['Agent reading', 'Rule', 'Reading note', 'Read under'];
+
+test('propose never writes or clears a reading: not the claim\'s Agent reading, not the ledger\'s four reading columns, on a row it creates, a row it updates and a claim it writes', async () => {
+  const held = { 'Agent reading': 'Rule unclear', Rule: `${CD} rule 3`, 'Reading note': 'The rule leaves this kind of case open.', 'Read under': '2026-10-16.1 · 0a1b2c3d' };
+  const line = `${CD}: Rule unclear, rule 3 · The rule leaves this kind of case open.`;
+  const w = await judged({
+    queue: [{ Claim: claimText(10), Key: 'c10::Context-dependent', Tag: CD, 'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Agent reason': 'old', 'Rulebook edition': '2026-10-01.1', ...held }],
+  });
+  w.review('c10', { tags: [], notes: 'Rule 3 is silent here.' }); // a decision the agent read: the row exists and holds its reading
+  w.editClaim('c10', { 'Agent reading': line, 'Agent status': 'Waits for you' });
+  w.review('c01', { tags: [CD], notes: 'The reference is clear.' }); // a decision with no row yet: the row is created
+  const r = await propose(w.hooks());
+  assert.equal(r.exit, 0);
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  assert.ok(plan.some((o) => o.op === 'create' && o.table === 'tag_decisions') && plan.some((o) => o.op === 'update' && o.table === 'tag_decisions') && plan.some((o) => o.table === 'claims_copy'), 'a create, an update of a ledger row and a claim update are in the plan');
+  for (const op of plan) {
+    const named = Object.keys(op.properties);
+    for (const column of READING_LEDGER) assert.ok(!named.includes(column), `${op.table} ${op.key}: the plan does not name ${column}`);
+  }
+  const row = w.row('tag_decisions', 'c10::Context-dependent');
+  assert.deepEqual(READING_LEDGER.map((c) => row[c]), Object.values(held), 'the reading of the row stays');
+  assert.equal(row['Tag outcome'], 'Does not apply', 'the copy of the decision was made all the same');
+  assert.equal(w.row('claims_copy', 'c10')['Agent reading'], line, 'and so does the claim\'s Agent reading');
+  assert.equal(w.row('claims_copy', 'c10')['Agent status'], 'Disagrees with your decision', 'the agent\'s other columns of the claim were written');
+  const created = w.row('tag_decisions', 'c01::Context-dependent');
+  assert.deepEqual([created['Agent reading'], created.Rule, created['Reading note'], created['Read under']], [null, '', '', ''], 'a row propose creates is unread');
+
+  // a second run changes nothing, readings included
+  const before = structuredClone(w.rows('tag_decisions'));
+  const again = await propose(w.hooks());
+  assert.equal(again.exit, 0);
+  assert.deepEqual(w.rows('tag_decisions'), before);
+});
+
+test('claimProps never names the claim\'s Agent reading, whatever the claim holds', () => {
+  const writeColumns = { tags: 'Agent tags', confidence: 'Agent confidence', reasons: 'Agent reasons', status: 'Agent status', waiting: 'Tags waiting', edition: 'Agent edition', remarks: 'Agent remarks', reading: 'Agent reading' };
+  const claim = {
+    agent_tags: [], tags_waiting: [], agent_status: 'Done', agent_reasons: 'old', agent_edition: 'old', agent_remarks: 'old', agent_reading: 'Context-dependent: Agent slip · x',
+  };
+  const columns = {
+    tags: [CD], waiting: [], status: 'Waits for you', agent_reasons: 'new', agent_edition: '2026-10-16.1', agent_remarks: 'not checked: 6 tags without rules', waits: 0, disagrees: false,
+  };
+  const props = claimProps({ claim, columns, writeColumns, tagPages: new Map([[CD, 'page-cd']]) });
+  assert.deepEqual(Object.keys(props).sort(), ['Agent edition', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags']);
+  assert.ok(!('Agent reading' in props));
 });

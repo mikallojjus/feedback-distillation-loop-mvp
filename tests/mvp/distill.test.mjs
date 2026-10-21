@@ -859,7 +859,7 @@ test('a batch that fails twice leaves its rows unread, keeps the refused replies
   const h = w.hooks();
   const r = await distill(h);
   assert.equal(readingCalls(w).length, reads + 2, 'two attempts for the batch');
-  assert.equal(r.exit, 2, 'something was to read and nothing at all could be read');
+  assert.equal(r.exit, 0, 'something was to read and nothing at all could be read, but a rule change was drafted from the earlier readings: not an error');
   assert.equal(w.row('tag_decisions', keyOf(5))['Agent reading'], null, 'the row stays unread');
   assert.equal(w.claim(claimId(5))['Agent reading'], '', 'and so does its claim');
   assert.equal(w.rows('rule_changes').length, 2, 'the lesson is drafted again from the earlier readings (the first was rejected)');
@@ -879,6 +879,41 @@ test('a batch that fails twice leaves its rows unread, keeps the refused replies
   assert.equal(again.exit, 0);
   assert.equal(w.row('tag_decisions', keyOf(5))['Agent reading'], 'Rule unclear');
   assert.equal(readdirSync(join(again.runDir)).includes('rejected'), false);
+});
+
+test('exit 2 only when something was to read, nothing at all could be read, and no rule change was drafted: the same failure is an error without earlier readings and a success with them', async () => {
+  // no reason word anywhere, so all three disagreements go to the model, and the model's replies are all refused: nothing could be read, nothing to draft from
+  const none = await story({ notes: { usps: 'USPS names which portal.' } });
+  none.setEnv('FAKE_CLAUDE_MODE', 'invalid-always');
+  none.setEnv('FAKE_CLAUDE_ONLY', 'reading');
+  const h = none.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 2);
+  assert.equal(assertReport(h, r).sentence, 'Distill: no decision could be read this time; no rule change to draft; none of the decisions read so far names a rule problem.');
+  assert.ok(none.rows('tag_decisions').every((x) => x['Agent reading'] === null), 'no row holds a reading');
+  assert.deepEqual(none.rows('claims_copy').filter((c) => c['Agent reading'] !== '').map((c) => c['Geo ID']), [claimId(GEORGIA)], 'only the claim the agent agreed on has its line: "Nothing to read"');
+  assert.deepEqual(readJson(join(r.runDir, 'run.json')).readings.could_not_read.sort(), [keyOf(PRESS), keyOf(AI), keyOf(USPS)].sort());
+  assert.equal(readJson(join(r.runDir, 'run.json')).exit_code, 2);
+  // --plan-only follows the same rule
+  const planned = await distill(none.hooks({ planOnly: true }));
+  assert.equal(planned.exit, 2);
+  assert.equal(planned.report.sentence, 'Distill: the plan is ready (0 rule changes, 3 not read) and nothing was written to Notion.');
+
+  // with readings from an earlier run a rule change is drafted although this run read nothing: exit 0, and the sentence still says how many could not be read
+  const earlier = await story({ claims: 5 });
+  assert.equal((await distill(earlier.hooks())).exit, 0);
+  const title = earlier.rows('rule_changes')[0].Lesson;
+  earlier.fake.editRow(earlier.row('rule_changes', title).page_id, { Status: 'Rejected' });
+  earlier.review(claimId(5), { tags: [], notes: 'A fifth claim that nobody has read yet.' });
+  earlier.setEnv('FAKE_CLAUDE_MODE', 'invalid-always');
+  earlier.setEnv('FAKE_CLAUDE_ONLY', 'reading');
+  const planOnly = await distill(earlier.hooks({ planOnly: true }));
+  assert.equal(planOnly.exit, 0);
+  assert.equal(planOnly.report.sentence, 'Distill: the plan is ready (1 rule change, 1 not read) and nothing was written to Notion.');
+  const live = await distill(earlier.hooks());
+  assert.equal(live.exit, 0);
+  assert.equal(live.report.sentence, 'Distill: drafted one rule change from your 2 notes; 1 could not be read this time.');
+  assert.equal(readJson(join(live.runDir, 'run.json')).exit_code, 0);
 });
 
 test('when only some of the batches fail the run is not an error: the rows of the good batches are read, the others wait, and the sentence counts them', async () => {

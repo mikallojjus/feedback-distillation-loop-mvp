@@ -7,8 +7,9 @@ import { decide } from '../../agents/claim-tagger-mvp/scripts/hooks/guard.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { placeholderConfig } from './helpers/config-fixture.mjs';
 
-// The connector guard (hooks/guard.mjs) reads the editor's column names from config.json editor_columns, whatever lists it holds, so that the claims' four
-// columns are as guarded as Editor wording and Paused were. It imports none of the agent's library modules.
+// The connector guard (hooks/guard.mjs) reads the editor's column names from config.json editor_columns, whatever lists it holds, so that the claims' three
+// columns (Verified tags, Review status, Challenged tags notes) are as guarded as Editor wording and Paused. Why wrong left the editor's work with the reading of
+// 22 October (READ-DECISIONS.md): it is the ledger's column now, and Agent reading is the agent's. The guard imports none of the agent's library modules.
 
 const dirs = [];
 after(() => {
@@ -45,6 +46,18 @@ test('the ledger\'s columns are not the editor\'s any more: a write naming Tag o
   assert.match(d.permissionDecisionReason, /no builder session is open/);
 });
 
+test('Why wrong and the agent\'s reading columns are not the editor\'s: a write naming one is refused for another reason, never as the editor\'s property', () => {
+  const root = rootWith(placeholderConfig());
+  for (const name of ['Why wrong', 'Why wrong (old)', 'Agent reading', 'Rule', 'Reading note', 'Read under']) {
+    const d = decide(update({ [name]: 'x' }), root);
+    assert.equal(d.permissionDecision, 'deny', name);
+    assert.doesNotMatch(d.permissionDecisionReason, /belongs to the editor/, name);
+    assert.match(d.permissionDecisionReason, /no builder session is open/, name);
+  }
+  // the three columns of the claims that an editor fills are still refused as the editor's, in the same call as an agent column
+  assert.match(decide(update({ 'Agent reading': 'x', 'Challenged tags notes': 'y' }), root).permissionDecisionReason, /the property "Challenged tags notes" belongs to the editor \(hard rule 1\)/);
+});
+
 test('the Status values Approved and Rejected stay the editor\'s', () => {
   const root = rootWith(placeholderConfig());
   for (const value of ['Approved', 'Rejected']) assert.match(decide(update({ Status: value }), root).permissionDecisionReason, new RegExp(`Status ${value} is for the editor to set`));
@@ -77,7 +90,7 @@ test('the guard still denies delete, move and duplicate, and a protected id anyw
   assert.equal(decide({ tool_name: 'Read', tool_input: {} }, root), null, 'a tool it does not guard gets no opinion');
 });
 
-test('the shipped guard imports none of the agent\'s library modules and the live config.json lists the claims\' four columns', () => {
+test('the shipped guard imports none of the agent\'s library modules and the live config.json lists the claims\' three columns', () => {
   const source = readFileSync(join(codeRoot(), 'scripts', 'hooks', 'guard.mjs'), 'utf8');
   assert.doesNotMatch(source, /from '\.\.?\/lib\//, 'it reads config.json and the markers itself');
   const live = JSON.parse(readFileSync(join(codeRoot(), 'config.json'), 'utf8'));

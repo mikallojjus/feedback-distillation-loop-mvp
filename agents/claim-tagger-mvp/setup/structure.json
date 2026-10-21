@@ -190,6 +190,12 @@
           "description": "What the agent could not check, such as \"not checked: 6 tags without rules\"; empty when it checked everything."
         },
         {
+          "name": "Agent reading",
+          "type": "rich_text",
+          "options": [],
+          "description": "What the agent made of your decision, one line per tag where you differed from it: Agent slip, Rule unclear or Rule should change, the rule, and why. Empty until the agent has read your decision."
+        },
+        {
           "name": "Verified tags",
           "type": "relation",
           "options": [],
@@ -207,20 +213,10 @@
           "description": "To review or Reviewed. A claim is decided once it is Reviewed; anything else leaves it open."
         },
         {
-          "name": "Why wrong",
-          "type": "select",
-          "options": [
-            "Agent slip",
-            "Rule unclear",
-            "Rule should change"
-          ],
-          "description": "Why the agent was wrong on this claim: one value for the claim. Agent slip, Rule unclear or Rule should change."
-        },
-        {
           "name": "Challenged tags notes",
           "type": "rich_text",
           "options": [],
-          "description": "Your words. A line that starts with a tag name and a colon belongs to that tag; it may start with Agent slip, Rule unclear or Rule should change and a full stop, which is that tag's Why wrong. \"rule 4\" typed here names the rule."
+          "description": "Your words. A line that starts with a tag name and a colon belongs to that tag. Open it with Agent slip, Rule unclear or Rule should change and a full stop to say what you think went wrong; otherwise the agent reads it. \"rule 4\" names the rule."
         },
         {
           "name": "Geo ID",
@@ -321,6 +317,18 @@
           "description": "The text column Agent notes of the first build, kept hidden. The agent no longer writes it.",
           "renamed_from": "Agent notes",
           "retired": true
+        },
+        {
+          "name": "Why wrong (old)",
+          "type": "select",
+          "options": [
+            "Agent slip",
+            "Rule unclear",
+            "Rule should change"
+          ],
+          "description": "The column Why wrong of the earlier builds, kept hidden. You no longer fill it in: the agent reads each disagreement itself (Agent reading).",
+          "renamed_from": "Why wrong",
+          "retired": true
         }
       ],
       "arrange_default_view": true
@@ -420,7 +428,7 @@
             "Rule unclear",
             "Rule should change"
           ],
-          "description": "Copied by the agent from the claim, for a tag whose outcome differs from the proposal."
+          "description": "Copied by the agent from your note on the claim: the reason word that opens the tag's line (Agent slip, Rule unclear or Rule should change), for a tag whose outcome differs from the proposal."
         },
         {
           "name": "Your reasoning",
@@ -433,6 +441,34 @@
           "type": "rich_text",
           "options": [],
           "description": "The edition the proposal you saw was made under, recorded when the agent copies your decision from the claim."
+        },
+        {
+          "name": "Agent reading",
+          "type": "select",
+          "options": [
+            "Agent slip",
+            "Rule unclear",
+            "Rule should change"
+          ],
+          "description": "What the agent made of your decision where you differed from it: Agent slip (the rule settles it your way), Rule unclear (it reads both ways) or Rule should change (it decides against you). Written by the agent."
+        },
+        {
+          "name": "Rule",
+          "type": "rich_text",
+          "options": [],
+          "description": "The rule the reading points at, for example \"Context-dependent rule 3\"."
+        },
+        {
+          "name": "Reading note",
+          "type": "rich_text",
+          "options": [],
+          "description": "One line of why. It opens with \"without your note\" when you wrote nothing for the tag."
+        },
+        {
+          "name": "Read under",
+          "type": "rich_text",
+          "options": [],
+          "description": "The edition and a short mark of what the reading rests on: your decision, your note and the rule. The agent reads a row again only when that changes."
         }
       ]
     },
@@ -570,9 +606,9 @@
         "Tags waiting",
         "Agent edition",
         "Agent remarks",
+        "Agent reading",
         "Verified tags",
         "Review status",
-        "Why wrong",
         "Challenged tags notes"
       ],
       "wrap": true
@@ -580,7 +616,7 @@
     {
       "name": "Needs your note",
       "table": "claims_copy",
-      "filter": "Why wrong is not empty, and Challenged tags notes is empty",
+      "filter": "Agent reading contains without your note",
       "sort": "Agent confidence, lowest first",
       "columns": [
         "Geo Name",
@@ -591,9 +627,9 @@
         "Tags waiting",
         "Agent edition",
         "Agent remarks",
+        "Agent reading",
         "Verified tags",
         "Review status",
-        "Why wrong",
         "Challenged tags notes"
       ],
       "wrap": true
@@ -612,9 +648,9 @@
         "Tags waiting",
         "Agent edition",
         "Agent remarks",
+        "Agent reading",
         "Verified tags",
         "Review status",
-        "Why wrong",
         "Challenged tags notes"
       ],
       "wrap": true
@@ -630,7 +666,11 @@
         "Agent reason",
         "Tag outcome",
         "Why wrong",
-        "Your reasoning"
+        "Your reasoning",
+        "Agent reading",
+        "Rule",
+        "Reading note",
+        "Read under"
       ],
       "wrap": false,
       "renamed_from": "Your queue"
@@ -638,13 +678,17 @@
     {
       "name": "Needs your note (ledger)",
       "table": "tag_decisions",
-      "filter": "Why wrong is Rule unclear or Rule should change, and Your reasoning is empty",
+      "filter": "Reading note contains without your note",
       "sort": "Agent confidence, lowest first",
       "columns": [
         "Claim",
         "Tag outcome",
         "Why wrong",
-        "Your reasoning"
+        "Your reasoning",
+        "Agent reading",
+        "Rule",
+        "Reading note",
+        "Read under"
       ],
       "wrap": false,
       "renamed_from": "Needs your note"

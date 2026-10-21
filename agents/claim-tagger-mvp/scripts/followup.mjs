@@ -19,6 +19,8 @@
 //                    the propose rule (the lowest of max(p, 1 - p) over the claim's judged tags) over the answers this step has, so a claim whose answer changed does not keep the
 //                    confidence of the answer it had; it is written only when every judged tag of the claim was checked again here (with one judged tag, always), else left as it is
 //   Agent settings   the edition and "Follow-up · <date time> · n Fixed, m Still wrong" (left out when promote runs the follow-up)
+// It never writes or clears a reading: the claim's Agent reading and the ledger's Agent reading, Rule, Reading note and Read under belong to distill (READ-DECISIONS.md). A row marked
+// Fixed keeps the reading it has, and distill does not read it again.
 //
 // Exit codes: 0 ok, 1 stopped, 2 invalid (the lesson is not Live, a supporting row is not decided any more), 3 paused, 4 drift, 75 usage window.
 //

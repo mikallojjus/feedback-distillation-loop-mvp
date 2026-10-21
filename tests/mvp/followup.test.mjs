@@ -241,3 +241,31 @@ test('followup: on a claim marked To review the tag that was checked again waits
   assert.deepEqual([w.claim('c01')['Agent tags'], w.claim('c01')['Tags waiting'], w.claim('c01')['Agent status']], [[], ['Context-dependent'], 'Waits for you']);
   assert.deepEqual([w.claim('c02')['Tags waiting'], w.claim('c02')['Agent status']], [[], 'Done'], 'Review status empty and a sure answer: nothing waits');
 });
+
+const READING_COLUMNS = ['Agent reading', 'Rule', 'Reading note', 'Read under'];
+
+test('followup never writes or clears a reading: the claim\'s Agent reading and the ledger\'s Agent reading, Rule, Reading note and Read under are in no operation of its plan, and they are as they were afterwards', async () => {
+  const w = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: wrong } }); // row 1 comes out Fixed, row 2 Still wrong; the claims' own columns are written again
+  const held = {
+    'Agent reading': 'Rule unclear', Rule: 'Context-dependent rule 4', 'Reading note': 'Rule 4 leaves general references open.', 'Read under': '2026-10-16.1 · 0a1b2c3d',
+  };
+  for (const i of [1, 2]) {
+    w.fake.editRow(w.ids.queue[keyOf(i)], held);
+    w.editClaim(`c0${i}`, { 'Agent reading': 'Context-dependent: Rule unclear, rule 4 · Rule 4 leaves general references open.', 'Agent status': 'Done', 'Agent edition': '2026-10-01.1' });
+  }
+  const r = await followup(w.hooks());
+  assert.equal(r.exit, 0);
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  assert.ok(plan.some((o) => o.table === 'claims_copy') && plan.some((o) => o.table === 'tag_decisions'), 'the plan writes both the claims\' columns and the Follow-up of the rows');
+  for (const op of plan) {
+    for (const column of READING_COLUMNS) assert.ok(!(column in op.properties), `${op.table} ${op.key}: the plan does not name ${column}`);
+  }
+  assert.equal(w.row('tag_decisions', keyOf(1))['Follow-up'], 'Fixed');
+  assert.equal(w.row('tag_decisions', keyOf(2))['Follow-up'], 'Still wrong');
+  for (const i of [1, 2]) {
+    const row = w.row('tag_decisions', keyOf(i));
+    assert.deepEqual(READING_COLUMNS.map((c) => row[c]), Object.values(held), `the ledger row of claim ${i} still holds its reading`);
+    assert.equal(w.row('claims_copy', `c0${i}`)['Agent reading'], 'Context-dependent: Rule unclear, rule 4 · Rule 4 leaves general references open.', `and so does claim ${i}`);
+    assert.equal(w.row('claims_copy', `c0${i}`)['Agent edition'], '2026-10-16.1', 'the agent\'s own columns of the claim were written again');
+  }
+});

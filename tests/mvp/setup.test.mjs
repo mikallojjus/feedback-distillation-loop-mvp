@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { RULEBOOK_COLUMNS, CLAIMS_COPY_COLUMNS, loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { countRequests } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
+import { READING_COLUMNS } from '../../agents/claim-tagger-mvp/scripts/lib/readings.mjs';
 import { AUDIT_PREFIX, checkPlan, readPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { readEdition, readLock, readRubric } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
@@ -162,8 +163,12 @@ test('preview prints what would be built; without a structure file it says how t
   const r = await w.run(['preview']);
   assert.equal(r.code, 0);
   assert.match(r.out[0], /^# Structure preview/);
-  assert.match(r.out[0], /## Tag decisions \(13 columns\)/);
-  assert.match(r.out[0], /## Claims copy \(26 columns\)/);
+  assert.match(r.out[0], /## Tag decisions \(17 columns\)/);
+  assert.match(r.out[0], /## Claims copy \(27 columns\)/);
+  assert.match(r.out[0], /\| Agent reading \| rich_text \|/);
+  assert.match(r.out[0], /\| Why wrong \(old\) \| select \| Agent slip, Rule unclear, Rule should change \|.*retired: never made on a new table/);
+  assert.match(r.out[0], /- \*\*Needs your note\*\*: rows shown: Agent reading contains without your note;/);
+  assert.match(r.out[0], /- \*\*Needs your note \(ledger\)\*\* .*rows shown: Reading note contains without your note;/);
   assert.match(r.out[0], /\| Verified tags \| relation \| points at the Rulebook copy \|/);
   assert.match(r.out[0], /\| Agent tags \(old\) \| rich_text \|/);
   assert.match(r.out[0], /- \*\*Your queue\*\*: rows shown: Agent status is Waits for you; sorted by: Agent confidence, lowest first; columns: Geo Name, Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting/);
@@ -256,12 +261,12 @@ test('setup build on a table of the build of 16 October (the live step): it says
   assert.deepEqual(r.out.filter((l) => /^(pages|tables|columns|views)/.test(l)), [
     'pages: 0 made, 2 there already',
     'tables: 0 made, 5 there already',
-    'columns: 5 added (claims_copy: Agent tags, Agent status, Tags waiting, Agent edition, Agent remarks)',
-    'columns renamed: 3 (claims_copy: Claim quality tags — verified -> Verified tags, Agent tags -> Agent tags (old), Agent notes -> Agent notes (old))',
+    'columns: 10 added (claims_copy: Agent tags, Agent status, Tags waiting, Agent edition, Agent remarks, Agent reading; tag_decisions: Agent reading, Rule, Reading note, Read under)',
+    'columns renamed: 4 (claims_copy: Claim quality tags — verified -> Verified tags, Agent tags -> Agent tags (old), Agent notes -> Agent notes (old), Why wrong -> Why wrong (old))',
     'views: 0 made, 7 there already',
-    'views brought to the structure: claims_copy: Your queue (filter, columns); claims_copy: Needs your note (columns); claims_copy: Agent disagreed (filter, columns)',
+    'views brought to the structure: claims_copy: Your queue (filter, column order); claims_copy: Needs your note (filter, column order); claims_copy: Agent disagreed (filter, column order); tag_decisions: Your queue (ledger) (column order); tag_decisions: Needs your note (ledger) (filter, column order)',
   ]);
-  assert.equal(w.fake.writes().length - before, 2 + 3, 'two column requests (renames, additions) and three views; the fake has no default view of its own');
+  assert.equal(w.fake.writes().length - before, 3 + 5, 'three column requests (renames, the claims\' additions, the ledger\'s) and five views; the fake has no default view of its own');
 
   const verified = await w.run(['verify']);
   assert.doesNotMatch(verified.text, /claims_copy: (missing column|type|extra column|view)/, verified.text);
@@ -270,6 +275,42 @@ test('setup build on a table of the build of 16 October (the live step): it says
   assert.equal(again.code, 0);
   assert.ok(!again.out.some((l) => /renamed|brought/.test(l)), again.out.join('\n'));
   assert.equal(w.fake.writes().length, writes, 'nothing to rename, add or set: not one write');
+});
+
+test('setup build on the copy of 21 October (the live step of the reading): it says what it renamed, added and put in order, verify is clean afterwards, and a second build writes nothing', async () => {
+  const w = newWorld();
+  const structure = join(w.root, 'setup', 'structure.json');
+  mkdirSync(join(w.root, 'setup'), { recursive: true });
+  const write = (s) => writeFileSync(structure, `${JSON.stringify(forFake(s), null, 2)}\n`);
+  openBuilder({ root: w.root, reason: 'test' });
+  write(JSON.parse(readFileSync(new URL('./fixtures/structure.16-oct.json', import.meta.url), 'utf8')));
+  assert.equal((await w.run(['build'])).code, 0);
+  write(JSON.parse(readFileSync(new URL('./fixtures/structure.21-oct.json', import.meta.url), 'utf8'))); // the live copy as it stands today
+  assert.equal((await w.run(['build'])).code, 0);
+  assert.equal((await w.run(['verify'])).err.some((l) => /claims_copy: (missing column|type|view)/.test(l)), false, 'the copy is as the structure of 21 October says');
+  write(revisedStructure());
+
+  const before = w.fake.writes().length;
+  const r = await w.run(['build']);
+  assert.equal(r.code, 0, r.text);
+  assert.deepEqual(r.out.filter((l) => /^(pages|tables|columns|views)/.test(l)), [
+    'pages: 0 made, 2 there already',
+    'tables: 0 made, 5 there already',
+    'columns: 5 added (claims_copy: Agent reading; tag_decisions: Agent reading, Rule, Reading note, Read under)',
+    'columns renamed: 1 (claims_copy: Why wrong -> Why wrong (old))',
+    'views: 0 made, 7 there already',
+    'views brought to the structure: claims_copy: Your queue (column order); claims_copy: Needs your note (filter, column order); claims_copy: Agent disagreed (column order); tag_decisions: Your queue (ledger) (column order); tag_decisions: Needs your note (ledger) (filter, column order)',
+  ]);
+  assert.equal(w.fake.writes().length - before, 3 + 5, 'three column requests (the rename, the claims\' addition, the ledger\'s) and five views');
+
+  const verified = await w.run(['verify']);
+  assert.doesNotMatch(verified.text, /(claims_copy|tag_decisions): (missing column|type|extra column|options|view)/, verified.text);
+  assert.match(verified.text, /verify: .* 0 write\(s\)/);
+  const writes = w.fake.writes().length;
+  const again = await w.run(['build']);
+  assert.equal(again.code, 0);
+  assert.deepEqual(again.out.filter((l) => /^(columns|views)/.test(l)), ['columns: 0 added', 'views: 0 made, 7 there already'], 'nothing renamed, nothing brought to the structure');
+  assert.equal(w.fake.writes().length, writes, 'a second build plans nothing: not one write');
 });
 
 test('a lost table create stops databases with exit 1 and what to check; the same command finishes the job', async () => {
@@ -567,6 +608,8 @@ test('seed-audit: ten decided rows of the ledger through a setup plan; the ledge
   for (const op of plan.ops) {
     assert.ok(op.properties['Your reasoning'].startsWith(AUDIT_PREFIX));
     assert.ok(!('Agent confidence' in op.properties) && !('Agent reason' in op.properties) && !('Rulebook edition' in op.properties) && !('Follow-up' in op.properties));
+    // decision 73: on the live copy the audit's disagreements are read later, by distill; the seeding writes no reading, no rule, no note on a reading and no Read under
+    for (const column of READING_COLUMNS) assert.ok(!(column in op.properties), `the seeding does not write ${column}`);
   }
 
   // what was read back
@@ -589,6 +632,7 @@ test('seed-audit: ten decided rows of the ledger through a setup plan; the ledge
     assert.equal(row['Agent reason'], '');
     assert.equal(row['Rulebook edition'], '');
     assert.equal(row['Follow-up'], null);
+    assert.deepEqual([row['Agent reading'], row.Rule, row['Reading note'], row['Read under']], [null, '', '', ''], 'unread: the model reads the audit disagreements later');
   }
   const disagree = ['8f9c833b41e54eee9ca78e9c2f4ffb58', '78dd775028795b65bb5c4945eda1c3bb'].map((id) => rows.find((x) => x.Key.startsWith(id)));
   assert.deepEqual(disagree.map((x) => [x['Agent proposal'], x['Tag outcome'], x['Why wrong']]), [['Does not apply', 'Does not apply', null], ['Does not apply', 'Does not apply', null]]);
@@ -635,7 +679,8 @@ test('claims: the editor columns of the Claims copy stay empty even when the pic
   assert.equal(pick.rows[0]['Challenged tags notes'], 'QA audit', 'the pick holds the real table\'s notes and relation');
   await w.run(['claims', '--from', w.inputs.claims]);
   for (const c of rowsOf(w, 'claims_copy')) {
-    assert.deepEqual([c['Verified tags'], c['Review status'], c['Why wrong'], c['Challenged tags notes'], c['Agent confidence']], [[], null, null, '', null], c['Geo ID']);
+    assert.deepEqual([c['Verified tags'], c['Review status'], c['Challenged tags notes'], c['Agent confidence'], c['Agent reading']], [[], null, '', null, ''], c['Geo ID']);
+    assert.ok(!('Why wrong' in c) && !('Why wrong (old)' in c), 'the Claims copy has no Why wrong column to fill, and a new table makes no retired one');
   }
 });
 
@@ -653,6 +698,9 @@ test('migrate-decisions: the ten audit decisions move from the ledger to their c
   assert.deepEqual(plan.header.plan.counts, { creates: 0, updates: 10 });
   assert.ok(plan.ops.every((op) => op.table === 'claims_copy' && op.op === 'update' && op.properties['Review status'] === 'Reviewed' && op.properties['Challenged tags notes'].startsWith(AUDIT_PREFIX)));
   assert.ok(plan.ops.every((op) => JSON.stringify(op.expect) === JSON.stringify({ 'Review status': null })), 'an editor who got there first is not overwritten');
+  // the editor fills three columns now: the migration writes the verified tags, Review status and the notes, no Why wrong (the column is gone) and no reading
+  assert.ok(plan.ops.every((op) => JSON.stringify(Object.keys(op.properties).sort()) === JSON.stringify(['Challenged tags notes', 'Review status', 'Verified tags'])), 'three columns, nothing else');
+  for (const op of plan.ops) for (const column of ['Why wrong', 'Why wrong (old)', 'Agent reading']) assert.ok(!(column in op.properties), column);
   assert.equal(checkPlan(plan, w.config, { setup: true, root: w.root }).ok, true);
   assert.equal(checkPlan(plan, w.config, { setup: false, root: w.root }).ok, false, 'only a setup plan may write the editor columns, and only with the prefix');
   assert.ok(existsSync(join(dir, 'ledger.jsonl')) && existsSync(join(dir, 'requests.jsonl')));
@@ -665,7 +713,9 @@ test('migrate-decisions: the ten audit decisions move from the ledger to their c
     assert.equal(c['Challenged tags notes'], `${AUDIT_PREFIX}: ${d.reasoning ?? NO_REASONING}`);
   }
   assert.equal(rowsOf(w, 'claims_copy').filter((c) => c['Review status'] === 'Reviewed').length, 10);
+  assert.equal(rowsOf(w, 'claims_copy').filter((c) => c['Agent reading'] !== '').length, 0, 'no claim has an Agent reading: distill writes it');
   assert.equal(rowsOf(w, 'tag_decisions').length, 10, 'the ledger rows are still there');
+  assert.equal(rowsOf(w, 'tag_decisions').filter((x) => x['Agent reading'] !== null || x['Read under'] !== '').length, 0, 'and unread');
 
   // a second run finds everything done and writes nothing
   const writes = w.fake.writes().length;
