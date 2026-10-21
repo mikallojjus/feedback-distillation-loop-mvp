@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Phase | "Read the decisions" (decision P4, specification `READ-DECISIONS.md`) on the branch `read-decisions-2026-11`: stage 0 (the specification, decisions 64 to 76) and stage 1 (the scripts, on fakes; decision 66 amended at c367949: the reading's key holds the edition the proposal was made under) committed; stage 2 (the practice page, manifest 2026-10-22.1, and the skills) with a coder in a separate worktree; stage 3 (the documents and the artifact) in progress. Suite in the main tree at c367949 with the stage 3 documents: 2,055 tests, 1,992 pass, 63 fail, all in `tests/mvp/walkthrough.test.mjs` (the practice page and the guide, which stage 2 changes). The live copy is still in the shape of 21 October (Why wrong shown, no reading columns) until stage 4's build; until then the branch's commands that check the claims table's columns stop with exit 2 against it. Then stage 4 (the live build, the plan-only readings of the audit's eight disagreements compared with the audit, calibration runs 6 to 8 of manifest 2026-10-22.1) and stage 5 (the verification loop, a fresh page for the product owner, the merge into `mvp-2026-11` on the product owner's say-so). Before the branch: the feedback round of 21 October (decision P3) live on the copy and verified end to end, 1,994 tests; the owner's page "Claim tagger practice · product owner, 21 Oct evening" is of the older shape for this branch (two open claims, Why wrong) |
+| Phase | "Read the decisions" (decision P4, specification `READ-DECISIONS.md`) on the branch `read-decisions-2026-11`: stages 0 to 3 are built, merged and green (2,059 tests pass, 0 fail, `evidence/01-tests/`): the scripts (decision 66 amended at c367949: the reading's key holds the edition the proposal was made under), the practice page (manifest 2026-10-22.1, nine claims, four open; its dry run passes the page check against the Demo tests page), the skills, the documents. Next: stage 4, the live build on the copy and the story's calibration (runs 6 to 8), then stage 5, the verification loop, then the artifact. The live copy is still in the 21 October shape until stage 4's build; until then every writing command of the branch stops with exit 2 (the column guard). |
 | Checkpoint 1 (structure proposal) | Approved as proposed on 2026-10-15 (decision P1); page https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 |
 | Checkpoint 2 (final demo) | message sent on 2026-10-15; the MVP is agreed when the product owner runs the seven steps and says so |
 | Branch | `read-decisions-2026-11`, off `mvp-2026-11` at 8827ceb; merged into `mvp-2026-11` after stage 5, on the product owner's say-so |
@@ -29,8 +29,7 @@
 
 | Agent | Model | Asked | Writes |
 |---|---|---|---|
-| practice-page coder, stage 2 of `READ-DECISIONS.md` | Sonnet, as the specification sets for coders | the manifest 2026-10-22.1, the page, the demo profile, the walkthrough runner, both skills and their references, the fixtures and tests | a separate worktree, merged by the engineer |
-| document drafter, stage 3 | Opus | the five documents: CLAUDE.md rules 1 and 10, AGENT.md, STRUCTURE.md (the revision of 22 October), BACKLOG.md (four rows), STATE.md | those five files in the main tree; no commit |
+| none | | no subagent is running at the last entry; the stage 1 coders (Sonnet, two worktrees), the stage 2 page coder (Sonnet, a worktree) and the stage 3 drafter (Opus, the main tree) have reported and their work is merged | |
 
 ## Finished subagents
 
