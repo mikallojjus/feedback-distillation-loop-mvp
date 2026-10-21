@@ -137,7 +137,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   const h2 = w.hooks();
   const drafted = await distill(h2);
   assert.equal(drafted.exit, 0, h2.io.errs.join('\n'));
-  assert.equal(drafted.report.sentence, 'Distill: read 10 of your decisions and drafted one rule change from your 2 notes.', 'the eight audit disagreements are read once (by the model), and the two decisions by their reason word');
+  assert.equal(drafted.report.sentence, 'Distill: read 10 of your decisions and drafted one rule change from 2 of them.', 'the eight audit disagreements are read once (by the model), and the two decisions by their reason word');
   assert.equal(drafted.report.rows[0][1], '10 decisions');
   assert.deepEqual(drafted.report.rows.slice(1, 4), [['Point at a rule', '2 decisions', ''], ['Agent slips', '8 decisions', ''], ['Without a note', 'none', '']], 'the audit says Agent slip for the eight, and so does the fake model: the comparison that decision 73 asks for');
   assert.equal(w.callsWith('# Reading').length, 1, 'one reading call, for the eight audit rows');

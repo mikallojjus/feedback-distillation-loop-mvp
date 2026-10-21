@@ -14,9 +14,13 @@ export const NEW_TEXT = 'Test: a reference that reads as general needs no answer
 export const MARK = 'every other definite reference must point at one specific thing';
 export const keyOf = (i) => `${claimId(i)}::Context-dependent`;
 
+// A decided row holds the reading the agent made of it (the ledger's Agent reading, Rule and Reading note), as distill leaves it: the rows a rule change rests on are rows that point at a rule
+// (decision 79), and promote and the follow-up look at the reading to know it.
+export const readingCells = (reading, rule = 4) => ({ 'Agent reading': reading, Rule: `Context-dependent rule ${rule}`, 'Reading note': 'The rule leaves this kind of case open.' });
+
 const decidedRow = (i, outcome, why, reasoning) => ({
   Claim: claimText(i), Key: keyOf(i), Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'Two readings. · Context-dependent rule 2 · 1/1 runs agreed',
-  'Rulebook edition': '2026-10-16.1', 'Tag outcome': outcome, 'Why wrong': why, 'Your reasoning': reasoning,
+  'Rulebook edition': '2026-10-16.1', 'Tag outcome': outcome, 'Why wrong': why, 'Your reasoning': reasoning, ...readingCells(why),
 });
 
 /**

@@ -14,8 +14,8 @@ Some reports end with a Next line that sends the editor to Notion. Under such a 
 | The Next line says | Checklist |
 |---|---|
 | `decide ... in Your queue (link)` or `start at the top of Your queue (link)` (tag, status, and promote after a PASS when claims still wait) | Decide in Your queue |
-| `add a note on ... in Needs your note (link), then type /claim-tagger distill again` (distill, when a decision has no note and no rule change was drafted) | Needs your note |
-| `read it in Lessons waiting (link) ... and approve it or write your own wording`, or `approve or reject ... in Lessons waiting (link)` (distill, status) | Approve in Lessons waiting |
+| `add a note on ... in Needs your note (link), then type /claim-tagger distill again` (distill, when a decision has no note and no rule change was drafted or waits) | Needs your note |
+| `read it in Lessons waiting (link) ... and approve it or write your own wording`, or `approve or reject ... in Lessons waiting (link)` (distill, status), or `reject the rule change ... in Lessons waiting (link), then type /claim-tagger distill again` (distill, status and promote, when a rule change rests on a decision the editor now calls the agent's slip) | Approve in Lessons waiting |
 | `in Lessons waiting (link), open the change and put this whole text into Editor wording` or `write all of the rule in Editor wording` (promote after a FAIL) | After a FAIL |
 | `add a note in Challenged tags notes on the claims in Agent disagreed (link)` (follow-up, the demo's step 7, and where at step 7) | Agent disagreed |
 | `open Your queue (link) and decide your four claims` (where at step 3; once some claims are decided it reads "your remaining claims", and "your remaining claim" for the last one) | Decide in Your queue, Demo form |
@@ -45,7 +45,7 @@ Demo:
 Real:
 
 1. Open Needs your note (the link in the Next line): the claims where you decided against the agent and wrote no note.
-2. Read Agent reading next to your Verified tags: it says what the agent made of your decision without a note.
+2. Read Agent reading next to your Verified tags: it says what the agent made of your decision without a note. That reading is a guess, so it drafts no rule change until your note is there.
 3. Add a line in Challenged tags notes for the tag: start with the tag name and a colon, then your words.
 4. If you know the reason, start your words with Agent slip, Rule unclear or Rule should change and a full stop; the agent then takes your word as it stands.
 5. When the notes are in, type /claim-tagger distill again.
@@ -53,7 +53,7 @@ Real:
 Demo:
 
 1. Open Needs your note (the link in the Next line): the claims where you decided against the agent and wrote no note.
-2. Read Agent reading next to your Verified tags: it says what the agent made of your decision without a note.
+2. Read Agent reading next to your Verified tags: it says what the agent made of your decision without a note. That reading is a guess, so it drafts no rule change until your note is there.
 3. Add a line in Challenged tags notes for the tag: start with the tag name and a colon, then your words.
 4. If you know the reason, start your words with Agent slip, Rule unclear or Rule should change and a full stop; the agent then takes your word as it stands.
 5. When the notes are in, type /claim-tagger demo distill again.
@@ -65,7 +65,7 @@ Real:
 1. Open Lessons waiting (the link in the Next line): each row shows Current text and Proposed text side by side.
 2. Read both and ask whether the draft says what you mean.
 3. If it does, set Status to Approved. If not, write all of the rule as you want it in Editor wording, then set Status to Approved: your wording is tested instead of the draft.
-4. A draft you do not want gets Status Rejected.
+4. A draft you do not want gets Status Rejected. So does a draft whose Next line says it rests on a decision you now call the agent's slip: reject it, then type /claim-tagger distill again.
 5. When a change is Approved, type /claim-tagger promote.
 
 Demo:
@@ -73,7 +73,7 @@ Demo:
 1. Open Lessons waiting (the link in the Next line): the draft shows Current text and Proposed text side by side.
 2. Read both and ask whether the draft says what you meant.
 3. If it does, set Status to Approved. If not, write all of rule 3 as you want it in Editor wording, then set Status to Approved: your wording is tested instead of the draft.
-4. Approving changes no rule yet; the safety check comes next.
+4. Approving changes no rule yet; the safety check comes next. If the Next line says the draft rests on a decision you now call the agent's slip, set Status to Rejected instead and type /claim-tagger demo distill again.
 5. Type /claim-tagger demo promote.
 
 ## After a FAIL

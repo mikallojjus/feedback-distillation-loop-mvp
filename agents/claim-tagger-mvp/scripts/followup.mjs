@@ -21,6 +21,9 @@
 //   Agent settings   the edition and "Follow-up · <date time> · n Fixed, m Still wrong" (left out when promote runs the follow-up)
 // It never writes or clears a reading: the claim's Agent reading and the ledger's Agent reading, Rule, Reading note and Read under belong to distill (READ-DECISIONS.md). A row marked
 // Fixed keeps the reading it has, and distill does not read it again.
+// Only the supporting rows whose reading still points at a rule are marked and judged again (decision 79): a row the editor has since called the agent's slip, or that is no longer a
+// disagreement, is left as it is (run.json names it, left_alone), its claim is not rewritten, and the report counts the marked rows only. A key with no ledger row stays in the list, so that the
+// check for a row that is not decided any more is unchanged.
 //
 // Exit codes: 0 ok, 1 stopped, 2 invalid (the lesson is not Live, a supporting row is not decided any more), 3 paused, 4 drift, 75 usage window.
 //
@@ -31,6 +34,7 @@ import { answerWord, plural, quoted, stampOf, viewLink } from './lib/editor-word
 import { claimDisagrees, isReviewed, isToReview } from './lib/decisions.mjs';
 import { readAnswers } from './lib/answers.mjs';
 import { tableEntry } from './lib/config.mjs';
+import { isDisagreement, ledgerAsRead, pointsAtRule } from './lib/readings.mjs';
 import {
   LoopExit, addSettingsOp, applyStep, assertApplied, judgeSettings, liveRubric, needClaimColumns, needTables, parseCli, pickLesson, readEvals, resumeLine, runJudge, runPreflight, supportingKeysOf, takePull, withRun,
 } from './lib/loop.mjs';
@@ -49,7 +53,21 @@ const round2 = (x) => Math.round(x * 100) / 100;
  * the keys of the supporting rows, `rubric` the rulebook in force. With summary: false the Agent settings row is left alone (promote has its own line there).
  * Returns { results: [{ key, claim, expected, got, status }], fixed, stillWrong, claimUpdates, result }. Throws a LoopExit when it cannot finish.
  */
-export async function followUp(ctx, { tag, keys, rubric, summary = true }) {
+export async function followUp(ctx, { tag, keys: allKeys, rubric, summary = true }) {
+  // only the rows whose reading still points at a rule are marked and judged again (decision 79): a row the editor has since called the agent's slip, or that is no longer a disagreement, is left
+  // as it is, and the rule change's figures count the marked rows only
+  const { rows: asRead } = ledgerAsRead({ claims: ctx.pull.claims() ?? [], ledgerRows: ctx.pull.queue() ?? [], rubric, config: ctx.config });
+  const readOf = new Map(asRead.map((r) => [r.Key, r]));
+  // a key with no ledger row at all stays in the list: the check below stops on a row that is not decided any more, as it always did
+  const keys = allKeys.filter((k) => !readOf.has(k) || (isDisagreement(readOf.get(k)) && pointsAtRule(readOf.get(k))));
+  const leftAlone = allKeys.filter((k) => !keys.includes(k));
+  if (leftAlone.length) ctx.record.left_alone = leftAlone;
+  if (keys.length === 0) {
+    throw new LoopExit(EXIT.INVALID, `none of the supporting rows points at a rule any more: ${leftAlone.join(', ')}`, {
+      sentence: `${ctx.label}: nothing was done, because none of the rows this rule change rests on points at a rule any more.`,
+      next: 'Next: type /claim-tagger status to see what is open.',
+    });
+  }
   const { cases } = readEvals(ctx.root);
   const byKey = new Map(cases.map((c) => [c.key, c]));
   const missing = keys.filter((k) => !byKey.has(k));
@@ -131,7 +149,7 @@ export async function followUp(ctx, { tag, keys, rubric, summary = true }) {
 
   const { result } = await applyStep(ctx, plan);
   assertApplied(ctx, result);
-  return { results, fixed, stillWrong, claimUpdates, result, planOnly: ctx.opts.planOnly === true };
+  return { results, fixed, stillWrong, claimUpdates, result, planOnly: ctx.opts.planOnly === true, leftAlone };
 }
 
 // ---- the run -------------------------------------------------------------------------------------------------------------------------

@@ -1113,7 +1113,7 @@ const withList = (lines = LIST, glue = '\n\n') => `${GOOD}${glue}${lines.join('\
 
 // the report that sends the editor to Needs your note (a distill that read a decision with no note and drafted nothing), and its checklist (the guide's "Needs your note", Demo form)
 const NOTE_REPORT = [
-  'Demo · Distill: read 1 of your decisions; no rule change to draft; 6 decided rows name no rule problem (practice page Claim tagger practice · 15 Oct 14:22).',
+  'Demo · Distill: read 1 of your decisions; no rule change to draft; 6 decided rows name no rule problem; 1 of your decisions has no note and waits in Needs your note (practice page Claim tagger practice · 15 Oct 14:22).',
   '',
   '| What | Result |',
   '|---|---|',
@@ -1127,7 +1127,7 @@ const NOTE_REPORT = [
 ].join('\n');
 const NOTE_LIST = [
   '1. Open Needs your note (the link in the Next line): the claims where you decided against the agent and wrote no note.',
-  '2. Read Agent reading next to your Verified tags: it says what the agent made of your decision without a note.',
+  '2. Read Agent reading next to your Verified tags: it says what the agent made of your decision without a note. That reading is a guess, so it drafts no rule change until your note is there.',
   '3. Add a line in Challenged tags notes for the tag: start with the tag name and a colon, then your words.',
   '4. If you know the reason, start your words with Agent slip, Rule unclear or Rule should change and a full stop; the agent then takes your word as it stands.',
   '5. When the notes are in, type /claim-tagger demo distill again.',
@@ -1142,6 +1142,33 @@ test('the report that sends the editor to Needs your note passes alone and with 
   assert.ok(has(grade({ final: `${NOTE_REPORT}\n\n${[...NOTE_LIST, '6. Check the Agent disagreed view.'].join('\n')}` }).problems, 'the checklist has 6 lines; the limit is 5'));
   assert.ok(has(grade({ final: `${NOTE_REPORT}\n\n${NOTE_LIST.join('\n')}\n\n${LIST.join('\n')}` }).problems, 'more than one part follows the Next line'));
   assert.ok(has(grade({ final: `${NOTE_REPORT}\n\n${NOTE_LIST.join('\n')}`.replace('Rule should change and a full stop', 'Rule should change and a full stop (see runs/20261021T092138Z)') }).problems, 'checklist line 4'), 'the word rules hold for this checklist too');
+});
+
+// the report that asks the editor to reject a rule change that rests on a decision they now call the agent's slip (decision 79), and the checklist "Approve in Lessons waiting", Demo form, that covers it
+const RECANTED_REPORT = [
+  'Demo · Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting; the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent\'s slip (practice page Claim tagger practice · 15 Oct 14:22).',
+  '',
+  '| What | Result |',
+  '|---|---|',
+  '| Read | 1 decision |',
+  '| Point at a rule | none |',
+  '| Agent slips | 1 decision |',
+  '| Without a note | none |',
+  '| Rule change | none |',
+  '',
+  'Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (https://www.notion.so/0123456789abcdef0123456789abcdef?v=fedcba9876543210fedcba9876543210), then type /claim-tagger demo distill again.',
+].join('\n');
+const RECANTED_LIST = [
+  '1. Open Lessons waiting (the link in the Next line): the draft shows Current text and Proposed text side by side.',
+  '2. Read both and ask whether the draft says what you meant.',
+  '3. If it does, set Status to Approved. If not, write all of rule 3 as you want it in Editor wording, then set Status to Approved: your wording is tested instead of the draft.',
+  '4. Approving changes no rule yet; the safety check comes next. If the Next line says the draft rests on a decision you now call the agent\'s slip, set Status to Rejected instead and type /claim-tagger demo distill again.',
+  '5. Type /claim-tagger demo promote.',
+];
+
+test('the report that asks to reject a recanted rule change passes alone and with the checklist that covers it', () => {
+  assert.deepEqual(grade({ final: RECANTED_REPORT }).problems, [], 'the report alone');
+  assert.deepEqual(grade({ final: `${RECANTED_REPORT}\n\n${RECANTED_LIST.join('\n')}` }).problems, [], 'and with its checklist');
 });
 
 test('pass-with-checklist passes: a report, one blank line, one numbered list of five lines', () => {

@@ -7,7 +7,7 @@ import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/j
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { stampOf } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.mjs';
 import { NOW, claimText } from './helpers/loop-world.mjs';
-import { TITLE, keyOf, promoteWorld } from './helpers/promote-scenario.mjs';
+import { TITLE, keyOf, promoteWorld, readingCells } from './helpers/promote-scenario.mjs';
 
 function assertReport(h, r) {
   assert.ok(r.markdown, 'a report was written');
@@ -129,8 +129,11 @@ test('followup: more than five rows show four and "and n more"', async () => {
     status: 'Live', supporting, open: 3,
     base: Object.fromEntries(supporting.map((i) => [claimText(i), no])),
   });
-  for (const i of [5, 6, 7]) w.fake.editRow(w.ids.queue[keyOf(i)], { 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Rule 4.' });
-  w.fake.addRow(w.DB.tag_decisions, { Claim: claimText(8), Key: keyOf(8), Tag: 'Context-dependent', 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Rule 4.' });
+  for (const i of [5, 6, 7]) w.fake.editRow(w.ids.queue[keyOf(i)], { 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Rule 4.', ...readingCells('Rule unclear') });
+  w.fake.editRow(w.ids.queue[keyOf(4)], readingCells('Rule unclear')); // row 4 is one of the seven rows the change rests on, so it points at a rule (decision 79)
+  w.fake.addRow(w.DB.tag_decisions, {
+    Claim: claimText(8), Key: keyOf(8), Tag: 'Context-dependent', 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Rule 4.', ...readingCells('Rule unclear'),
+  });
   const h = w.hooks();
   const r = await followup(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
@@ -138,6 +141,42 @@ test('followup: more than five rows show four and "and n more"', async () => {
   assert.equal(report.sentence, 'Follow-up, repeated by hand: the agent now agrees with all 7 of your decisions.');
   assert.equal(report.rows.length, 5);
   assert.deepEqual(report.rows.at(-1), ['and 3 more', '3 Fixed', '']);
+});
+
+test('followup: a supporting row whose reading no longer points at a rule (the editor now calls it the agent\'s slip) is left as it is: no Follow-up mark, no new judgement, and the report counts only the marked rows', async () => {
+  const w = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: no } });
+  w.fake.editRow(w.ids.queue[keyOf(2)], readingCells('Agent slip')); // re-read as Agent slip after the editor's note
+  const before = w.calls().length;
+  const h = w.hooks();
+  const r = await followup(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(w.row('tag_decisions', keyOf(1))['Follow-up'], 'Fixed');
+  assert.equal(w.row('tag_decisions', keyOf(2))['Follow-up'], null, 'the recanted row is not marked');
+  const report = assertReport(h, r);
+  assert.equal(report.sentence, 'Follow-up, repeated by hand: the agent now agrees with your decision.', 'one row was marked');
+  assert.deepEqual(report.rows, [['"The speaker said claim number 1 about..."', 'Fixed', '']]);
+  assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'], `Follow-up · ${stampOf(NOW)} · 1 Fixed, 0 Still wrong`);
+  assert.ok(w.calls().length > before, 'the one marked row is judged');
+  for (const c of w.callsWith(claimText(2))) assert.fail(`the recanted row was judged: ${c.stdin}`);
+  assert.deepEqual(readJson(join(r.runDir, 'run.json')).left_alone, [keyOf(2)]);
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  assert.ok(plan.every((op) => !(op.table === 'claims_copy' && op.key === 'c02')), 'and the claim of the recanted row is not written either');
+  // a row that is no longer a disagreement is left alone the same way
+  const agreed = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: no } });
+  agreed.fake.editRow(agreed.ids.queue[keyOf(1)], { 'Tag outcome': "Can't tell" });
+  const ra = await followup(agreed.hooks());
+  assert.equal(ra.exit, 0, ra.markdown);
+  assert.equal(agreed.row('tag_decisions', keyOf(1))['Follow-up'], null);
+  assert.equal(agreed.row('tag_decisions', keyOf(2))['Follow-up'], 'Fixed');
+  assert.equal(ra.report.sentence, 'Follow-up, repeated by hand: the agent now agrees with your decision.');
+  // when no row points at a rule any more there is nothing to mark: exit 2, and nothing is written
+  const none = await promoteWorld({ status: 'Live' });
+  for (const i of [1, 2]) none.fake.editRow(none.ids.queue[keyOf(i)], readingCells('Agent slip'));
+  const hn = none.hooks();
+  const rn = await followup(hn);
+  assert.equal(rn.exit, 2);
+  assert.equal(assertReport(hn, rn).sentence, 'Follow-up: nothing was done, because none of the rows this rule change rests on points at a rule any more.');
+  assert.equal(none.writes().length, 0);
 });
 
 test('followup --plan-only writes a plan and nothing else; a paused agent stops it; a bad command line is refused', async () => {

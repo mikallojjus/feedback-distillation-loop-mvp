@@ -9,7 +9,7 @@ import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/j
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { stampOf } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.mjs';
 import { NOW, claimText } from './helpers/loop-world.mjs';
-import { MARK, NEW_TEXT, RULE4, TITLE, keyOf, promoteWorld } from './helpers/promote-scenario.mjs';
+import { MARK, NEW_TEXT, RULE4, TITLE, keyOf, promoteWorld, readingCells } from './helpers/promote-scenario.mjs';
 
 function assertReport(h, r) {
   assert.ok(r.markdown, 'a report was written');
@@ -115,6 +115,7 @@ test('rollback: only a Live rule change can be rolled back, and the title is req
 test('rollback: a rule that has changed since the lesson went live is not rolled back over the later change', async () => {
   const w = await afterPass();
   const NEW_B = 'Test: a reference that reads as general needs no answer; a title alone is general; every other definite reference must point at one specific thing, named in the claim.';
+  for (const i of [3, 4]) w.fake.editRow(w.ids.queue[keyOf(i)], readingCells('Rule unclear')); // the later change rests on these two rows, so they point at a rule (decision 79)
   w.fake.addRow(w.DB.rule_changes, {
     Lesson: 'A title is general', Tag: 'Context-dependent', Rule: 'Context-dependent rule 4', Kind: 'Clarify wording', 'Current text': NEW_TEXT, 'Proposed text': NEW_B,
     'Supporting rows': `${claimText(3)} · ${keyOf(3)}\n${claimText(4)} · ${keyOf(4)}`, Status: 'Approved',

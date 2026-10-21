@@ -309,7 +309,7 @@ test('distill: two rows read Rule unclear on rule 4 become one Proposed lesson w
   const pulled = (await pullOf(w)).lessons();
   assert.deepEqual(pulled[0].supporting_keys, [keyOf(2), keyOf(1)]);
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: nothing new to read; drafted one rule change from your 2 notes.');
+  assert.equal(report.sentence, 'Distill: nothing new to read; drafted one rule change from 2 of your decisions.');
   assert.deepEqual(report.rows, [['Rule change', '"General references need no answer", Context-dependent rule 4', '']]);
   assert.equal(report.next, `Next: read it in Lessons waiting (https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003), where the current and the proposed text sit side by side, and approve it or write your own wording.`);
   assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'].startsWith('Distill · '), true);
@@ -439,7 +439,7 @@ test('distill: at most three lessons per run, the best supported first, and one 
   assert.deepEqual(made.map((x) => x.Lesson).sort(), ['Fix', 'Fix (2)', 'Fix (3)']);
   assert.ok(made.every((x) => x.Kind === 'Clarify wording'), 'the readings are all Rule unclear: the model\'s Change the rule is ignored');
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: nothing new to read; drafted 3 rule changes from your 12 notes.');
+  assert.equal(report.sentence, 'Distill: nothing new to read; drafted 3 rule changes from 12 of your decisions.');
   assert.deepEqual(report.rows, [['Rule change', '3 drafted', '']]);
   assert.match(report.next, /^Next: read them in Lessons waiting \(.*\), where the current and the proposed text sit side by side, and approve each one or write your own wording\.$/);
 });
@@ -528,7 +528,7 @@ test('distill: in a practice profile the report starts with "Demo · ", and the 
   const w = await makeWorld({ claims: 4, queue: [row(1), row(2)], demo: true });
   const r = await distill(w.hooks());
   assert.equal(r.exit, 0);
-  assert.ok(r.markdown.startsWith('Demo · Distill: nothing new to read; drafted one rule change from your 2 notes.'));
+  assert.ok(r.markdown.startsWith('Demo · Distill: nothing new to read; drafted one rule change from 2 of your decisions.'));
   for (const req of w.writes()) {
     const props = Object.keys(req.body?.properties ?? {});
     for (const forbidden of ['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused']) assert.ok(!props.includes(forbidden));
@@ -708,7 +708,7 @@ test('the story: four Reviewed claims, one reading call for the two the model re
 
   // the report
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: read 3 of your decisions and drafted one rule change from your 2 notes.');
+  assert.equal(report.sentence, 'Distill: read 3 of your decisions and drafted one rule change from 2 of them.');
   assert.deepEqual(report.rows, [
     ['Read', '3 decisions', ''], ['Point at a rule', '2 decisions', ''], ['Agent slips', '1 decision', ''], ['Without a note', 'none', ''], ['Rule change', `"${lessons[0].Lesson}", Context-dependent rule 3`, ''],
   ]);
@@ -791,32 +791,157 @@ test('a changed note re-reads that one row, a reason word the editor adds is tak
   assert.match(w.claim(claimId(PRESS))['Agent reading'], /^Context-dependent: Rule unclear, rule 3 · /, 'its claim line keeps the reading it had');
 });
 
-test('a disagreement without a note is read all the same, flagged "without your note" in the ledger and on the claim, and the Next line sends the editor to Needs your note when no lesson was drafted', async () => {
-  const w = await story({ claims: 4, notes: { press: '', ai: '' } });
+// the report check of assertReport, but for the words of decision 79 ("a decision you now call the agent's slip"): assertReport keeps the word call out of a report, because for an engineer it means a model call
+function assertRecantedReport(h, r) {
+  assert.deepEqual(lintReport(r.markdown), [], r.markdown);
+  assert.equal(h.io.outs.join('\n').trimEnd(), r.markdown.trimEnd());
+  assert.ok(!/token|duration|\$|\.mjs|--[a-z]|runs\//i.test(r.markdown) && !/\bcalls\b/i.test(r.markdown) && !/\bcall\b(?! the agent's slip)/i.test(r.markdown), r.markdown);
+  return r.report;
+}
+const READ_USPS_OPEN = { reading: 'Rule unclear', rule: 'Context-dependent rule 3', note: 'Rule 3 leaves a portal open.' };
+const NEEDS_YOUR_NOTE = (w) => `https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000002`;
+
+test('a disagreement without a note is read all the same, flagged "without your note" in the ledger and on the claim, counted and listed, and never grouped: two without a note and one with a note on the same rule draft nothing, the same three with notes draft a rule change', async () => {
+  // the press pool and the AI Force claim have no note, the USPS claim has one that is no reason word: all three are read Rule unclear on rule 3 in one call
+  const w = await story({ claims: 4, notes: { press: '', ai: '', usps: 'USPS names which portal.' } });
+  w.readings({ [keyOf(PRESS)]: READ_PRESS, [keyOf(AI)]: READ_AI, [keyOf(USPS)]: READ_USPS_OPEN });
   const h = w.hooks();
   const r = await distill(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assert.equal(readingCalls(w).length, 1);
-  assert.ok(readingCalls(w)[0].stdin.includes('<note none="true"/>'), 'the model is told there is no note');
+  assert.equal((readingCalls(w)[0].stdin.match(/<note none="true"\/>/g) ?? []).length, 2, 'the model is told, for the two rows, that there is no note');
+  assert.ok(readingCalls(w)[0].stdin.includes('<note>USPS names which portal.</note>'));
+  // flagged in code, in the ledger and on the claim; the noted row carries no flag
   const press = w.row('tag_decisions', keyOf(PRESS));
-  assert.equal(press['Reading note'], `without your note · ${READ_PRESS.note}`);
+  assert.deepEqual([press['Agent reading'], press['Reading note']], ['Rule unclear', `without your note · ${READ_PRESS.note}`]);
+  assert.equal(w.row('tag_decisions', keyOf(USPS))['Reading note'], READ_USPS_OPEN.note);
   assert.equal(w.claim(claimId(PRESS))['Agent reading'], `Context-dependent: Rule unclear, rule 3, without your note · ${READ_PRESS.note}`);
-  assert.equal(w.claim(claimId(USPS))['Agent reading'], 'Context-dependent: Agent slip, rule 5 · Your note says so.', 'a reason word is a note');
+  assert.equal(w.claim(claimId(USPS))['Agent reading'], `Context-dependent: Rule unclear, rule 3 · ${READ_USPS_OPEN.note}`);
+  // never grouped: one noted row on the rule is below the minimum, so no lesson and no call
+  assert.equal(distillCalls(w).length, 0, 'the two readings without a note are no part of any group');
+  assert.equal(w.rows('rule_changes').length, 0);
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: read 3 of your decisions and drafted one rule change from your 2 notes.', 'the lesson still stands on two readings');
-  assert.deepEqual(report.rows.find((x) => x[0] === 'Without a note'), ['Without a note', '2 decisions', '']);
+  assert.equal(report.sentence, 'Distill: read 3 of your decisions; no rule change to draft; no rule has 2 decided rows pointing at it yet; 2 of your decisions have no note and wait in Needs your note.', 'the sentence counts decisions and says how many wait for a note');
+  assert.deepEqual(report.rows, [
+    ['Read', '3 decisions', ''], ['Point at a rule', '1 decision', ''], ['Agent slips', 'none', ''], ['Without a note', '2 decisions', ''], ['Rule change', 'none', ''],
+  ]);
+  assert.equal(report.next, `Next: add a note on 2 claims in Needs your note (${NEEDS_YOUR_NOTE(w)}), then type /claim-tagger distill again.`, 'no lesson was drafted, so the Next line sends the editor to Needs your note');
+
+  // the editor writes the two notes: the rows are read again, now point at the rule, and the three make one lesson
+  w.review(claimId(PRESS), { tags: [], notes: PRESS_NOTE });
+  w.review(claimId(AI), { tags: [], notes: AI_NOTE });
+  const h2 = w.hooks();
+  const r2 = await distill(h2);
+  assert.equal(r2.exit, 0, h2.io.errs.join('\n'));
+  assert.equal(readingCalls(w).length, 2, 'the two rows whose note changed are read again, the third is current');
+  assert.equal(w.row('tag_decisions', keyOf(PRESS))['Reading note'], READ_PRESS.note, 'the flag is gone with the missing note');
+  assert.equal(w.rows('rule_changes').length, 1);
+  assert.deepEqual((await pullOf(w)).lessons()[0].supporting_keys.sort(), [keyOf(PRESS), keyOf(AI), keyOf(USPS)].sort());
+  const report2 = assertReport(h2, r2);
+  assert.equal(report2.sentence, 'Distill: read 2 of your decisions and drafted one rule change from 3 of them.');
+  assert.deepEqual(report2.rows.find((x) => x[0] === 'Without a note'), ['Without a note', 'none', '']);
+  assert.match(report2.next, /^Next: read it in Lessons waiting \(/);
 
   // one disagreement, no lesson: the Next line names the view
   const one = await makeWorld({ claims: 2, queue: [openRow(1)] });
   one.review(claimId(1), { tags: [], notes: '' });
-  const h2 = one.hooks();
-  const r2 = await distill(h2);
-  const report2 = assertReport(h2, r2);
-  assert.equal(report2.sentence, 'Distill: read 1 of your decisions; no rule change to draft; no rule has 2 decided rows pointing at it yet.');
-  assert.deepEqual(report2.rows.map((x) => x[0]), ['Read', 'Point at a rule', 'Agent slips', 'Without a note', 'Rule change']);
-  assert.deepEqual(report2.rows.at(-1), ['Rule change', 'none', '']);
-  assert.equal(report2.next, `Next: add a note on 1 claim in Needs your note (https://www.notion.so/${one.DB.claims_copy}?v=e3000000000000000000000000000002), then type /claim-tagger distill again.`);
+  const h3 = one.hooks();
+  const r3 = await distill(h3);
+  const report3 = assertReport(h3, r3);
+  assert.equal(report3.sentence, 'Distill: read 1 of your decisions; no rule change to draft; no decision with a note points at a rule yet; 1 of your decisions has no note and waits in Needs your note.');
+  assert.deepEqual(report3.rows.map((x) => x[0]), ['Read', 'Point at a rule', 'Agent slips', 'Without a note', 'Rule change']);
+  assert.deepEqual(report3.rows.at(-1), ['Rule change', 'none', '']);
+  assert.equal(report3.next, `Next: add a note on 1 claim in Needs your note (${NEEDS_YOUR_NOTE(one)}), then type /claim-tagger distill again.`);
   assert.equal(one.claim(claimId(1))['Agent reading'], 'Context-dependent: Rule unclear, rule 2, without your note · The rule leaves this kind of case open.', 'the fake reads Rule unclear on the rule the agent cited');
+});
+
+test('buildGroups: a reading of a decision without a note builds no group and is no counter-evidence, and it is still a decided row', async () => {
+  const w = await makeWorld({ claims: 1 });
+  const flagged = (i, over = {}) => row(i, { 'Reading note': `without your note · ${OPEN}`, ...over });
+  const groupsOf = (...rows) => buildGroups({ queue: queueRows(rows), rubric: w.rubric(), config: w.config, minClaims: 2 });
+  // two noted rows and one without a note on the same rule: the group has the two noted rows
+  const two = groupsOf(row(1), row(2), flagged(3));
+  assert.deepEqual(two.groups.map((g) => g.rows.map((r) => r.key)), [[keyOf(1), keyOf(2)]]);
+  assert.deepEqual([two.counts.decided, two.counts.ruleRows], [3, 2], 'the row is decided, but it points at no rule');
+  // one noted row and two without a note: below the minimum
+  const below = groupsOf(row(1), flagged(2), flagged(3));
+  assert.deepEqual(below.groups, []);
+  assert.deepEqual([below.counts.ruleRows, below.counts.groupsTooSmall], [1, 1], 'the two flagged rows are not rule rows; the one noted row is a group of one');
+  // no counter-evidence: a decision the other way without a note is left out, a noted one stays
+  const counterOf = (...rows) => groupsOf(row(1), row(2), ...rows).groups[0].counter.map((r) => r.key);
+  assert.deepEqual(counterOf(flagged(3, { 'Tag outcome': 'Applies', 'Agent proposal': 'Does not apply' })), [], 'a flagged reading is no counter-evidence');
+  assert.deepEqual(counterOf(row(3, { 'Tag outcome': 'Applies', 'Agent proposal': 'Does not apply', 'Agent reading': 'Agent slip' })), [keyOf(3)], 'a noted Agent slip row is');
+  assert.deepEqual(counterOf(flagged(3, { 'Tag outcome': 'Applies', 'Agent proposal': 'Does not apply', 'Agent reading': 'Agent slip' })), [], 'and a flagged Agent slip row is not');
+});
+
+test('a rule change that rests on a decision the editor later calls the agent\'s slip is recanted: the sentence and the Next line say so, nothing new is drafted for the rule, and the run file names the row; the lesson itself is never touched', async () => {
+  const w = await story({ claims: 4, notes: { usps: 'USPS names which portal.' } });
+  w.readings({ [keyOf(PRESS)]: READ_PRESS, [keyOf(AI)]: READ_AI, [keyOf(USPS)]: READ_USPS_OPEN });
+  assert.equal((await distill(w.hooks())).exit, 0);
+  const lesson0 = w.rows('rule_changes')[0];
+  assert.deepEqual((await pullOf(w)).lessons()[0].supporting_keys.sort(), [keyOf(PRESS), keyOf(AI), keyOf(USPS)].sort(), 'the draft rests on three rows');
+  const calls = w.calls().length;
+
+  // nothing changed: the second run has nothing to say about the draft
+  const quiet = await distill(w.hooks());
+  assert.match(quiet.report.sentence, /^Distill: nothing new to read; no rule change to draft; the rules the rows point at already have a rule change waiting\.$/);
+  assert.equal(quiet.report.next, `Next: approve or reject the rule change in Lessons waiting (https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003).`, 'a rule change that is Proposed: the words of status');
+
+  // the editor adds the reason word to the USPS note: the row is read Agent slip at once (no call), and the draft rests on a decision that is no longer a rule reading
+  w.review(claimId(USPS), { tags: [], notes: 'Agent slip. USPS names which portal, so rule 5 already settles it.' });
+  const h = w.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(w.calls().length, calls, 'no call at all: a reason word is taken as it stands and the open lesson blocks the group');
+  assert.equal(w.row('tag_decisions', keyOf(USPS))['Agent reading'], 'Agent slip');
+  const report = assertRecantedReport(h, r);
+  assert.equal(report.sentence, `Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting; the rule change "${lesson0.Lesson}" rests on a decision you now call the agent's slip.`);
+  assert.equal(report.next, `Next: reject the rule change "${lesson0.Lesson}" in Lessons waiting (https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003), then type /claim-tagger distill again.`);
+  assert.equal(w.rows('rule_changes').length, 1, 'nothing new is drafted');
+  const kept = w.row('rule_changes', lesson0.Lesson);
+  assert.deepEqual([kept.Status, kept['Proposed text'], kept['Supporting rows']], [lesson0.Status, lesson0['Proposed text'], lesson0['Supporting rows']], 'the agent never rewrites or withdraws a draft');
+  assert.deepEqual(readJson(join(r.runDir, 'run.json')).recanted, [{ lesson: lesson0.Lesson, keys: [keyOf(USPS)], why: 'slip' }]);
+
+  // an Approved lesson is recanted the same way
+  w.fake.editRow(lesson0.page_id, { Status: 'Approved' });
+  const approved = await distill(w.hooks());
+  assert.match(approved.report.sentence, /; the rule change ".*" rests on a decision you now call the agent's slip\.$/);
+  assert.match(approved.report.next, /^Next: reject the rule change ".*" in Lessons waiting/);
+
+  // the editor rejects it: the Next line is gone, and the two rows that remain are a group of two again
+  w.fake.editRow(lesson0.page_id, { Status: 'Rejected' });
+  const again = await distill(w.hooks());
+  assert.equal(again.exit, 0);
+  assert.equal(readJson(join(again.runDir, 'run.json')).recanted, undefined);
+  assert.equal(w.rows('rule_changes').length, 2, 'a new draft from the two rows that still point at the rule');
+  assert.deepEqual((await pullOf(w)).lessons().find((l) => l.Status === 'Proposed').supporting_keys.sort(), [keyOf(PRESS), keyOf(AI)].sort());
+  assert.match(again.report.sentence, /^Distill: nothing new to read; drafted one rule change from 2 of your decisions\.$/);
+});
+
+test('a rule change whose row is no longer a disagreement, or whose reading cannot be told this time, is recanted only for the first: a batch that failed says nothing about the lesson', async () => {
+  const w = await story({ claims: 4, notes: { usps: 'USPS names which portal.' } });
+  w.readings({ [keyOf(PRESS)]: READ_PRESS, [keyOf(AI)]: READ_AI, [keyOf(USPS)]: READ_USPS_OPEN });
+  assert.equal((await distill(w.hooks())).exit, 0);
+
+  // the editor takes the agent's side on the AI Force claim: the outcome equals the proposal, the row has no reading, and the draft rests on a decision that no longer points at a rule
+  w.review(claimId(AI), { tags: ['Context-dependent'], notes: AI_NOTE });
+  const r = await distill(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.match(r.report.sentence, /; the rule change ".*" rests on a decision that no longer points at a rule\.$/);
+  assert.deepEqual(readJson(join(r.runDir, 'run.json')).recanted.map((x) => [x.keys, x.why]), [[[keyOf(AI)], 'other']]);
+
+  // a note rewritten while the model cannot answer: the row is unread this run, which says nothing about the draft
+  const w2 = await story({ claims: 4, notes: { usps: 'USPS names which portal.' } });
+  w2.readings({ [keyOf(PRESS)]: READ_PRESS, [keyOf(AI)]: READ_AI, [keyOf(USPS)]: READ_USPS_OPEN });
+  assert.equal((await distill(w2.hooks())).exit, 0);
+  w2.review(claimId(AI), { tags: [], notes: 'The AI Force is a named body, said differently.' });
+  w2.setEnv('FAKE_CLAUDE_MODE', 'invalid-always');
+  w2.setEnv('FAKE_CLAUDE_ONLY', 'reading');
+  const quiet = await distill(w2.hooks());
+  assert.equal(readJson(join(quiet.runDir, 'run.json')).recanted, undefined, 'the unread row is not named');
+  assert.doesNotMatch(quiet.report.sentence, /rests on/);
+  assert.equal(quiet.report.sentence, 'Distill: no decision could be read this time; no rule change to draft; the rules the rows point at already have a rule change waiting.');
+  assert.match(quiet.report.next, /^Next: approve or reject the rule change in Lessons waiting \(/, 'the draft stands: it is still to be approved or rejected');
 });
 
 test('a note line that names a rulebook tag the agent did not judge reads "did not judge this tag", is listed in the run record, and never leaks into the judged tag\'s note', async () => {
@@ -864,7 +989,7 @@ test('a batch that fails twice leaves its rows unread, keeps the refused replies
   assert.equal(w.claim(claimId(5))['Agent reading'], '', 'and so does its claim');
   assert.equal(w.rows('rule_changes').length, 2, 'the lesson is drafted again from the earlier readings (the first was rejected)');
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: drafted one rule change from your 2 notes; 1 could not be read this time.');
+  assert.equal(report.sentence, 'Distill: drafted one rule change from 2 of your decisions; 1 could not be read this time.');
   const kept = readdirSync(join(r.runDir, 'rejected')).sort();
   assert.deepEqual(kept, ['reading-batch-1-attempt-1.md', 'reading-batch-1-attempt-2.md'], 'each refused reply is kept');
   const text = readFileSync(join(r.runDir, 'rejected', kept[0]), 'utf8');
@@ -912,7 +1037,7 @@ test('exit 2 only when something was to read, nothing at all could be read, and 
   assert.equal(planOnly.report.sentence, 'Distill: the plan is ready (1 rule change, 1 not read) and nothing was written to Notion.');
   const live = await distill(earlier.hooks());
   assert.equal(live.exit, 0);
-  assert.equal(live.report.sentence, 'Distill: drafted one rule change from your 2 notes; 1 could not be read this time.');
+  assert.equal(live.report.sentence, 'Distill: drafted one rule change from 2 of your decisions; 1 could not be read this time.');
   assert.equal(readJson(join(live.runDir, 'run.json')).exit_code, 0);
 });
 
@@ -959,7 +1084,7 @@ test('--plan-only asks the model and writes readings.jsonl but nothing to Notion
   assert.equal(callLines(live).filter((c) => c.purpose === 'reading').length, 0);
   assert.deepEqual([w.row('tag_decisions', keyOf(PRESS))['Agent reading'], w.row('tag_decisions', keyOf(PRESS)).Rule, w.row('tag_decisions', keyOf(PRESS))['Reading note']], ['Rule unclear', 'Context-dependent rule 3', READ_PRESS.note]);
   assert.equal(w.claim(claimId(GEORGIA))['Agent reading'], 'Nothing to read: the agent agreed with you.');
-  assert.equal(live.report.sentence, 'Distill: read 3 of your decisions and drafted one rule change from your 2 notes.');
+  assert.equal(live.report.sentence, 'Distill: read 3 of your decisions and drafted one rule change from 2 of them.');
   const reused = readJsonl(join(live.runDir, 'readings.jsonl')).rows;
   assert.deepEqual(reused.map((l) => [l.key, l.source, l.hash]).sort(), lines.map((l) => [l.key, l.source, l.hash]).sort(), 'the same readings, so a chain of runs can go on');
 

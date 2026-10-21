@@ -26,6 +26,10 @@
 // decision or one of the editor's own rows, whichever it is), and the report's Next line and card.md give the rule as it was tested, a space and that sentence.
 // Both go into the report and card.md only, never into Notion. HOLD writes the same two rows.
 //
+// A rule change that rests on a decision whose reading no longer points at a rule (the editor now calls it the agent's slip, or took the agent's side; recantedAmong over the ledger as distill would
+// leave it) is held before the lock, the evals and every write (decision 79): exit 10, "Promote: held: the rule change "<title>" rests on a decision you now call the agent's slip, so the safety
+// check did not run.", and a Next line that asks the editor to reject it in Lessons waiting and type distill again. Nothing is written; the rule change stays Approved.
+//
 // The lock runs/PROMOTING.json { run_id, lesson, phase } is taken at the start and removed on every exit; one younger than two hours from another run
 // refuses the command (exit 2).
 //
@@ -38,7 +42,8 @@ import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:f
 import { dirname, join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf } from './lib/config.mjs';
-import { answerWord, cutText, plural, practiceLink, quoted, quotedWhole, stampOf, viewLink, yourClaims } from './lib/editor-words.mjs';
+import { answerWord, cutText, plural, practiceLink, quoted, quotedWhole, recantedNext, stampOf, viewLink, yourClaims } from './lib/editor-words.mjs';
+import { ledgerAsRead, recantedAmong, recantedPhrase } from './lib/readings.mjs';
 import { extractJson } from './lib/claude.mjs';
 import { forceRuns, readAnswers } from './lib/answers.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
@@ -314,6 +319,18 @@ export async function promote(opts = {}) {
 
     // the items
     const keys = await supportingKeysOf(ctx, lesson);
+
+    // a rule change that rests on a decision whose reading no longer points at a rule (the editor re-read it as Agent slip, or it is no longer a disagreement) is held before anything is checked or
+    // written (decision 79): the draft's text was written with that row in mind, so the safety check on the rows that remain would test a clause nobody stands behind. Only the editor sets Rejected.
+    const { rows: asRead } = ledgerAsRead({ claims: ctx.pull.claims() ?? [], ledgerRows: ctx.pull.queue() ?? [], rubric: live, config: ctx.config });
+    const recanted = recantedAmong([{ ...lesson, supporting_keys: keys }], asRead)[0] ?? null;
+    if (recanted) {
+      ctx.record.recanted = { keys: recanted.keys, why: recanted.why };
+      throw new LoopExit(EXIT.HOLD, `the rule change "${title}" rests on ${recanted.keys.length} decision(s) that no longer point at a rule: ${recanted.keys.join(', ')}`, {
+        sentence: `Promote: held: the rule change ${quoted(title)} rests on ${recantedPhrase(recanted.keys, recanted.why)}, so the safety check did not run.`,
+        next: recantedNext(ctx.config, [title]),
+      });
+    }
     const evals = readEvals(ctx.root);
     const canaries = evals.canaries.filter((c) => c.tag === tag);
     const decided = evals.cases.filter((c) => c.tag === tag);

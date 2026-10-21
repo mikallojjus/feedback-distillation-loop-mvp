@@ -2,7 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MAX_NOTE_WORDS, READINGS, READING_COLUMNS, WITHOUT_NOTE, YOUR_NOTE_SAYS_SO, agentCitedRule, batchesOf, buildReadingMessage, checkReadings, citedRule, claimReadingCell, classifyRows,
-  clearedReadingCells, isDisagreement, parseReadUnder, readUnder, readingCells, readingHash, readingOfRow, readingRecord, renderTag, reusableReading, verbatimReading, xmlAttr, xmlText,
+  clearedReadingCells, isDisagreement, ledgerAsRead, parseReadUnder, pointsAtRule, readUnder, readingCells, readingHash, readingOfRow, readingRecord, recantedAmong, recantedKeys, recantedLessons,
+  recantedPhrase, renderTag, reusableReading, verbatimReading, xmlAttr, xmlText,
 } from '../../agents/claim-tagger-mvp/scripts/lib/readings.mjs';
 import { syncDecisions } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
 import { makeWorld } from './helpers/loop-world.mjs';
@@ -385,4 +386,108 @@ test('readingRecord is a line of readings.jsonl; reusableReading gives a model r
   assert.deepEqual(reusableReading({ ...line, rule: null }, one, rubric), { ...reading, rule: null });
   assert.equal(reusableReading(undefined, one, rubric), null);
   assert.equal(reusableReading('x', one, rubric), null);
+});
+
+// ---- a reading that points at a rule, and a draft that rests on one that no longer does (decisions 78 and 79) ---------------------------------
+
+test('pointsAtRule: Rule unclear and Rule should change with a note of the editor\'s; Agent slip, no reading, and a reading of a decision without a note do not', () => {
+  const held = (over = {}) => ({ 'Agent reading': 'Rule unclear', Rule: `${CD} rule 3`, 'Reading note': 'The rule leaves this open.', ...over });
+  assert.equal(pointsAtRule(held()), true);
+  assert.equal(pointsAtRule(held({ 'Agent reading': 'Rule should change' })), true);
+  assert.equal(pointsAtRule(held({ 'Agent reading': 'Agent slip' })), false, 'the rule is fine');
+  assert.equal(pointsAtRule(held({ 'Agent reading': null })), false, 'not read');
+  assert.equal(pointsAtRule(held({ 'Agent reading': 'Fine' })), false, 'not one of the three readings');
+  assert.equal(pointsAtRule(held({ 'Reading note': `${WITHOUT_NOTE} · The rule leaves this open.` })), false, 'the agent\'s guess about an unexplained decision supports no draft');
+  assert.equal(pointsAtRule(held({ 'Agent reading': 'Rule should change', 'Reading note': `${WITHOUT_NOTE} · x` })), false);
+  assert.equal(pointsAtRule(held({ 'Reading note': `The rule says ${WITHOUT_NOTE} in a note of the editor's` })), true, 'only an opening counts as the flag');
+  assert.equal(pointsAtRule(held({ Rule: null })), true, 'a reading may name no rule');
+  assert.equal(pointsAtRule(null), false);
+  assert.equal(pointsAtRule({}), false);
+});
+
+const open = (title, keys, over = {}) => ({ Lesson: title, Status: 'Proposed', supporting_keys: keys, ...over });
+const rowFor = (id, over = {}) => ledger(id, {
+  'Tag outcome': 'Does not apply', decided: true, 'Agent reading': 'Rule unclear', Rule: `${CD} rule 3`, 'Reading note': 'The rule leaves this open.', ...over,
+});
+
+test('recantedKeys: the rows of a rule change that no longer point at a rule (Agent slip, no reading, a guess without a note, Fixed, no longer a disagreement); a key without a ledger row is not named', () => {
+  const rows = [
+    rowFor('a'), // still points at a rule
+    rowFor('slip', { 'Agent reading': 'Agent slip' }),
+    rowFor('unread', { 'Agent reading': null, Rule: null, 'Reading note': null }),
+    rowFor('guess', { 'Reading note': `${WITHOUT_NOTE} · Open.` }),
+    rowFor('fixed', { 'Follow-up': 'Fixed' }),
+    rowFor('agreed', { 'Tag outcome': 'Applies' }), // the editor took the agent's side
+    rowFor('still', { 'Follow-up': 'Still wrong' }), // Still wrong stays open
+  ];
+  const keys = ['a', 'slip', 'unread', 'guess', 'fixed', 'agreed', 'still', 'gone'].map((k) => `${k}::${CD}`);
+  assert.deepEqual(recantedKeys(open('L', keys), rows), ['slip', 'unread', 'guess', 'fixed', 'agreed'].map((k) => `${k}::${CD}`));
+  assert.deepEqual(recantedKeys(open('L', [`a::${CD}`, `still::${CD}`]), rows), []);
+  assert.deepEqual(recantedKeys(open('L', []), rows), []);
+  assert.deepEqual(recantedKeys({ Lesson: 'L' }, rows), [], 'a lesson with no rows');
+  // the keys are read from the Supporting rows cell when the pull did not parse them: the last " · " part of each line
+  assert.deepEqual(recantedKeys({ Lesson: 'L', 'Supporting rows': `A claim · with a dot · slip::${CD}\nAnother · a::${CD}` }, rows), [`slip::${CD}`]);
+});
+
+test('recantedAmong: only the Proposed or Approved rule changes with recanted rows; why is slip when every one reads Agent slip with a note, else other', () => {
+  const rows = [
+    rowFor('a'), rowFor('s1', { 'Agent reading': 'Agent slip' }), rowFor('s2', { 'Agent reading': 'Agent slip' }),
+    rowFor('guess', { 'Agent reading': 'Agent slip', 'Reading note': `${WITHOUT_NOTE} · x` }), rowFor('gone', { 'Tag outcome': 'Applies' }),
+  ];
+  const k = (...ids) => ids.map((id) => `${id}::${CD}`);
+  const lessons = [
+    open('Fine', k('a')),
+    open('One slip', k('a', 's1')),
+    open('Two slips', k('s1', 's2'), { Status: 'Approved' }),
+    open('A slip and a change of mind', k('s1', 'gone')),
+    open('A guess', k('guess')),
+    open('Finished', k('s1'), { Status: 'Live' }),
+    open('Turned down', k('s1'), { Status: 'Rejected' }),
+  ];
+  assert.deepEqual(recantedAmong(lessons, rows).map((x) => [x.lesson.Lesson, x.keys, x.why]), [
+    ['One slip', k('s1'), 'slip'], ['Two slips', k('s1', 's2'), 'slip'], ['A slip and a change of mind', k('s1', 'gone'), 'other'], ['A guess', k('guess'), 'other'],
+  ]);
+  assert.deepEqual(recantedAmong([], rows), []);
+  assert.deepEqual(recantedAmong(undefined, rows), []);
+});
+
+test('recantedPhrase: the words of the sentences, singular and plural, and the short form of status\'s cell', () => {
+  assert.equal(recantedPhrase(['x'], 'slip'), "a decision you now call the agent's slip");
+  assert.equal(recantedPhrase(['x', 'y', 'z'], 'slip'), "3 decisions you now call the agent's slips");
+  assert.equal(recantedPhrase(['x'], 'other'), 'a decision that no longer points at a rule');
+  assert.equal(recantedPhrase(['x', 'y'], 'other'), '2 decisions that no longer point at a rule');
+  assert.equal(recantedPhrase(['x'], 'slip', { short: true }), 'a decision you now call a slip');
+  assert.equal(recantedPhrase(2, 'slip', { short: true }), '2 decisions you now call slips');
+});
+
+test('ledgerAsRead: the decisions are copied, a reason word the editor wrote is the reading at once, a row that stopped being a disagreement holds none, and nothing the caller passed is changed', () => {
+  const claims = [
+    claim('w', { challenged_notes: 'Agent slip. The rule settles it.' }), // a reason word, the row still holds Rule unclear under the old note
+    claim('x', { verified_tags: [CD] }), // the editor took the agent's side
+    claim('y', { challenged_notes: 'Rule 3 is silent.' }), // a note without a reason word: the model has to read it, the row keeps the stale reading
+    claim('z', { review_status: null, challenged_notes: 'Agent slip. Not decided.' }), // not Reviewed: untouched
+  ];
+  const held = { 'Agent reading': 'Rule unclear', Rule: `${CD} rule 3`, 'Reading note': 'Open.', 'Read under': readUnder('2026-10-01.1', 'ffffffff') };
+  const rows = ['w', 'x', 'y', 'z'].map((id) => ledger(id, held));
+  const before = JSON.stringify(rows);
+  const { rows: read, classes } = ledgerAsRead({ claims, ledgerRows: rows, rubric, config });
+  assert.equal(JSON.stringify(rows), before, 'the caller\'s rows are not touched');
+  const by = Object.fromEntries(read.map((r) => [r.Key.split('::')[0], r]));
+  assert.deepEqual([by.w['Agent reading'], by.w['Reading note'], by.w.Rule], ['Agent slip', YOUR_NOTE_SAYS_SO, `${CD} rule 2`], 'the editor\'s word, applied before distill writes it, on the rule the agent cited (the note names none)');
+  assert.deepEqual([by.x['Agent reading'], by.x.Rule, by.x['Reading note'], by.x['Read under']], [null, null, null, null], 'the agent agreed: no reading');
+  assert.equal(by.y['Agent reading'], 'Rule unclear', 'a note the model has still to read keeps the reading it holds');
+  assert.equal(by.z['Agent reading'], 'Rule unclear', 'a claim that is not Reviewed is left alone');
+  assert.deepEqual([keysOf(classes.verbatim), keysOf(classes.toRead), keysOf(classes.agree)], [[`w::${CD}`], [`y::${CD}`], [`x::${CD}`]]);
+  assert.equal(ledgerAsRead({ claims, ledgerRows: rows, rubric: null, config }).classes, null, 'without a rulebook there is nothing to read');
+});
+
+test('recantedLessons: over the ledger as ledgerAsRead leaves it, so a reason word the editor has just written recants a draft before distill has written the reading', () => {
+  const claims = [claim('a', { challenged_notes: 'Rule 3 is silent.' }), claim('b', { challenged_notes: 'Agent slip. Rule 5 settles it.' })];
+  const held = { 'Agent reading': 'Rule unclear', Rule: `${CD} rule 3`, 'Reading note': 'Open.', 'Read under': readUnder('2026-10-16.1', 'ffffffff') };
+  const rows = [ledger('a', { ...held, 'Tag outcome': 'Does not apply' }), ledger('b', { ...held, 'Tag outcome': 'Does not apply' })];
+  const lessons = [open('Draft', [`a::${CD}`, `b::${CD}`])];
+  assert.deepEqual(recantedLessons({ lessons, claims, ledgerRows: rows, rubric, config }).map((x) => [x.keys, x.why]), [[[`b::${CD}`], 'slip']]);
+  assert.deepEqual(recantedLessons({ lessons: [open('Draft', [`a::${CD}`])], claims, ledgerRows: rows, rubric, config }), []);
+  assert.deepEqual(recantedLessons({ lessons: [open('Draft', [`b::${CD}`], { Status: 'Live' })], claims, ledgerRows: rows, rubric, config }), [], 'a finished rule change is not asked about');
+  assert.deepEqual(recantedLessons({ lessons, claims, ledgerRows: rows, rubric: null, config }), []);
 });

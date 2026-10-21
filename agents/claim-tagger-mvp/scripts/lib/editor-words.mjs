@@ -25,6 +25,9 @@
 //                                        without a title, and when it already names the page
 //   demoCommands(text)                -> the slash commands of a report in their demo form: "/claim-tagger promote" -> "/claim-tagger demo promote"
 //                                        (a command that already says demo is left alone, so it can run twice)
+//   recantedNext(config, titles)      -> the Next line that asks the editor to reject a rule change that rests on a decision the editor has since called the agent's slip (decision 79), the same
+//                                        in distill, status and promote: "Next: reject the rule change "<title>" in Lessons waiting (<link>), then type /claim-tagger distill again."
+//   approveNext(config, proposed)     -> "Next: approve or reject the rule change in Lessons waiting (<link>)." (status's own words, which distill uses too while a rule change is Proposed)
 
 import { tableEntry } from './config.mjs';
 import { normId } from './notion-values.mjs';
@@ -129,6 +132,19 @@ export function viewLink(config, name) {
   const db = databaseIdOf(config, table);
   if (isSet(given) && db) return `${notionUrl(db)}?v=${hex32(given)}`;
   return tableLink(config, table);
+}
+
+/** The Next line for a rule change (or several) that rests on a decision the editor has since called the agent's slip: reject it in Lessons waiting, then distill again (decision 79). */
+export function recantedNext(config, titles) {
+  const list = [...titles];
+  const link = viewLink(config, 'lessons_waiting');
+  if (list.length === 1) return `Next: reject the rule change ${quoted(list[0])} in Lessons waiting (${link}), then type /claim-tagger distill again.`;
+  return `Next: reject the ${list.length} rule changes in Lessons waiting (${link}), then type /claim-tagger distill again.`;
+}
+
+/** The Next line while a rule change is Proposed: the same words in status and in distill. */
+export function approveNext(config, proposed = 1) {
+  return `Next: approve or reject the ${proposed === 1 ? 'rule change' : 'rule changes'} in Lessons waiting (${viewLink(config, 'lessons_waiting')}).`;
 }
 
 export function practiceLink(config) {

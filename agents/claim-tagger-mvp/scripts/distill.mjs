@@ -10,7 +10,8 @@
 // of the run is one line of readings.jsonl in the run folder; --readings <run-id> reuses the lines of an earlier run for the rows whose hash is unchanged (the live step after a --plan-only).
 //
 // Step 2, the lessons. The decided rows of Tag decisions read Rule unclear or Rule should change are grouped by (tag, the rule the reading points at, else the rule the agent cited; a row whose
-// Follow-up is Fixed is left out: a rule change that rests on it went live and the agent now agrees; Still wrong stays in), the distill model is asked once per group for at most three patterns,
+// Follow-up is Fixed is left out: a rule change that rests on it went live and the agent now agrees; Still wrong stays in; a reading of a decision without a note, "without your note", is left
+// out too and is no counter-evidence either: it is the agent's guess about an unexplained decision and supports no draft until the editor writes a note, decision 78), the distill model is asked once per group for at most three patterns,
 // every reply is checked, and a Rule changes row (Status Proposed) is written per kept lesson. It never changes a rule: a rule changes only through an Approved lesson, a safety check PASS and
 // the promote step. The lesson's Kind is derived: Change the rule when any row of its group reads Rule should change, else Clarify wording.
 //
@@ -39,6 +40,12 @@
 // proposed text and one line per supporting row ("the claim cut to 60 characters · key", spilling to the page body with "+ n more in the page"); the page body holds every supporting claim
 // in full, with its key.
 //
+// A rule change that is Proposed or Approved and rests on a decision whose reading no longer points at a rule (the editor opened the note with Agent slip., or took the agent's side) is recanted
+// (decision 79): nothing new is drafted for its tag and rule, the sentence says "the rule change "<title>" rests on a decision you now call the agent's slip" and the Next line asks the editor to
+// reject it in Lessons waiting and type distill again; run.json names the rows (recanted). The agent never rewrites or withdraws a draft. The sentence counts decisions: "read N of your decisions and
+// drafted one rule change from M of them", and ends "; K of your decisions have no note and wait in Needs your note" while some decision has none. Next, the first that applies: reject a recanted rule
+// change / Lessons waiting for the one drafted now / approve or reject one that is Proposed (status's words) / promote for one that is Approved / Needs your note / status.
+//
 // Run files: plan.jsonl, ledger.jsonl, report.md, run.json, calls.jsonl (one line per model call, purpose reading or distill), readings.jsonl ({ key, hash, edition, source: "model" | "verbatim",
 // reading, rule, note, no_note } per reading made or reused this run) and rejected/reading-batch-<n>-attempt-<k>.md (a reply the checks refused, as it came, with the problems).
 //
@@ -52,17 +59,19 @@ import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf, readingSettings, tableEntry } from './lib/config.mjs';
 import { READINGS, RULE_WHY, isFollowedUp, isReviewed, syncDecisions } from './lib/decisions.mjs';
-import { cutText, plural, quoted, stampOf, viewLink } from './lib/editor-words.mjs';
+import { approveNext, cutText, plural, quoted, recantedNext, stampOf, viewLink } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
-import { LoopExit, addSettingsOp, applyStep, assertApplied, callModel, judgeSettings, liveRubric, modelStop, needClaimColumns, needTables, parseCli, readEvals, resumeLine, runPreflight, takePull, withRun } from './lib/loop.mjs';
+import {
+  LoopExit, addSettingsOp, applyStep, assertApplied, callModel, judgeSettings, liveRubric, modelStop, needClaimColumns, needTables, parseCli, readEvals, resumeLine, runPreflight, supportingKeysOf, takePull, withRun,
+} from './lib/loop.mjs';
 import { appendJsonl, readJson, readJsonl, writeTextAtomic } from './lib/jsonl.mjs';
 import { splitRichText } from './lib/notion-rest.mjs';
 import { codeFile, ensureDir, isMain, safeName } from './lib/paths.mjs';
 import { newPlan } from './lib/plan.mjs';
 import { resumeFor } from './lib/resume.mjs';
 import {
-  READING_COLUMNS, agentCitedRule, batchesOf, buildReadingMessage, checkReadings, citedRule, claimReadingCell, classifyRows, clearedReadingCells, readingCells, readingRecord, renderTag,
-  reusableReading, verbatimReading, xmlAttr, xmlText,
+  READING_COLUMNS, agentCitedRule, batchesOf, buildReadingMessage, checkReadings, citedRule, claimReadingCell, classifyRows, clearedReadingCells, pointsAtRule, readingCells, readingOfRow, readingRecord,
+  recantedAmong, recantedPhrase, renderTag, reusableReading, verbatimReading, xmlAttr, xmlText,
 } from './lib/readings.mjs';
 import { oneLineRule, ruleNumberOf } from './lib/rulebook-edit.mjs';
 import { validate } from './lib/validate.mjs';
@@ -98,6 +107,8 @@ function rowOf(r, rubric) {
     readingNote: text(r['Reading note']).trim(), reasoning: text(r['Your reasoning']).trim(),
     agentReason: text(r['Agent reason']).trim(), proposal: r['Agent proposal'] ?? null, confidence: r['Agent confidence'] ?? null, edited: text(r.last_edited),
     n: valid(fromReading) ? fromReading : (valid(fromAgent) ? fromAgent : null), followedUp: isFollowedUp(r),
+    // a reading whose note opens "without your note" is the agent's guess about an unexplained decision: it supports no draft and is no counter-evidence (decision 78)
+    noNote: readingOfRow(r)?.noNote === true, points: pointsAtRule(r),
   };
 }
 
@@ -124,7 +135,8 @@ function chooseShown(rows, cap) {
 /**
  * The groups of decided rows to ask the model about. `queue` is the pull's Tag decisions rows (as they will be once the readings are written), `rubric` the rulebook in force, `openLessons` the
  * lessons with Status Proposed or Approved ({ Tag, Rule }). Returns { groups, counts } with counts { decided, ruleRows, ruleRowsFollowed, ruleRowsNotJudged, groupsTooSmall, groupsOpen }.
- * Only rows whose Agent reading is Rule unclear or Rule should change build groups (a row read Agent slip, and a row not read, builds none).
+ * Only rows that point at a rule build groups (pointsAtRule: the Agent reading is Rule unclear or Rule should change, and the editor wrote a note): a row read Agent slip, a row not read and a
+ * reading of a decision without a note (its Reading note opens "without your note", decision 78) build none. A decision without a note is no counter-evidence either; it still counts in `decided`.
  * A row whose Follow-up is Fixed is counted in ruleRows and ruleRowsFollowed and builds no group: a rule change that rests on it went live and the agent agrees. A row marked Still wrong
  * builds groups as before (the editor adds a note and distills again). A Fixed row still counts as a
  * decided row and may serve as counter-evidence, and so may a row read Agent slip.
@@ -135,7 +147,7 @@ export function buildGroups({ queue, rubric, config, minClaims = 2, rowCap = DEF
   const counts = { decided: decided.length, ruleRows: 0, ruleRowsFollowed: 0, ruleRowsNotJudged: 0, groupsTooSmall: 0, groupsOpen: 0 };
   const byGroup = new Map();
   for (const r of decided) {
-    if (!RULE_WHY.has(r.reading)) continue;
+    if (!r.points) continue;
     counts.ruleRows += 1;
     if (r.followedUp) {
       counts.ruleRowsFollowed += 1;
@@ -167,7 +179,7 @@ export function buildGroups({ queue, rubric, config, minClaims = 2, rowCap = DEF
     const tag = rubric.tags.find((t) => t.name === g.tag);
     const dominant = [...shown.reduce((m, r) => m.set(r.outcome, (m.get(r.outcome) ?? 0) + 1), new Map())].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0][0];
     const counter = decided
-      .filter((r) => r.tag === g.tag && !mine.has(r.key) && r.outcome !== dominant && (g.n === null || r.n === g.n || r.n === null))
+      .filter((r) => r.tag === g.tag && !r.noNote && !mine.has(r.key) && r.outcome !== dominant && (g.n === null || r.n === g.n || r.n === null))
       .sort((a, b) => ((g.n !== null && a.n === g.n) === (g.n !== null && b.n === g.n) ? newestFirst(a, b) : (g.n !== null && a.n === g.n ? -1 : 1)))
       .slice(0, COUNTER_ROWS);
     groups.push({ tag: g.tag, n: g.n, rows: g.rows, shown, counter, current: g.n === null ? null : tag.rules.find((x) => x.n === g.n).text });
@@ -467,6 +479,14 @@ export async function distill(opts = {}) {
     const { groups, counts } = buildGroups({ queue: groupQueue, rubric, config: ctx.config, minClaims: cfg.min_claims, rowCap, openLessons });
     ctx.record.groups = groups.map((g) => ({ tag: g.tag, rule: g.n, rows: g.rows.length, shown: g.shown.map((r) => r.key), counter: g.counter.map((r) => r.key) }));
 
+    // a rule change that is Proposed or Approved and rests on a decision whose reading no longer points at a rule (re-read as Agent slip after a reason word or a changed note, or no longer a
+    // disagreement) is recanted (decision 79): nothing new is drafted for its tag and rule while it is open (the groups above skip it), and the report asks the editor to reject it. The rows are
+    // the ones the plan leaves; a row whose batch could not be read this time says nothing either way.
+    const withKeys = [];
+    for (const l of openLessons) withKeys.push({ ...l, supporting_keys: (await supportingKeysOf(ctx, l)).filter((k) => !unreadKeys.has(k)) });
+    const recanted = recantedAmong(withKeys, queue);
+    if (recanted.length) ctx.record.recanted = recanted.map((x) => ({ lesson: x.lesson.Lesson, keys: x.keys, why: x.why }));
+
     // one model call per group
     const canaries = readEvals(ctx.root).canaries;
     const examplesOf = (tag) => canaries.filter((c) => c.tag === tag);
@@ -548,14 +568,21 @@ export async function distill(opts = {}) {
     const readN = made.fresh.size;
     const unreadN = made.unread.length;
     const nothingStale = toReadN === 0;
-    const kinds = [...made.fresh.values()];
+    const noNoteKey = (key) => made.items.get(key).reasonWord === null && text(made.items.get(key).noteLine).trim() === '';
     const tally = {
-      rule: kinds.filter((r) => RULE_WHY.has(r.reading)).length,
-      slips: kinds.filter((r) => r.reading === 'Agent slip').length,
-      noNote: [...made.fresh.keys()].filter((key) => made.items.get(key).reasonWord === null && text(made.items.get(key).noteLine).trim() === '').length,
+      // "Point at a rule" counts the readings that blame the rule and rest on a note of the editor's; the guess about a decision without a note is counted under "Without a note" (decision 78)
+      rule: [...made.fresh].filter(([key, r]) => RULE_WHY.has(r.reading) && !noNoteKey(key)).length,
+      slips: [...made.fresh.values()].filter((r) => r.reading === 'Agent slip').length,
+      noNote: [...made.fresh.keys()].filter(noNoteKey).length,
     };
+    // the decisions of Reviewed claims that still have no note after this run (read or not): K, and the claims they belong to for the Next line
     const differing = [...classes.verbatim, ...classes.toRead, ...classes.current].filter((i) => i.reasonWord === null && text(i.noteLine).trim() === '');
     const needNote = new Set(differing.map((i) => i.claim.geo_id)).size;
+    const noNoteDecisions = differing.length;
+    const noNoteRuleRows = groupQueue.filter((r) => r.decided && r.Key && r.Tag).filter((r) => {
+      const x = readingOfRow(r);
+      return x !== null && RULE_WHY.has(x.reading) && x.noNote && !isFollowedUp(r);
+    }).length;
     const details = {
       lessons: kept.map((k) => ({ title: k.title, rule: k.rule, kind: k.kind, keys: k.keys })), dropped, unreadable, counts, result, readings: ctx.record.readings,
     };
@@ -586,11 +613,31 @@ export async function distill(opts = {}) {
     }
     assertApplied(ctx, result);
 
-    const tail = unreadN > 0 ? `; ${unreadN} could not be read this time` : '';
+    // the clauses that end the sentence, in this order: what could not be read, the rule changes that rest on a decision the editor has since called the agent's slip (decision 79), and the
+    // decisions that have no note and wait in Needs your note (decision 78); one sentence all the same
+    const unreadClause = unreadN > 0 ? `; ${unreadN} could not be read this time` : '';
+    const clauses = [];
+    if (recanted.length === 1) clauses.push(`the rule change ${quoted(recanted[0].lesson.Lesson)} rests on ${recantedPhrase(recanted[0].keys, recanted[0].why)}`);
+    else if (recanted.length > 1) clauses.push(`${recanted.length} rule changes rest on ${recantedPhrase(recanted.flatMap((x) => x.keys), recanted.every((x) => x.why === 'slip') ? 'slip' : 'other')}`);
+    if (noNoteDecisions > 0) clauses.push(`${noNoteDecisions} of your decisions ${noNoteDecisions === 1 ? 'has no note and waits' : 'have no note and wait'} in Needs your note`);
+    const rest = clauses.map((c) => `; ${c}`).join('');
+    const tail = `${unreadClause}${rest}`;
+    // the Next line: a rule change to reject comes before everything else (decision 79); then the one drafted now, the one that already waits, the notes that are missing, and status
+    const proposedOpen = lessons.filter((l) => l.Status === 'Proposed').length;
+    const approvedOpen = lessons.filter((l) => l.Status === 'Approved').length;
+    const nextLine = (drafted) => {
+      if (recanted.length) return recantedNext(ctx.config, recanted.map((x) => x.lesson.Lesson));
+      if (drafted) return `Next: read ${kept.length === 1 ? 'it' : 'them'} in Lessons waiting (${link}), where the current and the proposed text sit side by side, and approve ${kept.length === 1 ? 'it' : 'each one'} or write your own wording.`;
+      if (proposedOpen > 0) return approveNext(ctx.config, proposedOpen);
+      if (approvedOpen > 0) return `Next: type /claim-tagger promote to check the approved ${approvedOpen === 1 ? 'rule change' : 'rule changes'}.`;
+      if (needNote > 0) return needNoteNext(needNote, noteLink);
+      return 'Next: type /claim-tagger status to see what is open.';
+    };
     if (kept.length === 0) {
       let why;
       if (unreadable > 0) why = 'the replies could not be used';
       else if (candidates.length > 0 || dropped.length > 0) why = 'none of the drafts passed the checks';
+      else if (counts.ruleRows === 0 && noNoteRuleRows > 0) why = 'no decision with a note points at a rule yet';
       else if (counts.ruleRows === 0 && unreadN > 0) why = 'none of the decisions read so far names a rule problem';
       else if (counts.ruleRows === 0) why = counts.decided === 0 ? 'no row is decided yet' : `${plural(counts.decided, 'decided row')} ${counts.decided === 1 ? 'names' : 'name'} no rule problem`;
       else if (counts.ruleRowsFollowed === counts.ruleRows) why = 'a rule change was already made for every decided row that names a rule problem';
@@ -600,20 +647,21 @@ export async function distill(opts = {}) {
       else why = 'the rows do not point at a change that is safe to make';
       let sentence;
       if (readN > 0) sentence = `Distill: read ${readN} of your decisions; no rule change to draft; ${why}${tail}.`;
-      else if (unreadN > 0) sentence = `Distill: no decision could be read this time; no rule change to draft; ${why}.`;
-      else sentence = `Distill: nothing new to read; no rule change to draft; ${why}.`;
+      else if (unreadN > 0) sentence = `Distill: no decision could be read this time; no rule change to draft; ${why}${rest}.`;
+      else sentence = `Distill: nothing new to read; no rule change to draft; ${why}${rest}.`;
       return {
         exit: unreadable > 0 ? EXIT.INVALID : exit,
         sentence,
         rows: tableRows,
-        next: needNote > 0 ? needNoteNext(needNote, noteLink) : 'Next: type /claim-tagger status to see what is open.',
+        next: nextLine(false),
         details,
         counts: counted,
       };
     }
-    const noteRows = new Set(kept.flatMap((k) => k.keys)).size;
+    // the sentence counts decisions, not notes: the distinct rows the kept rule changes rest on (a decision without a note rests none, decision 78)
+    const restingRows = new Set(kept.flatMap((k) => k.keys)).size;
     const one = kept.length === 1;
-    const drafted = `${one ? 'one rule change' : `${kept.length} rule changes`} from your ${plural(noteRows, 'note')}`;
+    const drafted = `${one ? 'one rule change' : `${kept.length} rule changes`} from ${readN > 0 ? `${restingRows} of them` : `${restingRows} of your decisions`}`;
     let lead;
     if (readN > 0) lead = `read ${readN} of your decisions and drafted ${drafted}`;
     else lead = `${nothingStale ? 'nothing new to read; ' : ''}drafted ${drafted}`;
@@ -621,7 +669,7 @@ export async function distill(opts = {}) {
       exit,
       sentence: `Distill: ${lead}${tail}.`,
       rows: tableRows,
-      next: `Next: read ${one ? 'it' : 'them'} in Lessons waiting (${link}), where the current and the proposed text sit side by side, and approve ${one ? 'it' : 'each one'} or write your own wording.`,
+      next: nextLine(true),
       details,
       counts: counted,
     };

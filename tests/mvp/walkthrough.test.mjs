@@ -861,8 +861,13 @@ test('the page text and the manifest agree: the lint is clean with the manifest\
   assert.ok(!/as it is/.test(step3), 'the page no longer says to paste the sentence as it is');
   assert.match(step3, /so the order of the three columns does not matter for the view/);
   // one sentence under the lists on the reason word, and the view right under it (the editor never says why the agent was wrong, but may)
-  const reason = 'A note that starts with "Agent slip.", "Rule unclear." or "Rule should change." is taken as it stands and the agent does not read that tag; without one the agent reads your decision itself.';
+  // (decision 78: the next sentence says what an empty note means when the editor disagrees, so that "an empty note is a decision too" is not read for a disagreement)
+  const reason = 'A note that starts with "Agent slip.", "Rule unclear." or "Rule should change." is taken as it stands and the agent does not read that tag; without one the agent reads your decision itself. '
+    + 'If you disagree with the agent and leave the note empty, the agent still reads your decision, marks its reading "without your note", lists the claim in Needs your note and drafts nothing from it until you add a note.';
   assert.ok(step3.indexOf(reason) > step3.lastIndexOf('3. Review status: Reviewed.'), 'the sentence on the reason word stands under the four lists');
+  const step4Text = page.slice(page.indexOf('## Step 4'), page.indexOf('## Step 5'));
+  assert.ok(step4Text.includes("Claude's report counts what was read, what points at a rule, the agent's slips and the decisions without a note, and its Next line opens Lessons waiting."), 'step 4 says what Claude\'s report holds');
+  assert.ok(step4Text.indexOf("Claude's report counts") < step4Text.indexOf('**Claims** (your 4 claims)'), 'and says it before the tables of the step');
   assert.match(step3, new RegExp(`${reason.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\n\\n\\{\\{view:Your queue\\}\\}`));
   // the list is blocks as well: four numbered lists of three items, the notes item holding a line break before its sentence (but Georgia's)
   const blocks = toBlocks(step3).filter((b) => b.type === 'numbered_list_item');
@@ -3813,7 +3818,7 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   const drafted = await distill(first);
   assert.equal(drafted.exit, 0, `${first.io.errs.join('\n')}\n${drafted.markdown}`);
   assert.ok(drafted.markdown.startsWith('Demo · Distill: '));
-  assert.match(drafted.report.sentence, /^Distill: read 3 of your decisions and drafted one rule change from your 2 notes \(practice page /);
+  assert.match(drafted.report.sentence, /^Distill: read 3 of your decisions and drafted one rule change from 2 of them \(practice page /);
   assert.deepEqual(drafted.report.rows, [
     ['Read', '3 decisions', ''], ['Point at a rule', '2 decisions', ''], ['Agent slips', '1 decision', ''], ['Without a note', 'none', ''],
     ['Rule change', `"${STORY_LESSON}", Context-dependent rule 3`, ''],
@@ -3915,7 +3920,16 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   for (const d of reports) assert.deepEqual(lintReport(readFileSync(join(runs, d.name, 'report.md'), 'utf8')), [], d.name);
 });
 
-test('a decision without a note is read all the same, flagged "without your note" on the claim, and distill sends the editor to Needs your note; a note then takes the reading by its reason word without a call', async () => {
+// The report check of these tests, for the words of decision 79 ("a decision you now call the agent's slip"): the lint of the report, and no engineering word. The word call is one of them (it means a
+// model call to an engineer), except in "you now call".
+const plainReport = (markdown) => lintReport(markdown).length === 0 && !/token|duration|\$|\.mjs|--[a-z]|runs\//i.test(markdown) && !/\bcalls\b/i.test(markdown) && !/\bcall\b(?! (?:the agent's|a) slip)/i.test(markdown);
+
+/**
+ * A practice page on the fakes, taken through the tag step, with the editor's decisions on the four claims of the story made by the walkthrough's own `decide`: the press pool, the AI Force
+ * claim and Georgia as the page says, USPS with no note at all (`--outcome` alone writes an empty note). The fake model reads USPS Rule unclear on rule 3, as verification run 4 saw it.
+ * Returns the handles the tests use.
+ */
+async function pageWithoutUspsNote() {
   const w = newWorld();
   const { manifest } = real();
   assert.equal((await w.start()).code, 0);
@@ -3929,28 +3943,138 @@ test('a decision without a note is read all the same, flagged "without your note
   assert.equal((await pull({ root: w.dir(), tables: 'all', fetchImpl: w.fake.fetchImpl, token: w.fake.token, sleep: noSleep, now: () => w.clock })).code, 0);
   assert.equal((await judge({ root: w.dir(), driver: 'fake', items: 'claims', io: quietIo(), env: hooks().env, fakeState: state, fakeScript: FAKE_SCRIPT, sleep: noSleep, now: () => w.clock })).exit, 0);
   assert.equal((await propose(hooks())).exit, 0);
-  // the editor decides the USPS claim with no note on purpose (decide --outcome alone writes an empty note); the model reads it, and the flag is set in code
-  const usps = keyOf('usps');
   const readingsFile = JSON.parse(readFileSync(env.FAKE_CLAUDE_READINGS, 'utf8'));
-  readingsFile[usps] = { reading: 'Agent slip', rule: 'Context-dependent rule 3', note: 'The portal is named in the claim.' };
+  readingsFile[keyOf('usps')] = { reading: 'Rule unclear', rule: 'Context-dependent rule 3', note: 'The portal is named in the claim.' };
   writeFileSync(env.FAKE_CLAUDE_READINGS, JSON.stringify(readingsFile));
+  for (const key of ['presspool', 'aiforce', 'georgia']) assert.equal((await w.run(['decide', '--claim', key])).code, 0, key);
   assert.equal((await w.run(['decide', '--claim', 'usps', '--outcome', 'Does not apply'])).code, 0);
+  const uspsNote = manifest.open.find((o) => o.claim === 'usps').enter['Challenged tags notes'];
+  const supporting = (row) => (row['Supporting rows'] ?? '').split('\n').map((l) => l.split(' · ').at(-1)).sort();
+  return { w, manifest, state, hooks, keyOf, claimRow, ledgerRow, uspsNote, supporting };
+}
+
+test('a decision without a note is read all the same and flagged "without your note", but it joins no draft: the rule change rests on the two noted rows, the sentence of distill says that one decision waits for a note, and the note then takes the reading by its reason word without a call while the draft stands', async () => {
+  const { w, state, hooks, keyOf, claimRow, ledgerRow, uspsNote, supporting } = await pageWithoutUspsNote();
+  // status before distill: three decisions to read, one of them without a note; the sentence follows the row
+  const midway = await status(hooks());
+  assert.match(midway.report.sentence, /^Status of the practice page .*: nothing is paused; the agent has 3 of your decisions to read\.$/);
+  assert.deepEqual(midway.report.rows.find((r) => r[0] === 'Your decisions')?.slice(0, 2), ['Your decisions', '3 to read, 1 without a note']);
+
+  // distill reads the three decisions in one call and drafts from the two that have a note
   const one = hooks();
   const first = await distill(one);
   assert.equal(first.exit, 0, `${one.io.errs.join('\n')}\n${first.markdown}`);
   assert.ok(first.markdown.startsWith('Demo · Distill: '));
-  assert.match(first.report.sentence, /^Distill: read 1 of your decisions; no rule change to draft; .*\(practice page /);
-  assert.deepEqual(first.report.rows.slice(0, 4), [['Read', '1 decision', ''], ['Point at a rule', 'none', ''], ['Agent slips', '1 decision', ''], ['Without a note', '1 decision', '']]);
-  assert.match(first.report.next, /^Next: add a note on 1 claim in Needs your note \(https:\/\/[^)]+\), then type \/claim-tagger demo distill again\.$/);
-  assert.deepEqual([ledgerRow('usps')['Agent reading'], ledgerRow('usps').Rule, ledgerRow('usps')['Reading note']], ['Agent slip', 'Context-dependent rule 3', 'without your note · The portal is named in the claim.']);
-  assert.equal(claimRow('usps')['Agent reading'], `${TAG}: Agent slip, rule 3, without your note · The portal is named in the claim.`);
+  assert.match(first.report.sentence, /^Distill: read 3 of your decisions and drafted one rule change from 2 of them; 1 of your decisions has no note and waits in Needs your note \(practice page .*\)\.$/);
+  assert.deepEqual(first.report.rows.slice(0, 4), [['Read', '3 decisions', ''], ['Point at a rule', '2 decisions', ''], ['Agent slips', 'none', ''], ['Without a note', '1 decision', '']]);
+  assert.match(first.report.next, /^Next: read it in Lessons waiting \(/, 'a rule change was drafted, so the Next line opens Lessons waiting');
   assert.equal(callsWith(state, '# Reading').length, 1);
-  // the editor adds the reason word: the row is read again from the note, with no call
-  w.fake.editRow(claimRow('usps').page_id, { 'Challenged tags notes': manifest.open.find((o) => o.claim === 'usps').enter['Challenged tags notes'] });
+  assert.deepEqual([ledgerRow('usps')['Agent reading'], ledgerRow('usps').Rule, ledgerRow('usps')['Reading note']], ['Rule unclear', 'Context-dependent rule 3', 'without your note · The portal is named in the claim.']);
+  assert.equal(claimRow('usps')['Agent reading'], `${TAG}: Rule unclear, rule 3, without your note · The portal is named in the claim.`);
+  for (const key of ['presspool', 'aiforce', 'georgia']) assert.ok(!/without your note/.test(claimRow(key)['Agent reading']), `${key}: only the USPS claim is flagged, which is what Needs your note lists`);
+  assert.equal(w.rows('rule_changes').length, 1);
+  const lesson = w.rows('rule_changes')[0];
+  assert.deepEqual(supporting(lesson), [keyOf('presspool'), keyOf('aiforce')].sort(), 'the draft rests on the two noted rows; the guess about the USPS decision is not among them');
+  assert.ok(!/portal|USPS/i.test(lesson['Proposed text']), 'and its text holds nothing about the USPS claim');
+
+  // status: two decisions point at a rule, one has no note, the draft waits for approval
+  const after = await status(hooks());
+  assert.deepEqual(after.report.rows.find((r) => r[0] === 'Your decisions')?.slice(0, 2), ['Your decisions', '2 point at a rule, 1 without a note']);
+  assert.match(after.report.next, /^Next: approve or reject the rule change in Lessons waiting \(/);
+
+  // the editor adds the reason word: the row is read again from the note, with no call, and the draft stands as it was
+  w.fake.editRow(claimRow('usps').page_id, { 'Challenged tags notes': uspsNote });
   const two = hooks();
   const second = await distill(two);
   assert.equal(second.exit, 0, two.io.errs.join('\n'));
   assert.equal(callsWith(state, '# Reading').length, 1, 'the reason word is taken as it stands: no second call');
   assert.deepEqual([ledgerRow('usps')['Agent reading'], ledgerRow('usps').Rule, ledgerRow('usps')['Reading note']], ['Agent slip', 'Context-dependent rule 5', 'Your note says so.']);
   assert.equal(claimRow('usps')['Agent reading'], `${TAG}: Agent slip, rule 5 · Your note says so.`);
+  assert.match(second.report.sentence, /^Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting \(practice page .*\)\.$/);
+  assert.match(second.report.next, /^Next: approve or reject the rule change in Lessons waiting \(/, 'a rule change is Proposed: the words of status');
+  assert.equal(w.rows('rule_changes').length, 1, 'no second rule change');
+  assert.deepEqual(supporting(w.rows('rule_changes')[0]), [keyOf('presspool'), keyOf('aiforce')].sort(), 'the draft still rests on the two rows');
+  assert.equal(read(join(second.runDir, 'run.json')).recanted, undefined, 'and nothing is recanted: it never rested on the USPS row');
+  const settled = await status(hooks());
+  assert.deepEqual(settled.report.rows.find((r) => r[0] === 'Your decisions')?.slice(0, 2), ['Your decisions', '2 point at a rule']);
+  assert.equal(settled.report.rows.find((r) => r[0] === 'Lessons waiting')[1], '1 rule change to approve');
+
+  // approve and promote: the safety check counts the two rows of the draft, and the follow-up marks those two, neither USPS nor Georgia
+  assert.equal((await w.run(['approve'])).code, 0);
+  const passed = await promote(hooks({ lesson: lesson.Lesson }));
+  assert.equal(passed.exit, 0, passed.markdown);
+  assert.deepEqual(passed.report.rows.at(-1), ['Your 2 rows', '2 of 2 now right, marked Fixed', '']);
+  assert.deepEqual(['presspool', 'aiforce', 'usps', 'georgia'].map((k) => ledgerRow(k)['Follow-up'] ?? null), ['Fixed', 'Fixed', null, null]);
+  assert.deepEqual(['usps', 'georgia'].map((k) => claimRow(k)['Agent status']), ['Waits for you', 'Waits for you']);
+});
+
+test('a draft that rests on a noted row the editor later calls the agent\'s slip is recanted: status, distill and promote ask for it to be rejected and write nothing, and after the rejection the next distill drafts from the two rows that remain and the safety check counts those two', async () => {
+  const { w, state, hooks, keyOf, claimRow, ledgerRow, uspsNote, supporting } = await pageWithoutUspsNote();
+  // the USPS decision gets a note that is no reason word: the model reads it Rule unclear on rule 3, with a note, so it points at a rule and the draft rests on three rows
+  w.fake.editRow(claimRow('usps').page_id, { 'Challenged tags notes': 'The USPS portal names a body readers know by name.' });
+  const first = await distill(hooks());
+  assert.equal(first.exit, 0, first.markdown);
+  assert.match(first.report.sentence, /^Distill: read 3 of your decisions and drafted one rule change from 3 of them \(practice page /, 'three decisions with a note, three rows');
+  const lesson = w.rows('rule_changes')[0];
+  assert.deepEqual(supporting(lesson), [keyOf('presspool'), keyOf('aiforce'), keyOf('usps')].sort());
+
+  // the editor decides that the USPS decision was the agent's slip after all: the manifest's note, with the reason word
+  w.fake.editRow(claimRow('usps').page_id, { 'Challenged tags notes': uspsNote });
+  const reject = `Next: reject the rule change ${quoted(lesson.Lesson)} in Lessons waiting (${w.demo().views.lessons_waiting.url}), then type /claim-tagger demo distill again.`;
+
+  // status asks for the rejection (before any distill has written the reason word) and not for the approval
+  const st = await status(hooks());
+  assert.ok(plainReport(st.markdown), st.markdown);
+  assert.equal(st.report.rows.find((r) => r[0] === 'Lessons waiting')[1], '1 rule change to reject (rests on a decision you now call a slip)');
+  assert.equal(st.report.next, reject);
+
+  // distill says it in its sentence and its Next line, asks the model nothing (the reason word is taken as it stands) and drafts nothing
+  const reads = callsWith(state, '# Reading').length;
+  const two = hooks();
+  const second = await distill(two);
+  assert.equal(second.exit, 0, two.io.errs.join('\n'));
+  assert.ok(plainReport(second.markdown), second.markdown);
+  assert.equal(callsWith(state, '# Reading').length, reads);
+  assert.match(second.report.sentence, new RegExp(`^Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting; the rule change ${quoted(lesson.Lesson).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} rests on a decision you now call the agent's slip \\(practice page .*\\)\\.$`));
+  assert.equal(second.report.next, reject);
+  assert.equal(w.rows('rule_changes').length, 1, 'nothing is drafted while the old draft is open');
+  assert.equal(w.rows('rule_changes')[0]['Proposed text'], lesson['Proposed text'], 'and the draft is not rewritten');
+  assert.deepEqual(read(join(second.runDir, 'run.json')).recanted, [{ lesson: lesson.Lesson, keys: [keyOf('usps')], why: 'slip' }]);
+  assert.deepEqual([ledgerRow('usps')['Agent reading'], ledgerRow('usps')['Reading note']], ['Agent slip', 'Your note says so.']);
+
+  // the editor approves the draft all the same: promote holds before the safety check, and nothing is written
+  assert.equal((await w.run(['approve'])).code, 0);
+  const rulebookBefore = w.rows('rulebook').map((r) => r['When to use']);
+  const written = w.fake.writes().length;
+  const callsBefore = (state.log ?? []).length;
+  const hp = hooks({ lesson: lesson.Lesson });
+  const held = await promote(hp);
+  assert.equal(held.exit, 10, `${hp.io.errs.join('\n')}\n${held.markdown}`);
+  assert.ok(plainReport(held.markdown), held.markdown);
+  assert.match(held.report.sentence, new RegExp(`^Promote: held: the rule change ${quoted(lesson.Lesson).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} rests on a decision you now call the agent's slip, so the safety check did not run \\(practice page .*\\)\\.$`));
+  assert.equal(held.report.next, reject);
+  assert.equal(w.fake.writes().length, written, 'nothing was written to Notion');
+  assert.equal((state.log ?? []).length, callsBefore, 'and the model was asked nothing');
+  assert.deepEqual(w.rows('rulebook').map((r) => r['When to use']), rulebookBefore);
+  assert.deepEqual([w.rows('rule_changes')[0].Status, w.rows('rule_changes')[0]['Safety check result'] ?? ''], ['Approved', '']);
+
+  // the editor rejects it (in the practice, with W reject) and types distill again: a new draft from the two rows that still point at the rule
+  assert.equal((await w.run(['reject'])).code, 0);
+  assert.equal(w.rows('rule_changes')[0].Status, 'Rejected');
+  const three = hooks();
+  const third = await distill(three);
+  assert.equal(third.exit, 0, three.io.errs.join('\n'));
+  assert.match(third.report.sentence, /^Distill: nothing new to read; drafted one rule change from 2 of your decisions \(practice page .*\)\.$/);
+  assert.match(third.report.next, /^Next: read it in Lessons waiting \(/);
+  assert.equal(w.rows('rule_changes').length, 2);
+  const fresh = w.rows('rule_changes').find((r) => r.Status === 'Proposed');
+  assert.deepEqual(supporting(fresh), [keyOf('presspool'), keyOf('aiforce')].sort());
+  assert.equal((await status(hooks())).report.rows.find((r) => r[0] === 'Lessons waiting')[1], '1 rule change to approve');
+
+  // approve and promote: the safety check counts the two rows, the follow-up marks those two and not USPS
+  assert.equal((await w.run(['approve'])).code, 0);
+  const passed = await promote(hooks({ lesson: fresh.Lesson }));
+  assert.equal(passed.exit, 0, passed.markdown);
+  assert.deepEqual(passed.report.rows.at(-1), ['Your 2 rows', '2 of 2 now right, marked Fixed', '']);
+  assert.deepEqual(['presspool', 'aiforce', 'usps', 'georgia'].map((k) => ledgerRow(k)['Follow-up'] ?? null), ['Fixed', 'Fixed', null, null]);
 });

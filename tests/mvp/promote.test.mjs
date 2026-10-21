@@ -10,7 +10,7 @@ import { stampOf } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.
 import { validate } from '../../agents/claim-tagger-mvp/scripts/lib/validate.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { NOW, claimText, taxonomyCanaries } from './helpers/loop-world.mjs';
-import { MARK, NEW_TEXT, RULE4, TITLE, callsHolding, keyOf, promoteWorld } from './helpers/promote-scenario.mjs';
+import { MARK, NEW_TEXT, RULE4, TITLE, callsHolding, keyOf, promoteWorld, readingCells } from './helpers/promote-scenario.mjs';
 
 const cardSchema = readJson(join(codeRoot(), 'schemas', 'card.schema.json'));
 const EXAMPLE_1 = taxonomyCanaries()[0].claim; // an example that applies
@@ -205,6 +205,7 @@ test('promote PASS: a second promote the same day makes edition .3, keeps the fi
   const rule2 = w.rubric().tags.find((t) => t.name === 'Context-dependent').rules[1].text;
   const NEW2 = 'A definite reference that needs an outside antecedent to identify it makes the claim Context-dependent, even when other entities in the claim are named; a title alone counts.';
   const MARK2 = 'a title alone counts';
+  for (const i of [3, 4]) w.fake.editRow(w.ids.queue[keyOf(i)], readingCells('Rule unclear', 2)); // the second change rests on these two rows, so they point at a rule (decision 79)
   w.fake.addRow(w.DB.rule_changes, {
     Lesson: 'A title alone counts', Tag: 'Context-dependent', Rule: 'Context-dependent rule 2', Kind: 'Change the rule', 'Current text': rule2, 'Proposed text': NEW2,
     'Supporting rows': `${claimText(3)} · ${keyOf(3)}\n${claimText(4)} · ${keyOf(4)}`, Status: 'Approved',
@@ -525,6 +526,87 @@ test('promote HOLD: with nothing to check the change against, exit 10, the two r
   assert.deepEqual(validate(cardSchema, card).errors, []);
   assert.equal(card.verdict, 'HOLD');
   assert.equal(existsSync(lockFile(w)), false);
+});
+
+// the report check of assertReport, but for the words of decision 79 ("a decision you now call the agent's slip"): assertReport keeps the word call out of a report, because for an engineer it means a model call
+function assertHeldReport(h, r) {
+  assert.deepEqual(lintReport(r.markdown), [], r.markdown);
+  assert.equal(h.io.outs.join('\n').trimEnd(), r.markdown.trimEnd());
+  assert.ok(!/token|duration|\$|\.mjs|--[a-z]|runs\//i.test(r.markdown) && !/\bcalls\b/i.test(r.markdown) && !/\bcall\b(?! the agent's slip)/i.test(r.markdown), r.markdown);
+  return r.report;
+}
+
+test('promote HOLD, a rule change that rests on a decision the editor now calls the agent\'s slip: exit 10 before anything is asked or written, the report says why and asks to reject it and distill again, and the lesson stays Approved', async () => {
+  const w = await promoteWorld();
+  w.fake.editRow(w.ids.queue[keyOf(2)], readingCells('Agent slip')); // distill re-read the row of claim 2 as Agent slip after the editor's note
+  const writes = w.writes().length;
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 10, h.io.errs.join('\n'));
+  const report = assertHeldReport(h, r);
+  assert.equal(report.sentence, `Promote: held: the rule change "${TITLE}" rests on a decision you now call the agent's slip, so the safety check did not run.`);
+  assert.equal(report.next, `Next: reject the rule change "${TITLE}" in Lessons waiting (${lessonsLink(w)}), then type /claim-tagger distill again.`);
+  assert.equal(report.rows, undefined, 'a sentence and a Next line');
+  assert.equal(w.writes().length, writes, 'nothing is written: not the lesson, not Agent settings, not the rulebook');
+  assert.equal(w.calls().length, 0, 'and the safety check did not run');
+  assert.equal(w.row('rule_changes', TITLE).Status, 'Approved');
+  assert.equal(w.row('rule_changes', TITLE)['Safety check result'], '');
+  assert.equal(w.rubric().edition, '2026-10-16.1');
+  assert.equal(existsSync(lockFile(w)), false, 'no lock was taken');
+  const run = readJson(join(r.runDir, 'run.json'));
+  assert.deepEqual([run.exit_code, run.status, run.recanted], [10, 'done', { keys: [keyOf(2)], why: 'slip' }]);
+
+  // the demo form of the command
+  const demo = await promoteWorld({ world: { demo: true } });
+  demo.fake.editRow(demo.ids.queue[keyOf(2)], readingCells('Agent slip'));
+  const hd = demo.hooks();
+  const rd = await promote(hd);
+  assert.equal(rd.exit, 10);
+  assert.ok(rd.markdown.startsWith('Demo · Promote: held: '), rd.markdown);
+  assert.match(assertHeldReport(hd, rd).next, /, then type \/claim-tagger demo distill again\.$/);
+
+  // the editor rejects it, distill drafts again from the row that remains: nothing of this is promote's to do
+  w.fake.editRow(w.ids.lesson[TITLE], { Status: 'Rejected' });
+  assert.equal((await promote(w.hooks())).exit, 2, 'a rejected rule change is not Approved: the usual refusal');
+});
+
+test('promote HOLD, the editor\'s reason word counts before distill has written it: a note that opens with "Agent slip." holds the rule change although the ledger still holds the old reading', async () => {
+  const w = await promoteWorld();
+  w.review('c02', { tags: [], why: 'Agent slip', notes: 'Rule 5 settles it.' }); // the claim is Reviewed again with the reason word; the ledger row of claim 2 still reads Rule unclear
+  assert.equal(w.row('tag_decisions', keyOf(2))['Agent reading'], 'Rule unclear');
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 10, h.io.errs.join('\n'));
+  assert.equal(assertHeldReport(h, r).sentence, `Promote: held: the rule change "${TITLE}" rests on a decision you now call the agent's slip, so the safety check did not run.`);
+  assert.equal(w.calls().length, 0);
+  assert.equal(w.row('rule_changes', TITLE).Status, 'Approved');
+});
+
+test('promote HOLD, a row that is no longer a disagreement, was marked Fixed or holds only a guess without a note: "a decision that no longer points at a rule"; a Still wrong row stays checkable', async () => {
+  const phrase = 'a decision that no longer points at a rule';
+  const cases = {
+    'no longer a disagreement': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Tag outcome': "Can't tell" }),
+    'marked Fixed': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Follow-up': 'Fixed' }),
+    'a guess without a note': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Reading note': 'without your note · The rule leaves this kind of case open.' }),
+    'no reading': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Agent reading': null, Rule: '', 'Reading note': '' }),
+  };
+  for (const [name, change] of Object.entries(cases)) {
+    const w = await promoteWorld();
+    change(w);
+    const h = w.hooks();
+    const r = await promote(h);
+    assert.equal(r.exit, 10, name);
+    assert.equal(assertHeldReport(h, r).sentence, `Promote: held: the rule change "${TITLE}" rests on ${phrase}, so the safety check did not run.`, name);
+  }
+  const still = await promoteWorld();
+  still.fake.editRow(still.ids.queue[keyOf(1)], { 'Follow-up': 'Still wrong' });
+  assert.equal((await promote(still.hooks())).exit, 0, 'Still wrong stays open: the rule change is checked as always');
+  // two recanted rows
+  const both = await promoteWorld();
+  for (const i of [1, 2]) both.fake.editRow(both.ids.queue[keyOf(i)], readingCells('Agent slip'));
+  const rb = await promote(both.hooks());
+  assert.equal(rb.exit, 10);
+  assert.equal(rb.report.sentence, `Promote: held: the rule change "${TITLE}" rests on 2 decisions you now call the agent's slips, so the safety check did not run.`);
 });
 
 // ---- the lock --------------------------------------------------------------------------------------------------------------------------------

@@ -53,9 +53,9 @@ Next: decide your four claims in Your queue (link).
 
 ### status (demo, midway: all four claims decided)
 
-The editor has decided all four claims, but Your queue still lists them until the agent's next run reads the decisions, so the row says that and not "nothing waits". Nothing is left to decide, and the agent has not read the decisions yet, so a Your decisions row counts them, in up to three parts that are left out while they are zero: the decisions still to read ("3 to read"), the decisions that point at a rule, once read ("2 point at a rule"), and the decisions without a note ("1 without a note"); here the USPS claim was decided without a note. The reading is made by distill, so the Next line is the distill step, which reads the decisions and turns the ones that blame the rule into a draft rule. After the follow-up of step 7 has marked the rows the draft rests on Fixed, those claims no longer ask for distill. After a promote nothing is to read (the key of a reading holds the edition the proposal was made under), so the status of step 7 has no Your decisions row.
+The editor has decided all four claims, but Your queue still lists them until the agent's next run reads the decisions, so the row says that and not "nothing waits". Nothing is left to decide, and the agent has not read the decisions yet, so the sentence says what the agent has to do (it does not say that nothing waits for you), and a Your decisions row counts the decisions, in up to three parts that are left out while they are zero: the decisions still to read ("3 to read"), the decisions that point at a rule, once read and with a note ("2 point at a rule"), and the decisions without a note ("1 without a note"); here the USPS claim was decided without a note. When only decisions without a note are left, the sentence reads "...; 1 of your decisions has no note." The reading is made by distill, so the Next line is the distill step, which reads the decisions and turns the ones that blame the rule into a draft rule. After the follow-up of step 7 has marked the rows the draft rests on Fixed, those claims no longer ask for distill. After a promote nothing is to read (the key of a reading holds the edition the proposal was made under), so the status of step 7 has no Your decisions row.
 
-Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused and nothing waits for you.
+Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; the agent has 3 of your decisions to read.
 
 | Where | Now |
 |---|---|
@@ -99,11 +99,26 @@ Tag: the agent read 214 claims for Context-dependent; 9 wait for you.
 
 Next: decide your nine claims in Your queue (link).
 
+### status (demo, a rule change that rests on a decision the editor now calls the agent's slip)
+
+The editor opened the note of a decision the draft rests on with "Agent slip." after the draft was made. The draft's text was written with that decision in mind, so the row of Lessons waiting says to reject it, and the Next line comes before "approve or reject". Only the editor sets Rejected; the agent never withdraws a draft.
+
+Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; 1 rule change waits for you.
+
+| Where | Now |
+|---|---|
+| Rulebook | 1 tag, edition 2026-10-15.1 |
+| Your queue | nothing waits |
+| Lessons waiting | 1 rule change to reject (rests on a decision you now call a slip) |
+| Last run | Distill · 15 Oct 11:02 · 1 rule change |
+
+Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger demo distill again.
+
 ### distill (demo)
 
-The agent read three decisions (the press pool and the AI Force claim through its model, the USPS claim from the reason word in the editor's note), found nothing to read on the Georgia claim, and drafted one rule change from the two decisions that blame the rule.
+The agent read three decisions (the press pool and the AI Force claim through its model, the USPS claim from the reason word in the editor's note), found nothing to read on the Georgia claim, and drafted one rule change from the two decisions that blame the rule. The sentence counts decisions, not notes.
 
-Demo · Distill: read 3 of your decisions and drafted one rule change from your 2 notes (practice page Claim tagger demo · 15 Oct 10:42).
+Demo · Distill: read 3 of your decisions and drafted one rule change from 2 of them (practice page Claim tagger demo · 15 Oct 10:42).
 
 | What | Result |
 |---|---|
@@ -117,9 +132,25 @@ Next: read it in Lessons waiting (link), where the current and the proposed text
 
 ### distill (demo), a decision without a note
 
-A decision that differs from the agent's tag and has no note is read all the same, carefully and from the claim and the rule alone, and flagged "without your note" on the claim. When no rule change is drafted, the Next line sends the editor to Needs your note.
+A decision that differs from the agent's tag and has no note is read all the same, carefully and from the claim and the rule alone, and flagged "without your note" on the claim. The agent's reading of a decision nobody explained is a guess, so it never goes into a draft: it is counted under Without a note, listed in Needs your note, and the sentence says how many decisions wait for a note. Here a rule change was drafted from the two decisions that have a note, so the Next line opens Lessons waiting.
 
-Demo · Distill: read 1 of your decisions; no rule change to draft; 6 decided rows name no rule problem (practice page Claim tagger demo · 15 Oct 10:42).
+Demo · Distill: read 3 of your decisions and drafted one rule change from 2 of them; 1 of your decisions has no note and waits in Needs your note (practice page Claim tagger demo · 15 Oct 10:42).
+
+| What | Result |
+|---|---|
+| Read | 3 decisions |
+| Point at a rule | 2 decisions |
+| Agent slips | none |
+| Without a note | 1 decision |
+| Rule change | "Known groups count as identified, unknown names do not", Context-dependent rule 3 |
+
+Next: read it in Lessons waiting (link), where the current and the proposed text sit side by side, and approve it or write your own wording.
+
+### distill (demo), no rule change while a decision has no note
+
+When no rule change is drafted and none waits, the Next line sends the editor to Needs your note. Once the note is there the row is read again and may support a draft.
+
+Demo · Distill: read 1 of your decisions; no rule change to draft; 6 decided rows name no rule problem; 1 of your decisions has no note and waits in Needs your note (practice page Claim tagger demo · 15 Oct 10:42).
 
 | What | Result |
 |---|---|
@@ -131,9 +162,33 @@ Demo · Distill: read 1 of your decisions; no rule change to draft; 6 decided ro
 
 Next: add a note on 1 claim in Needs your note (link), then type /claim-tagger demo distill again.
 
+### distill (demo), a rule change that rests on a decision the editor now calls the agent's slip
+
+The editor opened a note with "Agent slip." after the draft was made. The agent takes the word at once and asks nothing, but the draft's text was written with that decision in mind, so the sentence says so and the Next line asks the editor to reject the draft before anything else. Nothing new is drafted for that rule while the old draft is open; after the rejection, typing distill again drafts from the decisions that remain.
+
+Demo · Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting; the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent's slip (practice page Claim tagger demo · 15 Oct 10:42).
+
+| What | Result |
+|---|---|
+| Read | 1 decision |
+| Point at a rule | none |
+| Agent slips | 1 decision |
+| Without a note | none |
+| Rule change | none |
+
+Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger demo distill again.
+
 ### distill (demo), nothing new to read
 
+When a rule change already waits, the Next line is the one status gives: approve or reject it (or, for an approved one, type the promote command).
+
 Demo · Distill: nothing new to read; no rule change to draft; the rules the rows point at already have a rule change waiting (practice page Claim tagger demo · 15 Oct 10:42).
+
+Next: approve or reject the rule change in Lessons waiting (link).
+
+### distill (demo), nothing new to read and nothing waiting
+
+Demo · Distill: nothing new to read; no rule change to draft; 6 decided rows name no rule problem (practice page Claim tagger demo · 15 Oct 10:42).
 
 Next: type /claim-tagger demo status to see what is open.
 
@@ -148,6 +203,14 @@ Demo · Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-15
 | Your 2 rows | 2 of 2 now right, marked Fixed |
 
 Next: look at step 7 on the practice page (link); the demo is then complete.
+
+### promote, held because a decision was recanted (demo)
+
+The editor approved a draft that rests on a decision they have since called the agent's slip. Promote holds before the safety check and writes nothing; the rule change stays Approved until the editor rejects it.
+
+Demo · Promote: held: the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent's slip, so the safety check did not run (practice page Claim tagger demo · 15 Oct 10:42).
+
+Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger demo distill again.
 
 ### promote, when it does not pass (demo)
 

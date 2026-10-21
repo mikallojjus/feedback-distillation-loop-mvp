@@ -367,7 +367,7 @@ test('status midway, every claim decided but still listed in Your queue: the row
   const r = await status(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Status: nothing is paused and nothing waits for you.', 'nothing is left to decide');
+  assert.equal(report.sentence, 'Status: nothing is paused; the agent has 2 of your decisions to read.', 'nothing is left to decide, and the sentence does not say that nothing waits while the row Your decisions shows decisions to read');
   assert.deepEqual(report.header, ['Where', 'Now', '']);
   assert.deepEqual(report.rows, [
     ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
@@ -388,7 +388,7 @@ test('status midway: one decision the agent has not read is enough for distill; 
   const r1 = await status(one.hooks());
   assert.deepEqual(r1.report.rows[1], ['Your queue', "1 row decided, waiting for the agent's next run", '']);
   assert.deepEqual(r1.report.rows[2], ['Your decisions', '1 to read', '']);
-  assert.equal(r1.report.sentence, 'Status: nothing is paused and nothing waits for you.');
+  assert.equal(r1.report.sentence, 'Status: nothing is paused; the agent has 1 of your decisions to read.');
   assert.equal(r1.report.next, DISTILL, 'something is to read, so the minimum of claims for a rule change does not matter yet');
 
   // the agent has read it (Rule unclear) and the claim has left Your queue: one claim that points at a rule is below distill.min_claims
@@ -420,9 +420,9 @@ test('the counts of the decisions made follow one claim through the editor\'s wo
   // 2. the agent read it Agent slip (without your note): read, and still without a note; it points at no rule
   markRead(w, [1], { reading: 'Agent slip', noNote: true, noteLine: '', reasonWord: null });
   assert.deepEqual(await countsIn(w), { toRead: 0, pending: 0, needsNote: 1 });
-  // 3. read as a rule problem, still without a note: it points at a rule and needs a note
+  // 3. read as a rule problem, still without a note: the agent's guess about an unexplained decision points at no rule (decision 78); it only needs a note
   markRead(w, [1], { reading: 'Rule unclear', noNote: true, noteLine: '', reasonWord: null });
-  assert.deepEqual(await countsIn(w), { toRead: 0, pending: 1, needsNote: 1 });
+  assert.deepEqual(await countsIn(w), { toRead: 0, pending: 0, needsNote: 1 });
   // 4. the editor writes a note: the decision changed since the reading, so the claim is to be read again; the note is there
   w.review(id(1), { tags: [], notes: 'Rule 3 is silent here.' });
   assert.deepEqual(await countsIn(w), { toRead: 1, pending: 0, needsNote: 0 });
@@ -482,7 +482,7 @@ test('readingCounts: every combination at once, counted in claims (a claim with 
     row('fixed', { 'Follow-up': 'Fixed' }), row('agree'), row('open'), row('changed', reading(hash())), row('two'), row('two', {}, 'Wordy'),
   ];
   const counts = readingCounts({ claims, queue, rubric: two });
-  assert.deepEqual(counts, { to_read: 5, pending_rule_decisions: 3, needs_note: 2 }, 'to read: stale, verbatim, nonote, changed, two; pointing at a rule: rule, should, nonote-read; without a note: nonote, nonote-read');
+  assert.deepEqual(counts, { to_read: 5, pending_rule_decisions: 2, needs_note: 2 }, 'to read: stale, verbatim, nonote, changed, two; pointing at a rule: rule, should (nonote-read is a guess about a decision without a note: it counts only as without a note); without a note: nonote, nonote-read');
   assert.deepEqual(readingCounts({ claims: [], queue: [], rubric: two }), { to_read: 0, pending_rule_decisions: 0, needs_note: 0 });
   assert.deepEqual(readingCounts({ claims, queue, rubric: null }), { to_read: 0, pending_rule_decisions: 0, needs_note: 0 }, 'without a rulebook there is nothing the agent could read');
   // a tag the agent does not judge (no rules, or outside the judge groups of the config) is not read, so it is not counted
@@ -596,6 +596,113 @@ test('status asks for distill while a decision is to read, or while at least dis
   assert.equal(await next({ queue: [...marked([1], 'Fixed'), ...marked([2], 'Fixed')], read: [1, 2], configure: (c) => { c.distill.min_claims = 1; } }), NEXT_TAG, 'Fixed rows never count, whatever the minimum');
 });
 
+// the report check of assertReport, but for the words of decision 79 ("a decision you now call a slip"): assertReport keeps the word call out of a report, because for an engineer it means a model call
+function assertRecantedReport(h, r) {
+  assert.deepEqual(lintReport(r.markdown), [], r.markdown);
+  assert.equal(h.io.outs.join('\n').trimEnd(), r.markdown.trimEnd());
+  assert.ok(!/token|duration|\$|\.mjs|--[a-z]|runs\//i.test(r.markdown) && !/\bcalls\b/i.test(r.markdown) && !/\bcall\b(?! a slip)/i.test(r.markdown), r.markdown);
+  return r.report;
+}
+
+test('status asks the editor to reject a rule change that rests on a decision the editor now calls the agent\'s slip: the row of Lessons waiting says so, and the Next line comes before "approve or reject" and "promote"', async () => {
+  const lines = (...ns) => ns.map((n) => `${claimText(n)} · ${id(n)}::${TAG}`).join('\n');
+  const decided = { ...reviewed([1, 2, 3], { 'Why wrong': 'Rule unclear', 'Challenged tags notes': NOTE_LINE }), ...read(4) };
+  const makeIt = async (extra = {}) => {
+    const w = await makeWorld({ claims: 4, claimRows: decided, queue: ledgerOf([1, 2, 3]), lessons: [lesson('Draft', 'Proposed', { 'Supporting rows': lines(1, 2, 3) })], ...extra });
+    markRead(w, [1, 2, 3]);
+    return w;
+  };
+  const lessonsRow = (report) => report.rows.find((row) => row[0] === 'Lessons waiting')[1];
+
+  // three decisions that point at the rule: the draft is to be approved
+  const fine = await makeIt();
+  const h0 = fine.hooks();
+  const r0 = await status(h0);
+  const report0 = assertReport(h0, r0);
+  assert.equal(lessonsRow(report0), '1 rule change to approve');
+  assert.match(report0.next, /^Next: approve or reject the rule change in Lessons waiting \(/);
+  assert.deepEqual(r0.json.recanted_lessons, []);
+
+  // the editor opens the note of claim 3 with the reason word: before distill has written anything, the draft rests on a decision the editor calls the agent's slip
+  fine.review(id(3), { tags: [], why: 'Agent slip', notes: 'Rule 5 settles it.' });
+  const h1 = fine.hooks();
+  const r1 = await status(h1);
+  const report1 = assertRecantedReport(h1, r1);
+  assert.equal(lessonsRow(report1), '1 rule change to reject (rests on a decision you now call a slip)');
+  assert.equal(report1.next, `Next: reject the rule change "Draft" in Lessons waiting (https://www.notion.so/${fine.DB.rule_changes}?v=e3000000000000000000000000000003), then type /claim-tagger distill again.`);
+  assert.equal(report1.sentence, 'Status: nothing is paused; 1 rule change waits for you.');
+  assert.deepEqual(r1.json.recanted_lessons, ['Draft']);
+  assert.equal(fine.writes().length, 0, 'status writes nothing to Notion');
+
+  // an Approved draft is rejected, not checked
+  const approved = await makeIt({ lessons: [lesson('Draft', 'Approved', { 'Supporting rows': lines(1, 2, 3) })] });
+  approved.review(id(3), { tags: [], why: 'Agent slip', notes: 'Rule 5 settles it.' });
+  const hA = approved.hooks();
+  const reportA = assertRecantedReport(hA, await status(hA));
+  assert.equal(lessonsRow(reportA), '1 rule change to reject (rests on a decision you now call a slip)', 'not "approved, ready to check"');
+  assert.match(reportA.next, /^Next: reject the rule change "Draft" in Lessons waiting/);
+
+  // the demo form of the command
+  const demo = await makeIt({ demo: true });
+  demo.review(id(3), { tags: [], why: 'Agent slip', notes: 'Rule 5 settles it.' });
+  const hD = demo.hooks();
+  assert.match(assertRecantedReport(hD, await status(hD)).next, /, then type \/claim-tagger demo distill again\.$/);
+
+  // the editor takes the agent's side on claim 3: the decision is no longer a disagreement, which is another way of not pointing at a rule
+  const agreed = await makeIt();
+  agreed.review(id(3), { tags: [TAG], notes: NOTE_LINE });
+  const hG = agreed.hooks();
+  const reportG = assertRecantedReport(hG, await status(hG));
+  assert.equal(lessonsRow(reportG), '1 rule change to reject (rests on a decision that no longer points at a rule)');
+
+  // two rule changes
+  const two = await makeIt({ lessons: [lesson('Draft', 'Proposed', { 'Supporting rows': lines(1, 2, 3) }), lesson('Other', 'Proposed', { Rule: 'Context-dependent rule 2', 'Supporting rows': lines(3, 1) })] });
+  two.review(id(3), { tags: [], why: 'Agent slip', notes: 'Rule 5 settles it.' });
+  const hT = two.hooks();
+  const reportT = assertRecantedReport(hT, await status(hT));
+  assert.equal(lessonsRow(reportT), '2 rule changes to reject (they rest on decisions you changed)');
+  assert.match(reportT.next, /^Next: reject the 2 rule changes in Lessons waiting \(/);
+
+  // a recanted draft does not hide the claims that wait for the editor: deciding comes first, as it always did
+  const waitingToo = await makeIt({ claims: 5, claimRows: { ...decided, ...waiting(5) } });
+  waitingToo.review(id(3), { tags: [], why: 'Agent slip', notes: 'Rule 5 settles it.' });
+  assert.match((await status(waitingToo.hooks())).report.next, /^Next: decide your claim in Your queue \(/);
+});
+
+test('status, nothing in Your queue and no rule change: the sentence does not say that nothing waits while the agent has decisions to read or decisions have no note', async () => {
+  // decisions to read: the sentence follows the row of Your decisions
+  const toRead = await reportOf({ claimRows: { ...decidedListed([1, 2, 3], { 'Agent status': NOTHING }), ...read(4) }, queue: ledgerOf([1, 2, 3]) });
+  assert.equal(toRead.sentence, 'Status: nothing is paused; the agent has 3 of your decisions to read.');
+  assert.equal(yourDecisions(toRead)[1], '3 to read');
+  // one decision to read and one without a note: the sentence is about what the agent will do
+  const mixed = await reportOf({ claimRows: { ...decidedListed([1], { 'Agent status': NOTHING }), ...reviewed([2], { 'Why wrong': null, 'Challenged tags notes': '' }), ...read(3, 4) }, queue: ledgerOf([1, 2]) });
+  assert.equal(mixed.sentence, 'Status: nothing is paused; the agent has 2 of your decisions to read.');
+  assert.equal(yourDecisions(mixed)[1], '2 to read, 1 without a note');
+  // only decisions without a note are left: read, and waiting for a note
+  const bare = await reportOf({
+    claimRows: { ...reviewed([1, 2], { 'Why wrong': null, 'Challenged tags notes': '' }), ...read(3, 4) }, queue: ledgerOf([1, 2]), read: [1, 2],
+    readOpts: { reading: 'Agent slip', noNote: true, noteLine: '', reasonWord: null },
+  });
+  assert.equal(bare.sentence, 'Status: nothing is paused; 2 of your decisions have no note.');
+  assert.equal(yourDecisions(bare)[1], '2 without a note');
+  const one = await reportOf({
+    claimRows: { ...reviewed([1], { 'Why wrong': null, 'Challenged tags notes': '' }), ...read(2, 3, 4) }, queue: ledgerOf([1]), read: [1],
+    readOpts: { reading: 'Agent slip', noNote: true, noteLine: '', reasonWord: null },
+  });
+  assert.equal(one.sentence, 'Status: nothing is paused; 1 of your decisions has no note.');
+  // a reading of a decision without a note supports no draft: two of them make no call for distill (decision 78), only the note is missing
+  assert.equal(bare.next, NEXT_TAG);
+  const guesses = await reportOf({
+    claimRows: { ...reviewed([1, 2], { 'Why wrong': null, 'Challenged tags notes': '' }), ...read(3, 4) }, queue: ledgerOf([1, 2]), read: [1, 2],
+    readOpts: { reading: 'Rule unclear', noNote: true, noteLine: '', reasonWord: null },
+  });
+  assert.equal(yourDecisions(guesses)[1], '2 without a note', 'two readings of Rule unclear without a note point at no rule');
+  assert.equal(guesses.next, NEXT_TAG, 'and ask for no draft');
+  // a decision that points at a rule is nothing to read and has a note: the sentence stays as it was
+  const pointing = await reportOf({ claimRows: { ...decidedListed([1, 2], { 'Agent status': NOTHING }), ...read(3, 4) }, queue: ledgerOf([1, 2]), read: [1, 2] });
+  assert.equal(pointing.sentence, 'Status: nothing is paused and nothing waits for you.');
+});
+
 test('status midway on a practice page: the demo distill command, and reading the claims still comes first', async () => {
   // step 4 of the page: both claims decided, the agent has not read the decisions (Agent status still Waits for you), no rule change yet
   const w = await practicePage({ claimRows: decidedListed([1, 2]), queue: ledgerOf([1, 2]) });
@@ -603,7 +710,7 @@ test('status midway on a practice page: the demo distill command, and reading th
   const r = await status(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   const report = assertReport(h, r);
-  assert.equal(report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused and nothing waits for you.`);
+  assert.equal(report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; the agent has 2 of your decisions to read.`);
   assert.deepEqual(report.rows, [
     ['Rulebook', '1 tag, edition 2026-10-16.1', ''],
     ['Your queue', "2 rows decided, waiting for the agent's next run", ''],

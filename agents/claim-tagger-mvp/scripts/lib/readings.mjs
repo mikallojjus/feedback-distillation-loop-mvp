@@ -28,6 +28,16 @@
 //                                          point at a rule that exists for the row's tag (or null) and keep the note to 25 words. A reply with a problem is refused as a whole (readings is empty)
 //   readingCells(item, reading, edition)   the four ledger values of a reading; "without your note · " opens the note when the editor wrote none (set here, never by the model)
 //   readingOfRow(row)                      the reading a ledger row holds, { reading, rule, note, noNote }, or null
+//   pointsAtRule(row)                      true when the row's reading blames the rule (Rule unclear or Rule should change) and the editor wrote a note: a reading whose note opens "without your note"
+//                                          is the agent's guess about an unexplained decision and never supports a draft (decision 78)
+//   ledgerAsRead({ claims, ledgerRows, rubric, config })
+//                                          { rows, classes }: the ledger rows as distill would leave them before it asks a model anything (the decisions copied, a reason word the editor wrote already applied,
+//                                          the reading of a row that stopped being a disagreement cleared), for status, promote and the follow-up
+//   recantedKeys(lesson, ledgerRows)       the keys of the rows a rule change rests on (its supporting_keys) whose ledger row does not point at a rule any more: no row, no longer a disagreement,
+//                                          marked Fixed, or a reading that is not a rule reading (re-read as Agent slip after a reason word or a changed note, or none) (decision 79)
+//   recantedAmong(lessons, ledgerRows)     [{ lesson, keys, why }] for the Proposed or Approved lessons that have recanted keys; `why` is "slip" when every one reads Agent slip, else "other"
+//   recantedLessons({ lessons, claims, ledgerRows, rubric, config })   the same over ledgerAsRead's rows (status and promote)
+//   recantedPhrase(keys, why, { short })   "a decision you now call the agent's slip" / "a decision that no longer points at a rule" (plural for several), the words of the sentences
 //   claimReadingCell({ claim, items, readings, unjudged })
 //                                          the text of the claim's Agent reading, or null when it cannot be written yet (a disagreement has no reading); see the rules below
 //   readingRecord(item, reading, source), reusableReading(line, item, rubric)   a line of readings.jsonl, and the reading a line gives back for an item whose hash it matches (or null)
@@ -43,15 +53,20 @@
 //  - An empty cell means "not read yet"; only distill writes it (the editor columns are never touched).
 //  - The key of a reading holds the edition the proposal was made under (the row's Rulebook edition): a promote alone makes no reading stale; the next proposal under the new
 //    edition (a tag run, or the follow-up on the rows a lesson rests on) is read again.
+//  - A decision without a note never supports a draft (decision 78): a row whose reading note opens "without your note" is read, flagged and counted, but it points at no rule until the
+//    editor writes a note (the row is then read again).
+//  - A rule change that rests on a decision whose reading no longer points at a rule is recanted (decision 79): distill, status and promote say so and ask the editor to reject it; the agent
+//    never rewrites or withdraws a draft itself.
 
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { groupOf } from './config.mjs';
-import { READINGS, decisionsFor, isFollowedUp, isReviewed, parseTagLines } from './decisions.mjs';
+import { RULE_WHY, READINGS, decisionsFor, isFollowedUp, isReviewed, parseTagLines, syncDecisions } from './decisions.mjs';
 import { readJson } from './jsonl.mjs';
 import { codeRoot } from './paths.mjs';
 import { ruleNumberOf } from './rulebook-edit.mjs';
 import { validate } from './validate.mjs';
+import { supportingKeys } from '../pull.mjs';
 
 export { READINGS };
 
@@ -314,6 +329,87 @@ export function readingOfRow(row) {
   const noNote = note.startsWith(prefix);
   if (noNote) note = note.slice(prefix.length).trim();
   return { reading, rule: text(row.Rule).trim() || null, note, noNote };
+}
+
+/**
+ * True when a ledger row's reading blames the rule (Rule unclear or Rule should change) and the editor wrote a note (decision 78). A reading whose note opens "without your note" is the agent's
+ * guess about an unexplained decision: it is shown and counted as a decision without a note, and it supports no draft until the editor writes a note and the row is read again.
+ */
+export function pointsAtRule(row) {
+  const r = readingOfRow(row);
+  return r !== null && RULE_WHY.has(r.reading) && !r.noNote;
+}
+
+/**
+ * The ledger rows as they stand once the decisions are copied and the readings that need no model are made, with the classification of the Reviewed claims' rows: the editor's decisions
+ * copied the way distill copies them first (syncDecisions), a reason word the editor wrote applied at once (the reading of a `verbatim` row is the word), and the reading of a row that stopped
+ * being a disagreement cleared. A row the model has still to read keeps the reading it holds. `rows` are copies: nothing the caller passed is changed. For status, promote and the
+ * follow-up, which look at the rows a rule change rests on without waiting for distill to write them.
+ */
+export function ledgerAsRead({ claims, ledgerRows, rubric, config }) {
+  if (!rubric || !Array.isArray(rubric.tags)) return { rows: (ledgerRows ?? []).map((r) => ({ ...r })), classes: null };
+  const { rows } = syncDecisions(claims, ledgerRows, { tagNames: rubric.tags.map((t) => t.name) });
+  const classes = classifyRows({ claims, ledgerRows: rows, rubric, config });
+  for (const item of classes.verbatim) Object.assign(item.row, readingCells(item, verbatimReading(item), rubric.edition));
+  for (const item of classes.agree) if (READING_COLUMNS.some((c) => text(item.row[c]).trim() !== '')) Object.assign(item.row, clearedReadingCells());
+  return { rows, classes };
+}
+
+/** The keys of the rows a rule change rests on: its supporting_keys when the pull parsed them, else the keys at the end of the lines of its Supporting rows cell. */
+const keysOfLesson = (lesson) => (Array.isArray(lesson?.supporting_keys) ? lesson.supporting_keys : supportingKeys(lesson?.['Supporting rows']));
+
+/**
+ * The keys of the rows `lesson` rests on whose ledger row does not point at a rule any more (decision 79): it is no longer a disagreement, it is marked Fixed (a rule change resting on it went
+ * live), or its reading is not a rule reading any more (re-read as Agent slip after a reason word or a changed note, no reading, or a reading without a note). A key that has no ledger row at all is
+ * not named here: promote and the follow-up already stop on a row that is not decided any more. `lesson` carries `supporting_keys` (the pull parses them; a caller that needs the keys of the
+ * page body passes the whole list); `ledgerRows` are rows of Tag decisions as they stand.
+ */
+export function recantedKeys(lesson, ledgerRows) {
+  const byKey = new Map((ledgerRows ?? []).map((r) => [r.Key, r]));
+  return keysOfLesson(lesson).filter((key) => {
+    const row = byKey.get(key);
+    return row !== undefined && (!isDisagreement(row) || isFollowedUp(row) || !pointsAtRule(row));
+  });
+}
+
+const isOpenLesson = (l) => l?.Status === 'Proposed' || l?.Status === 'Approved';
+
+/**
+ * The Proposed or Approved rule changes that rest on a decision whose reading no longer points at a rule: [{ lesson, keys, why }]. `why` is "slip" when every recanted row reads Agent slip with a
+ * note of the editor's, else "other" (no reading, no longer a disagreement, Fixed, or a guess about a decision without a note).
+ */
+export function recantedAmong(lessons, ledgerRows) {
+  const byKey = new Map((ledgerRows ?? []).map((r) => [r.Key, r]));
+  const slip = (key) => {
+    const row = byKey.get(key);
+    const r = row && isDisagreement(row) && !isFollowedUp(row) ? readingOfRow(row) : null;
+    return r !== null && r.reading === 'Agent slip' && !r.noNote;
+  };
+  const out = [];
+  for (const lesson of lessons ?? []) {
+    if (!isOpenLesson(lesson)) continue;
+    const keys = recantedKeys(lesson, ledgerRows);
+    if (keys.length) out.push({ lesson, keys, why: keys.every(slip) ? 'slip' : 'other' });
+  }
+  return out;
+}
+
+/** recantedAmong over the ledger as ledgerAsRead leaves it (status and promote); [] without a rulebook. */
+export function recantedLessons({ lessons, claims, ledgerRows, rubric, config }) {
+  if (!rubric || !Array.isArray(rubric.tags) || !(lessons ?? []).some(isOpenLesson)) return [];
+  return recantedAmong(lessons, ledgerAsRead({ claims, ledgerRows, rubric, config }).rows);
+}
+
+/**
+ * The words that say what a recanted rule change rests on: "a decision you now call the agent's slip" / "a decision that no longer points at a rule"; for several keys "3 decisions you now call the
+ * agent's slips" / "3 decisions that no longer point at a rule". With `short` the slip is "a slip" (the cell of status's row).
+ */
+export function recantedPhrase(keys, why, { short = false } = {}) {
+  const n = Array.isArray(keys) ? keys.length : Number(keys);
+  const slip = short ? 'a slip' : "the agent's slip";
+  const slips = short ? 'slips' : "the agent's slips";
+  if (why === 'slip') return n === 1 ? `a decision you now call ${slip}` : `${n} decisions you now call ${slips}`;
+  return n === 1 ? 'a decision that no longer points at a rule' : `${n} decisions that no longer point at a rule`;
 }
 
 // the reading an item has after this run: a fresh one, or the one its row holds when that is current (or the row is marked Fixed); null when it has none

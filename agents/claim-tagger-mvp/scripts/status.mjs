@@ -32,7 +32,14 @@
 //   queue.needs_note               a row for which the editor wrote neither a reason word nor any words for the tag, whether the agent has read it yet or not (the claim's Agent
 //                                  reading says "without your note" once it has)
 // Each is a count of claims. The row "Your decisions" shows the parts that are not zero, in this order, "<n> to read", "<n> point(s) at a rule", "<n> without a note", for example
-// "3 to read, 1 without a note"; with all three zero there is nothing to say and the row is left out (the table of step 1 of the practice page has four rows).
+// "3 to read, 1 without a note"; with all three zero there is nothing to say and the row is left out (the table of step 1 of the practice page has four rows). A reading of a decision without
+// a note ("without your note" opens its Reading note) points at no rule (pointsAtRule): it counts in "without a note" only (decision 78). With nothing in Your queue and no rule change, the sentence
+// follows that row: "Status: nothing is paused; the agent has N of your decisions to read." / "...; N of your decisions have no note." instead of "nothing waits for you".
+//
+// A Proposed or Approved rule change that rests on a decision the editor now calls the agent's slip (or that no longer points at a rule) is recanted (decision 79, recantedLessons over the ledger
+// as distill would leave it, a reason word the editor has just written applied already): the row Lessons waiting says "1 rule change to reject (rests on a decision you now call a slip)" and the Next
+// line, after the claims to decide and the distill suggestion and before "approve or reject" and "promote", is "reject the rule change "<title>" in Lessons waiting (<link>), then type /claim-tagger
+// distill again."
 //
 // Exit codes: 0 ok, 2 invalid, 3 paused, 4 drift or an invalid rulebook file.
 //
@@ -42,12 +49,12 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { AGENT_STATUS } from './lib/config.mjs';
-import { RULE_WHY, claimWaits, isReviewed, syncDecisions } from './lib/decisions.mjs';
-import { listNames, plural, quoted, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
-import { LOCK_STALE_MS, LoopExit, needClaimColumns, parseCli, resumeLine, takePull, withRun } from './lib/loop.mjs';
+import { claimWaits, isReviewed, syncDecisions } from './lib/decisions.mjs';
+import { approveNext, listNames, plural, quoted, recantedNext, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
+import { LOCK_STALE_MS, LoopExit, needClaimColumns, parseCli, resumeLine, supportingKeysOf, takePull, withRun } from './lib/loop.mjs';
 import { isMain } from './lib/paths.mjs';
 import { preflight, refusedReport } from './lib/preflight.mjs';
-import { classifyRows, readingOfRow } from './lib/readings.mjs';
+import { classifyRows, pointsAtRule, recantedLessons, recantedPhrase } from './lib/readings.mjs';
 import { readRubric } from './lib/rubric.mjs';
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/status.mjs [--pull <pull-id>] [--json] [--run-id <id>]';
@@ -67,7 +74,7 @@ export function readingCounts({ claims = [], queue = [], rubric = null, config =
   const noNote = (item) => item.reasonWord === null && String(item.noteLine ?? '').trim() === '';
   return {
     to_read: claimsOf([...classes.verbatim, ...classes.toRead]),
-    pending_rule_decisions: claimsOf(classes.current.filter((item) => RULE_WHY.has(readingOfRow(item.row)?.reading))),
+    pending_rule_decisions: claimsOf(classes.current.filter((item) => pointsAtRule(item.row))),
     needs_note: claimsOf([...classes.toRead, ...classes.current].filter(noNote)),
   };
 }
@@ -89,6 +96,8 @@ export function countsOf({ claims = [], lessons = [], queue = [], settings = nul
   const byStatus = { Proposed: 0, Approved: 0, Rejected: 0, Live: 0, 'Rolled back': 0 };
   for (const l of lessons) byStatus[l.Status] = (byStatus[l.Status] ?? 0) + 1;
   const readings = readingCounts({ claims, queue, rubric, config });
+  // the Proposed or Approved rule changes that rest on a decision whose reading no longer points at a rule (decision 79), judged over the ledger as distill would leave it
+  const recanted = recantedLessons({ lessons, claims, ledgerRows: queue, rubric, config }).map((x) => ({ title: x.lesson.Lesson, status: x.lesson.Status, keys: x.keys, why: x.why }));
   return {
     queue: {
       open,
@@ -102,6 +111,7 @@ export function countsOf({ claims = [], lessons = [], queue = [], settings = nul
     },
     lessons: byStatus,
     waiting_lessons: byStatus.Proposed + byStatus.Approved,
+    recanted,
     last_run: settings?.last_run_summary ?? null,
   };
 }
@@ -150,7 +160,10 @@ export async function status(opts = {}) {
     }
     const sitting = ctx.config.queue?.sitting_rows ?? 20;
     const claims = ctx.pull.claims() ?? [];
-    const counts = countsOf({ claims, lessons: ctx.pull.lessons() ?? [], queue: ctx.pull.queue() ?? [], settings: ctx.pull.settings(), sitting, rubric, config: ctx.config });
+    // the keys a rule change rests on, with the ones its page body holds when the cell was cut (read only for a Proposed or Approved one)
+    const lessonRows = [];
+    for (const l of ctx.pull.lessons() ?? []) lessonRows.push(l.Status === 'Proposed' || l.Status === 'Approved' ? { ...l, supporting_keys: await supportingKeysOf(ctx, l) } : l);
+    const counts = countsOf({ claims, lessons: lessonRows, queue: ctx.pull.queue() ?? [], settings: ctx.pull.settings(), sitting, rubric, config: ctx.config });
     const minClaims = ctx.config.distill?.min_claims ?? 2; // distill drafts nothing from fewer decided claims
     const n = counts.queue.open;
     const proposed = counts.lessons.Proposed;
@@ -171,9 +184,19 @@ export async function status(opts = {}) {
     const rulebook = rubric
       ? `${plural(rubric.tags.length, 'tag')}, edition ${rubric.edition}${notionSays ? `, ${notionSays}` : ''}`
       : 'no edition yet';
+    // a rule change that rests on a decision the editor has since called the agent's slip is to be rejected, not approved or checked (decision 79)
+    const recanted = counts.recanted;
+    const recantedOf = (status) => recanted.filter((x) => x.status === status).length;
+    const toApprove = proposed - recantedOf('Proposed');
+    const ready = approved - recantedOf('Approved');
+    const toReject = recanted.length;
+    const rejectCell = toReject === 1
+      ? `1 rule change to reject (rests on ${recantedPhrase(recanted[0].keys, recanted[0].why, { short: true })})`
+      : `${toReject} rule changes to reject (they rest on decisions you changed)`;
     const lessonsCell = m === 0 ? 'none' : [
-      proposed ? `${plural(proposed, 'rule change')} to approve` : null,
-      approved ? `${approved} approved, ready to check` : null,
+      toApprove > 0 ? `${plural(toApprove, 'rule change')} to approve` : null,
+      toReject > 0 ? rejectCell : null,
+      ready > 0 ? `${ready} approved, ready to check` : null,
     ].filter(Boolean).join(', ');
     // Your queue still lists a decided claim until the agent's next tag run reads the decision, so "nothing waits" would contradict the view when only such claims are left
     const decidedListed = counts.queue.decided_listed;
@@ -193,9 +216,15 @@ export async function status(opts = {}) {
     if (decisions !== '') rows.splice(2, 0, ['Your decisions', decisions, '']);
 
     const parts = [n ? plural(n, 'row') : null, m ? plural(m, 'rule change') : null].filter(Boolean);
-    const sentence = parts.length === 0
-      ? 'Status: nothing is paused and nothing waits for you.'
-      : `Status: nothing is paused; ${parts.join(' and ')} ${parts.length === 1 && (n === 1 || (n === 0 && m === 1)) ? 'waits' : 'wait'} for you${counts.queue.more_than_a_sitting ? ', more than fit one sitting' : ''}.`;
+    // with nothing in Your queue and no rule change, the sentence must not say that nothing waits while the row "Your decisions" shows decisions the agent has to read or that have no note
+    const toRead = counts.queue.to_read;
+    const noNote = counts.queue.needs_note;
+    let sentence;
+    if (parts.length > 0) {
+      sentence = `Status: nothing is paused; ${parts.join(' and ')} ${parts.length === 1 && (n === 1 || (n === 0 && m === 1)) ? 'waits' : 'wait'} for you${counts.queue.more_than_a_sitting ? ', more than fit one sitting' : ''}.`;
+    } else if (toRead > 0) sentence = `Status: nothing is paused; the agent has ${toRead} of your decisions to read.`;
+    else if (noNote > 0) sentence = `Status: nothing is paused; ${noNote} of your decisions ${noNote === 1 ? 'has' : 'have'} no note.`;
+    else sentence = 'Status: nothing is paused and nothing waits for you.';
     // On a practice page the two claims that are still open are seeded without the agent's side (step 1); the agent fills its columns (Agent status, Agent tags, Agent confidence ...) when
     // the editor types the demo tag command (step 2). Until it has, there is nothing to decide yet, so the Next line sends the editor to step 2. In production
     // the agent has always filled its side of a claim before the claim waits, so this never applies there.
@@ -207,7 +236,9 @@ export async function status(opts = {}) {
     // distill has something to do while a decision is still to read (the reading is made only by distill, so even one row is enough), or while enough decisions point at a rule for it to
     // draft from, and no rule change is open (Proposed or Approved)
     else if ((counts.queue.to_read > 0 || counts.queue.pending_rule_decisions >= minClaims) && m === 0) next = 'Next: type /claim-tagger distill to draft a rule change from your decisions.';
-    else if (proposed > 0) next = `Next: approve or reject the ${proposed === 1 ? 'rule change' : 'rule changes'} in Lessons waiting (${viewLink(ctx.config, 'lessons_waiting')}).`;
+    // a rule change that rests on a decision the editor has since called the agent's slip is rejected first, then distill drafts again from the rows that remain (decision 79)
+    else if (recanted.length > 0) next = recantedNext(ctx.config, recanted.map((x) => x.title));
+    else if (proposed > 0) next = approveNext(ctx.config, proposed);
     else if (approved > 0) next = `Next: type /claim-tagger promote to check the approved ${approved === 1 ? 'rule change' : 'rule changes'}.`;
     else next = 'Next: type /claim-tagger tag to read new claims.';
 
@@ -218,6 +249,7 @@ export async function status(opts = {}) {
       same_as_notion: differs.length === 0,
       queue: counts.queue,
       lessons: counts.lessons,
+      recanted_lessons: recanted.map((x) => x.title),
       last_run: counts.last_run,
       promoting,
       table: tableLink(ctx.config, 'claims_copy'),

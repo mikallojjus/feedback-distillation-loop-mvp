@@ -103,7 +103,7 @@ A claim the agent is sure of is read once, so its line ends with a count of one;
 2. Challenged tags notes: leave it empty. An empty note is a decision too: you agree with the agent.
 3. Review status: Reviewed.
 
-A note that starts with "Agent slip.", "Rule unclear." or "Rule should change." is taken as it stands and the agent does not read that tag; without one the agent reads your decision itself.
+A note that starts with "Agent slip.", "Rule unclear." or "Rule should change." is taken as it stands and the agent does not read that tag; without one the agent reads your decision itself. If you disagree with the agent and leave the note empty, the agent still reads your decision, marks its reading "without your note", lists the claim in Needs your note and drafts nothing from it until you add a note.
 
 {{view:Your queue}}
 
@@ -131,6 +131,8 @@ Challenged tags notes holds your sentence on three of the claims and nothing on 
 **Explaining the outputs.**
 
 A reading is the agent's own answer to why a decision differs from its tag. It is one of three: Agent slip (the rule as written settles it your way and the agent misread it), Rule unclear (the rule can honestly be read both ways on this claim) or Rule should change (the rule as written decides against you). It names the rule and gives one line of why. Only the readings that blame the rule, Rule unclear and Rule should change, become a draft.
+
+Claude's report counts what was read, what points at a rule, the agent's slips and the decisions without a note, and its Next line opens Lessons waiting.
 
 **Claims** (your 4 claims)
 
