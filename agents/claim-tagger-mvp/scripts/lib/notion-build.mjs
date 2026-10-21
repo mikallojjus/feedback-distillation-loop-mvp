@@ -4,7 +4,7 @@
 // PATCH only (lib/notion-rest.mjs), and every id the builder learns is recorded at once (runs/builder/*.json and config.json), so a run that
 // stops halfway is finished by running it again.
 //
-//   structureFromProposal(markdown)            -> { tables: { rulebook|claims_copy|tag_decisions|rule_changes|agent_settings: { title, columns: [{ name, type, options, description, relation_to? }] } },
+//   structureFromProposal(markdown)            -> { tables: { rulebook|claims_copy|tag_decisions|rule_changes|agent_settings: { title, columns: [{ name, type, options, description, relation_to?, renamed_from?, retired? }], arrange_default_view? } },
 //                                                   views: [{ name, table, filter, sort, columns, wrap, renamed_from? }], pages: ["Demos", "Demo tests"] }
 //                                                  Throws StructureError (exit 2) naming the table and column when a type word is unknown, a table
 //                                                  section or a "Values:" list is missing, or a view cannot be read. (The approved text of the proposal has no relation
@@ -12,20 +12,31 @@
 //                                                  A relation column names the table it points at in relation_to; a view that was another view of the same table under an
 //                                                  older name says so in renamed_from, and the builder renames that view instead of making a new one.
 //   validateStructure(structure), loadStructure(root), saveStructure(root, structure), structurePath(root), countStructure(structure)
-//   planStructure(structure, config)           -> { parent_page_id, pages: [{ key, title, text }], databases: [{ table, title, body }], columns: [{ table, name, type, relation_to, body }],
-//                                                   views: [{ table, name, columns, hidden, wrap, renamed_from, body }] }
+//   planStructure(structure, config)           -> { parent_page_id, pages: [{ key, title, text }], databases: [{ table, title, body }], columns: [{ table, name, type, relation_to, renamed_from, retired, body }],
+//                                                   views: [{ table, name, columns, hidden, retired, wrap, renamed_from, body }], arrange: { <table>: { shown, hidden } } }
 //                                                  body of a database is the POST /databases body (relation columns left out: the table they point at may not exist yet);
 //                                                  columns lists every column but the title, so that what a table lacks can be added (PATCH data source); body of a view is the
 //                                                  POST /views body without the ids
 //   completeViewBody(viewPlan, dataSource, { databaseId }) -> the POST /views body, property ids filled from the created data source
-//   runStructure({ plan, client, root, config, log, parts }) -> { ok, code, stopped, pages, databases, columns, views, warnings, created }
+//   arrangeOwnViews({ client, plan, table, databaseId, dataSourceId, log }) -> the names of the table's own views (Notion's default view) whose column order was set to the structure's
+//   runStructure({ plan, client, root, config, log, parts }) -> { ok, code, stopped, pages, databases, columns, columnsRenamed, views, updated, arranged, warnings, created }
+//                                                  columnsRenamed: { <table>: [{ from, to }] }; updated: { <table>: { <view name>: ['filter', 'sorts', 'columns', 'wrap'] } } (views the table had
+//                                                  that were brought to the structure); arranged: { <table>: [view names] } (the table's own views whose column order was set)
 //   verifyStructure({ client, config, structure })  -> { ok, differences: [{ table, kind, detail }], views: { <table>: { <view name>: <view id> } } }
 //   renderPreview(structure)                   -> Markdown for the dry run
 //   parseViewFilter(text, table, where), parseViewSort(text, table, where)
 //   viewKey(name), viewUrl(databaseId, viewId) -> 'your_queue'; 'https://www.notion.so/<database id>?v=<view id>' (ids without dashes)
 //
-// Columns. After the tables exist, runStructure adds every column of the structure that a table lacks (updateDataSource): a table made by an earlier build gains the
-// columns of a later revision, and the relation columns, which need the table they point at, are added this way too. A column that is there is never changed or removed.
+// Columns. After the tables exist, runStructure first renames the columns of an earlier build that the structure gives another name (a column's `renamed_from`: the text columns
+// Agent tags and Agent notes become "Agent tags (old)" and "Agent notes (old)", the relation "Claim quality tags — verified" becomes "Verified tags"; a rename is made only when the
+// old name is there with the same type and the new name is not), then adds every column of the structure that a table lacks (updateDataSource): a table made by an earlier build
+// gains the columns of a later revision, and the relation columns, which need the table they point at, are added this way too. A column that is there is never changed or
+// removed. A `retired` column (the "(old)" ones) is never made on a new table: it exists only where a rename made it, and every view hides it.
+//
+// Views. A view the table has already is not left as it was: its filter, its sorts, its shown columns and their order, and whether cells wrap are compared with the structure and
+// patched where they differ (updateView), so that a table built by an earlier revision gets the new filter of Your queue and the new column order. The views of a table that sets
+// `arrange_default_view` (the Claims copy) include the views the structure does not name, Notion's own default view: they get the column order of the structure, every column
+// visible and the retired ones hidden, and nothing else of theirs is changed.
 //
 // Where the ids go. Pages: config.json notion.pages.<key> (demos, demo_tests) and runs/builder/pages.json. Tables: notion.rulebook, notion.claims[0],
 // notion.databases.<table> (database_id, data_source_id) and runs/builder/databases.json (the table's id and its data source's, under <table> and
@@ -97,6 +108,7 @@ export const OPTION_COLORS = Object.freeze({
     'Geo Name source': { 'This space': 'green', 'Other space (fallback)': 'orange' },
     'Review status': { 'To review': 'yellow', Reviewed: 'green' },
     'Why wrong': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
+    'Agent status': { 'Waits for you': 'yellow', Done: 'green', 'Disagrees with your decision': 'red', 'Could not read': 'gray' },
   },
   tag_decisions: {
     'Agent proposal': { Applies: 'green', 'Does not apply': 'red', "Can't tell": 'yellow' },
@@ -421,7 +433,15 @@ export function validateStructure(structure) {
       if (c.type === 'relation') {
         if (!TABLES.includes(c.relation_to) || c.relation_to === key) bad(`table "${t.title}", column "${c.name}": a relation names another of the five tables in relation_to`);
       } else if (c.relation_to !== undefined) bad(`table "${t.title}", column "${c.name}": only a relation has relation_to`);
+      if (c.renamed_from !== undefined && (typeof c.renamed_from !== 'string' || c.renamed_from === '' || c.renamed_from === c.name)) {
+        bad(`table "${t.title}", column "${c.name}": renamed_from must be another name that a column of the table had in an earlier build`);
+      }
+      if (c.retired !== undefined && typeof c.retired !== 'boolean') bad(`table "${t.title}", column "${c.name}": retired must be true or false`);
+      if (c.retired === true && c.type === 'title') bad(`table "${t.title}", column "${c.name}": the title column cannot be retired`);
     }
+    const olds = t.columns.map((c) => c.renamed_from).filter((x) => x !== undefined);
+    if (new Set(olds).size !== olds.length) bad(`table "${t.title}": two columns are renamed from the same name`);
+    if (t.arrange_default_view !== undefined && typeof t.arrange_default_view !== 'boolean') bad(`table "${t.title}": arrange_default_view must be true or false`);
     if (t.columns.filter((c) => c.type === 'title').length !== 1) bad(`table "${t.title}" needs exactly one title column`);
   }
   if (!Array.isArray(structure.views)) bad('views must be a list');
@@ -433,7 +453,11 @@ export function validateStructure(structure) {
     viewKeys.add(viewKey(v.name));
     if (!TABLES.includes(v.table)) bad(`${where}: the table "${v.table}" is not one of ${TABLES.join(', ')}`);
     if (!Array.isArray(v.columns) || v.columns.length === 0) bad(`${where}: no columns are shown`);
-    for (const c of v.columns) if (!structure.tables[v.table].columns.some((x) => x.name === c)) bad(`${where}: the table has no column "${c}"`);
+    for (const c of v.columns) {
+      const found = structure.tables[v.table].columns.find((x) => x.name === c);
+      if (!found) bad(`${where}: the table has no column "${c}"`);
+      if (found.retired === true) bad(`${where}: "${c}" is a retired column, which every view hides`);
+    }
     if (typeof v.wrap !== 'boolean') bad(`${where}: wrap must be true or false`);
     if (v.renamed_from !== undefined && (typeof v.renamed_from !== 'string' || v.renamed_from === '' || v.renamed_from === v.name)) bad(`${where}: renamed_from must be another name of a view of the same table`);
     parseViewFilter(v.filter, structure.tables[v.table], where);
@@ -467,6 +491,9 @@ export function countStructure(structure) {
 
 // ---- the plan ------------------------------------------------------------------------------------------------------------------------------
 
+/** The columns of a table that are in use: every column of the structure but the retired ones (the "(old)" columns of an earlier build, which are only ever renamed, never made). */
+export const liveColumns = (structure, table) => structure.tables[table].columns.filter((c) => c.retired !== true);
+
 export const pageKey = (title) => String(title).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
 
 /** The key of a view in config.json notion.views: its name in lower case with underscores ("Your queue" -> "your_queue"). */
@@ -492,6 +519,7 @@ export function viewPlan(structure, view) {
   const filter = parseViewFilter(view.filter, t, where);
   const sorts = parseViewSort(view.sort, t, where);
   const hidden = t.columns.map((c) => c.name).filter((n) => !view.columns.includes(n));
+  const retired = t.columns.filter((c) => c.retired === true).map((c) => c.name);
   const properties = [
     ...view.columns.map((name) => ({ name, visible: true, wrap: view.wrap })),
     ...hidden.map((name) => ({ name, visible: false })),
@@ -503,6 +531,7 @@ export function viewPlan(structure, view) {
     hidden,
     wrap: view.wrap,
     renamed_from: view.renamed_from ?? null,
+    retired,
     body: {
       name: view.name,
       type: 'table',
@@ -527,7 +556,7 @@ export function planStructure(structure, config) {
     databases: TABLES.map((table) => {
       const t = structure.tables[table];
       const properties = {};
-      for (const column of t.columns) if (column.type !== 'relation') properties[column.name] = propertyConfig(table, column);
+      for (const column of t.columns) if (column.type !== 'relation' && column.retired !== true) properties[column.name] = propertyConfig(table, column);
       return {
         table,
         title: t.title,
@@ -541,8 +570,14 @@ export function planStructure(structure, config) {
     }),
     columns: TABLES.flatMap((table) => structure.tables[table].columns
       .filter((c) => c.type !== 'title')
-      .map((c) => ({ table, name: c.name, type: c.type, relation_to: c.relation_to ?? null, body: propertyConfig(table, c) }))),
+      .map((c) => ({
+        table, name: c.name, type: c.type, relation_to: c.relation_to ?? null, renamed_from: c.renamed_from ?? null, retired: c.retired === true, body: propertyConfig(table, c),
+      }))),
     views: structure.views.map((v) => viewPlan(structure, v)),
+    // the tables whose views the structure does not name (Notion's own default view) get the column order too: the live columns shown in order, the retired ones hidden
+    arrange: Object.fromEntries(TABLES.filter((table) => structure.tables[table].arrange_default_view === true).map((table) => [table, {
+      shown: liveColumns(structure, table).map((c) => c.name), hidden: structure.tables[table].columns.filter((c) => c.retired === true).map((c) => c.name),
+    }])),
   };
 }
 
@@ -555,7 +590,8 @@ export function completeViewBody(plan, dataSource, { databaseId } = {}) {
   if (!isPlain(props)) throw new StructureError(`view "${plan?.name}": the data source has no properties`);
   const db = databaseId ?? dataSource.parent?.database_id;
   if (!db) throw new StructureError(`view "${plan.name}": the database id is unknown`);
-  const properties = plan.body.configuration.properties.map(({ name, ...rest }) => {
+  const retired = new Set(plan.retired ?? []);
+  const properties = plan.body.configuration.properties.filter(({ name }) => props[name]?.id || !retired.has(name)).map(({ name, ...rest }) => {
     const id = props[name]?.id;
     if (!id) throw new StructureError(`view "${plan.name}": the table has no column "${name}"`);
     return { property_id: id, ...rest };
@@ -766,8 +802,10 @@ async function buildDatabases(ctx) {
   }
 }
 
-// Add the columns a table lacks (updateDataSource, one call per table): the columns of a revision that came after the table was made, and every relation column, which
-// needs the table it points at. A column that is there is left as it is, whatever it holds; nothing is changed or removed.
+// Rename the columns of an earlier build that the structure gives another name, then add the columns a table lacks (updateDataSource, one call for the renames and one for the
+// additions, per table): the columns of a revision that came after the table was made, and every relation column, which needs the table it points at. A column that is there is
+// left as it is, whatever it holds; nothing is removed, and a rename keeps the column's contents. A rename happens only when the column of the old name has the type of the
+// structure's column of the new name and the new name is free, so a table that already has the new shape is left alone and a second run finds nothing to do.
 async function buildColumns(ctx) {
   const { plan, client, config, log, result } = ctx;
   for (const table of TABLES) {
@@ -782,7 +820,26 @@ async function buildColumns(ctx) {
       stopWith(ctx, `the columns of "${table}"`, e);
       return;
     }
-    const missing = wanted.filter((c) => !dataSource.properties?.[c.name]);
+    const have = { ...(dataSource.properties ?? {}) };
+
+    const renames = wanted.filter((c) => c.renamed_from && !have[c.name] && have[c.renamed_from]?.type === c.type);
+    if (renames.length) {
+      try {
+        await client.updateDataSource(entry.data_source_id, { properties: Object.fromEntries(renames.map((c) => [c.renamed_from, { name: c.name }])) });
+      } catch (e) {
+        stopWith(ctx, `the renamed columns of "${table}"`, e);
+        return;
+      }
+      for (const c of renames) {
+        have[c.name] = { ...have[c.renamed_from], name: c.name };
+        delete have[c.renamed_from];
+      }
+      result.columnsRenamed[table] = renames.map((c) => ({ from: c.renamed_from, to: c.name }));
+      result.created.columns_renamed += renames.length;
+      log(`table "${table}": ${renames.length} column(s) renamed (${renames.map((c) => `${c.renamed_from} -> ${c.name}`).join(', ')})`);
+    }
+
+    const missing = wanted.filter((c) => c.retired !== true && !have[c.name]);
     if (missing.length === 0) continue;
     const properties = {};
     for (const c of missing) {
@@ -807,14 +864,126 @@ async function buildColumns(ctx) {
   }
 }
 
-// name -> view id for the views a table already has
+// name -> view (the whole view, as retrieveView answers) for the views a table already has
 async function existingViews(client, databaseId) {
   const out = new Map();
   for (const ref of await client.listViews(databaseId)) {
     const view = await client.retrieveView(ref.id);
-    if (typeof view?.name === 'string' && !out.has(view.name)) out.set(view.name, view.id ?? ref.id);
+    if (typeof view?.name === 'string' && !out.has(view.name)) out.set(view.name, { ...view, id: view.id ?? ref.id });
   }
   return out;
+}
+
+// ---- keeping a view as the structure says --------------------------------------------------------------------------------------------------------
+
+// The properties of a view's configuration as [{ name, visible }], in the order the view shows them, with the names of the data source.
+const configured = (view, nameOf) => (view?.configuration?.properties ?? []).map((p) => ({ name: nameOf(p.property_id), visible: p.visible !== false }));
+
+// Does a view show `shown` in this order, and hide every column of `hidden` that the table has? (A column the view does not list may be visible, so it counts as not hidden.)
+function columnsDiffer(shown, hidden, current, present) {
+  if (stable(current.filter((p) => p.visible).map((p) => p.name)) !== stable(shown)) return true;
+  const state = new Map(current.map((p) => [p.name, p.visible]));
+  return hidden.filter((n) => present.has(n)).some((n) => state.get(n) !== false);
+}
+
+/**
+ * The configuration to send for a view: `shown` in this order, `hidden` after them, then any column of the table the structure does not know (as visible as it is now). With `wrap`
+ * true or false every shown column and the view wrap their cells or not; with null the view keeps its own wrap settings. The widths a view has are kept, and so are its other settings
+ * (frozen columns, vertical lines, grouping, sub-tasks).
+ */
+function buildConfiguration(dataSource, { shown, hidden, wrap = null, found = null }) {
+  const props = dataSource.properties ?? {};
+  const nameOf = nameLookup(dataSource);
+  const now = new Map((found?.configuration?.properties ?? []).map((p) => [nameOf(p.property_id), p]));
+  const item = (name, visible) => {
+    const was = now.get(name);
+    return {
+      property_id: props[name].id,
+      visible,
+      ...(visible ? (wrap === null ? (typeof was?.wrap === 'boolean' ? { wrap: was.wrap } : {}) : { wrap }) : {}),
+      ...(Number.isInteger(was?.width) ? { width: was.width } : {}),
+    };
+  };
+  const listed = new Set([...shown, ...hidden]);
+  const properties = [
+    ...shown.filter((n) => props[n]).map((n) => item(n, true)),
+    ...hidden.filter((n) => props[n]).map((n) => item(n, false)),
+    ...Object.keys(props).filter((n) => !listed.has(n)).map((n) => item(n, now.get(n)?.visible !== false)),
+  ];
+  const keep = {};
+  for (const k of ['frozen_column_index', 'show_vertical_lines', 'group_by', 'subtasks']) {
+    if (found?.configuration?.[k] !== undefined && found.configuration[k] !== null) keep[k] = found.configuration[k];
+  }
+  const wrapCells = wrap === null ? found?.configuration?.wrap_cells : wrap;
+  return { type: 'table', ...keep, ...(typeof wrapCells === 'boolean' ? { wrap_cells: wrapCells } : {}), properties };
+}
+
+/** What differs between a view of the table and its plan: any of 'filter', 'sorts', 'columns', 'wrap'. */
+export function viewDifferences(plan, found, dataSource) {
+  const nameOf = nameLookup(dataSource);
+  const out = [];
+  if (stable(canonFilter(plan.body.filter, (n) => n)) !== stable(canonFilter(found.filter, nameOf))) out.push('filter');
+  if (stable(canonSorts(plan.body.sorts, (n) => n)) !== stable(canonSorts(found.sorts, nameOf))) out.push('sorts');
+  if (columnsDiffer(plan.columns, plan.hidden, configured(found, nameOf), new Set(Object.keys(dataSource.properties ?? {})))) out.push('columns');
+  if ((found.configuration?.wrap_cells === true) !== plan.wrap) out.push('wrap');
+  return out;
+}
+
+// Bring one view of the table to its plan: only what differs is sent. A filter or sorts that the plan does not have cannot be taken away (the client never clears), so that is said.
+async function reconcileView(ctx, table, plan, found, dataSource) {
+  const { client, log, result } = ctx;
+  const diff = viewDifferences(plan, found, dataSource);
+  if (diff.length === 0) return [];
+  const body = {};
+  if (diff.includes('filter')) {
+    if (plan.body.filter) body.filter = plan.body.filter;
+    else result.warnings.push(`view "${plan.name}" of "${table}" has a filter that the structure does not have; the client never clears a filter, so it was left`);
+  }
+  if (diff.includes('sorts')) body.sorts = plan.body.sorts ?? [];
+  if (diff.includes('columns') || diff.includes('wrap')) {
+    body.configuration = buildConfiguration(dataSource, { shown: plan.columns, hidden: plan.hidden, wrap: plan.wrap, found });
+  }
+  if (Object.keys(body).length === 0) return [];
+  await client.updateView(found.id, body);
+  const done = diff.filter((d) => (d === 'filter' ? body.filter : d === 'sorts' ? body.sorts : body.configuration));
+  result.created.views_updated += 1;
+  (result.updated[table] ??= {})[plan.name] = done;
+  log(`view "${plan.name}": updated (${done.join(', ')})`);
+  return done;
+}
+
+// The views of a table that the structure does not name (Notion's own default view): the column order of the structure, every column visible, the retired ones hidden. Nothing else of
+// such a view is touched. Returns the names of the views that were changed.
+async function arrangeDefaultViews(ctx, table, have, dataSource) {
+  const { plan, client, log, result } = ctx;
+  const named = new Set(plan.views.filter((v) => v.table === table).flatMap((v) => [v.name, v.renamed_from].filter(Boolean)));
+  const nameOf = nameLookup(dataSource);
+  const { shown, hidden } = plan.arrange[table];
+  const present = new Set(Object.keys(dataSource.properties ?? {}));
+  const changed = [];
+  for (const [name, found] of have) {
+    if (named.has(name)) continue;
+    if (!columnsDiffer(shown, hidden, configured(found, nameOf), present)) continue;
+    await client.updateView(found.id, { configuration: buildConfiguration(dataSource, { shown, hidden, found }) });
+    changed.push(name);
+    result.created.views_updated += 1;
+    log(`view "${name}" (the table's own): column order and visibility set`);
+  }
+  if (changed.length) result.arranged[table] = changed;
+  return changed;
+}
+
+/**
+ * Set the column order and visibility of the table's own views (the views the structure does not name: Notion's default view) to the structure's, for a table that sets
+ * `arrange_default_view`. For a builder that makes its tables and views itself (the practice page): the relation columns are made after the others, so the default view
+ * shows them last until this is called. `plan` is planStructure's answer. Returns the names of the views that were changed ([] when they were in order already).
+ */
+export async function arrangeOwnViews({ client, plan, table, databaseId, dataSourceId, log = () => {} } = {}) {
+  if (!plan?.arrange?.[table]) return [];
+  const dataSource = await client.retrieveDataSource(dataSourceId);
+  const have = await existingViews(client, databaseId);
+  const result = { created: { views_updated: 0 }, arranged: {} };
+  return arrangeDefaultViews({ plan, client, log, result }, table, have, dataSource);
 }
 
 async function buildViews(ctx) {
@@ -845,17 +1014,17 @@ async function buildViews(ctx) {
     }
     let previous = null; // the view before this one in the tab bar: ours go first, in the order of the proposal, ahead of Notion's own default view
     for (const v of wanted) {
+      let id = null;
+      let status = null;
       if (have.has(v.name)) {
+        id = have.get(v.name).id;
+        status = 'exists';
         const known = config.notion?.views?.[viewKey(v.name)];
-        const link = !known || known.id !== normId(have.get(v.name)) || known.url !== viewUrl(entry.database_id, have.get(v.name)) ? recordView(ctx, v, entry.database_id, have.get(v.name)) : known;
-        mine[v.name] = { id: have.get(v.name), status: 'exists', url: link.url };
-        previous = have.get(v.name);
+        if (!known || known.id !== normId(id) || known.url !== viewUrl(entry.database_id, id)) recordView(ctx, v, entry.database_id, id);
         log(`view "${v.name}": already there`);
-        continue;
-      }
-      if (v.renamed_from && have.has(v.renamed_from)) {
-        // the table has this view under its older name: give it the new one (its filter, sorts and columns are the structure's own; verify compares them)
-        const id = have.get(v.renamed_from);
+      } else if (v.renamed_from && have.has(v.renamed_from)) {
+        // the table has this view under its older name: give it the new one (the next step brings its filter, sorts and columns to the structure's)
+        id = have.get(v.renamed_from).id;
         try {
           await client.updateView(id, { name: v.name });
         } catch (e) {
@@ -867,13 +1036,29 @@ async function buildViews(ctx) {
           stopWith(ctx, `the view "${v.renamed_from}" of "${table}" (its new name)`, e);
           return;
         }
+        have.set(v.name, { ...have.get(v.renamed_from), name: v.name });
         have.delete(v.renamed_from);
-        have.set(v.name, id);
-        previous = id;
-        const link = recordView(ctx, v, entry.database_id, id);
-        mine[v.name] = { id, status: 'renamed', url: link.url };
+        status = 'renamed';
+        recordView(ctx, v, entry.database_id, id);
         result.created.renamed += 1;
         log(`view "${v.renamed_from}": renamed to "${v.name}" (${id})`);
+      }
+      if (status !== null) {
+        let changed = [];
+        try {
+          changed = await reconcileView(ctx, table, v, have.get(v.name), dataSource);
+        } catch (e) {
+          if (e?.name === 'NotionError' && (e.status === 400 || e.status === 404)) {
+            mine[v.name] = { id, status: 'failed', message: `the view could not be brought to the structure: ${e.message}`, url: viewUrl(entry.database_id, id) };
+            log(`view "${v.name}": could not be updated (${e.message})`);
+            previous = id;
+            continue;
+          }
+          stopWith(ctx, `the view "${v.name}" of "${table}"`, e);
+          return;
+        }
+        mine[v.name] = { id, status, url: viewUrl(entry.database_id, id), ...(changed.length ? { changed } : {}) };
+        previous = id;
         continue;
       }
       const body = completeViewBody(v, dataSource, { databaseId: entry.database_id });
@@ -890,7 +1075,7 @@ async function buildViews(ctx) {
           log(`view "${v.name}": Notion did not take its place in the tab bar (${e.message}); asking again without it`);
           res = await make(undefined);
         }
-        have.set(v.name, res.id);
+        have.set(v.name, { id: res.id, name: v.name });
         previous = res.id;
         const link = recordView(ctx, v, entry.database_id, res.id);
         mine[v.name] = { id: res.id, status: 'created', url: link.url };
@@ -903,6 +1088,18 @@ async function buildViews(ctx) {
           continue;
         }
         stopWith(ctx, `the view "${v.name}" of "${table}"`, e);
+        return;
+      }
+    }
+    if (plan.arrange?.[table]) {
+      try {
+        await arrangeDefaultViews(ctx, table, have, dataSource);
+      } catch (e) {
+        if (e?.name === 'NotionError' && (e.status === 400 || e.status === 404)) {
+          result.warnings.push(`the table's own view of "${table}" could not be arranged: ${e.message}`);
+          continue;
+        }
+        stopWith(ctx, `the table's own view of "${table}"`, e);
         return;
       }
     }
@@ -941,7 +1138,10 @@ export async function runStructure({ plan, client, root = agentRoot(), config, l
   if (!client || typeof client.createDatabase !== 'function') throw new TypeError('runStructure: a Notion client is required');
   if (!config) throw new TypeError('runStructure: the config is required');
   if (isProtected(config, plan.parent_page_id)) throw new StructureError('the parent page is on the protected list of config.json; the builder never builds there');
-  const result = { ok: true, code: EXIT.OK, stopped: null, pages: {}, databases: {}, columns: {}, views: {}, warnings: [], created: { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0 } };
+  const result = {
+    ok: true, code: EXIT.OK, stopped: null, pages: {}, databases: {}, columns: {}, columnsRenamed: {}, views: {}, updated: {}, arranged: {}, warnings: [],
+    created: { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0, columns_renamed: 0, views_updated: 0 },
+  };
   const ctx = { plan, client, root, config, log, result, children: null };
   try {
     if (parts.includes('pages')) await buildPages(ctx);
@@ -1001,11 +1201,14 @@ function compareColumns(add, key, t, dataSource, config) {
   for (const c of t.columns) {
     const def = actual[c.name];
     if (!def) {
-      add(key, 'missing column', `"${c.name}" (${c.type}) is not in the table`);
+      if (c.retired === true) continue; // a retired column exists only where a rename made it
+      const old = c.renamed_from && actual[c.renamed_from] ? ` ("${c.renamed_from}" is there under its old name; setup.mjs build renames it)` : '';
+      add(key, 'missing column', `"${c.name}" (${c.type}) is not in the table${old}`);
       continue;
     }
     if (def.type !== c.type) {
-      add(key, 'type', `"${c.name}" is ${def.type} in Notion but ${c.type} in the structure`);
+      const successor = t.columns.find((o) => o.renamed_from === c.name && o.type === def.type);
+      add(key, 'type', `"${c.name}" is ${def.type} in Notion but ${c.type} in the structure${successor ? `; setup.mjs build renames it to "${successor.name}" and adds the new one` : ''}`);
       continue;
     }
     if (c.type === 'relation') {
@@ -1064,6 +1267,18 @@ async function compareViews(add, key, structure, wanted, entry, client, dataSour
     const haveWrap = found.configuration?.wrap_cells === true;
     if (haveWrap !== plan.wrap) add(key, 'view wrap', `"${v.name}": cells ${plan.wrap ? 'should' : 'should not'} wrap, and they ${haveWrap ? 'do' : 'do not'}`);
   }
+  // the table's own view (a view the structure does not name) of a table that arranges it: the columns of the structure in its order, the retired ones hidden
+  if (structure.tables[key].arrange_default_view === true) {
+    const named = new Set(structure.views.filter((v) => v.table === key).flatMap((v) => [v.name, v.renamed_from].filter(Boolean)));
+    const shown = liveColumns(structure, key).map((c) => c.name);
+    const present = new Set(Object.keys(dataSource?.properties ?? {}));
+    for (const found of views.filter((x) => x && !named.has(x.name))) {
+      const haveShown = (found.configuration?.properties ?? []).filter((p) => p.visible !== false).map((p) => nameOf(p.property_id));
+      const wantShown = shown.filter((n) => present.has(n));
+      const known = haveShown.filter((n) => structure.tables[key].columns.some((c) => c.name === n)); // a column the structure does not know is not compared
+      if (stable(wantShown) !== stable(known)) add(key, 'view columns', `"${found.name}" (the table's own view): expected ${wantShown.join(', ')}; found ${known.join(', ') || 'none'}`);
+    }
+  }
 }
 
 /**
@@ -1119,7 +1334,11 @@ export function renderPreview(structure) {
     const t = structure.tables[key];
     lines.push(`## ${t.title} (${t.columns.length} columns)`, '');
     lines.push('| Column | Type | Options | Meaning |', '|---|---|---|---|');
-    for (const c of t.columns) lines.push(`| ${cell(c.name)} | ${c.type} | ${cell(c.relation_to ? `points at the ${structure.tables[c.relation_to].title}` : c.options.join(', '))} | ${cell(c.description)} |`);
+    for (const c of t.columns) {
+      const options = c.relation_to ? `points at the ${structure.tables[c.relation_to].title}` : c.options.join(', ');
+      const note = [c.renamed_from ? `the column "${c.renamed_from}" of an earlier build is renamed to this` : null, c.retired ? 'retired: never made on a new table, hidden in every view' : null].filter(Boolean).join('; ');
+      lines.push(`| ${cell(c.name)} | ${c.type} | ${cell(options)} | ${cell(c.description)}${note ? ` (${cell(note)})` : ''} |`);
+    }
     const views = structure.views.filter((v) => v.table === key);
     if (views.length) {
       lines.push('', 'Views:', '');

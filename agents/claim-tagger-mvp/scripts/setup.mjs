@@ -15,12 +15,16 @@
 //   setup.mjs verify [--taxonomy f] [--claims f] [--audit f]   read everything back and list the differences -> runs/builder/verify.json
 //
 //   The build (needs the session: runs/SETUP)
-//   setup.mjs pages | databases | views | build           the sub-pages, the five tables and the columns a table lacks, the views (build = all three), resumable;
-//                                                         a view of an older build that the structure renames is renamed, not made again
+//   setup.mjs pages | databases | views | build           the sub-pages, the five tables and the columns a table lacks, the views (build = all three), resumable and safe to run again
+//                                                         on a table that exists: it renames the columns the structure renames (Agent tags and Agent notes to "(old)", Claim quality
+//                                                         tags — verified to Verified tags), adds the columns the table lacks (the revision of 21 October: Agent tags as a relation,
+//                                                         Agent status, Tags waiting, Agent edition, Agent remarks), renames a view of an older build that the structure renames
+//                                                         (not made again), and brings every view of a table to the structure: its filter, sorts, shown columns in order, wrap; the
+//                                                         Claims copy's own default view gets the column order too. It says what it did, and a second run does nothing
 //   setup.mjs rulebook [--from setup/taxonomy-issue.json] the 13 rows of the Rulebook copy (a setup plan, applied and read back)
 //   setup.mjs claims [--from setup/claims-pick.json]      the 50 rows of the Claims copy, Geo Sources with its links
 //   setup.mjs seed-audit [--from <audit json>]            the audit's ten decisions as decided rows of Tag decisions (the agent's ledger)
-//   setup.mjs migrate-decisions                           the decisions in Tag decisions carried over, once, to the claims they are about (Reviewed, the verified tags, the
+//   setup.mjs migrate-decisions                           the decisions in Tag decisions carried over, once, to the claims they are about (Reviewed, Verified tags, the
 //                                                         audit's words); Decided under on the ledger rows; Agent confidence on the claims that wait
 //   setup.mjs rubric [--from setup/taxonomy-issue.json]   rubric/ edition <today>.1 from the taxonomy file (local files only)
 //   setup.mjs canaries [--from setup/taxonomy-issue.json] evals/canaries.jsonl (local file only)

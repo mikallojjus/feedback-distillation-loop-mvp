@@ -31,7 +31,7 @@ const [U1, U2, U3, U4, A1] = randoms.slice(0, 5).map((r) => normalizeClaim(r['Ge
 const idOf = (text) => PICK.rows.find((r) => normalizeClaim(r['Geo Name']) === text)['Geo ID'];
 const keyOf = (text) => `${idOf(text)}::Context-dependent`;
 // the editor's columns: no write names one (Why wrong is the editor's on a claim and the agent's copy on the ledger, so a write to a claim is checked apart)
-const forbiddenColumns = ['Claim quality tags — verified', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
+const forbiddenColumns = ['Verified tags', 'Claim quality tags — verified', 'Agent notes', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
 const EXAMPLE_1 = taxonomyCanaries()[0].claim;
 
 /** The production-shaped world with the fake CLI's answers; `flipExample` makes the candidate answer an example wrongly. */
@@ -115,10 +115,10 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.deepEqual(w.rows('tag_decisions').filter((r) => !r['Tag outcome'] && r['Agent proposal'] === "Can't tell").map((r) => r.Key).sort(), [U1, U2, U3, U4].map(keyOf).sort(), 'every unsure cell waits in Your queue');
   assert.equal(w.rows('tag_decisions').filter((r) => r['Tag outcome']).length, 10, 'only the audit rows hold a decision');
   assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome']).map((r) => JSON.stringify(r)).sort(), auditBefore, 'the decided rows are untouched');
-  assert.equal(w.row('claims_copy', idOf(A1))['Agent tags'], 'Context-dependent');
-  assert.equal(w.row('claims_copy', idOf(U1))['Agent tags'], '');
-  assert.match(w.row('claims_copy', idOf(U1))['Agent notes'], /^no tags\n1 waits for an editor · not checked: /);
-  for (const c of w.rows('claims_copy')) assert.ok(c['Agent notes'].split('\n').length <= 2);
+  assert.deepEqual(w.claim(idOf(A1))['Agent tags'], ['Context-dependent']);
+  assert.deepEqual([w.claim(idOf(U1))['Agent tags'], w.claim(idOf(U1))['Tags waiting'], w.claim(idOf(U1))['Agent status']], [[], ['Context-dependent'], 'Waits for you']);
+  assert.match(w.claim(idOf(U1))['Agent remarks'], /^not checked: /);
+  for (const c of w.rows('claims_copy')) assert.ok(!('Agent notes' in c), 'the table has no Agent notes');
   const queueBefore = w.rows('tag_decisions').filter((r) => r['Tag outcome']).map((r) => JSON.stringify(r));
   assert.equal(w.row('claims_copy', idOf(U1))['Agent confidence'], 0.5);
   assert.equal(w.row('claims_copy', idOf(U1))['Agent reasons'], `Context-dependent: ${w.row('tag_decisions', keyOf(U1))['Agent reason']}`, 'the claim shows the reason the ledger holds');
@@ -162,7 +162,11 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(w.rubric().edition, '2026-10-16.2');
   for (const text of [U1, U2]) assert.equal(w.row('tag_decisions', keyOf(text))['Follow-up'], 'Fixed');
   assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome'] && !/^From the audit/.test(r['Your reasoning'])).length, 2);
-  for (const text of [U1, U2]) assert.match(w.row('claims_copy', idOf(text))['Agent notes'], /^no tags\nnothing waits for an editor · not checked/, 'the follow-up wrote the notes of the claim with the editor\'s set');
+  for (const text of [U1, U2]) {
+    const c = w.claim(idOf(text));
+    assert.deepEqual([c['Agent tags'], c['Tags waiting'], c['Agent status']], [[], [], 'Done'], 'the follow-up wrote the columns of the claim with the editor\'s set');
+    assert.match(c['Agent remarks'], /^not checked/);
+  }
   // the audit rows were not touched at all
   assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome']).filter((r) => /^From the audit/.test(r['Your reasoning'])).map((r) => JSON.stringify(r)).sort(), queueBefore.sort());
 
@@ -172,7 +176,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(again.exit, 0, again.markdown);
   assert.equal(again.report.sentence, 'Tag: the agent read 50 claims for Context-dependent; 2 wait for you.');
   assert.equal(w.row('tag_decisions', keyOf(U3))['Rulebook edition'], '2026-10-16.2');
-  assert.equal(w.row('claims_copy', idOf(U3))['Agent notes'].endsWith('edition 2026-10-16.2'), true);
+  assert.equal(w.row('claims_copy', idOf(U3))['Agent edition'], '2026-10-16.2');
 
   // status
   const h5 = w.hooks();
@@ -306,9 +310,10 @@ async function requestLogIsClean(w) {
       assert.ok(own.has(req.body.parent.database_id.replace(/-/g, '')), 'a row is created only in one of the five tables');
     }
     if (props.includes('Status')) assert.ok(['Proposed', 'Live', 'Rolled back'].includes(req.body.properties.Status.select.name), 'only the Status values the agent may write');
-    // the claims table takes the three write columns and nothing else
-    if (props.includes('Agent tags') || props.includes('Agent notes') || props.includes('Agent confidence') || props.includes('Agent reasons')) {
-      if (claimPages.has(req.path.split('/').at(-1).replace(/-/g, ''))) assert.ok(props.every((p) => ['Agent tags', 'Agent notes', 'Agent confidence', 'Agent reasons'].includes(p)), props.join(','));
+    // the claims table takes the seven write columns and nothing else
+    const writeColumns = ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks'];
+    if (props.some((p) => writeColumns.includes(p))) {
+      if (claimPages.has(req.path.split('/').at(-1).replace(/-/g, ''))) assert.ok(props.every((p) => writeColumns.includes(p)), props.join(','));
     }
   }
   // every run folder has its run.json written first and last

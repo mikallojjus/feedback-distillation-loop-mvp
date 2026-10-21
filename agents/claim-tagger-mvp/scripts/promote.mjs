@@ -43,7 +43,7 @@ import { extractJson } from './lib/claude.mjs';
 import { forceRuns, readAnswers } from './lib/answers.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import {
-  LOCK_STALE_MS, LoopExit, addSettingsOp, addUsage, applyInChild, applyStep, assertApplied, callModel, childRun, closeChild, commitRubric, confirmUnchanged, liveRubric, needTables, parseCli, pickLesson, readEvals, resumeLine,
+  LOCK_STALE_MS, LoopExit, addSettingsOp, addUsage, applyInChild, applyStep, assertApplied, callModel, childRun, closeChild, commitRubric, confirmUnchanged, liveRubric, needClaimColumns, needTables, parseCli, pickLesson, readEvals, resumeLine,
   runJudge, runPreflight, supportingKeysOf, takePull, withRun,
 } from './lib/loop.mjs';
 import { codeFile, isMain } from './lib/paths.mjs';
@@ -264,6 +264,7 @@ export async function promote(opts = {}) {
     await takePull(ctx);
     needTables(ctx, 'rulebook', 'rule_changes', 'tag_decisions', 'claims_copy');
     runPreflight(ctx);
+    needClaimColumns(ctx);
     const live = liveRubric(ctx);
     const lesson = pickLesson(ctx, opts.lesson, { status: 'Approved', command: '/claim-tagger promote' });
     const title = lesson.Lesson;

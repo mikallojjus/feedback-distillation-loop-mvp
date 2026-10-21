@@ -112,9 +112,9 @@ test('promote PASS: the new text goes live in the Rulebook copy and in a new edi
   // the follow-up: both rows Fixed, nothing else on decided rows
   for (const i of [1, 2]) assert.equal(w.row('tag_decisions', keyOf(i))['Follow-up'], 'Fixed');
   for (const i of [3, 4]) assert.equal(w.row('tag_decisions', keyOf(i))['Follow-up'], null);
-  assert.equal(w.row('claims_copy', 'c01')['Agent notes'].split('\n')[1].endsWith('edition 2026-10-16.2'), true);
-  assert.equal(w.row('claims_copy', 'c01')['Agent tags'], '', 'the editor decided Does not apply');
-  assert.equal(w.row('claims_copy', 'c03')['Agent tags'], '', 'claim 3 is not part of the lesson, so its columns were not touched');
+  assert.equal(w.claim('c01')['Agent edition'], '2026-10-16.2');
+  assert.deepEqual(w.claim('c01')['Agent tags'], [], 'the editor decided Does not apply');
+  assert.deepEqual([w.claim('c03')['Agent tags'], w.claim('c03')['Agent edition']], [[], ''], 'claim 3 is not part of the lesson, so its columns were not touched');
 
   // the report
   const report = assertReport(h, r);

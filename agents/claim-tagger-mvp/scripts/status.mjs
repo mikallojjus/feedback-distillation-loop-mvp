@@ -16,9 +16,9 @@
 // (step 1 of the page) the Next line is "type /claim-tagger demo tag" (step 2) instead of "decide the rows": there is nothing to decide before the agent has read the
 // claims. In production that line is never used.
 //
-// The rows that wait are claims of the Claims copy (CLAIMS-REVIEW.md, section 3): a claim whose Agent notes say "<n> wait(s) for an editor" and whose Review status is not
-// Reviewed. "nothing waits for an editor" holds the same words, so the count reads the number in front of them (lib/decisions.mjs). Needs your note counts the claims that have
-// a Why wrong and no Challenged tags notes. Your queue is the view of the Claims copy.
+// The rows that wait are claims of the Claims copy (CLAIMS-REVIEW.md, section 6.2): a claim whose Agent status is "Waits for you" and whose Review status is not Reviewed (what is
+// still to decide: Your queue may list a few more, the claims that were decided since the last tag run). Needs your note counts the claims that have a Why wrong and no Challenged
+// tags notes. Your queue is the view of the Claims copy.
 //
 // Exit codes: 0 ok, 2 invalid, 3 paused, 4 drift or an invalid rulebook file.
 //
@@ -29,7 +29,7 @@ import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { claimWaits, isReviewed } from './lib/decisions.mjs';
 import { listNames, plural, quoted, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
-import { LOCK_STALE_MS, LoopExit, parseCli, resumeLine, takePull, withRun } from './lib/loop.mjs';
+import { LOCK_STALE_MS, LoopExit, needClaimColumns, parseCli, resumeLine, takePull, withRun } from './lib/loop.mjs';
 import { isMain } from './lib/paths.mjs';
 import { preflight, refusedReport } from './lib/preflight.mjs';
 import { readRubric } from './lib/rubric.mjs';
@@ -85,6 +85,7 @@ export async function status(opts = {}) {
       });
     }
 
+    needClaimColumns(ctx);
     let rubric = null;
     try {
       rubric = readRubric(ctx.root);
@@ -131,10 +132,10 @@ export async function status(opts = {}) {
     const sentence = parts.length === 0
       ? 'Status: nothing is paused and nothing waits for you.'
       : `Status: nothing is paused; ${parts.join(' and ')} ${parts.length === 1 && (n === 1 || (n === 0 && m === 1)) ? 'waits' : 'wait'} for you${counts.queue.more_than_a_sitting ? ', more than fit one sitting' : ''}.`;
-    // On a practice page the two claims that are still open are seeded without the agent's side (step 1); the agent fills Agent tags, Agent notes and Agent confidence when
+    // On a practice page the two claims that are still open are seeded without the agent's side (step 1); the agent fills its columns (Agent status, Agent tags, Agent confidence ...) when
     // the editor types the demo tag command (step 2). Until it has, there is nothing to decide yet, so the Next line sends the editor to step 2. In production
     // the agent has always filled its side of a claim before the claim waits, so this never applies there.
-    const unread = ctx.demo ? claims.filter((c) => !isReviewed(c) && String(c.agent_notes ?? '').trim() === '').length : 0;
+    const unread = ctx.demo ? claims.filter((c) => !isReviewed(c) && String(c.agent_status ?? '').trim() === '').length : 0;
     let next;
     if (unread > 0) next = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
     else if (counts.queue.more_than_a_sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;

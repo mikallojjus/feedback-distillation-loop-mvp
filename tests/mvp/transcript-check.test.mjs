@@ -643,7 +643,7 @@ test('expectStyle confirms the output style from the init event', () => {
 
 test('the editor columns come from config.json without the Status values', () => {
   const config = JSON.parse(readFileSync(join(REPO, 'agents', 'claim-tagger-mvp', 'config.json'), 'utf8'));
-  assert.deepEqual(editorColumnsFromConfig(config), ['Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused']);
+  assert.deepEqual(editorColumnsFromConfig(config), ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused']);
   assert.deepEqual(editorColumnsFromConfig(config), [...DEFAULT_EDITOR_COLUMNS]);
   assert.deepEqual(editorColumnsFromConfig({ editor_columns: { a: ['X', 'Y'], b: ['Y', 'Z'], c_status_editor_values: ['Approved'] } }), ['X', 'Y', 'Z']);
   assert.deepEqual(editorColumnsFromConfig({}), [...DEFAULT_EDITOR_COLUMNS]);

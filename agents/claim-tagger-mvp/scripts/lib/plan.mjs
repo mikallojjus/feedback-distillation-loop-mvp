@@ -246,7 +246,7 @@ const SCHEMA_WORDS = new Map([
  *
  * `demoEditor: true` is decision D31, the demo-only exception to hard rule 1: an agent may act as the editor on a practice page. It allows,
  * and only when config.demo is true and `root` is a folder directly under runs/demos/ (isDemoRoot), an UPDATE on claims_copy to write the
- * editor's four columns (Claim quality tags — verified, Review status, Why wrong, Challenged tags notes) and an UPDATE on rule_changes to write Editor wording and a Status that is one of
+ * editor's four columns (Verified tags, Review status, Why wrong, Challenged tags notes) and an UPDATE on rule_changes to write Editor wording and a Status that is one of
  * config.editor_columns.rule_changes_status_editor_values (Approved, Rejected). Without the option, on a production config, outside
  * runs/demos/, on a create, and on any other table or column, every editor column and those two Status values stay refused.
  */

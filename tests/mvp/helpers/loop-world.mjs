@@ -7,8 +7,9 @@
 //   w.hooks(extra)                                 the options a script takes: { root, config, fetchImpl, token, sleep, now, io, driver: 'fake', fakeScript, fakeState, env, noCommit }
 //   await w.pull() / await w.judge(opts)           pull every table / pull, then judge the claims (items: 'claims') under the fake CLI
 //   w.table(obj) / w.overrides(list) / w.setEnv(k, v)   the fake CLI's answers (see fixtures/fake-claude-loop.mjs)
-//   w.rows(table) / w.row(table, key)              plain rows of a table in the fake Notion
-//   w.editClaim(geoId, plain)                      an editor works on a claim: plain values of the Claims copy; "Claim quality tags — verified" takes tag names
+//   w.rows(table) / w.row(table, key)              plain rows of a table in the fake Notion (a relation is a list of page ids)
+//   w.claim(geoId)                                 a row of the Claims copy with its three relations (Agent tags, Tags waiting, Verified tags) read as lists of tag names, sorted
+//   w.editClaim(geoId, plain)                      an editor works on a claim: plain values of the Claims copy; "Verified tags" (and the agent's "Agent tags" and "Tags waiting") take tag names
 //   w.review(geoId, { tags, why, notes })          an editor Reviews a claim: the verified tags, Why wrong, Challenged tags notes and Review status Reviewed
 //   w.rubric()                                     rubric/rubric.json of the state folder
 //   w.calls() / w.callsWith(text)                  what the fake CLI was asked: all calls / the calls whose system prompt holds the text
@@ -113,10 +114,11 @@ const jsonl = (rows) => `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`;
  *   canaries    true (default): write evals/canaries.jsonl from the taxonomy; a list: those rows; false: none
  *   edition     the first edition (default 2026-10-16.1);  demo: true makes the config a demo profile
  *   demoId      a practice page's state folder: the root is <temporary folder>/runs/demos/<demoId> (the way the walkthrough makes it), and the config is that demo's
+ *   tableSpecs  { <table>: spec } to build a table with other columns than helpers/tables.mjs gives it (a Claims copy of the first build, say)
  *   configure   (config) => void, to change the config before it is written
  */
 export async function makeWorld({
-  claims = 12, rulebook, queue = [], audit = false, lessons = [], settings = {}, canaries = true, edition = '2026-10-16.1', demo = false, demoId = null, configure, claimRows = {},
+  claims = 12, rulebook, queue = [], audit = false, lessons = [], settings = {}, canaries = true, edition = '2026-10-16.1', demo = false, demoId = null, configure, claimRows = {}, tableSpecs = {},
 } = {}) {
   const base = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-loop-'));
   dirs.push(base);
@@ -142,7 +144,7 @@ export async function makeWorld({
 
   const fake = createFakeNotion({ protected: [...config.notion.protected_database_ids, ...config.notion.protected_page_ids] });
   for (const table of Object.keys(DB)) {
-    fake.addDatabase({ id: DB[table], dataSourceId: entries[table].data_source_id, title: table, properties: restProps(TABLE_SPECS[table], entries.rulebook.data_source_id) });
+    fake.addDatabase({ id: DB[table], dataSourceId: entries[table].data_source_id, title: table, properties: restProps(tableSpecs[table] ?? TABLE_SPECS[table], entries.rulebook.data_source_id) });
   }
   const ids = { tag: {}, claim: {}, queue: {}, lesson: {}, settings: null };
 
@@ -167,8 +169,13 @@ export async function makeWorld({
   });
   const editClaim = (geoId, plain) => {
     if (!ids.claim[geoId]) throw new Error(`makeWorld: there is no claim "${geoId}"`);
-    const { 'Claim quality tags — verified': verified, ...rest } = plain;
-    fake.editRow(ids.claim[geoId], { ...rest, ...(verified === undefined ? {} : { 'Claim quality tags — verified': tagIds(verified) }) });
+    const { 'Verified tags': verified, 'Agent tags': agentTags, 'Tags waiting': waiting, ...rest } = plain;
+    fake.editRow(ids.claim[geoId], {
+      ...rest,
+      ...(verified === undefined ? {} : { 'Verified tags': tagIds(verified) }),
+      ...(agentTags === undefined ? {} : { 'Agent tags': tagIds(agentTags) }),
+      ...(waiting === undefined ? {} : { 'Tags waiting': tagIds(waiting) }),
+    });
   };
   for (const [geoId, plain] of Object.entries(claimRows)) editClaim(geoId, plain);
 
@@ -183,7 +190,7 @@ export async function makeWorld({
       });
       if (ids.claim[d.geo_id]) {
         editClaim(d.geo_id, {
-          'Claim quality tags — verified': d.outcome === 'Applies' ? ['Context-dependent'] : [], 'Review status': 'Reviewed', 'Why wrong': 'Agent slip',
+          'Verified tags': d.outcome === 'Applies' ? ['Context-dependent'] : [], 'Review status': 'Reviewed', 'Why wrong': 'Agent slip',
           'Challenged tags notes': `From the audit of 9 October: ${d.reasoning}`,
         });
       }
@@ -235,9 +242,16 @@ export async function makeWorld({
     },
     editClaim,
     review: (geoId, { tags = [], why = null, notes = '' } = {}) => editClaim(geoId, {
-      'Claim quality tags — verified': tags, 'Review status': 'Reviewed', 'Why wrong': why, 'Challenged tags notes': notes,
+      'Verified tags': tags, 'Review status': 'Reviewed', 'Why wrong': why, 'Challenged tags notes': notes,
     }),
     rows: (table) => fake.plainRows(DB[table]),
+    claim(geoId) {
+      const row = fake.plainRows(DB.claims_copy).find((r) => r['Geo ID'] === geoId);
+      if (!row) return null;
+      const byPage = new Map(Object.entries(ids.tag).map(([name, id]) => [String(id).replace(/-/g, '').toLowerCase(), name]));
+      const named = (list) => (list ?? []).map((id) => byPage.get(String(id).replace(/-/g, '').toLowerCase()) ?? id).sort();
+      return { ...row, 'Agent tags': named(row['Agent tags']), 'Tags waiting': named(row['Tags waiting']), 'Verified tags': named(row['Verified tags']) };
+    },
     row(table, key) {
       const keyColumn = { rulebook: 'Name', claims_copy: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name' }[table];
       return fake.plainRows(DB[table]).find((r) => r[keyColumn] === key) ?? null;

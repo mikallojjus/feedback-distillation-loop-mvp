@@ -13,8 +13,8 @@ import {
   migrationOps, protectedInLinks, rulebookOps, settingsProperties, unknownOptions, withLinkedSources,
 } from '../../agents/claim-tagger-mvp/scripts/lib/setup-steps.mjs';
 import {
-  AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_PICK, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, builderClient, cleanTmp, fullTaxonomy, makePick, newWorld, readAuditFile,
-  readJson, readLines, restClient, smallTaxonomy, tmp, writeInputs,
+  AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_PICK, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, builderClient, cleanTmp, forFake, fullTaxonomy, makePick, newWorld, readAuditFile,
+  readJson, readLines, restClient, revisedStructure, smallTaxonomy, tmp, writeInputs,
 } from './helpers/setup-world.mjs';
 
 // setup.mjs against the shared in-memory Notion: the commands behind the builder session, the row steps (each a plan applied with a ledger and a
@@ -163,9 +163,10 @@ test('preview prints what would be built; without a structure file it says how t
   assert.equal(r.code, 0);
   assert.match(r.out[0], /^# Structure preview/);
   assert.match(r.out[0], /## Tag decisions \(13 columns\)/);
-  assert.match(r.out[0], /## Claims copy \(21 columns\)/);
-  assert.match(r.out[0], /Claim quality tags — verified \| relation \| points at the Rulebook copy/);
-  assert.match(r.out[0], /- \*\*Your queue\*\*: rows shown: Review status is not Reviewed, and Agent notes contains for an editor/);
+  assert.match(r.out[0], /## Claims copy \(26 columns\)/);
+  assert.match(r.out[0], /\| Verified tags \| relation \| points at the Rulebook copy \|/);
+  assert.match(r.out[0], /\| Agent tags \(old\) \| rich_text \|/);
+  assert.match(r.out[0], /- \*\*Your queue\*\*: rows shown: Agent status is Waits for you; sorted by: Agent confidence, lowest first; columns: Geo Name, Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting/);
   const none = await newWorld().run(['preview']);
   assert.equal(none.code, 2);
   assert.match(none.err[0], /structure --from-proposal/);
@@ -209,13 +210,13 @@ test('pages, databases and views each do their part, in that order; build does a
   assert.deepEqual([r.code, r.out], [0, ['page "Demos": created (' + normId(readJson(join(w.root, 'config.json')).notion.pages.demos) + ')', 'page "Demo tests": created (' + normId(readJson(join(w.root, 'config.json')).notion.pages.demo_tests) + ')', 'pages: 2 made']]);
   r = await w.run(['databases']);
   assert.equal(r.code, 0);
-  assert.deepEqual(r.out.slice(-2), ['tables: 5 made', 'columns: 1 added (claims_copy: Claim quality tags — verified)']);
+  assert.deepEqual(r.out.slice(-2), ['tables: 5 made', 'columns: 3 added (claims_copy: Agent tags, Tags waiting, Verified tags)']);
   assert.equal(posts(w.fake, '/databases').length, 5);
   r = await w.run(['views']);
   assert.equal(r.code, 0);
   assert.equal(r.out.at(-1), 'views: 7 made');
   const writes = w.fake.writes().length;
-  assert.equal(writes, 15, 'two pages, five tables, one PATCH for the relation column, seven views');
+  assert.equal(writes, 15, 'two pages, five tables, one PATCH for the relation columns, seven views');
   r = await w.run(['build']);
   assert.equal(r.code, 0);
   assert.deepEqual(r.out.filter((l) => /made|added/.test(l)), ['pages: 0 made, 2 there already', 'tables: 0 made, 5 there already', 'columns: 0 added', 'views: 0 made, 7 there already']);
@@ -237,6 +238,38 @@ test('pages, databases and views each do their part, in that order; build does a
     assert.equal(run.resume, `node agents/claim-tagger-mvp/scripts/setup.mjs ${step}`);
     assert.ok(existsSync(join(lastRun(w.root, step), 'structure-plan.json')));
   }
+});
+
+test('setup build on a table of the build of 16 October (the live step): it says what it renamed, added and brought to the structure, verify is clean afterwards, and a second build writes nothing', async () => {
+  const w = newWorld();
+  const structure = join(w.root, 'setup', 'structure.json');
+  mkdirSync(join(w.root, 'setup'), { recursive: true });
+  const old = JSON.parse(readFileSync(new URL('./fixtures/structure.16-oct.json', import.meta.url), 'utf8'));
+  writeFileSync(structure, `${JSON.stringify(forFake(old), null, 2)}\n`);
+  openBuilder({ root: w.root, reason: 'test' });
+  assert.equal((await w.run(['build'])).code, 0);
+  writeFileSync(structure, `${JSON.stringify(forFake(revisedStructure()), null, 2)}\n`);
+
+  const before = w.fake.writes().length;
+  const r = await w.run(['build']);
+  assert.equal(r.code, 0, r.text);
+  assert.deepEqual(r.out.filter((l) => /^(pages|tables|columns|views)/.test(l)), [
+    'pages: 0 made, 2 there already',
+    'tables: 0 made, 5 there already',
+    'columns: 5 added (claims_copy: Agent tags, Agent status, Tags waiting, Agent edition, Agent remarks)',
+    'columns renamed: 3 (claims_copy: Claim quality tags — verified -> Verified tags, Agent tags -> Agent tags (old), Agent notes -> Agent notes (old))',
+    'views: 0 made, 7 there already',
+    'views brought to the structure: claims_copy: Your queue (filter, columns); claims_copy: Needs your note (columns); claims_copy: Agent disagreed (filter, columns)',
+  ]);
+  assert.equal(w.fake.writes().length - before, 2 + 3, 'two column requests (renames, additions) and three views; the fake has no default view of its own');
+
+  const verified = await w.run(['verify']);
+  assert.doesNotMatch(verified.text, /claims_copy: (missing column|type|extra column|view)/, verified.text);
+  const writes = w.fake.writes().length;
+  const again = await w.run(['build']);
+  assert.equal(again.code, 0);
+  assert.ok(!again.out.some((l) => /renamed|brought/.test(l)), again.out.join('\n'));
+  assert.equal(w.fake.writes().length, writes, 'nothing to rename, add or set: not one write');
 });
 
 test('a lost table create stops databases with exit 1 and what to check; the same command finishes the job', async () => {
@@ -396,7 +429,7 @@ test('a value that is not an option of its column is refused before anything is 
 
 // ---- the claims ----------------------------------------------------------------------------------------------------------------------------------------
 
-test('claims: the Geo columns by their names, Agent tags and Agent notes empty, Geo Sources with its links, the pages kept for the seed', async () => {
+test('claims: the Geo columns by their names, the agent\'s columns empty, Geo Sources with its links, the pages kept for the seed', async () => {
   const w = await built({ pick: makePick({ extra: 3 }) });
   const pick = readJson(w.inputs.claims);
   const r = await w.run(['claims', '--from', w.inputs.claims]);
@@ -406,7 +439,7 @@ test('claims: the Geo columns by their names, Agent tags and Agent notes empty, 
   const plan = readPlan(dir);
   for (const op of plan.ops) {
     assert.ok(Object.keys(op.properties).every((c) => CLAIMS_COPY_COLUMNS.includes(c)), `only Geo columns: ${Object.keys(op.properties).join(', ')}`);
-    assert.ok(!('page_id' in op.properties) && !('url' in op.properties) && !('Review status' in op.properties) && !('Agent tags' in op.properties) && !('Agent notes' in op.properties) && !('source_pieces' in op.properties));
+    assert.ok(!('page_id' in op.properties) && !('url' in op.properties) && !('Review status' in op.properties) && !('Agent tags' in op.properties) && !('Agent status' in op.properties) && !('Agent notes' in op.properties) && !('source_pieces' in op.properties));
   }
   const rows = rowsOf(w, 'claims_copy');
   assert.equal(rows.length, 3);
@@ -420,8 +453,8 @@ test('claims: the Geo columns by their names, Agent tags and Agent notes empty, 
       else if (Array.isArray(expected)) assert.deepEqual(found, expected, `${want['Geo ID']}: ${column}`);
       else assert.equal(found ?? '', expected ?? '', `${want['Geo ID']}: ${column}`);
     }
-    assert.equal(got['Agent tags'], '');
-    assert.equal(got['Agent notes'], '');
+    assert.deepEqual([got['Agent tags'], got['Tags waiting'], got['Agent status'], got['Agent edition'], got['Agent remarks']], [[], [], null, '', ''], 'the agent fills its columns at its first tag run');
+    assert.ok(!('Agent notes' in got) && !('Agent notes (old)' in got));
   }
   assert.equal(rows.find((x) => x['Geo ID'] === pick.rows[1]['Geo ID'])['Geo Score'], 0.25);
   assert.equal(rows.find((x) => x['Geo ID'] === pick.rows[2]['Geo ID'])['Geo Is factual'], true);
@@ -602,7 +635,7 @@ test('claims: the editor columns of the Claims copy stay empty even when the pic
   assert.equal(pick.rows[0]['Challenged tags notes'], 'QA audit', 'the pick holds the real table\'s notes and relation');
   await w.run(['claims', '--from', w.inputs.claims]);
   for (const c of rowsOf(w, 'claims_copy')) {
-    assert.deepEqual([c['Claim quality tags — verified'], c['Review status'], c['Why wrong'], c['Challenged tags notes'], c['Agent confidence']], [[], null, null, '', null], c['Geo ID']);
+    assert.deepEqual([c['Verified tags'], c['Review status'], c['Why wrong'], c['Challenged tags notes'], c['Agent confidence']], [[], null, null, '', null], c['Geo ID']);
   }
 });
 
@@ -627,7 +660,7 @@ test('migrate-decisions: the ten audit decisions move from the ledger to their c
   const tagPage = new Map(rowsOf(w, 'rulebook').map((t) => [t.Name, t.page_id]));
   for (const d of audit.decisions) {
     const c = claimOf(w, d.geo_id);
-    assert.deepEqual(c['Claim quality tags — verified'], d.outcome === 'Applies' ? [tagPage.get('Context-dependent')] : [], d.geo_id);
+    assert.deepEqual(c['Verified tags'], d.outcome === 'Applies' ? [tagPage.get('Context-dependent')] : [], d.geo_id);
     assert.equal(c['Review status'], 'Reviewed');
     assert.equal(c['Why wrong'], 'Agent slip');
     assert.equal(c['Challenged tags notes'], `${AUDIT_PREFIX}: ${d.reasoning ?? NO_REASONING}`);
@@ -670,7 +703,7 @@ test('migrate-decisions: an open ledger row gives its claim the Agent confidence
   assert.equal(claimOf(w, extra['Geo ID'])['Agent confidence'], 0.65);
   assert.equal(claimOf(w, extra['Geo ID'])['Review status'], null, 'an open claim is not Reviewed by a script');
   assert.equal(claimOf(w, other['Geo ID'])['Review status'], null);
-  assert.deepEqual(claimOf(w, other['Geo ID'])['Claim quality tags — verified'], []);
+  assert.deepEqual(claimOf(w, other['Geo ID'])['Verified tags'], []);
   const plan = readPlan(lastRun(w.root, 'migrate-decisions'));
   assert.deepEqual(plan.header.plan.counts, { creates: 0, updates: 11 }, 'nine claims with a decision, one claim with a confidence, one ledger row');
   assert.ok(plan.ops.filter((op) => op.table === 'claims_copy' && !('Review status' in op.properties)).every((op) => Object.keys(op.properties).join() === 'Agent confidence' && !op.expect));
@@ -727,10 +760,10 @@ test('verify finds an audit decision that was not carried over to its claim, and
   assert.doesNotMatch(clean.text, /migrated decision/, 'only the steps that were not run here (the rubric and the settings) are still missing');
   const audit = readAuditFile();
   const d = audit.decisions.find((x) => x.outcome === 'Applies') ?? audit.decisions[0];
-  w.fake.editRow(claimOf(w, d.geo_id).page_id, { 'Claim quality tags — verified': [], 'Challenged tags notes': 'Rewritten.' });
+  w.fake.editRow(claimOf(w, d.geo_id).page_id, { 'Verified tags': [], 'Challenged tags notes': 'Rewritten.' });
   const after = await w.run(verifyArgs(w));
   assert.equal(after.code, 2);
-  assert.match(after.text, /migrated decision - .*Claim quality tags — verified holds \[\], the audit decided \["Context-dependent"\]/);
+  assert.match(after.text, /migrated decision - .*Verified tags holds \[\], the audit decided \["Context-dependent"\]/);
   assert.match(after.text, /migrated decision - .*Challenged tags notes does not start with "From the audit of 9 October"/);
 });
 

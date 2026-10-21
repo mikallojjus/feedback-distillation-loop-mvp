@@ -470,8 +470,8 @@ test('distill: decisions the editor made on the claims since the last tag step a
 
 test('distill: claims that are not Reviewed give no decision, even with a tag in the relation, and a second run copies nothing again', async () => {
   const w = await makeWorld({ claims: 4, queue: [openRow(1), openRow(2)] });
-  w.editClaim(claimId(1), { 'Claim quality tags — verified': [], 'Review status': 'To review', 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 4 should let general references pass.' });
-  w.editClaim(claimId(2), { 'Claim quality tags — verified': [], 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 4 should let general references pass.' });
+  w.editClaim(claimId(1), { 'Verified tags': [], 'Review status': 'To review', 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 4 should let general references pass.' });
+  w.editClaim(claimId(2), { 'Verified tags': [], 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 4 should let general references pass.' });
   const r = await distill(w.hooks());
   assert.equal(r.exit, 0);
   assert.equal(r.report.sentence, 'Distill: no rule change to draft; no row is decided yet.');

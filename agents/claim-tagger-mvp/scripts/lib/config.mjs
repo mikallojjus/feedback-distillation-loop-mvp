@@ -11,11 +11,12 @@
 //   writableProperties(config, table, { setup }) -> Set of the column names a plan may write to that table (CONTRACTS section 8); with
 //                                                  setup: true also what a create made by the one-time setup may fill
 //   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the two exceptions of hard rule 1):
-//                                                  four on claims_copy, Editor wording on rule_changes, Paused on agent_settings; [] for the others
+//                                                  four on claims_copy (Verified tags, Review status, Why wrong, Challenged tags notes), Editor wording on rule_changes,
+//                                                  Paused on agent_settings; [] for the others
 //                                                  (tag_decisions, the agent's ledger, has none)
 //   capabilityOf(config, tag)                   -> text, deterministic, source or corpus (config.tags, with its default)
 //   groupOf(config, tag)                        -> the judge group the tag belongs to (config.judge.groups), or null
-//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_COPY_COLUMNS, CLAIMS_EDITOR_KEYS, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
+//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_COPY_COLUMNS, CLAIMS_EDITOR_KEYS, CLAIMS_WRITE_KEYS, AGENT_STATUS, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
 //              RULE_CHANGES_AGENT_STATUS (the Status values a script may write; Approved and Rejected belong to the editor,
 //              see config.editor_columns.rule_changes_status_editor_values)
 //
@@ -46,8 +47,17 @@ export const CLAIMS_COPY_COLUMNS = Object.freeze([
 
 /** The keys of notion.claims[].columns that name the four columns an editor fills on the Claims copy (they must also be listed in editor_columns.claims_copy). */
 export const CLAIMS_EDITOR_KEYS = Object.freeze(['verified', 'review_status', 'why_wrong', 'notes']);
-/** The keys of notion.claims[].write_columns: the four columns the agent fills on the Claims copy (Agent tags, Agent notes, Agent confidence, Agent reasons). */
-export const CLAIMS_WRITE_KEYS = Object.freeze(['tags', 'notes', 'confidence', 'reasons']);
+/**
+ * The keys of notion.claims[].write_columns: the seven columns the agent fills on the Claims copy (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting,
+ * Agent edition, Agent remarks; CLAIMS-REVIEW.md section 6.1). Agent notes is retired: a config that still names it is refused.
+ */
+export const CLAIMS_WRITE_KEYS = Object.freeze(['tags', 'confidence', 'reasons', 'status', 'waiting', 'edition', 'remarks']);
+/** The write_columns key of a column the agent no longer writes (Agent notes); a config that still has it is refused, because the plan check would otherwise let the agent write it. */
+export const CLAIMS_RETIRED_WRITE_KEYS = Object.freeze(['notes']);
+/** The values of Agent status (a select on the Claims copy): what the agent says about a claim. */
+export const AGENT_STATUS = Object.freeze({
+  waits: 'Waits for you', done: 'Done', disagrees: 'Disagrees with your decision', unread: 'Could not read',
+});
 
 // Tag decisions is the agent's ledger: Tag outcome, Why wrong, Your reasoning and Decided under are copies the agent makes from the Claims copy
 // (propose, and the setup migration); no editor writes there, so they are agent columns now.
@@ -157,7 +167,12 @@ export function validateConfig(config) {
       bool(`${path}.enabled`, c.enabled);
       table(path, c);
       if (obj(`${path}.columns`, c.columns)) for (const k of ['claim', 'link', 'sources', 'is_factual', ...CLAIMS_EDITOR_KEYS]) text(`${path}.columns.${k}`, c.columns[k]);
-      if (obj(`${path}.write_columns`, c.write_columns)) for (const k of CLAIMS_WRITE_KEYS) text(`${path}.write_columns.${k}`, c.write_columns[k]);
+      if (obj(`${path}.write_columns`, c.write_columns)) {
+        for (const k of CLAIMS_WRITE_KEYS) text(`${path}.write_columns.${k}`, c.write_columns[k]);
+        for (const k of CLAIMS_RETIRED_WRITE_KEYS) if (c.write_columns[k] !== undefined) bad(`${path}.write_columns.${k}`, 'Agent notes is retired (CLAIMS-REVIEW.md section 6.1); remove this key');
+        const names = CLAIMS_WRITE_KEYS.map((k) => c.write_columns[k]).filter((v) => typeof v === 'string' && v.trim() !== '');
+        if (new Set(names).size !== names.length) bad(`${path}.write_columns`, 'two keys name the same column');
+      }
     }, { min: 1 });
     if (Array.isArray(n.claims)) {
       if (!n.claims.some((c) => c?.enabled === true)) bad('notion.claims', 'no entry is enabled');
@@ -349,7 +364,7 @@ export function isProtected(config, id) {
  *                    (the Status values are limited to RULE_CHANGES_AGENT_STATUS)
  *   agent_settings   Rulebook edition, Last run summary; with setup also the key column (Name)
  *   rulebook         When to use; with setup every column of the copy
- *   claims_copy      the four write columns (Agent tags, Agent notes, Agent confidence, Agent reasons); with setup also every copied column
+ *   claims_copy      the seven write columns (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks); with setup also every copied column
  * Editor columns are never in these sets. A setup plan that seeds the audit, or a demo profile's setup, is the only way one is
  * written, and that exception is checked by the plan code, not here.
  */
@@ -373,7 +388,7 @@ export function writableProperties(config, table, { setup = false } = {}) {
       break;
     case 'claims_copy': {
       const entry = tableEntry(config, 'claims_copy');
-      add(...Object.values(entry.write_columns));
+      add(...CLAIMS_WRITE_KEYS.map((k) => entry.write_columns[k]).filter(Boolean));
       const editor = new Set(editorColumns(config, 'claims_copy'));
       if (setup) add(entry.key, ...Object.values(entry.columns).filter((c) => !editor.has(c)), ...CLAIMS_COPY_COLUMNS);
       break;

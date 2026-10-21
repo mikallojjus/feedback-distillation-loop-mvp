@@ -2,7 +2,7 @@
 // that form into the REST property configs that fixtures/fake-notion.mjs addDatabase takes.
 //
 //   restProps({ Name: 'title', Tags: { type: 'multi_select', options: ['a', 'b'] }, Taxonomy: { type: 'relation', data_source_id } }, relationTarget)
-//   A relation without a data_source_id of its own (the Claims copy's "Claim quality tags — verified") points at `relationTarget`: the data source id of the Rulebook copy.
+//   A relation without a data_source_id of its own (the Claims copy's Agent tags, Tags waiting and Verified tags) points at `relationTarget`: the data source id of the Rulebook copy.
 
 export function restProps(spec, relationTarget = null) {
   const out = {};
@@ -23,8 +23,10 @@ export const TABLE_SPECS = Object.freeze({
   claims_copy: {
     'Geo Name': 'title', 'Geo ID': 'rich_text', 'Geo URL': 'url', 'Geo Sources': 'rich_text', 'Geo Tags': 'multi_select', 'Geo Topics': 'rich_text', 'Geo Score': 'number',
     'Geo Supporting arguments': 'rich_text', 'Geo Opposing arguments': 'rich_text', 'Geo Related people': 'rich_text', 'Geo Related projects': 'rich_text',
-    'Geo Is factual': 'checkbox', 'Geo Name source': 'select', 'Agent tags': 'rich_text', 'Agent notes': 'rich_text', 'Agent confidence': 'number', 'Agent reasons': 'rich_text',
-    'Claim quality tags — verified': { type: 'relation' }, 'Review status': { type: 'select', options: ['To review', 'Reviewed'] },
+    'Geo Is factual': 'checkbox', 'Geo Name source': 'select', 'Agent tags': { type: 'relation' }, 'Agent confidence': 'number', 'Agent reasons': 'rich_text',
+    'Agent status': { type: 'select', options: ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read'] }, 'Tags waiting': { type: 'relation' },
+    'Agent edition': 'rich_text', 'Agent remarks': 'rich_text',
+    'Verified tags': { type: 'relation' }, 'Review status': { type: 'select', options: ['To review', 'Reviewed'] },
     'Why wrong': { type: 'select', options: ['Agent slip', 'Rule unclear', 'Rule should change'] }, 'Challenged tags notes': 'rich_text',
   },
   tag_decisions: {

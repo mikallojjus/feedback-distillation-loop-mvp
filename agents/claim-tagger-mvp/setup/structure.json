@@ -141,6 +141,88 @@
           "description": "The claim text."
         },
         {
+          "name": "Agent tags",
+          "type": "relation",
+          "options": [],
+          "description": "The tags that apply, from the Rulebook copy. The agent writes it; on a claim you have Reviewed it holds your Verified tags. Tags that wait for you are in Tags waiting instead.",
+          "relation_to": "rulebook"
+        },
+        {
+          "name": "Agent confidence",
+          "type": "number",
+          "options": [],
+          "description": "How sure the agent is: the lowest confidence among the tags it judged on the claim, from 0.5 (a coin flip) to 1 (certain). Your queue is sorted by it, lowest first."
+        },
+        {
+          "name": "Agent reasons",
+          "type": "rich_text",
+          "options": [],
+          "description": "Why the agent proposed what it did: one line per judged tag, \"<Tag>: <reason> · <rule cited> · <k> of <n> runs agree\", so you can decide without opening the agent's record."
+        },
+        {
+          "name": "Agent status",
+          "type": "select",
+          "options": [
+            "Waits for you",
+            "Done",
+            "Disagrees with your decision",
+            "Could not read"
+          ],
+          "description": "What the agent says about the claim: Waits for you (a tag needs your decision), Done, Disagrees with your decision, or Could not read. Your queue lists Waits for you; a claim you have decided leaves it at the agent's next tag run."
+        },
+        {
+          "name": "Tags waiting",
+          "type": "relation",
+          "options": [],
+          "description": "The tags that wait for your decision on this claim, from the Rulebook copy. Empty when nothing waits.",
+          "relation_to": "rulebook"
+        },
+        {
+          "name": "Agent edition",
+          "type": "rich_text",
+          "options": [],
+          "description": "The rulebook edition the agent wrote this row under."
+        },
+        {
+          "name": "Agent remarks",
+          "type": "rich_text",
+          "options": [],
+          "description": "What the agent could not check, such as \"not checked: 6 tags without rules\"; empty when it checked everything."
+        },
+        {
+          "name": "Verified tags",
+          "type": "relation",
+          "options": [],
+          "description": "The tags you confirm on the claim, from the Rulebook copy (the real table's column is Claim quality tags — verified). Applies for a tag that is in it, Does not apply for a judged tag that is not, once Review status is Reviewed.",
+          "relation_to": "rulebook",
+          "renamed_from": "Claim quality tags — verified"
+        },
+        {
+          "name": "Review status",
+          "type": "select",
+          "options": [
+            "To review",
+            "Reviewed"
+          ],
+          "description": "To review or Reviewed. A claim is decided once it is Reviewed; anything else leaves it open."
+        },
+        {
+          "name": "Why wrong",
+          "type": "select",
+          "options": [
+            "Agent slip",
+            "Rule unclear",
+            "Rule should change"
+          ],
+          "description": "Why the agent was wrong on this claim: one value for the claim. Agent slip, Rule unclear or Rule should change."
+        },
+        {
+          "name": "Challenged tags notes",
+          "type": "rich_text",
+          "options": [],
+          "description": "Your words. A line that starts with a tag name and a colon belongs to that tag; it may start with Agent slip, Rule unclear or Rule should change and a full stop, which is that tag's Why wrong. \"rule 4\" typed here names the rule."
+        },
+        {
           "name": "Geo ID",
           "type": "rich_text",
           "options": [],
@@ -225,62 +307,23 @@
           "description": "Which space the claim's name was taken from."
         },
         {
-          "name": "Agent tags",
+          "name": "Agent tags (old)",
           "type": "rich_text",
           "options": [],
-          "description": "The tags that apply and are not waiting for an editor, comma-separated, or empty."
+          "description": "The text column Agent tags of the first build, kept hidden. The agent no longer writes it.",
+          "renamed_from": "Agent tags",
+          "retired": true
         },
         {
-          "name": "Agent notes",
+          "name": "Agent notes (old)",
           "type": "rich_text",
           "options": [],
-          "description": "At most two short lines: line 1 the tags that apply or \"no tags\"; line 2 how many tags wait for an editor, what was not checked, and the rulebook edition, joined with \" · \"."
-        },
-        {
-          "name": "Agent confidence",
-          "type": "number",
-          "options": [],
-          "description": "How sure the agent is: the lowest confidence among the tags it judged on the claim, from 0.5 (a coin flip) to 1 (certain). Your queue is sorted by it, lowest first."
-        },
-        {
-          "name": "Agent reasons",
-          "type": "rich_text",
-          "options": [],
-          "description": "Why the agent proposed what it did: one line per judged tag, \"<Tag>: <reason> · <rule cited> · <k> of <n> runs agree\", so you can decide without opening the agent's record."
-        },
-        {
-          "name": "Claim quality tags — verified",
-          "type": "relation",
-          "options": [],
-          "description": "The tags you confirm on the claim, from the Rulebook copy (the real table has a column of this name). Applies for a tag that is in it, Does not apply for a judged tag that is not, once Review status is Reviewed.",
-          "relation_to": "rulebook"
-        },
-        {
-          "name": "Review status",
-          "type": "select",
-          "options": [
-            "To review",
-            "Reviewed"
-          ],
-          "description": "To review or Reviewed. A claim is decided once it is Reviewed; anything else leaves it open."
-        },
-        {
-          "name": "Why wrong",
-          "type": "select",
-          "options": [
-            "Agent slip",
-            "Rule unclear",
-            "Rule should change"
-          ],
-          "description": "Why the agent was wrong on this claim: one value for the claim. Agent slip, Rule unclear or Rule should change."
-        },
-        {
-          "name": "Challenged tags notes",
-          "type": "rich_text",
-          "options": [],
-          "description": "Your words. A line that starts with a tag name and a colon belongs to that tag; \"rule 4\" typed here names the rule."
+          "description": "The text column Agent notes of the first build, kept hidden. The agent no longer writes it.",
+          "renamed_from": "Agent notes",
+          "retired": true
         }
-      ]
+      ],
+      "arrange_default_view": true
     },
     "tag_decisions": {
       "title": "Tag decisions",
@@ -516,15 +559,18 @@
     {
       "name": "Your queue",
       "table": "claims_copy",
-      "filter": "Review status is not Reviewed, and Agent notes contains for an editor, and Agent notes does not contain nothing waits",
+      "filter": "Agent status is Waits for you",
       "sort": "Agent confidence, lowest first",
       "columns": [
         "Geo Name",
         "Agent tags",
         "Agent confidence",
-        "Agent notes",
         "Agent reasons",
-        "Claim quality tags — verified",
+        "Agent status",
+        "Tags waiting",
+        "Agent edition",
+        "Agent remarks",
+        "Verified tags",
         "Review status",
         "Why wrong",
         "Challenged tags notes"
@@ -539,7 +585,13 @@
       "columns": [
         "Geo Name",
         "Agent tags",
-        "Claim quality tags — verified",
+        "Agent confidence",
+        "Agent reasons",
+        "Agent status",
+        "Tags waiting",
+        "Agent edition",
+        "Agent remarks",
+        "Verified tags",
         "Review status",
         "Why wrong",
         "Challenged tags notes"
@@ -549,15 +601,18 @@
     {
       "name": "Agent disagreed",
       "table": "claims_copy",
-      "filter": "Agent notes contains disagrees",
+      "filter": "Agent status is Disagrees with your decision",
       "sort": "Agent confidence, lowest first",
       "columns": [
         "Geo Name",
         "Agent tags",
         "Agent confidence",
-        "Agent notes",
         "Agent reasons",
-        "Claim quality tags — verified",
+        "Agent status",
+        "Tags waiting",
+        "Agent edition",
+        "Agent remarks",
+        "Verified tags",
         "Review status",
         "Why wrong",
         "Challenged tags notes"

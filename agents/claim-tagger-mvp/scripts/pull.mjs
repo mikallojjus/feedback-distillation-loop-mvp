@@ -12,11 +12,13 @@
 //
 // runs/pull/<pull-id>/
 //   schema/<table>.json   the retrieveDatabase answer          raw/<table>.jsonl   every page object, one per line
-//   norm/claims.jsonl     { table, geo_id, page_id, notion_url, claim, geo_url, sources_text, source_links [{ text, href }], is_factual, agent_tags, agent_notes,
-//                           agent_confidence (a number or null), agent_reasons (text), verified_tags (Claim quality tags — verified as tag names), review_status (To review, Reviewed
+//   norm/claims.jsonl     { table, geo_id, page_id, notion_url, claim, geo_url, sources_text, source_links [{ text, href }], is_factual, agent_tags (Agent tags as tag names),
+//                           agent_status (Waits for you, Done, Disagrees with your decision, Could not read, or null), tags_waiting (Tags waiting as tag names), agent_confidence (a number
+//                           or null), agent_reasons (text), agent_edition (text), agent_remarks (text), verified_tags (Verified tags as tag names), review_status (To review, Reviewed
 //                           or null), why_wrong (or null), challenged_notes (text), last_edited }
-//                         The relation is resolved to names through the page ids of the Rulebook copy's rows (this pull's, else the ones in rubric/rubric.json);
-//                         an id that names no tag of the rulebook is left out and said in a warning.
+//                         The three relations (Agent tags, Tags waiting, Verified tags) are resolved to names through the page ids of the Rulebook copy's rows (this pull's, else the
+//                         ones in rubric/rubric.json); an id that names no tag of the rulebook is left out and said in a warning. A Claims copy that still has the text column Agent tags
+//                         (setup.mjs build has not renamed it) is read the same way: its comma-separated names are the list.
 //   norm/rulebook.json    [ { <every column by its Notion name>, page_id } ] for the rows that carry the work tag (config notion.rulebook.work_tag)
 //   norm/queue.jsonl      the thirteen columns of Tag decisions (the agent's ledger) by their Notion names + page_id, last_edited, decided (Tag outcome is set)
 //   norm/lessons.jsonl    the ten columns of Rule changes + page_id, created, supporting_keys (the trailing <geo_id>::<tag> of each Supporting rows line)
@@ -46,10 +48,10 @@ import { agentRoot, codeFile, isMain, repoRoot as defaultRepoRoot, runId as make
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { mulberry32, sample, seedFromString } from './lib/rng.mjs';
 import { computeDrift, readLock, readRubric } from './lib/rubric.mjs';
-import { claimWaits, decisionsFor, disagreementsIn, isReviewed, isToReview, parseTagNotes, waitsForEditor } from './lib/decisions.mjs';
+import { claimDisagrees, claimWaits, decisionsFor, isReviewed, isToReview, parseTagLines, parseTagNotes } from './lib/decisions.mjs';
 import { validate } from './lib/validate.mjs';
 
-export { claimWaits, decisionsFor, disagreementsIn, isReviewed, isToReview, parseTagNotes, waitsForEditor };
+export { claimDisagrees, claimWaits, decisionsFor, isReviewed, isToReview, parseTagLines, parseTagNotes };
 
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/pull.mjs --all | --tables <rulebook,claims_copy,tag_decisions,rule_changes,agent_settings> [--pull-id <id>]',
@@ -331,17 +333,25 @@ function claimsNorm(entry, table, decoded, pagesById, warnings, tagNames = new M
   const writeCols = entry.write_columns ?? {};
   const { rows, duplicates, empty } = indexRows(table, keyColumn, decoded);
   if (empty.length) warnings.push(`${table}: ${empty.length} row(s) without a ${keyColumn} were left out of the norm file`);
-  let unresolved = 0;
+  const unresolved = {};
+  // a relation cell as tag names (each once, in code point order); an id that names no tag is counted for the warning. A text cell (a table that is not rebuilt yet) is a comma-separated list.
+  const namesOf = (value, column) => {
+    const names = [];
+    if (Array.isArray(value)) {
+      for (const id of value) {
+        const name = tagNames.get(normId(id));
+        if (name === undefined) unresolved[column] = (unresolved[column] ?? 0) + 1;
+        else if (!names.includes(name)) names.push(name);
+      }
+    } else {
+      for (const part of text(value).split(',')) if (part.trim() !== '' && !names.includes(part.trim())) names.push(part.trim());
+    }
+    return names.sort(byCodePoints);
+  };
   const out = rows.map(({ key, row }) => {
     const p = row.props;
     const raw = pagesById.get(normId(row.page_id));
     const links = geoSourceLinks(raw?.properties?.[cols.sources]?.rich_text, text(p[cols.sources]));
-    const verified = [];
-    for (const id of Array.isArray(p[cols.verified]) ? p[cols.verified] : []) {
-      const name = tagNames.get(normId(id));
-      if (name === undefined) unresolved += 1;
-      else if (!verified.includes(name)) verified.push(name);
-    }
     return {
       table: entry.name ?? table,
       geo_id: key,
@@ -352,18 +362,21 @@ function claimsNorm(entry, table, decoded, pagesById, warnings, tagNames = new M
       sources_text: text(p[cols.sources]),
       source_links: links.map(({ text: t, href }) => ({ text: t, href })),
       is_factual: p[cols.is_factual] ?? null,
-      agent_tags: text(p[writeCols.tags]),
-      agent_notes: text(p[writeCols.notes]),
+      agent_tags: namesOf(p[writeCols.tags], writeCols.tags),
+      agent_status: text(p[writeCols.status]).trim() || null,
+      tags_waiting: namesOf(p[writeCols.waiting], writeCols.waiting),
       agent_confidence: numberOrNull(p[writeCols.confidence]),
       agent_reasons: text(p[writeCols.reasons]),
-      verified_tags: verified.sort(byCodePoints),
+      agent_edition: text(p[writeCols.edition]).trim(),
+      agent_remarks: text(p[writeCols.remarks]).trim(),
+      verified_tags: namesOf(p[cols.verified], cols.verified),
       review_status: text(p[cols.review_status]).trim() || null,
       why_wrong: text(p[cols.why_wrong]).trim() || null,
       challenged_notes: text(p[cols.notes]),
       last_edited: row.last_edited_time ?? null,
     };
   });
-  if (unresolved) warnings.push(`${table}: ${unresolved} reference(s) in ${cols.verified} name no tag of the rulebook (their page ids are not among the Rulebook copy's rows), so they were left out`);
+  for (const [column, n] of Object.entries(unresolved)) warnings.push(`${table}: ${n} reference(s) in ${column} name no tag of the rulebook (their page ids are not among the Rulebook copy's rows), so they were left out`);
   return { out, duplicates };
 }
 

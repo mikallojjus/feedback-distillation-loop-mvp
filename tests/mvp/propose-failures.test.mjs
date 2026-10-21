@@ -3,6 +3,11 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { propose } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
+import { distill } from '../../agents/claim-tagger-mvp/scripts/distill.mjs';
+import { status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
+import { followup } from '../../agents/claim-tagger-mvp/scripts/followup.mjs';
+import { promote } from '../../agents/claim-tagger-mvp/scripts/promote.mjs';
+import { TABLE_SPECS } from './helpers/tables.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { claimText, makeWorld } from './helpers/loop-world.mjs';
@@ -92,7 +97,7 @@ test('a write that fails stops the run with exit 1 and the same command finishes
   const again = await propose(w.hooks());
   assert.equal(again.exit, 0);
   assert.deepEqual(w.rows('tag_decisions').map((r) => r.Key).sort(), [1, 2, 3, 4, 5, 6].map((i) => `c0${i}::Context-dependent`));
-  for (let i = 1; i <= 6; i++) assert.notEqual(w.row('claims_copy', `c0${i}`)['Agent notes'], '', `claim ${i} has its notes now`);
+  for (let i = 1; i <= 6; i++) assert.notEqual(w.claim(`c0${i}`)['Agent status'], null, `claim ${i} has its columns now`);
 });
 
 test('a create whose answer was lost is never sent twice: the next run finds the row and writes nothing again for it', async () => {
@@ -134,9 +139,10 @@ test('two judged tags in two groups: each has its own cells, its own row for an 
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assert.deepEqual(w.rows('tag_decisions').map((x) => x.Key).sort(), [1, 2, 3, 4].flatMap((i) => [`c0${i}::Context-dependent`, `c0${i}::Wordy`]), 'a ledger row for every claim and every judged tag');
   assert.deepEqual(w.rows('claims_copy').map((c) => [c['Geo ID'], c['Agent confidence']]).sort(), [['c01', 0.9], ['c02', 0.9], ['c03', 0.5], ['c04', 0.9]], 'the lowest confidence among the judged tags');
-  assert.equal(w.row('claims_copy', 'c01')['Agent tags'], 'Context-dependent, Wordy');
-  assert.equal(w.row('claims_copy', 'c01')['Agent notes'], 'Context-dependent, Wordy\nnothing waits for an editor · not checked: 4 source tags, 2 duplicate tags, 5 tags without rules · edition 2026-10-16.1');
-  assert.equal(w.row('claims_copy', 'c03')['Agent notes'].split('\n')[1].startsWith('2 wait for an editor'), true);
+  assert.deepEqual(w.claim('c01')['Agent tags'], ['Context-dependent', 'Wordy']);
+  assert.deepEqual([w.claim('c01')['Tags waiting'], w.claim('c01')['Agent status'], w.claim('c01')['Agent edition']], [[], 'Done', '2026-10-16.1']);
+  assert.equal(w.claim('c01')['Agent remarks'], 'not checked: 4 source tags, 2 duplicate tags, 5 tags without rules');
+  assert.deepEqual([w.claim('c03')['Tags waiting'], w.claim('c03')['Agent status']], [['Context-dependent', 'Wordy'], 'Waits for you'], 'two tags wait on the same claim');
   assert.equal(r.report.sentence, 'Tag: the agent read 4 claims for Context-dependent and Wordy; 1 waits for you.', 'Your queue lists claims: c03 waits once, for two tags');
   assert.deepEqual(r.report.rows.slice(0, 3).map((x) => x[0]), ['Claims read', 'Carrying Context-dependent', 'Carrying Wordy']);
   clean(h, r);
@@ -156,4 +162,57 @@ test('two judged tags: Agent reasons has one line per tag, in tag order, each th
   assert.equal(w.row('claims_copy', 'c01')['Agent reasons'], `Context-dependent: ${cd}\nWordy: ${wordy}`);
   assert.equal(w.row('claims_copy', 'c02')['Agent reasons'].split('\n').length, 2);
   clean(h, r);
+});
+
+// ---- several tags on one claim: the note convention of CLAIMS-REVIEW.md section 6.3 -------------------------------------------------------------------------
+
+test('two judged tags and one Reviewed claim: a line per tag in the notes, a reason word on the line is that tag\'s Why wrong in the ledger, a tag the editor agrees with needs no line', async () => {
+  const { default: taxonomy } = await import('../../agents/claim-tagger-mvp/setup/taxonomy-issue.json', { with: { type: 'json' } });
+  const rows = taxonomy.rows.map((r) => (r.Name === 'Wordy' ? { ...r, 'When to use': '1. A sentence that says the same thing twice is Wordy.\n2. A sentence with filler words that add nothing is Wordy.' } : r));
+  const w = await makeWorld({ claims: 3, rulebook: rows, configure: (c) => { c.judge.groups.G2 = ['Wordy']; } });
+  w.table({ ...sure(3), [claimText(1)]: { decision: 'apply', p: 0.9 } }); // the fake answers every tag of a claim alike: both tags Apply on claim 1, neither does on the others
+  assert.equal((await w.judge()).exit, 0);
+  // claim 1: the editor agrees on Context-dependent, disagrees on Wordy and says why on its line; the claim's Why wrong is Agent slip
+  w.review('c01', { tags: ['Context-dependent'], why: 'Agent slip', notes: 'Wordy: Rule unclear. It repeats itself, and rule 2 does not say so.' });
+  // claim 2: both tags are wrong, one note for both: both rows take the claim's Why wrong and the whole text
+  w.review('c02', { tags: ['Context-dependent', 'Wordy'], why: 'Rule should change', notes: 'Both apply here.' });
+  // claim 3: two lines, each with its own reason
+  w.review('c03', { tags: ['Context-dependent', 'Wordy'], why: 'Agent slip', notes: 'Context-dependent: Rule should change. A new rule is needed.\nWordy: Rule unclear. Rule 1.' });
+  const h = w.hooks();
+  const r = await propose(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const row = (id, tag) => w.row('tag_decisions', `${id}::${tag}`);
+  const copy = (x) => [x['Tag outcome'], x['Why wrong'], x['Your reasoning']];
+  assert.deepEqual(copy(row('c01', 'Context-dependent')), ['Applies', null, ''], 'the agent got it right: no Why wrong and no words');
+  assert.deepEqual(copy(row('c01', 'Wordy')), ['Does not apply', 'Rule unclear', 'It repeats itself, and rule 2 does not say so.'], 'the reason word on the line overrides the claim\'s Why wrong; it is not part of the words');
+  assert.deepEqual(copy(row('c02', 'Context-dependent')), ['Applies', 'Rule should change', 'Both apply here.'], 'a note with no tag name applies to every tag the agent got wrong');
+  assert.deepEqual(copy(row('c02', 'Wordy')), ['Applies', 'Rule should change', 'Both apply here.']);
+  assert.deepEqual(copy(row('c03', 'Context-dependent')), ['Applies', 'Rule should change', 'A new rule is needed.']);
+  assert.deepEqual(copy(row('c03', 'Wordy')), ['Applies', 'Rule unclear', 'Rule 1.']);
+  // the claim itself: the editor's columns are as they were left, and the agent says it differs on the tags it got wrong
+  assert.equal(w.row('claims_copy', 'c01')['Why wrong'], 'Agent slip', 'the editor\'s columns are never written by the agent');
+  assert.deepEqual([w.claim('c01')['Agent tags'], w.claim('c01')['Agent status']], [['Context-dependent'], 'Disagrees with your decision'], "the editor's set is written, and the status says the agent still differs on Wordy");
+  assert.deepEqual(w.claim('c01')['Tags waiting'], []);
+});
+
+test('a Claims table that setup build has not rebuilt stops every script that would read a decision from it or write the agent\'s columns to it, and nothing is changed', async () => {
+  const { 'Verified tags': _verified, ...rest } = TABLE_SPECS.claims_copy;
+  const old = { ...rest, 'Agent tags': 'rich_text', 'Claim quality tags — verified': { type: 'relation' } }; // the text column Agent tags, and the relation under its old name
+  const decided = { Claim: claimText(1), Key: 'c01::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Tag outcome': 'Applies', 'Why wrong': 'Agent slip', 'Your reasoning': 'The reference is clear.', 'Rulebook edition': '2026-10-16.1' };
+  const w = await makeWorld({ claims: 3, tableSpecs: { claims_copy: old }, queue: [decided], claimRows: { c01: { 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'The reference is clear.' } } });
+  w.table(sure(3));
+  assert.equal((await w.judge()).exit, 0);
+  const before = w.writes().length;
+  const ledgerBefore = structuredClone(w.rows('tag_decisions'));
+  for (const [name, run] of [['Tag', propose], ['Distill', distill], ['Status', status], ['Follow-up', followup], ['Promote', promote]]) {
+    const h = w.hooks();
+    const r = await run(h);
+    assert.equal(r.exit, 2, name);
+    assert.equal(r.report.sentence, `${name}: nothing was done, because the Claims table does not have the agent's new columns yet.`, name);
+    assert.equal(r.report.next, 'Next: ask the engineer to run the setup build, then type the same command again.', name);
+    assert.match(h.io.errs.join('\n'), /Agent tags \(rich_text, not relation\).*Verified tags \(missing\)/, name);
+    clean(h, r);
+  }
+  assert.equal(w.writes().length, before, 'not one write');
+  assert.deepEqual(w.rows('tag_decisions'), ledgerBefore, 'the ledger copy of the decision is as it was: Applies');
 });

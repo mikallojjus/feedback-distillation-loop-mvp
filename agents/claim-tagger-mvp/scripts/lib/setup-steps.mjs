@@ -135,7 +135,7 @@ export function readAudit(file) {
 export function columnsOf(root, table) {
   try {
     const structure = loadStructure(root);
-    return structure.tables[table].columns.filter((c) => !AUTOMATIC_TYPES.includes(c.type)).map((c) => c.name);
+    return structure.tables[table].columns.filter((c) => !AUTOMATIC_TYPES.includes(c.type) && c.retired !== true).map((c) => c.name);
   } catch (e) {
     if (!(e instanceof StructureError)) throw e;
     return table === 'rulebook' ? [...RULEBOOK_COLUMNS] : [...CLAIMS_COPY_COLUMNS];
@@ -155,7 +155,7 @@ export function rulebookOps(taxonomy, columns) {
   });
 }
 
-/** One create per picked claim: the Geo columns of the structure that the row carries, Agent tags and Agent notes left empty. */
+/** One create per picked claim: the Geo columns of the structure that the row carries (a retired column is not one of them), the agent's columns left empty. */
 export function claimOps(pick, columns, { keyColumn = 'Geo ID', skip = [] } = {}) {
   return pick.rows.map((row) => {
     const properties = {};
@@ -416,8 +416,16 @@ export async function stepStructure(ctx, parts) {
   if (parts.includes('databases')) {
     lines.push(`tables: ${said(result.created.databases, there(result.databases))}`);
     lines.push(`columns: ${result.created.columns} added${Object.keys(result.columns).length ? ` (${Object.entries(result.columns).map(([t, names]) => `${t}: ${names.join(', ')}`).join('; ')})` : ''}`);
+    if (result.created.columns_renamed) {
+      lines.push(`columns renamed: ${result.created.columns_renamed} (${Object.entries(result.columnsRenamed).map(([t, list]) => `${t}: ${list.map((r) => `${r.from} -> ${r.to}`).join(', ')}`).join('; ')})`);
+    }
   }
-  if (parts.includes('views')) lines.push(`views: ${said(result.created.views, there(viewList.map((v) => v)))}${result.created.renamed ? `, ${result.created.renamed} renamed` : ''}`);
+  if (parts.includes('views')) {
+    lines.push(`views: ${said(result.created.views, there(viewList.map((v) => v)))}${result.created.renamed ? `, ${result.created.renamed} renamed` : ''}`);
+    const brought = Object.entries(result.updated).flatMap(([t, views]) => Object.entries(views).map(([name, what]) => `${t}: ${name} (${what.join(', ')})`));
+    const arranged = Object.entries(result.arranged).flatMap(([t, names]) => names.map((name) => `${t}: ${name} (column order)`));
+    if (brought.length || arranged.length) lines.push(`views brought to the structure: ${[...brought, ...arranged].join('; ')}`);
+  }
   for (const w of result.warnings) ctx.warn(w);
   let code = result.code;
   const failed = Object.entries(result.views).flatMap(([table, views]) => Object.entries(views).filter(([, v]) => v.status === 'failed').map(([name, v]) => ({ table, name, message: v.message })));
@@ -512,7 +520,7 @@ export async function stepSeedAudit(ctx, { from } = {}) {
  * What migrate-decisions writes (CLAIMS-REVIEW.md, section 3), worked out from the pull. `claims` are the rows of norm/claims.jsonl, `ledger` the rows of norm/queue.jsonl,
  * `tagPages` maps a tag name to the page id of its Rulebook copy row, `columns` is the claims entry's `columns` and `write_columns`.
  *   a claim with ledger rows that hold a decision from the audit (Your reasoning starts with the audit prefix) and no decision of its own yet gets, on the claim:
- *   Claim quality tags — verified (the tags with outcome Applies), Review status Reviewed, Why wrong (the ledger's, else Agent slip) and Challenged tags notes (the rows'
+ *   Verified tags (the tags with outcome Applies), Review status Reviewed, Why wrong (the ledger's, else Agent slip) and Challenged tags notes (the rows'
  *   Your reasoning, which carries "From the audit of 9 October"); and on each of those ledger rows Decided under, the edition the row's proposal was made under (when it
  *   records one). A claim whose ledger rows have a confidence and no Agent confidence of its own gets the lowest of them (the open rows).
  *   Left alone: a claim that is Reviewed or has any editor column filled already (carried over, or an editor's own work), and a decided ledger row that is not from the

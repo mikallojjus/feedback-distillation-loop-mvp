@@ -251,14 +251,19 @@ test('report: the parts of report.json', () => {
 const claimRow = load('claim-row');
 const claimOf = (over = {}) => ({
   table: 'claims_copy', geo_id: 'g1', page_id: '0a9e0000-0000-4000-8000-000000000001', notion_url: 'https://www.notion.so/x', claim: 'The AI Force should enforce binding safety standards',
-  geo_url: null, sources_text: '', source_links: [], is_factual: false, agent_tags: '', agent_notes: 'no tags\n1 waits for an editor · edition 2026-10-16.1', agent_confidence: 0.65,
-  agent_reasons: "Context-dependent: Two rules pull apart. · 2 of 2 runs agree", verified_tags: [], review_status: null, why_wrong: null, challenged_notes: '', last_edited: '2026-10-16T09:00:00.000Z', ...over,
+  geo_url: null, sources_text: '', source_links: [], is_factual: false, agent_tags: [], agent_status: 'Waits for you', tags_waiting: ['Context-dependent'], agent_confidence: 0.65,
+  agent_reasons: "Context-dependent: Two rules pull apart. · 2 of 2 runs agree", agent_edition: '2026-10-16.1', agent_remarks: '', verified_tags: [], review_status: null, why_wrong: null,
+  challenged_notes: '', last_edited: '2026-10-16T09:00:00.000Z', ...over,
 });
 
 test('claim row: an open claim, a Reviewed claim and one that has never been read', () => {
   ok(claimRow, claimOf());
-  ok(claimRow, claimOf({ agent_tags: 'Context-dependent', verified_tags: ['Context-dependent'], review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: 'Context-dependent: rule 3 is unclear.' }));
-  ok(claimRow, claimOf({ agent_notes: '', agent_confidence: null, review_status: 'To review' }));
+  ok(claimRow, claimOf({
+    agent_tags: ['Context-dependent'], agent_status: 'Done', tags_waiting: [], agent_remarks: 'not checked: 5 tags without rules', verified_tags: ['Context-dependent'], review_status: 'Reviewed',
+    why_wrong: 'Rule unclear', challenged_notes: 'Context-dependent: Rule unclear. Rule 3 is unclear.',
+  }));
+  ok(claimRow, claimOf({ agent_status: null, tags_waiting: [], agent_edition: '', agent_confidence: null, review_status: 'To review' }));
+  for (const status of ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read', null]) ok(claimRow, claimOf({ agent_status: status }), String(status));
   for (const why of ['Agent slip', 'Rule unclear', 'Rule should change']) ok(claimRow, claimOf({ review_status: 'Reviewed', why_wrong: why }), why);
 });
 
@@ -268,6 +273,12 @@ test('claim row: what makes a row invalid', () => {
   bad(claimRow, claimOf({ agent_confidence: 0.2 }), /agent_confidence: must be >= 0.5/);
   bad(claimRow, claimOf({ agent_confidence: 1.1 }), /agent_confidence: must be <= 1/);
   bad(claimRow, claimOf({ verified_tags: 'Context-dependent' }), /verified_tags: expected array/);
+  bad(claimRow, claimOf({ agent_tags: 'Context-dependent' }), /agent_tags: expected array/);
+  bad(claimRow, claimOf({ tags_waiting: [''] }), /tags_waiting\[0\]: must be at least 1 characters/);
+  bad(claimRow, claimOf({ agent_status: 'Maybe' }), /agent_status: expected one of "Waits for you", "Done", "Disagrees with your decision", "Could not read", null/);
+  bad(claimRow, claimOf({ agent_status: undefined }), /agent_status: missing required property/);
+  bad(claimRow, claimOf({ agent_edition: undefined }), /agent_edition: missing required property/);
+  bad(claimRow, claimOf({ agent_notes: 'no tags' }), /agent_notes: unexpected property/);
   bad(claimRow, claimOf({ verified_tags: [''] }), /verified_tags\[0\]: must be at least 1 characters/);
   bad(claimRow, claimOf({ geo_id: '' }), /geo_id: must be at least 1 characters/);
   bad(claimRow, claimOf({ challenged_notes: undefined }), /challenged_notes: missing required property/);

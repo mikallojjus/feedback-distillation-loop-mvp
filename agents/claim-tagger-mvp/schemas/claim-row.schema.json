@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Claim (a Claims copy row as a pull writes it)",
-  "description": "One line of norm/claims.jsonl: a row of the Claims copy as plain values. The agent writes Agent tags, Agent notes, Agent confidence and Agent reasons; the editor writes the verified tags (a relation to the Rulebook copy, resolved here to tag names), Review status, Why wrong and Challenged tags notes. A claim is decided when review_status is Reviewed; any other state has no decision. A script never writes the four editor fields (hard rule 1).",
+  "description": "One line of norm/claims.jsonl: a row of the Claims copy as plain values. The agent writes seven columns: Agent tags and Tags waiting (relations to the Rulebook copy, resolved here to tag names), Agent confidence, Agent reasons, Agent status, Agent edition and Agent remarks. The editor writes the verified tags (a relation to the Rulebook copy, resolved here to tag names), Review status, Why wrong and Challenged tags notes. A claim is decided when review_status is Reviewed; any other state has no decision. A script never writes the four editor fields (hard rule 1).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["geo_id", "page_id", "claim", "agent_tags", "agent_notes", "agent_confidence", "agent_reasons", "verified_tags", "review_status", "why_wrong", "challenged_notes"],
+  "required": ["geo_id", "page_id", "claim", "agent_tags", "agent_status", "tags_waiting", "agent_confidence", "agent_reasons", "agent_edition", "agent_remarks", "verified_tags", "review_status", "why_wrong", "challenged_notes"],
   "properties": {
     "table": { "type": "string" },
     "geo_id": { "type": "string", "minLength": 1, "description": "The claim's identity in Geo; the key of the row." },
@@ -15,14 +15,17 @@
     "sources_text": { "type": "string" },
     "source_links": { "type": "array", "items": { "type": "object", "required": ["text", "href"], "properties": { "text": { "type": "string" }, "href": { "type": "string" } } } },
     "is_factual": { "type": ["boolean", "null"] },
-    "agent_tags": { "type": "string", "description": "Comma-separated tag names, or empty." },
-    "agent_notes": { "type": "string", "description": "Two lines: the tags that apply or no tags; then how many tags wait for an editor (or that nothing waits), whether the agent disagrees with the editor, what was not checked and the edition." },
+    "agent_tags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Agent tags (a relation to the Rulebook copy), as tag names: the tags that apply and are not waiting for an editor. A table that is not rebuilt yet holds the old text column; its comma-separated names are read as the same list." },
+    "agent_status": { "type": ["string", "null"], "enum": ["Waits for you", "Done", "Disagrees with your decision", "Could not read", null], "description": "What the agent says about the claim; empty until the first tag run has read it." },
+    "tags_waiting": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Tags waiting (a relation to the Rulebook copy), as tag names: the judged tags that wait for the editor." },
     "agent_confidence": { "type": ["number", "null"], "minimum": 0.5, "maximum": 1, "description": "The lowest confidence among the tags the agent judged on the claim." },
     "agent_reasons": { "type": "string", "description": "One line per judged tag: \"<Tag>: <reason> · <rule cited> · <k> of <n> runs agree\"." },
-    "verified_tags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Claim quality tags — verified, as tag names." },
+    "agent_edition": { "type": "string", "description": "The rulebook edition the row was written under." },
+    "agent_remarks": { "type": "string", "description": "\"not checked: <counts by kind>\" when the agent could not check some tags of the rulebook, else empty." },
+    "verified_tags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "Verified tags (the editor's relation to the Rulebook copy), as tag names." },
     "review_status": { "type": ["string", "null"], "enum": ["To review", "Reviewed", null] },
     "why_wrong": { "type": ["string", "null"], "enum": ["Agent slip", "Rule unclear", "Rule should change", null], "description": "One value for the claim." },
-    "challenged_notes": { "type": "string", "description": "The editor's words; a line that starts with a tag name and a colon belongs to that tag." },
+    "challenged_notes": { "type": "string", "description": "The editor's words; a line that starts with a tag name and a colon belongs to that tag, and may start with a reason word and a full stop (Rule unclear.) that is that tag's Why wrong." },
     "last_edited": { "type": ["string", "null"] }
   }
 }

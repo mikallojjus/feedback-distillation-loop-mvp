@@ -4,29 +4,34 @@
 //   isReviewed(claim)                      -> true when the claim's Review status is Reviewed: the only state in which it has a decision
 //   isToReview(claim)                      -> true when the claim's Review status is To review: every judged tag of such a claim waits for the editor, whatever the
 //                                             agent's confidence (propose and the follow-up write the notes that way; a claim with Review status empty waits only for a tag the agent could not tell)
-//   waitsForEditor(notes)                  -> true when Agent notes line 2 says "<n> wait(s) for an editor" ("nothing waits for an editor" is not that)
-//   claimWaits(claim)                      -> true for a claim that waits in Your queue: it says so and is not Reviewed
-//   disagreementsIn(notes)                 -> the tags Agent notes says the agent disagrees with the editor on ("disagrees with your decision on A, B")
-//   parseTagNotes(notes, tagNames)         -> Map(tag -> text) when the notes hold lines that start with a tag name and a colon, else null
+//   claimWaits(claim)                      -> true for a claim that is still to decide and that the agent says waits: Agent status is "Waits for you" and the claim is not Reviewed
+//                                             (a decided claim keeps the status until the next tag run reads the decision, CLAIMS-REVIEW.md section 6.2)
+//   claimDisagrees(claim)                  -> true when Agent status is "Disagrees with your decision"
+//   parseTagLines(notes, tagNames)         -> Map(tag -> { text, reason }) when the notes hold lines that start with a tag name and a colon, else null; `reason` is the reason word
+//                                             (Agent slip, Rule unclear, Rule should change) that opens the line after the colon and a full stop, else null (section 6.3)
+//   parseTagNotes(notes, tagNames)         -> the same as Map(tag -> text), without the reason word
 //   decisionsFor(claim, ledgerRows, { tagNames }) -> the decision of every tag the agent judged on a Reviewed claim (none for any other claim):
 //                                             [{ key, tag, outcome, why_wrong, reasoning, decided_under }]
 //
 // The rules (section 2). A claim is decided when Review status is Reviewed. For every tag the agent judged on it (every ledger row of the claim):
-//   outcome       Applies when the tag is in Claim quality tags — verified, else Does not apply
-//   why_wrong     the claim's Why wrong, for a tag whose outcome differs from the agent's proposal; null for a tag the agent got right
-//   reasoning     the tag's own line of Challenged tags notes when the notes hold lines that start with "<tag name>:"; otherwise the whole text, for a
-//                 tag whose outcome differs from the proposal
+//   outcome       Applies when the tag is in Verified tags, else Does not apply
+//   why_wrong     the reason word that opens the tag's own line of the notes ("Context-dependent: Rule unclear. ..."), else the claim's Why wrong, for a tag whose outcome differs from the
+//                 agent's proposal; null for a tag the agent got right
+//   reasoning     the tag's own line of Challenged tags notes (without its reason word) when the notes hold lines that start with "<tag name>:"; otherwise the whole text, for a
+//                 tag whose outcome differs from the proposal (a note with no tag name applies to every tag the agent got wrong)
 //   decided_under the edition the ledger row's proposal was made under: the row's Decided under when it is already filled (the decision was copied
 //                 before), else its Rulebook edition at the time of the sync
 // A proposal of "Can't tell" differs from every outcome, so a tag the agent could not tell carries the claim's Why wrong and the editor's words.
 
+import { AGENT_STATUS } from './config.mjs';
 import { AUDIT_PREFIX } from './plan.mjs';
 
 const text = (v) => (typeof v === 'string' ? v : v === null || v === undefined ? '' : String(v));
 
 export const REVIEWED = 'Reviewed';
-const WAITS = /(?:^|\s)\d+ waits? for an editor\b/i;
-const DISAGREES = /\bdisagrees with your decision on ([^·\n]+)/i;
+// the reason words an editor may put after a tag name (the values of Why wrong), written with a full stop: "Context-dependent: Rule unclear. The pronoun ..."
+const REASON_WORDS = Object.freeze(['Agent slip', 'Rule unclear', 'Rule should change']);
+const REASON_AT_START = /^(Agent slip|Rule unclear|Rule should change)\.(?:\s+|$)/i;
 
 export const TO_REVIEW = 'To review';
 
@@ -35,24 +40,19 @@ export const isReviewed = (claim) => text(claim?.review_status).trim() === REVIE
 /** A claim marked To review (by the editor, or by QA on the real table): every judged tag of it waits for an editor, whatever the confidence. */
 export const isToReview = (claim) => text(claim?.review_status).trim() === TO_REVIEW;
 
-/** "1 waits for an editor" and "2 wait for an editor" say that tags wait; "nothing waits for an editor" says the opposite, though it holds the same words. */
-export const waitsForEditor = (notes) => WAITS.test(text(notes));
+/** A claim the agent says waits in Your queue: Agent status is "Waits for you" and an editor has not Reviewed it (a Reviewed claim keeps the status until the next tag run). */
+export const claimWaits = (claim) => !isReviewed(claim) && text(claim?.agent_status).trim() === AGENT_STATUS.waits;
 
-/** A claim that waits in Your queue: its Agent notes say that tags wait and an editor has not Reviewed it. */
-export const claimWaits = (claim) => !isReviewed(claim) && waitsForEditor(claim?.agent_notes);
-
-/** The tags named after "disagrees with your decision on" in Agent notes ("A, B"), in order; [] when it does not say so. */
-export function disagreementsIn(notes) {
-  const m = DISAGREES.exec(text(notes));
-  return m ? m[1].split(',').map((t) => t.trim()).filter(Boolean) : [];
-}
+/** A claim whose Agent status says that the agent still differs from the editor's decision. */
+export const claimDisagrees = (claim) => text(claim?.agent_status).trim() === AGENT_STATUS.disagrees;
 
 /**
  * The editor's words per tag. A line that starts with a tag name (one of `tagNames`, letter case ignored) and a colon opens that tag's text; the lines
- * after it that do not start with a tag name belong to it. Returns a Map(tag -> text), or null when no line starts with a tag name (the text is then
- * one note for the claim). Words before the first tag line belong to no tag.
+ * after it that do not start with a tag name belong to it. The text may start with a reason word (Agent slip, Rule unclear or Rule should change) and a full
+ * stop: that is the tag's Why wrong, and it is not part of the text. Returns a Map(tag -> { text, reason }), or null when no line starts with a tag name (the
+ * notes are then one note for the claim, for every tag the agent got wrong). Words before the first tag line belong to no tag.
  */
-export function parseTagNotes(notes, tagNames = []) {
+export function parseTagLines(notes, tagNames = []) {
   const known = new Map([...new Set(tagNames)].map((t) => [t.trim().toLowerCase(), t]));
   const out = new Map();
   let current = null;
@@ -65,7 +65,22 @@ export function parseTagNotes(notes, tagNames = []) {
     } else if (current !== null) out.get(current).push(raw.trim());
   }
   if (out.size === 0) return null;
-  return new Map([...out].map(([tag, lines]) => [tag, lines.join('\n').trim()]));
+  return new Map([...out].map(([tag, lines]) => {
+    let body = lines.join('\n').trim();
+    let reason = null;
+    const r = REASON_AT_START.exec(body);
+    if (r) {
+      reason = REASON_WORDS.find((w) => w.toLowerCase() === r[1].toLowerCase());
+      body = body.slice(r[0].length).trim();
+    }
+    return [tag, { text: body, reason }];
+  }));
+}
+
+/** parseTagLines with the text only: Map(tag -> text) or null. */
+export function parseTagNotes(notes, tagNames = []) {
+  const lines = parseTagLines(notes, tagNames);
+  return lines === null ? null : new Map([...lines].map(([tag, { text: body }]) => [tag, body]));
 }
 
 const keyTag = (key) => {
@@ -83,17 +98,18 @@ export function decisionsFor(claim, ledgerRows, { tagNames = [] } = {}) {
   if (!isReviewed(claim)) return [];
   const verified = new Set(claim.verified_tags ?? []);
   const rows = (ledgerRows ?? []).filter((r) => keyTag(r?.Key)?.geo_id === claim.geo_id && text(r.Tag).trim() !== '');
-  const perTag = parseTagNotes(claim.challenged_notes, [...tagNames, ...verified, ...rows.map((r) => r.Tag)]);
+  const perTag = parseTagLines(claim.challenged_notes, [...tagNames, ...verified, ...rows.map((r) => r.Tag)]);
   const whole = text(claim.challenged_notes).trim();
   return rows.map((r) => {
     const outcome = verified.has(r.Tag) ? 'Applies' : 'Does not apply';
     const differs = r['Agent proposal'] !== outcome;
     let reasoning = null;
-    if (perTag) reasoning = perTag.get(r.Tag) || null;
+    const own = perTag?.get(r.Tag) ?? null;
+    if (perTag) reasoning = own?.text || null;
     else if (differs && whole !== '') reasoning = whole;
     const under = text(r['Decided under']).trim() || text(r['Rulebook edition']).trim() || null;
     return {
-      key: r.Key, tag: r.Tag, outcome, why_wrong: differs ? (claim.why_wrong ?? null) : null, reasoning, decided_under: under,
+      key: r.Key, tag: r.Tag, outcome, why_wrong: differs ? (own?.reason ?? claim.why_wrong ?? null) : null, reasoning, decided_under: under,
     };
   }).sort((a, b) => (a.tag < b.tag ? -1 : a.tag > b.tag ? 1 : 0));
 }

@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { TABLES, loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { EXIT } from '../../agents/claim-tagger-mvp/scripts/lib/exit-codes.mjs';
 import {
-  OPTION_COLORS, PAGE_TEXT, StructureError, completeViewBody, countStructure, loadStructure, parseViewFilter, parseViewSort, planStructure, renderPreview,
+  OPTION_COLORS, PAGE_TEXT, StructureError, arrangeOwnViews, completeViewBody, countStructure, loadStructure, parseViewFilter, parseViewSort, planStructure, renderPreview,
   runStructure, saveStructure, structureFromProposal, validateStructure, verifyStructure, viewKey, viewUrl,
 } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
@@ -221,9 +221,9 @@ test('planStructure: a createDatabase body per table in the shape of POST /datab
     assert.deepEqual(db.body.parent, { type: 'page_id', page_id: config.notion.parent_page_id });
     assert.deepEqual(db.body.title, [{ type: 'text', text: { content: t.title } }]);
     assert.equal(db.body.is_inline, true);
-    // a relation column is left out of the create: the table it points at may not exist yet (it is added after the tables are made)
-    assert.deepEqual(Object.keys(db.body.initial_data_source.properties), t.columns.filter((c) => c.type !== 'relation').map((c) => c.name));
-    for (const c of t.columns.filter((x) => x.type !== 'relation')) {
+    // a relation column is left out of the create: the table it points at may not exist yet (it is added after the tables are made); a retired column is never made
+    assert.deepEqual(Object.keys(db.body.initial_data_source.properties), t.columns.filter((c) => c.type !== 'relation' && !c.retired).map((c) => c.name));
+    for (const c of t.columns.filter((x) => x.type !== 'relation' && !x.retired)) {
       const p = db.body.initial_data_source.properties[c.name];
       assert.equal(p.type, c.type, `${t.title}.${c.name}`);
       assert.ok(c.type in p, `${t.title}.${c.name} carries its ${c.type} config`);
@@ -243,10 +243,16 @@ test('planStructure: columns lists every column but the title, with the table a 
   assert.deepEqual(plan.columns.map((c) => c.table).filter((t, i, all) => all.indexOf(t) === i), [...TABLES]);
   assert.equal(plan.columns.length, Object.values(structure.tables).reduce((n, t) => n + t.columns.filter((c) => c.type !== 'title').length, 0));
   assert.ok(plan.columns.every((c) => c.name !== 'Geo Name' && c.name !== 'Claim' && c.name !== 'Lesson'), 'a title column cannot be added');
-  const relation = plan.columns.find((c) => c.type === 'relation');
-  assert.deepEqual({ table: relation.table, name: relation.name, relation_to: relation.relation_to }, { table: 'claims_copy', name: 'Claim quality tags — verified', relation_to: 'rulebook' });
-  assert.deepEqual(relation.body.relation, { single_property: {} }, 'the data source id is added when the column is, once the Rulebook copy exists');
-  assert.equal(plan.columns.filter((c) => c.type === 'relation').length, 1);
+  const relations = plan.columns.filter((c) => c.type === 'relation');
+  assert.deepEqual(relations.map((c) => ({ table: c.table, name: c.name, relation_to: c.relation_to })), [
+    { table: 'claims_copy', name: 'Agent tags', relation_to: 'rulebook' }, { table: 'claims_copy', name: 'Tags waiting', relation_to: 'rulebook' },
+    { table: 'claims_copy', name: 'Verified tags', relation_to: 'rulebook' },
+  ]);
+  for (const relation of relations) assert.deepEqual(relation.body.relation, { single_property: {} }, 'the data source id is added when the column is, once the Rulebook copy exists');
+  assert.equal(relations[2].renamed_from, 'Claim quality tags — verified', 'the column of the first build that Verified tags replaces');
+  const retired = plan.columns.filter((c) => c.retired);
+  assert.deepEqual(retired.map((c) => [c.name, c.renamed_from, c.type]), [['Agent tags (old)', 'Agent tags', 'rich_text'], ['Agent notes (old)', 'Agent notes', 'rich_text']], 'the two text columns of the first build are renamed, never made');
+  assert.equal(plan.columns.filter((c) => c.renamed_from).length, 3);
   assert.deepEqual(plan.columns.find((c) => c.name === 'Review status').body.select.options.map((o) => [o.name, o.color]), [['To review', 'yellow'], ['Reviewed', 'green']]);
 });
 
@@ -260,7 +266,13 @@ test('validateStructure: a relation names another table, and nothing else has re
   bad((x) => { delete relation(x).relation_to; }, /a relation names another of the five tables in relation_to/);
   bad((x) => { relation(x).relation_to = 'claims_copy'; }, /a relation names another of the five tables/);
   bad((x) => { relation(x).relation_to = 'elsewhere'; }, /a relation names another of the five tables/);
-  bad((x) => { x.tables.claims_copy.columns.find((c) => c.name === 'Agent notes').relation_to = 'rulebook'; }, /only a relation has relation_to/);
+  bad((x) => { x.tables.claims_copy.columns.find((c) => c.name === 'Agent confidence').relation_to = 'rulebook'; }, /only a relation has relation_to/);
+  bad((x) => { x.tables.claims_copy.columns.find((c) => c.name === 'Verified tags').renamed_from = 'Verified tags'; }, /renamed_from must be another name/);
+  bad((x) => { x.tables.claims_copy.columns.find((c) => c.name === 'Verified tags').renamed_from = 'Agent tags'; }, /two columns are renamed from the same name/);
+  bad((x) => { x.tables.claims_copy.columns.find((c) => c.name === 'Agent notes (old)').retired = 'yes'; }, /retired must be true or false/);
+  bad((x) => { x.tables.claims_copy.columns.find((c) => c.name === 'Geo Name').retired = true; }, /the title column cannot be retired/);
+  bad((x) => { x.tables.claims_copy.arrange_default_view = 'yes'; }, /arrange_default_view must be true or false/);
+  bad((x) => { x.views.find((v) => v.name === 'Your queue').columns.push('Agent notes (old)'); }, /"Agent notes \(old\)" is a retired column, which every view hides/);
   bad((x) => { x.views.find((v) => v.renamed_from).renamed_from = ''; }, /renamed_from must be another name/);
   bad((x) => { const v = x.views.find((y) => y.renamed_from); v.renamed_from = v.name; }, /renamed_from must be another name/);
 });
@@ -295,27 +307,23 @@ test('planStructure: a createView body per view with the query filter, the sorts
   assert.deepEqual(plan.views.map((v) => v.name), ['Your queue', 'Needs your note', 'Agent disagreed', 'Your queue (ledger)', 'Needs your note (ledger)', 'Lessons waiting', 'Rulebook']);
   assert.deepEqual(plan.views.map((v) => v.renamed_from), [null, null, null, 'Your queue', 'Needs your note', null, null]);
   const queue = byName['Your queue'];
-  // "nothing waits for an editor" holds the words "waits for an editor", so the view asks for "for an editor" and drops "nothing waits"
-  assert.deepEqual(queue.body.filter, {
-    and: [
-      { property: 'Review status', select: { does_not_equal: 'Reviewed' } },
-      { property: 'Agent notes', rich_text: { contains: 'for an editor' } },
-      { property: 'Agent notes', rich_text: { does_not_contain: 'nothing waits' } },
-    ],
-  });
+  // the revision of 21 October: Your queue lists the claims whose Agent status is Waits for you, and no longer asks about Review status
+  assert.deepEqual(queue.body.filter, { property: 'Agent status', select: { equals: 'Waits for you' } });
   assert.deepEqual(queue.body.sorts, [{ property: 'Agent confidence', direction: 'ascending' }]);
   assert.equal(queue.body.type, 'table');
   assert.equal(queue.body.configuration.type, 'table');
   assert.equal(queue.body.configuration.wrap_cells, true);
   const props = queue.body.configuration.properties;
-  assert.ok(queue.columns.includes('Agent reasons') && queue.columns.indexOf('Agent reasons') === queue.columns.indexOf('Agent notes') + 1, 'the reasons are shown next to the notes');
-  assert.deepEqual(props.slice(0, 9).map((p) => [p.name, p.visible, p.wrap]), queue.columns.map((n) => [n, true, true]));
-  assert.ok(props.slice(9).every((p) => p.visible === false && !('wrap' in p)));
-  assert.equal(props.length, structure.tables.claims_copy.columns.length, 'every column is either shown or hidden');
-  assert.deepEqual(props.slice(9).map((p) => p.name), queue.hidden);
-  assert.ok(byName['Agent disagreed'].columns.includes('Agent reasons') && !byName['Needs your note'].columns.includes('Agent reasons'), 'where the notes are shown, the reasons are');
+  const REVIEW = ['Geo Name', 'Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', 'Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes'];
+  for (const name of ['Your queue', 'Needs your note', 'Agent disagreed']) assert.deepEqual(byName[name].columns, REVIEW, `${name}: the columns of the claims table in the order of CLAIMS-REVIEW.md section 6.1`);
+  assert.deepEqual(props.slice(0, 12).map((p) => [p.name, p.visible, p.wrap]), queue.columns.map((n) => [n, true, true]));
+  assert.ok(props.slice(12).every((p) => p.visible === false && !('wrap' in p)));
+  assert.equal(props.length, structure.tables.claims_copy.columns.length, 'every column is either shown or hidden, the two retired ones last');
+  assert.deepEqual(props.slice(12).map((p) => p.name), queue.hidden);
+  assert.deepEqual(props.slice(-2).map((p) => p.name), ['Agent tags (old)', 'Agent notes (old)'], 'hidden in every view');
+  assert.deepEqual(queue.retired, ['Agent tags (old)', 'Agent notes (old)'], 'the plan says which hidden columns exist only where a rename made them');
   assert.deepEqual(byName['Needs your note'].body.filter, { and: [{ property: 'Why wrong', select: { is_not_empty: true } }, { property: 'Challenged tags notes', rich_text: { is_empty: true } }] });
-  assert.deepEqual(byName['Agent disagreed'].body.filter, { property: 'Agent notes', rich_text: { contains: 'disagrees' } });
+  assert.deepEqual(byName['Agent disagreed'].body.filter, { property: 'Agent status', select: { equals: 'Disagrees with your decision' } });
   assert.deepEqual(byName['Agent disagreed'].body.sorts, [{ property: 'Agent confidence', direction: 'ascending' }]);
   assert.deepEqual(byName['Your queue (ledger)'].body.filter, { property: 'Tag outcome', select: { is_empty: true } }, 'the old view keeps its filter under its new name');
   assert.equal(byName['Your queue (ledger)'].body.configuration.wrap_cells, false);
@@ -325,6 +333,25 @@ test('planStructure: a createView body per view with the query filter, the sorts
   assert.ok(byName.Rulebook.body.configuration.properties.slice(0, 5).every((p) => p.visible && p.wrap === true));
   assert.deepEqual(byName['Lessons waiting'].body.filter, { or: [{ property: 'Status', select: { equals: 'Proposed' } }, { property: 'Status', select: { equals: 'Approved' } }] });
   assert.equal(byName['Needs your note (ledger)'].body.filter.and.length, 2);
+  assert.deepEqual(plan.arrange, {
+    claims_copy: { shown: [...REVIEW, ...structure.tables.claims_copy.columns.filter((c) => !c.retired).map((c) => c.name).filter((n) => !REVIEW.includes(n))], hidden: ['Agent tags (old)', 'Agent notes (old)'] },
+  }, 'the table\'s own view gets the same order, every column shown but the retired ones');
+});
+
+test('completeViewBody leaves out a retired column that the table does not have (a new table never made it), and still refuses any other column that is missing', () => {
+  const { plan } = build();
+  const view = plan.views.find((v) => v.name === 'Your queue');
+  const names = view.body.configuration.properties.map((p) => p.name);
+  const props = Object.fromEntries(names.filter((n) => !view.retired.includes(n)).map((n, i) => [n, { id: n === 'Geo Name' ? 'title' : `%3A${i}`, name: n }]));
+  const body = completeViewBody(view, { id: 'ds-1', parent: { database_id: 'db-1' }, properties: props });
+  assert.equal(body.configuration.properties.length, names.length - 2);
+  assert.ok(body.configuration.properties.every((p) => p.property_id));
+  const missing = { ...props };
+  delete missing['Agent edition'];
+  assert.throws(() => completeViewBody(view, { id: 'ds-1', parent: { database_id: 'db-1' }, properties: missing }), /the table has no column "Agent edition"/);
+  const old = { ...props, 'Agent tags (old)': { id: '%3Aold', name: 'Agent tags (old)' } };
+  const withOld = completeViewBody(view, { id: 'ds-1', parent: { database_id: 'db-1' }, properties: old });
+  assert.deepEqual(withOld.configuration.properties.at(-1), { property_id: '%3Aold', visible: false }, 'where the retired column exists, it is hidden');
 });
 
 test('completeViewBody puts the property ids of the created data source where the column names were, and nothing else changes', () => {
@@ -364,8 +391,9 @@ test('runStructure makes two pages, five tables, the relation column and seven v
   assert.equal(result.ok, true);
   assert.equal(result.code, EXIT.OK);
   assert.equal(result.stopped, null);
-  assert.deepEqual(result.created, { pages: 2, databases: 5, columns: 1, views: 7, renamed: 0 });
-  assert.deepEqual(result.columns, { claims_copy: ['Claim quality tags — verified'] }, 'the relation needs the Rulebook copy, so it is added once the tables exist');
+  assert.deepEqual(result.created, { pages: 2, databases: 5, columns: 3, views: 7, renamed: 0, columns_renamed: 0, views_updated: 0 });
+  assert.deepEqual(result.columns, { claims_copy: ['Agent tags', 'Tags waiting', 'Verified tags'] }, 'the relations need the Rulebook copy, so they are added once the tables exist');
+  assert.deepEqual(result.columnsRenamed, {}, 'a new table has nothing to rename, and never gets the two "(old)" columns');
   assert.equal(posts(w.fake, '/pages').length, 2);
   assert.equal(posts(w.fake, '/databases').length, 5);
   assert.equal(posts(w.fake, '/views').length, 7);
@@ -373,15 +401,15 @@ test('runStructure makes two pages, five tables, the relation column and seven v
   const patches = w.fake.requests.filter((r) => r.method === 'PATCH');
   assert.equal(patches.length, 1);
   const rulebookDs = result0(w, 'rulebook').data_source_id;
-  assert.deepEqual(Object.keys(patches[0].body.properties), ['Claim quality tags — verified']);
-  assert.equal(normId(patches[0].body.properties['Claim quality tags — verified'].relation.data_source_id), normId(rulebookDs));
+  assert.deepEqual(Object.keys(patches[0].body.properties), ['Agent tags', 'Tags waiting', 'Verified tags']);
+  for (const name of Object.keys(patches[0].body.properties)) assert.equal(normId(patches[0].body.properties[name].relation.data_source_id), normId(rulebookDs), name);
   assert.ok(w.fake.requests.every((r) => r.version === '2026-03-11'), 'the builder version on every request');
   assert.deepEqual(posts(w.fake, '/databases').map((r) => r.body), w.plan.databases.map((d) => d.body), 'the bodies sent are the bodies planned');
   const pageBodies = posts(w.fake, '/pages').map((r) => r.body);
   assert.deepEqual(pageBodies.map((b) => b.parent), [{ type: 'page_id', page_id: w.parent }, { type: 'page_id', page_id: w.parent }]);
   assert.deepEqual(pageBodies.map((b) => b.properties.title.title[0].text.content), ['Demos', 'Demo tests']);
   assert.deepEqual(pageBodies.map((b) => b.children[0].paragraph.rich_text[0].text.content), [PAGE_TEXT.demos, PAGE_TEXT.demo_tests]);
-  assert.equal(w.fake.writes().length, 15, 'two pages, five tables, one PATCH for the column, seven views');
+  assert.equal(w.fake.writes().length, 15, 'two pages, five tables, one PATCH for the columns, seven views');
   assert.deepEqual(w.fake.writes().filter((r) => r.method !== 'PATCH').map((r) => r.method), Array(14).fill('POST'));
 });
 
@@ -399,8 +427,9 @@ test('runStructure: the fake holds the tables as planned, and every view body is
     assert.deepEqual(columns.map((c) => c.name), [...Object.keys(db.body.initial_data_source.properties), ...later]);
     assert.ok(columns.every((c) => (c.description ?? '').length <= 280));
   }
-  const relation = w.fake.database(result0(w, 'claims_copy').database_id).properties['Claim quality tags — verified'];
+  const relation = w.fake.database(result0(w, 'claims_copy').database_id).properties['Verified tags'];
   assert.equal(relation.type, 'relation');
+  assert.deepEqual(Object.keys(w.fake.database(result0(w, 'claims_copy').database_id).properties).filter((n) => /\(old\)/.test(n)), [], 'the retired columns are not made on a new table');
   assert.equal(normId(relation.relation.data_source_id), normId(result0(w, 'rulebook').data_source_id), 'it points at the Rulebook copy');
   assert.match(relation.description, /tags you confirm on the claim/);
   const viewPosts = posts(w.fake, '/views');
@@ -418,8 +447,8 @@ test('runStructure: the fake holds the tables as planned, and every view body is
   assert.deepEqual(stored[0].sorts, [{ property: 'Agent confidence', direction: 'ascending' }]);
   assert.equal(stored[0].configuration.properties.filter((p) => p.visible).length, 6);
   const queue = w.fake.views(result0(w, 'claims_copy').database_id)[0];
-  assert.equal(queue.configuration.properties.filter((p) => p.visible).length, 9);
-  assert.equal(queue.filter.and.length, 3);
+  assert.equal(queue.configuration.properties.filter((p) => p.visible).length, 12);
+  assert.deepEqual(queue.filter, { property: 'Agent status', select: { equals: 'Waits for you' } });
 });
 
 function result0(w, table) {
@@ -523,12 +552,12 @@ test('runStructure is resumable: a second run, even from a config read off the d
   const before = w.fake.requests.length;
   const again = await runStructure({ plan: w.plan, client: w.client, root: w.root, config: loadConfig(w.root) });
   assert.equal(again.ok, true);
-  assert.deepEqual(again.created, { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0 });
+  assert.deepEqual(again.created, { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0, columns_renamed: 0, views_updated: 0 });
   assert.deepEqual(again.columns, {});
   assert.deepEqual(Object.values(again.pages).map((p) => p.status), ['exists', 'exists']);
   assert.deepEqual(Object.values(again.databases).map((d) => d.status), Array(5).fill('exists'));
   assert.deepEqual(Object.values(again.views).flatMap((v) => Object.values(v).map((x) => x.status)), Array(7).fill('exists'));
-  assert.equal(w.fake.writes().length, 15, 'two pages, five tables, one column and seven views, once');
+  assert.equal(w.fake.writes().length, 15, 'two pages, five tables, one PATCH for the columns and seven views, once');
   assert.ok(w.fake.requests.slice(before).every((r) => r.method === 'GET'), 'the second run only reads');
   assert.equal(readJson(join(w.root, 'runs', 'builder', 'state.json')).pages.demos.status, 'created', 'the state keeps how a thing came to be');
 });
@@ -558,7 +587,7 @@ test('a run that crashes between two creates is finished by the next run: nothin
   assert.equal(new Set(posts(w.fake, '/databases').map((r) => r.body.title[0].text.content)).size, 5, 'five different titles');
   assert.equal(posts(w.fake, '/pages').length, 2);
   assert.equal(posts(w.fake, '/views').length, 7);
-  assert.deepEqual(second.created, { pages: 0, databases: 3, columns: 1, views: 7, renamed: 0 });
+  assert.deepEqual(second.created, { pages: 0, databases: 3, columns: 3, views: 7, renamed: 0, columns_renamed: 0, views_updated: 0 });
 });
 
 test('a table made just before a crash, before its id was recorded, is found by its title under the parent page and adopted', async () => {
@@ -669,7 +698,7 @@ test('a view that Notion refuses (400 or 404) is recorded as failed and the run 
     const again = await runStructure({ plan: w.plan, client: w.client, root: w.root, config: loadConfig(w.root) });
     assert.equal(again.views.rulebook.Rulebook.status, 'created');
     assert.equal(posts(w.fake, '/views').length, 7 + attempts);
-    assert.deepEqual(again.created, { pages: 0, databases: 0, columns: 0, views: 1, renamed: 0 });
+    assert.deepEqual(again.created, { pages: 0, databases: 0, columns: 0, views: 1, renamed: 0, columns_renamed: 0, views_updated: 0 });
   }
 });
 
@@ -749,7 +778,7 @@ test('verifyStructure finds nothing wrong with what runStructure built', async (
     rulebook: ['Rulebook'], claims_copy: ['Your queue', 'Needs your note', 'Agent disagreed'], tag_decisions: ['Your queue (ledger)', 'Needs your note (ledger)'], rule_changes: ['Lessons waiting'],
   }, 'the ids of the views it found');
   const reads = w.fake.requests.filter((x) => x.method !== 'GET' && !/\/query$/.test(x.path));
-  assert.equal(reads.length, 15, 'verify sent nothing: only the 14 creates and the one column of the build are writes');
+  assert.equal(reads.length, 15, 'verify sent nothing: only the 14 creates and the one PATCH for the columns of the build are writes');
 });
 
 test('verifyStructure finds a missing option, an extra option, a missing column, an extra column and a wrong type', async () => {
@@ -877,34 +906,33 @@ test('the structure file written from the repository proposal is the file the bu
 test('parseViewFilter reads "is not <value>", "contains" and "does not contain", and the clauses that follow them', () => {
   const claims = revisedStructure().tables.claims_copy;
   assert.deepEqual(parseViewFilter('Review status is not Reviewed', claims), { property: 'Review status', select: { does_not_equal: 'Reviewed' } });
-  assert.deepEqual(parseViewFilter('Agent notes contains disagrees', claims), { property: 'Agent notes', rich_text: { contains: 'disagrees' } });
-  assert.deepEqual(parseViewFilter('Agent notes contains "waits for an editor"', claims), { property: 'Agent notes', rich_text: { contains: 'waits for an editor' } }, 'quotes around the text are dropped');
-  assert.deepEqual(parseViewFilter('Agent notes does not contain nothing waits', claims), { property: 'Agent notes', rich_text: { does_not_contain: 'nothing waits' } });
+  assert.deepEqual(parseViewFilter('Agent reasons contains disagrees', claims), { property: 'Agent reasons', rich_text: { contains: 'disagrees' } });
+  assert.deepEqual(parseViewFilter('Agent reasons contains "waits for an editor"', claims), { property: 'Agent reasons', rich_text: { contains: 'waits for an editor' } }, 'quotes around the text are dropped');
+  assert.deepEqual(parseViewFilter('Agent reasons does not contain nothing waits', claims), { property: 'Agent reasons', rich_text: { does_not_contain: 'nothing waits' } });
+  assert.deepEqual(parseViewFilter('Agent status is Disagrees with your decision', claims), { property: 'Agent status', select: { equals: 'Disagrees with your decision' } }, 'a select value of several words');
+  assert.deepEqual(parseViewFilter('Agent status is Waits for you or Done', claims), { or: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { property: 'Agent status', select: { equals: 'Done' } }] });
   assert.deepEqual(parseViewFilter('Why wrong is not empty, and Challenged tags notes is empty', claims), {
     and: [{ property: 'Why wrong', select: { is_not_empty: true } }, { property: 'Challenged tags notes', rich_text: { is_empty: true } }],
   });
-  assert.deepEqual(parseViewFilter('Review status is not Reviewed, and Agent notes contains for an editor, and Agent notes does not contain nothing waits', claims).and.map((f) => Object.keys(f)[1]), ['select', 'rich_text', 'rich_text']);
+  assert.deepEqual(parseViewFilter('Review status is not Reviewed, and Agent reasons contains for an editor, and Agent reasons does not contain nothing waits', claims).and.map((f) => Object.keys(f)[1]), ['select', 'rich_text', 'rich_text']);
+  assert.deepEqual(parseViewFilter('Agent tags (old) is empty', claims), { property: 'Agent tags (old)', rich_text: { is_empty: true } }, 'a column name with brackets, and one that starts with the name of another column');
   assert.throws(() => parseViewFilter('Review status is not Done', claims, 'view "V"'), /view "V": "Done" is not a value of "Review status"/);
   assert.throws(() => parseViewFilter('Review status contains Rev', claims, 'view "V"'), /view "V": "contains" needs a text column, and "Review status" is a select/);
-  assert.throws(() => parseViewFilter('Agent notes contains ', claims, 'view "V"'), StructureError);
-  assert.throws(() => parseViewFilter('Agent notes looks like x', claims, 'view "V"'), /cannot read the filter "Agent notes looks like x"/);
+  assert.throws(() => parseViewFilter('Agent reasons contains ', claims, 'view "V"'), StructureError);
+  assert.throws(() => parseViewFilter('Agent reasons looks like x', claims, 'view "V"'), /cannot read the filter "Agent reasons looks like x"/);
 });
 
-test('"nothing waits for an editor" holds the words "waits for an editor": the Your queue filter keeps it out by its own words', () => {
+test('the three claims views of the revision of 21 October filter on Agent status; Your queue no longer looks at Review status or at any note', () => {
   const claims = revisedStructure().tables.claims_copy;
-  const queue = revisedStructure().views.find((v) => v.name === 'Your queue');
-  const filter = parseViewFilter(queue.filter, claims);
-  const text = (notes) => notes.toLowerCase();
-  const matches = (notes, review) => {
-    const contains = filter.and.find((f) => f.rich_text?.contains).rich_text.contains.toLowerCase();
-    const not = filter.and.find((f) => f.rich_text?.does_not_contain).rich_text.does_not_contain.toLowerCase();
-    return review !== 'Reviewed' && text(notes).includes(contains) && !text(notes).includes(not);
-  };
-  assert.equal(matches('no tags\n1 waits for an editor · edition 2026-10-16.1', null), true);
-  assert.equal(matches('no tags\n2 wait for an editor · edition 2026-10-16.1', 'To review'), true, 'the plural has no "waits"');
-  assert.equal(matches('no tags\nnothing waits for an editor · edition 2026-10-16.1', null), false);
-  assert.equal(matches('Context-dependent\nnothing waits for an editor · disagrees with your decision on Context-dependent · edition 2026-10-16.1', 'Reviewed'), false);
-  assert.equal(matches('no tags\n1 waits for an editor · edition 2026-10-16.1', 'Reviewed'), false);
+  const views = Object.fromEntries(revisedStructure().views.filter((v) => v.table === 'claims_copy').map((v) => [v.name, v]));
+  assert.equal(views['Your queue'].filter, 'Agent status is Waits for you');
+  assert.equal(views['Agent disagreed'].filter, 'Agent status is Disagrees with your decision');
+  assert.equal(views['Needs your note'].filter, 'Why wrong is not empty, and Challenged tags notes is empty', 'unchanged');
+  assert.deepEqual(parseViewFilter(views['Your queue'].filter, claims), { property: 'Agent status', select: { equals: 'Waits for you' } });
+  assert.deepEqual(parseViewFilter(views['Agent disagreed'].filter, claims), { property: 'Agent status', select: { equals: 'Disagrees with your decision' } });
+  for (const v of Object.values(views)) assert.equal(v.sort, 'Agent confidence, lowest first', v.name);
+  assert.deepEqual(claims.columns.find((c) => c.name === 'Agent status').options, ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read']);
+  assert.throws(() => parseViewFilter('Agent status is Waiting', claims, 'view "V"'), /"Waiting" is not a value of "Agent status"/);
 });
 
 // ---- columns a table lacks, and a view that changes its name -----------------------------------------------------------------------------
@@ -933,16 +961,22 @@ test('runStructure over a table of the first build adds the columns it lacks and
   const log = [];
   const result = await runStructure({ plan, client: w.client, root: w.root, config: w.config, log: (l) => log.push(l) });
   assert.equal(result.ok, true, JSON.stringify(result.stopped));
-  assert.deepEqual(result.created, { pages: 0, databases: 0, columns: 7, views: 3, renamed: 2 });
+  assert.deepEqual(result.created, { pages: 0, databases: 0, columns: 12, views: 3, renamed: 2, columns_renamed: 2, views_updated: 2 });
+  assert.deepEqual(result.columnsRenamed, { claims_copy: [{ from: 'Agent tags', to: 'Agent tags (old)' }, { from: 'Agent notes', to: 'Agent notes (old)' }] });
   assert.deepEqual(result.columns, {
-    claims_copy: ['Agent confidence', 'Agent reasons', 'Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes'],
+    claims_copy: ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', 'Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes'],
     tag_decisions: ['Decided under'],
   });
+  assert.deepEqual(result.updated, {
+    tag_decisions: { 'Your queue (ledger)': ['columns'], 'Needs your note (ledger)': ['columns'] },
+  }, 'the two renamed views did not list the column that was added to their table, so they are brought to the structure too');
   const after = w.fake.database(result0(w, 'claims_copy').database_id);
-  assert.equal(Object.keys(after.properties).length, 21);
+  assert.equal(Object.keys(after.properties).length, 26);
   assert.equal(after.properties['Review status'].select.options.map((o) => o.name).join(), 'To review,Reviewed');
-  assert.equal(normId(after.properties['Claim quality tags — verified'].relation.data_source_id), normId(result0(w, 'rulebook').data_source_id));
-  assert.equal(w.fake.plainRows(result0(w, 'claims_copy').database_id)[0]['Agent notes'], 'kept', 'the rows are as they were');
+  assert.equal(after.properties['Agent tags'].type, 'relation');
+  assert.equal(after.properties['Agent tags (old)'].type, 'rich_text');
+  assert.equal(normId(after.properties['Verified tags'].relation.data_source_id), normId(result0(w, 'rulebook').data_source_id));
+  assert.equal(w.fake.plainRows(result0(w, 'claims_copy').database_id)[0]['Agent notes (old)'], 'kept', 'the rows are as they were: the text of Agent notes is in Agent notes (old)');
   assert.ok(row);
 
   // the two old views were renamed, not made again, and keep their ids
@@ -950,7 +984,8 @@ test('runStructure over a table of the first build adds the columns it lacks and
   assert.deepEqual(ledgerViews.map((v) => v.name), ['Your queue (ledger)', 'Needs your note (ledger)']);
   assert.deepEqual(ledgerViews.map((v) => v.id), oldIds);
   const patches = w.fake.requests.filter((r) => r.method === 'PATCH' && /^\/views\//.test(r.path));
-  assert.deepEqual(patches.map((r) => r.body), [{ name: 'Your queue (ledger)' }, { name: 'Needs your note (ledger)' }], 'only the name is sent');
+  assert.deepEqual(patches.map((r) => Object.keys(r.body)), [['name'], ['configuration'], ['name'], ['configuration']], 'each rename sends the name only, and the update that follows it the configuration only');
+  assert.deepEqual(patches.filter((r) => 'name' in r.body).map((r) => r.body), [{ name: 'Your queue (ledger)' }, { name: 'Needs your note (ledger)' }]);
   assert.ok(log.some((l) => /view "Your queue": renamed to "Your queue \(ledger\)"/.test(l)));
   assert.deepEqual(w.fake.views(result0(w, 'claims_copy').database_id).map((v) => v.name), ['Your queue', 'Needs your note', 'Agent disagreed']);
 
@@ -969,7 +1004,7 @@ test('runStructure over a table of the first build adds the columns it lacks and
   // a second run finds everything and writes nothing
   const before = w.fake.writes().length;
   const again = await runStructure({ plan, client: w.client, root: w.root, config: loadConfig(w.root) });
-  assert.deepEqual(again.created, { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0 });
+  assert.deepEqual(again.created, { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0, columns_renamed: 0, views_updated: 0 });
   assert.equal(w.fake.writes().length, before);
 });
 
@@ -991,31 +1026,236 @@ test('a relation column that points at the wrong table is a difference, and a co
   const claims = result0(w, 'claims_copy');
   const rulebook = result0(w, 'rulebook');
   assert.deepEqual((await verify(w)).differences, []);
-  const stored = w.fake.database(claims.database_id).properties['Claim quality tags — verified'];
+  const stored = w.fake.database(claims.database_id).properties['Verified tags'];
   assert.equal(stored.type, 'relation');
   const wrong = structuredClone(w.structure);
-  wrong.tables.claims_copy.columns.find((c) => c.type === 'relation').relation_to = 'rule_changes';
+  wrong.tables.claims_copy.columns.find((c) => c.name === 'Verified tags').relation_to = 'rule_changes';
   const r = await verify(w, wrong);
   const d = r.differences.find((x) => x.kind === 'relation');
   assert.ok(d, JSON.stringify(r.differences));
-  assert.match(d.detail, /"Claim quality tags — verified" points at/);
+  assert.match(d.detail, /"Verified tags" points at/);
   assert.match(d.detail, /not at the rule_changes table/);
+  assert.equal(r.differences.filter((x) => x.kind === 'relation').length, 1, 'the other relations still point at the Rulebook copy');
   assert.ok(rulebook.data_source_id);
 });
 
-test('the revised structure file is valid, has the six new columns and the three claims views, and renders in the preview', () => {
+test('the revised structure file is valid, has the claims columns of CLAIMS-REVIEW.md section 6.1 in their order and the three claims views, and renders in the preview', () => {
   const s = revisedStructure();
   assert.equal(validateStructure(s), s);
-  assert.deepEqual(countStructure(s), { tables: 5, columns: 65, views: 7, pages: 2 });
-  assert.deepEqual(s.tables.claims_copy.columns.slice(-6).map((c) => c.name), ['Agent confidence', 'Agent reasons', 'Claim quality tags — verified', 'Review status', 'Why wrong', 'Challenged tags notes']);
-  assert.deepEqual(s.tables.claims_copy.columns.slice(-6).map((c) => c.type), ['number', 'rich_text', 'relation', 'select', 'select', 'rich_text']);
+  assert.deepEqual(countStructure(s), { tables: 5, columns: 70, views: 7, pages: 2 });
+  assert.deepEqual(s.tables.claims_copy.columns.slice(0, 12).map((c) => c.name), [
+    'Geo Name', 'Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', 'Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes',
+  ]);
+  assert.deepEqual(s.tables.claims_copy.columns.slice(0, 12).map((c) => c.type), ['title', 'relation', 'number', 'rich_text', 'select', 'relation', 'rich_text', 'rich_text', 'relation', 'select', 'select', 'rich_text']);
+  assert.deepEqual(s.tables.claims_copy.columns.slice(12, 24).map((c) => c.name), ['Geo ID', 'Geo URL', 'Geo Sources', 'Geo Tags', 'Geo Topics', 'Geo Score', 'Geo Supporting arguments', 'Geo Opposing arguments', 'Geo Related people', 'Geo Related projects', 'Geo Is factual', 'Geo Name source'], 'then the Geo columns');
+  assert.deepEqual(s.tables.claims_copy.columns.slice(-2).map((c) => [c.name, c.renamed_from, c.retired]), [['Agent tags (old)', 'Agent tags', true], ['Agent notes (old)', 'Agent notes', true]]);
+  assert.equal(s.tables.claims_copy.columns.find((c) => c.name === 'Verified tags').renamed_from, 'Claim quality tags — verified');
+  assert.deepEqual(s.tables.claims_copy.columns.filter((c) => c.relation_to).map((c) => [c.name, c.relation_to]), [['Agent tags', 'rulebook'], ['Tags waiting', 'rulebook'], ['Verified tags', 'rulebook']]);
+  assert.equal(s.tables.claims_copy.arrange_default_view, true);
   assert.equal(s.tables.tag_decisions.columns.at(-1).name, 'Decided under');
   assert.deepEqual(s.views.map((v) => [v.table, v.name]).slice(0, 5), [
     ['claims_copy', 'Your queue'], ['claims_copy', 'Needs your note'], ['claims_copy', 'Agent disagreed'], ['tag_decisions', 'Your queue (ledger)'], ['tag_decisions', 'Needs your note (ledger)'],
   ]);
   const md = renderPreview(s);
-  assert.match(md, /Claim quality tags — verified \| relation \| points at the Rulebook copy/);
+  assert.match(md, /\| Verified tags \| relation \| points at the Rulebook copy \|.*\(the column "Claim quality tags — verified" of an earlier build is renamed to this\)/);
+  assert.match(md, /\| Agent notes \(old\) \| rich_text \|.*\(the column "Agent notes" of an earlier build is renamed to this; retired: never made on a new table, hidden in every view\)/);
   assert.match(md, /- \*\*Your queue \(ledger\)\*\* \(the view "Your queue" of an earlier build is renamed to this\): rows shown: Tag outcome is empty/);
   assert.match(md, /7 views/);
   for (const t of Object.values(s.tables)) for (const c of t.columns) assert.ok([...c.description].length <= 280, `${t.title}.${c.name}`);
+});
+
+// ---- the live step: a table as the build of 16 October left it, brought to the revision of 21 October (CLAIMS-REVIEW.md section 6.5) ------------------------------------
+
+const REVIEW_ORDER = ['Geo Name', 'Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', 'Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes'];
+const GEO_ORDER = ['Geo ID', 'Geo URL', 'Geo Sources', 'Geo Tags', 'Geo Topics', 'Geo Score', 'Geo Supporting arguments', 'Geo Opposing arguments', 'Geo Related people', 'Geo Related projects', 'Geo Is factual', 'Geo Name source'];
+
+// the structure file as the build of 16 October used it (fixtures/structure.16-oct.json), built over the fake, and a default view on the Claims copy: Notion makes one for every table, the fake does not
+async function octoberBuild() {
+  const w = newWorld();
+  const old = forFake(JSON.parse(readFileSync(new URL('./fixtures/structure.16-oct.json', import.meta.url), 'utf8')));
+  const client = builderClient(w.fake);
+  const first = await runStructure({ plan: planStructure(old, w.config), client, root: w.root, config: w.config });
+  assert.equal(first.ok, true, JSON.stringify(first.stopped));
+  const entry = result0(w, 'claims_copy');
+  const ds = w.fake.dataSource(entry.data_source_id);
+  await client.createView({
+    databaseId: entry.database_id, dataSourceId: entry.data_source_id, name: 'Table',
+    configuration: { type: 'table', wrap_cells: false, properties: Object.values(ds.properties).map((p) => ({ property_id: p.id, visible: true, width: 150 })) }, position: { type: 'end' },
+  });
+  // the claims as the live table holds them: the text of the first build in Agent tags and Agent notes, and a decided claim with its relation
+  const tag = w.fake.addRow(result0(w, 'rulebook').database_id, { Name: 'Context-dependent', 'Work tags': ['Issue'] });
+  w.fake.addRow(entry.database_id, {
+    'Geo Name': 'A claim', 'Geo ID': 'g1', 'Agent tags': 'Context-dependent', 'Agent notes': 'Context-dependent\nnothing waits for an editor · edition 2026-10-16.1', 'Agent confidence': 0.8,
+    'Claim quality tags — verified': [tag], 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'Fine.',
+  });
+  return { ...w, client, old, tag };
+}
+
+const shownOf = (w, viewName) => {
+  const entry = result0(w, 'claims_copy');
+  const names = new Map(Object.values(w.fake.dataSource(entry.data_source_id).properties).map((p) => [p.id, p.name]));
+  const view = w.fake.views(entry.database_id).find((v) => v.name === viewName);
+  return view.configuration.properties.filter((p) => p.visible).map((p) => names.get(p.property_id));
+};
+
+test('build on a table of the build of 16 October: the two text columns and the verified relation are renamed, the five new columns added, the views set to the new order and filter, and the table\'s own view too', async () => {
+  const w = await octoberBuild();
+  const entry = result0(w, 'claims_copy');
+  const before = w.fake.writes().length;
+  const revised = forFake(revisedStructure());
+  const plan = planStructure(revised, w.config);
+  const log = [];
+  const result = await runStructure({ plan, client: w.client, root: w.root, config: w.config, log: (l) => log.push(l) });
+  assert.equal(result.ok, true, JSON.stringify(result.stopped));
+
+  // 1. the renames, in one request, and nothing is lost by them
+  assert.deepEqual(result.columnsRenamed, {
+    claims_copy: [{ from: 'Claim quality tags — verified', to: 'Verified tags' }, { from: 'Agent tags', to: 'Agent tags (old)' }, { from: 'Agent notes', to: 'Agent notes (old)' }],
+  });
+  const patches = w.fake.requests.slice(before).filter((r) => r.method === 'PATCH' && /^\/data_sources\//.test(r.path));
+  assert.equal(patches.length, 2, 'one request for the renames, one for the new columns');
+  assert.deepEqual(patches[0].body.properties, { 'Claim quality tags — verified': { name: 'Verified tags' }, 'Agent tags': { name: 'Agent tags (old)' }, 'Agent notes': { name: 'Agent notes (old)' } });
+  // 2. the five new columns
+  assert.deepEqual(Object.keys(patches[1].body.properties), ['Agent tags', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks']);
+  assert.deepEqual(result.columns, { claims_copy: ['Agent tags', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks'] });
+  assert.deepEqual(patches[1].body.properties['Agent status'].select.options.map((o) => o.name), ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read']);
+  for (const name of ['Agent tags', 'Tags waiting']) assert.equal(normId(patches[1].body.properties[name].relation.data_source_id), normId(result0(w, 'rulebook').data_source_id), name);
+  const columns = w.fake.database(entry.database_id).properties;
+  assert.deepEqual([columns['Agent tags'].type, columns['Agent tags (old)'].type, columns['Agent notes (old)'].type, columns['Verified tags'].type, columns['Tags waiting'].type, columns['Agent status'].type],
+    ['relation', 'rich_text', 'rich_text', 'relation', 'relation', 'select']);
+  assert.equal(columns['Claim quality tags — verified'], undefined);
+  const row = w.fake.plainRows(entry.database_id)[0];
+  assert.deepEqual([row['Agent tags (old)'], row['Agent notes (old)'], row['Agent confidence'], row['Verified tags'], row['Review status'], row['Agent tags'], row['Agent status']],
+    ['Context-dependent', 'Context-dependent\nnothing waits for an editor · edition 2026-10-16.1', 0.8, [w.tag], 'Reviewed', [], null], 'the contents moved with their columns; the new columns are empty until the next tag run');
+
+  // 3. the views: the filter of Your queue and Agent disagreed, the order of the columns and the hidden ones on all three, and the table's own view
+  const views = w.fake.views(entry.database_id);
+  const byName = Object.fromEntries(views.map((v) => [v.name, v]));
+  const nameOf = (id) => Object.values(w.fake.dataSource(entry.data_source_id).properties).find((p) => p.id === id)?.name;
+  assert.deepEqual(byName['Your queue'].filter, { property: 'Agent status', select: { equals: 'Waits for you' } }, 'no condition on Review status, none on a note');
+  assert.deepEqual(byName['Agent disagreed'].filter, { property: 'Agent status', select: { equals: 'Disagrees with your decision' } });
+  assert.deepEqual(byName['Your queue'].sorts, [{ property: 'Agent confidence', direction: 'ascending' }]);
+  assert.deepEqual(result.updated, { claims_copy: { 'Your queue': ['filter', 'columns'], 'Needs your note': ['columns'], 'Agent disagreed': ['filter', 'columns'] } });
+  for (const name of ['Your queue', 'Needs your note', 'Agent disagreed']) {
+    assert.deepEqual(shownOf(w, name), REVIEW_ORDER, name);
+    const hidden = byName[name].configuration.properties.filter((p) => !p.visible).map((p) => nameOf(p.property_id));
+    assert.ok(['Agent tags (old)', 'Agent notes (old)'].every((n) => hidden.includes(n)), `${name}: the two "(old)" columns are hidden`);
+    assert.deepEqual(byName[name].configuration.properties.slice(-2).map((p) => nameOf(p.property_id)), ['Agent tags (old)', 'Agent notes (old)']);
+    assert.equal(byName[name].configuration.wrap_cells, true);
+  }
+  assert.deepEqual(shownOf(w, 'Table'), [...REVIEW_ORDER, ...GEO_ORDER], 'the table\'s own view: the review columns, then the Geo columns, the retired ones hidden');
+  assert.equal(byName.Table.configuration.properties.find((p) => nameOf(p.property_id) === 'Geo Name').width, 150, 'a width the view had is kept');
+  assert.equal(byName.Table.configuration.wrap_cells, false, 'so is the way it wraps');
+  assert.equal(byName.Table.filter, null);
+  assert.deepEqual(result.arranged, { claims_copy: ['Table'] });
+  assert.deepEqual(w.fake.views(result0(w, 'rulebook').database_id).map((v) => v.name), ['Rulebook'], 'the other tables\' views are as they were');
+  assert.equal(result.created.views_updated, 4);
+  assert.ok(log.some((l) => /column\(s\) renamed \(Claim quality tags — verified -> Verified tags, Agent tags -> Agent tags \(old\), Agent notes -> Agent notes \(old\)\)/.test(l)), log.join('\n'));
+  assert.ok(log.some((l) => /view "Your queue": updated \(filter, columns\)/.test(l)));
+
+  // 4. the structure reads back clean, and a second run writes nothing
+  const read = await verifyStructure({ client: w.client, config: w.config, structure: revised });
+  assert.deepEqual([read.ok, read.differences], [true, []]);
+  const writes = w.fake.writes().length;
+  const again = await runStructure({ plan, client: w.client, root: w.root, config: loadConfig(w.root) });
+  assert.equal(again.ok, true);
+  assert.deepEqual(again.created, { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0, columns_renamed: 0, views_updated: 0 });
+  assert.deepEqual([again.columns, again.columnsRenamed, again.updated, again.arranged], [{}, {}, {}, {}]);
+  assert.equal(w.fake.writes().length, writes, 'idempotent: not one write');
+});
+
+test('build on the table of 16 October, stopped after the renames: the next run adds the columns and finishes; nothing is renamed twice', async () => {
+  const w = await octoberBuild();
+  const plan = planStructure(forFake(revisedStructure()), w.config);
+  w.fake.failNext('PATCH', /^\/data_sources\//, 400, 1, { applied: false });
+  // the first PATCH (the renames) is refused: nothing changed
+  const refused = await runStructure({ plan, client: w.client, root: w.root, config: w.config });
+  assert.equal(refused.ok, false);
+  assert.equal(refused.code, EXIT.INVALID);
+  assert.match(refused.stopped.what, /the renamed columns of "claims_copy"/);
+  assert.ok(w.fake.database(result0(w, 'claims_copy').database_id).properties['Agent tags (old)'] === undefined, 'nothing was renamed');
+  const done = await runStructure({ plan, client: w.client, root: w.root, config: loadConfig(w.root) });
+  assert.equal(done.ok, true, JSON.stringify(done.stopped));
+  assert.equal(done.created.columns_renamed, 3);
+
+  // a crash between the renames and the new columns: the second run sees the renamed columns and only adds
+  const v = await octoberBuild();
+  const crashing = { ...v.client, updateDataSource: (id, body) => (Object.keys(body.properties ?? {}).includes('Agent status') ? Promise.reject(new Error('the process died')) : v.client.updateDataSource(id, body)) };
+  const half = await runStructure({ plan: planStructure(forFake(revisedStructure()), v.config), client: crashing, root: v.root, config: v.config });
+  assert.equal(half.ok, false);
+  assert.equal(half.created.columns_renamed, 3, 'the renames were made');
+  const rest = await runStructure({ plan: planStructure(forFake(revisedStructure()), v.config), client: v.client, root: v.root, config: loadConfig(v.root) });
+  assert.equal(rest.ok, true, JSON.stringify(rest.stopped));
+  assert.deepEqual([rest.created.columns_renamed, rest.created.columns], [0, 5], 'only the five new columns are added the second time');
+  assert.deepEqual((await verifyStructure({ client: v.client, config: v.config, structure: forFake(revisedStructure()) })).differences, []);
+});
+
+test('a column is renamed only when the old name is there with the type of the new column and the new name is free', async () => {
+  // the new name is taken: Verified tags exists already, so the old relation is left alone (verify then calls it an extra column)
+  const w = await octoberBuild();
+  const entry = result0(w, 'claims_copy');
+  await w.client.updateDataSource(entry.data_source_id, { properties: { 'Verified tags': { type: 'relation', relation: { data_source_id: result0(w, 'rulebook').data_source_id, single_property: {} } } } });
+  const taken = await runStructure({ plan: planStructure(forFake(revisedStructure()), w.config), client: w.client, root: w.root, config: w.config });
+  assert.equal(taken.ok, true);
+  assert.deepEqual(taken.columnsRenamed.claims_copy.map((r) => r.to), ['Agent tags (old)', 'Agent notes (old)'], 'no rename onto a name that is taken');
+  assert.ok(w.fake.database(entry.database_id).properties['Claim quality tags — verified'], 'and the old column is untouched');
+  assert.ok((await verifyStructure({ client: w.client, config: w.config, structure: forFake(revisedStructure()) })).differences.some((d) => d.kind === 'extra column' && /Claim quality tags — verified/.test(d.detail)));
+
+  // the old name has another type than the new column: Agent tags is a relation already, so it is not renamed to Agent tags (old)
+  const v = await octoberBuild();
+  const ds = result0(v, 'claims_copy');
+  await v.client.updateDataSource(ds.data_source_id, { properties: { 'Agent tags': { name: 'Gone' } } });
+  await v.client.updateDataSource(ds.data_source_id, { properties: { 'Agent tags': { type: 'relation', relation: { data_source_id: result0(v, 'rulebook').data_source_id, single_property: {} } } } });
+  const typed = await runStructure({ plan: planStructure(forFake(revisedStructure()), v.config), client: v.client, root: v.root, config: v.config });
+  assert.equal(typed.ok, true);
+  assert.ok(!typed.columnsRenamed.claims_copy.some((r) => r.from === 'Agent tags'), 'a relation is not renamed to the old text column\'s new name');
+});
+
+test('verify on the table of 16 October names what build will do: the old name still there, the type that differs, the views that are not as the structure says', async () => {
+  const w = await octoberBuild();
+  const r = await verifyStructure({ client: w.client, config: w.config, structure: forFake(revisedStructure()) });
+  assert.equal(r.ok, false);
+  const text = r.differences.map((d) => `${d.table} ${d.kind}: ${d.detail}`).join('\n');
+  assert.match(text, /claims_copy missing column: "Verified tags" \(relation\) is not in the table \("Claim quality tags — verified" is there under its old name; setup\.mjs build renames it\)/);
+  assert.match(text, /claims_copy type: "Agent tags" is rich_text in Notion but relation in the structure; setup\.mjs build renames it to "Agent tags \(old\)" and adds the new one/);
+  assert.match(text, /claims_copy missing column: "Agent status" \(select\)/);
+  assert.match(text, /claims_copy extra column: "Agent notes" \(rich_text\)/);
+  assert.match(text, /claims_copy view filter: "Your queue": expected/);
+  assert.match(text, /claims_copy view columns: "Your queue": expected Geo Name, Agent tags, Agent confidence/);
+  assert.match(text, /claims_copy view columns: "Table" \(the table's own view\)/);
+  assert.ok(!/retired|\(old\)" \(rich_text\) is not in the table/.test(text), 'a retired column that is not there yet is no difference');
+  assert.equal(r.differences.filter((d) => d.table !== 'claims_copy').length, 0, 'the other tables are as they should be');
+});
+
+test('a table built fresh from the revised structure makes no "(old)" column, and its own view is set to the order as well, because the relation columns are made after the others', async () => {
+  const w = build();
+  const first = await runStructure({ plan: w.plan, client: w.client, root: w.root, config: w.config });
+  assert.equal(first.ok, true);
+  const entry = result0(w, 'claims_copy');
+  assert.deepEqual(Object.keys(w.fake.database(entry.database_id).properties).filter((n) => /\(old\)/.test(n)), []);
+  await w.client.createView({
+    databaseId: entry.database_id, dataSourceId: entry.data_source_id, name: 'Table',
+    configuration: { type: 'table', properties: Object.values(w.fake.dataSource(entry.data_source_id).properties).map((p) => ({ property_id: p.id, visible: true })) },
+  });
+  assert.notDeepEqual(shownOf(w, 'Table').slice(0, 3), ['Geo Name', 'Agent tags', 'Agent confidence'], 'in the order the columns were made, the relations come last');
+  const again = await runStructure({ plan: w.plan, client: w.client, root: w.root, config: loadConfig(w.root) });
+  assert.deepEqual(again.arranged, { claims_copy: ['Table'] });
+  assert.deepEqual(shownOf(w, 'Table'), [...REVIEW_ORDER, ...GEO_ORDER]);
+  assert.deepEqual((await verify(w)).differences, []);
+  const before = w.fake.writes().length;
+  const third = await runStructure({ plan: w.plan, client: w.client, root: w.root, config: loadConfig(w.root) });
+  assert.deepEqual(third.arranged, {});
+  assert.equal(w.fake.writes().length, before);
+
+  // the same arrangement is available on its own, for a builder that makes its views itself (the practice page)
+  const other = build();
+  await runStructure({ plan: other.plan, client: other.client, root: other.root, config: other.config });
+  const e2 = result0(other, 'claims_copy');
+  await other.client.createView({
+    databaseId: e2.database_id, dataSourceId: e2.data_source_id, name: 'Table',
+    configuration: { type: 'table', properties: Object.values(other.fake.dataSource(e2.data_source_id).properties).map((p) => ({ property_id: p.id, visible: true })) },
+  });
+  const changed = await arrangeOwnViews({ client: other.client, plan: other.plan, table: 'claims_copy', databaseId: e2.database_id, dataSourceId: e2.data_source_id });
+  assert.deepEqual(changed, ['Table']);
+  assert.deepEqual(await arrangeOwnViews({ client: other.client, plan: other.plan, table: 'claims_copy', databaseId: e2.database_id, dataSourceId: e2.data_source_id }), [], 'a second call changes nothing');
 });

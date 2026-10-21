@@ -15,13 +15,13 @@ function assertReport(h, r) {
   assert.ok(!/\bcalls?\b|token|duration|\$|\.mjs|--[a-z]|runs\//i.test(r.markdown), r.markdown);
   return r.report;
 }
-// the rows that wait are claims of the Claims copy: a claim whose Agent notes say that a tag waits and that an editor has not Reviewed
-const WAITS = 'no tags\n1 waits for an editor · edition 2026-10-16.1';
-const NOTHING = 'no tags\nnothing waits for an editor · edition 2026-10-16.1';
+// the rows that wait are claims of the Claims copy: a claim whose Agent status is Waits for you and that an editor has not Reviewed
+const WAITS = 'Waits for you';
+const NOTHING = 'Done';
 const id = (i) => `c${String(i).padStart(2, '0')}`;
-const waiting = (...ns) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent notes': WAITS, 'Agent confidence': 0.5 }]));
-const read = (...ns) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent notes': NOTHING, 'Agent confidence': 0.9 }]));
-const reviewed = (ns, over = {}) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent notes': NOTHING, 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'Fine.', ...over }]));
+const waiting = (...ns) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent status': WAITS, 'Agent confidence': 0.5 }]));
+const read = (...ns) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent status': NOTHING, 'Agent confidence': 0.9 }]));
+const reviewed = (ns, over = {}) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent status': NOTHING, 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'Fine.', ...over }]));
 const lesson = (title, Status, over = {}) => ({ Lesson: title, Tag: 'Context-dependent', Rule: 'Context-dependent rule 4', Kind: 'Clarify wording', 'Current text': 'x', 'Proposed text': 'y', Status, ...over });
 
 test('status, nothing waits: the sentence, the table of four rows and a Next that reads new claims', async () => {
@@ -56,14 +56,14 @@ test('status, rows and a rule change wait: both counted in the sentence, Next po
   assert.ok(report.next.includes(w.DB.claims_copy), 'Your queue is a view of the Claims copy');
 });
 
-test('status counts a claim by what its Agent notes say: "nothing waits for an editor" and a Reviewed claim do not wait, "2 wait for an editor" does', async () => {
+test('status counts a claim by its Agent status: Done and a Reviewed claim do not wait, Waits for you does', async () => {
   const w = await makeWorld({
     claims: 5,
     claimRows: {
       ...waiting(1),
-      [id(2)]: { 'Agent notes': 'no tags\n2 wait for an editor · edition 2026-10-16.1', 'Review status': 'To review' },
+      [id(2)]: { 'Agent status': 'Waits for you', 'Review status': 'To review' },
       ...read(3),
-      ...reviewed([4], { 'Agent notes': WAITS }),
+      ...reviewed([4], { 'Agent status': WAITS }),
     },
   });
   const r = await status(w.hooks());
@@ -198,7 +198,7 @@ test('status in a practice profile starts with "Demo · "', async () => {
 // tags, notes or confidence: step 2 fills them), no rule change, no run yet
 const PRACTICE_TITLE = 'Claim tagger demo · 15 Oct 10:42';
 const ONE_TAG = [JSON.parse(readFileSync(join(codeRoot(), 'setup', 'taxonomy-issue.json'), 'utf8')).rows.find((r) => r.Name === 'Context-dependent')];
-const earlier = reviewed([3, 4, 5, 6, 7], { 'Agent notes': '' });
+const earlier = reviewed([3, 4, 5, 6, 7], { 'Agent status': null });
 const practicePage = ({ claimRows = {}, ...extra } = {}) => makeWorld({
   claims: 7, rulebook: ONE_TAG, claimRows: { ...earlier, ...claimRows }, demo: true, configure: (c) => { c.demo_title = PRACTICE_TITLE; }, ...extra,
 });
@@ -224,7 +224,7 @@ test('status on a practice page names the page and shows step 1: "1 tag, edition
   assert.equal(readJson(join(r.runDir, 'report.json')).next, TAG_FIRST);
 });
 
-test('on a practice page the Next line says to type the demo tag command while a claim that is still open has no Agent notes yet, and points at Your queue once the agent has read them', async () => {
+test('on a practice page the Next line says to type the demo tag command while a claim that is still open has no Agent status yet, and points at Your queue once the agent has read them', async () => {
   const check = async (w) => {
     const h = w.hooks();
     const r = await status(h);
@@ -233,14 +233,14 @@ test('on a practice page the Next line says to type the demo tag command while a
   };
   assert.equal((await check(await practicePage())).next, TAG_FIRST, 'step 1: neither open claim has been read');
   assert.equal((await check(await practicePage({ claimRows: waiting(1) }))).next, TAG_FIRST, 'one claim that is not read yet is enough');
-  assert.equal((await check(await practicePage({ claimRows: { ...waiting(1), [id(2)]: { 'Agent notes': '  ' } } }))).next, TAG_FIRST, 'empty notes are none');
+  assert.equal((await check(await practicePage({ claimRows: { ...waiting(1), [id(2)]: { 'Agent status': null } } }))).next, TAG_FIRST, 'an empty status is none');
   const both = await check(await practicePage({ claimRows: waiting(1, 2) }));
   assert.match(both.next, DECIDE, 'step 3: the agent has read both claims, the editor decides them');
   assert.equal(DECIDE.exec(both.next)[1], 'two');
   assert.equal(both.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.`);
 
   // only a claim that is still open can be unread: a Reviewed claim without notes (an earlier decision) does not send the editor back to step 2
-  const noEarlier = await check(await practicePage({ claimRows: { ...waiting(1, 2), ...reviewed([3], { 'Agent notes': '' }) } }));
+  const noEarlier = await check(await practicePage({ claimRows: { ...waiting(1, 2), ...reviewed([3], { 'Agent status': null }) } }));
   assert.match(noEarlier.next, DECIDE);
   assert.equal(DECIDE.exec(noEarlier.next)[1], 'two');
 
@@ -252,7 +252,7 @@ test('on a practice page the Next line says to type the demo tag command while a
   assert.equal(approved.next, 'Next: type /claim-tagger demo promote to check the approved rule change.', 'nothing waits to be read: the line is the one it was');
 });
 
-test('in production the Next line stays "decide the rows" even when other claims have no Agent notes yet, and --json is the same on a practice page', async () => {
+test('in production the Next line stays "decide the rows" even when other claims have no Agent status yet, and --json is the same on a practice page', async () => {
   const production = await makeWorld({ claims: 3, claimRows: waiting(1, 2) }); // c03 is open and not read: in production that is not step 2 of a practice page
   const h = production.hooks();
   const r = await status(h);
@@ -305,9 +305,9 @@ test('a practice page title that the report lint refuses is left out of the sent
 test('countsOf: open, decided, needs a note, lessons by status', () => {
   const c = countsOf({
     claims: [
-      { agent_notes: WAITS, review_status: null, why_wrong: null, challenged_notes: '' },
-      { agent_notes: NOTHING, review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: ' ' },
-      { agent_notes: WAITS, review_status: 'Reviewed', why_wrong: 'Agent slip', challenged_notes: 'Fine.' },
+      { agent_status: WAITS, review_status: null, why_wrong: null, challenged_notes: '' },
+      { agent_status: NOTHING, review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: ' ' },
+      { agent_status: WAITS, review_status: 'Reviewed', why_wrong: 'Agent slip', challenged_notes: 'Fine.' },
     ],
     lessons: [{ Status: 'Proposed' }, { Status: 'Approved' }, { Status: 'Live' }],
     settings: { last_run_summary: 'x' },
@@ -329,9 +329,9 @@ test('status counts a claim marked To review the way propose wrote it: it waits 
   const w = await makeWorld({
     claims: 4,
     claimRows: {
-      [id(1)]: { 'Agent notes': WAITS, 'Agent confidence': 0.9, 'Review status': 'To review' }, // a confident answer on a claim marked To review: propose wrote "1 waits for an editor"
-      [id(2)]: { 'Agent notes': NOTHING, 'Agent confidence': 0.9 }, // Review status empty and a confident answer
-      [id(3)]: { 'Agent notes': NOTHING, 'Agent confidence': 0.9, 'Review status': 'Reviewed' },
+      [id(1)]: { 'Agent status': WAITS, 'Agent confidence': 0.9, 'Review status': 'To review' }, // a confident answer on a claim marked To review: propose wrote Waits for you
+      [id(2)]: { 'Agent status': NOTHING, 'Agent confidence': 0.9 }, // Review status empty and a confident answer
+      [id(3)]: { 'Agent status': NOTHING, 'Agent confidence': 0.9, 'Review status': 'Reviewed' },
     },
   });
   const r = await status(w.hooks());

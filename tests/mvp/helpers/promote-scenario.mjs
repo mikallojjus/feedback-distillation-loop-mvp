@@ -21,7 +21,7 @@ const decidedRow = (i, outcome, why, reasoning) => ({
 
 /**
  * Options: wording (the Editor wording), status (the lesson's Status, default Approved), title, open (a number of claims that wait in Your queue: a ledger row
- * for the proposal and Agent notes that say a tag waits),
+ * for the proposal and an Agent status that says a tag waits),
  * overrides (answers of the candidate, by claim text, laid over the base ones), base (answers of the rulebook in force, by claim text, laid over the scenario's),
  * lessonRows (more Rule changes rows), mark (the text that marks the candidate, default MARK), world (options for makeWorld).
  */
@@ -36,7 +36,7 @@ export async function promoteWorld({
   ];
   const claimRows = {};
   for (let k = 0; k < open; k++) {
-    claimRows[claimId(5 + k)] = { 'Agent notes': 'no tags\n1 waits for an editor · edition 2026-10-16.1', 'Agent confidence': 0.5 };
+    claimRows[claimId(5 + k)] = { 'Agent status': 'Waits for you', 'Agent confidence': 0.5 };
     queue.push({
       Claim: claimText(5 + k), Key: keyOf(5 + k), Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'Unsure. · 2/2 runs agreed', 'Rulebook edition': '2026-10-16.1',
     });

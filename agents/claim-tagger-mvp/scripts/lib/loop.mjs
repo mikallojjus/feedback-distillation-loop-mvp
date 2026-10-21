@@ -13,6 +13,7 @@
 //   class LoopExit(code, message, { sentence, header, rows, next })   end the run with an exit code and the words of its report
 //   takePull(ctx, { pullId })          pull every table (or load --pull <id>), set ctx.pull (loadPull) and put its id into run.json
 //   needTables(ctx, ...tables)         LoopExit(2) unless the pull holds those tables
+//   needClaimColumns(ctx)              LoopExit(2) unless the Claims table of the pull has the seven agent columns and the editor's four with the types the scripts use (a table that setup.mjs build has not rebuilt does not)
 //   runPreflight(ctx, { adopt })       lib/preflight.mjs; a refusal ends the run with its report; sets ctx.edition
 //   confirmUnchanged(ctx, { lesson, copy, tag, status })   read the Rulebook copy row and the rule change again right before they are written
 //   pickLesson(ctx, title, { status, command })   the Rule changes row to work on, or a LoopExit with a report that says why not
@@ -39,7 +40,7 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { cutText, demoCommands, listNames, namePracticePage, quoted, viewLink } from './editor-words.mjs';
 import { claudeVersion, findClaudeBin, runClaude, withTransientRetry } from './claude.mjs';
-import { isDemo, loadConfig } from './config.mjs';
+import { isDemo, loadConfig, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { readJson, readJsonl, writeJsonAtomic } from './jsonl.mjs';
 import { clientFromConfig, requestLogger } from './notion-rest.mjs';
@@ -309,6 +310,36 @@ export function needTables(ctx, ...tables) {
     throw new LoopExit(EXIT.INVALID, `the pull does not hold ${missing.join(', ')}`, {
       sentence: `${ctx.label}: nothing was done, because the ${missing.map((t) => TABLE_WORDS[t] ?? t).join(' and ')} table ${missing.length === 1 ? 'is' : 'are'} not set up yet.`,
       next: 'Next: ask the engineer to finish the setup.',
+    });
+  }
+}
+
+/** The type each agent column of the Claims copy must have (CLAIMS-REVIEW.md section 6.1), by its key in the config's write_columns. */
+const CLAIM_COLUMN_TYPES = Object.freeze({
+  tags: 'relation', confidence: 'number', reasons: 'rich_text', status: 'select', waiting: 'relation', edition: 'rich_text', remarks: 'rich_text',
+});
+/** The type each editor column of the Claims copy must have, by its key in the config's columns. */
+const EDITOR_COLUMN_TYPES = Object.freeze({ verified: 'relation', review_status: 'select', why_wrong: 'select', notes: 'rich_text' });
+
+/**
+ * Stop with exit 2 unless the Claims table of the pull has the seven agent columns and the editor's four with the types the scripts read and write (Agent tags and Tags waiting
+ * are relations since the revision of 21 October, and the editor's relation is Verified tags; a table that setup.mjs build has not rebuilt still has the text column Agent tags and
+ * the relation under its old name). A script that reads the claims' decisions or writes the claims calls this first: without it a decision would be read from a column that is not
+ * there, and every Reviewed claim would look decided as "Does not apply".
+ */
+export function needClaimColumns(ctx) {
+  const schema = ctx.pull.schema('claims_copy');
+  if (!schema?.properties) return;
+  const entry = tableEntry(ctx.config, 'claims_copy');
+  const found = (name, type) => (schema.properties[name] ? `${name} (${schema.properties[name].type}, not ${type})` : `${name} (missing)`);
+  const wrong = [
+    ...Object.entries(CLAIM_COLUMN_TYPES).filter(([key, type]) => schema.properties[entry.write_columns?.[key]]?.type !== type).map(([key, type]) => found(entry.write_columns?.[key], type)),
+    ...Object.entries(EDITOR_COLUMN_TYPES).filter(([key, type]) => schema.properties[entry.columns?.[key]]?.type !== type).map(([key, type]) => found(entry.columns?.[key], type)),
+  ];
+  if (wrong.length) {
+    throw new LoopExit(EXIT.INVALID, `the Claims table lacks columns of the revision of 21 October: ${wrong.join(', ')}; run setup.mjs build`, {
+      sentence: `${ctx.label}: nothing was done, because the Claims table does not have the agent's new columns yet.`,
+      next: 'Next: ask the engineer to run the setup build, then type the same command again.',
     });
   }
 }

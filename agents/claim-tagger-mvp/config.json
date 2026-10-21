@@ -31,16 +31,19 @@
           "link": "Geo URL",
           "sources": "Geo Sources",
           "is_factual": "Geo Is factual",
-          "verified": "Claim quality tags — verified",
+          "verified": "Verified tags",
           "review_status": "Review status",
           "why_wrong": "Why wrong",
           "notes": "Challenged tags notes"
         },
         "write_columns": {
           "tags": "Agent tags",
-          "notes": "Agent notes",
           "confidence": "Agent confidence",
-          "reasons": "Agent reasons"
+          "reasons": "Agent reasons",
+          "status": "Agent status",
+          "waiting": "Tags waiting",
+          "edition": "Agent edition",
+          "remarks": "Agent remarks"
         }
       }
     ],
@@ -140,7 +143,7 @@
   },
   "editor_columns": {
     "claims_copy": [
-      "Claim quality tags — verified",
+      "Verified tags",
       "Review status",
       "Why wrong",
       "Challenged tags notes"

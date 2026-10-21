@@ -38,7 +38,7 @@ import { groupOf } from './lib/config.mjs';
 import { syncDecisions } from './lib/decisions.mjs';
 import { cutText, plural, quoted, stampOf, viewLink } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
-import { LoopExit, addSettingsOp, applyStep, assertApplied, callModel, judgeSettings, liveRubric, modelStop, needTables, parseCli, readEvals, resumeLine, runPreflight, takePull, withRun } from './lib/loop.mjs';
+import { LoopExit, addSettingsOp, applyStep, assertApplied, callModel, judgeSettings, liveRubric, modelStop, needClaimColumns, needTables, parseCli, readEvals, resumeLine, runPreflight, takePull, withRun } from './lib/loop.mjs';
 import { readJson } from './lib/jsonl.mjs';
 import { splitRichText } from './lib/notion-rest.mjs';
 import { codeFile, isMain } from './lib/paths.mjs';
@@ -287,6 +287,7 @@ export async function distill(opts = {}) {
     await takePull(ctx);
     needTables(ctx, 'tag_decisions', 'rule_changes');
     runPreflight(ctx);
+    if (ctx.pull.covers('claims_copy')) needClaimColumns(ctx);
     const rubric = liveRubric(ctx);
     const cfg = ctx.config.distill;
     const jc = judgeSettings(ctx);

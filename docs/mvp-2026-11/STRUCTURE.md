@@ -10,29 +10,38 @@ Sample rows use real claims from the audit of 9 October, with claims and ids sho
 
 After the second checkpoint the product owner asked that editors decide tags where they work, on the claims table, as on the real table. The sections below this one are the approved proposal of 15 October and stay as history; this section is what is built from 16 October on, and the specification is in the notes (decisions P2, 42 and 43).
 
-**Claims copy** gains four editor columns and two agent columns. The editor's outcome is the verified relation plus Review status: Reviewed with the tag in the relation means Applies, Reviewed without it means Does not apply, anything else is still open.
+**Claims copy** carries seven agent columns and four editor columns (the feedback round of 21 October, decision P3, replaced the two-line Agent notes by columns a view can filter on and made Agent tags a relation). The editor's outcome is the verified relation plus Review status: Reviewed with the tag in the relation means Applies, Reviewed without it means Does not apply, anything else is still open.
 
 | Column | Type | Who fills it | Meaning |
 |---|---|---|---|
+| Agent tags | relation to the Rulebook copy | the agent | The tags the agent applies and that do not wait for the editor; where the claim is Reviewed, the editor's set. |
 | Agent confidence | number | the agent | The lowest confidence among the tags the agent judged on the claim, 0.5 to 1; Your queue sorts by it. |
 | Agent reasons | text | the agent | One line per judged tag: the tag, the agent's reason in at most 40 words, the rule cited and how many runs agreed. |
-| Claim quality tags — verified | relation to the Rulebook copy | the editor | The tags the editor confirms on the claim; the real table's column of the same name. |
+| Agent status | select | the agent | Waits for you, Done, Disagrees with your decision, Could not read. Your queue and Agent disagreed filter on it. |
+| Tags waiting | relation to the Rulebook copy | the agent | The tags that wait for the editor: an unsure tag, or every judged tag on a claim marked To review. |
+| Agent edition | text | the agent | The rulebook edition the agent's columns were written under. |
+| Agent remarks | text | the agent | "not checked: …" when a tag could not be judged; else empty. |
+| Verified tags | relation to the Rulebook copy | the editor | The tags the editor confirms on the claim (the real table's "Claim quality tags — verified"; the config maps the name). |
 | Review status | select | the editor | To review, Reviewed. A claim is decided once it is Reviewed. |
-| Why wrong | select | the editor | Agent slip, Rule unclear, Rule should change: why the agent's tag was wrong; one value for the claim. |
-| Challenged tags notes | text | the editor | The editor's words. A line that starts with a tag name and a colon belongs to that tag. |
+| Why wrong | select | the editor | Agent slip, Rule unclear, Rule should change: why the agent's tag was wrong; the claim's default reason. |
+| Challenged tags notes | text | the editor | The editor's words, one line per tag the editor disagrees on: the tag name, a colon, then optionally a reason word (Agent slip, Rule unclear, Rule should change) and a full stop, then the words. |
+
+The columns appear in this order on every view, the agent's side before the review columns, so that the review needs no horizontal scrolling. The two text columns of the first build, Agent tags and Agent notes, are kept as "Agent tags (old)" and "Agent notes (old)" and hidden.
 
 The agent's side of four sample rows, as the tag run leaves them:
 
-| Geo Name | Agent tags | Agent confidence | Agent notes | Agent reasons |
+| Geo Name | Agent tags | Agent confidence | Agent status | Tags waiting |
 |---|---|---|---|---|
-| The press pool was justified in suspending coverage… | empty | 0.75 | no tags / 1 waits for an editor · edition 2026-10-16.1 | Context-dependent: "the press pool": which one? · rule 3 · 3 of 3 runs agree |
-| The AI Force should enforce binding safety standards | empty | 0.65 | no tags / 1 waits for an editor · edition 2026-10-16.1 | Context-dependent: "The AI Force": a name, or a kind of body? · rule 3 · 2 of 3 runs agree |
-| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.93 | Context-dependent / nothing waits for an editor · edition 2026-10-16.1 | Context-dependent: "the federal court order": which order? · rule 2 · 3 of 3 runs agree |
-| Relocating the Kennedy Center Honors to a sports arena… | empty | 0.92 | no tags / nothing waits for an editor · edition 2026-10-16.1 | Context-dependent: "the awards" points back to the Honors · rule 5 · 3 of 3 runs agree |
+| The press pool was justified in suspending coverage… | empty | 0.75 | Waits for you | Context-dependent |
+| The AI Force should enforce binding safety standards | empty | 0.55 | Waits for you | Context-dependent |
+| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.93 | Done | empty |
+| Relocating the Kennedy Center Honors to a sports arena… | empty | 0.92 | Done | empty |
+
+Each row also carries Agent reasons (one line per judged tag, for example `Context-dependent: "the press pool": which one? · rule 3 · 1 of 1 runs agree`), Agent edition (2026-10-16.1) and Agent remarks (empty here).
 
 The editor's side of the same rows, after review:
 
-| Geo Name | Claim quality tags — verified | Review status | Why wrong | Challenged tags notes |
+| Geo Name | Verified tags | Review status | Why wrong | Challenged tags notes |
 |---|---|---|---|---|
 | The press pool was justified in suspending coverage… | empty | Reviewed | Rule unclear | Context-dependent: rule 3 does not say that a group every reader knows by its role counts as identified; it does. |
 | The AI Force should enforce binding safety standards | Context-dependent | Reviewed | Rule unclear | Context-dependent: a capitalised phrase that names no body readers know is still a kind of thing, not which one. |
@@ -54,13 +63,13 @@ Each row also carries Tag (Context-dependent on every row above), Agent reason, 
 
 | View | Table | Filter | Sort |
 |---|---|---|---|
-| Your queue | Claims copy | Review status is not Reviewed, Agent notes contains "for an editor" and does not contain "nothing waits" | Agent confidence, lowest first |
+| Your queue | Claims copy | Agent status is Waits for you (a decided claim stays listed until the agent's next tag run) | Agent confidence, lowest first |
 | Needs your note | Claims copy | Why wrong is set, and Challenged tags notes is empty | Agent confidence, lowest first |
-| Agent disagreed | Claims copy | Agent notes contains "disagrees" | Agent confidence, lowest first |
+| Agent disagreed | Claims copy | Agent status is Disagrees with your decision | Agent confidence, lowest first |
 | Lessons waiting | Rule changes | Status is Proposed or Approved | none |
 | Rulebook | Rulebook copy | all rows | none |
 
-**Reruns.** A rerun judges only new or changed claims and tags with a new edition. The agent never reopens a Reviewed claim: where its new proposal differs from the editor's set, Agent tags keeps the editor's set and Agent notes says "disagrees with your decision on <tag>", which the Agent disagreed view lists.
+**Reruns.** A rerun judges only new or changed claims and tags with a new edition. The agent never reopens a Reviewed claim: where its new proposal differs from the editor's set, Agent tags keeps the editor's set and Agent status reads Disagrees with your decision, which the Agent disagreed view lists.
 
 ## At a glance
 
