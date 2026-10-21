@@ -25,7 +25,7 @@
 // The decisions made (READ-DECISIONS.md, decision 74). The agent reads each disagreement between an editor's decision and its own proposal itself (distill, lib/readings.mjs), and
 // only distill makes or writes a reading, so status counts, from the ledger as distill would bring it up to date (syncDecisions) and sorted the way distill sorts it (classifyRows),
 // the Reviewed claims with an unfixed disagreement row (a row whose Follow-up is Fixed is never read):
-//   queue.to_read                  a row is stale: the editor's decision, note, reason word or the tag's rules changed since the agent last read it, or it was never read (it is read by
+//   queue.to_read                  a row is stale: the editor's decision, note or reason word changed since the agent last read it, or the agent proposed the tag again under a new edition, or it was never read (it is read by
 //                                  distill; also a note line that opens with a reason word, which distill takes as it stands without asking a model)
 //   queue.pending_rule_decisions   a row the agent has read as a rule problem (Rule unclear or Rule should change) and that stands: distill drafts a rule change from such rows when
 //                                  at least distill.min_claims claims point at the same rule

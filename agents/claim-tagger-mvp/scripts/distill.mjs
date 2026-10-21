@@ -5,7 +5,7 @@
 // Rule should change, the rule it points at, one line of why. A note line that opens with a reason word (Agent slip., Rule unclear., Rule should change.) is taken as it stands, no model
 // call. Any other disagreement goes to the model in batches of distill.reading_batch rows (prompt prompts/reading.md, model models.distill, effort distill.reading_effort, two attempts per
 // batch, refused replies kept under the run's rejected/); a batch that fails twice leaves its rows unread this run, and the next run tries again. A row is read again only when its
-// "Read under" (edition and a hash of the outcome, the proposal, the note line, the reason word and the tag's rules) differs from the current one; a row marked Fixed is never read.
+// "Read under" (edition and a hash of the outcome, the proposal, the note line, the reason word and the edition the proposal was made under) differs from the current one; a row marked Fixed is never read.
 // The readings go to the ledger (Agent reading, Rule, Reading note, Read under) and, as one line per tag, to the claim's Agent reading, in the same plan as the rest. Every reading
 // of the run is one line of readings.jsonl in the run folder; --readings <run-id> reuses the lines of an earlier run for the rows whose hash is unchanged (the live step after a --plan-only).
 //

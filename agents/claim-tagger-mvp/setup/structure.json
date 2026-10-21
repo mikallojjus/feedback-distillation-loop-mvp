@@ -468,7 +468,7 @@
           "name": "Read under",
           "type": "rich_text",
           "options": [],
-          "description": "The edition and a short mark of what the reading rests on: your decision, your note and the rule. The agent reads a row again only when that changes."
+          "description": "The edition and a short mark of what the reading rests on: your decision, your note and the proposal the agent made. The agent reads a row again only when one of those changes."
         }
       ]
     },
