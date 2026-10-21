@@ -1,0 +1,38 @@
+=== pull
+pull 20261021T132058Z-pull: rulebook 13, claims_copy 50, tag_decisions 50, rule_changes 0, agent_settings 1; drift 0 difference(s); duplicates 0; paused no
+exit 0
+=== judge
+Judge: read 50 claims for Context-dependent; 4 unsure.
+
+| What | Result |
+|---|---|
+| Claims read | 50 |
+| Unsure | 4 |
+| Re-read | 5 |
+
+Next: type /claim-tagger tag to finish (it continues from here).
+exit 0
+=== propose
+Tag: the agent read 50 claims for Context-dependent; 2 wait for you.
+
+| What | Result |
+|---|---|
+| Claims read | 50 |
+| Carrying Context-dependent | 5 claims (earlier decisions included) |
+| New rows in Your queue | 2, lowest confidence first |
+| Agent disagreed | 1 claim |
+
+Next: decide your two claims in Your queue (https://www.notion.so/a0e77c4711044d87bc3e38296d2ea5d5?v=400273e214eb815cb56e000c9983235e).
+exit 0
+=== status
+Status: nothing is paused; 2 rows wait for you.
+
+| Where | Now |
+|---|---|
+| Rulebook | 13 tags, edition 2026-10-15.2 |
+| Your queue | 2 rows, lowest confidence first |
+| Lessons waiting | none |
+| Last run | Tag · 21 Oct 16:21 · 50 claims |
+
+Next: decide your two claims in Your queue (https://www.notion.so/a0e77c4711044d87bc3e38296d2ea5d5?v=400273e214eb815cb56e000c9983235e).
+exit 0

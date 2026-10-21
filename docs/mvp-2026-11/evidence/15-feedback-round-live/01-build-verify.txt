@@ -1,0 +1,41 @@
+=== builder open
+builder session open: feedback round of 21 October: Agent tags as a relation, Agent status, Tags waiting, Agent edition, Agent remarks, Verified tags, the review column order and the view filters
+exit 0
+=== build
+page "Demos": already recorded (3fa273e214eb81ada268f4b511182378)
+page "Demo tests": already recorded (3fa273e214eb81c2b223dcc2331b7051)
+table "Rulebook copy": already recorded (17b99d1873384a1bb688c0075de45f78)
+table "Claims copy": already recorded (a0e77c4711044d87bc3e38296d2ea5d5)
+table "Tag decisions": already recorded (b77d1b758c414293b14837fdd1af4754)
+table "Rule changes": already recorded (ce293cfbd61a4cc680ab3567bac6da38)
+table "Agent settings": already recorded (d941cf5880bb4b4ea5de378191ab8202)
+table "claims_copy": 3 column(s) renamed (Claim quality tags — verified -> Verified tags, Agent tags -> Agent tags (old), Agent notes -> Agent notes (old))
+table "claims_copy": 5 column(s) added (Agent tags, Agent status, Tags waiting, Agent edition, Agent remarks)
+view "Rulebook": already there
+view "Your queue": already there
+view "Your queue": updated (filter, columns)
+view "Needs your note": already there
+view "Needs your note": updated (columns)
+view "Agent disagreed": already there
+view "Agent disagreed": updated (filter, columns)
+view "Your queue (ledger)": already there
+view "Your queue (ledger)": updated (columns)
+view "Needs your note (ledger)": already there
+view "Needs your note (ledger)": updated (columns)
+view "Lessons waiting": already there
+setup: warning: the table's own view of "claims_copy" could not be arranged: Notion PATCH /views/23928440-89d2-4baa-b346-289614c88eb0 -> 400 validation_error: body failed validation: body.configuration.frozen_column_index should be ≥ `0` or `undefined`, instead was `-1`.
+pages: 0 made, 2 there already
+tables: 0 made, 5 there already
+columns: 5 added (claims_copy: Agent tags, Agent status, Tags waiting, Agent edition, Agent remarks)
+columns renamed: 3 (claims_copy: Claim quality tags — verified -> Verified tags, Agent tags -> Agent tags (old), Agent notes -> Agent notes (old))
+views: 0 made, 7 there already
+views brought to the structure: claims_copy: Your queue (filter, columns); claims_copy: Needs your note (columns); claims_copy: Agent disagreed (filter, columns); tag_decisions: Your queue (ledger) (columns); tag_decisions: Needs your note (ledger) (columns)
+exit 0
+=== verify
+verify: rows rulebook 13, claims_copy 50, tag_decisions 50, rule_changes 0, agent_settings 1; 30 request(s), 0 write(s)
+verify: 1 difference(s)
+  claims_copy: view columns - "Default view" (the table's own view): expected Geo Name, Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks, Verified tags, Review status, Why wrong, Challenged tags notes, Geo ID, Geo URL, Geo Sources, Geo Tags, Geo Topics, Geo Score, Geo Supporting arguments, Geo Opposing arguments, Geo Related people, Geo Related projects, Geo Is factual, Geo Name source; found Geo Name, Agent notes (old), Agent tags (old), Geo ID, Geo Is factual, Geo Name source, Geo Opposing arguments, Geo Related people, Geo Related projects, Geo Score, Geo Sources, Geo Supporting arguments, Geo Tags, Geo Topics, Geo URL
+exit 2
+=== builder close
+builder session closed
+exit 0

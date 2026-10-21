@@ -1,0 +1,6 @@
+{"step":"start","demo":"20261021-1625-b5e09b","time":"16:27:23"}
+{"ok":true,"problems":[],"counts":{"canaries":10,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":11,"table_row":36,"heading_2":8,"numbered_list_item":11,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"decided":5,"open":2,"tag_decisions":5,"rule_changes":0,"agent_settings":1,"linked_views":2,"tab_views":3,"fallback":null,"steps":7,"fresh":true}}
+{"step":"after tag step","time":"16:30:28"}
+{"ok":true,"problems":[],"counts":{"canaries":10,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":11,"table_row":36,"heading_2":8,"numbered_list_item":11,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"decided":5,"open":2,"tag_decisions":7,"rule_changes":0,"agent_settings":1,"linked_views":2,"tab_views":3,"fallback":null,"steps":7,"fresh":false}}
+{"step":"after promote","time":"16:35:37"}
+{"ok":true,"problems":[],"counts":{"canaries":10,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":11,"table_row":36,"heading_2":8,"numbered_list_item":11,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"decided":7,"open":0,"tag_decisions":7,"rule_changes":1,"agent_settings":1,"linked_views":2,"tab_views":3,"fallback":null,"steps":7,"fresh":false}}

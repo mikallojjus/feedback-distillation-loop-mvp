@@ -1,0 +1,35 @@
+=== start
+Building the page.
+walkthrough: the column order of the Claims view "Default view" was set to the review order
+Walkthrough: your practice page is ready under Demos.
+
+| Table | Now |
+|---|---|
+| Rulebook | 1 tag |
+| Claims | 7: 5 reviewed earlier, 2 for you |
+| Rule changes | empty |
+
+Next: open Claim tagger practice · product owner, 21 Oct evening (https://app.notion.com/p/Claim-tagger-practice-product-owner-21-Oct-evening-400273e214eb81d99593e1865b9767db) and follow step 1.
+exit 0
+demo 20261021-1622-d913cf
+=== verify
+{"ok":true,"problems":[],"counts":{"canaries":10,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":53,"table":11,"table_row":36,"heading_2":8,"numbered_list_item":11,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"decided":5,"open":2,"tag_decisions":5,"rule_changes":0,"agent_settings":1,"linked_views":2,"tab_views":3,"fallback":null,"steps":7,"fresh":true}}
+exit 0
+=== where (default page)
+Walkthrough: you are at step 1, Meet the demo.
+
+Next: type /claim-tagger demo status.
+exit 0
+=== list
+Walkthrough: 12 practice pages, the newest 5 below.
+
+| Practice page | State | Step |
+|---|---|---|
+| Claim tagger practice · product owner, 21 Oct evening (https://app.notion.com/p/Claim-tagger-practice-product-owner-21-Oct-evening-400273e214eb81d99593e1865b9767db) | ready · used by the demo commands | step 1 |
+| Claim tagger practice · verification 21 Oct, run 2 (https://app.notion.com/p/Claim-tagger-practice-verification-21-Oct-run-2-400273e214eb8128928fcae51937a518) | ready | unknown |
+| "Claim tagger practice · verification 21 Oct, second run" (https://app.notion.com/p/Claim-tagger-practice-verification-21-Oct-second-run-400273e214eb816b85a4e515e5770030) | ready | unknown |
+| Claim tagger practice · product owner, 21 Oct afternoon (https://app.notion.com/p/Claim-tagger-practice-product-owner-21-Oct-afternoon-400273e214eb8147a715e29c018b0206) | ready | unknown |
+| Claim tagger practice · verification 21 Oct (https://app.notion.com/p/Claim-tagger-practice-verification-21-Oct-400273e214eb8126bf20cd1f1337681e) | ready | unknown |
+
+Next: type /claim-tagger demo status.
+exit 0
