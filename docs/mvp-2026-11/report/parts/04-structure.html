@@ -9,34 +9,41 @@
 <div class="sub" id="structure-revision-of-16-october-decisions-on-the" data-title="Revision of 16 October: decisions on the claims table">
 <h3>Revision of 16 October: decisions on the claims table</h3>
 <p>After the second checkpoint the product owner asked that editors decide tags where they work, on the claims table, as on the real table. The sections below this one are the approved proposal of 15 October and stay as history; this section is what is built from 16 October on, and the specification is in the notes (decisions P2, 42 and 43).</p>
-<p><strong>Claims copy</strong> gains four editor columns and two agent columns. The editor's outcome is the verified relation plus Review status: Reviewed with the tag in the relation means Applies, Reviewed without it means Does not apply, anything else is still open.</p>
+<p><strong>Claims copy</strong> carries seven agent columns and four editor columns (the feedback round of 21 October, decision P3, replaced the two-line Agent notes by columns a view can filter on and made Agent tags a relation). The editor's outcome is the verified relation plus Review status: Reviewed with the tag in the relation means Applies, Reviewed without it means Does not apply, anything else is still open.</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
-<colgroup><col style="width:15%"><col style="width:10%"><col style="width:21%"><col style="width:54%"></colgroup>
+<colgroup><col style="width:13%"><col style="width:12%"><col style="width:21%"><col style="width:54%"></colgroup>
 <thead><tr><th scope="col">Column</th><th scope="col">Type</th><th scope="col">Who fills it</th><th scope="col">Meaning</th></tr></thead>
 <tbody>
+<tr><td>Agent tags</td><td>relation to the Rulebook copy</td><td>the agent</td><td>The tags the agent applies and that do not wait for the editor; where the claim is Reviewed, the editor's set.</td></tr>
 <tr><td>Agent confidence</td><td>number</td><td>the agent</td><td>The lowest confidence among the tags the agent judged on the claim, 0.5 to 1; Your queue sorts by it.</td></tr>
 <tr><td>Agent reasons</td><td>text</td><td>the agent</td><td>One line per judged tag: the tag, the agent's reason in at most 40 words, the rule cited and how many runs agreed.</td></tr>
-<tr><td>Claim quality tags — verified</td><td>relation to the Rulebook copy</td><td>the editor</td><td>The tags the editor confirms on the claim; the real table's column of the same name.</td></tr>
+<tr><td>Agent status</td><td>select</td><td>the agent</td><td>Waits for you, Done, Disagrees with your decision, Could not read. Your queue and Agent disagreed filter on it.</td></tr>
+<tr><td>Tags waiting</td><td>relation to the Rulebook copy</td><td>the agent</td><td>The tags that wait for the editor: an unsure tag, or every judged tag on a claim marked To review.</td></tr>
+<tr><td>Agent edition</td><td>text</td><td>the agent</td><td>The rulebook edition the agent's columns were written under.</td></tr>
+<tr><td>Agent remarks</td><td>text</td><td>the agent</td><td>"not checked: …" when a tag could not be judged; else empty.</td></tr>
+<tr><td>Verified tags</td><td>relation to the Rulebook copy</td><td>the editor</td><td>The tags the editor confirms on the claim (the real table's "Claim quality tags — verified"; the config maps the name).</td></tr>
 <tr><td>Review status</td><td>select</td><td>the editor</td><td>To review, Reviewed. A claim is decided once it is Reviewed.</td></tr>
-<tr><td>Why wrong</td><td>select</td><td>the editor</td><td>Agent slip, Rule unclear, Rule should change: why the agent's tag was wrong; one value for the claim.</td></tr>
-<tr><td>Challenged tags notes</td><td>text</td><td>the editor</td><td>The editor's words. A line that starts with a tag name and a colon belongs to that tag.</td></tr>
+<tr><td>Why wrong</td><td>select</td><td>the editor</td><td>Agent slip, Rule unclear, Rule should change: why the agent's tag was wrong; the claim's default reason.</td></tr>
+<tr><td>Challenged tags notes</td><td>text</td><td>the editor</td><td>The editor's words, one line per tag the editor disagrees on: the tag name, a colon, then optionally a reason word (Agent slip, Rule unclear, Rule should change) and a full stop, then the words.</td></tr>
 </tbody>
 </table></div>
+<p>The columns appear in this order on every view, the agent's side before the review columns, so that the review needs no horizontal scrolling. The two text columns of the first build, Agent tags and Agent notes, are kept as "Agent tags (old)" and "Agent notes (old)" and hidden.</p>
 <p>The agent's side of four sample rows, as the tag run leaves them:</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
-<colgroup><col style="width:18%"><col style="width:14%"><col style="width:21%"><col style="width:20%"><col style="width:27%"></colgroup>
-<thead><tr><th scope="col" style="white-space:normal">Geo Name</th><th scope="col" style="white-space:normal">Agent tags</th><th scope="col" style="white-space:normal">Agent confidence</th><th scope="col" style="white-space:normal">Agent notes</th><th scope="col" style="white-space:normal">Agent reasons</th></tr></thead>
+<colgroup><col style="width:32%"><col style="width:14%"><col style="width:21%"><col style="width:16%"><col style="width:17%"></colgroup>
+<thead><tr><th scope="col" style="white-space:normal">Geo Name</th><th scope="col" style="white-space:normal">Agent tags</th><th scope="col" style="white-space:normal">Agent confidence</th><th scope="col" style="white-space:normal">Agent status</th><th scope="col" style="white-space:normal">Tags waiting</th></tr></thead>
 <tbody>
-<tr><td>The press pool was justified in suspending coverage…</td><td>empty</td><td>0.75</td><td>no tags / 1 waits for an editor · edition 2026-10-16.1</td><td>Context-dependent: "the press pool": which one? · rule 3 · 3 of 3 runs agree</td></tr>
-<tr><td>The AI Force should enforce binding safety standards</td><td>empty</td><td>0.65</td><td>no tags / 1 waits for an editor · edition 2026-10-16.1</td><td>Context-dependent: "The AI Force": a name, or a kind of body? · rule 3 · 2 of 3 runs agree</td></tr>
-<tr><td>Excluding CNN from Air Force One violates the federal court…</td><td>Context-dependent</td><td>0.93</td><td>Context-dependent / nothing waits for an editor · edition 2026-10-16.1</td><td>Context-dependent: "the federal court order": which order? · rule 2 · 3 of 3 runs agree</td></tr>
-<tr><td>Relocating the Kennedy Center Honors to a sports arena…</td><td>empty</td><td>0.92</td><td>no tags / nothing waits for an editor · edition 2026-10-16.1</td><td>Context-dependent: "the awards" points back to the Honors · rule 5 · 3 of 3 runs agree</td></tr>
+<tr><td>The press pool was justified in suspending coverage…</td><td>empty</td><td>0.75</td><td>Waits for you</td><td>Context-dependent</td></tr>
+<tr><td>The AI Force should enforce binding safety standards</td><td>empty</td><td>0.55</td><td>Waits for you</td><td>Context-dependent</td></tr>
+<tr><td>Excluding CNN from Air Force One violates the federal court…</td><td>Context-dependent</td><td>0.93</td><td>Done</td><td>empty</td></tr>
+<tr><td>Relocating the Kennedy Center Honors to a sports arena…</td><td>empty</td><td>0.92</td><td>Done</td><td>empty</td></tr>
 </tbody>
 </table></div>
+<p>Each row also carries Agent reasons (one line per judged tag, for example <code>Context-dependent: "the press pool": which one? · rule 3 · 1 of 1 runs agree</code>), Agent edition (2026-10-16.1) and Agent remarks (empty here).</p>
 <p>The editor's side of the same rows, after review:</p>
 <div class="geo-table-wrap"><table class="geo-table geo-table-compact packages">
 <colgroup><col style="width:25%"><col style="width:19%"><col style="width:16%"><col style="width:14%"><col style="width:26%"></colgroup>
-<thead><tr><th scope="col" style="white-space:normal">Geo Name</th><th scope="col" style="white-space:normal">Claim quality tags — verified</th><th scope="col" style="white-space:normal">Review status</th><th scope="col" style="white-space:normal">Why wrong</th><th scope="col" style="white-space:normal">Challenged tags notes</th></tr></thead>
+<thead><tr><th scope="col" style="white-space:normal">Geo Name</th><th scope="col" style="white-space:normal">Verified tags</th><th scope="col" style="white-space:normal">Review status</th><th scope="col" style="white-space:normal">Why wrong</th><th scope="col" style="white-space:normal">Challenged tags notes</th></tr></thead>
 <tbody>
 <tr><td>The press pool was justified in suspending coverage…</td><td>empty</td><td>Reviewed</td><td>Rule unclear</td><td>Context-dependent: rule 3 does not say that a group every reader knows by its role counts as identified; it does.</td></tr>
 <tr><td>The AI Force should enforce binding safety standards</td><td>Context-dependent</td><td>Reviewed</td><td>Rule unclear</td><td>Context-dependent: a capitalised phrase that names no body readers know is still a kind of thing, not which one.</td></tr>
@@ -61,14 +68,14 @@
 <colgroup><col style="width:17%"><col style="width:17%"><col style="width:43%"><col style="width:23%"></colgroup>
 <thead><tr><th scope="col">View</th><th scope="col">Table</th><th scope="col">Filter</th><th scope="col">Sort</th></tr></thead>
 <tbody>
-<tr><td>Your queue</td><td>Claims copy</td><td>Review status is not Reviewed, Agent notes contains "for an editor" and does not contain "nothing waits"</td><td>Agent confidence, lowest first</td></tr>
+<tr><td>Your queue</td><td>Claims copy</td><td>Agent status is Waits for you (a decided claim stays listed until the agent's next tag run)</td><td>Agent confidence, lowest first</td></tr>
 <tr><td>Needs your note</td><td>Claims copy</td><td>Why wrong is set, and Challenged tags notes is empty</td><td>Agent confidence, lowest first</td></tr>
-<tr><td>Agent disagreed</td><td>Claims copy</td><td>Agent notes contains "disagrees"</td><td>Agent confidence, lowest first</td></tr>
+<tr><td>Agent disagreed</td><td>Claims copy</td><td>Agent status is Disagrees with your decision</td><td>Agent confidence, lowest first</td></tr>
 <tr><td>Lessons waiting</td><td>Rule changes</td><td>Status is Proposed or Approved</td><td>none</td></tr>
 <tr><td>Rulebook</td><td>Rulebook copy</td><td>all rows</td><td>none</td></tr>
 </tbody>
 </table></div>
-<p><strong>Reruns.</strong> A rerun judges only new or changed claims and tags with a new edition. The agent never reopens a Reviewed claim: where its new proposal differs from the editor's set, Agent tags keeps the editor's set and Agent notes says "disagrees with your decision on &lt;tag&gt;", which the Agent disagreed view lists.</p>
+<p><strong>Reruns.</strong> A rerun judges only new or changed claims and tags with a new edition. The agent never reopens a Reviewed claim: where its new proposal differs from the editor's set, Agent tags keeps the editor's set and Agent status reads Disagrees with your decision, which the Agent disagreed view lists.</p>
 </div>
 <div class="sub" id="structure-at-a-glance" data-title="At a glance">
 <h3>At a glance</h3>

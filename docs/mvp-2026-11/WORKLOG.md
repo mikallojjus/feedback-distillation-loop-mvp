@@ -4,12 +4,12 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: the revision of 16 October is live on the copy and verified twice end to end on fresh practice pages (2026-10-21); the first verification's eleven findings are fixed and confirmed, the second's new finding (a title word read as a duration) is fixed. 1,945 tests pass. The product owner's page "Claim tagger practice · product owner, 21 Oct afternoon" (400273e214eb8147a715e29c018b0206, profile 20261021-1348-aae97a) is the page the demo commands reach; the MVP is agreed when the product owner runs its seven steps and says so.
+- Phase: the feedback round of 21 October (decision P3) is built, tested (1,994 tests pass), live on the copy and verified end to end on a fresh practice page; the product owner's page "Claim tagger practice · product owner, 21 Oct evening" (400273e214eb81d99593e1865b9767db, profile 20261021-1622-d913cf) carries the new columns and is the page the demo commands reach. The MVP is agreed when the product owner runs its seven steps and says so.
 - Blockers: none open.
 - Branch `mvp-2026-11`; the last commit is the newest one in `git log`.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. Under Demo tests: the two verification pages and one page with the misread title, all left in place. Under Demos: the owner's two pages and the five calibration pages of the old shape.
-- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 5).
-- Still to do: calibration runs 6 and 7 of the story on the new shape (the two verification runs count towards it: both passed on the draft), the unpaused practice-page eval, a second independent verification of the loop's acceptance checks.
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. On the Claims copy the two text columns of the first build are kept hidden as "Agent tags (old)" and "Agent notes (old)". Practice pages of the earlier shapes (15 and 16 October, and the 21 October pages built before the feedback round) stay in place and show as "unknown" in `list`.
+- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 6).
+- Still to do: calibration runs 6 and 7 of the story on the current shape (the three verification runs of 21 October all passed on the draft), the unpaused practice-page eval, a second independent verification of the acceptance checks.
 
 ## Entries
 
@@ -196,3 +196,11 @@ Done: the product owner tested the practice page and gave seven points (decision
 Verified: nothing yet; this entry opens the work.
 
 Next: the coders' hand-backs; the live change; a fresh practice page; the documents and the artifact.
+
+### 24. The feedback round live: columns, views, the page, the skills, a third verification (2026-10-21)
+
+Done: two coders implemented `CLAIMS-REVIEW.md` section 6 (decisions 54 to 61). Scripts: the Claims copy's agent side is seven columns (Agent tags as a relation, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks), the editor's verified column is Verified tags, the views filter on Agent status and show the agent's columns before the review columns in every view including the table's own, a note line may start with a reason word, `build` renames and adds columns and arranges views idempotently, and a column guard stops every writing command until the table has the new columns. Practice page: step 2 and 7 show the new columns, step 3 is a checklist per claim, `decide` writes the four editor columns under the new name, the page's Claims views carry the order and filters. Skills: after a report whose Next line sends the editor to Notion, both skills add one checklist of at most five lines from `references/guide.md`, and the headless report checker accepts exactly that shape. Live: `setup.mjs build` renamed three columns, added five, brought the five Claims and ledger views to the structure; the first pass could not arrange the table's own view (Notion refuses the frozen-column value it reports), the fix landed and the second pass did; `verify` reads back no difference; a tag run wrote the agent's columns on all 50 claims (2 wait, 1 disagreement shown). A fresh page was built for the product owner. A third verifier ran a fresh page end to end: it worked end to end, the safety check passed on the first try, all seven changes were found in place (Agent remarks could not be exercised with one tag), and its three minor findings (status midway pointing at tag instead of distill and counting only undecided claims, the guide not mapping where's Next lines, the paste sentence shown in quotes) were fixed the same evening together with a narrower distill suggestion (decisions 62 and 63).
+
+Verified: `node --test tests/`: 1,994 tests pass, 0 fail (`evidence/01-tests/`); `setup verify` clean after the second pass (`evidence/15-feedback-round-live/`); the owner's page verifies clean and `list` marks it as the default; the verifier's report in `evidence/16-walkthrough-verification-3/`.
+
+Next: the product owner runs the seven steps on the new page; then calibration runs 6 and 7 on the current shape, the unpaused practice-page eval, a second verification of the acceptance checks.

@@ -2,16 +2,16 @@
 
 | Item | Value |
 |---|---|
-| Phase | Revision of 16 October live on the copy (2026-10-21) and verified twice end to end on fresh practice pages; the findings fixed; 1,945 tests pass. The owner's page "Claim tagger practice · product owner, 21 Oct afternoon" is the one the demo commands reach. Waiting: the product owner's run of the seven steps; then calibration runs 6 and 7, the unpaused practice-page eval, a second verification of the acceptance checks |
+| Phase | Feedback round of 21 October (decision P3) live on the copy and verified end to end; 1,994 tests pass. The owner's page "Claim tagger practice · product owner, 21 Oct evening" is the one the demo commands reach. Waiting: the product owner's run of the seven steps; then calibration runs 6 and 7, the unpaused practice-page eval, a second verification of the acceptance checks |
 | Checkpoint 1 (structure proposal) | Approved as proposed on 2026-10-15 (decision P1); page https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 |
 | Checkpoint 2 (final demo) | message sent on 2026-10-15; the MVP is agreed when the product owner runs the seven steps and says so |
 | Branch | `mvp-2026-11` |
 | Parent Notion page | "Feedback Distillation MVP", 3fa273e214eb805199f3d12ef01db453 |
 | Notion ids created by this build | pages: Structure proposal 3fa273e214eb81ef8504cb40e3bd7052, Demos 3fa273e214eb81ada268f4b511182378, Demo tests 3fa273e214eb81c2b223dcc2331b7051; tables: Rulebook copy 17b99d1873384a1bb688c0075de45f78, Claims copy a0e77c4711044d87bc3e38296d2ea5d5, Tag decisions b77d1b758c414293b14837fdd1af4754, Rule changes ce293cfbd61a4cc680ab3567bac6da38, Agent settings d941cf5880bb4b4ea5de378191ab8202; views and data sources in config.json |
 | Rulebook | edition 2026-10-15.2 (the restore after the drift check; text identical to edition .1); 13 tags, Context-dependent judged; lock, history and changelog under agents/claim-tagger-mvp/rubric/ |
-| Claims and ledger | Ten claims Reviewed with the audit's decisions, the rest with the agent's columns from the first tag run of 2026-10-21; the ledger holds one row per judged claim and tag |
+| Claims and ledger | Seven agent columns (Agent tags as a relation, confidence, reasons, status, Tags waiting, edition, remarks) and four editor columns (Verified tags, Review status, Why wrong, Challenged tags notes); ten claims Reviewed with the audit's decisions, the agent's columns written on all 50 by the tag run of 21 Oct evening; the ledger holds one row per judged claim and tag; the first build's text columns kept hidden as "(old)" |
 | Notion token | the product owner tested a connection token on 2026-10-15 (reads of every object ok, writes untested); `.env` unchanged by the agent |
-| Artifact | https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr, "Claim tagger MVP", version 5 (after the two verification runs); rebuild with `node gen-parts.mjs && node build.mjs --strict` in `docs/mvp-2026-11/report/`, republish the same file path |
+| Artifact | https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr, "Claim tagger MVP", version 6 (the feedback round live); rebuild with `node gen-parts.mjs && node build.mjs --strict` in `docs/mvp-2026-11/report/`, republish the same file path |
 | Builder session | closed (`runs/SETUP` absent) |
 | Pause | none (B2 cleared by the product owner on 2026-10-21) |
 | Evidence so far | `evidence/00` baseline tests, `01` full test run, `03` audit decisions, `04` dry run (0 writes), `05` setup (verify ok), `06` real run (53 writes read back), `07-headless` (status, demo status, demo tag, demo distill, demo promote: all pass), `08` pause and drift, `09-calibration/run-1` to `run-4` (manifest .1 and .2), `run-5` (manifest .3), `10-rollback` (read back), `11-walkthrough-evals` (benchmark, review page, description loop) |

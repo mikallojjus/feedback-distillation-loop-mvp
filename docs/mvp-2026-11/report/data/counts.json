@@ -22,7 +22,7 @@
   },
 
   "tests": {
-    "full": { "value": 1985, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1985, pass 1985, fail 0 (node --test tests/ on 21 October 2026, after the feedback round)" },
+    "full": { "value": 1994, "source": "notes/evidence/01-tests/node-test-spec.txt, summary at the end: tests 1994, pass 1994, fail 0 (node --test tests/ on 21 October 2026, after the feedback round and the third verification's fixes)" },
     "files": { "value": 34, "source": "tests/mvp/*.test.mjs counted with ls on 21 October 2026" }
   },
 
@@ -91,7 +91,7 @@
   },
 
   "decisions": {
-    "logged": { "value": 61, "source": "notes/DECISIONS.md: numbered rows 1 to 61 counted on 21 October 2026, plus the product owner's decisions P1 to P3" }
+    "logged": { "value": 63, "source": "notes/DECISIONS.md: numbered rows 1 to 63 counted on 21 October 2026, plus the product owner's decisions P1 to P3" }
   },
 
   "backlog": {
