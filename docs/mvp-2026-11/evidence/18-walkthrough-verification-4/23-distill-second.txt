@@ -1,0 +1,19 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2149-242961 distill
+exit code: 0
+started: 2026-10-21T18:58:44Z
+ended:   2026-10-21T18:58:53Z (elapsed 9 s)
+head:    131d72f
+
+----- stdout -----
+Demo · Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting (practice page Claim tagger practice · verification 4).
+
+| What | Result |
+|---|---|
+| Read | 1 decision |
+| Point at a rule | none |
+| Agent slips | 1 decision |
+| Without a note | none |
+| Rule change | none |
+
+Next: type /claim-tagger demo status to see what is open.
+----- stderr -----

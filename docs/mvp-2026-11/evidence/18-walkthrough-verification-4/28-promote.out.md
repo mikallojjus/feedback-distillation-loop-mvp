@@ -1,0 +1,9 @@
+Demo · Promote: PASS, rule 3 now uses the new wording (edition 2026-10-21.2), and the follow-up marked all 3 of your rows Fixed (practice page Claim tagger practice · verification 4).
+
+| Check | Result |
+|---|---|
+| Example claims | 10 of 10 right |
+| Earlier decisions | 6 of 6 still right |
+| Your 3 rows | 3 of 3 now right, marked Fixed |
+
+Next: look at step 7 on the practice page (https://app.notion.com/p/Claim-tagger-practice-verification-4-400273e214eb8156b0ade202aeebfd8f); the demo is then complete.

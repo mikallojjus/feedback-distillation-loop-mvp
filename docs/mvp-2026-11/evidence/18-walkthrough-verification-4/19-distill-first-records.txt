@@ -1,0 +1,115 @@
+run folder: 20261021T185617Z-distill
+
+===== calls.jsonl =====
+{"purpose":"reading","model":"claude-opus-5-5","effort":"medium","batch":1,"attempt":1,"items":3,"status":"ok","usage":{"input":2,"cache_write":2064,"cache_read":1329,"output":870},"duration_ms":10638}
+{"purpose":"distill","model":"claude-opus-5-5","effort":"high","tag":"Context-dependent","rule":3,"attempt":1,"items":3,"status":"ok","usage":{"input":2,"cache_write":3184,"cache_read":1471,"output":1675},"duration_ms":17631}
+
+===== readings.jsonl =====
+{"key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","hash":"5158c072","edition":"2026-10-21.1","source":"model","reading":"Rule unclear","rule":"Context-dependent rule 3","note":"Rule 3 does not say whether naming the owner, USPS, picks out one portal or still leaves which portal open.","no_note":true}
+{"key":"5c9d133e54864197a585599669353aff::Context-dependent","hash":"f6ebacfb","edition":"2026-10-21.1","source":"model","reading":"Rule should change","rule":"Context-dependent rule 3","note":"As written, 'the press pool' names a kind without saying which; rule 3 would need to exempt groups known by their standing role.","no_note":false}
+{"key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","hash":"830960e5","edition":"2026-10-21.1","source":"model","reading":"Rule unclear","rule":"Context-dependent rule 3","note":"Rule 3 does not say whether a capitalised phrase naming no known body counts as a proper name or an unresolved descriptive definite.","no_note":false}
+
+===== report.md =====
+Demo · Distill: read 3 of your decisions and drafted one rule change from your 3 notes (practice page Claim tagger practice · verification 4).
+
+| What | Result |
+|---|---|
+| Read | 3 decisions |
+| Point at a rule | 3 decisions |
+| Agent slips | none |
+| Without a note | 1 decision |
+| Rule change | "A kind is identified only if readers know which one", Context-dependent rule 3 |
+
+Next: read it in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-verification-4-400273e214eb8156b0ade202aeebfd8f#400273e214eb819db894f976ea626217), where the current and the proposed text sit side by side, and approve it or write your own wording.
+
+===== run.json =====
+{
+  "run_id": "20261021T185617Z-distill",
+  "script": "distill",
+  "args": {
+    "pull": null,
+    "plan_only": false,
+    "driver": "cli",
+    "rows": null,
+    "readings": null
+  },
+  "started_at": "2026-10-21T18:56:17.789Z",
+  "finished_at": "2026-10-21T18:57:05.238Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.1",
+  "pull_id": "20261021T185617Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2149-242961 distill",
+  "status": "done",
+  "readings": {
+    "to_read": 3,
+    "read": 3,
+    "verbatim": 0,
+    "reused": 0,
+    "model": 3,
+    "could_not_read": [],
+    "current": 5,
+    "agree": 1,
+    "fixed": 0
+  },
+  "groups": [
+    {
+      "tag": "Context-dependent",
+      "rule": 3,
+      "rows": 3,
+      "shown": [
+        "92f57020ce349b27b5e56f54068cbc05::Context-dependent",
+        "5c9d133e54864197a585599669353aff::Context-dependent",
+        "27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent"
+      ],
+      "counter": [
+        "fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent",
+        "1bff859247ecdb618af41a397d2eb6ba::Context-dependent"
+      ]
+    }
+  ],
+  "lessons": [
+    {
+      "title": "A kind is identified only if readers know which one",
+      "rule": "Context-dependent rule 3",
+      "kind": "Change the rule",
+      "rows": [
+        "92f57020ce349b27b5e56f54068cbc05::Context-dependent",
+        "5c9d133e54864197a585599669353aff::Context-dependent",
+        "27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent"
+      ]
+    }
+  ],
+  "plan": {
+    "creates": 1,
+    "updates": 9
+  },
+  "apply": {
+    "done": 10,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  },
+  "counts": {
+    "lessons": 1,
+    "groups": 1,
+    "decisions_copied": 4,
+    "readings": 3,
+    "could_not_read": 0
+  }
+}
+
+===== plan.jsonl =====
+{"plan":{"run_id":"20261021T185617Z-distill","script":"distill","created_at":"2026-10-21T18:56:51.605Z","rubric_edition":"2026-10-21.1","counts":{"creates":1,"updates":9}}}
+{"op":"update","table":"tag_decisions","key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","page_id":"400273e2-14eb-8146-9683-fc0c8bbcead3","properties":{"Tag outcome":"Does not apply","Decided under":"2026-10-21.1","Agent reading":"Rule unclear","Rule":"Context-dependent rule 3","Reading note":"without your note · Rule 3 does not say whether naming the owner, USPS, picks out one portal or still leaves which portal open.","Read under":"2026-10-21.1 · 5158c072"}}
+{"op":"update","table":"tag_decisions","key":"5c9d133e54864197a585599669353aff::Context-dependent","page_id":"400273e2-14eb-8190-ba60-edfb886a9c7b","properties":{"Tag outcome":"Does not apply","Your reasoning":"Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.","Decided under":"2026-10-21.1","Agent reading":"Rule should change","Rule":"Context-dependent rule 3","Reading note":"As written, 'the press pool' names a kind without saying which; rule 3 would need to exempt groups known by their standing role.","Read under":"2026-10-21.1 · f6ebacfb"}}
+{"op":"update","table":"tag_decisions","key":"8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","page_id":"400273e2-14eb-81cd-bfcf-d81c884d38d8","properties":{"Tag outcome":"Does not apply","Decided under":"2026-10-21.1"}}
+{"op":"update","table":"tag_decisions","key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","page_id":"400273e2-14eb-8115-9e37-e5ff72edfdaa","properties":{"Tag outcome":"Applies","Your reasoning":"Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.","Decided under":"2026-10-21.1","Agent reading":"Rule unclear","Rule":"Context-dependent rule 3","Reading note":"Rule 3 does not say whether a capitalised phrase naming no known body counts as a proper name or an unresolved descriptive definite.","Read under":"2026-10-21.1 · 830960e5"}}
+{"op":"update","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-8175-822c-cba91f28f018","properties":{"Agent reading":"Context-dependent: Rule unclear, rule 3, without your note · Rule 3 does not say whether naming the owner, USPS, picks out one portal or still leaves which portal open."}}
+{"op":"update","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-815e-a690-e1a08e8c1e99","properties":{"Agent reading":"Context-dependent: Rule should change, rule 3 · As written, 'the press pool' names a kind without saying which; rule 3 would need to exempt groups known by their standing role."}}
+{"op":"update","table":"claims_copy","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-814f-9740-d32b4c49facd","properties":{"Agent reading":"Nothing to read: the agent agreed with you."}}
+{"op":"update","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-81c4-b910-de1f7a586872","properties":{"Agent reading":"Context-dependent: Rule unclear, rule 3 · Rule 3 does not say whether a capitalised phrase naming no known body counts as a proper name or an unresolved descriptive definite."}}
+{"op":"create","table":"rule_changes","key":"A kind is identified only if readers know which one","properties":{"Lesson":"A kind is identified only if readers know which one","Tag":"Context-dependent","Rule":"Context-dependent rule 3","Kind":"Change the rule","Current text":"A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").","Proposed text":"A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant; a capitalised phrase that is not the name of a widely known body is still such a definite. It counts as identified, and does not make the claim Context-dependent, when it is a standing group every reader knows by its role (such as the press pool) or the only one of its kind that a named owner has (such as an agency's single portal). Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").","Status":"Proposed","Supporting rows":"The AI Force should enforce binding safety standards · 92f57020ce349b27b5e56f54068cbc05::Context-dependent\nThe press pool was justified in suspending coverage in so... · 5c9d133e54864197a585599669353aff::Context-dependent\nThe USPS ballot portal should not launch before the 2026... · 27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent"},"children":[{"object":"block","type":"paragraph","paragraph":{"rich_text":[{"type":"text","text":{"content":"The AI Force should enforce binding safety standards · 92f57020ce349b27b5e56f54068cbc05::Context-dependent"}}]}},{"object":"block","type":"paragraph","paragraph":{"rich_text":[{"type":"text","text":{"content":"The press pool was justified in suspending coverage in solidarity with banned networks · 5c9d133e54864197a585599669353aff::Context-dependent"}}]}},{"object":"block","type":"paragraph","paragraph":{"rich_text":[{"type":"text","text":{"content":"The USPS ballot portal should not launch before the 2026 midterms · 27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent"}}]}}]}
+{"op":"update","table":"agent_settings","key":"Claim tagger","page_id":"400273e2-14eb-81f0-93ab-c97e2cad2a35","properties":{"Rulebook edition":"2026-10-21.1","Last run summary":"Distill · 21 Oct 21:56 · 1 rule change"}}

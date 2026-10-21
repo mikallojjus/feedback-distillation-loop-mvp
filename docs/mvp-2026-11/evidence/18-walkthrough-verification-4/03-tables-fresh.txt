@@ -1,0 +1,113 @@
+pull: 20261021T185158Z-pull
+counts: {"rulebook":1,"claims_copy":9,"tag_decisions":5,"rule_changes":0,"agent_settings":1}; problems: []; warnings: []; drift: {"checked":true,"judged":0,"adopted":0,"missing":0,"added":0}
+
+== Claims ==
+
+[aiforce] The AI Force should enforce binding safety standards  (geo 92f57020ce349b27b5e56f54068cbc05)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: ""
+  Verified tags: [] | Review status: To review | Challenged tags notes: ""
+
+[cnn] Excluding CNN from Air Force One violates the federal court order  (geo fc0cb0da0a1a4375b0fae6b5c9a67c69)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+  Verified tags: ["Context-dependent"] | Review status: Reviewed | Challenged tags notes: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+
+[contractor] A contractor's enforcement of safety restrictions constitutes a natio…  (geo 6dc1222aeb364918821167370d8fbc40)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+  Verified tags: [] | Review status: Reviewed | Challenged tags notes: "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’."
+
+[dallas] The Dallas convention is the unofficial launch of JD Vance’s 2028 pre…  (geo 1bff859247ecdb618af41a397d2eb6ba)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+  Verified tags: ["Context-dependent"] | Review status: Reviewed | Challenged tags notes: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+
+[georgia] Georgia's gubernatorial debate should be moderated by professional jo…  (geo 8f9c833b41e54eee9ca78e9c2f4ffb58)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: ""
+  Verified tags: [] | Review status: To review | Challenged tags notes: ""
+
+[kennedy] Relocating the Kennedy Center Honors to a sports arena diminishes the…  (geo 89fcfb7fc6684b63af7d829ed90106cd)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+  Verified tags: [] | Review status: Reviewed | Challenged tags notes: "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded."
+
+[presspool] The press pool was justified in suspending coverage in solidarity wit…  (geo 5c9d133e54864197a585599669353aff)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: ""
+  Verified tags: [] | Review status: To review | Challenged tags notes: ""
+
+[stopgap] December stopgap funding rewards Congress for avoiding a full budget  (geo 3e0d601de961dbf8ae38154e3f3a02e5)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+  Verified tags: [] | Review status: Reviewed | Challenged tags notes: "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it."
+
+[usps] The USPS ballot portal should not launch before the 2026 midterms  (geo 27ad00b59c1f7d4aee71643fc8cdec94)
+  Agent tags: [] | Agent confidence: null | Agent status: null | Tags waiting: [] | Agent edition:  | Agent remarks: ""
+  Agent reasons: ""
+  Agent reading: ""
+  Verified tags: [] | Review status: To review | Challenged tags notes: ""
+
+== Tag decisions (ledger) ==
+
+[cnn] fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent
+  Agent proposal: Does not apply | Agent confidence: null | Rulebook edition: 2026-10-21.1 | Follow-up: null | decided: true
+  Agent reason: ""
+  Tag outcome: Applies | Why wrong: null | Decided under: 
+  Your reasoning: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+  Agent reading: "Agent slip" | Rule: "" | Read under: "2026-10-21.1 · 8560829f"
+  Reading note: "Seeded from the audit of 9 October."
+
+[contractor] 6dc1222aeb364918821167370d8fbc40::Context-dependent
+  Agent proposal: Applies | Agent confidence: null | Rulebook edition: 2026-10-21.1 | Follow-up: null | decided: true
+  Agent reason: ""
+  Tag outcome: Does not apply | Why wrong: null | Decided under: 
+  Your reasoning: "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’."
+  Agent reading: "Agent slip" | Rule: "" | Read under: "2026-10-21.1 · 923e0a4b"
+  Reading note: "Seeded from the audit of 9 October."
+
+[dallas] 1bff859247ecdb618af41a397d2eb6ba::Context-dependent
+  Agent proposal: Does not apply | Agent confidence: null | Rulebook edition: 2026-10-21.1 | Follow-up: null | decided: true
+  Agent reason: ""
+  Tag outcome: Applies | Why wrong: null | Decided under: 
+  Your reasoning: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+  Agent reading: "Agent slip" | Rule: "" | Read under: "2026-10-21.1 · 8560829f"
+  Reading note: "Seeded from the audit of 9 October."
+
+[kennedy] 89fcfb7fc6684b63af7d829ed90106cd::Context-dependent
+  Agent proposal: Applies | Agent confidence: null | Rulebook edition: 2026-10-21.1 | Follow-up: null | decided: true
+  Agent reason: ""
+  Tag outcome: Does not apply | Why wrong: null | Decided under: 
+  Your reasoning: "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded."
+  Agent reading: "Agent slip" | Rule: "" | Read under: "2026-10-21.1 · 6cfb0909"
+  Reading note: "Seeded from the audit of 9 October."
+
+[stopgap] 3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent
+  Agent proposal: Applies | Agent confidence: null | Rulebook edition: 2026-10-21.1 | Follow-up: null | decided: true
+  Agent reason: ""
+  Tag outcome: Does not apply | Why wrong: null | Decided under: 
+  Your reasoning: "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it."
+  Agent reading: "Agent slip" | Rule: "" | Read under: "2026-10-21.1 · fc77541c"
+  Reading note: "Seeded from the audit of 9 October."
+
+== Rule changes ==
+(none)
+
+== Agent settings ==
+{
+  "page_id": "400273e2-14eb-81f0-93ab-c97e2cad2a35",
+  "name": "Claim tagger",
+  "paused": false,
+  "rulebook_edition": "2026-10-21.1",
+  "last_run_summary": null
+}
+

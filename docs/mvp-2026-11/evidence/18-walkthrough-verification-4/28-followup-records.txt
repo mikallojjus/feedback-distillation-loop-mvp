@@ -1,0 +1,39 @@
+run folder: 20261021T185944Z-promote-followup
+
+===== run.json =====
+{
+  "run_id": "20261021T185944Z-promote-followup",
+  "script": "followup",
+  "args": {
+    "parent": "20261021T185944Z-promote"
+  },
+  "started_at": "2026-10-21T19:02:38.295Z",
+  "finished_at": "2026-10-21T19:02:43.432Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.2",
+  "pull_id": "20261021T185944Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2149-242961 promote --lesson \"A kind is identified only if readers know which one\"",
+  "status": "done",
+  "plan": {
+    "creates": 0,
+    "updates": 6
+  },
+  "apply": {
+    "done": 6,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  }
+}
+
+===== plan.jsonl =====
+{"plan":{"run_id":"20261021T185944Z-promote-followup","script":"followup","created_at":"2026-10-21T19:02:38.383Z","rubric_edition":"2026-10-21.2","counts":{"creates":0,"updates":6}}}
+{"op":"update","table":"tag_decisions","key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","page_id":"400273e2-14eb-8115-9e37-e5ff72edfdaa","properties":{"Follow-up":"Fixed"}}
+{"op":"update","table":"tag_decisions","key":"5c9d133e54864197a585599669353aff::Context-dependent","page_id":"400273e2-14eb-8190-ba60-edfb886a9c7b","properties":{"Follow-up":"Fixed"}}
+{"op":"update","table":"tag_decisions","key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","page_id":"400273e2-14eb-8146-9683-fc0c8bbcead3","properties":{"Follow-up":"Fixed"}}
+{"op":"update","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-81c4-b910-de1f7a586872","properties":{"Agent reasons":"Context-dependent: 'The AI Force' is a capitalised phrase that is not a widely known body, so it is still a definite. A reader cannot tell which group it means without outside context. · Context-dependent rule 3 · 3 of 3 runs agree","Agent tags":["400273e2-14eb-81d0-928d-ee5418d7bcc0"],"Tags waiting":[],"Agent status":"Done","Agent edition":"2026-10-21.2","Agent confidence":0.83}}
+{"op":"update","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-815e-a690-e1a08e8c1e99","properties":{"Agent reasons":"Context-dependent: 'The press pool' is a standing group every reader knows by its role, which rule 3 treats as identified. 'Banned networks' is a plain indefinite, so no outside antecedent is needed. · Context-dependent rule 3 · 2 of 3 runs agree","Tags waiting":[],"Agent status":"Done","Agent edition":"2026-10-21.2","Agent confidence":0.75}}
+{"op":"update","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-8175-822c-cba91f28f018","properties":{"Agent reasons":"Context-dependent: 'The USPS ballot portal' is a named agency's single portal of its kind, which rule 3 counts as identified. A reader can tell which portal is meant, so the claim is not Context-dependent. · Context-dependent rule 3 · 3 of 3 runs agree","Tags waiting":[],"Agent status":"Done","Agent edition":"2026-10-21.2","Agent confidence":0.78}}

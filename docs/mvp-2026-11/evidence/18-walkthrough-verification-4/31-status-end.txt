@@ -1,0 +1,18 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2149-242961 status
+exit code: 0
+started: 2026-10-21T19:03:09Z
+ended:   2026-10-21T19:03:13Z (elapsed 4 s)
+head:    131d72f
+
+----- stdout -----
+Demo · Status of the practice page Claim tagger practice · verification 4: nothing is paused and nothing waits for you.
+
+| Where | Now |
+|---|---|
+| Rulebook | 1 tag, edition 2026-10-21.2 |
+| Your queue | 1 row decided, waiting for the agent's next run |
+| Lessons waiting | none |
+| Last run | Promote · 21 Oct 22:02 · PASS |
+
+Next: type /claim-tagger demo tag to read new claims.
+----- stderr -----

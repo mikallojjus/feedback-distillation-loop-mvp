@@ -1,0 +1,9 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2149-242961 pull --all
+exit code: 0
+started: 2026-10-21T19:02:51Z
+ended:   2026-10-21T19:02:55Z (elapsed 4 s)
+head:    131d72f
+
+----- stdout -----
+pull 20261021T190251Z-pull: rulebook 1, claims_copy 9, tag_decisions 9, rule_changes 1, agent_settings 1; drift 0 difference(s); duplicates 0; paused no
+----- stderr -----

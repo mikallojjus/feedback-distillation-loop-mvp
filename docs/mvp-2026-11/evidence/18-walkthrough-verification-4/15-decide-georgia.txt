@@ -1,0 +1,18 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs decide --demo 20261021-2149-242961 --claim georgia
+exit code: 0
+started: 2026-10-21T18:55:37Z
+ended:   2026-10-21T18:55:45Z (elapsed 8 s)
+head:    131d72f
+
+----- stdout -----
+Walkthrough: acting as the editor, the claim "Georgia's gubernatorial debate should be moderated by pro..." now reads Reviewed with no tag verified.
+
+| Column | Now |
+|---|---|
+| Verified tags | none |
+| Challenged tags notes | (empty) |
+| Review status | Reviewed |
+
+Next: type /claim-tagger demo distill.
+----- stderr -----
+walkthrough: acting as the editor on practice page 20261021-2149-242961 (decision D31): Claims 8f9c833b41e54eee9ca78e9c2f4ffb58: Verified tags, Challenged tags notes, Review status

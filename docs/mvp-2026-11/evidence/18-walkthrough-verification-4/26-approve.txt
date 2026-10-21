@@ -1,0 +1,16 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve --demo 20261021-2149-242961
+exit code: 0
+started: 2026-10-21T18:59:28Z
+ended:   2026-10-21T18:59:35Z (elapsed 7 s)
+head:    131d72f
+
+----- stdout -----
+Walkthrough: acting as the editor, the rule change "A kind is identified only if readers know which one" is now Approved.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+
+Next: type /claim-tagger demo promote.
+----- stderr -----
+walkthrough: acting as the editor on practice page 20261021-2149-242961 (decision D31): Rule changes A kind is identified only if readers know which one: Status

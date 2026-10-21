@@ -1,0 +1,87 @@
+== Reports ==
+20261021T184953Z-walkthrough-start\report.md  lint=[]  extra=[]
+20261021T185245Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T185255Z-status\report.md  lint=[]  extra=[]
+20261021T185315Z-judge\report.md  lint=[]  extra=[]
+20261021T185349Z-propose\report.md  lint=[]  extra=[]
+20261021T185429Z-walkthrough-verify\report.md  lint=[]  extra=[]
+20261021T185445Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T185454Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T185507Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T185523Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T185537Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T185549Z-status\report.md  lint=[]  extra=[]
+20261021T185553Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T185617Z-distill\report.md  lint=[]  extra=[]
+20261021T185818Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T185831Z-status\report.md  lint=[]  extra=[]
+20261021T185844Z-distill\report.md  lint=[]  extra=[]
+20261021T185918Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T185928Z-walkthrough-approve\report.md  lint=[]  extra=[]
+20261021T185936Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T185944Z-promote-baseline\report.md  lint=[]  extra=[]
+20261021T185944Z-promote-candidate\report.md  lint=[]  extra=[]
+20261021T185944Z-promote-followup-judge\report.md  lint=[]  extra=[]
+20261021T185944Z-promote\report.md  lint=[]  extra=[]
+20261021T190303Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T190310Z-status\report.md  lint=[]  extra=[]
+reports with a problem: 0
+
+== Plans ==
+20261021T185028Z-rows-rulebook\plan.jsonl  (walkthrough.mjs, 1 ops)
+    create rulebook: Name, Category, Counterpart, Description, Evidence, Example Claims, Geo Status, Polarity, Status, Verified on, When to use, Work tags
+20261021T185030Z-rows-claims_copy\plan.jsonl  (walkthrough.mjs, 9 ops)
+    create claims_copy: Geo Name, Geo ID, Geo URL, Geo Sources, Geo Tags, Geo Topics, Geo Is factual, Geo Name source, Review status, Verified tags, Challenged tags notes, Agent reading
+20261021T185037Z-rows-tag_decisions\plan.jsonl  (walkthrough.mjs, 5 ops)
+    create tag_decisions: Claim, Key, Tag, Claim link, Agent proposal, Tag outcome, Your reasoning, Rulebook edition, Agent reading, Reading note, Read under
+20261021T185041Z-rows-agent_settings\plan.jsonl  (walkthrough.mjs, 1 ops)
+    create agent_settings: Name, Rulebook edition
+20261021T185349Z-propose\plan.jsonl  (propose, 19 ops)
+    update tag_decisions: Decided under
+    update claims_copy: Agent reasons, Agent tags, Agent status, Agent edition, Agent confidence, Tags waiting
+    create tag_decisions: Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Rulebook edition, Claim link
+    update agent_settings: Rulebook edition, Last run summary
+20261021T185456Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T185512Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T185525Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T185540Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T185617Z-distill\plan.jsonl  (distill, 10 ops)
+    update tag_decisions: Tag outcome, Decided under, Agent reading, Rule, Reading note, Read under, Your reasoning
+    update claims_copy: Agent reading
+    create rule_changes: Lesson, Tag, Rule, Kind, Current text, Proposed text, Status, Supporting rows
+    update agent_settings: Rulebook edition, Last run summary
+20261021T185820Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T185844Z-distill\plan.jsonl  (distill, 3 ops)
+    update tag_decisions: Why wrong, Your reasoning, Agent reading, Rule, Reading note, Read under
+    update claims_copy: Agent reading
+    update agent_settings: Rulebook edition, Last run summary
+20261021T185929Z-editor-approve\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update rule_changes: Status
+20261021T185944Z-promote-followup\plan.jsonl  (followup, 6 ops)
+    update tag_decisions: Follow-up
+    update claims_copy: Agent reasons, Agent tags, Tags waiting, Agent status, Agent edition, Agent confidence
+20261021T185944Z-promote-record\plan.jsonl  (promote, 2 ops)
+    update rule_changes: Status, Safety check result
+    update agent_settings: Rulebook edition, Last run summary
+20261021T185944Z-promote\plan.jsonl  (promote, 1 ops)
+    update rulebook: When to use
+editor-column writes outside the logged editor actions and the setup creates: 0
+
+logged editor actions: 12 lines
+  2026-10-21T18:54:56.800Z decide planned claims_copy 5c9d133e54864197a585599669353aff wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T18:54:57.993Z decide done claims_copy 5c9d133e54864197a585599669353aff wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T18:55:12.169Z decide planned claims_copy 92f57020ce349b27b5e56f54068cbc05 wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T18:55:12.885Z decide done claims_copy 92f57020ce349b27b5e56f54068cbc05 wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T18:55:25.495Z decide planned claims_copy 27ad00b59c1f7d4aee71643fc8cdec94 wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T18:55:26.688Z decide done claims_copy 27ad00b59c1f7d4aee71643fc8cdec94 wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T18:55:40.958Z decide planned claims_copy 8f9c833b41e54eee9ca78e9c2f4ffb58 wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T18:55:41.631Z decide done claims_copy 8f9c833b41e54eee9ca78e9c2f4ffb58 wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T18:58:20.304Z decide planned claims_copy 27ad00b59c1f7d4aee71643fc8cdec94 wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T18:58:20.936Z decide done claims_copy 27ad00b59c1f7d4aee71643fc8cdec94 wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T18:59:29.628Z approve planned rule_changes A kind is identified only if readers know which one wrote=Status
+  2026-10-21T18:59:30.277Z approve done rule_changes A kind is identified only if readers know which one wrote=Status read_back="ok"

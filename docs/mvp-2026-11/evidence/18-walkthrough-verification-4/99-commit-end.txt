@@ -1,0 +1,6 @@
+131d72f1972d962985c1d92e7e601acb59dc305f
+2026-10-21T19:08:55Z
+ M docs/mvp-2026-11/report/data/counts.json
+ M docs/mvp-2026-11/report/parts/02-status.html
+ M docs/mvp-2026-11/report/parts/03-how-to-run.html
+?? docs/mvp-2026-11/evidence/18-walkthrough-verification-4/

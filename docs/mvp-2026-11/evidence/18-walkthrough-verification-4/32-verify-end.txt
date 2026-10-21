@@ -1,0 +1,9 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs verify --demo 20261021-2149-242961 --json
+exit code: 0
+started: 2026-10-21T19:03:17Z
+ended:   2026-10-21T19:03:32Z (elapsed 15 s)
+head:    131d72f
+
+----- stdout -----
+{"ok":true,"problems":[],"counts":{"canaries":10,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":59,"table":12,"table_row":50,"heading_2":8,"numbered_list_item":15,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":9,"decided":9,"open":0,"tag_decisions":9,"rule_changes":1,"agent_settings":1,"linked_views":2,"tab_views":3,"fallback":null,"steps":7,"fresh":false}}
+----- stderr -----
