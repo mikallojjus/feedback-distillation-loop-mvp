@@ -17,7 +17,8 @@
 // the toggle as the last block: the segments end [... marker tables] [marker help] [toggle].
 //
 // Markdown subset. `# `, `## `, `### ` -> heading_1/2/3 (`#### ` and deeper -> heading_3); `- ` (or `* `) -> bulleted_list_item, an indented
-// line right under it is appended to its text with a space (a nested list is an error); `1. ` -> numbered_list_item; `> ` -> quote (adjacent
+// line right under it is appended to its text with a space, or after a line break when the line above it ends with a backslash, so that a sentence can stand on a
+// line of its own inside an item (a nested list is an error); `1. ` -> numbered_list_item; `> ` -> quote (adjacent
 // lines join); `---` -> divider; a paragraph that starts `Callout: ` -> callout with the memo icon and the rest of the text (lines under it
 // that are not otherwise special stay in the callout, as separate lines); a pipe table (header row, separator row, body rows) -> table with
 // table_width = the header's cell count, has_column_header true, has_row_header false and table_row children (a row with another cell count is
@@ -263,6 +264,12 @@ const NUMBERED = /^([ \t]*)\d{1,9}[.)][ \t]+(\S.*?)[ \t]*$/;
 const CALLOUT = /^Callout:[ \t]+(\S.*?)[ \t]*$/;
 const TABLE_ROW = /^[ \t]*\|/;
 const HELP_HEADING = /^##[ \t]+Help[ \t]*$/;
+const HARD_BREAK = /(?<!\\)\\$/; // a list item line that ends with one backslash is followed by a line break, not by a space (a backslash of text at the end is written as two)
+
+/** A list item line without its hard break: { text, hard }. */
+function withoutBreak(line) {
+  return HARD_BREAK.test(line) ? { text: line.replace(HARD_BREAK, '').trimEnd(), hard: true } : { text: line, hard: false };
+}
 
 /** The marker object for the key of a block placeholder ("tables", "help", "view:<Name>"), or null for any other key. */
 function markerOf(key, line) {
@@ -404,7 +411,7 @@ function convert(entries, inHelp) {
       const hit = m ?? numbered;
       if (open?.kind === 'item' && indentOf(hit[1]) >= 2) throw syntaxError(e.n, 'a nested list is not supported; make the sub-item a bullet of its own or part of the sentence');
       close();
-      open = { kind: 'item', type: m ? 'bulleted_list_item' : 'numbered_list_item', text: hit[2] };
+      open = { kind: 'item', type: m ? 'bulleted_list_item' : 'numbered_list_item', ...withoutBreak(hit[2]) };
       continue;
     }
     m = CALLOUT.exec(text);
@@ -414,7 +421,9 @@ function convert(entries, inHelp) {
       continue;
     }
     if (open?.kind === 'item' && /^[ \t]/.test(text)) {
-      open.text += ` ${text.trim()}`; // an indented line under a list item continues it
+      const next = withoutBreak(text.trim()); // an indented line under a list item continues it: after a space, or after a line break when the line above ended with a backslash
+      open.text += `${open.hard ? '\n' : ' '}${next.text}`;
+      open.hard = next.hard;
       continue;
     }
     if (open?.kind === 'paragraph' || open?.kind === 'callout') {

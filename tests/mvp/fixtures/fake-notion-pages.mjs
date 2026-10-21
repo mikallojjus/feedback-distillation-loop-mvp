@@ -134,7 +134,15 @@ export function createPagesFake(options = {}) {
     const parentPage = body?.parent?.page_id;
     if (method === 'POST' && (segments[0] === 'pages' || segments[0] === 'databases') && segments.length === 1 && typeof parentPage === 'string' && isPage(parentPage)) listOf(parentPage);
 
-    const res = await stock.fetchImpl(url, init);
+    // The list of a page that this fake keeps holds tables and linked views among the blocks, so a page can have more entries than the shared fake has blocks, and the shared
+    // fake would refuse the cursor of the second page; this fake reads the cursor itself (below), so the shared one is asked without it.
+    let sent = url;
+    if (method === 'GET' && segments[0] === 'blocks' && segments[2] === 'children' && segments.length === 3 && lists.has(norm(segments[1])) && u.searchParams.has('start_cursor')) {
+      const bare = new URL(String(url));
+      bare.searchParams.delete('start_cursor');
+      sent = bare.toString();
+    }
+    const res = await stock.fetchImpl(sent, init);
     if (!res.ok) return res;
 
     if (method === 'POST' && segments.length === 1 && typeof parentPage === 'string' && lists.has(norm(parentPage))) {

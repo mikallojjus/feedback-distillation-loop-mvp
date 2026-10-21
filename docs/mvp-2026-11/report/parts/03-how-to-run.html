@@ -17,7 +17,7 @@
 <li>Open your practice page "Claim tagger practice · product owner, 21 Oct afternoon" under Demos; it was built for you on 21 October after the fixes below, and it is the page the demo commands reach. To make another one later, ask Claude Code for a practice page and paste the link of the Demos page: <code>/claim-tagger-walkthrough</code> with the link.</li>
 <li>Type <code>/claim-tagger demo status</code> (step 1 of the page).</li>
 <li>Type <code>/claim-tagger demo tag</code> (step 2): the agent reads the {{count:walkthrough.claims}} claims and fills its side of your {{count:walkthrough.openRows}} rows.</li>
-<li>In Notion, in Your queue on the Claims table, decide your {{count:walkthrough.openRows}} claims (step 3): tick the tag in Claim quality tags — verified where it applies, choose Why wrong, write your note, then set Review status to Reviewed. The page gives you the words.</li>
+<li>In Notion, in Your queue on the Claims table, decide your {{count:walkthrough.openRows}} claims (step 3): tick the tag in Verified tags where it applies, choose Why wrong, write your note, set Review status to Reviewed. The page gives you the words as a checklist, and Claude repeats it after the report. A decided claim stays in Your queue until the agent's next run picks it up.</li>
 <li>Type <code>/claim-tagger demo distill</code> (step 4), then approve the draft in Lessons waiting (step 5).</li>
 <li>Type <code>/claim-tagger demo promote</code> (step 6). On a PASS the follow-up runs by itself and step 7 shows your rows marked Fixed. On a FAIL the report hands you the whole text for Editor wording: paste it, then type the same command again.</li>
 </ol>
@@ -32,7 +32,7 @@
 <thead><tr><th scope="col">Command</th><th scope="col">What it does</th><th scope="col">Then</th></tr></thead>
 <tbody>
 <tr><td><code>/claim-tagger status</code></td><td>Shows what is waiting: claims to review, lessons waiting, whether the agent is paused and the current rulebook edition.</td><td>Open Your queue, or you are done.</td></tr>
-<tr><td><code>/claim-tagger tag</code></td><td>Reads the claims against the rulebook and writes its tags, notes, confidence and reasons into four columns of the claims table. A tag it is unsure about, or any tag on a claim marked To review, waits for you instead of being written, and Your queue lists those claims, least sure first. On a claim you have reviewed your tags stand; where the agent now disagrees it says so in its notes.</td><td>Decide the claims in Your queue.</td></tr>
+<tr><td><code>/claim-tagger tag</code></td><td>Reads the claims against the rulebook and writes its side of the claims table: Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition and Agent remarks. A tag it is unsure about, or any tag on a claim marked To review, goes to Tags waiting instead of Agent tags, the status reads Waits for you, and Your queue lists those claims, least sure first. On a claim you have reviewed your tags stand; where the agent now disagrees its status says so.</td><td>Decide the claims in Your queue.</td></tr>
 <tr><td><code>/claim-tagger distill</code></td><td>Turns decisions that blame a rule into proposed rule changes, called lessons, at most {{count:distill.maxLessons}} per run.</td><td>Approve or rewrite each lesson in Lessons waiting.</td></tr>
 <tr><td><code>/claim-tagger promote</code></td><td>Runs the safety check on the approved lesson. On a PASS the new rule goes live, a new edition starts and the follow-up re-checks the rows. On a FAIL nothing changes and the report hands you the whole text for Editor wording.</td><td>Read step 7, or paste the wording and promote again.</td></tr>
 <tr><td><code>/claim-tagger follow-up</code></td><td>Repeats the follow-up by hand, only after a promote that stopped before its last step.</td><td>Read the Follow-up column.</td></tr>
@@ -42,7 +42,7 @@
 <p>If a command stops because the agent is paused, untick Paused in Agent settings (or delete the pause file) and run it again. If it stops because your Claude allowance ran out, wait and run the same command again: it picks up where it stopped. If it says the rulebook text was edited by hand, put the text back as it was, or ask the engineer.</p>
 <h3>Who does what</h3>
 <ul>
-<li><strong>The editor</strong> types status and tag, then decides the claims in Your queue, least sure first: the verified tags column is the decision, Review status Reviewed closes the claim, Why wrong and a note say when the rule, not the agent, was at fault.</li>
+<li><strong>The editor</strong> types status and tag, then decides the claims in Your queue, least sure first: Verified tags is the decision, Review status Reviewed closes the claim, Why wrong and a note say when the rule, not the agent, was at fault. After each report Claude adds a short checklist of what to do in Notion and the next command.</li>
 <li><strong>The rule owner</strong> approves or rewrites lessons in Lessons waiting, then types promote.</li>
 <li><strong>The engineer</strong> does the setup, the rollback and the repairs, and nothing else.</li>
 <li><strong>The machine</strong> runs the follow-up after a PASS, without anyone typing.</li>

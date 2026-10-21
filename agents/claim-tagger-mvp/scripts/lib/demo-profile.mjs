@@ -56,9 +56,9 @@ export const FALLBACK_TEXT = Object.freeze({
   your_queue: 'Scroll to Claims in the tables further down this page; your two claims are the ones whose Review status is To review.',
   lessons_waiting: 'Scroll to Rule changes at the bottom of this page and open the row with Status Proposed.',
 });
-/** The editor's four columns of a claim (the real table's names; config.json editor_columns.claims_copy lists the same four). */
+/** The editor's four columns of a claim (the names of the production Claims copy since the revision of 21 October; config.json editor_columns.claims_copy lists the same four). */
 export const CLAIM_COLUMNS = Object.freeze({
-  verified: 'Claim quality tags — verified', review_status: 'Review status', why_wrong: 'Why wrong', notes: 'Challenged tags notes',
+  verified: 'Verified tags', review_status: 'Review status', why_wrong: 'Why wrong', notes: 'Challenged tags notes',
 });
 /** The block types the page template can make (anything else on the page, a table or a linked view, is not template text). */
 export const CONTENT_TYPES = new Set(['paragraph', 'heading_1', 'heading_2', 'heading_3', 'bulleted_list_item', 'numbered_list_item', 'quote', 'divider', 'callout', 'table', 'toggle']);
@@ -252,8 +252,8 @@ export function practiceStructure(structure) {
   return validateStructure(copy);
 }
 
-/** The columns a table is filled from: the structure's, less the ones Notion fills by itself. */
-export const writableColumns = (structure, table) => structure.tables[table].columns.filter((c) => !AUTOMATIC_TYPES.includes(c.type)).map((c) => c.name);
+/** The columns a table is filled from: the structure's, less the ones Notion fills by itself and the retired ones ("Agent tags (old)" and "Agent notes (old)" are never made on a practice page). */
+export const writableColumns = (structure, table) => structure.tables[table].columns.filter((c) => !AUTOMATIC_TYPES.includes(c.type) && c.retired !== true).map((c) => c.name);
 
 const PLACEHOLDER = '<setup>';
 
@@ -509,12 +509,12 @@ const text = (v) => (typeof v === 'string' ? v.trim() : v === null || v === unde
 const byCreated = (a, b) => text(b.created).localeCompare(text(a.created));
 
 /**
- * The mapping of the design (W4 9.3), from a pull of the demo's tables: claims = the rows of the Claims (geo_id, review_status, agent_notes), ledger = the rows of Tag
+ * The mapping of the design (W4 9.3), from a pull of the demo's tables: claims = the rows of the Claims (geo_id, review_status, agent_status), ledger = the rows of Tag
  * decisions (Key, Follow-up), lessons = the rows of Rule changes (Lesson, Status, Safety check result), open = the two claims that wait for the editor
  * (openClaims: geo_id and ledger key), settings = the row of Agent settings (Last run summary). An editor's decision is a claim whose Review status is Reviewed.
- *   { step: 1 }                          a fresh page: a claim of the two is not Reviewed, has no Agent notes, and Agent settings has no Last run summary
- *   { step: 2 }                          the same, but a command has written a Last run summary (the tag step, which writes the notes, has not finished)
- *   { step: 3, remaining }               they have notes and `remaining` of them (1 or 2) are not Reviewed
+ *   { step: 1 }                          a fresh page: a claim of the two is not Reviewed, has no Agent status, and Agent settings has no Last run summary
+ *   { step: 2 }                          the same, but a command has written a Last run summary (the tag step, which writes the agent's columns, has not finished)
+ *   { step: 3, remaining }               they have an Agent status (the agent has read them) and `remaining` of them (1 or 2) are not Reviewed
  *   { step: 4 }                          both are Reviewed and there is no rule change
  *   { step: 5, lesson }                  a rule change is Proposed
  *   { step: 6, lesson }                  Approved, no Safety check result yet
@@ -532,9 +532,9 @@ export function stepOf({ claims = [], ledger = [], lessons = [], open = [], sett
     return { problem: `a claim that waits for the editor is not in Claims (${missing.join(', ') || 'none are known'})` };
   }
   const reviewed = (c) => text(c.review_status) === 'Reviewed';
-  // Last run summary is empty from the build until the first command that writes: the tag step writes it together with the notes, and status writes nothing,
-  // so a page where only status was typed is still at step 1
-  if (rows.some((c) => !reviewed(c) && text(c.agent_notes) === '')) return text(settings?.last_run_summary) === '' ? { step: 1 } : { step: 2 };
+  // Last run summary is empty from the build until the first command that writes: the tag step writes it together with the agent's columns, and status writes nothing,
+  // so a page where only status was typed is still at step 1. No Agent status means the agent has not read the claim; "Waits for you" means it has read it and it waits.
+  if (rows.some((c) => !reviewed(c) && text(c.agent_status) === '')) return text(settings?.last_run_summary) === '' ? { step: 1 } : { step: 2 };
   const remaining = rows.filter((c) => !reviewed(c)).length;
   if (remaining > 0) return { step: 3, remaining };
   const mine = [...lessons].sort(byCreated);

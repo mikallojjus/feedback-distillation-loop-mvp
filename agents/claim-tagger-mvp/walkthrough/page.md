@@ -11,7 +11,7 @@ Rule 3 of Context-dependent says that a descriptive definite which names a kind 
 
 The first two are yours: you decide them in Your queue, the agent drafts a clearer rule 3, you approve it, and a safety check makes sure the earlier decisions still come out right before the new rule is used.
 
-The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so it waits in Your queue like the AI Force claim, which the agent reads differently from run to run and which the page also marks To review. For real, a claim waits when someone marks it To review or when the agent is unsure.
+The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so its Agent status reads Waits for you and it sits in Your queue like the AI Force claim, which the agent reads differently from run to run and which the page also marks To review. For real, a claim waits when someone marks it To review or when the agent is unsure.
 
 ## Step 1 · Meet the demo
 
@@ -34,42 +34,58 @@ The sentence starts with "Demo · " and names this practice page, as every repor
 
 ## Step 2 · The agent reads the claims
 
-**Goal of the step.** The agent reads the 7 claims against the rulebook and writes its four columns on every claim, your 2 included.
+**Goal of the step.** The agent reads the 7 claims against the rulebook and writes its seven columns on every claim, your 2 included.
 
-**Existing status.** Your 2 claims, the press pool and the AI Force, are To review and the agent has written nothing on them; Agent tags is empty on all 7 claims (step 1).
+**Existing status.** Your 2 claims, the press pool and the AI Force, are To review and the agent has written nothing on them; the agent's columns (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition and Agent remarks) are empty on all 7 claims (step 1).
 
 **Doing the work.** Type `/claim-tagger demo tag`. It is a short wait; Notion changes only at the end.
 
 **Explaining the outputs.**
 
-**Claims** (all 7; Agent notes is two short lines per claim, the table shows the line break as a slash)
+**Claims** (all 7)
 
-| Geo Name | Agent tags | Agent confidence | Agent notes |
+| Geo Name | Agent tags | Agent confidence | Agent status |
 |---|---|---|---|
-| The press pool was justified in suspending coverage… | (empty) | 0.80 | no tags / 1 waits for an editor · edition {{edition}} |
-| The AI Force should enforce binding safety standards | (empty) | 0.50 | no tags / 1 waits for an editor · edition {{edition}} |
-| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.75 or more | Context-dependent / nothing waits for an editor · edition {{edition}} |
-| The Dallas convention is the unofficial launch of JD Vance’s… | Context-dependent | 0.75 or more | Context-dependent / nothing waits for an editor · edition {{edition}} |
-| A contractor's enforcement of safety restrictions constitutes… | (empty) | 0.75 or more | no tags / nothing waits for an editor · edition {{edition}} |
-| Relocating the Kennedy Center Honors to a sports arena… | (empty) | 0.75 or more | no tags / nothing waits for an editor · edition {{edition}} |
-| December stopgap funding rewards Congress for avoiding a… | (empty) | 0.75 or more | no tags / nothing waits for an editor · edition {{edition}} |
+| The press pool was justified in suspending coverage… | (empty) | 0.80 | Waits for you |
+| The AI Force should enforce binding safety standards | (empty) | 0.50 | Waits for you |
+| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.75 or more | Done |
+| The Dallas convention is the unofficial launch of JD Vance’s… | Context-dependent | 0.75 or more | Done |
+| A contractor's enforcement of safety restrictions constitutes… | (empty) | 0.75 or more | Done |
+| Relocating the Kennedy Center Honors to a sports arena… | (empty) | 0.75 or more | Done |
+| December stopgap funding rewards Congress for avoiding a… | (empty) | 0.75 or more | Done |
 
-Agent reasons holds one line for each tag the agent judged: the tag, the reason, the rule it cites (when it cites one) and how many of its readings agree. For your 2 claims, as one run read them:
+Tags waiting names the tags that wait for you, and Agent reasons holds one line for each tag the agent judged: the tag, the reason, the rule it cites (when it cites one) and how many of its readings agree. For your 2 claims, as one run read them:
 
-| Geo Name | Agent reasons |
-|---|---|
-| The press pool was justified in suspending coverage… | Context-dependent: "the press pool": which one? · Context-dependent rule 3 · 1 of 1 runs agree |
-| The AI Force should enforce binding safety standards | Context-dependent: "The AI Force": a name or a kind? · 2 of 2 runs agree |
+| Geo Name | Tags waiting | Agent reasons |
+|---|---|---|
+| The press pool was justified in suspending coverage… | Context-dependent | Context-dependent: "the press pool": which one? · Context-dependent rule 3 · 1 of 1 runs agree |
+| The AI Force should enforce binding safety standards | Context-dependent | Context-dependent: "The AI Force": a name or a kind? · 2 of 2 runs agree |
 
-A claim the agent is sure of is read once, so its line ends with a count of one; the agent reads a claim again only when it is unsure, and a third time only when the first two readings disagree. The figures differ from run to run, and the AI Force claim most of all: the agent may read it as Can't tell, as here, or answer with confidence either way, and then its line may cite a rule or none. Both claims are To review, so each waits for you whatever the agent reads, and Agent tags stays empty on both. Both are now in Your queue, lowest confidence first. Agent confidence is the lowest confidence among the tags the agent judged on a claim. The agent agrees with all 5 earlier decisions: their Agent tags are the tags an editor confirmed, and their notes say that nothing waits.
+A claim the agent is sure of is read once, so its line ends with a count of one; the agent reads a claim again only when it is unsure, and a third time only when the first two readings disagree. The figures differ from run to run, and the AI Force claim most of all: the agent may read it as Can't tell, as here, or answer with confidence either way, and then its line may cite a rule or none. Both claims are To review, so each waits for you whatever the agent reads: Agent tags stays empty on both, Agent status reads Waits for you and Tags waiting holds the tag. Both are now in Your queue, lowest confidence first. Agent confidence is the lowest confidence among the tags the agent judged on a claim. The agent agrees with all 5 earlier decisions: their Agent tags are the tags an editor confirmed, their Agent status is Done and their Tags waiting is empty. Agent edition holds {{edition}} on all 7 claims, and Agent remarks stays empty, because the rulebook has no tag that was left unchecked.
 
 ## Step 3 · Decide your two claims (you, as the editor)
 
 **Goal of the step.** Record your decision on both claims, and say that rule 3, not the agent, is the problem.
 
-**Existing status.** Both of your claims are To review and wait in Your queue (step 2); Agent tags is empty on both.
+**Existing status.** Both of your claims are To review and wait in Your queue (step 2): Agent status reads Waits for you on both, Tags waiting holds Context-dependent and Agent tags is empty.
 
-**Doing the work.** In Your queue, just below, fill in four columns on each of your two claims. AI Force claim: Claim quality tags — verified Context-dependent, Why wrong Rule unclear, Challenged tags notes "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.", and last Review status Reviewed. Press pool claim: Claim quality tags — verified stays empty, because the tag does not apply, Why wrong Rule unclear, Challenged tags notes "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.", and last Review status Reviewed. Set Review status last, because a Reviewed claim leaves Your queue at once. What each Why wrong value makes happen is explained in Help at the bottom of the page.
+**Doing the work.** Fill in four columns on each of your two claims, in the order of its list, in Your queue under the lists. The sentence for Challenged tags notes stands on its own line, so that you can paste it as it is. Review status comes last only because it closes the claim: a claim you have decided stays in Your queue until the agent reads it again (the next tag run does that, and in this practice the follow-up in step 7 does it for these two), so the order of the four columns does not matter for the view. What each Why wrong value makes happen is explained in Help at the bottom of the page.
+
+**The AI Force claim**
+
+1. Verified tags: Context-dependent.
+2. Why wrong: Rule unclear.
+3. Challenged tags notes: paste this sentence, as it is:\
+   "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context."
+4. Review status: Reviewed.
+
+**The press pool claim**
+
+1. Verified tags: leave it empty, because the tag does not apply.
+2. Why wrong: Rule unclear.
+3. Challenged tags notes: paste this sentence, as it is:\
+   "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well."
+4. Review status: Reviewed.
 
 {{view:Your queue}}
 
@@ -77,12 +93,12 @@ A claim the agent is sure of is read once, so its line ends with a count of one;
 
 **Claims** (your 2 claims)
 
-| Geo Name | Claim quality tags — verified | Review status | Why wrong |
+| Geo Name | Verified tags | Review status | Why wrong |
 |---|---|---|---|
 | The press pool was justified in suspending coverage… | (empty) | Reviewed | Rule unclear |
 | The AI Force should enforce binding safety standards | Context-dependent | Reviewed | Rule unclear |
 
-Challenged tags notes holds your sentence on each claim. The agent is not involved and no other table changes: Agent tags and Agent notes still show what the agent wrote in step 2. Both claims are earlier decisions now, and both leave Your queue when the page reloads.
+Challenged tags notes holds your sentence on each claim. The agent is not involved and no other table changes: its seven columns still show what it wrote in step 2, so both claims stay in Your queue, with Agent status Waits for you, until the agent reads them again in step 7. Both claims are earlier decisions now.
 
 ## Step 4 · The agent drafts a clearer rule 3
 
@@ -164,7 +180,7 @@ The same three steps apply when the check names one of your own claims instead o
 
 **Goal of the step.** Confirm that the agent now agrees with your two decisions.
 
-**Existing status.** You decided both claims in step 3 and the new rule 3 went live in step 6; in step 2 both claims waited for you, so the agent had written no tag on either, and Agent tags is still empty on both.
+**Existing status.** You decided both claims in step 3 and the new rule 3 went live in step 6; in step 2 both claims waited for you, so the agent had written no tag on either, and both still read Waits for you in Agent status.
 
 **Doing the work.** Nothing to type: the follow-up ran by itself at the end of the safety check. It takes the answers the check already gave for your two claims under the new rule 3, so there was nothing more to wait for. Open the Claims table in The tables just below.
 
@@ -172,12 +188,12 @@ The same three steps apply when the check names one of your own claims instead o
 
 **Claims** (your 2 claims)
 
-| Geo Name | Agent tags | Agent notes |
-|---|---|---|
-| The press pool was justified in suspending coverage… | (empty) | no tags / nothing waits for an editor · the next edition |
-| The AI Force should enforce binding safety standards | Context-dependent | Context-dependent / nothing waits for an editor · the next edition |
+| Geo Name | Agent tags | Agent status | Agent edition |
+|---|---|---|---|
+| The press pool was justified in suspending coverage… | (empty) | Done | the next edition |
+| The AI Force should enforce binding safety standards | Context-dependent | Done | the next edition |
 
-Agent tags now holds the tags you decided: the AI Force claim carries the tag and the press pool claim does not. Agent notes names the next edition, the one the safety check put in force, and Agent confidence follows the new reading; neither claim says that the agent disagrees with your decision, and a claim that did would show up in Agent disagreed and would need a clearer rule. Only your two claims name the new edition: the 5 earlier decisions keep theirs until the next tag run. That is one full cycle: your two notes became a clearer rule 3, it was tested against every earlier decision before it went live, and your two claims are earlier decisions now, checked by every future safety check.
+Agent tags now holds the tags you decided: the AI Force claim carries the tag and the press pool claim does not. Agent status reads Done on both, so both have left Your queue; neither claim says Disagrees with your decision, and a claim that did would show up in Agent disagreed and would need a clearer rule. Agent edition names the next edition, the one the safety check put in force, and Agent confidence follows the new reading. Only your two claims name the new edition: the 5 earlier decisions keep theirs until the next tag run. That is one full cycle: your two notes became a clearer rule 3, it was tested against every earlier decision before it went live, and your two claims are earlier decisions now, checked by every future safety check.
 
 **What the full version adds later:**
 
@@ -190,7 +206,7 @@ Archive this page by hand when you no longer need it.
 ## The tables
 
 - **Rulebook**: one row per tag (here one). The agent changes When to use only after a passed safety check. Do not edit When to use by hand: every command then stops until the text is put back.
-- **Claims**: one row per claim, shaped like the real claims table. The agent writes Agent tags, Agent notes, Agent confidence and Agent reasons; you write Claim quality tags — verified, Review status, Why wrong and Challenged tags notes.
+- **Claims**: one row per claim, shaped like the real claims table. The agent writes Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition and Agent remarks; you write Verified tags, Review status, Why wrong and Challenged tags notes.
 - **Tag decisions**: the agent's own record of each decision; nothing to do here.
 - **Rule changes**: one row per proposed rule change. You set Status and may write Editor wording.
 - **Agent settings**: one row. Tick Paused to stop the agent; Last run summary always describes the latest command.
@@ -219,10 +235,10 @@ Archive this page by hand when you no longer need it.
 - **Earlier decision**: a claim an editor already decided (here the 5 from the audit of 9 October, when editors checked the agent's tags on real claims); the agent must keep getting it right.
 - **Example claim**: one of the tag's 6 examples in the Rulebook, or one of 4 examples of its opposite tag, Self-contained, which the agent keeps in its own files (they are not on this page); it must always come out right.
 - **Agent confidence**: how sure the agent is of its answers on a claim, from 0.5 (a coin flip) to 1 (certain); Your queue shows the least sure claims first.
-- **Claim quality tags — verified**: the tags you confirm on a claim; it always wins over the agent's answer.
-- **Why wrong**: your reason the agent was wrong; the table above says what each value makes happen.
+- **Agent status**: what the agent says about a claim: Waits for you, Done, Disagrees with your decision or Could not read; a claim you have decided leaves Your queue once the agent reads it again.
+- **Verified tags**: the tags you confirm on a claim (the real claims table calls this column Claim quality tags — verified); it always wins over the agent's answer.
 - **Review status**: To review until you decide a claim, then Reviewed; a Reviewed claim is an earlier decision.
-- **Views**: the Claims table has Your queue (the claims that wait for you), Needs your note (a Why wrong with no Challenged tags notes) and Agent disagreed (the agent disagrees with your decision); Lessons waiting shows the Rule changes not yet decided.
+- **Views**: the Claims table has Your queue (the claims whose Agent status is Waits for you), Needs your note (a Why wrong with no Challenged tags notes) and Agent disagreed (the agent disagrees with your decision); Lessons waiting shows the Rule changes not yet decided.
 
 **If something stops.**
 

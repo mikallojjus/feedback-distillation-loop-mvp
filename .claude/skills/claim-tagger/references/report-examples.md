@@ -1,6 +1,6 @@
 # Report examples for the claim tagger skills
 
-Each example is the whole report as the scripts print it today (checked against their output on the practice page of 16 October, where editors decide on the Claims table); the skills relay it verbatim. The shape was agreed in the design review (`docs/analysis-2026-10/debate/inputs/report-examples.md`).
+Each example is the whole report as the scripts print it today (the shape after the feedback round of 21 October, where editors decide on the Claims table and the agent writes seven columns of its own); the skills relay it verbatim. When a report's Next line sends the editor to Notion, the skill adds the matching checklist of `guide.md` under it, after one blank line; one example below shows that (the demo tag report). The other examples leave the checklist out to stay short, but the rule is the same for each of them. The shape was agreed in the design review (`docs/analysis-2026-10/debate/inputs/report-examples.md`).
 
 On a practice page the first sentence names the page: a status report starts "Status of the practice page <title>:", and the other reports end their first sentence with "(practice page <title>)". The commands are the demo ones (`/claim-tagger demo promote`).
 
@@ -49,11 +49,11 @@ Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing i
 | Lessons waiting | none |
 | Last run | Tag · 15 Oct 10:50 · 7 claims |
 
-Next: decide the 2 rows in Your queue (link).
+Next: decide your two claims in Your queue (link).
 
-### tag (demo)
+### tag (demo), the report followed by its checklist
 
-Both claims of the editor are To review, so no tag is written on them and both wait; the other five are Reviewed and keep the editor's tags.
+Both claims of the editor are To review, so no tag is written on them and both wait; the other five are Reviewed and keep the editor's tags. The Next line sends the editor to Notion, so the checklist "Decide in Your queue" (Demo form, from `guide.md`) follows the report, after one blank line, and nothing follows it. The sentence, the table and the Next line are the report; the numbered list under it is the checklist.
 
 Demo · Tag: the agent read 7 claims for Context-dependent; 2 wait for you (practice page Claim tagger demo · 15 Oct 10:42).
 
@@ -64,6 +64,12 @@ Demo · Tag: the agent read 7 claims for Context-dependent; 2 wait for you (prac
 | New rows in Your queue | 2, lowest confidence first |
 
 Next: decide your two claims in Your queue (link).
+
+1. Open Your queue (the link in the Next line): your two claims wait there.
+2. On each of your two claims fill in, in this order: Verified tags, Why wrong, Challenged tags notes, Review status; step 3 of the practice page gives the values.
+3. Paste the sentence for Challenged tags notes as the page gives it, and set Review status to Reviewed last.
+4. A decided claim stays in Your queue until the agent reads it again, which the follow-up of step 7 does for these two.
+5. When both claims are Reviewed, type /claim-tagger demo distill.
 
 ### tag (real claims, the first run: Context-dependent only)
 

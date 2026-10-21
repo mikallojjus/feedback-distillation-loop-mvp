@@ -225,6 +225,22 @@ test('toBlocks: numbered items, with the same continuation rule', () => {
   assert.deepEqual(toBlocks('2026-10-15.1 is the edition').map((b) => b.type), ['paragraph']);
 });
 
+test('toBlocks: a list line that ends with a backslash keeps the line break before the indented line under it, so a sentence can stand on a line of its own inside an item', () => {
+  assert.deepEqual(toBlocks(['1. Challenged tags notes: paste this sentence:\\', '   "Rule 3 does not say it."', '2. Review status: Reviewed.'].join('\n')), [
+    block('numbered_list_item', { rich_text: [t('Challenged tags notes: paste this sentence:\n"Rule 3 does not say it."')] }),
+    block('numbered_list_item', { rich_text: [t('Review status: Reviewed.')] }),
+  ]);
+  // the same in a bullet: a break, then a continuation that joins with a space as before
+  assert.deepEqual(toBlocks(['- a\\', '  b', '  c'].join('\n')), [block('bulleted_list_item', { rich_text: [t('a\nb c')] })]);
+  // two backslashes at the end of a line are one backslash of text, and make no break
+  assert.deepEqual(toBlocks(['- a\\\\', '  b'].join('\n')), [block('bulleted_list_item', { rich_text: [t('a\\ b')] })]);
+  // a break with nothing after it leaves no trailing line break
+  assert.deepEqual(toBlocks('- a\\'), [block('bulleted_list_item', { rich_text: [t('a')] })]);
+  // the plain text of such an item keeps the break; a paragraph line is not touched by the rule
+  assert.equal(blockText(toBlocks('1. x\\\n   y')[0]), 'x\ny');
+  assert.deepEqual(toBlocks('a\\\nb'), [paragraph(t('a\\\nb'))]);
+});
+
 test('toBlocks: "> " is a quote and adjacent quote lines join into one; "---" is a divider', () => {
   assert.deepEqual(toBlocks(['> one', '> two', '', '> three', '---', '-----', 'x'].join('\n')), [
     block('quote', { rich_text: [t('one\ntwo')] }),

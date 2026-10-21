@@ -10,11 +10,11 @@ description: Run the claim tagger's editor feedback loop against the Notion page
 ## What this skill does and never does
 
 - Every subcommand runs one or more scripts under `agents/claim-tagger-mvp/scripts/` with the Bash tool, exactly as listed below, one command at a time, each waited for before the next. The working directory is already the repository root: type the command alone, with nothing before or after it (no `cd`, no `&&`, no pipes, no redirection). Nothing else is run: no other tools, no file reads.
-- The scripts do the work and write Notion themselves, through the REST client, by applying a plan and reading every write back. You never write Notion through the connector, never create, move or delete a page, never fill an editor column (on the claims table Claim quality tags — verified, Review status, Why wrong and Challenged tags notes; Editor wording, Paused, the Status values Approved and Rejected), and never edit files under `agents/claim-tagger-mvp/runs/` or `agents/claim-tagger-mvp/rubric/`.
+- The scripts do the work and write Notion themselves, through the REST client, by applying a plan and reading every write back. You never write Notion through the connector, never create, move or delete a page, never fill an editor column (on the claims table Verified tags, Review status, Why wrong and Challenged tags notes; Editor wording, Paused, the Status values Approved and Rejected), and never edit files under `agents/claim-tagger-mvp/runs/` or `agents/claim-tagger-mvp/rubric/`.
 - You never pass `--bare`, `--fallback-model`, `--unpause` or `--confirm`; `rollback` is the one subcommand whose command line carries `--confirm`, and the permission prompt it raises is the person's confirmation.
 - A script that stops (exit 1 or 75) is resumed by running the same subcommand again, later; the scripts continue from their own records. Never start a second run for the same step and never repeat a command more than once in a row.
 - A refusal because the agent is paused (exit 3) or because the rulebook text was edited by hand (exit 4) also arrives as a printed report: relay it and stop.
-- The last thing a script prints is its report. Your final message is that printed report, verbatim and complete, and nothing else: no words before it, no words after it.
+- The last thing a script prints is its report. Your final message starts with that printed report, verbatim and complete, with no word before it. When the report's Next line sends the editor to Notion, one checklist follows it (section "After the report: the checklist"), and nothing else; otherwise nothing follows the report.
 
 ## Subcommands
 
@@ -33,7 +33,7 @@ For `tag`, the report to relay is the one `propose.mjs` prints; what `pull.mjs` 
 
 ## Demo mode
 
-A practice page, made by `/claim-tagger-walkthrough`, has its own small tables under the Demos sub-page. The demo subcommands run the same scripts against the newest practice page under Demos (the newest finished page under the Demos sub-page that the script can read; a page under Demo tests is never the one) through the walkthrough runner: replace `node agents/claim-tagger-mvp/scripts/<x>.mjs` with `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run <x>` and keep the arguments. `promote` and `followup` without `--lesson` take the demo's only Approved (or Live) rule change. Every demo report starts with "Demo · ", and its links point at the practice page's views. Every demo report names the practice page it acted on. Steps 3 and 5 of the practice page happen in Notion: never fill those columns for the editor; the report's Next line links the view. Step 7 needs no command, because the follow-up runs by itself after a PASS; `demo follow-up` only repeats it after a run that stopped early. No git commit happens after a demo promote.
+A practice page, made by `/claim-tagger-walkthrough`, has its own small tables under the Demos sub-page. The demo subcommands run the same scripts against the newest practice page under Demos (the newest finished page under the Demos sub-page that the script can read; a page under Demo tests is never the one) through the walkthrough runner: replace `node agents/claim-tagger-mvp/scripts/<x>.mjs` with `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run <x>` and keep the arguments. `promote` and `followup` without `--lesson` take the demo's only Approved (or Live) rule change. Every demo report starts with "Demo · ", and its links point at the practice page's views. Every demo report names the practice page it acted on. Steps 3 and 5 of the practice page happen in Notion: never fill those columns for the editor; the report's Next line links the view, and the Demo checklist of `references/guide.md` under the report says what to fill in there, in the words of the page. Step 7 needs no command, because the follow-up runs by itself after a PASS; `demo follow-up` only repeats it after a run that stopped early. No git commit happens after a demo promote.
 
 ## Reporting style
 
@@ -45,7 +45,13 @@ Editors read these reports between other tasks. Every report, errors included, h
 
 Leave out everything else: headings, how the scripts work, the commands you ran, retries and incidents (if one changed the result, say so in a few words inside the sentence), file paths, run ids, JSON, and any duration, dollar amount or model-call count (they stay in the run record). Add one row, "Usage", only when the share of your Claude allowance that the run took is known. For a stopped run, "Next:" is the same slash command; the skill resumes the run itself. While a step takes a while, say once what is happening, with no duration ("Reading 7 claims."), then nothing until the report.
 
-The scripts write the report in exactly this shape. Relay it as printed; do not reword, shorten or extend it.
+The scripts write the report in exactly this shape. Relay it as printed; do not reword, shorten or extend it. The checklist below is not part of the report: it is a separate part of the message.
+
+## After the report: the checklist
+
+The report is relayed verbatim first. When its Next line sends the editor to Notion (a view to open and something to fill in there), read `references/guide.md` and add the checklist that matches the Next line below the report, after one blank line, and nothing else: no heading, no words before or after, not reworded, not shortened, not extended. The guide has a checklist for deciding in Your queue (after `tag`, `status` or a `promote` that passed with claims still waiting), for approving in Lessons waiting (after `distill`), for a `promote` that ended in FAIL, and for the claims in Agent disagreed (after `follow-up`); each comes in a real and a demo form, and a report that starts with "Demo · " takes the demo form. A checklist is a numbered list of at most five lines: which view to open, which columns to fill in and in which order, what to look at, and the next command to type. Its words are the practice page's (same column names, same order), so the editor meets the same words on the page and under the report.
+
+A report whose Next line only names a command, a stopped run (exit 1 or 75), a pause, a refusal or a drift report gets no checklist. Never add a checklist the guide does not have, and never add one of your own; if no checklist matches the Next line, send the report alone.
 
 ## Two examples
 
@@ -74,4 +80,4 @@ Demo · Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-15
 
 Next: look at step 7 on the practice page (link); the demo is then complete.
 
-All the examples are in `references/report-examples.md`.
+All the examples are in `references/report-examples.md` (one of them shows a report followed by its checklist); the checklists are in `references/guide.md`.

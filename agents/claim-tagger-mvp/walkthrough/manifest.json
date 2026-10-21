@@ -1,5 +1,5 @@
 {
-  "manifest_version": "2026-10-16.1",
+  "manifest_version": "2026-10-21.1",
   "calibration": {
     "status": "pending",
     "runs": [
@@ -570,7 +570,7 @@
     {
       "claim": "cnn",
       "Agent proposal": "Does not apply",
-      "Claim quality tags — verified": [
+      "Verified tags": [
         "Context-dependent"
       ],
       "Review status": "Reviewed",
@@ -581,7 +581,7 @@
     {
       "claim": "dallas",
       "Agent proposal": "Does not apply",
-      "Claim quality tags — verified": [
+      "Verified tags": [
         "Context-dependent"
       ],
       "Review status": "Reviewed",
@@ -592,7 +592,7 @@
     {
       "claim": "contractor",
       "Agent proposal": "Applies",
-      "Claim quality tags — verified": [],
+      "Verified tags": [],
       "Review status": "Reviewed",
       "Why wrong": "Agent slip",
       "Challenged tags notes": "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’.",
@@ -601,7 +601,7 @@
     {
       "claim": "kennedy",
       "Agent proposal": "Applies",
-      "Claim quality tags — verified": [],
+      "Verified tags": [],
       "Review status": "Reviewed",
       "Why wrong": "Agent slip",
       "Challenged tags notes": "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded.",
@@ -610,7 +610,7 @@
     {
       "claim": "stopgap",
       "Agent proposal": "Applies",
-      "Claim quality tags — verified": [],
+      "Verified tags": [],
       "Review status": "Reviewed",
       "Why wrong": "Agent slip",
       "Challenged tags notes": "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it.",
@@ -622,10 +622,10 @@
       "claim": "presspool",
       "Review status": "To review",
       "enter": {
-        "Claim quality tags — verified": [],
-        "Review status": "Reviewed",
+        "Verified tags": [],
         "Why wrong": "Rule unclear",
-        "Challenged tags notes": "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well."
+        "Challenged tags notes": "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.",
+        "Review status": "Reviewed"
       },
       "calibrate": {
         "agent": "apply",
@@ -638,12 +638,12 @@
       "claim": "aiforce",
       "Review status": "To review",
       "enter": {
-        "Claim quality tags — verified": [
+        "Verified tags": [
           "Context-dependent"
         ],
-        "Review status": "Reviewed",
         "Why wrong": "Rule unclear",
-        "Challenged tags notes": "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context."
+        "Challenged tags notes": "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.",
+        "Review status": "Reviewed"
       },
       "calibrate": {
         "agent": [
@@ -717,6 +717,25 @@
       "Your queue",
       "Needs your note",
       "Agent disagreed"
+    ],
+    "claims_view_filters": {
+      "Your queue": "Agent status is Waits for you",
+      "Needs your note": "Why wrong is not empty, and Challenged tags notes is empty",
+      "Agent disagreed": "Agent status is Disagrees with your decision"
+    },
+    "claims_columns": [
+      "Geo Name",
+      "Agent tags",
+      "Agent confidence",
+      "Agent reasons",
+      "Agent status",
+      "Tags waiting",
+      "Agent edition",
+      "Agent remarks",
+      "Verified tags",
+      "Review status",
+      "Why wrong",
+      "Challenged tags notes"
     ],
     "lesson_rule": "Context-dependent rule 3",
     "gate": "PASS"

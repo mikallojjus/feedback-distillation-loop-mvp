@@ -12,10 +12,10 @@ import { fileURLToPath } from 'node:url';
 import { RUN_SCRIPTS, main } from '../../agents/claim-tagger-mvp/scripts/walkthrough.mjs';
 import { CLAIMS_COPY_COLUMNS, editorColumns, loadConfig, validateConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import * as dp from '../../agents/claim-tagger-mvp/scripts/lib/demo-profile.mjs';
-import { blockText, lintPage } from '../../agents/claim-tagger-mvp/scripts/lib/notion-blocks.mjs';
+import { blockText, lintPage, toBlocks } from '../../agents/claim-tagger-mvp/scripts/lib/notion-blocks.mjs';
 import { viewPlan } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
 import { claimColumns } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
-import { BUILDER_API_VERSION, countRequests, createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
+import { BUILDER_API_VERSION, NotionError, countRequests, createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { nextEdition, readRubric, writeEdition } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
@@ -30,6 +30,12 @@ const NOW = new Date(2026, 9, 15, 14, 22); // 15 Oct 2026 14:22, local time
 const EDITION = nextEdition(null, NOW);
 const noSleep = async () => {};
 const TAG = 'Context-dependent';
+// the Claims table (CLAIMS-REVIEW.md section 6.1): the agent's seven columns, then the editor's four, in the order every view of the table shows them
+const AGENT_COLUMNS = ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks'];
+const EDITOR_COLUMNS = ['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes'];
+const REVIEW_ORDER = ['Geo Name', ...AGENT_COLUMNS, ...EDITOR_COLUMNS];
+const RETIRED_COLUMNS = ['Agent tags (old)', 'Agent notes (old)'];
+const RELATIONS = ['Agent tags', 'Tags waiting', 'Verified tags'];
 const read = (file) => JSON.parse(readFileSync(file, 'utf8'));
 const lines = (file) => readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
 
@@ -150,6 +156,13 @@ function expectedOutline({ fallbackKeys = [] } = {}) {
   return out;
 }
 
+/** The agent's seven columns of a claim row are empty (before any command ran): two relations, three texts, a number and a select. */
+function assertAgentSideEmpty(row, label) {
+  assert.deepEqual([row['Agent tags'], row['Tags waiting']], [[], []], `${label}: Agent tags and Tags waiting`);
+  for (const column of ['Agent reasons', 'Agent edition', 'Agent remarks']) assert.ok([null, undefined, ''].includes(row[column]), `${label}: ${column}`);
+  for (const column of ['Agent confidence', 'Agent status']) assert.ok([null, undefined, ''].includes(row[column]), `${label}: ${column}`);
+}
+
 const POST_BODIES = (fake, path) => fake.requests.filter((r) => r.method === 'POST' && r.path === path && r.status === 200).map((r) => r.body);
 const methodsOf = (fake) => new Set(fake.requests.map((r) => r.method));
 
@@ -198,7 +211,14 @@ test('the page model: the text before the tables, the two view slots with the bl
   assert.deepEqual(model.slots.map((s) => s.key), ['your_queue', 'lessons_waiting']);
   const anchors = dp.anchorIndexes(model);
   const pre = dp.preBlocks(model);
-  assert.match(dp.signature(pre[anchors.your_queue]), /Doing the work/, 'the view goes under the Doing the work line of its step');
+  // Your queue goes under the last line of Step 3's Doing the work (the two numbered lists come after its first line); Lessons waiting under the Doing the work line of Step 5
+  const text = (i) => dp.plainBlockText(pre[i]);
+  assert.match(dp.signature(pre[anchors.your_queue]), /^numbered_list_item\|Review status: Reviewed\.$/, 'the view goes under the two lists of Doing the work');
+  const doing = pre.findLastIndex((b, i) => i < anchors.your_queue && /^Doing the work\./.test(text(i)));
+  const explaining = pre.findIndex((b, i) => i > anchors.your_queue && /^Explaining the outputs\./.test(text(i)));
+  assert.ok(doing >= 0 && explaining > anchors.your_queue, 'the view sits between Doing the work and Explaining the outputs of its step');
+  assert.deepEqual(pre.slice(doing, anchors.your_queue + 1).map((b) => b.type).filter((type) => type !== 'numbered_list_item'), ['paragraph', 'paragraph', 'paragraph'], 'the Doing the work line and the label of each list');
+  assert.equal(pre.slice(doing, anchors.your_queue + 1).filter((b) => b.type === 'numbered_list_item').length, 8, 'two lists of four');
   assert.match(dp.signature(pre[anchors.lessons_waiting]), /Doing the work/);
   assert.equal(model.toggle.type, 'toggle');
   const { stub, children } = dp.splitToggle(model.toggle);
@@ -224,10 +244,10 @@ test('signatures compare the type and the text with white space made one space, 
 
 test('stepOf maps every state of the design from the claims: 1, 2, 3, 4, 5, 6, the not-passed branch, 7 stopped early, 7 to read, complete', () => {
   const open = [{ claim: 'a', geo_id: 'a', key: 'a::T' }, { claim: 'b', geo_id: 'b', key: 'b::T' }];
-  const READ = 'no tags\n1 waits for an editor · edition e';
-  const claim = (geo_id, over = {}) => ({ geo_id, review_status: null, agent_notes: READ, ...over });
-  const claims = (a = {}, b = {}) => [claim('a', a), claim('b', b), claim('c', { review_status: 'Reviewed', agent_notes: '' })];
-  const unread = { agent_notes: '' };
+  const READ = 'Waits for you'; // the agent has read the claim, and it waits
+  const claim = (geo_id, over = {}) => ({ geo_id, review_status: null, agent_status: READ, ...over });
+  const claims = (a = {}, b = {}) => [claim('a', a), claim('b', b), claim('c', { review_status: 'Reviewed', agent_status: null })];
+  const unread = { agent_status: null };
   const done = { review_status: 'Reviewed' };
   const step = (cl, lessons = [], ledger = [], settings = { last_run_summary: 'Tag · 15 Oct 10:42 · 7 claims' }) => dp.stepOf({ claims: cl, ledger, lessons, open, settings });
   // a fresh page: nothing has written a Last run summary (the build leaves it empty, status writes nothing, the tag step writes it with the notes)
@@ -237,16 +257,20 @@ test('stepOf maps every state of the design from the claims: 1, 2, 3, 4, 5, 6, t
   assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [], lessons: [], open, settings: { last_run_summary: '  ' } }), { step: 1 }, 'white space is no summary');
   assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [], lessons: [], open }), { step: 1 }, 'no settings row at all: nothing has run');
   assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [], lessons: [], open, settings: null }), { step: 1 });
-  // a command wrote a Last run summary and the open claims still have no Agent notes: step 2
+  // a command wrote a Last run summary and the open claims still have no Agent status: step 2
   assert.deepEqual(step(claims(unread, unread)), { step: 2 });
   assert.deepEqual(step(claims(unread)), { step: 2 }, 'one claim the agent has not read is still step 2');
-  assert.deepEqual(step(claims({ review_status: 'To review', agent_notes: '  ' }, {})), { step: 2 }, 'white space is no notes, and To review is not Reviewed');
-  // with notes on the claims the step is 3 whatever Last run summary says (a page whose summary was cleared by hand is not sent back)
+  assert.deepEqual(step(claims({ review_status: 'To review', agent_status: '  ' }, {})), { step: 2 }, 'white space is no status, and To review is not Reviewed');
+  // with a status on the claims (the agent has read them) the step is 3 whatever Last run summary says (a page whose summary was cleared by hand is not sent back)
+  for (const status of ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read']) {
+    assert.deepEqual(step(claims({ agent_status: status }, { agent_status: status })), { step: 3, remaining: 2 }, `${status}: any status means the agent has read the claim`);
+  }
   assert.deepEqual(fresh(claims()), { step: 3, remaining: 2 });
   assert.deepEqual(step(claims()), { step: 3, remaining: 2 });
   assert.deepEqual(step(claims({ review_status: 'To review' }, {})), { step: 3, remaining: 2 });
   assert.deepEqual(step(claims(done, {})), { step: 3, remaining: 1 }, 'one claim decided is still step 3, with one claim left');
-  assert.deepEqual(step(claims({ ...done, agent_notes: '' }, {})), { step: 3, remaining: 1 }, 'a claim the editor decided before the agent read it is decided, not unread');
+  assert.deepEqual(step(claims({ ...done, agent_status: null }, {})), { step: 3, remaining: 1 }, 'a claim the editor decided before the agent read it is decided, not unread');
+  assert.deepEqual(step(claims({ ...done, agent_status: 'Waits for you' }, done)), { step: 4 }, 'a decided claim keeps Waits for you until the next tag run: that is no reason to call it open');
   assert.deepEqual(step(claims(done, done)), { step: 4 });
   const lesson = (over) => ({ Lesson: 'L', Status: 'Proposed', 'Safety check result': null, created: '2026-10-15T10:00:00Z', ...over });
   const both = claims(done, done);
@@ -266,7 +290,9 @@ test('stepOf maps every state of the design from the claims: 1, 2, 3, 4, 5, 6, t
   assert.equal(step(both, [lesson({ Status: 'Rejected' })]).step, 'complete', 'a rejected rule change ends the demo');
   assert.equal(step(both, [lesson({ Status: 'Rolled back' })]).step, 'complete');
   assert.equal(step(both, [lesson({ Status: 'Rejected', created: '2026-10-15T09:00:00Z' }), lesson({ Lesson: 'M', Status: 'Approved', created: '2026-10-15T11:00:00Z' })]).step, 6, 'a rule change in progress wins over a rejected one');
-  // the ledger is not what step 2 and 3 are read from: the claims are
+  // the ledger is not what step 2 and 3 are read from: the claims are, through Agent status (the notes of the first build are not read any more)
+  const notesOnly = { agent_status: null, agent_notes: 'no tags\n1 waits for an editor · edition e' };
+  assert.deepEqual(dp.stepOf({ claims: [claim('a', notesOnly), claim('b', unread), claim('c', { review_status: 'Reviewed' })], ledger: [], lessons: [], open, settings: { last_run_summary: 'Tag · 15 Oct 10:42 · 7 claims' } }), { step: 2 }, 'notes are no sign that the agent has read a claim');
   assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [{ Key: 'a::T', 'Agent proposal': 'Applies' }], lessons: [], open, settings: { last_run_summary: 'Tag · 15 Oct 10:42 · 7 claims' } }), { step: 2 });
   assert.ok(dp.stepOf({ claims: [], lessons: [], open }).problem, 'a claim that is not in Claims is a problem, not a step');
   assert.match(dp.stepOf({ claims: [claim('a')], lessons: [], open }).problem, /not in Claims \(b\)/);
@@ -330,10 +356,22 @@ test('the practice structure carries the practice titles and the production colu
   assert.equal(practice.views.length, original.views.length);
   assert.deepEqual(practice.tables.tag_decisions.columns, original.tables.tag_decisions.columns);
   assert.deepEqual(dp.writableColumns(practice, 'agent_settings'), ['Name', 'Paused', 'Rulebook edition', 'Last run summary']);
-  // the Claims table: the thirteen Geo columns, the agent's four in that order, then the editor's four; the verified tags are a relation to the Rulebook
+  // the Claims table: Geo Name, the agent's seven columns, the editor's four, then the other twelve Geo columns; Agent tags, Tags waiting and Verified tags are relations to
+  // the Rulebook, and the two "(old)" columns of the first build are in the structure as retired (a rename makes them on the live table, a new table never does)
   const claims = practice.tables.claims_copy.columns;
-  assert.deepEqual(claims.slice(0, 13).map((c) => c.name), CLAIMS_COPY_COLUMNS);
-  assert.deepEqual(claims.slice(13).map((c) => c.name), ['Agent tags', 'Agent notes', 'Agent confidence', 'Agent reasons', ...Object.values(dp.CLAIM_COLUMNS)]);
+  const live = claims.filter((c) => !c.retired);
+  assert.deepEqual(live.map((c) => c.name), [...REVIEW_ORDER, ...CLAIMS_COPY_COLUMNS.slice(1)]);
+  assert.deepEqual(claims.filter((c) => c.retired).map((c) => c.name), RETIRED_COLUMNS);
+  for (const name of RELATIONS) {
+    const column = claims.find((c) => c.name === name);
+    assert.deepEqual([column.type, column.relation_to], ['relation', 'rulebook'], name);
+  }
+  assert.deepEqual(claims.find((c) => c.name === 'Agent status').options, ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read']);
+  assert.equal(claims.find((c) => c.name === 'Agent confidence').type, 'number');
+  // a practice page makes only the live columns: the retired ones are never a column to write
+  assert.deepEqual(dp.writableColumns(practice, 'claims_copy'), live.map((c) => c.name));
+  assert.ok(!dp.writableColumns(practice, 'claims_copy').some((n) => RETIRED_COLUMNS.includes(n)));
+  assert.ok(practice.tables.claims_copy.arrange_default_view === true, 'the table\'s own view is arranged');
   const verified = claims.find((c) => c.name === dp.CLAIM_COLUMNS.verified);
   assert.deepEqual([verified.type, verified.relation_to], ['relation', 'rulebook']);
   assert.deepEqual(claims.find((c) => c.name === 'Review status').options, ['To review', 'Reviewed']);
@@ -396,7 +434,7 @@ test('the demos on disk: newest first, only folders with a demo.json, a ready on
 test('the manifest describes the claims\' columns: five Reviewed claims with the audit\'s words, two To review with what the editor types, and a shape that is checked', () => {
   const { manifest } = real();
   const V = dp.CLAIM_COLUMNS.verified;
-  assert.equal(manifest.manifest_version, '2026-10-16.1');
+  assert.equal(manifest.manifest_version, '2026-10-21.1');
   assert.equal(manifest.calibration.status, 'pending');
   assert.ok(manifest.calibration.runs.length >= 5, 'the earlier calibration runs are kept');
   assert.deepEqual(manifest.decided.map((d) => d.claim), ['cnn', 'dallas', 'contractor', 'kennedy', 'stopgap']);
@@ -422,13 +460,18 @@ test('the manifest describes the claims\' columns: five Reviewed claims with the
   assert.deepEqual(manifest.open.map((o) => o.claim), ['presspool', 'aiforce']);
   for (const o of manifest.open) {
     assert.equal(o['Review status'], 'To review', o.claim);
-    assert.deepEqual(Object.keys(o.enter), [V, 'Review status', 'Why wrong', 'Challenged tags notes'], o.claim);
+    assert.deepEqual(Object.keys(o.enter), [V, 'Why wrong', 'Challenged tags notes', 'Review status'], `${o.claim}: the columns in the order the editor types them, Review status last`);
     assert.equal(o.enter['Review status'], 'Reviewed');
     assert.equal(o.enter['Why wrong'], 'Rule unclear');
   }
   assert.deepEqual(manifest.open[0].enter[V], [], 'the press pool: the tag does not apply, so nothing is verified');
   assert.deepEqual(manifest.open[1].enter[V], [TAG], 'the AI Force: the tag applies');
   assert.deepEqual(manifest.expect.claims_views, ['Your queue', 'Needs your note', 'Agent disagreed']);
+  // the shape the Claims table has after the build: the filters of the three views and the order of the columns (CLAIMS-REVIEW.md section 6)
+  assert.deepEqual(manifest.expect.claims_view_filters, {
+    'Your queue': 'Agent status is Waits for you', 'Needs your note': 'Why wrong is not empty, and Challenged tags notes is empty', 'Agent disagreed': 'Agent status is Disagrees with your decision',
+  });
+  assert.deepEqual(manifest.expect.claims_columns, REVIEW_ORDER);
   assert.deepEqual(manifest.steps.map((s) => s.affects), [[], ['Claims'], ['Claims'], ['Rule changes'], ['Rule changes'], ['Rulebook', 'Rule changes', 'Agent settings'], ['Claims']], 'no step affects Tag decisions');
 
   // the shape is checked when the manifest is read
@@ -440,13 +483,13 @@ test('the manifest describes the claims\' columns: five Reviewed claims with the
     return () => dp.loadManifest(file);
   };
   assert.throws(broken((m) => { m.decided[0]['Review status'] = 'To review'; }), /decided\[0\] \(cnn\): Review status must be Reviewed/);
-  assert.throws(broken((m) => { m.decided[0][V] = ['Wordy']; }), /decided\[0\] \(cnn\): Claim quality tags — verified must be a list of tag names; the page has one tag, Context-dependent/);
+  assert.throws(broken((m) => { m.decided[0][V] = ['Wordy']; }), /decided\[0\] \(cnn\): Verified tags must be a list of tag names; the page has one tag, Context-dependent/);
   assert.throws(broken((m) => { m.decided[0][V] = TAG; }), /must be a list of tag names/);
   assert.throws(broken((m) => { m.decided[1]['Why wrong'] = 'Because'; }), /decided\[1\] \(dallas\): Why wrong must be one of/);
   assert.throws(broken((m) => { m.decided[2]['Challenged tags notes'] = ' '; }), /decided\[2\] \(contractor\): Challenged tags notes is missing/);
   assert.throws(broken((m) => { m.decided[3]['Agent proposal'] = 'Maybe'; }), /decided\[3\] \(kennedy\): Agent proposal must be one of/);
   assert.throws(broken((m) => { m.open[0]['Review status'] = 'Reviewed'; }), /open\[0\] \(presspool\): Review status is To review when the page is made/);
-  assert.throws(broken((m) => { m.open[1].enter[V] = ['Wordy']; }), /open\[1\] \(aiforce\)\.enter: Claim quality tags — verified must be a list of tag names/);
+  assert.throws(broken((m) => { m.open[1].enter[V] = ['Wordy']; }), /open\[1\] \(aiforce\)\.enter: Verified tags must be a list of tag names/);
   assert.throws(broken((m) => { m.open[1].enter['Review status'] = 'To review'; }), /enter: Review status must be Reviewed/);
   assert.throws(broken((m) => { delete m.open[0].enter['Challenged tags notes']; }), /open\[0\] \(presspool\)\.enter: Challenged tags notes is missing/);
   assert.doesNotThrow(broken(() => {}));
@@ -547,11 +590,16 @@ test('start --dry-run sends one GET and nothing else; it writes preview.md and s
   assert.deepEqual(plan.requests.filter((q) => q.path === '/databases').map((q) => q.body.title), Object.values(dp.PRACTICE_TITLES));
   // the relation of the Claims to the Rulebook needs the Rulebook, so it is added by a request of its own after the five tables
   const relation = plan.requests.find((q) => q.path === '/data_sources/<Claims>');
-  assert.deepEqual(Object.keys(relation.body.properties), [dp.CLAIM_COLUMNS.verified]);
-  assert.equal(relation.body.properties[dp.CLAIM_COLUMNS.verified].type, 'relation');
-  assert.equal(relation.body.properties[dp.CLAIM_COLUMNS.verified].relation.data_source_id, '<Rulebook>');
+  assert.deepEqual(Object.keys(relation.body.properties), RELATIONS, 'the three relations of the Claims, one request');
+  for (const name of RELATIONS) {
+    assert.equal(relation.body.properties[name].type, 'relation', name);
+    assert.equal(relation.body.properties[name].relation.data_source_id, '<Rulebook>', name);
+  }
   assert.ok(plan.requests.indexOf(relation) > plan.requests.findLastIndex((q) => q.path === '/databases'), 'after the last table');
-  assert.ok(plan.requests.filter((q) => q.path === '/databases').every((q) => !Object.hasOwn(q.body.initial_data_source.properties, dp.CLAIM_COLUMNS.verified)), 'the relation is not part of a table create');
+  const created = plan.requests.filter((q) => q.path === '/databases').map((q) => Object.keys(q.body.initial_data_source.properties));
+  assert.ok(created.every((names) => RELATIONS.every((name) => !names.includes(name))), 'a relation is not part of a table create');
+  assert.ok(created.every((names) => RETIRED_COLUMNS.every((name) => !names.includes(name))), 'a retired column is never made');
+  assert.deepEqual([...created[1]].sort(), [...REVIEW_ORDER.filter((n) => !RELATIONS.includes(n)), ...CLAIMS_COPY_COLUMNS.slice(1)].sort(), 'the Claims is made with its other columns');
   assert.deepEqual(plan.requests.filter((q) => q.path === '/views').map((q) => q.body.name), ['Rulebook', 'Needs your note', 'Agent disagreed', 'Your queue', 'Lessons waiting']);
   assert.deepEqual(Object.keys(plan.rows), ['rulebook', 'claims_copy', 'tag_decisions', 'agent_settings']);
   assert.deepEqual(Object.values(plan.rows).map((list) => list.length), [1, 7, 5, 1], 'the ledger has a row for each decided claim and none for the two that wait');
@@ -588,23 +636,75 @@ test('the real manifest and page template, with no --manifest, give a lint-clean
   assert.equal(plan.rows.claims_copy.length, manifest.claims.length);
 });
 
-test('the page text and the manifest agree: the lint is clean with the manifest\'s steps, the editor types the manifest\'s words, and the page never explains the ledger beyond its one line', () => {
+/**
+ * The numbered lists of Step 3's Doing the work, one per claim: [{ title, items: [{ n, column, text, sentence }] }], read from the Markdown of the page. A list line that ends
+ * with a backslash is followed by the sentence to paste, on a line of its own under it.
+ */
+function step3Lists(page) {
+  const step3 = page.slice(page.indexOf('## Step 3'), page.indexOf('## Step 4')).split('\n');
+  const lists = [];
+  let current = null;
+  for (let i = 0; i < step3.length; i += 1) {
+    const title = /^\*\*(The .+ claim)\*\*$/.exec(step3[i]);
+    if (title) {
+      current = { title: title[1], items: [] };
+      lists.push(current);
+      continue;
+    }
+    const item = /^(\d+)\. ([^:]+): (.*)$/.exec(step3[i]);
+    if (!item || !current) continue;
+    let text = item[3];
+    let sentence = null;
+    if (text.endsWith('\\')) {
+      text = text.slice(0, -1);
+      sentence = step3[i + 1].trim();
+      i += 1;
+    }
+    current.items.push({ n: Number(item[1]), column: item[2], text, sentence });
+  }
+  return lists;
+}
+
+test('the page text and the manifest agree: the lint is clean with the manifest\'s steps, the step 3 lists are the manifest\'s `enter` values word for word and in the order they are typed, and the page never explains the ledger beyond its one line', () => {
   const { manifest, template } = real();
   const model = dp.pageModel(template.text, { edition: EDITION, date: dp.dateWord(NOW) });
   const preview = dp.annotatedPreview(model.rendered, {});
   const page = model.rendered; // the text, without the comments the preview adds under the markers
   assert.deepEqual(lintPage(preview, { manifest }).problems, []);
   assert.deepEqual(lintPage(dp.annotatedPreview(model.rendered, { fallbackKeys: ['your_queue', 'lessons_waiting'] }), { manifest }).problems, []);
-  // the editor's words in step 3 are the manifest's `enter` text word for word, and what each claim gets is the manifest's
+  // the editor's words in step 3 are the manifest's `enter` text word for word: one numbered list per claim, one column per line, the sentence to paste on a line of its own,
+  // in the order the editor types the columns (Review status last, because it closes the claim)
   const step3 = page.slice(page.indexOf('## Step 3'), page.indexOf('## Step 4'));
+  const V = dp.CLAIM_COLUMNS.verified;
+  const lists = step3Lists(page);
+  const titles = { aiforce: 'The AI Force claim', presspool: 'The press pool claim' };
+  assert.deepEqual(lists.map((l) => l.title), manifest.open.map((o) => titles[o.claim]).reverse(), 'one list per claim; the AI Force claim is first, as it comes first in Your queue (lowest confidence first)');
+  assert.deepEqual(Object.keys(manifest.open[0].enter), [V, 'Why wrong', 'Challenged tags notes', 'Review status'], 'the manifest lists the columns in the order they are typed');
   for (const o of manifest.open) {
-    assert.ok(step3.includes(`"${o.enter['Challenged tags notes']}"`), `${o.claim}: the sentence the page gives is the manifest's`);
-    assert.ok(step3.includes(`Why wrong ${o.enter['Why wrong']}`), `${o.claim}: Why wrong`);
+    const list = lists.find((l) => l.title === titles[o.claim]);
+    assert.ok(list, o.claim);
+    assert.deepEqual(list.items.map((i) => i.n), [1, 2, 3, 4], `${o.claim}: numbered 1 to 4`);
+    assert.deepEqual(list.items.map((i) => i.column), Object.keys(o.enter), `${o.claim}: one column per line, in the order of the manifest's enter`);
+    const by = Object.fromEntries(list.items.map((i) => [i.column, i]));
+    if (o.enter[V].length) assert.equal(by[V].text, `${o.enter[V].join(', ')}.`, `${o.claim}: the tags to verify`);
+    else assert.match(by[V].text, /^leave it empty, because the tag does not apply\.$/, `${o.claim}: the tag does not apply, so nothing is verified`);
+    assert.equal(by['Why wrong'].text, `${o.enter['Why wrong']}.`, `${o.claim}: Why wrong`);
+    assert.equal(by['Review status'].text, `${o.enter['Review status']}.`, `${o.claim}: Review status`);
+    assert.equal(by['Challenged tags notes'].sentence, `"${o.enter['Challenged tags notes']}"`, `${o.claim}: the sentence to paste is the manifest's, word for word, on a line of its own`);
+    assert.equal(by['Challenged tags notes'].text, 'paste this sentence, as it is:');
+    assert.ok(step3.includes(`\n   "${o.enter['Challenged tags notes']}"\n`), `${o.claim}: the sentence has its own line`);
+    assert.ok(list.items.filter((i) => i.sentence !== null).length === 1, `${o.claim}: only the notes carry a sentence`);
   }
-  assert.ok(step3.includes('Claim quality tags — verified Context-dependent'), 'the AI Force claim gets the tag');
-  assert.ok(step3.includes('Claim quality tags — verified stays empty'), 'the press pool claim does not');
-  assert.ok(step3.includes('Review status Reviewed'));
+  assert.ok(!step3.includes('Claim quality tags'), 'the column is called Verified tags');
+  assert.match(step3, /Review status comes last only because it closes the claim: a claim you have decided stays in Your queue until the agent reads it again/);
+  assert.match(step3, /so the order of the four columns does not matter for the view/);
   assert.match(step3, /\{\{view:Your queue\}\}/);
+  // the list is blocks as well: two numbered lists of four items, the notes item holding a line break before its sentence
+  const blocks = toBlocks(step3).filter((b) => b.type === 'numbered_list_item');
+  assert.equal(blocks.length, 8);
+  const notesItems = blocks.filter((b) => blockText(b).startsWith('Challenged tags notes'));
+  assert.deepEqual(notesItems.map((b) => blockText(b).split('\n').length), [2, 2]);
+  assert.deepEqual(notesItems.map((b) => blockText(b).split('\n')[1]), manifest.open.map((o) => `"${o.enter['Challenged tags notes']}"`).reverse());
   // Tag decisions: one line in The tables, nothing in the steps, and no step asks for a caption for it
   const mentions = page.split('\n').map((line, i) => ({ line, n: i + 1 })).filter(({ line }) => /Tag decisions/.test(line));
   assert.equal(mentions.length, 1, 'the ledger is named once');
@@ -615,14 +715,23 @@ test('the page text and the manifest agree: the lint is clean with the manifest\
   const step1 = page.slice(page.indexOf('## Step 1'), page.indexOf('## Step 2'));
   assert.match(step1, /\| Your queue \| nothing waits \|/);
   assert.ok(!/2 rows, lowest confidence first/.test(page));
-  // step 2 shows the Claims table with the agent's columns, and no ledger table
+  // step 2 shows the Claims table with the agent's columns, and no ledger table: Agent tags, Agent confidence and Agent status in one table, Tags waiting with Agent reasons in the other
   const step2 = page.slice(page.indexOf('## Step 2'), page.indexOf('## Step 3'));
-  assert.match(step2, /\| Geo Name \| Agent tags \| Agent confidence \| Agent notes \|/);
-  assert.match(step2, /\| Geo Name \| Agent reasons \|/);
+  assert.match(step2, /\| Geo Name \| Agent tags \| Agent confidence \| Agent status \|/);
+  assert.match(step2, /\| Geo Name \| Tags waiting \| Agent reasons \|/);
   assert.ok(!/Agent proposal|Tag outcome|Tag decisions/.test(`${step1}${step2}${step3}`));
-  // the Help list stays at ten lines and the Queue entry is the claims table's views
+  assert.match(step2, /The figures differ from run to run/);
+  // step 7 shows Agent tags, Agent status and Agent edition
+  const step7 = page.slice(page.indexOf('## Step 7'), page.indexOf('## The tables'));
+  assert.match(step7, /\| Geo Name \| Agent tags \| Agent status \| Agent edition \|/);
+  // Agent notes is nowhere on the page, and the real table's name for the verified tags is named once, in the words list
+  assert.ok(!/Agent notes/.test(page), 'no Agent notes anywhere');
+  assert.equal(page.match(/Claim quality tags — verified/g).length, 1);
+  assert.match(page, /- \*\*Verified tags\*\*: .*Claim quality tags — verified/);
+  // the Help list stays at ten lines, with Agent status in it, and the Views entry is the claims table's views
   const help = page.slice(page.indexOf('**Words used on this page.**'), page.indexOf('**If something stops.**'));
   assert.equal(help.split('\n').filter((l) => l.startsWith('- ')).length, 10);
+  assert.match(help, /- \*\*Agent status\*\*: .*Waits for you, Done, Disagrees with your decision or Could not read/);
   assert.match(help, /\*\*Views\*\*: the Claims table has Your queue .* Needs your note .* Agent disagreed/);
 });
 
@@ -666,17 +775,23 @@ test('start builds the page: one page, five tables, the text in order, two linke
   assert.deepEqual(POST_BODIES(w.fake, '/databases').map((b) => b.title[0].text.content), Object.values(dp.PRACTICE_TITLES));
   assert.ok(POST_BODIES(w.fake, '/databases').every((b) => b.is_inline === true && b.parent.page_id === demo.page.id));
 
-  // the Claims table carries the Geo columns, the agent's four and the editor's four; the relation points at this page's Rulebook and was added after it
+  // the Claims table carries the Geo columns, the agent's seven and the editor's four, and neither "(old)" column; the three relations point at this page's Rulebook and were added after it
   const claimsSchema = w.fake.dataSource(demo.databases.claims_copy.data_source_id).properties;
-  assert.deepEqual(Object.keys(claimsSchema), structure.tables.claims_copy.columns.map((c) => c.name).filter((n) => n !== dp.CLAIM_COLUMNS.verified).concat(dp.CLAIM_COLUMNS.verified), 'the relation comes last: it is added once the Rulebook exists');
-  assert.equal(claimsSchema[dp.CLAIM_COLUMNS.verified].type, 'relation');
-  assert.equal(claimsSchema[dp.CLAIM_COLUMNS.verified].relation.data_source_id.replace(/-/g, ''), demo.databases.rulebook.data_source_id, 'the relation points at the Rulebook of this page, not at any other table');
+  const liveNames = structure.tables.claims_copy.columns.filter((c) => !c.retired).map((c) => c.name);
+  assert.deepEqual(Object.keys(claimsSchema), liveNames.filter((n) => !RELATIONS.includes(n)).concat(RELATIONS), 'the relations come last: they are added once the Rulebook exists');
+  assert.deepEqual(Object.keys(claimsSchema).filter((n) => RETIRED_COLUMNS.includes(n)), [], 'a practice page never gets the two retired columns');
+  for (const name of RELATIONS) {
+    assert.equal(claimsSchema[name].type, 'relation', name);
+    assert.equal(claimsSchema[name].relation.data_source_id.replace(/-/g, ''), demo.databases.rulebook.data_source_id, `${name} points at the Rulebook of this page, not at any other table`);
+  }
+  assert.deepEqual(claimsSchema['Agent status'].select.options.map((o) => o.name), ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read']);
+  for (const name of ['Agent edition', 'Agent remarks']) assert.equal(claimsSchema[name].type, 'rich_text', name);
   assert.deepEqual(claimsSchema['Review status'].select.options.map((o) => o.name), ['To review', 'Reviewed']);
   assert.deepEqual(claimsSchema['Why wrong'].select.options.map((o) => o.name), ['Agent slip', 'Rule unclear', 'Rule should change']);
   assert.equal(claimsSchema['Agent confidence'].type, 'number');
   assert.equal(claimsSchema['Agent reasons'].type, 'rich_text');
   assert.equal(w.fake.dataSource(demo.databases.tag_decisions.data_source_id).properties['Decided under'].type, 'rich_text');
-  assert.equal(w.fake.requests.filter((q) => q.method === 'PATCH' && /^\/data_sources\//.test(q.path)).length, 1, 'one request adds the relation');
+  assert.equal(w.fake.requests.filter((q) => q.method === 'PATCH' && /^\/data_sources\//.test(q.path)).length, 1, 'one request adds the three relations');
 
   // the page, top to bottom
   const outline = w.fake.outline(demo.page.id);
@@ -695,7 +810,8 @@ test('start builds the page: one page, five tables, the text in order, two linke
   for (const l of linked) {
     const at = entries.findIndex((e) => e.kind === 'linked' && e.view_id === l.view_id);
     assert.equal(entries[at - 1].id, l.after_block, `${l.name} sits right under the block it follows`);
-    assert.match(entries[at - 1].text, /^Doing the work\./, `${l.name} follows the Doing the work line of its step`);
+    const lastLine = { 'Your queue': /^Review status: Reviewed\.$/, 'Lessons waiting': /^Doing the work\./ }[l.name];
+    assert.match(entries[at - 1].text, lastLine, `${l.name} follows the last line of the Doing the work of its step`);
     assert.equal(l.page_id.replace(/-/g, ''), demo.page.id);
     assert.equal(l.body.create_database.position.type, 'after_block');
     assert.equal(l.body.type, 'table');
@@ -709,10 +825,10 @@ test('start builds the page: one page, five tables, the text in order, two linke
   const queue = linked.find((l) => l.name === 'Your queue');
   assert.equal(queue.source_database_id.replace(/-/g, ''), demo.databases.claims_copy.database_id, 'Your queue is a view of the Claims table');
   assert.deepEqual(queue.body.filter, planned('Your queue').body.filter);
-  assert.deepEqual(queue.body.filter.and.map((f) => [f.property, Object.keys(f.select ?? f.rich_text)[0]]), [['Review status', 'does_not_equal'], ['Agent notes', 'contains'], ['Agent notes', 'does_not_contain']]);
+  assert.deepEqual(queue.body.filter, { property: 'Agent status', select: { equals: 'Waits for you' } }, 'Your queue lists the claims whose Agent status is Waits for you, with no condition on Review status');
   assert.deepEqual(queue.body.sorts, [{ property: 'Agent confidence', direction: 'ascending' }]);
   assert.equal(queue.body.configuration.wrap_cells, true);
-  assert.deepEqual(shown(queue, 'claims_copy'), ['Geo Name', 'Agent tags', 'Agent confidence', 'Agent notes', 'Agent reasons', dp.CLAIM_COLUMNS.verified, 'Review status', 'Why wrong', 'Challenged tags notes']);
+  assert.deepEqual(shown(queue, 'claims_copy'), REVIEW_ORDER);
   const lessons = linked.find((l) => l.name === 'Lessons waiting');
   assert.equal(lessons.source_database_id.replace(/-/g, ''), demo.databases.rule_changes.database_id);
   assert.equal(lessons.body.configuration.wrap_cells, true);
@@ -744,8 +860,7 @@ test('start builds the page: one page, five tables, the text in order, two linke
     assert.equal(row['Geo Name'], c['Geo Name']);
     assert.equal(row['Geo URL'], c['Geo URL']);
     assert.equal(row['Geo Is factual'], c['Geo Is factual']);
-    for (const column of ['Agent tags', 'Agent notes', 'Agent reasons']) assert.equal(row[column], '', `${c.key}: ${column}`);
-    assert.ok([null, undefined].includes(row['Agent confidence']), `${c.key}: Agent confidence`);
+    assertAgentSideEmpty(row, c.key);
   }
   const claimsDb = demo.databases.claims_copy.database_id;
   const cnn = w.fake.rows(claimsDb).find((p) => p.properties['Geo ID'].rich_text[0].plain_text === manifest.claims.find((c) => c.key === 'cnn')['Geo ID']);
@@ -852,11 +967,8 @@ test('a fresh page\'s Claims: five claims Reviewed with the audit\'s values, two
   assert.deepEqual(['cnn', 'dallas'].map((k) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === k)['Geo ID'])[V].length), [1, 1]);
   assert.equal(w.rows('claims_copy').filter((r) => r[V].length).length, 2, 'only the two Applies decisions hold the tag');
   assert.equal(w.rows('claims_copy').filter((r) => r['Review status'] === 'Reviewed').length, 5);
-  // the agent's side is empty on all seven, and none of the claims says that anything waits
-  for (const row of w.rows('claims_copy')) {
-    for (const column of ['Agent tags', 'Agent notes', 'Agent reasons']) assert.equal(row[column], '');
-    assert.ok([null, undefined].includes(row['Agent confidence']));
-  }
+  // the agent's side (all seven columns) is empty on all seven claims, and none of the claims says that anything waits
+  for (const row of w.rows('claims_copy')) assertAgentSideEmpty(row, row['Geo Name']);
   // the editor's columns were written by the build under its marker, in creates and through the plan check; nothing was updated afterwards
   assert.equal(w.fake.requests.filter((q) => q.method === 'PATCH' && /^\/pages\//.test(q.path)).length, 0);
 });
@@ -864,7 +976,7 @@ test('a fresh page\'s Claims: five claims Reviewed with the audit\'s values, two
 test('the ledger of a fresh page: a row for each of the five decided claims with the copy of the audit\'s decision, and none for the two claims that wait', async () => {
   const w = newWorld();
   const { manifest } = real();
-  assert.equal((await w.start()).code, 0);
+  { const r0 = await w.start(); assert.equal(r0.code, 0, r0.err + " | " + r0.out); }
   const rows = w.rows('tag_decisions');
   assert.equal(rows.length, 5);
   const decided = new Map(manifest.decided.map((d) => [manifest.claims.find((c) => c.key === d.claim)['Geo ID'], d]));
@@ -880,7 +992,7 @@ test('the ledger of a fresh page: a row for each of the five decided claims with
     assert.equal(row.Tag, TAG);
     assert.equal(row['Claim link'], notionUrl(claimRow.page_id), 'the ledger row links to the claim');
     assert.equal(row['Agent proposal'], d['Agent proposal'], `${c.key}: what the agent said before the audit`);
-    assert.equal(row['Tag outcome'], d['Claim quality tags — verified'].length ? 'Applies' : 'Does not apply', `${c.key}: the outcome of the claim's verified tags`);
+    assert.equal(row['Tag outcome'], d['Verified tags'].length ? 'Applies' : 'Does not apply', `${c.key}: the outcome of the claim's verified tags`);
     assert.equal(row['Why wrong'], 'Agent slip');
     assert.equal(row['Your reasoning'], d['Challenged tags notes'], `${c.key}: the words of the audit, copied`);
     assert.ok(!row['Decided under'], `${c.key}: the audit gave no edition`);
@@ -892,7 +1004,7 @@ test('the ledger of a fresh page: a row for each of the five decided claims with
   const { syncDecisions } = await import('../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs');
   const claims = manifest.claims.map((c) => {
     const row = w.rowBy('claims_copy', 'Geo ID', c['Geo ID']);
-    return { geo_id: c['Geo ID'], review_status: row['Review status'], verified_tags: row['Claim quality tags — verified'].length ? [TAG] : [], why_wrong: row['Why wrong'] || null, challenged_notes: row['Challenged tags notes'] || '' };
+    return { geo_id: c['Geo ID'], review_status: row['Review status'], verified_tags: row['Verified tags'].length ? [TAG] : [], why_wrong: row['Why wrong'] || null, challenged_notes: row['Challenged tags notes'] || '' };
   });
   const ledger = rows.map((r) => ({ ...r, decided: Boolean(r['Tag outcome']) }));
   assert.deepEqual(syncDecisions(claims, ledger).changes, []);
@@ -1430,7 +1542,7 @@ test('when Notion refuses every view the build goes on: demo.json records views 
   assert.deepEqual(w.fake.outline(demo.page.id), expectedOutline({ fallbackKeys: ['your_queue', 'lessons_waiting'] }));
   const outline = w.fake.outline(demo.page.id);
   const at = outline.indexOf(`paragraph|${dp.FALLBACK_TEXT.your_queue}`);
-  assert.match(outline[at - 1], /^paragraph\|Doing the work\./, 'the paragraph follows the Doing the work line of Step 3');
+  assert.match(outline[at - 1], /^numbered_list_item\|Review status: Reviewed\.$/, 'the paragraph follows the last line of the Doing the work of Step 3');
   const at2 = outline.indexOf(`paragraph|${dp.FALLBACK_TEXT.lessons_waiting}`);
   assert.match(outline[at2 - 1], /^paragraph\|Doing the work\./);
   assert.ok(at2 > at);
@@ -1556,7 +1668,8 @@ test('verify finds what was changed after the build: an editor column of a decid
   w.fake.editRow(claimRow('presspool').page_id, { 'Why wrong': 'Agent slip' });
   w.fake.editRow(claimRow('aiforce').page_id, { 'Review status': 'Reviewed', [V]: [book.page_id] });
   // the agent's columns before any command ran
-  w.fake.editRow(claimRow('dallas').page_id, { 'Agent tags': TAG });
+  w.fake.editRow(claimRow('dallas').page_id, { 'Agent tags': [book.page_id] });
+  w.fake.editRow(claimRow('kennedy').page_id, { 'Agent status': 'Done' });
   w.fake.editRow(claimRow('presspool').page_id, { 'Agent reasons': 'x' });
   // the ledger: a copy that was changed, and a row for a claim that waits, which only the tag step makes
   w.fake.editRow(ledgerRow('dallas').page_id, { 'Tag outcome': null });
@@ -1574,14 +1687,15 @@ test('verify finds what was changed after the build: an editor column of a decid
   const result = JSON.parse(bad.out);
   assert.equal(result.ok, false);
   const text = result.problems.join('\n');
-  assert.match(text, /the earlier decision Excluding CNN .* differs from the manifest in Claim quality tags — verified/);
+  assert.match(text, /the earlier decision Excluding CNN .* differs from the manifest in Verified tags/);
   assert.match(text, /the earlier decision A contractor.* differs from the manifest in Review status/);
   assert.match(text, /the earlier decision Relocating .* differs from the manifest in Why wrong/);
   assert.match(text, /the earlier decision December stopgap .* differs from the manifest in Challenged tags notes/);
   assert.match(text, /the claim The press pool .* that waits for the editor already has Why wrong/);
   assert.match(text, /the claim The AI Force .* that waits for the editor has Review status Reviewed, it should be To review/);
-  assert.match(text, /the claim The AI Force .* that waits for the editor already has Claim quality tags — verified/);
+  assert.match(text, /the claim The AI Force .* that waits for the editor already has Verified tags/);
   assert.match(text, /the claim The Dallas .* has Agent tags filled in before any command ran/);
+  assert.match(text, /the claim Relocating .* has Agent status filled in before any command ran/);
   assert.match(text, /the claim The press pool .* has Agent reasons filled in before any command ran/);
   assert.match(text, /the earlier decision The Dallas .* differs from the manifest in Tag outcome of Tag decisions/);
   assert.match(text, /the row Excluding CNN .* has Decided under filled in before any command ran/);
@@ -1626,7 +1740,7 @@ test('verify finds an editor column of a decided claim that was changed whatever
   w.fake.editRow(claimRow('cnn').page_id, { 'Review status': 'To review' });
   const changed = JSON.parse((await w.run(['verify', '--json'])).out);
   assert.equal(changed.ok, false);
-  assert.match(changed.problems.join('\n'), /the earlier decision Relocating .* differs from the manifest in Claim quality tags — verified/);
+  assert.match(changed.problems.join('\n'), /the earlier decision Relocating .* differs from the manifest in Verified tags/);
   assert.match(changed.problems.join('\n'), /the earlier decision Excluding CNN .* differs from the manifest in Review status/);
   assert.equal(changed.problems.length, 2);
 });
@@ -1724,7 +1838,7 @@ test('where says which step the editor is at and the one thing to do, for every 
   let r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 1, ${title(1)}.`);
   assert.equal(r.next, `Next: type ${steps[0].command}.`);
-  // a command that writes has run (Last run summary is filled) and the claims have no Agent notes yet
+  // a command that writes has run (Last run summary is filled) and the claims have no Agent status yet
   w.fake.editRow(w.rows('agent_settings')[0].page_id, { 'Last run summary': 'Tag at 15 Oct 14:40' });
   r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 2, ${title(2)}.`);
@@ -1790,7 +1904,7 @@ test('where reads the step from the Review status of the two claims: the ledger 
   const { manifest } = real();
   const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
   const stepLine = async () => (await w.run(['where'])).out.split('\n')[0];
-  // the ledger rows of the two exist, with a proposal, but the claims have no Agent notes: the agent has not read them
+  // the ledger rows of the two exist, with a proposal, but the claims have no Agent status: the agent has not read them
   for (const o of manifest.open) {
     const c = manifest.claims.find((x) => x.key === o.claim);
     w.fake.addRow(w.db('tag_decisions'), { Claim: c['Geo Name'], Key: `${c['Geo ID']}::${TAG}`, Tag: TAG, 'Agent proposal': 'Applies' });
@@ -1798,9 +1912,9 @@ test('where reads the step from the Review status of the two claims: the ledger 
   assert.match(await stepLine(), /step 1,/, 'a fresh page: the ledger rows do not move it either');
   w.fake.editRow(w.rows('agent_settings')[0].page_id, { 'Last run summary': 'Tag at 15 Oct 14:40' });
   assert.match(await stepLine(), /step 2,/);
-  w.fake.editRow(claimRow('presspool').page_id, { 'Agent notes': 'no tags\nnothing waits for an editor · edition e' });
+  w.fake.editRow(claimRow('presspool').page_id, { 'Agent status': 'Waits for you' });
   assert.match(await stepLine(), /step 2,/, 'one of the two is still unread');
-  w.fake.editRow(claimRow('aiforce').page_id, { 'Agent notes': 'no tags\n1 waits for an editor · edition e' });
+  w.fake.editRow(claimRow('aiforce').page_id, { 'Agent status': 'Waits for you' });
   assert.match(await stepLine(), /step 3,/);
   for (const key of ['presspool', 'aiforce']) w.fake.editRow(claimRow(key).page_id, { 'Review status': 'Reviewed' });
   assert.match(await stepLine(), /step 4,/);
@@ -1831,37 +1945,56 @@ test('where on a page without views points at the Claims table instead of Your q
   assert.match(five.out, new RegExp(`Next: open Rule changes \\(https://www\\.notion\\.so/${demo.databases.rule_changes.database_id}\\) and set Status to Approved\\.`));
 });
 
-test('the Claims table of step 2 and the words of the story are what the tag step writes: both claims are To review, so every tag waits and none is written to Agent tags', () => {
+test('the Claims tables of step 2 and the words of the story are what the tag step writes: both claims are To review, so every tag waits and none is written to Agent tags', () => {
   const { manifest, template } = real();
   const page = dp.pageModel(template.text, { edition: EDITION, date: dp.dateWord(NOW) }).rendered;
   const step2 = page.slice(page.indexOf('## Step 2'), page.indexOf('## Step 3'));
   const cells = (row) => row.split('|').slice(1, -1).map((c) => c.trim());
   const rows = step2.split('\n').filter((l) => l.startsWith('|')).map(cells);
+  // Agent tags, Agent confidence and Agent status for all seven claims (Geo Name makes the fourth column of four)
   const header = rows.findIndex((r) => r[0] === 'Geo Name' && r[1] === 'Agent tags');
-  assert.ok(header >= 0);
+  assert.deepEqual(rows[header], ['Geo Name', 'Agent tags', 'Agent confidence', 'Agent status']);
   const table = rows.slice(header + 2, header + 2 + manifest.claims.length);
   assert.equal(table.length, manifest.claims.length);
   const open = new Set(manifest.open.map((o) => o.claim));
   const decided = new Map(manifest.decided.map((d) => [d.claim, d]));
   const proposals = { presspool: 'Applies', aiforce: "Can't tell" };
-  manifest.claims.forEach((c, i) => {
+  const writtenFor = (c) => {
     const d = decided.get(c.key);
     // what the tag step writes for this claim (propose.mjs claimColumns): a claim To review waits whatever the proposal; a Reviewed claim gets the editor's set
-    const written = open.has(c.key)
+    return open.has(c.key)
       ? claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, proposals[c.key]]]), toReview: true, edition: EDITION })
-      : claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, d['Claim quality tags — verified'].includes(TAG) ? 'Applies' : 'Does not apply']]), reviewed: true, verifiedTags: d['Claim quality tags — verified'], edition: EDITION });
-    const [name, tags, , notes] = table[i];
+      : claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, d['Verified tags'].includes(TAG) ? 'Applies' : 'Does not apply']]), reviewed: true, verifiedTags: d['Verified tags'], edition: EDITION });
+  };
+  manifest.claims.forEach((c, i) => {
+    const written = writtenFor(c);
+    const [name, tags, confidence, status] = table[i];
     assert.equal(name, c.short, c.key);
-    assert.equal(tags, written.agent_tags || '(empty)', `${c.key}: Agent tags`);
-    assert.equal(notes, written.agent_notes.replace('\n', ' / '), `${c.key}: Agent notes`);
+    assert.equal(tags, written.tags.join(', ') || '(empty)', `${c.key}: Agent tags`);
+    assert.equal(status, written.status, `${c.key}: Agent status`);
+    assert.match(confidence, /^0\.\d\d( or more)?$/, `${c.key}: a figure between 0.5 and 1, or a lower bound`);
   });
-  assert.deepEqual(table.filter((r) => r[3].includes('1 waits for an editor')).map((r) => r[0]), manifest.open.map((o) => manifest.claims.find((c) => c.key === o.claim).short), 'the two claims for the editor are the two that wait');
+  assert.deepEqual(table.filter((r) => r[3] === 'Waits for you').map((r) => r[0]), manifest.open.map((o) => manifest.claims.find((c) => c.key === o.claim).short), 'the two claims for the editor are the two that wait');
+  assert.deepEqual(table.filter((r) => r[3] === 'Done').length, 5, 'the five earlier decisions are Done');
+  // Tags waiting and Agent reasons for the two claims that wait: the tag, and the reason in the form propose writes
+  const header2 = rows.findIndex((r) => r[0] === 'Geo Name' && r[1] === 'Tags waiting');
+  assert.deepEqual(rows[header2], ['Geo Name', 'Tags waiting', 'Agent reasons']);
+  const waiting = rows.slice(header2 + 2, header2 + 2 + manifest.open.length);
+  assert.equal(waiting.length, manifest.open.length);
+  manifest.open.forEach((o, i) => {
+    const c = manifest.claims.find((x) => x.key === o.claim);
+    assert.equal(waiting[i][0], c.short);
+    assert.equal(waiting[i][1], writtenFor(c).waiting.join(', '), `${o.claim}: Tags waiting holds the tag`);
+    assert.ok(waiting[i][2].startsWith(`${TAG}: `) && /runs agree$/.test(waiting[i][2]), `${o.claim}: Agent reasons, the tag first`);
+  });
+  assert.ok(!/Agent notes|two short lines|waits for an editor/.test(step2), 'the notes of the first build are nowhere in step 2');
+  assert.match(step2, /Agent edition holds \d{4}-\d\d-\d\d\.\d on all 7 claims/);
   // the story: both wait in Your queue, and the line that rule g asks for says why the press pool claim is there
   const story = page.slice(0, page.indexOf('## Step 1'));
-  assert.match(story, /The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so it waits in Your queue like the AI Force claim, which the agent reads differently from run to run and which the page also marks To review\./);
+  assert.match(story, /The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so its Agent status reads Waits for you and it sits in Your queue like the AI Force claim, which the agent reads differently from run to run and which the page also marks To review\./);
   assert.ok(!/because the agent is unsure/.test(story), 'the story does not say as a fact that the agent is unsure of the AI Force claim: its reading differs from run to run');
   const step3 = page.slice(page.indexOf('## Step 3'), page.indexOf('## Step 4'));
-  assert.match(step3, /In Your queue, just below, fill in four columns on each of your two claims\./);
+  assert.match(step3, /Fill in four columns on each of your two claims, in the order of its list, in Your queue under the lists\./);
   assert.ok(!/not in it|in the Claims table, in The tables/.test(step3), 'both claims are decided in Your queue');
   assert.ok(!/which here is the AI Force claim/.test(step3));
 });
@@ -2022,9 +2155,9 @@ test('without --demo the commands act on the newest finished page under Demos: a
   // the second page has the manifest of an earlier shape (a list of tags written as a text): the loader cannot read it, so it is skipped
   const file = join(w.dir(shaped), 'walkthrough', 'manifest.json');
   const manifest = read(file);
-  manifest.decided[0]['Claim quality tags — verified'] = 'Context-dependent';
+  manifest.decided[0]['Verified tags'] = 'Context-dependent';
   writeFileSync(file, JSON.stringify(manifest));
-  assert.match(dp.profileProblem(dp.pickDemo(w.root, shaped)), /Claim quality tags — verified must be a list of tag names/);
+  assert.match(dp.profileProblem(dp.pickDemo(w.root, shaped)), /Verified tags must be a list of tag names/);
   assert.equal(dp.profileProblem(dp.pickDemo(w.root, mine)), null);
   assert.equal(await rootOf(), w.dir(mine), 'the older page of the current shape');
 
@@ -2045,7 +2178,7 @@ test('without --demo the commands act on the newest finished page under Demos: a
   // nothing left under Demos that can be read: the commands say so, they do not fall back to the page under Demo tests
   const mineFile = join(w.dir(mine), 'walkthrough', 'manifest.json');
   const mineManifest = read(mineFile);
-  mineManifest.decided[0]['Claim quality tags — verified'] = 'Context-dependent';
+  mineManifest.decided[0]['Verified tags'] = 'Context-dependent';
   writeFileSync(mineFile, JSON.stringify(mineManifest));
   for (const argv of [['where'], ['verify'], ['run', 'pull'], ['decide', '--claim', 'presspool'], ['approve']]) {
     const r = await w.run(argv, { scriptsDir });
@@ -2232,7 +2365,7 @@ test('no command of the walkthrough reads .env: with a token given and the repo 
 
 const ROW_PAGE = '0a9e0000-0000-4000-8000-0000000000aa';
 // the editor's four columns of a claim (CLAIMS-REVIEW.md): the relation (no tag), Review status, Why wrong, Challenged tags notes
-const EDITOR_QUEUE = { 'Claim quality tags — verified': [], 'Review status': 'Reviewed', 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 4 is too strict.' };
+const EDITOR_QUEUE = { 'Verified tags': [], 'Review status': 'Reviewed', 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 4 is too strict.' };
 const LESSON = 'General references pass the rule 4 test';
 
 /** The config of a practice page and the folder one lives in (directly under runs/demos). Nothing is made on disk: checkPlan only looks at the path. */
@@ -2271,6 +2404,7 @@ const lessonByTitle = (w, title) => w.rows('rule_changes').find((r) => r.Lesson 
 function agentHasRead(w, id) {
   const { manifest } = real();
   const edition = w.demo(id).edition;
+  const book = w.rows('rulebook', id)[0];
   const reads = {
     presspool: { proposal: 'Applies', confidence: 0.8 },
     aiforce: { proposal: "Can't tell", confidence: 0.5 },
@@ -2278,13 +2412,16 @@ function agentHasRead(w, id) {
   for (const o of manifest.open) {
     const claim = manifest.claims.find((c) => c.key === o.claim);
     const read = reads[o.claim] ?? reads.aiforce;
-    const reason = `${claim.short.replace(/…$/, '')}: which one? · Context-dependent rule 3 · 3 of 3 runs agree`;
-    const columns = claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, read.proposal]]), toReview: true, edition });
+    const reason = `${claim.short.replace(/…$/, '')}: which one? · Context-dependent rule 3 · 1 of 1 runs agree`;
+    const columns = claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, read.proposal]]), toReview: true, edition, reasons: new Map([[TAG, reason]]) });
     w.fake.editRow(w.rowBy('claims_copy', 'Geo ID', claim['Geo ID'], id).page_id, {
-      'Agent tags': columns.agent_tags,
-      'Agent notes': columns.agent_notes,
+      'Agent tags': columns.tags.map(() => book.page_id),
       'Agent confidence': read.confidence,
-      'Agent reasons': `${TAG}: ${reason}`,
+      'Agent reasons': columns.agent_reasons,
+      'Agent status': columns.status,
+      'Tags waiting': columns.waiting.map(() => book.page_id),
+      'Agent edition': columns.agent_edition,
+      'Agent remarks': columns.agent_remarks,
     });
     w.fake.addRow(w.db('tag_decisions', id), {
       Claim: claim['Geo Name'], Key: `${claim['Geo ID']}::${TAG}`, Tag: TAG, 'Agent proposal': read.proposal, 'Agent confidence': read.confidence, 'Agent reason': reason, 'Rulebook edition': edition,
@@ -2315,7 +2452,7 @@ test('checkPlan with demoEditor allows, in a practice page, the editor columns o
   const ok = (plan) => assert.deepEqual(checkPlan(plan, w.demo, opts).problems, []);
   ok(queueUpdate(w.demo));
   ok(queueUpdate(w.demo, { 'Review status': 'Reviewed' }));
-  ok(queueUpdate(w.demo, { 'Claim quality tags — verified': ['0a9e0000-0000-4000-8000-0000000000bb'], 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'The claim names its subject.' }));
+  ok(queueUpdate(w.demo, { 'Verified tags': ['0a9e0000-0000-4000-8000-0000000000bb'], 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'The claim names its subject.' }));
   ok(lessonUpdate(w.demo, { Status: 'Approved' }));
   ok(lessonUpdate(w.demo, { Status: 'Rejected' }));
   ok(lessonUpdate(w.demo, { Status: 'Approved', 'Editor wording': 'Test: the whole rule, as the editor wants it.' }));
@@ -2418,7 +2555,7 @@ test('decide enters the manifest values for one of the two claims, writes the fo
   const book = w.rows('rulebook')[0];
   agentHasRead(w);
   const writesBefore = w.fake.writes().length;
-  const agentColumns = (claim) => ['Agent tags', 'Agent notes', 'Agent confidence', 'Agent reasons', 'Geo Name'].map((c) => rowOf(claim)[c]);
+  const agentColumns = (claim) => [...AGENT_COLUMNS, 'Geo Name'].map((c) => rowOf(claim)[c]);
   const agentBefore = agentColumns(claims[0]);
 
   // only --claim: the values the page tells the editor to enter
@@ -2833,5 +2970,359 @@ test('verify does not call a page damaged because the editor acted on it, and st
   w.fake.editRow(w.rowBy('claims_copy', 'Geo ID', earlier['Geo ID']).page_id, { [V]: decided[V].length ? [] : [book.page_id] });
   const changed = await w.run(['verify']);
   assert.equal(changed.code, 2);
-  assert.match(changed.err, /the earlier decision .* differs from the manifest in Claim quality tags — verified/);
+  assert.match(changed.err, /the earlier decision .* differs from the manifest in Verified tags/);
+});
+
+// ---- the Claims table and its views after the feedback round of 21 October (CLAIMS-REVIEW.md section 6) --------------------------------------------------------------
+
+/** The option for w.start: the Claims table gets, when it is made, the view Notion makes for every table (the shared fake makes none): all its columns shown, in the order they were made. */
+function withDefaultView() {
+  return {
+    wrapClients: ({ builder, rest }) => ({
+      builder: {
+        ...builder,
+        async createDatabase(args) {
+          const res = await builder.createDatabase(args);
+          if (args.title === dp.PRACTICE_TITLES.claims_copy) {
+            const dataSourceId = res.data_sources[0].id;
+            const properties = Object.values((await builder.retrieveDataSource(dataSourceId)).properties);
+            await builder.createView({
+              databaseId: res.id, dataSourceId, name: 'Table',
+              configuration: { type: 'table', wrap_cells: false, properties: properties.map((p) => ({ property_id: p.id, visible: true, width: 150 })) }, position: { type: 'end' },
+            });
+          }
+          return res;
+        },
+      },
+      rest,
+    }),
+  };
+}
+
+/** The views of the Claims table of a built page, with the names of their columns: { own (Notion's own view), queue (the linked view), tabs (all views of the table), shown, hidden }. */
+function claimsViews(w) {
+  const demo = w.demo();
+  const ds = w.fake.dataSource(demo.databases.claims_copy.data_source_id);
+  const names = new Map(Object.values(ds.properties).map((p) => [p.id, p.name]));
+  const tabs = w.fake.tabViews(demo.databases.claims_copy.database_id);
+  return {
+    own: tabs.find((v) => v.name === 'Table'),
+    queue: w.fake.linked().find((l) => l.name === 'Your queue'),
+    tabs,
+    shown: (config) => config.properties.filter((p) => p.visible !== false).map((p) => names.get(p.property_id)),
+    hidden: (config) => config.properties.filter((p) => p.visible === false).map((p) => names.get(p.property_id)),
+  };
+}
+
+const builderClient = (w, version = BUILDER_API_VERSION) => createClient({ token: w.fake.token, fetchImpl: w.fake.fetchImpl, apiVersion: version, requestsPerSecond: 1000, sleep: noSleep });
+
+test('the Claims table of a built page shows the agent\'s columns first, then the review columns, then the Geo columns, on its own view and on the three views; the relations, made last, do not come last', async () => {
+  const w = newWorld();
+  const r = await w.start([], withDefaultView());
+  assert.equal(r.code, 0, `${r.err}\n${r.out}`);
+  assert.match(r.err, /the column order of the Claims view "Table" was set to the review order/);
+  const v = claimsViews(w);
+  const geo = CLAIMS_COPY_COLUMNS.slice(1);
+  // the table's own view: every column shown, in the order of the structure (the relations were added last and would otherwise come last)
+  assert.deepEqual(v.shown(v.own.configuration), [...REVIEW_ORDER, ...geo]);
+  assert.deepEqual(v.hidden(v.own.configuration), []);
+  assert.deepEqual(dp.practiceStructure(read(join(AGENT, 'setup', 'structure.json'))).tables.claims_copy.columns.filter((c) => !c.retired).map((c) => c.name), v.shown(v.own.configuration), 'it is the structure\'s order');
+  // the three views: the twelve review columns in that order, the Geo columns hidden, cells wrapping
+  const three = [['Your queue', v.queue.body.configuration], ...v.tabs.filter((t) => t.name !== 'Table').map((t) => [t.name, t.configuration])];
+  assert.deepEqual(three.map(([name]) => name), ['Your queue', 'Needs your note', 'Agent disagreed']);
+  for (const [name, config] of three) {
+    assert.deepEqual(v.shown(config), REVIEW_ORDER, name);
+    assert.deepEqual(v.hidden(config).sort(), [...geo].sort(), `${name}: the Geo columns are hidden`);
+    assert.equal(config.wrap_cells, true, name);
+  }
+  assert.deepEqual(real().manifest.expect.claims_columns, v.shown(v.queue.body.configuration), 'the manifest expects this order');
+  // one write set the own view; the three views were made in the right order and never changed
+  assert.equal(w.fake.requests.filter((q) => q.method === 'PATCH' && /^\/views\//.test(q.path)).length, 1);
+  // verify finds nothing, and asking for the page again changes nothing
+  assert.deepEqual(JSON.parse((await w.run(['verify', '--json'])).out).problems, []);
+  const before = w.fake.writes().length;
+  assert.equal((await w.run(['start', '--resume', w.demos()[0]])).code, 0);
+  assert.equal(w.fake.writes().length, before);
+});
+
+test('verify names the Claims view whose columns were moved and the view whose filter was changed', async () => {
+  const w = newWorld();
+  assert.equal((await w.start([], withDefaultView())).code, 0);
+  assert.deepEqual(JSON.parse((await w.run(['verify', '--json'])).out).problems, []);
+  const v = claimsViews(w);
+  const client = builderClient(w);
+  const props = v.own.configuration.properties;
+  await client.updateView(v.own.id, { configuration: { ...v.own.configuration, properties: [props.at(-1), ...props.slice(0, -1)] } }); // the last column first
+  const disagreed = v.tabs.find((t) => t.name === 'Agent disagreed');
+  await client.updateView(disagreed.id, { filter: { property: 'Agent status', select: { equals: 'Waits for you' } } });
+  const bad = JSON.parse((await w.run(['verify', '--json'])).out);
+  assert.equal(bad.ok, false);
+  const text = bad.problems.join('\n');
+  assert.match(text, /Claims: view columns - "Table" \(the table's own view\): expected Geo Name, Agent tags, Agent confidence/);
+  assert.match(text, /Claims: view filter - "Agent disagreed": expected /);
+  assert.equal(bad.problems.length, 2, text);
+});
+
+test('a refusal of the column order of the Claims view does not stop the build: it is recorded, and verify names the view', async () => {
+  const w = newWorld();
+  const base = withDefaultView();
+  const refusing = {
+    wrapClients: (clients) => {
+      const wrapped = base.wrapClients(clients);
+      return { ...wrapped, builder: { ...wrapped.builder, async updateView() { throw new NotionError('Notion said no to the columns', { status: 400, code: 'validation_error' }); } } };
+    },
+  };
+  const r = await w.start([], refusing);
+  assert.equal(r.code, 2, 'the check of the finished page finds the view out of order');
+  assert.match(r.err, /Notion refused the column order of the Claims view/);
+  assert.match(r.err, /verify: Claims: view columns - "Table" \(the table's own view\)/);
+  assert.ok(w.demo().errors.some((e) => e.view === 'claims_own_view'));
+});
+
+test('the three Claims views on a fresh page: Your queue lists the claims whose Agent status is Waits for you (a decided claim stays until the agent reads it again), Agent disagreed the claims that say Disagrees with your decision, Needs your note a Why wrong with no note', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  const { manifest } = real();
+  const demo = w.demo();
+  const tabs = w.fake.tabViews(demo.databases.claims_copy.database_id);
+  const queue = w.fake.linked().find((l) => l.name === 'Your queue');
+  const view = { 'Your queue': queue.body, ...Object.fromEntries(tabs.map((t) => [t.name, t])) };
+  assert.deepEqual(view['Your queue'].filter, { property: 'Agent status', select: { equals: 'Waits for you' } }, 'no condition on Review status');
+  assert.deepEqual(view['Agent disagreed'].filter, { property: 'Agent status', select: { equals: 'Disagrees with your decision' } });
+  assert.deepEqual(view['Needs your note'].filter, { and: [{ property: 'Why wrong', select: { is_not_empty: true } }, { property: 'Challenged tags notes', rich_text: { is_empty: true } }] });
+  for (const name of ['Your queue', 'Needs your note', 'Agent disagreed']) assert.deepEqual(view[name].sorts, [{ property: 'Agent confidence', direction: 'ascending' }], `${name}: lowest confidence first`);
+  // the manifest says the same in words
+  assert.match(manifest.expect.claims_view_filters['Your queue'], /Agent status is Waits for you/);
+  assert.match(manifest.expect.claims_view_filters['Agent disagreed'], /Agent status is Disagrees with your decision/);
+  assert.match(manifest.expect.claims_view_filters['Needs your note'], /Why wrong is not empty, and Challenged tags notes is empty/);
+
+  // the filters at work on the rows of the page
+  const client = builderClient(w, '2025-09-03');
+  const dataSourceId = demo.databases.claims_copy.data_source_id;
+  const listed = async (name) => (await client.queryDataSourceAll(dataSourceId, { filter: view[name].filter, sorts: view[name].sorts })).map((p) => p.properties['Geo Name'].title.map((t) => t.plain_text).join(''));
+  const nameOf = (key) => manifest.claims.find((c) => c.key === key)['Geo Name'];
+  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
+  assert.deepEqual([await listed('Your queue'), await listed('Agent disagreed'), await listed('Needs your note')], [[], [], []], 'a fresh page: the agent has read nothing, and the five earlier decisions carry their words');
+  agentHasRead(w);
+  assert.deepEqual(await listed('Your queue'), [nameOf('aiforce'), nameOf('presspool')], 'after the tag step both wait, the least sure first');
+  for (const o of manifest.open) assert.equal((await w.run(['decide', '--claim', o.claim])).code, 0);
+  assert.deepEqual(await listed('Your queue'), [nameOf('aiforce'), nameOf('presspool')], 'both are Reviewed and stay in Your queue until the agent reads them again');
+  for (const key of ['aiforce', 'presspool']) w.fake.editRow(claimRow(key).page_id, { 'Agent status': 'Done' }); // what the follow-up of step 7 writes
+  assert.deepEqual(await listed('Your queue'), [], 'read again, they leave');
+  w.fake.editRow(claimRow('aiforce').page_id, { 'Agent status': 'Disagrees with your decision' });
+  assert.deepEqual(await listed('Agent disagreed'), [nameOf('aiforce')]);
+  assert.deepEqual(await listed('Your queue'), []);
+  w.fake.editRow(claimRow('presspool').page_id, { 'Challenged tags notes': null });
+  assert.deepEqual(await listed('Needs your note'), [nameOf('presspool')], 'a Why wrong and no words');
+});
+
+test('decide writes the four editor columns under their new names, in the order the page gives them, and the old name is nowhere', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  const { manifest } = real();
+  agentHasRead(w);
+  const claim = manifest.claims.find((c) => c.key === 'aiforce');
+  const book = w.rows('rulebook')[0];
+  const before = w.fake.writes().length;
+  const r = await w.run(['decide', '--claim', 'aiforce']);
+  assert.equal(r.code, 0, r.err);
+  const sent = w.fake.writes().slice(before);
+  assert.equal(sent.length, 1);
+  assert.deepEqual(Object.keys(sent[0].body.properties), ['Verified tags', 'Why wrong', 'Challenged tags notes', 'Review status'], 'the four columns, Review status last');
+  assert.deepEqual(sent[0].body.properties['Verified tags'].relation.map((x) => dashless(x.id)), [dashless(book.page_id)]);
+  assert.ok(!JSON.stringify(sent[0].body).includes('Claim quality tags'), 'the real table\'s name is not used on a practice page');
+  assert.ok(r.out.includes('| Verified tags | Context-dependent |'));
+  assert.ok(!r.out.includes('Claim quality tags'));
+  const row = w.rowBy('claims_copy', 'Geo ID', claim['Geo ID']);
+  assert.deepEqual([row['Verified tags'].map(dashless), row['Review status'], row['Why wrong'], row['Challenged tags notes']], [[dashless(book.page_id)], 'Reviewed', 'Rule unclear', manifest.open[1].enter['Challenged tags notes']]);
+  const log = actionsOf(w).filter((l) => l.status === 'done');
+  assert.deepEqual(Object.keys(log[0].wrote), ['Verified tags', 'Why wrong', 'Challenged tags notes', 'Review status']);
+  // the ledger copy the tag step makes from this claim is under the same words
+  assert.ok(loadConfig(w.dir()).editor_columns.claims_copy.includes('Verified tags'));
+  assert.ok(!loadConfig(w.dir()).editor_columns.claims_copy.includes('Claim quality tags — verified'));
+});
+
+test('where reads Agent status: no status is a claim the agent has not read, whatever else is written, and each of the four values is a claim it has read', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  const { manifest } = real();
+  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
+  const stepLine = async () => (await w.run(['where'])).out.split('\n')[0];
+  w.fake.editRow(w.rows('agent_settings')[0].page_id, { 'Last run summary': 'Tag at 15 Oct 14:40' });
+  assert.match(await stepLine(), /step 2,/);
+  // reasons, an edition and a confidence are no status
+  w.fake.editRow(claimRow('presspool').page_id, { 'Agent reasons': 'Context-dependent: x · 1 of 1 runs agree', 'Agent edition': EDITION, 'Agent confidence': 0.8 });
+  assert.match(await stepLine(), /step 2,/);
+  w.fake.editRow(claimRow('presspool').page_id, { 'Agent status': 'Done' });
+  assert.match(await stepLine(), /step 2,/, 'one of the two is still unread');
+  for (const status of ['Could not read', 'Disagrees with your decision', 'Waits for you', 'Done']) {
+    w.fake.editRow(claimRow('aiforce').page_id, { 'Agent status': status });
+    assert.match(await stepLine(), /step 3,/, status);
+  }
+  // a decided claim keeps its status: that does not make it unread
+  for (const key of ['presspool', 'aiforce']) w.fake.editRow(claimRow(key).page_id, { 'Review status': 'Reviewed', 'Agent status': 'Waits for you' });
+  assert.match(await stepLine(), /step 4,/);
+});
+
+test('the page passes the page lint with the manifest, as the template, the text and the preview with and without the fallbacks, and keeps its fixed lines and limits', () => {
+  const { manifest, template } = real();
+  const model = dp.pageModel(template.text, { edition: EDITION, date: dp.dateWord(NOW) });
+  const page = model.rendered;
+  for (const [what, text] of [['template', template.text], ['text', page], ['preview', dp.annotatedPreview(page, {})], ['preview with fallbacks', dp.annotatedPreview(page, { fallbackKeys: ['your_queue', 'lessons_waiting'] })]]) {
+    assert.deepEqual(lintPage(text, { manifest }).problems, [], what);
+  }
+  // the limits again, read independently of the lint: tables of at most four columns, cells of at most 100 characters
+  const tableRows = page.split('\n').filter((l) => l.startsWith('|') && !/^\|[-| ]+\|$/.test(l));
+  assert.ok(tableRows.length > 40);
+  for (const row of tableRows) {
+    const cells = row.split('|').slice(1, -1).map((c) => c.trim());
+    assert.ok(cells.length <= 4, `at most four columns: ${row.slice(0, 60)}`);
+    for (const cell of cells) assert.ok([...cell].length <= 100, `a cell of at most 100 characters: ${cell.slice(0, 60)}`);
+  }
+  // the fixed lines
+  assert.ok(page.startsWith('Callout: You type four commands yourself (status, tag, distill and promote); the follow-up runs by itself after a PASS, and the engineer sets things up and fixes what breaks.\n'));
+  assert.match(page, /picked for the demo/);
+  assert.equal(page.match(/^## Step \d · /gm).length, 7);
+  const step1 = page.slice(page.indexOf('## Step 1'), page.indexOf('## Step 2'));
+  assert.match(step1, /an edition is a date plus a count/);
+  const step7 = page.slice(page.indexOf('## Step 7'), page.indexOf('## The tables'));
+  assert.match(step7, /\*\*What the full version adds later:\*\*\n\n- .*\n- .*\n- .*\n\nArchive this page by hand when you no longer need it\.\n*$/);
+  const help = page.slice(page.indexOf('## Help'));
+  assert.equal(help.slice(help.indexOf('**Words used'), help.indexOf('**If something stops')).split('\n').filter((l) => l.startsWith('- ')).length, 10);
+  assert.equal(help.slice(help.indexOf('**If something stops')).split('\n').filter((l) => l.startsWith('- ')).length, 3);
+  // every step still has its four labels in order, Agent settings is captioned in step 6 only, and the two views stand where the lint wants them
+  for (let n = 1; n <= 7; n += 1) {
+    const step = page.slice(page.indexOf(`## Step ${n} `), n < 7 ? page.indexOf(`## Step ${n + 1} `) : page.indexOf('## The tables'));
+    const at = ['**Goal of the step.**', '**Existing status.**', '**Doing the work.**', '**Explaining the outputs'].map((label) => step.indexOf(label));
+    assert.ok(at.every((i) => i >= 0) && at.every((i, k) => k === 0 || i > at[k - 1]), `Step ${n}: the four labels in order`);
+  }
+  // a line that ends with a backslash (a break inside a list item) occurs in step 3 only, twice
+  const breaks = page.split('\n').map((line, i) => ({ line, i })).filter(({ line }) => line.endsWith('\\'));
+  const step3At = page.split('\n').findIndex((l) => l.startsWith('## Step 3'));
+  const step4At = page.split('\n').findIndex((l) => l.startsWith('## Step 4'));
+  assert.equal(breaks.length, 2);
+  assert.ok(breaks.every(({ i }) => i > step3At && i < step4At));
+  // the words that must not come back: Agent notes and the first build's name of the verified tags in the steps
+  assert.ok(!/Agent notes/.test(page));
+  assert.ok(!page.slice(0, page.indexOf('## Help')).includes('Claim quality tags'));
+});
+
+// ---- the checklists under a report (CLAIMS-REVIEW.md section 6.4) ------------------------------------------------------------------------------------------------
+
+const SKILLS = join(REPO, '.claude', 'skills');
+const GUIDE_FILE = join(SKILLS, 'claim-tagger', 'references', 'guide.md');
+
+/** guide.md as { "Decide in Your queue": { Real: [{ n, text }], Demo: [...] }, ... }: the numbered lines under "Real:" and "Demo:" of each "## " section. */
+function checklists() {
+  const out = {};
+  for (const section of readFileSync(GUIDE_FILE, 'utf8').replace(/\r\n?/g, '\n').split(/^## /m).slice(1)) {
+    const [name, ...rest] = section.split('\n');
+    const forms = {};
+    let form = null;
+    for (const line of rest) {
+      const mark = /^(Real|Demo):$/.exec(line);
+      if (mark) {
+        form = mark[1];
+        forms[form] = [];
+        continue;
+      }
+      const item = /^(\d+)\. (.*)$/.exec(line);
+      if (item && form) forms[form].push({ n: Number(item[1]), text: item[2] });
+    }
+    out[name.trim()] = forms;
+  }
+  return out;
+}
+
+test('guide.md has the four checklists, each in a real and a demo form of at most five numbered lines, ending with the command to type', () => {
+  const guide = checklists();
+  const { manifest } = real();
+  assert.deepEqual(Object.keys(guide).filter((n) => n !== 'How a checklist is added'), ['Decide in Your queue', 'Approve in Lessons waiting', 'After a FAIL', 'Agent disagreed']);
+  const commands = { 'Decide in Your queue': 'distill', 'Approve in Lessons waiting': 'promote', 'After a FAIL': 'promote', 'Agent disagreed': 'distill' };
+  const demoSteps = { distill: manifest.steps[3].command, promote: manifest.steps[5].command };
+  for (const [name, command] of Object.entries(commands)) {
+    for (const form of ['Real', 'Demo']) {
+      const list = guide[name][form];
+      assert.ok(list && list.length >= 3 && list.length <= 5, `${name} (${form}): three to five lines, not ${list?.length}`);
+      assert.deepEqual(list.map((i) => i.n), list.map((_, k) => k + 1), `${name} (${form}): numbered from 1`);
+      const last = list.at(-1).text;
+      if (form === 'Real') assert.match(last, new RegExp(`^(?:When [^,]+, t|T)ype /claim-tagger ${command}(?: again)?\\.$`), `${name}: the last line names the command`);
+      else {
+        assert.ok(last.includes(demoSteps[command]), `${name} (Demo): the last line types ${demoSteps[command]}, a command of the page's steps`);
+        assert.match(last, /\/claim-tagger demo /);
+      }
+      assert.match(list[0].text, /^Open (?:Your queue|Lessons waiting|Agent disagreed) \(the link in the Next line\)/, `${name} (${form}): the first line opens the view of the Next line`);
+      for (const item of list) assert.ok([...item.text].length <= 260, `${name} (${form}) line ${item.n} is short`);
+      assert.ok(!/\b(?:minutes?|hours?|days?|weeks?|seconds?)\b/i.test(list.map((i) => i.text).join(' ')), `${name} (${form}): no durations`);
+    }
+  }
+  // only a view the page has, and columns the tables have
+  const structure = read(join(AGENT, 'setup', 'structure.json'));
+  const columns = (table) => structure.tables[table].columns.map((c) => c.name);
+  const text = Object.values(guide).flatMap((forms) => Object.values(forms).flat()).map((i) => i.text).join('\n');
+  for (const name of ['Verified tags', 'Why wrong', 'Challenged tags notes', 'Review status', 'Agent reasons', 'Tags waiting', 'Agent confidence']) assert.ok(columns('claims_copy').includes(name), name);
+  for (const name of ['Current text', 'Proposed text', 'Editor wording', 'Status']) assert.ok(columns('rule_changes').includes(name), name);
+  for (const view of text.match(/Open ([A-Z][A-Za-z ]+?) \(/g).map((m) => m.slice(5, -2))) assert.ok(Object.values(dp.VIEW_NAMES).includes(view), view);
+});
+
+test('the checklists name the columns of the practice page in the page\'s order: step 3\'s lists, step 5 and the FAIL text of step 6', () => {
+  const guide = checklists();
+  const { manifest, template } = real();
+  const page = dp.pageModel(template.text, { edition: EDITION, date: dp.dateWord(NOW) }).rendered;
+  const order = Object.keys(manifest.open[0].enter);
+  assert.deepEqual(order, ['Verified tags', 'Why wrong', 'Challenged tags notes', 'Review status']);
+  // the line of each Decide checklist that lists the columns: the four names, in the order of the page's lists
+  const fillIn = (list) => list.find((i) => order.every((name) => i.text.includes(name))).text;
+  for (const form of ['Real', 'Demo']) {
+    const line = fillIn(guide['Decide in Your queue'][form]);
+    const at = order.map((name) => line.indexOf(name));
+    assert.ok(at.every((i, k) => i >= 0 && (k === 0 || i > at[k - 1])), `${form}: ${order.join(', ')} in this order`);
+  }
+  assert.deepEqual(step3Lists(page).map((l) => l.items.map((i) => i.column)), [order, order], 'and the lists of the page name them in the same order');
+  assert.match(guide['Decide in Your queue'].Demo[2].text, /Review status to Reviewed last/);
+  assert.match(page, /Review status comes last only because it closes the claim/);
+  assert.match(guide['Decide in Your queue'].Demo[3].text, /stays in Your queue until the agent reads it again/);
+  // Lessons waiting: step 5 of the page says the same things in the same words
+  const step5 = page.slice(page.indexOf('## Step 5'), page.indexOf('## Step 6'));
+  for (const phrase of ['Current text', 'Proposed text', 'Editor wording', 'Status to Approved']) {
+    assert.ok(step5.includes(phrase), `step 5: ${phrase}`);
+    assert.ok(guide['Approve in Lessons waiting'].Demo.some((i) => i.text.includes(phrase)), `the Approve checklist: ${phrase}`);
+  }
+  assert.ok(guide['Approve in Lessons waiting'].Demo.some((i) => i.text.includes('your wording is tested instead of the draft')) && step5.includes('your wording is tested instead of the draft'));
+  // a FAIL: step 6 of the page puts the whole text into Editor wording, or rejects
+  const fail = page.slice(page.indexOf('**If it does not pass.**'), page.indexOf('## Step 7'));
+  for (const phrase of ['Editor wording', 'Rejected', 'Lessons waiting']) {
+    assert.ok(fail.includes(phrase), `step 6: ${phrase}`);
+    assert.ok(guide['After a FAIL'].Demo.some((i) => i.text.includes(phrase)), `the FAIL checklist: ${phrase}`);
+  }
+  assert.ok(guide['After a FAIL'].Demo.some((i) => i.text.includes('the demo ends here')) && fail.includes('the demo ends here'));
+  // Agent disagreed: the view the page names in step 7
+  assert.match(page.slice(page.indexOf('## Step 7')), /would show up in Agent disagreed/);
+});
+
+test('the skills relay the report first and add the checklist under it: the rule is in both SKILL.md files, and the examples show a report followed by its checklist once', () => {
+  const ct = readFileSync(join(SKILLS, 'claim-tagger', 'SKILL.md'), 'utf8');
+  const wt = readFileSync(join(SKILLS, 'claim-tagger-walkthrough', 'SKILL.md'), 'utf8');
+  for (const [name, text] of [['claim-tagger', ct], ['claim-tagger-walkthrough', wt]]) {
+    assert.match(text, /references\/guide\.md/, `${name} names the guide`);
+    assert.match(text, /verbatim/, name);
+    assert.match(text, /checklist/, name);
+    assert.match(text, /at most five lines/, name);
+    assert.ok(!text.includes('Claim quality tags — verified'), `${name}: the column is Verified tags`);
+  }
+  assert.match(ct, /Your final message starts with that printed report, verbatim and complete, with no word before it/);
+  assert.match(ct, /one checklist follows it/);
+  assert.match(ct, /Never add a checklist the guide does not have/);
+  assert.match(wt, /Demo form/);
+  assert.match(wt, /`W where`/);
+  // the examples: the same file in both skills, with the demo tag report and its Demo checklist once
+  const examples = readFileSync(join(SKILLS, 'claim-tagger', 'references', 'report-examples.md'), 'utf8');
+  assert.equal(readFileSync(join(SKILLS, 'claim-tagger-walkthrough', 'references', 'report-examples.md'), 'utf8'), examples, 'the two copies are the same');
+  const demo = checklists()['Decide in Your queue'].Demo.map((i) => `${i.n}. ${i.text}`).join('\n');
+  assert.equal(examples.split(demo).length - 1, 1, 'the checklist is shown once');
+  const before = examples.slice(0, examples.indexOf(demo));
+  assert.ok(before.endsWith('Next: decide your two claims in Your queue (link).\n\n'), 'right under the Next line of the report, after one blank line');
+  assert.ok(before.includes('Demo · Tag: the agent read 7 claims for Context-dependent; 2 wait for you'));
+  assert.ok(examples.slice(examples.indexOf(demo) + demo.length).startsWith('\n\n### '), 'and the next example follows it');
+  assert.ok(!examples.includes('Agent notes'));
 });

@@ -25,7 +25,9 @@
 // How the page comes out in order. Blocks go to the end of a page and so do tables; a linked view can be put after a given block. So: the text up to
 // the tables is appended first, then the five tables are made (they land after it), then the Help toggle, then the three tab views are made and the two
 // linked views are put under the blocks they belong to. If Notion refuses a linked view the page gets, under the same block, a paragraph that says where to
-// scroll (the fallback).
+// scroll (the fallback). The relations of the Claims (Agent tags, Tags waiting, Verified tags) are added once the Rulebook exists, so they would come last in the
+// table's own view; once the views are made that view is set to the review order, as the three views of the Claims already show it (arrangeOwnViews): the agent's
+// columns first, then the review columns, then the Geo columns.
 //
 // run. `node <script>.mjs <args>` as a child process with CLAIM_TAGGER_MVP_ROOT set to the demo's folder (by default the newest finished demo under the Demos sub-page
 // whose profile this build reads; a page under Demo tests, or of an older shape, is reached only with --demo <id>). It
@@ -33,15 +35,17 @@
 // without --lesson it passes the title of the demo's only Approved (promote) or Live (followup) rule change from the newest pull. The exit code is
 // the child's.
 //
-// where. Pulls the demo's tables and says which of the seven steps the editor is at (read from the Agent notes of the two open claims and Agent settings' Last run
-// summary for steps 1 and 2 - a fresh page is at step 1, and status writes nothing, so it stays there until the tag step has run - then from the Review status of the
-// two open claims, the rule changes and the Follow-up of the ledger), and the one thing to do next.
-// verify. Reads the page and the tables back and lists what differs from what was built (the page lint, the five tables, the views).
+// where. Pulls the demo's tables and says which of the seven steps the editor is at (read from the Agent status of the two open claims - no status means the agent has not
+// read the claim, "Waits for you" means it has read it and it waits - and Agent settings' Last run summary for steps 1 and 2 - a fresh page is at step 1, and status writes
+// nothing, so it stays there until the tag step has run - then from the Review status of the two open claims, the rule changes and the Follow-up of the ledger), and the one thing
+// to do next.
+// verify. Reads the page and the tables back and lists what differs from what was built (the page lint, the five tables, the views: the Claims table's columns in the review
+// order on its own view and on the three views of the Claims, and their filters).
 // list. The practice pages, newest first, with their state and step, and a mark on the one the commands reach when no page is named.
 //
 // decide, approve, reject (decision D31, the demo-only exception to hard rule 1: on a practice page the agent may act as the editor, so the
 // calibration runs and the evals of the skill can go through all seven steps). decide enters the editor's four columns of one of the two claims that
-// wait (Claim quality tags — verified, Review status, Why wrong, Challenged tags notes: the values of the manifest's open[].enter when only --claim is
+// wait (Verified tags, Review status, Why wrong, Challenged tags notes: the values of the manifest's open[].enter when only --claim is
 // given; --outcome Applies puts the tag among the verified tags, Does not apply leaves it out, and the claim is Reviewed either way); approve sets a
 // rule change to Approved and may write Editor wording
 // (the only Proposed rule change, or with --wording the only Approved one whose safety check did not pass); reject sets Rejected. Each is a plan with
@@ -60,7 +64,7 @@ import { EXIT } from './lib/exit-codes.mjs';
 import { listNames, notionUrl, plural, quoted, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { blockText, countBlocks, lintPage } from './lib/notion-blocks.mjs';
-import { StructureError, completeViewBody, planStructure, verifyStructure, viewPlan } from './lib/notion-build.mjs';
+import { StructureError, arrangeOwnViews, completeViewBody, planStructure, verifyStructure, viewPlan } from './lib/notion-build.mjs';
 import { BUILDER_API_VERSION, NotionError, clientFromConfig, countRequests } from './lib/notion-rest.mjs';
 import { normId, sameValue } from './lib/notion-values.mjs';
 import { ROOT_ENV, codeFile, codeRoot, isMain, runId as makeRunId } from './lib/paths.mjs';
@@ -394,7 +398,8 @@ export function buildSetupPlan(ctx) {
  * The rows of each table, in the order they are made: Rulebook, Claims, Tag decisions, Agent settings. `claimLinks`: Geo ID -> the link to the claim's row.
  * `tagPages`: tag name -> the page id of its row in the Rulebook (the relation of the decided claims holds it; the plan file holds a placeholder).
  * A claim is made with the Geo columns and the editor's four columns as the manifest has them (decided claims Reviewed, open claims To review); the agent's
- * four columns are left empty. The ledger gets a row for each decided claim.
+ * seven columns (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks) are left empty: the tag step writes them.
+ * The ledger gets a row for each decided claim.
  */
 function rowOpsFor(ctx, claimLinks, tagPages) {
   const { manifest, structure, demo } = ctx;
@@ -607,7 +612,7 @@ async function ensureDatabases(ctx) {
   demo.tables_position = 'marker';
 }
 
-// The relation columns (Claim quality tags — verified points at the Rulebook): a relation needs the table it points at, so it is added to a table that exists
+// The relation columns (Agent tags, Tags waiting and Verified tags point at the Rulebook): a relation needs the table it points at, so it is added to a table that exists
 // once all five do. A column that is there is left as it is.
 async function ensureRelations(ctx) {
   const { demo, structure } = ctx;
@@ -772,6 +777,25 @@ async function ensureViews(ctx) {
     demo.fallback = 'no-views';
   } else if (model.slots.some((s) => !views[s.key])) demo.fallback = 'no-views';
   else demo.fallback = null;
+  persist(ctx);
+  await arrangeClaimsView(ctx);
+}
+
+// The table's own view of the Claims (Notion's default view) shows the relations last, because they were added after the other columns: set it to the review order, the
+// way the three views of the Claims already show it. It is a matter of looks, so a refusal by Notion does not stop the build; it is recorded, and `verify` names the view.
+async function arrangeClaimsView(ctx) {
+  const { demo, structure } = ctx;
+  const { builder } = ctx.clients;
+  const database = demo.databases.claims_copy;
+  const plan = planStructure(structure, { notion: { parent_page_id: demo.page.id } });
+  try {
+    const changed = await arrangeOwnViews({ client: builder, plan, table: 'claims_copy', databaseId: database.database_id, dataSourceId: database.data_source_id });
+    if (changed.length) ctx.io.err(`walkthrough: the column order of the Claims view${changed.length === 1 ? '' : 's'} ${changed.map((n) => `"${n}"`).join(', ')} was set to the review order`);
+  } catch (e) {
+    if (!refusal(e)) throw e;
+    demo.errors = [...(demo.errors ?? []), { at: ctx.now().toISOString(), view: 'claims_own_view', message: oneLine(e.message, 300) }];
+    ctx.io.err(`walkthrough: Notion refused the column order of the Claims view (${oneLine(e.message, 120)}); the page goes without it`);
+  }
   persist(ctx);
 }
 
