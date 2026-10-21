@@ -1,0 +1,25 @@
+=== builder open
+builder session open: revision of 16 October: columns and views on the Claims copy, the twelve decisions carried over
+exit 0
+=== build
+page "Demos": already recorded (3fa273e214eb81ada268f4b511182378)
+page "Demo tests": already recorded (3fa273e214eb81c2b223dcc2331b7051)
+table "Rulebook copy": already recorded (17b99d1873384a1bb688c0075de45f78)
+table "Claims copy": already recorded (a0e77c4711044d87bc3e38296d2ea5d5)
+table "Tag decisions": already recorded (b77d1b758c414293b14837fdd1af4754)
+table "Rule changes": already recorded (ce293cfbd61a4cc680ab3567bac6da38)
+table "Agent settings": already recorded (d941cf5880bb4b4ea5de378191ab8202)
+table "claims_copy": 6 column(s) added (Agent confidence, Agent reasons, Claim quality tags — verified, Review status, Why wrong, Challenged tags notes)
+table "tag_decisions": 1 column(s) added (Decided under)
+view "Rulebook": already there
+view "Your queue": created (400273e2-14eb-815c-b56e-000c9983235e)
+view "Needs your note": created (400273e2-14eb-812d-8a4b-000c3d177ab5)
+view "Agent disagreed": created (400273e2-14eb-818b-a7bf-000c6ea7ab80)
+view "Your queue": renamed to "Your queue (ledger)" (3fa273e2-14eb-81ce-b47a-000c49ca726d)
+view "Needs your note": renamed to "Needs your note (ledger)" (3fa273e2-14eb-81a5-b651-000cf5ec6760)
+view "Lessons waiting": already there
+pages: 0 made, 2 there already
+tables: 0 made, 5 there already
+columns: 7 added (claims_copy: Agent confidence, Agent reasons, Claim quality tags — verified, Review status, Why wrong, Challenged tags notes; tag_decisions: Decided under)
+views: 3 made, 2 there already, 2 renamed
+exit 0

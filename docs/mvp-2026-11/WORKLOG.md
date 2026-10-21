@@ -4,11 +4,12 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: the revision of 16 October (decisions on the claims table, decision P2) is built and tested (1,935 tests pass) and waits for its live step. Checkpoint 2 was reached on 2026-10-15; the MVP is agreed when the product owner runs the seven steps on a fresh practice page and says so.
-- Live step pending: delete `agents/claim-tagger-mvp/runs/PAUSED` (a person; blocker B2), then the engineer runs, in a builder session, `setup.mjs build` (adds the columns and views to the Claims copy, renames the two ledger views), `setup.mjs migrate-decisions` (carries the twelve existing decisions over), `setup.mjs verify`, closes the session, and builds a fresh practice page for the product owner. The five older practice pages keep the old shape and cannot be verified against the new one.
+- Phase: the revision of 16 October (decisions on the claims table, decision P2) is live on the copy since 2026-10-21: the Claims copy has its new columns and views, the twelve decisions are carried over, the first tag run under the new shape has written the agent's columns, and a fresh practice page waits for the product owner. Checkpoint 2 was reached on 2026-10-15; the MVP is agreed when the product owner runs the seven steps and says so.
+- Blockers: none open (B2, the pause file, was cleared by the product owner on 2026-10-21).
 - Branch `mvp-2026-11`; the last commit is the newest one in `git log`.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The builder session is closed.
-- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 3, the revision).
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md (the three Claims copy views were recorded by the build of 2026-10-21). The builder session is closed. The product owner's practice page: "Claim tagger practice · product owner" (https://app.notion.com/p/Claim-tagger-practice-product-owner-400273e214eb81cda86ae10987b9bf8c, profile 20261021-1225-8517e5). The five calibration pages keep the old shape.
+- Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr (version 4, the revision live).
+- Still to do: calibration runs 6 and 7 of the story on the new shape, the unpaused practice-page eval, a second independent verification of the revision.
 
 ## Entries
 
@@ -171,3 +172,11 @@ Done: two coders implemented `CLAIMS-REVIEW.md`. Scripts: the Claims copy carrie
 Verified: `node --test tests/`: 1,935 tests pass, 0 fail (`evidence/01-tests/`); the practice page and the manifest pass the page check in a dry run on the fakes (a test covers it); the artifact's strict build passes every check. Not yet verified live: the migration and a fresh practice page wait for the pause file to be deleted.
 
 Next: the product owner deletes the pause file; the engineer runs the live step (build, migrate-decisions, verify) and builds a fresh practice page; the product owner runs the seven steps; then calibration runs 6 and 7 of the story and the unpaused practice-page eval.
+
+### 21. The revision live: columns, views, the carry-over, the first tag run, a fresh practice page (2026-10-21)
+
+Done: after the product owner deleted the pause file, a builder session ran `setup.mjs build` (six columns added to the Claims copy and Decided under to the ledger; Your queue, Needs your note and Agent disagreed created on the Claims copy; the two old queue views renamed with "(ledger)"; the ids recorded in `config.json`), `setup.mjs migrate-decisions` (twelve claim updates through one plan with read-back: ten audit claims Reviewed with their verified tags, Why wrong Agent slip and the audit note; the two open claims given Agent confidence), `setup.mjs verify` (30 requests, 0 writes, no differences) and `builder close`. The first tag run under the new shape then ran on the copy: 50 claims received the agent's four columns, 38 ledger rows were created and 2 updated (one per judged claim and tag), 5 claims are tagged Context-dependent, 2 claims wait in Your queue, and on 1 reviewed claim the agent now disagrees with the audit's decision and says so in its notes; status reads 2 rows waiting at edition 2026-10-15.2. A fresh practice page for the product owner was built under Demos from manifest 2026-10-16.1 and read back clean. Evidence in `evidence/12-revision-live/` (the build and migration logs, the migration plan and ledger, the verify result, the tag run's reports, the page's verify and where).
+
+Verified: every migration op read back ok; `setup verify` found no structure difference and every audit claim Reviewed with the audit's values; the tag run's ledger read back; the practice page passes `verify`.
+
+Next: the product owner runs the seven steps on the fresh page; then calibration runs 6 and 7 of the story on the new shape, the unpaused practice-page eval, and a second independent verification.

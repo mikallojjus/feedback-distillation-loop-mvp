@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-21T09:22:38.149Z",
+  "ok": true,
+  "differences": [],
+  "counts": {
+    "rulebook": 13,
+    "claims_copy": 50,
+    "tag_decisions": 12,
+    "rule_changes": 0,
+    "agent_settings": 1
+  },
+  "requests": {
+    "total": 30,
+    "writes": 0
+  }
+}

@@ -108,6 +108,18 @@
     "page_size": 100,
     "max_text": 1900,
     "views": {
+      "your_queue": {
+        "id": "400273e214eb815cb56e000c9983235e",
+        "url": "https://www.notion.so/a0e77c4711044d87bc3e38296d2ea5d5?v=400273e214eb815cb56e000c9983235e"
+      },
+      "needs_your_note": {
+        "id": "400273e214eb812d8a4b000c3d177ab5",
+        "url": "https://www.notion.so/a0e77c4711044d87bc3e38296d2ea5d5?v=400273e214eb812d8a4b000c3d177ab5"
+      },
+      "agent_disagreed": {
+        "id": "400273e214eb818ba7bf000c6ea7ab80",
+        "url": "https://www.notion.so/a0e77c4711044d87bc3e38296d2ea5d5?v=400273e214eb818ba7bf000c6ea7ab80"
+      },
       "your_queue_ledger": {
         "id": "3fa273e214eb81ceb47a000c49ca726d",
         "url": "https://www.notion.so/b77d1b758c414293b14837fdd1af4754?v=3fa273e214eb81ceb47a000c49ca726d"

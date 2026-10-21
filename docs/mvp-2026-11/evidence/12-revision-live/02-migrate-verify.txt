@@ -1,0 +1,11 @@
+=== migrate-decisions
+migrate-decisions: 10 claim(s) carried over, 0 ledger row(s) got Decided under, 2 claim(s) got Agent confidence; read back ok
+migrate-decisions: seeded from the audit of 9 October
+exit 0
+=== verify
+verify: rows rulebook 13, claims_copy 50, tag_decisions 12, rule_changes 0, agent_settings 1; 30 request(s), 0 write(s)
+verify: no differences
+exit 0
+=== builder close
+builder session closed
+exit 0

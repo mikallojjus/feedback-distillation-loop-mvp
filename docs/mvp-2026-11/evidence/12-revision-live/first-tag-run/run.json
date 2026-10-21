@@ -1,0 +1,39 @@
+{
+  "run_id": "20261021T092313Z-propose",
+  "script": "propose",
+  "args": {
+    "pull": null,
+    "plan_only": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T09:23:13.976Z",
+  "finished_at": "2026-10-21T09:24:44.287Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-15.2",
+  "pull_id": "20261021T092313Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/propose.mjs",
+  "status": "done",
+  "plan": {
+    "creates": 38,
+    "updates": 53
+  },
+  "apply": {
+    "done": 91,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  },
+  "counts": {
+    "claims_read": 50,
+    "not_read": 0,
+    "rows_created": 38,
+    "rows_updated": 2,
+    "decisions_copied": 0,
+    "claims_updated": 50,
+    "open_rows": 2,
+    "disagreed": 1
+  }
+}

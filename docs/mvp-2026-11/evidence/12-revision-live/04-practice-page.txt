@@ -1,0 +1,21 @@
+=== start
+Building the page.
+Walkthrough: your practice page is ready under Demos.
+
+| Table | Now |
+|---|---|
+| Rulebook | 1 tag |
+| Claims | 7: 5 reviewed earlier, 2 for you |
+| Rule changes | empty |
+
+Next: open Claim tagger practice · product owner (https://app.notion.com/p/Claim-tagger-practice-product-owner-400273e214eb81cda86ae10987b9bf8c) and follow step 1.
+exit 0
+demo 20261021-1225-8517e5
+=== verify
+{"ok":true,"problems":[],"counts":{"canaries":10,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":51,"table":11,"table_row":36,"heading_2":8,"numbered_list_item":3,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"decided":5,"open":2,"tag_decisions":5,"rule_changes":0,"agent_settings":1,"linked_views":2,"tab_views":3,"fallback":null,"steps":7,"fresh":true}}
+exit 0
+=== where
+Walkthrough: you are at step 2, The agent reads the claims.
+
+Next: type /claim-tagger demo tag.
+exit 0

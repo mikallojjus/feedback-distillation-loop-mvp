@@ -1,0 +1,19 @@
+{"at":"2026-10-15T10:48:41.099Z","event":"open","reason":"structure proposal page under Feedback Distillation MVP (checkpoint 1)"}
+{"at":"2026-10-15T11:03:22.275Z","event":"register","kind":"page","id":"3fa273e214eb81ef8504cb40e3bd7052","name":"proposal"}
+{"at":"2026-10-15T11:03:22.365Z","event":"close"}
+{"at":"2026-10-15T13:22:43.588Z","event":"open","reason":"stage 1 setup: the approved structure under Feedback Distillation MVP"}
+{"at":"2026-10-15T13:22:44.417Z","event":"register","kind":"page","id":"3fa273e214eb81ada268f4b511182378","name":"demos"}
+{"at":"2026-10-15T13:22:44.751Z","event":"register","kind":"page","id":"3fa273e214eb81c2b223dcc2331b7051","name":"demo_tests"}
+{"at":"2026-10-15T13:22:45.320Z","event":"register","kind":"database","id":"17b99d1873384a1bb688c0075de45f78","name":"rulebook"}
+{"at":"2026-10-15T13:22:45.325Z","event":"register","kind":"database","id":"2b06fc1239c540da976da76a8e935e57","name":"rulebook_data_source"}
+{"at":"2026-10-15T13:22:46.016Z","event":"register","kind":"database","id":"a0e77c4711044d87bc3e38296d2ea5d5","name":"claims_copy"}
+{"at":"2026-10-15T13:22:46.021Z","event":"register","kind":"database","id":"d91ec6a806d243dea9795083184e64d8","name":"claims_copy_data_source"}
+{"at":"2026-10-15T13:22:46.535Z","event":"register","kind":"database","id":"b77d1b758c414293b14837fdd1af4754","name":"tag_decisions"}
+{"at":"2026-10-15T13:22:46.540Z","event":"register","kind":"database","id":"05c35b80e4154ba583c24694d30f80a4","name":"tag_decisions_data_source"}
+{"at":"2026-10-15T13:22:47.034Z","event":"register","kind":"database","id":"ce293cfbd61a4cc680ab3567bac6da38","name":"rule_changes"}
+{"at":"2026-10-15T13:22:47.039Z","event":"register","kind":"database","id":"9b5af949b47941169cb5794f9b7bafc2","name":"rule_changes_data_source"}
+{"at":"2026-10-15T13:22:47.496Z","event":"register","kind":"database","id":"d941cf5880bb4b4ea5de378191ab8202","name":"agent_settings"}
+{"at":"2026-10-15T13:22:47.501Z","event":"register","kind":"database","id":"8d500555731f40919c44427a8907fb48","name":"agent_settings_data_source"}
+{"at":"2026-10-15T14:00:43.326Z","event":"close"}
+{"at":"2026-10-21T09:21:38.470Z","event":"open","reason":"revision of 16 October: columns and views on the Claims copy, the twelve decisions carried over"}
+{"at":"2026-10-21T09:22:38.265Z","event":"close"}

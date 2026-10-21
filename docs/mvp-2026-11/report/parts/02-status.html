@@ -7,7 +7,7 @@
 <p><strong>The MVP is built, tested and run live: the second checkpoint, the final demo, is reached.</strong> The loop runs end to end on a copy of {{count:plan.claimsCopy}} real claims in Notion: the agent tags, the editor decides, a rule change is drafted from the decisions, a safety check tests it against every earlier decision before the rulebook changes, and the follow-up re-checks the rows. The whole cycle ran {{count:calibration.pages}} times on practice pages, through to a rule going live and being rolled back again. After the demo was handed over, the product owner asked that editors decide where they work: since 16 October the decision lives on the claims table itself, in the same columns the real table has, and the former queue is the agent's own record.</p>
 <p>The MVP judges one tag, Context-dependent, and never writes the real claims table. Everything else waits in the <a href="#backlog">Backlog</a>.</p>
 <div class="geo-callout"><div class="geo-callout-body">
-<p><strong>What the product owner does now.</strong> First delete the pause file the engineer left in the agent's run folder: it was set so that the skill tests could not touch the copy, and only a person may clear a pause. Then run the seven steps on a fresh practice page, as the <a href="#how-to-run">How to run</a> tab describes, and say whether the MVP is agreed.</p>
+<p><strong>What the product owner does now.</strong> Run the seven steps on the fresh practice page, as the <a href="#how-to-run">How to run</a> tab describes, and say whether the MVP is agreed.</p>
 </div></div>
 </div>
 
@@ -18,7 +18,7 @@
 <thead><tr><th scope="col">Part</th><th scope="col">What it is</th><th scope="col">State</th></tr></thead>
 <tbody>
 <tr><td>Notion tables</td><td>The {{count:plan.tables}} tables under the page "Feedback Distillation MVP", built as approved and read back without a difference: {{count:plan.rulebookRows}} rulebook rows, {{count:plan.claimsCopy}} claims, {{count:plan.seededDecisions}} decisions from the 9 October audit, one settings row. The revision adds four editor columns and two agent columns to the claims table and moves the editor's views there ({{count:revision.views}} views in all).</td><td><span class="mark mark-yes">Built and verified</span></td></tr>
-<tr><td>Decisions on the claims table</td><td>Editors set the verified tags, Review status, Why wrong and their notes on the claim's own row; the agent reads the decision from there, copies it into its record and never writes those four columns. Built and tested on stand-in Notion; the live change to the copy (new columns, the views, the carry-over of the twelve existing decisions) runs once the pause file is gone.</td><td><span class="mark mark-part">Live step pending</span></td></tr>
+<tr><td>Decisions on the claims table</td><td>Editors set the verified tags, Review status, Why wrong and their notes on the claim's own row; the agent reads the decision from there, copies it into its record and never writes those four columns. Live on the copy since 21 October: the new columns and views are in place, the twelve existing decisions were carried over and read back, and the first tag run under the new shape wrote the agent's columns on every claim.</td><td><span class="mark mark-yes">Live</span></td></tr>
 <tr><td>The loop</td><td>Pull, judge, propose, distill, promote with the safety check, follow-up, rollback, restore and status. The first real run tagged the {{count:plan.claimsCopy}} claims, put {{count:plan.openRows}} rows in the queue and wrote {{count:realRun.writes}} cells that were all read back.</td><td><span class="mark mark-yes">Run live</span></td></tr>
 <tr><td>The safety check</td><td>Tests an approved rule change against the example claims, the earlier decisions and the rows it rests on; PASS switches the rulebook to a new edition and runs the follow-up, FAIL leaves it alone and proposes a wording. Both outcomes happened on practice pages today.</td><td><span class="mark mark-yes">Run live</span></td></tr>
 <tr><td>Rollback</td><td>Puts a rule back to its earlier text as a new edition and marks the change Rolled back. Run on a practice page whose rule had gone live; the Notion text was read back equal to the restored text.</td><td><span class="mark mark-yes">Read back</span></td></tr>
@@ -61,8 +61,7 @@
 <div class="sub" id="status-open" data-title="What is open">
 <h3>Waiting on you</h3>
 <ul>
-<li>Delete the pause file in the agent's run folder; the engineer may not (a pause is cleared by a person). It also holds back the live step of the revision: adding the columns and views to the copy and carrying the twelve existing decisions over.</li>
-<li>Run the seven steps on a fresh practice page and say whether the MVP is agreed.</li>
+<li>Run the seven steps on your fresh practice page (the How to run tab names it) and say whether the MVP is agreed.</li>
 </ul>
 <h3>What the runs showed</h3>
 <ul>

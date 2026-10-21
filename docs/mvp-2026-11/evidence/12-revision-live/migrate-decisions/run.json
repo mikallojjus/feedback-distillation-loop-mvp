@@ -1,0 +1,14 @@
+{
+  "run_id": "20261021T092210Z-setup-migrate-decisions",
+  "script": "setup.mjs",
+  "args": [
+    "migrate-decisions"
+  ],
+  "started_at": "2026-10-21T09:22:10.036Z",
+  "finished_at": "2026-10-21T09:22:27.744Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-15.2",
+  "pull_id": "20261021T092210Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs migrate-decisions",
+  "note": "seeded from the audit of 9 October"
+}
