@@ -24,6 +24,10 @@
 // What makes a problem, each named in plain words in `problems`:
 //  a  The final text fails lintReport (lib/report.mjs) or is not exactly: one sentence line, an optional Markdown table (at most 5 body rows
 //     and 3 columns, its own part), one line "Next: ...". Blank lines separate the parts; the Next line is never glued to the table.
+//     One thing may follow the Next line (decision 58): after one blank line, a checklist, which is one numbered list (1., 2., ...) of at most
+//     5 lines, one item per line, with no heading and no words before or after it. The report part still has to pass on its own, and each
+//     checklist line has to pass the word rules of the report lint (no file path, script name, run id, duration word, dollar sign, JSON brace
+//     or shorthand code). Anything else after the Next line, a second list included, is a problem.
 //  b  An Insight marker (a star glyph then "Insight", or "Insight" then box-drawing dashes) in ANY assistant text of the transcript, because the
 //     output-style override has to hold everywhere; a fenced code block or a rule line of box-drawing characters in the final text.
 //  c  A JSON object or array in the final text (a lone number in brackets such as a footnote "[1]" is not JSON for this purpose).
@@ -49,12 +53,13 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { EXIT } from './lib/exit-codes.mjs';
 import { agentRoot, isMain } from './lib/paths.mjs';
-import { lintReport } from './lib/report.mjs';
+import { lintReport, lintWords } from './lib/report.mjs';
 
 export const DEFAULT_ALLOWED_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status', 'walkthrough']);
 export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Verified tags', 'Review status', 'Why wrong', 'Challenged tags notes', 'Editor wording', 'Paused']);
 export const MAX_TABLE_ROWS = 5;
 export const MAX_TABLE_COLUMNS = 3;
+export const MAX_CHECKLIST_LINES = 5;
 
 const SHELL_TOOLS = new Set(['Bash', 'PowerShell']);
 const FILE_WRITE_TOOLS = new Set(['Write', 'Edit', 'MultiEdit', 'NotebookEdit']);
@@ -301,17 +306,57 @@ function shapeProblems(text) {
   return out;
 }
 
+const LIST_ITEM = /^(\d+)[.)]\s+\S/;
+
+/**
+ * Split a final message into the report and the checklist that may follow it: { report, checklist, problems }. The checklist is what comes after the last line that starts
+ * with "Next:": one blank line, then one numbered list (1., 2., ... in order) of at most MAX_CHECKLIST_LINES lines, each item on a single line. `checklist` is the array of
+ * its lines, or null when nothing follows the Next line or what follows is not such a list; then `report` is the whole text (so the report lint still sees the extra text) and
+ * `problems` says what is wrong with it.
+ */
+export function splitChecklist(final) {
+  const t = String(final ?? '').replace(/\r\n?/g, '\n').replace(/\s+$/, '');
+  const lines = t.split('\n');
+  let nextAt = -1;
+  for (let i = lines.length - 1; i >= 0; i--) {
+    if (lines[i].startsWith('Next:')) {
+      nextAt = i;
+      break;
+    }
+  }
+  if (nextAt < 0 || nextAt === lines.length - 1) return { report: t, checklist: null, problems: [] };
+  const tail = lines.slice(nextAt + 1);
+  const problems = [];
+  if (tail[0].trim() !== '') problems.push('text follows the Next line without a blank line; only a checklist may follow it, after one blank line');
+  else if (tail.length > 1 && tail[1].trim() === '') problems.push('more than one blank line between the Next line and the checklist; there is exactly one');
+  const body = tail.slice(1).filter((l, i) => !(i === 0 && l.trim() === '' && problems.length > 0));
+  if (problems.length === 0) {
+    if (body.some((l) => l.trim() === '')) problems.push('more than one part follows the Next line; a checklist is one numbered list with no blank line inside and nothing after it');
+    else {
+      const numbered = body.every((l, i) => {
+        const m = LIST_ITEM.exec(l);
+        return m !== null && Number(m[1]) === i + 1;
+      });
+      if (!numbered) problems.push('what follows the Next line is not a checklist: one numbered list (1., 2., ...), one item per line, no heading and no other words');
+      else if (body.length > MAX_CHECKLIST_LINES) problems.push(`the checklist has ${body.length} lines; the limit is ${MAX_CHECKLIST_LINES}`);
+    }
+  }
+  if (problems.length > 0) return { report: t, checklist: null, problems: problems.map((p) => `after the Next line: ${p}`) };
+  return { report: lines.slice(0, nextAt + 1).join('\n'), checklist: body, problems: [] };
+}
+
 function finalProblems(final) {
   const t = final.replace(/\r\n?/g, '\n');
   if (t.trim() === '') return ['there is no final message text'];
   const out = [];
   const insight = INSIGHT.test(t);
   const json = findJson(t);
-  let lint = lintReport(t);
-  if (insight) lint = lint.filter((p) => !p.includes('Insight block marker'));
-  if (json.length) lint = lint.filter((p) => !p.includes('JSON brace'));
-  out.push(...lint);
-  out.push(...shapeProblems(t));
+  const { report, checklist, problems: listProblems } = splitChecklist(t);
+  const skip = (list) => list.filter((p) => !(insight && p.includes('Insight block marker')) && !(json.length && p.includes('JSON brace')));
+  out.push(...skip(lintReport(report)));
+  out.push(...listProblems);
+  if (checklist) out.push(...skip(lintWords(checklist)).map((p) => `checklist ${p}`));
+  out.push(...shapeProblems(report));
   if (insight) out.push('it holds an Insight block (the output-style override did not hold)');
   if (FENCE.test(t)) out.push('it holds a fenced code block');
   if (BOX_RULE.test(t)) out.push('it holds a rule line made of box-drawing characters');

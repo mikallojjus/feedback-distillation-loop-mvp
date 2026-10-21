@@ -8,7 +8,7 @@ import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   DEFAULT_ALLOWED_SCRIPTS, DEFAULT_EDITOR_COLUMNS, TOKEN_KINDS, checkTranscript, classifyBash, editorColumnsFromConfig, extractFinalText, findJson, loadEditorColumns,
-  main as checkMain, parseStreamJson,
+  MAX_CHECKLIST_LINES, main as checkMain, parseStreamJson, splitChecklist,
 } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
 import {
   OUTPUT_STYLE, buildArgs, main as headlessMain, mergeSettings, promptDirName, readPrompts, runPrompt, slugify,
@@ -189,6 +189,7 @@ const FAILING = [
   ['fail-time-word', ['duration word: "minutes"'], 1],
   ['fail-error-result', ['is_error'], 1],
   ['fail-no-result', ['no result event', 'does not parse'], null],
+  ['fail-two-lists', ['after the Next line: more than one part follows the Next line'], 3],
 ];
 for (const [name, expected, count] of FAILING) {
   test(`${name} fails with the problem it was written for`, () => {
@@ -1097,4 +1098,147 @@ test('headless-check runs as a script: --help, and a whole run through a real ch
 test('the fixture folder holds the transcripts the tests read', () => {
   for (const name of ['pass-status', 'pass-demo-tag', 'pass-with-stray-line', ...FAILING.map(([n]) => n), 'usage-limit']) assert.ok(existsSync(fixturePath(name)), name);
   assert.ok(existsSync(FAKE_CLI));
+});
+
+// ---- a checklist after the report (decision 58) -------------------------------------------------------------------------------------------------
+
+const LIST = [
+  '1. Open Your queue (the link in the Next line): the claims that wait for you, lowest Agent confidence first.',
+  '2. Read Agent reasons and Tags waiting: they say which tag waits and why.',
+  '3. On each claim fill in, in this order: Verified tags, Why wrong (only where the agent was wrong), Challenged tags notes, Review status.',
+  '4. Set Review status to Reviewed last: a claim you have decided stays in Your queue until the agent reads it again.',
+  '5. When your claims are decided, type /claim-tagger distill.',
+];
+const withList = (lines = LIST, glue = '\n\n') => `${GOOD}${glue}${lines.join('\n')}`;
+
+test('pass-with-checklist passes: a report, one blank line, one numbered list of five lines', () => {
+  const r = checkTranscript(fixture('pass-with-checklist'), { expectStyle: 'Explanatory' });
+  assert.deepEqual(r.problems, []);
+  assert.equal(r.ok, true);
+  assert.ok(r.final.endsWith(LIST[4]));
+  const c = cap();
+  assert.equal(checkMain([fixturePath('pass-with-checklist')], c.io), 0);
+  const fail = cap();
+  assert.equal(checkMain([fixturePath('fail-two-lists')], fail.io), 1);
+  assert.match(fail.out.join('\n'), /after the Next line: more than one part follows the Next line/);
+});
+
+test('a final message is the report alone, or the report and then one checklist', () => {
+  assert.deepEqual(grade({ final: GOOD }).problems, [], 'the report alone');
+  assert.deepEqual(grade({ final: withList() }).problems, [], 'the report and a checklist of five lines');
+  for (const n of [1, 2, 3, 4]) assert.deepEqual(grade({ final: withList(LIST.slice(0, n)) }).problems, [], `${n} line(s)`);
+  assert.deepEqual(grade({ final: `${withList()}\n` }).problems, [], 'a line end after the list is nothing');
+  assert.deepEqual(grade({ final: `${withList().replace(/\n/g, '\r\n')}\r\n` }).problems, [], 'Windows line ends');
+  assert.deepEqual(grade({ final: GOOD.replace(SENTENCE, `Demo · ${SENTENCE}`) + '\n\n' + LIST.join('\n') }).problems, [], 'a demo report too');
+  assert.deepEqual(grade({ final: withList(['1) Open Your queue.', '2) Fill in Verified tags.']) }).problems, [], 'a bracket after the number is a numbered list too');
+  assert.equal(MAX_CHECKLIST_LINES, 5);
+});
+
+test('splitChecklist: the report and the lines of the checklist, or why what follows the Next line is not one', () => {
+  const ok = splitChecklist(withList());
+  assert.equal(ok.report, GOOD);
+  assert.deepEqual([ok.checklist, ok.problems], [LIST, []]);
+  assert.deepEqual(splitChecklist(GOOD), { report: GOOD, checklist: null, problems: [] });
+  assert.deepEqual(splitChecklist(`${GOOD}\n\n\n`), { report: GOOD, checklist: null, problems: [] }, 'blank lines after the Next line are not a checklist');
+  const bad = splitChecklist(withList([...LIST, '6. Check Needs your note.']));
+  assert.equal(bad.checklist, null);
+  assert.equal(bad.report, withList([...LIST, '6. Check Needs your note.']), 'then the report is the whole text, so the report lint sees the extra lines');
+  assert.match(bad.problems[0], /the checklist has 6 lines; the limit is 5/);
+  assert.equal(splitChecklist('no report at all').checklist, null);
+});
+
+test('after the Next line only one numbered list of at most five lines may follow, after one blank line', () => {
+  const cases = [
+    [withList([...LIST, '6. Check Needs your note.']), ['the checklist has 6 lines; the limit is 5']],
+    [withList(LIST, '\n'), ['text follows the Next line without a blank line']],
+    [withList(LIST, '\n\n\n'), ['more than one blank line between the Next line and the checklist']],
+    [withList(['## What to do', ...LIST.slice(0, 2)]), ['not a checklist', 'heading']],
+    [`${withList()}\n\nHappy deciding.`, ['more than one part follows the Next line']],
+    [`${withList()}\n\n1. Open Lessons waiting (the link in the Next line).\n2. Read both.`, ['more than one part follows the Next line']],
+    [withList(['Open Your queue first.', ...LIST.slice(1, 3)]), ['what follows the Next line is not a checklist']],
+    [withList(['- Open Your queue.', '- Fill in Verified tags.']), ['what follows the Next line is not a checklist']],
+    [withList(['2. Open Your queue.', '3. Fill in Verified tags.']), ['what follows the Next line is not a checklist']],
+    [withList([LIST[0], '   and then the rest of the first line', LIST[1]]), ['what follows the Next line is not a checklist']],
+    [withList([LIST[0], `${LIST[1]} Then wait.`, '', 'Thanks.']), ['more than one part follows the Next line']],
+    [`${GOOD}\n\nThe queue has 12 rows.`, ['what follows the Next line is not a checklist']],
+    [`${GOOD}\nThe queue has 12 rows.`, ['text follows the Next line without a blank line']],
+  ];
+  for (const [final, expected] of cases) {
+    const r = grade({ final });
+    assert.equal(r.ok, false, final);
+    for (const text of expected) assert.ok(has(r.problems, text), `expected "${text}" in:\n${r.problems.join('\n')}\nfor:\n${final}`);
+  }
+});
+
+test('the report part has to pass on its own, and a checklist does not excuse it', () => {
+  assert.ok(has(grade({ final: `${withTable(['| a | b |', '| a | b |', '| a | b |', '| a | b |', '| a | b |', '| a | b |'], '| What | Result |')}\n\n${LIST.join('\n')}` }).problems, '6 body rows'));
+  assert.ok(has(grade({ final: `${GOOD.replace(NEXT, '')}\n${LIST.join('\n')}` }).problems, 'no line starts with "Next:"'));
+  assert.ok(has(grade({ final: `${GOOD.replace(SENTENCE, 'Status: done. Twelve rows wait.')}\n\n${LIST.join('\n')}` }).problems, 'more than one sentence'));
+  assert.ok(has(grade({ final: `${[SENTENCE, '', '1. one', '2. two', '', NEXT].join('\n')}\n\n${LIST.join('\n')}` }).problems, 'not a Markdown table'), 'a list between the sentence and the Next line is still a fourth thing');
+  assert.ok(has(grade({ final: `${GOOD}\n\n${LIST.join('\n')}\n\nNext: and then this.` }).problems, 'lines start with "Next:"'));
+  assert.ok(has(grade({ final: `${LIST.join('\n')}\n\n${GOOD}` }).problems, 'does not start with a sentence') || has(grade({ final: `${LIST.join('\n')}\n\n${GOOD}` }).problems, 'not a sentence'), 'a list before the report');
+});
+
+test('the word rules of the report lint hold for every line of the checklist', () => {
+  const rules = [
+    ['2. Read the files under runs/ for the details.', 'checklist line 2 names a run folder'],
+    ['2. Open the script setup.mjs and read it.', 'checklist line 2 names a script file'],
+    ['2. Look in C:/work/notes for the page.', 'checklist line 2 holds a file path'],
+    ['2. Look in agents\\claim-tagger-mvp for the page.', 'checklist line 2 holds a file path'],
+    ['2. The run 20261021T092138Z is the one to open.', 'checklist line 2 holds a run id'],
+    ['2. Allow a few minutes before you type the command.', 'checklist line 2 holds a duration word: "minutes"'],
+    ['2. This takes about 30 seconds.', 'checklist line 2 holds a duration word: "seconds"'],
+    ['2. The run costs $0.40.', 'checklist line 2 holds a dollar sign'],
+    ['2. Fill in {Verified tags} first.', 'checklist line 2 holds a JSON brace'],
+    ['2. See rule D-3 for the reason.', 'checklist line 2 holds the shorthand code D-3'],
+    ['2. Open the rubric and read it.', 'checklist line 2 says "rubric"'],
+    ['2. Open the database and read it.', 'checklist line 2 says "database"'],
+  ];
+  for (const [line, expected] of rules) {
+    const r = grade({ final: withList([LIST[0], line]) });
+    assert.equal(r.ok, false, line);
+    assert.ok(has(r.problems, expected), `expected "${expected}" in:\n${r.problems.join('\n')}`);
+    assert.equal(r.problems.length, 1, `${line}: one problem, not several\n${r.problems.join('\n')}`);
+  }
+  assert.deepEqual(grade({ final: withList([LIST[0], '2. The claim "costs $2.87 million in two weeks" reads on its own.']) }).problems, [], 'quoted claim text is exempt');
+  assert.ok(has(grade({ final: withList([LIST[0], '2. ★ Insight ─────']) }).problems, 'Insight'));
+  assert.ok(has(grade({ final: withList([LIST[0], '2. The run took 3 dollars.']) }).problems, 'money in words'));
+  assert.ok(has(grade({ final: withList([LIST[0], '2. Use [1, 2] as the values.']) }).problems, 'JSON array'));
+});
+
+test('a fenced code block in the checklist is refused', () => {
+  const r = grade({ final: withList(['1. Type this:', '```', '/claim-tagger distill', '```']) });
+  assert.equal(r.ok, false);
+  assert.ok(has(r.problems, 'fenced code block'));
+});
+
+test('the checklists of the skill\'s guide (references/guide.md) pass the checker after a report', () => {
+  const guide = readFileSync(join(REPO, '.claude', 'skills', 'claim-tagger', 'references', 'guide.md'), 'utf8').replace(/\r\n?/g, '\n').split('\n');
+  const groups = [];
+  let current = null;
+  for (const line of guide) {
+    if (/^\d+\.\s/.test(line)) (current ??= []).push(line);
+    else if (current) {
+      groups.push(current);
+      current = null;
+    }
+  }
+  if (current) groups.push(current);
+  assert.ok(groups.length >= 7, `the guide holds several checklists (found ${groups.length})`);
+  for (const group of groups) {
+    assert.ok(group.length >= 1 && group.length <= MAX_CHECKLIST_LINES, group[0]);
+    assert.deepEqual(grade({ final: withList(group) }).problems, [], group.join('\n'));
+  }
+});
+
+test('the headless runner passes a run whose final message is a report and a checklist, and keeps the message whole', async () => {
+  const dir = tmp();
+  const out = join(dir, 'out');
+  const r = await headless(['--prompt', '/claim-tagger status', '--out', out, '--claude-bin', FAKE_CLI, '--cwd', REPO], { FAKE_TRANSCRIPT: fixturePath('pass-with-checklist') });
+  assert.equal(r.code, 0, r.out + r.err);
+  assert.match(readFileSync(join(out, 'final-message.md'), 'utf8'), /Next: start at the top of Your queue \(link\)\.\n\n1\. Open Your queue[\s\S]*5\. When your claims are decided, type \/claim-tagger distill\.\n$/);
+  assert.deepEqual(readJson(join(out, 'check.json')).problems, []);
+  const bad = await headless(['--prompt', '/claim-tagger status', '--out', join(dir, 'bad'), '--claude-bin', FAKE_CLI, '--cwd', REPO], { FAKE_TRANSCRIPT: fixturePath('fail-two-lists') });
+  assert.equal(bad.code, 1);
+  assert.match(bad.out + bad.err, /more than one part follows the Next line/);
 });

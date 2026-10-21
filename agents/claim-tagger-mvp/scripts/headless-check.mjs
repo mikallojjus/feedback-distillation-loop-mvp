@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // headless-check.mjs: start the Claude Code CLI headless with the Explanatory output style on, save the transcript and grade it
-// (MVP-PROMPT section 8, item 7: the final message of each run has the three parts only, no insight block, no JSON, no time words, no
+// (MVP-PROMPT section 8, item 7: the final message of each run has the three parts, and after the Next line at most one checklist of five numbered lines, no insight block, no JSON, no time words, no
 // dollars, and the transcript shows no write to an editor column). The grading is transcript-check.mjs; this script is the runner.
 //
 //   node agents/claim-tagger-mvp/scripts/headless-check.mjs --prompt "/claim-tagger status" --out <dir>

@@ -1,6 +1,6 @@
 // The report every script ends with, and the lint that keeps it short and plain (CONTRACTS section 9). An editor reads it between other
 // tasks, so it has exactly three parts and nothing else: one sentence, an optional table, one "Next:" line. The skill prints report.md
-// word for word as its whole final message, so whatever passes the lint here is what the editor sees.
+// word for word at the start of its final message (a checklist may follow it, CONTRACTS section 9), so whatever passes the lint here is what the editor sees of the report.
 //
 //   buildReport({ demo, sentence, header, rows, next }) -> the checked report object (the shape of report.json); throws on a bad shape
 //        demo      true: the sentence is shown with "Demo · " in front of it (default false)
@@ -14,6 +14,9 @@
 //        (editors say table, rulebook and safety check), an Insight block marker, and a missing, repeated or misplaced Next line.
 //        Text inside double quotes (straight or curly) is a quoted claim and is not checked for those words and characters, because a claim
 //        may say "two weeks", "$2.87 million" or "G20" (the same exemption the walkthrough page lint has): put claim text in quotes.
+//   lintWords(lines)      -> string[] of the per-line word rules of lintReport alone (a heading or rule line, a path, a script name, a run id, a duration word, a dollar sign,
+//        a JSON brace, a shorthand code, the words database, rubric and gate, an Insight marker; quoted text and links exempt), as "line <n> ...". The transcript check applies
+//        them to the checklist that may follow a report (CONTRACTS section 9)
 //   writeReport(dir, report) -> builds, renders and lints; writes dir/report.json then dir/report.md; throws (code REPORT_LINT, .problems)
 //        before writing anything when the lint finds a problem
 //   constants: MAX_ROWS, DEMO_PREFIX, DEFAULT_HEADER
@@ -86,20 +89,9 @@ const QUOTED = /"[^"\n]*"|“[^”\n]*”/g; // quoted claim text: "like this" o
 const LINK = /https?:\/\/[^\s)\]]+/g; // a link is an address, not prose: its slug may repeat a page title word for word ("second-run"), which is not a duration
 const shown = (line) => (line.length > 60 ? `${line.slice(0, 57)}...` : line);
 
-/** What is wrong with a report's Markdown, as plain sentences; an empty array means it may be shown. */
-export function lintReport(markdown) {
+/** The word rules of the lint, line by line (lines are the lines of a text, in order): [] when no line breaks one. Used by lintReport and by the transcript check for a checklist. */
+export function lintWords(lines) {
   const problems = [];
-  const text = String(markdown ?? '').replace(/\r\n?/g, '\n');
-  const lines = text.split('\n');
-  const parts = text.split(/\n[ \t]*\n/).map((p) => p.trim()).filter(Boolean);
-
-  if (parts.length > 3) problems.push(`more than three parts (${parts.length}): a report is a sentence, a table and a Next line`);
-  if (parts.length > 0) {
-    const first = parts[0];
-    if (first.startsWith('|') || first.startsWith('Next:')) problems.push('the report does not start with a sentence');
-    else if (first.split('\n').length > 1) problems.push('the sentence runs over more than one line');
-  }
-
   lines.forEach((whole, i) => {
     const at = `line ${i + 1}`;
     if (HEADING.test(whole)) problems.push(`${at} is a heading or a rule line: "${shown(whole)}"`);
@@ -116,6 +108,23 @@ export function lintReport(markdown) {
     for (const m of line.match(PLAIN_WORDS) ?? []) problems.push(`${at} says "${m}"; editors read table, rulebook and safety check`);
     if (INSIGHT.test(line)) problems.push(`${at} holds an Insight block marker`);
   });
+  return problems;
+}
+
+/** What is wrong with a report's Markdown, as plain sentences; an empty array means it may be shown. */
+export function lintReport(markdown) {
+  const text = String(markdown ?? '').replace(/\r\n?/g, '\n');
+  const lines = text.split('\n');
+  const parts = text.split(/\n[ \t]*\n/).map((p) => p.trim()).filter(Boolean);
+  const problems = [];
+
+  if (parts.length > 3) problems.push(`more than three parts (${parts.length}): a report is a sentence, a table and a Next line`);
+  if (parts.length > 0) {
+    const first = parts[0];
+    if (first.startsWith('|') || first.startsWith('Next:')) problems.push('the report does not start with a sentence');
+    else if (first.split('\n').length > 1) problems.push('the sentence runs over more than one line');
+  }
+  problems.push(...lintWords(lines));
 
   const nextAt = lines.flatMap((line, i) => (line.startsWith('Next:') ? [i] : []));
   if (nextAt.length === 0) problems.push('no line starts with "Next:"');

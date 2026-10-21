@@ -1259,3 +1259,50 @@ test('a table built fresh from the revised structure makes no "(old)" column, an
   assert.deepEqual(changed, ['Table']);
   assert.deepEqual(await arrangeOwnViews({ client: other.client, plan: other.plan, table: 'claims_copy', databaseId: e2.database_id, dataSourceId: e2.data_source_id }), [], 'a second call changes nothing');
 });
+
+test('the configuration sent for a view keeps frozen_column_index only when it is a whole number of at least 0: Notion reports -1 for "no frozen column" and refuses it back', async () => {
+  const w = build();
+  assert.equal((await runStructure({ plan: w.plan, client: w.client, root: w.root, config: w.config })).ok, true);
+  const entry = result0(w, 'claims_copy');
+  await w.client.createView({
+    databaseId: entry.database_id, dataSourceId: entry.data_source_id, name: 'Table',
+    configuration: { type: 'table', properties: Object.values(w.fake.dataSource(entry.data_source_id).properties).map((p) => ({ property_id: p.id, visible: true })) },
+  });
+  const sent = async (frozen) => {
+    const bodies = [];
+    const client = {
+      ...w.client,
+      // the view as Notion reports it, with its frozen column
+      async retrieveView(id) {
+        const view = await w.client.retrieveView(id);
+        return view.name === 'Table' ? { ...view, configuration: { ...view.configuration, ...(frozen === undefined ? {} : { frozen_column_index: frozen }) } } : view;
+      },
+      async updateView(id, body) {
+        bodies.push(body);
+        return w.client.updateView(id, body);
+      },
+    };
+    const changed = await arrangeOwnViews({ client, plan: w.plan, table: 'claims_copy', databaseId: entry.database_id, dataSourceId: entry.data_source_id });
+    return { changed, configuration: bodies[0]?.configuration };
+  };
+  // -1: the view has no frozen column; the key is left out, and the fake (like Notion) would have refused it
+  const none = await sent(-1);
+  assert.deepEqual(none.changed, ['Table']);
+  assert.ok(!('frozen_column_index' in none.configuration), JSON.stringify(none.configuration).slice(0, 120));
+  assert.equal(none.configuration.type, 'table');
+  // a view whose frozen_column_index is 1 keeps it (the columns are put out of order again first, so that the view needs arranging)
+  const entryProps = Object.values(w.fake.dataSource(entry.data_source_id).properties);
+  const view = w.fake.views(entry.database_id).find((v) => v.name === 'Table');
+  await w.client.updateView(view.id, { configuration: { type: 'table', properties: [...entryProps].reverse().map((p) => ({ property_id: p.id, visible: true })) } });
+  const kept = await sent(1);
+  assert.deepEqual(kept.changed, ['Table']);
+  assert.equal(kept.configuration.frozen_column_index, 1);
+  await w.client.updateView(view.id, { configuration: { type: 'table', properties: [...entryProps].reverse().map((p) => ({ property_id: p.id, visible: true })) } });
+  const zero = await sent(0);
+  assert.equal(zero.configuration.frozen_column_index, 0, '0 is a valid index and is kept');
+  // anything else that is not a whole number of at least 0 is left out too
+  for (const odd of [-2, 1.5, '1', null]) {
+    await w.client.updateView(view.id, { configuration: { type: 'table', properties: [...entryProps].reverse().map((p) => ({ property_id: p.id, visible: true })) } });
+    assert.ok(!('frozen_column_index' in (await sent(odd)).configuration), String(odd));
+  }
+});

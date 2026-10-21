@@ -912,7 +912,10 @@ function buildConfiguration(dataSource, { shown, hidden, wrap = null, found = nu
   ];
   const keep = {};
   for (const k of ['frozen_column_index', 'show_vertical_lines', 'group_by', 'subtasks']) {
-    if (found?.configuration?.[k] !== undefined && found.configuration[k] !== null) keep[k] = found.configuration[k];
+    const v = found?.configuration?.[k];
+    if (v === undefined || v === null) continue;
+    if (k === 'frozen_column_index' && !(Number.isInteger(v) && v >= 0)) continue; // Notion reports -1 for "no frozen column" and refuses it back
+    keep[k] = v;
   }
   const wrapCells = wrap === null ? found?.configuration?.wrap_cells : wrap;
   return { type: 'table', ...keep, ...(typeof wrapCells === 'boolean' ? { wrap_cells: wrapCells } : {}), properties };
