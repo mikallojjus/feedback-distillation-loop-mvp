@@ -120,7 +120,7 @@ test('promote PASS: the new text goes live in the Rulebook copy and in a new edi
   const report = assertReport(h, r);
   assert.equal(report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed.');
   assert.deepEqual(report.rows, [['Example claims', '11 of 11 right', ''], ['Earlier decisions', '2 of 2 still right', ''], ['Your 2 rows', '2 of 2 now right, marked Fixed', '']]);
-  assert.equal(report.next, `Next: decide the remaining 1 row in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000001).`);
+  assert.equal(report.next, `Next: decide your claim in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000001).`);
 
   // the card
   const card = readJson(join(r.runDir, 'card.json'));
@@ -263,7 +263,7 @@ test('promote PASS: in a practice profile Next points at step 7 of the practice 
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assert.ok(r.markdown.startsWith('Demo · Promote: PASS, rule 4'), r.markdown);
   assert.equal(r.report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger demo · 15 Oct 10:42).');
-  assert.equal(r.report.next, 'Next: look at step 7 on the practice page (https://www.notion.so/a1b2c3d4e5f60718293a4b5c6d7e8f90); the demo is then complete.');
+  assert.equal(r.report.next, 'Next: look at step 7 on the practice page (https://app.notion.com/p/Claim-tagger-demo-15-Oct-10-42-a1b2c3d4e5f60718293a4b5c6d7e8f90); the demo is then complete.', 'the link has the form of the one every other report shows');
   assert.deepEqual(lintReport(r.markdown), []);
 });
 

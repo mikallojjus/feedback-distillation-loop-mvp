@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  answerWord, capWords, cutText, demoCommands, listNames, namePracticePage, notionUrl, plural, practiceLink, practiceTitle, quoted, quotedWhole, stampOf, tableLink, viewLink,
+  answerWord, capWords, cutText, demoCommands, listNames, namePracticePage, notionUrl, plural, practiceLink, practiceTitle, quoted, quotedWhole, stampOf, tableLink, viewLink, yourClaims,
 } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.mjs';
 import { lintReport, renderReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { placeholderConfig } from './helpers/config-fixture.mjs';
@@ -54,6 +54,11 @@ test('stampOf is "15 Oct 11:20" in local time, with no leading zero on the day a
   assert.match(stampOf(), /^\d{1,2} [A-Z][a-z]{2} \d{2}:\d{2}$/);
 });
 
+test('yourClaims names the claims an editor is to decide in the words of the page: one, two or three up to ten spelled out, then the figure', () => {
+  assert.deepEqual([1, 2, 3, 10, 11, 14].map(yourClaims), ['your claim', 'your two claims', 'your three claims', 'your ten claims', 'your 11 claims', 'your 14 claims']);
+  assert.equal(yourClaims(2), 'your two claims', 'the words where and the page use');
+});
+
 test('answerWord names the three answers of the queue', () => {
   assert.deepEqual(['apply', 'do_not_apply', 'ask_editor', null].map(answerWord), ['Applies', 'Does not apply', "Can't tell", 'no answer']);
 });
@@ -63,6 +68,14 @@ test('notionUrl and tableLink: the plain address of a table, dashes taken out', 
   const c = base();
   assert.equal(tableLink(c, 'rulebook'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
   assert.equal(tableLink(c, 'claims_copy'), `https://www.notion.so/${c.notion.parent_page_id}`, 'a table that setup has not made yet points at the page');
+});
+
+test('notionUrl with a title is the form Notion gives a page: the words of the title joined by dashes, then the id', () => {
+  const id = '400273e214eb8126bf20cd1f1337681e';
+  assert.equal(notionUrl(id, 'Claim tagger practice · verification 21 Oct'), `https://app.notion.com/p/Claim-tagger-practice-verification-21-Oct-${id}`);
+  assert.equal(notionUrl('3fa273e2-14eb-8125-b451-e4a2c04d099e', 'Claim tagger practice · 15 Oct 21:44'), 'https://app.notion.com/p/Claim-tagger-practice-15-Oct-21-44-3fa273e214eb8125b451e4a2c04d099e');
+  assert.equal(notionUrl(id, 'Über — the “demo”!'), `https://app.notion.com/p/Uber-the-demo-${id}`, 'accents and marks are dropped, as in a link');
+  for (const none of [undefined, null, '', '   ', '·']) assert.equal(notionUrl(id, none), `https://www.notion.so/${id}`, `no words, no title: ${JSON.stringify(none)}`);
 });
 
 test('viewLink: a view id gives ?v=, a link is used as it is, an object works, and without a view the table\'s own link is used', () => {
@@ -89,6 +102,10 @@ test('practiceLink: the practice page of a demo profile, else the Lessons waitin
   assert.equal(practiceLink(c), 'https://www.notion.so/cccccccccccccccccccccccccccccccc');
   c.notion.page_id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
   assert.equal(practiceLink(c), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
+  // a practice page has a title, and its link has the form of the link Notion itself gives (the one every other report of the practice page shows)
+  c.demo = true;
+  c.demo_title = 'Claim tagger practice · 21 Oct 12:37';
+  assert.equal(practiceLink(c), 'https://app.notion.com/p/Claim-tagger-practice-21-Oct-12-37-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
 });
 
 test('quotedWhole: the whole text in double quotes, never cut, inner double quotes made single, on one line, and the report lint leaves it alone', () => {

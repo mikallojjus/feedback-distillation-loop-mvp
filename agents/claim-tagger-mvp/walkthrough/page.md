@@ -11,7 +11,7 @@ Rule 3 of Context-dependent says that a descriptive definite which names a kind 
 
 The first two are yours: you decide them in Your queue, the agent drafts a clearer rule 3, you approve it, and a safety check makes sure the earlier decisions still come out right before the new rule is used.
 
-The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so it waits in Your queue like the AI Force claim, which waits because the agent is unsure. For real, a claim waits when someone marks it To review or when the agent is unsure.
+The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so it waits in Your queue like the AI Force claim, which the agent reads differently from run to run and which the page also marks To review. For real, a claim waits when someone marks it To review or when the agent is unsure.
 
 ## Step 1 · Meet the demo
 
@@ -54,20 +54,20 @@ The sentence starts with "Demo · " and names this practice page, as every repor
 | Relocating the Kennedy Center Honors to a sports arena… | (empty) | 0.75 or more | no tags / nothing waits for an editor · edition {{edition}} |
 | December stopgap funding rewards Congress for avoiding a… | (empty) | 0.75 or more | no tags / nothing waits for an editor · edition {{edition}} |
 
-Agent reasons holds one line for each tag the agent judged: the tag, the reason, the rule it cites and how many of its three readings agree. For your 2 claims:
+Agent reasons holds one line for each tag the agent judged: the tag, the reason, the rule it cites (when it cites one) and how many of its readings agree. For your 2 claims, as one run read them:
 
 | Geo Name | Agent reasons |
 |---|---|
-| The press pool was justified in suspending coverage… | Context-dependent: "the press pool": which one? · Context-dependent rule 3 · 3 of 3 runs agree |
-| The AI Force should enforce binding safety standards | Context-dependent: "The AI Force": a name or a kind? · Context-dependent rule 3 · 2 of 3 runs agree |
+| The press pool was justified in suspending coverage… | Context-dependent: "the press pool": which one? · Context-dependent rule 3 · 1 of 1 runs agree |
+| The AI Force should enforce binding safety standards | Context-dependent: "The AI Force": a name or a kind? · 2 of 2 runs agree |
 
-Both claims cite rule 3, the rule on descriptive definites. Both are To review, so the tag waits for you on each, whatever the agent's confidence, and Agent tags stays empty: the agent is fairly sure about the press pool, which the page marks To review for the demo, and unsure about the AI Force (Can't tell, or Does not apply at low confidence). Both claims are now in Your queue, lowest confidence first. Agent confidence is the lowest confidence among the tags the agent judged on a claim; the figures vary a little from page to page. The agent agrees with all 5 earlier decisions: their Agent tags are the tags an editor confirmed, and their notes say that nothing waits.
+A claim the agent is sure of is read once, so its line ends with a count of one; the agent reads a claim again only when it is unsure, and a third time only when the first two readings disagree. The figures differ from run to run, and the AI Force claim most of all: the agent may read it as Can't tell, as here, or answer with confidence either way, and then its line may cite a rule or none. Both claims are To review, so each waits for you whatever the agent reads, and Agent tags stays empty on both. Both are now in Your queue, lowest confidence first. Agent confidence is the lowest confidence among the tags the agent judged on a claim. The agent agrees with all 5 earlier decisions: their Agent tags are the tags an editor confirmed, and their notes say that nothing waits.
 
 ## Step 3 · Decide your two claims (you, as the editor)
 
 **Goal of the step.** Record your decision on both claims, and say that rule 3, not the agent, is the problem.
 
-**Existing status.** Both of your claims are To review and wait in Your queue (step 2); Agent tags is empty on both, and both cite rule 3.
+**Existing status.** Both of your claims are To review and wait in Your queue (step 2); Agent tags is empty on both.
 
 **Doing the work.** In Your queue, just below, fill in four columns on each of your two claims. AI Force claim: Claim quality tags — verified Context-dependent, Why wrong Rule unclear, Challenged tags notes "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.", and last Review status Reviewed. Press pool claim: Claim quality tags — verified stays empty, because the tag does not apply, Why wrong Rule unclear, Challenged tags notes "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.", and last Review status Reviewed. Set Review status last, because a Reviewed claim leaves Your queue at once. What each Why wrong value makes happen is explained in Help at the bottom of the page.
 
@@ -177,7 +177,7 @@ The same three steps apply when the check names one of your own claims instead o
 | The press pool was justified in suspending coverage… | (empty) | no tags / nothing waits for an editor · the next edition |
 | The AI Force should enforce binding safety standards | Context-dependent | Context-dependent / nothing waits for an editor · the next edition |
 
-Agent tags now holds the tags you decided: the AI Force claim carries the tag and the press pool claim does not. Agent notes names the next edition, the one the safety check put in force, and neither claim says that the agent disagrees with your decision; a claim that did would show up in Agent disagreed and would need a clearer rule. That is one full cycle: your two notes became a clearer rule 3, it was tested against every earlier decision before it went live, and your two claims are earlier decisions now, checked by every future safety check.
+Agent tags now holds the tags you decided: the AI Force claim carries the tag and the press pool claim does not. Agent notes names the next edition, the one the safety check put in force, and Agent confidence follows the new reading; neither claim says that the agent disagrees with your decision, and a claim that did would show up in Agent disagreed and would need a clearer rule. Only your two claims name the new edition: the 5 earlier decisions keep theirs until the next tag run. That is one full cycle: your two notes became a clearer rule 3, it was tested against every earlier decision before it went live, and your two claims are earlier decisions now, checked by every future safety check.
 
 **What the full version adds later:**
 

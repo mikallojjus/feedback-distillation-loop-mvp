@@ -112,13 +112,19 @@ const jsonl = (rows) => `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`;
  *   settings    false: no Agent settings row; an object: its values (Name, Paused, ...)
  *   canaries    true (default): write evals/canaries.jsonl from the taxonomy; a list: those rows; false: none
  *   edition     the first edition (default 2026-10-16.1);  demo: true makes the config a demo profile
+ *   demoId      a practice page's state folder: the root is <temporary folder>/runs/demos/<demoId> (the way the walkthrough makes it), and the config is that demo's
  *   configure   (config) => void, to change the config before it is written
  */
 export async function makeWorld({
-  claims = 12, rulebook, queue = [], audit = false, lessons = [], settings = {}, canaries = true, edition = '2026-10-16.1', demo = false, configure, claimRows = {},
+  claims = 12, rulebook, queue = [], audit = false, lessons = [], settings = {}, canaries = true, edition = '2026-10-16.1', demo = false, demoId = null, configure, claimRows = {},
 } = {}) {
-  const root = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-loop-'));
-  dirs.push(root);
+  const base = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-loop-'));
+  dirs.push(base);
+  const root = demoId ? join(base, 'runs', 'demos', demoId) : base;
+  if (demoId) {
+    mkdirSync(root, { recursive: true });
+    dirs.push(root);
+  }
   const config = builtConfig(); // the config of fixtures/config.placeholder.json with ids filled in, never the live config.json
   config.notion.requests_per_second = 1000;
   const entries = { rulebook: config.notion.rulebook, claims_copy: config.notion.claims[0], ...config.notion.databases };
@@ -127,9 +133,9 @@ export async function makeWorld({
     entries[table].data_source_id = `c400000000000000000000000000000${i + 1}`;
   });
   config.notion.views = { ...VIEWS };
-  if (demo) {
+  if (demo || demoId) {
     config.demo = true;
-    config.demo_id = 'practice-1';
+    config.demo_id = demoId ?? 'practice-1';
   }
   configure?.(config);
   write(join(root, 'config.json'), config);

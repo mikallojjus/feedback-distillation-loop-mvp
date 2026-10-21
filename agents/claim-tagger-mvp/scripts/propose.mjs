@@ -43,7 +43,7 @@ import { openStore } from './lib/cells.mjs';
 import { tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { claimWaits, decisionChanges, decisionProps, decisionsFor, disagreementsIn, isReviewed, isToReview } from './lib/decisions.mjs';
-import { listNames, plural, reasonLine, stampOf, viewLink } from './lib/editor-words.mjs';
+import { listNames, plural, reasonLine, stampOf, viewLink, yourClaims } from './lib/editor-words.mjs';
 import {
   LoopExit, addSettingsOp, applyStep, assertApplied, judgeSettings, liveRubric, needTables, parseCli, resumeLine, runPreflight, takePull, withRun,
 } from './lib/loop.mjs';
@@ -344,14 +344,16 @@ export async function propose(opts = {}) {
 
     const waiting = open === 0 ? 'nothing waits for you' : (open > sitting ? `${open} wait for you, more than fit one sitting` : (open === 1 ? '1 waits for you' : `${open} wait for you`));
     const rows = [['Claims read', String(read), '']];
-    if (judgedList.length <= 2) for (const t of judgedList) rows.push([`Tagged ${t}`, plural(tagged.get(t), 'claim'), '']);
-    else rows.push(['Tagged', `${plural([...tagged.values()].reduce((a, b) => a + b, 0), 'tag')} written`, '']);
+    // the count is of the claims that carry the tag in Agent tags, and that includes the earlier decisions (a Reviewed claim carries the editor's verified set), so the row says so:
+    // read as "tagged", an editor takes it for a count of their own claims
+    if (judgedList.length <= 2) for (const t of judgedList) rows.push([`Carrying ${t}`, `${plural(tagged.get(t), 'claim')} (earlier decisions included)`, '']);
+    else rows.push(['Carrying tags', `${plural([...tagged.values()].reduce((a, b) => a + b, 0), 'tag')} (earlier decisions included)`, '']);
     rows.push(['New rows in Your queue', newlyWaiting ? `${newlyWaiting}, lowest confidence first` : 'none', '']);
     if (disagreed > 0 && rows.length < 5) rows.push(['Agent disagreed', plural(disagreed, 'claim'), '']);
     if (notRead > 0 && rows.length < 5) rows.push(['Not read yet', String(notRead), '']);
     const next = open === 0
       ? 'Next: nothing waits for you; type /claim-tagger tag when new claims arrive.'
-      : (open > sitting ? `Next: start at the top of Your queue (${link}).` : `Next: decide the ${plural(open, 'row')} in Your queue (${link}).`);
+      : (open > sitting ? `Next: start at the top of Your queue (${link}).` : `Next: decide ${yourClaims(open)} in Your queue (${link}).`);
     return {
       exit: EXIT.OK,
       sentence: `Tag: the agent read ${plural(read, 'claim')} for ${tagLine(judgedList)}; ${waiting}.`,

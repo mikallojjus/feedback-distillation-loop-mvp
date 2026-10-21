@@ -38,7 +38,7 @@ import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:f
 import { dirname, join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf } from './lib/config.mjs';
-import { answerWord, cutText, plural, practiceLink, quoted, quotedWhole, stampOf, viewLink } from './lib/editor-words.mjs';
+import { answerWord, cutText, plural, practiceLink, quoted, quotedWhole, stampOf, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
 import { forceRuns, readAnswers } from './lib/answers.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
@@ -535,7 +535,7 @@ export async function promote(opts = {}) {
       if (ctx.demo) next = `Next: look at step 7 on the practice page (${practiceLink(ctx.config)}); the demo is then complete.`;
       else if (open === 0) next = 'Next: nothing waits; type /claim-tagger status to see what is open.';
       else if (open > sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
-      else next = `Next: decide the remaining ${plural(open, 'row')} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
+      else next = `Next: decide ${yourClaims(open)} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
       return {
         exit: EXIT.OK,
         sentence: `${head}, and the follow-up ${marks}.`,

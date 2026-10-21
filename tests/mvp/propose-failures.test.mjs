@@ -138,7 +138,7 @@ test('two judged tags in two groups: each has its own cells, its own row for an 
   assert.equal(w.row('claims_copy', 'c01')['Agent notes'], 'Context-dependent, Wordy\nnothing waits for an editor · not checked: 4 source tags, 2 duplicate tags, 5 tags without rules · edition 2026-10-16.1');
   assert.equal(w.row('claims_copy', 'c03')['Agent notes'].split('\n')[1].startsWith('2 wait for an editor'), true);
   assert.equal(r.report.sentence, 'Tag: the agent read 4 claims for Context-dependent and Wordy; 1 waits for you.', 'Your queue lists claims: c03 waits once, for two tags');
-  assert.deepEqual(r.report.rows.slice(0, 3).map((x) => x[0]), ['Claims read', 'Tagged Context-dependent', 'Tagged Wordy']);
+  assert.deepEqual(r.report.rows.slice(0, 3).map((x) => x[0]), ['Claims read', 'Carrying Context-dependent', 'Carrying Wordy']);
   clean(h, r);
 });
 

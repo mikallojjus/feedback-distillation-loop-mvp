@@ -30,11 +30,11 @@ description: >-
 
 ## Where am I
 
-Run `W where` and relay its sentence and its "Next:" line. `W list` names every practice page with its step when the editor asks which pages exist.
+Run `W where` and relay its sentence and its "Next:" line. `W where` and the demo commands act on the newest practice page under Demos (the newest finished page under the Demos sub-page that the script can read); a page under Demo tests, or of an older shape, is never the one they reach. `W list` names every practice page with its step when the editor asks which pages exist, and marks the one the demo commands use.
 
 ## Running the steps
 
-The steps of the page are `/claim-tagger demo status`, `demo tag`, `demo distill` and `demo promote`; run them exactly as the claim-tagger skill's "Demo mode" says (`W run <script> ...`, against the newest practice page). Steps 3 and 5 happen in Notion: never fill those columns for the editor; link the table or view instead. Step 3 is Your queue, a view of the Claims table: both claims of the editor are To review, so after the tag step both wait there (the press pool claim although the agent is fairly sure of it), and `W where` links it. Step 5 is Lessons waiting. Step 7 needs no command: the follow-up runs by itself at the end of a passed safety check, and the promote report's Next line points at step 7; `/claim-tagger demo follow-up` only repeats it after a run that stopped early, and `W where` says when.
+The steps of the page are `/claim-tagger demo status`, `demo tag`, `demo distill` and `demo promote`; run them exactly as the claim-tagger skill's "Demo mode" says (`W run <script> ...`, against the newest practice page under Demos). Steps 3 and 5 happen in Notion: never fill those columns for the editor; link the table or view instead. Step 3 is Your queue, a view of the Claims table: both claims of the editor are To review, so after the tag step both wait there (the press pool claim although the agent is fairly sure of it), and `W where` links it. Step 5 is Lessons waiting. Step 7 needs no command: the follow-up runs by itself at the end of a passed safety check, and the promote report's Next line points at step 7; `/claim-tagger demo follow-up` only repeats it after a run that stopped early, and `W where` says when.
 
 ## Reporting style
 
@@ -42,7 +42,7 @@ Editors read these reports between other tasks. Every report, errors included, h
 
 1. **One sentence**: what ran and what came out, in plain words. Start with "Demo · " when the demo ran.
 2. **One table**, at most five rows and three columns, with the figures that matter for this subcommand (see the examples in `references/report-examples.md`). Leave it out when there is nothing to count.
-3. **One line starting "Next:"** with exactly one thing to do: a command to type, or a Notion link and the action to take there. When more rows wait than fit one sitting (a setting, default 20), the sentence gives the count and the line says "start at the top of Your queue (link)", not "decide the N rows".
+3. **One line starting "Next:"** with exactly one thing to do: a command to type, or a Notion link and the action to take there. When more rows wait than fit one sitting (a setting, default 20), the sentence gives the count and the line says "start at the top of Your queue (link)", not "decide your N claims".
 
 Leave out everything else: headings, how the scripts work, the commands you ran, retries and incidents (if one changed the result, say so in a few words inside the sentence), file paths, run ids, JSON, and any duration, dollar amount or model-call count (they stay in the run record). For a stopped run, "Next:" is the same request again; the script resumes the run itself. While a step takes a while, say once what is happening, with no duration ("Building the page."), then nothing until the report.
 

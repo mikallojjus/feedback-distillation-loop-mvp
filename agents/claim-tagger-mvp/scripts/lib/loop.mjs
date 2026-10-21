@@ -4,7 +4,7 @@
 // script means; it does the things every script does the same way.
 //
 //   parseCli(script, argv, options, usage, io)   parse a command line: { values } or { exit }
-//   resumeLine(script, parts)          "node agents/claim-tagger-mvp/scripts/<script>.mjs <parts>" for run.json
+//   resumeLine(script, parts)          "node agents/claim-tagger-mvp/scripts/<script>.mjs <parts>" for run.json (on a practice page the run records it through the walkthrough runner, lib/resume.mjs)
 //   withRun({ script, label, opts, args, resume }, body)   open the run, load the config, call body(ctx), write the report and run.json, print the
 //                                                          report, return { exit, runId, runDir, report, ...details }. body returns
 //                                                          { exit?, sentence, header?, rows?, next, details? } or throws a LoopExit.
@@ -48,6 +48,7 @@ import { agentRoot, codeRoot, ensureDir, repoRoot, runId as makeRunId, safeName 
 import { applyPlan, checkPlan } from './plan.mjs';
 import { writeReport } from './report.mjs';
 import { preflight, refusedReport } from './preflight.mjs';
+import { resumeFor } from './resume.mjs';
 import { readRubric } from './rubric.mjs';
 import { judge, loadJudgeConfig } from '../judge.mjs';
 import { loadPull, pull, supportingKeys as parseSupportingKeys } from '../pull.mjs';
@@ -155,7 +156,7 @@ function openRun({ script, label, again, opts, args, resume }) {
     exit_code: null,
     rubric_edition: null,
     pull_id: null,
-    resume: resume ?? `node agents/claim-tagger-mvp/scripts/${script}.mjs`,
+    resume: resumeFor(root, resume ?? `node agents/claim-tagger-mvp/scripts/${script}.mjs`),
     status: 'running',
   };
   saveRecord(ctx);

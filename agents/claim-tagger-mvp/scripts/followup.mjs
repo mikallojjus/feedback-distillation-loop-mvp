@@ -12,8 +12,10 @@
 // safety check keeps in evals/cases.jsonl (item case-<key>). They are judged under the rulebook in force: right after a PASS that rulebook is the candidate the check judged, so every answer is
 // already in the store and nothing is asked. A row whose answer is what the editor decided is Fixed, any other Still wrong. The plan writes
 //   Tag decisions    Follow-up on the supporting rows (the only column a decided row accepts), where it differs from the pulled value
-//   Claims copy      Agent tags, Agent notes and Agent reasons (the line of each tag that was checked again, the others kept) of the claims of those rows, worked out again: a claim an editor has Reviewed gets the editor's verified set (an editor
-//                    always wins) and "disagrees with your decision on <tag>" where the agent's answer under the rule now in force still differs from it
+//   Claims copy      Agent tags, Agent notes, Agent reasons (the line of each tag that was checked again, the others kept) and Agent confidence of the claims of those rows, worked out again: a claim an editor has Reviewed gets the editor's verified set (an editor
+//                    always wins) and "disagrees with your decision on <tag>" where the agent's answer under the rule now in force still differs from it. Agent confidence is
+//                    the propose rule (the lowest of max(p, 1 - p) over the claim's judged tags) over the answers this step has, so a claim whose answer changed does not keep the
+//                    confidence of the answer it had; it is written only when every judged tag of the claim was checked again here (with one judged tag, always), else left as it is
 //   Agent settings   the edition and "Follow-up · <date time> · n Fixed, m Still wrong" (left out when promote runs the follow-up)
 //
 // Exit codes: 0 ok, 1 stopped, 2 invalid (the lesson is not Live, a supporting row is not decided any more), 3 paused, 4 drift, 75 usage window.
@@ -38,6 +40,7 @@ export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/followup.mjs [
 
 const ENGINEER = 'Next: ask the engineer to look at the message the script printed.';
 const sameText = (a, b) => normaliseText(a ?? '') === normaliseText(b ?? '');
+const round2 = (x) => Math.round(x * 100) / 100;
 
 /**
  * Check the rows a lesson rests on under the rulebook in force and write the result (see the header). `ctx` is the run (or a child run of promote), `keys`
@@ -60,7 +63,9 @@ export async function followUp(ctx, { tag, keys, rubric, summary = true }) {
   const answers = readAnswers(ctx, rubric, tag, items);
   const results = wanted.map((c) => {
     const got = answers.get(c.id)?.decision ?? null;
-    return { key: c.key, claim: c.claim, expected: c.expected, got, status: got === c.expected ? 'Fixed' : 'Still wrong', reason: answers.get(c.id)?.reason ?? null };
+    return {
+      key: c.key, claim: c.claim, expected: c.expected, got, status: got === c.expected ? 'Fixed' : 'Still wrong', reason: answers.get(c.id)?.reason ?? null, p: answers.get(c.id)?.p ?? null,
+    };
   });
   const fixed = results.filter((r) => r.status === 'Fixed').length;
   const stillWrong = results.length - fixed;
@@ -86,11 +91,13 @@ export async function followUp(ctx, { tag, keys, rubric, summary = true }) {
     // the answers under the rule now in force, for the tags of this claim that were checked again (the others keep what Agent tags and Agent notes say)
     const verdicts = new Map();
     const reasons = new Map();
+    const confidences = [];
     for (const r of results) {
       const at = r.key.lastIndexOf('::');
       if (r.key.slice(0, at) !== id || r.got === null) continue;
       verdicts.set(r.key.slice(at + 2), answerWord(r.got));
       if (r.reason) reasons.set(r.key.slice(at + 2), r.reason);
+      if (typeof r.p === 'number') confidences.push(round2(Math.max(r.p, 1 - r.p)));
     }
     const cols = claimColumns({
       judgedNames,
@@ -109,6 +116,11 @@ export async function followUp(ctx, { tag, keys, rubric, summary = true }) {
     if (!sameText(claim.agent_tags, cols.agent_tags)) props[writeColumns.tags] = cols.agent_tags;
     if (!sameText(claim.agent_reasons, cols.agent_reasons)) props[writeColumns.reasons] = cols.agent_reasons;
     if (!sameText(claim.agent_notes, cols.agent_notes)) props[writeColumns.notes] = cols.agent_notes;
+    // the confidence of the answers just read (propose's rule), when they are all the claim's judged tags: a claim that was re-tagged does not keep the confidence of its old answer
+    if (judgedNames.length > 0 && verdicts.size === judgedNames.length && confidences.length === verdicts.size) {
+      const confidence = Math.min(...confidences);
+      if (claim.agent_confidence === null || claim.agent_confidence === undefined || round2(claim.agent_confidence) !== confidence) props[writeColumns.confidence] = confidence;
+    }
     if (Object.keys(props).length) {
       plan.update('claims_copy', id, claim.page_id, props);
       claimUpdates += 1;

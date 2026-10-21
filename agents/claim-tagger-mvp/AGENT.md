@@ -55,7 +55,7 @@ What the editor types, and the lines the skill runs (nothing else is run):
 | `/claim-tagger promote "<title>"` | `node agents/claim-tagger-mvp/scripts/promote.mjs --lesson "<title>"`; with no title the script takes the only Approved rule change |
 | `/claim-tagger follow-up "<title>"` | `node agents/claim-tagger-mvp/scripts/followup.mjs --lesson "<title>"` (repeats the last step of a promote that stopped before it) |
 | `/claim-tagger rollback "<title>"` | `node agents/claim-tagger-mvp/scripts/rollback.mjs --lesson "<title>" --confirm` (the permission prompt is the confirmation) |
-| `/claim-tagger demo <command>` | the same script through `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run <script> [arguments]`, against the newest practice page |
+| `/claim-tagger demo <command>` | the same script through `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run <script> [arguments]`, against the newest practice page under Demos (the newest finished page under the Demos sub-page, `notion.pages.demos` in `config.json`, whose profile the script can read; a page under Demo tests or of an older shape is reached only with `--demo <id>`) |
 | `/claim-tagger-walkthrough` | `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent <link>`; then `... where` and `... list` |
 | `/claim-tagger setup` | nothing: the skill answers that setup is the engineer's step |
 
@@ -64,12 +64,12 @@ What the editor types, and the lines the skill runs (nothing else is run):
 | Setup, once (section 3) | `node agents/claim-tagger-mvp/scripts/setup.mjs <step> ...` |
 | List editions; put one back | `node agents/claim-tagger-mvp/scripts/restore.mjs --list`; `node agents/claim-tagger-mvp/scripts/restore.mjs --edition <edition> --confirm` |
 | Roll a change back (asks every time; `--no-commit` leaves the commit out) | `node agents/claim-tagger-mvp/scripts/rollback.mjs --lesson "<title>" --confirm` |
-| Continue a stopped judge run | `node agents/claim-tagger-mvp/scripts/judge.mjs --resume <run-id>`; any other script: run it again (`run.json` holds the line) |
+| Continue a stopped judge run | `node agents/claim-tagger-mvp/scripts/judge.mjs --resume <run-id>`; any other script: run it again (`run.json` holds the line; for a run on a practice page, a folder under `runs/demos/`, the line goes through the walkthrough runner and names the page: `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo <id> <script> <arguments>`, so a line copied from there never reaches the production tables) |
 | Read the real claims table, write nothing | `node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --dry-run`; the 50-claim pick: `node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --pick 50 --seed <seed> --audit <audit file> [--from <dry-run id>]` |
 | Make and check a plan, send nothing | `--plan-only` on `propose.mjs`, `distill.mjs` (the model is still asked) and `followup.mjs` |
 | Counts for the engineer | `node agents/claim-tagger-mvp/scripts/status.mjs --json` |
 | Headless check of the report format | `node agents/claim-tagger-mvp/scripts/headless-check.mjs --prompt "/claim-tagger status" --out <dir>` (or `--prompts-file <file>`); grade a saved transcript: `node agents/claim-tagger-mvp/scripts/transcript-check.mjs <transcript.jsonl> [--json]` |
-| Practice pages | `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent <link> [--dry-run] [--resume <id>] [--title <text>] [--manifest <path>]`; `... verify [--demo <id>] [--json]`; `... where [--demo <id>]`; `... list`; `... run [--demo <id>] <script> [arguments]` |
+| Practice pages | `node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent <link> [--dry-run] [--resume <id>] [--title <text>] [--manifest <path>]`; `... verify [--demo <id>] [--json]`; `... where [--demo <id>]`; `... list` (every page, newest first, with the one the commands reach marked); `... run [--demo <id>] <script> [arguments]` |
 
 `headless-check.mjs` starts the CLI with the Explanatory output style forced on and grades the final message and every tool call (three-part report, no Insight block, no JSON, no connector write, no editor column in a write, only allowed script lines typed alone with no `cd` or chaining, no token). It runs the prompt for real, so a `tag` prompt writes Notion; use a demo prompt for those.
 

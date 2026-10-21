@@ -60,10 +60,10 @@ Demo · Tag: the agent read 7 claims for Context-dependent; 2 wait for you (prac
 | What | Result |
 |---|---|
 | Claims read | 7 |
-| Tagged Context-dependent | 2 claims |
+| Carrying Context-dependent | 2 claims (earlier decisions included) |
 | New rows in Your queue | 2, lowest confidence first |
 
-Next: decide the 2 rows in Your queue (link).
+Next: decide your two claims in Your queue (link).
 
 ### tag (real claims, the first run: Context-dependent only)
 
@@ -72,10 +72,10 @@ Tag: the agent read 214 claims for Context-dependent; 9 wait for you.
 | What | Result |
 |---|---|
 | Claims read | 214 |
-| Tagged Context-dependent | 31 claims |
+| Carrying Context-dependent | 31 claims (earlier decisions included) |
 | New rows in Your queue | 9, lowest confidence first |
 
-Next: decide the 9 rows in Your queue (link).
+Next: decide your nine claims in Your queue (link).
 
 ### distill (demo)
 
@@ -159,6 +159,20 @@ Without the linked view (Notion refused it) the line links the Claims table inst
 Walkthrough: you are at step 3, Decide your two claims.
 
 Next: open Your queue (link) and decide your two claims.
+
+### Walkthrough: where, on a page where no command has written yet
+
+`status` writes nothing, so a page stays at step 1 until the tag step has run.
+
+Walkthrough: you are at step 1, Meet the demo.
+
+Next: type /claim-tagger demo status.
+
+### Walkthrough: where, after the first of the two claims
+
+Walkthrough: you are at step 3, Decide your two claims.
+
+Next: open Your queue (link) and decide your remaining claim.
 
 ### Walkthrough: where, when a follow-up marked a claim Still wrong
 

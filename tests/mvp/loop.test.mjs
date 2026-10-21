@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { distill } from '../../agents/claim-tagger-mvp/scripts/distill.mjs';
 import { followup } from '../../agents/claim-tagger-mvp/scripts/followup.mjs';
@@ -12,6 +13,7 @@ import { rollback } from '../../agents/claim-tagger-mvp/scripts/rollback.mjs';
 import { status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
+import { resumeFor } from '../../agents/claim-tagger-mvp/scripts/lib/resume.mjs';
 import { AUDIT, PICK, makeWorld, taxonomyCanaries } from './helpers/loop-world.mjs';
 
 // The whole loop on the fakes, as production has it: thirteen rulebook rows, the fifty claims of setup/claims-pick.json, the ten audit decisions as decided
@@ -153,7 +155,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
     ['Earlier decisions', '9 of 9 still right', ''],
     ['Your 2 rows', '2 of 2 now right, marked Fixed', ''],
   ]);
-  assert.equal(passed.report.next, `Next: decide the remaining 2 rows in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000001).`);
+  assert.equal(passed.report.next, `Next: decide your two claims in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000001).`);
   assert.equal(w.row('rule_changes', TITLE).Status, 'Live');
   assert.equal(w.row('rule_changes', TITLE)['Safety check result'], 'PASS: examples 11/11, earlier 9/9, yours 2/2');
   assert.equal(w.row('rulebook', 'Context-dependent')['When to use'].split('\n')[3], `4. ${NEW_TEXT}`);
@@ -321,3 +323,42 @@ async function requestLogIsClean(w) {
     for (const line of readJsonl(join(runs, d.name, 'ledger.jsonl')).rows) assert.ok(line.read_back === 'ok' || line.status === 'skipped', `${d.name}: ${JSON.stringify(line)}`);
   }
 }
+
+test('a run on a practice page records the line that continues it through the walkthrough runner, naming the page; a production run keeps the bare line', async () => {
+  const id = '20261021-1237-c23118';
+  const demo = await makeWorld({ claims: 4, demoId: id });
+  const prod = await makeWorld({ claims: 4 });
+  assert.ok(demo.root.endsWith(join('runs', 'demos', id)));
+  const bare = 'node agents/claim-tagger-mvp/scripts';
+  const runner = `${bare}/walkthrough.mjs run --demo ${id}`;
+  const recorded = (r) => readJson(join(r.runDir, 'run.json')).resume;
+  const cases = [
+    ['status', (w) => status(w.hooks()), ''],
+    ['propose', (w) => propose(w.hooks()), ' --driver fake'], // the world's scripts run on the fake CLI, and the line keeps the flag
+    ['distill', (w) => distill(w.hooks()), ' --driver fake'],
+    ['promote', (w) => promote(w.hooks({ lesson: 'A title with spaces' })), ' --lesson "A title with spaces" --driver fake'],
+    ['followup', (w) => followup(w.hooks({ lesson: 'A title with spaces' })), ' --lesson "A title with spaces" --driver fake'],
+  ];
+  for (const [script, call, parts] of cases) {
+    assert.equal(recorded(await call(demo)), `${runner} ${script}${parts}`, `${script} on a practice page`);
+    assert.equal(recorded(await call(prod)), `${bare}/${script}.mjs${parts}`, `${script} in production`);
+  }
+  // the judge writes its own run.json: its line continues that run through the runner as well
+  const judged = await demo.judge();
+  assert.equal(readJson(join(judged.runDir, 'run.json')).resume, `${runner} judge --resume ${judged.runId}`);
+  const judgedProd = await prod.judge();
+  assert.equal(readJson(join(judgedProd.runDir, 'run.json')).resume, `${bare}/judge.mjs --resume ${judgedProd.runId}`);
+});
+
+test('resumeFor rewrites only the bare line of one of the agent\'s scripts, and only for a folder directly under runs/demos', () => {
+  const bare = 'node agents/claim-tagger-mvp/scripts/judge.mjs --resume 20261021T094229Z-judge';
+  const page = join(tmpdir(), 'x', 'runs', 'demos', '20261021-1237-c23118');
+  assert.equal(resumeFor(page, bare), 'node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-1237-c23118 judge --resume 20261021T094229Z-judge');
+  assert.equal(resumeFor(`${page}/`, 'node agents/claim-tagger-mvp/scripts/status.mjs'), 'node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-1237-c23118 status');
+  assert.equal(resumeFor(join(tmpdir(), 'x'), bare), bare, 'production');
+  assert.equal(resumeFor(join(tmpdir(), 'x', 'runs', 'demos', 'a', 'b'), bare), bare, 'a folder below a practice page is not one');
+  const wrapped = 'node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --resume 20261021-1237-c23118';
+  assert.equal(resumeFor(page, wrapped), wrapped, 'a line that already goes through the runner is left alone');
+  assert.equal(resumeFor(page, 'something else'), 'something else');
+  assert.equal(resumeFor(page, null), null);
+});

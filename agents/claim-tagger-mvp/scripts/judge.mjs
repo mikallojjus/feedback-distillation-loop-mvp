@@ -60,6 +60,7 @@ import { appendJsonl, readJson, readJsonl, writeJsonAtomic, writeTextAtomic } fr
 import { agentRoot, codeFile, ensureDir, isMain, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { writeReport } from './lib/report.mjs';
+import { resumeFor } from './lib/resume.mjs';
 import { checkLock, readLock, verifyRubric } from './lib/rubric.mjs';
 import { validate } from './lib/validate.mjs';
 
@@ -268,7 +269,7 @@ export function loadJudgeConfig(root) {
 
 // ---- the rulebook, the groups ------------------------------------------------------------------------------------------------
 
-const RULEBOOK_FILE_NEXT = 'Next: ask an engineer to restore the rulebook file, then type /claim-tagger tag again';
+const RULEBOOK_FILE_NEXT = 'Next: ask an engineer to restore the rulebook file, then type /claim-tagger tag again.';
 
 /**
  * The rulebook the run judges with: <root>/rubric/rubric.json, or the candidate file given with --rubric. Returns { rubric, path, candidate }.
@@ -397,7 +398,7 @@ function ensurePromptFile(root, text) {
     if (readFileSync(file, 'utf8') !== text) {
       throw new ExitError(EXIT.DRIFT, `${file} was changed after it was written; delete it so that it is written again`, {
         sentence: 'Judge: nothing was read, because a saved copy of the prompt was changed by hand.',
-        next: 'Next: ask an engineer to look at the message the script printed',
+        next: 'Next: ask an engineer to look at the message the script printed.',
       });
     }
   } else {
@@ -806,7 +807,7 @@ function prepareRun(ctx) {
     exit_code: null,
     rubric_edition: prev.rubric_edition ?? null,
     pull_id: prev.pull_id ?? null,
-    resume: resumeCommand(ctx.runId),
+    resume: resumeFor(ctx.root, resumeCommand(ctx.runId)), // on a practice page: through the walkthrough runner
     status: 'running',
     invocations: (prev.invocations ?? 0) + 1,
     ...(prev.item_ids ? { item_ids: prev.item_ids } : {}),
@@ -818,7 +819,7 @@ function prepareRun(ctx) {
 const saveRecord = (ctx) => writeJsonAtomic(join(ctx.runDir, 'run.json'), ctx.record);
 
 const PAUSED_SENTENCE = 'Judge: nothing was read, because the agent is paused.';
-const PAUSED_NEXT = 'Next: a person has to clear Paused (in Agent settings in Notion, or by deleting the PAUSED file), then type /claim-tagger tag again';
+const PAUSED_NEXT = 'Next: a person has to clear Paused (in Agent settings in Notion, or by deleting the PAUSED file), then type /claim-tagger tag again.';
 
 // Exit 3 while runs/PAUSED exists or the newest pull says Paused is ticked in Agent settings. Needs no config and no rulebook, so it comes first.
 function checkPaused(ctx) {
@@ -855,7 +856,7 @@ function checkDrift(ctx, rubric) {
   const what = stops.slice(0, 3).map((e) => [e.tag, e.column].filter(Boolean).join(': ')).filter(Boolean).join('; ');
   throw new ExitError(EXIT.DRIFT, `the rulebook in Notion no longer matches the locked edition${what ? ` (${what})` : ''}; undo the edit in Notion, or restore the rulebook`, {
     sentence: `Judge: nothing was read, because the rulebook in Notion no longer matches the locked edition${what ? ` (${what})` : ''}.`,
-    next: 'Next: undo that edit in the Rulebook copy in Notion, then type /claim-tagger tag again',
+    next: 'Next: undo that edit in the Rulebook copy in Notion, then type /claim-tagger tag again.',
   });
 }
 
@@ -875,7 +876,7 @@ async function execute(ctx) {
   if (!groups.length) {
     throw new ExitError(EXIT.INVALID, args.tags ? `none of the tags ${args.tags.join(', ')} has rules in force, so there is nothing to judge` : 'the rulebook has no tag with rules in force in any group of judge.groups, so there is nothing to judge', {
       sentence: 'Judge: nothing was read, because no tag has rules to judge by.',
-      next: 'Next: ask an engineer to look at the message the script printed',
+      next: 'Next: ask an engineer to look at the message the script printed.',
     });
   }
   for (const g of groups) {
@@ -908,7 +909,7 @@ async function execute(ctx) {
   });
   if (selection.skipped.length) ctx.warnings.push(`${selection.skipped.length} row${selection.skipped.length === 1 ? '' : 's'} without an id or a claim text ${selection.skipped.length === 1 ? 'was' : 'were'} skipped`);
   if (!selection.items.length) {
-    throw new ExitError(EXIT.INVALID, `there are no items to judge in ${args.items}`, { sentence: 'Judge: nothing was read, because there are no claims to read.', next: 'Next: ask an engineer to look at the message the script printed' });
+    throw new ExitError(EXIT.INVALID, `there are no items to judge in ${args.items}`, { sentence: 'Judge: nothing was read, because there are no claims to read.', next: 'Next: ask an engineer to look at the message the script printed.' });
   }
   record.pull_id = selection.pull_id;
   record.item_ids = selection.items.map((it) => it.id);
@@ -922,7 +923,7 @@ async function execute(ctx) {
     })
     .filter((p) => p.items.length > 0);
   if (!plans.length) {
-    throw new ExitError(EXIT.INVALID, `none of the ${selection.items.length} items belongs to a tag that is judged here`, { sentence: 'Judge: nothing was read, because none of the claims is about a tag that is judged.', next: 'Next: ask an engineer to look at the message the script printed' });
+    throw new ExitError(EXIT.INVALID, `none of the ${selection.items.length} items belongs to a tag that is judged here`, { sentence: 'Judge: nothing was read, because none of the claims is about a tag that is judged.', next: 'Next: ask an engineer to look at the message the script printed.' });
   }
 
   // one state per group: prompt, store, items
@@ -944,7 +945,7 @@ async function execute(ctx) {
       if (e?.code !== STORE_LOCKED) throw e;
       throw new ExitError(EXIT.ERROR, e.message, {
         sentence: 'Judge: nothing was read, because another run is using the same saved answers.',
-        next: 'Next: wait for that run to finish, then type /claim-tagger tag again',
+        next: 'Next: wait for that run to finish, then type /claim-tagger tag again.',
       });
     }
   }
@@ -1158,12 +1159,12 @@ function reportFor(ctx) {
   const s = ctx.summary;
   const e = ctx.error;
   const known = e instanceof ExitError;
-  if (known && e.sentence) return { sentence: e.sentence, rows: [], next: e.next ?? 'Next: ask an engineer to look at the message the script printed' };
+  if (known && e.sentence) return { sentence: e.sentence, rows: [], next: e.next ?? 'Next: ask an engineer to look at the message the script printed.' };
   if (e && !known) {
     return { sentence: 'Judge stopped on an unexpected error; nothing was written to Notion.', rows: [], next: 'Next: ask an engineer to look at the message the script printed, then type /claim-tagger tag again' };
   }
   if (known || !s) {
-    return { sentence: 'Judge: nothing was read, because something it needs is missing or not valid.', rows: [], next: 'Next: ask an engineer to look at the message the script printed' };
+    return { sentence: 'Judge: nothing was read, because something it needs is missing or not valid.', rows: [], next: 'Next: ask an engineer to look at the message the script printed.' };
   }
   const tags = listTags(s.tags);
   const rows = [['Claims read', String(s.read), ''], ['Unsure', String(s.unsure), ''], ['Re-read', String(s.reread), '']];
@@ -1179,10 +1180,10 @@ function reportFor(ctx) {
       model_mismatch: `a different model than the pinned one answered ${after}, so that answer was not kept`,
     }[ctx.stop.kind];
     const next = {
-      usage_window: 'Next: when your Claude allowance is back, type /claim-tagger tag again; it continues where it stopped',
-      transient: 'Next: type /claim-tagger tag again in a while; it continues where it stopped',
-      spawn: 'Next: ask an engineer to check that claude is installed, then type /claim-tagger tag again',
-      model_mismatch: 'Next: ask an engineer to check the pinned model, then type /claim-tagger tag again',
+      usage_window: 'Next: when your Claude allowance is back, type /claim-tagger tag again; it continues where it stopped.',
+      transient: 'Next: type /claim-tagger tag again in a while; it continues where it stopped.',
+      spawn: 'Next: ask an engineer to check that claude is installed, then type /claim-tagger tag again.',
+      model_mismatch: 'Next: ask an engineer to check the pinned model, then type /claim-tagger tag again.',
     }[ctx.stop.kind];
     return { sentence: `Judge stopped: ${why}; nothing was written to Notion.`, rows: rowsStopped, next };
   }
@@ -1190,17 +1191,17 @@ function reportFor(ctx) {
     return {
       sentence: `Judge: read ${plural(s.read, 'claim')} for ${tags}; ${s.unsure} unsure; ${s.failed} could not be read.`,
       rows,
-      next: 'Next: type /claim-tagger tag again to read the ones that failed (it continues from here)',
+      next: 'Next: type /claim-tagger tag again to read the ones that failed (it continues from here).',
     };
   }
   if (s.failedReread > 0) {
     return {
       sentence: `Judge: read ${plural(s.read, 'claim')} for ${tags}; ${s.unsure} unsure; ${s.failedReread} could not be read again.`,
       rows,
-      next: 'Next: type /claim-tagger tag again to read them again (it continues from here)',
+      next: 'Next: type /claim-tagger tag again to read them again (it continues from here).',
     };
   }
-  return { sentence: `Judge: read ${plural(s.read, 'claim')} for ${tags}; ${s.unsure} unsure.`, rows, next: 'Next: type /claim-tagger tag to finish (it continues from here)' };
+  return { sentence: `Judge: read ${plural(s.read, 'claim')} for ${tags}; ${s.unsure} unsure.`, rows, next: 'Next: type /claim-tagger tag to finish (it continues from here).' };
 }
 
 // A read that failed twice (invalid replies) ends the run with exit 2 after everything else was done; its items are tried again by the next run.
@@ -1256,7 +1257,7 @@ function finish(ctx) {
   if (!report) {
     ctx.warnings.push(`report.md was not written as planned: ${why(refused)}`);
     try {
-      report = writeReport(ctx.runDir, { demo: false, sentence: 'Judge finished.', rows: [], next: 'Next: ask an engineer to look at the message the script printed' }).report;
+      report = writeReport(ctx.runDir, { demo: false, sentence: 'Judge finished.', rows: [], next: 'Next: ask an engineer to look at the message the script printed.' }).report;
     } catch {
       report = null;
     }

@@ -601,9 +601,9 @@ test('a run reads every claim once, re-reads the 3 most unsure of the 4 unsure o
     sentence: 'Judge: read 12 claims for Context-dependent; 4 unsure.',
     header: ['What', 'Result', ''],
     rows: [['Claims read', '12', ''], ['Unsure', '4', ''], ['Re-read', '3', '']],
-    next: 'Next: type /claim-tagger tag to finish (it continues from here)',
+    next: 'Next: type /claim-tagger tag to finish (it continues from here).',
   });
-  assert.equal(reportMd(r), 'Judge: read 12 claims for Context-dependent; 4 unsure.\n\n| What | Result |\n|---|---|\n| Claims read | 12 |\n| Unsure | 4 |\n| Re-read | 3 |\n\nNext: type /claim-tagger tag to finish (it continues from here)\n');
+  assert.equal(reportMd(r), 'Judge: read 12 claims for Context-dependent; 4 unsure.\n\n| What | Result |\n|---|---|\n| Claims read | 12 |\n| Unsure | 4 |\n| Re-read | 3 |\n\nNext: type /claim-tagger tag to finish (it continues from here).\n');
 });
 
 test('the same run a second time asks nothing: every answer is already in the store, and the capped item stays capped', async () => {
@@ -996,7 +996,7 @@ test('a second read that fails both attempts leaves error lines in run 2, ends t
   const report = assertReport(r);
   assert.equal(report.sentence, 'Judge: read 12 claims for Context-dependent; 4 unsure; 3 could not be read again.');
   assert.deepEqual(report.rows.at(-1), ['Could not be read again', '3', '']);
-  assert.equal(report.next, 'Next: type /claim-tagger tag again to read them again (it continues from here)');
+  assert.equal(report.next, 'Next: type /claim-tagger tag again to read them again (it continues from here).');
 
   const again = await go(root, { table: scenarioTable(), fakeState }); // the same fake: it knows it answered c05 once
   assert.equal(again.exit, 0, again.io.errs.join('\n'));
@@ -1120,7 +1120,7 @@ test('three transient failures in a row stop the run with exit 1 and the command
   assert.match(r.io.errs.join('\n'), new RegExp(`to continue: ${RESUME(r.runId).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`));
   const report = assertReport(r);
   assert.match(report.sentence, /^Judge stopped: Claude kept answering with an error after 0 of 12 claims; nothing was written to Notion\.$/);
-  assert.match(report.next, /^Next: type \/claim-tagger tag again in a while; it continues where it stopped$/);
+  assert.match(report.next, /^Next: type \/claim-tagger tag again in a while; it continues where it stopped\.$/);
 
   // the same run, continued: same selection, same options, the same run folder and its call log
   const resumed = await go(root, { table: scenarioTable(), resume: r.runId, fakeState });
@@ -1173,7 +1173,7 @@ test('the usage window stops the run with exit 75 at once, writes nothing for th
   const report = assertReport(r);
   assert.equal(report.sentence, 'Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion.');
   assert.deepEqual(report.rows, [['Claims read', '8', ''], ['Still waiting', '4', '']]);
-  assert.equal(report.next, 'Next: when your Claude allowance is back, type /claim-tagger tag again; it continues where it stopped');
+  assert.equal(report.next, 'Next: when your Claude allowance is back, type /claim-tagger tag again; it continues where it stopped.');
 
   const resumed = await go(root, { table: scenarioTable(), resume: r.runId, fakeState }); // the same fake: it counts how often it answered each claim
   assert.equal(resumed.exit, 0, resumed.io.errs.join('\n'));
@@ -1212,7 +1212,7 @@ test('on a practice page the usage window (exit 75) tells the editor to type the
   assert.equal(json.demo, true);
   assert.equal(json.sentence, `Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion (practice page ${PRACTICE_TITLE}).`);
   assert.deepEqual(json.rows, [['Claims read', '8', ''], ['Still waiting', '4', '']]);
-  assert.equal(json.next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped');
+  assert.equal(json.next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped.');
   const md = reportMd(r);
   assert.ok(md.startsWith(`Demo · Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion (practice page ${PRACTICE_TITLE}).\n`), md);
   assert.ok(md.trimEnd().endsWith(json.next));
@@ -1229,7 +1229,7 @@ test('on a practice page with no title the commands are the demo ones and the se
   const a = await go(untitled.root, { table: scenarioTable(), env: USAGE_WINDOW });
   assert.equal(a.exit, 75);
   assert.equal(reportJson(a).sentence, 'Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion.');
-  assert.equal(reportJson(a).next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped');
+  assert.equal(reportJson(a).next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped.');
   assert.ok(reportMd(a).startsWith('Demo · Judge stopped:'));
 
   const production = makeRoot({ judge: { concurrency: 1 } });
@@ -1238,7 +1238,7 @@ test('on a practice page with no title the commands are the demo ones and the se
   assert.equal(b.exit, 75);
   const json = assertReport(b); // demo false, no "Demo · ", no page named
   assert.equal(json.sentence, 'Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion.');
-  assert.equal(json.next, 'Next: when your Claude allowance is back, type /claim-tagger tag again; it continues where it stopped');
+  assert.equal(json.next, 'Next: when your Claude allowance is back, type /claim-tagger tag again; it continues where it stopped.');
 });
 
 test('on a practice page every report of the judge speaks the demo commands and names the page: a result, a transient stop, a pause, a drift', async () => {
@@ -1246,13 +1246,13 @@ test('on a practice page every report of the judge speaks the demo commands and 
   const ok = await go(done.root, { runsMax: 1 });
   assert.equal(ok.exit, 0, ok.io.errs.join('\n'));
   assert.equal(reportJson(ok).sentence, `Judge: read 4 claims for Context-dependent; ${runJson(ok).counts.unsure} unsure (practice page ${PRACTICE_TITLE}).`);
-  assert.equal(reportJson(ok).next, 'Next: type /claim-tagger demo tag to finish (it continues from here)');
+  assert.equal(reportJson(ok).next, 'Next: type /claim-tagger demo tag to finish (it continues from here).');
 
   const flaky = practiceRoot({});
   const transient = await go(flaky.root, { env: { FAKE_CLAUDE_MODE: 'transient-always' } });
   assert.equal(transient.exit, 1);
   assert.equal(reportJson(transient).sentence, `Judge stopped: Claude kept answering with an error after 0 of 12 claims; nothing was written to Notion (practice page ${PRACTICE_TITLE}).`);
-  assert.equal(reportJson(transient).next, 'Next: type /claim-tagger demo tag again in a while; it continues where it stopped');
+  assert.equal(reportJson(transient).next, 'Next: type /claim-tagger demo tag again in a while; it continues where it stopped.');
 
   // paused is checked before the configuration is read: the report still reads the profile, to speak the demo words
   const paused = practiceRoot({}, { pausedFile: true });
@@ -1260,14 +1260,14 @@ test('on a practice page every report of the judge speaks the demo commands and 
   assert.equal(stopped.exit, 3);
   assert.equal(reportJson(stopped).demo, true);
   assert.equal(reportJson(stopped).sentence, `Judge: nothing was read, because the agent is paused (practice page ${PRACTICE_TITLE}).`);
-  assert.match(reportJson(stopped).next, /^Next: a person has to clear Paused .*, then type \/claim-tagger demo tag again$/);
+  assert.match(reportJson(stopped).next, /^Next: a person has to clear Paused .*, then type \/claim-tagger demo tag again\.$/);
   assert.ok(reportMd(stopped).startsWith('Demo · Judge: nothing was read'));
 
   const drifted = practiceRoot({}, { drift: { judged: [{ tag: 'Context-dependent', column: 'When to use' }], adopted: [], missing: [], added: [] } });
   const edited = await go(drifted.root);
   assert.equal(edited.exit, 4);
   assert.equal(reportJson(edited).sentence, `Judge: nothing was read, because the rulebook in Notion no longer matches the locked edition (Context-dependent: When to use) (practice page ${PRACTICE_TITLE}).`);
-  assert.equal(reportJson(edited).next, 'Next: undo that edit in the Rulebook copy in Notion, then type /claim-tagger demo tag again');
+  assert.equal(reportJson(edited).next, 'Next: undo that edit in the Rulebook copy in Notion, then type /claim-tagger demo tag again.');
 
   // a configuration that cannot be read is no practice page: the plain words, as before
   const broken = practiceRoot({}, { pausedFile: true });
@@ -1275,7 +1275,7 @@ test('on a practice page every report of the judge speaks the demo commands and 
   const plain = await go(broken.root);
   assert.equal(plain.exit, 3);
   assert.equal(assertReport(plain).sentence, 'Judge: nothing was read, because the agent is paused.');
-  assert.match(reportJson(plain).next, /type \/claim-tagger tag again$/);
+  assert.match(reportJson(plain).next, /type \/claim-tagger tag again\.$/);
   for (const r of [ok, transient, stopped, edited]) assert.deepEqual(lintReport(reportMd(r)), [], reportMd(r));
 });
 
@@ -1285,7 +1285,7 @@ test('a practice page title that the report lint refuses is left out of the sent
   assert.equal(r.exit, 75);
   assert.equal(reportJson(r).demo, true);
   assert.equal(reportJson(r).sentence, 'Judge stopped: your Claude allowance ran out after 8 of 12 claims; nothing was written to Notion.');
-  assert.equal(reportJson(r).next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped');
+  assert.equal(reportJson(r).next, 'Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped.');
   assert.ok(reportMd(r).startsWith('Demo · Judge stopped:'), reportMd(r));
   assert.deepEqual(lintReport(reportMd(r)), []);
   assert.ok(runJson(r).warnings.some((x) => /does not name the practice page/.test(x)), JSON.stringify(runJson(r).warnings));
@@ -1568,7 +1568,7 @@ test('two judges on one store: the second is told the store is in use, and the f
   assert.ok(existsSync(join(dir, 'LOCK')));
   assert.equal(second.fakeState.calls, undefined);
   assert.equal(assertReport(second).sentence, 'Judge: nothing was read, because another run is using the same saved answers.');
-  assert.equal(reportJson(second).next, 'Next: wait for that run to finish, then type /claim-tagger tag again');
+  assert.equal(reportJson(second).next, 'Next: wait for that run to finish, then type /claim-tagger tag again.');
   const refresh = await go(root, { runsMax: 1, refresh: true });
   assert.equal(refresh.exit, 1, '--refresh does not set aside a store that is in use');
   assert.ok(existsSync(dir), 'and it is still where it was');

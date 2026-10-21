@@ -28,7 +28,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { claimWaits, isReviewed } from './lib/decisions.mjs';
-import { listNames, plural, quoted, tableLink, viewLink } from './lib/editor-words.mjs';
+import { listNames, plural, quoted, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { LOCK_STALE_MS, LoopExit, parseCli, resumeLine, takePull, withRun } from './lib/loop.mjs';
 import { isMain } from './lib/paths.mjs';
 import { preflight, refusedReport } from './lib/preflight.mjs';
@@ -138,7 +138,7 @@ export async function status(opts = {}) {
     let next;
     if (unread > 0) next = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
     else if (counts.queue.more_than_a_sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
-    else if (n > 0) next = `Next: decide the ${plural(n, 'row')} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
+    else if (n > 0) next = `Next: decide ${yourClaims(n)} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
     else if (proposed > 0) next = `Next: approve or reject the ${proposed === 1 ? 'rule change' : 'rule changes'} in Lessons waiting (${viewLink(ctx.config, 'lessons_waiting')}).`;
     else if (approved > 0) next = `Next: type /claim-tagger promote to check the approved ${approved === 1 ? 'rule change' : 'rule changes'}.`;
     else next = 'Next: type /claim-tagger tag to read new claims.';

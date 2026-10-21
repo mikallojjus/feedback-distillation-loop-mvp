@@ -91,9 +91,18 @@ test('cellVerdict: the practice page shows the Agent reason in the form propose 
   const page = readFileSync(new URL('../../agents/claim-tagger-mvp/walkthrough/page.md', import.meta.url), 'utf8');
   const manifest = JSON.parse(readFileSync(new URL('../../agents/claim-tagger-mvp/walkthrough/manifest.json', import.meta.url), 'utf8'));
   const rule = manifest.expect.lesson_rule; // the rule the story is about ("Context-dependent rule 3"); the page's Step 2 rows cite it
-  const cells = page.split('\n').filter((l) => l.includes('runs agree'));
+  // the rows of Step 2's Agent reasons table: the form propose writes, "<reason> · <rule, when one is cited> · <k> of <n> runs agree"
+  const cells = page.split('\n').filter((l) => l.startsWith('|') && l.includes('runs agree'));
   assert.equal(cells.length, 2, 'the two rows of Step 2');
-  for (const cell of cells) assert.match(cell, new RegExp(` · ${rule} · \\d of \\d runs agree \\|$`));
+  for (const cell of cells) assert.match(cell, new RegExp(` · (?:${rule} · )?\\d of \\d runs agree \\|$`));
+  assert.match(cells[0], new RegExp(` · ${rule} · 1 of 1 runs agree \\|$`), 'a claim the agent is sure of is read once: its line ends with one of one');
+  // no figure the tag step cannot produce: three readings are never made at once (a second one only for an unsure claim, a third only when the first two disagree)
+  assert.ok(!/\b[23] of 3 runs agree\b/.test(page), 'no "2 of 3" or "3 of 3" on the page');
+  assert.ok(!/three readings/.test(page));
+  for (const cell of cells) {
+    const [, k, n] = /(\d) of (\d) runs agree/.exec(cell);
+    assert.ok(Number(k) <= Number(n) && Number(n) <= 2, `${k} of ${n}: a count the tag step can write on the first and second reading`);
+  }
 });
 
 test('cellVerdict: the reason is cut to reason_max_words words', () => {
@@ -188,8 +197,8 @@ test('propose: every judged claim and tag gets a ledger row (the unsure ones wai
   const report = assertReport(h, r);
   assert.equal(report.demo, false);
   assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
-  assert.deepEqual(report.rows, [['Claims read', '12', ''], ['Tagged Context-dependent', '1 claim', ''], ['New rows in Your queue', '3, lowest confidence first', '']]);
-  assert.equal(report.next, `Next: decide the 3 rows in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=${'e3000000000000000000000000000001'}).`, 'Your queue is a view of the Claims copy');
+  assert.deepEqual(report.rows, [['Claims read', '12', ''], ['Carrying Context-dependent', '1 claim (earlier decisions included)', ''], ['New rows in Your queue', '3, lowest confidence first', '']]);
+  assert.equal(report.next, `Next: decide your three claims in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=${'e3000000000000000000000000000001'}).`, 'Your queue is a view of the Claims copy');
   assert.deepEqual([r.claimsRead, r.created, r.open], [12, 12, 3], 'the result carries the counts for callers');
 });
 
@@ -353,7 +362,7 @@ test('propose: when more rows wait than fit one sitting the sentence says so and
   assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you, more than fit one sitting.');
   assert.match(report.next, /^Next: start at the top of Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/);
   assert.ok(report.next.includes(w.DB.claims_copy), 'the link is the Claims copy\'s');
-  assert.ok(!/decide the/.test(report.next));
+  assert.ok(!/decide your/.test(report.next));
 });
 
 test('propose: one open row says "waits", and with nothing open the sentence and Next say nothing waits', async () => {
@@ -365,7 +374,7 @@ test('propose: one open row says "waits", and with nothing open the sentence and
   await w.judge();
   const one = await propose(w.hooks());
   assert.equal(one.report.sentence, 'Tag: the agent read 4 claims for Context-dependent; 1 waits for you.');
-  assert.match(one.report.next, /^Next: decide the 1 row in Your queue \(/);
+  assert.match(one.report.next, /^Next: decide your claim in Your queue \(/);
 
   const w2 = await makeWorld({ claims: 3 });
   w2.table(Object.fromEntries([1, 2, 3].map((i) => [claimText(i), { decision: 'do_not_apply', p: 0.1 }])));

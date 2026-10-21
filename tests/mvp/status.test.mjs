@@ -52,7 +52,7 @@ test('status, rows and a rule change wait: both counted in the sentence, Next po
   assert.deepEqual(report.rows[1], ['Your queue', '3 rows, lowest confidence first', '']);
   assert.deepEqual(report.rows[2], ['Lessons waiting', '1 rule change to approve', '']);
   assert.deepEqual(report.rows[3], ['Last run', 'none yet', '']);
-  assert.match(report.next, /^Next: decide the 3 rows in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/);
+  assert.match(report.next, /^Next: decide your three claims in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/);
   assert.ok(report.next.includes(w.DB.claims_copy), 'Your queue is a view of the Claims copy');
 });
 
@@ -203,7 +203,7 @@ const practicePage = ({ claimRows = {}, ...extra } = {}) => makeWorld({
   claims: 7, rulebook: ONE_TAG, claimRows: { ...earlier, ...claimRows }, demo: true, configure: (c) => { c.demo_title = PRACTICE_TITLE; }, ...extra,
 });
 const TAG_FIRST = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
-const DECIDE = /^Next: decide the (\d+) rows in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/;
+const DECIDE = /^Next: decide your (\w+) claims? in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/;
 
 test('status on a practice page names the page and shows step 1: "1 tag, edition <e>", nothing in Your queue until the agent has read the two open claims, "none", "none yet"', async () => {
   const w = await practicePage();
@@ -236,13 +236,13 @@ test('on a practice page the Next line says to type the demo tag command while a
   assert.equal((await check(await practicePage({ claimRows: { ...waiting(1), [id(2)]: { 'Agent notes': '  ' } } }))).next, TAG_FIRST, 'empty notes are none');
   const both = await check(await practicePage({ claimRows: waiting(1, 2) }));
   assert.match(both.next, DECIDE, 'step 3: the agent has read both claims, the editor decides them');
-  assert.equal(DECIDE.exec(both.next)[1], '2');
+  assert.equal(DECIDE.exec(both.next)[1], 'two');
   assert.equal(both.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; 2 rows wait for you.`);
 
   // only a claim that is still open can be unread: a Reviewed claim without notes (an earlier decision) does not send the editor back to step 2
   const noEarlier = await check(await practicePage({ claimRows: { ...waiting(1, 2), ...reviewed([3], { 'Agent notes': '' }) } }));
   assert.match(noEarlier.next, DECIDE);
-  assert.equal(DECIDE.exec(noEarlier.next)[1], '2');
+  assert.equal(DECIDE.exec(noEarlier.next)[1], 'two');
 
   // unread claims come first, even when more wait than fit one sitting; with nothing to read the Next lines are the ones they always were
   const many = await check(await practicePage({ claims: 9, claimRows: { ...waiting(1, 2, 8), [id(9)]: {} }, configure: (c) => { c.demo_title = PRACTICE_TITLE; c.queue.sitting_rows = 2; } }));

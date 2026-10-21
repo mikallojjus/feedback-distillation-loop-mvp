@@ -86,8 +86,9 @@ function withRealIds(config) {
 
 /**
  * A production state folder (config.json with the table ids of production, which no request may ever name; the structure file), a fake Notion with
- * a page called "Demos" to put the practice page under (and one standing for the sub-page of the production page), and ways to run walkthrough
- * commands against them.
+ * a page called "Demos" to put the practice page under (config.notion.pages.demos, the sub-page the demo commands look under by default) and a page
+ * called "Demo tests" (config.notion.pages.demo_tests, where the verification runs go and the commands do not look by default), and ways to run
+ * walkthrough commands against them.
  */
 function newWorld({ configure } = {}) {
   const root = tmp('wt');
@@ -96,15 +97,18 @@ function newWorld({ configure } = {}) {
   const protectedIds = [...production.notion.protected_database_ids, ...production.notion.protected_page_ids];
   const fake = createPagesFake({ protected: protectedIds });
   const parent = fake.addPage({ title: 'Demos' });
-  const subPage = fake.addPage({ title: 'Production demos' });
-  config.notion.pages.demos = subPage.replace(/-/g, '');
+  const testsParent = fake.addPage({ title: 'Demo tests' });
+  config.notion.pages.demos = parent.replace(/-/g, '');
+  config.notion.pages.demo_tests = testsParent.replace(/-/g, '');
   config.notion.requests_per_second = 1000;
   configure?.(config, fake);
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
   mkdirSync(join(root, 'setup'), { recursive: true });
   writeFileSync(join(root, 'setup', 'structure.json'), `${JSON.stringify(structureForFake(), null, 2)}\n`);
   let n = 0;
-  const w = { root, fake, parent, config, production, protectedIds, clock: NOW, link: `https://www.notion.so/Demos-${parent.replace(/-/g, '')}` };
+  const w = {
+    root, fake, parent, testsParent, config, production, protectedIds, clock: NOW, link: `https://www.notion.so/Demos-${parent.replace(/-/g, '')}`, testsLink: `https://www.notion.so/Demo-tests-${testsParent.replace(/-/g, '')}`,
+  };
   w.env = (extra = {}) => ({ root, fetchImpl: fake.fetchImpl, token: fake.token, sleep: noSleep, now: () => w.clock, random: () => `r${(n += 1)}`, repoRoot: root, ...extra });
   w.run = async (argv, extra = {}) => {
     const io = quietIo();
@@ -218,21 +222,31 @@ test('signatures compare the type and the text with white space made one space, 
   assert.equal(dp.signature(null), '');
 });
 
-test('stepOf maps every state of the design from the claims: 2, 3, 4, 5, 6, the not-passed branch, 7 stopped early, 7 to read, complete', () => {
+test('stepOf maps every state of the design from the claims: 1, 2, 3, 4, 5, 6, the not-passed branch, 7 stopped early, 7 to read, complete', () => {
   const open = [{ claim: 'a', geo_id: 'a', key: 'a::T' }, { claim: 'b', geo_id: 'b', key: 'b::T' }];
   const READ = 'no tags\n1 waits for an editor · edition e';
   const claim = (geo_id, over = {}) => ({ geo_id, review_status: null, agent_notes: READ, ...over });
   const claims = (a = {}, b = {}) => [claim('a', a), claim('b', b), claim('c', { review_status: 'Reviewed', agent_notes: '' })];
   const unread = { agent_notes: '' };
   const done = { review_status: 'Reviewed' };
-  const step = (cl, lessons = [], ledger = []) => dp.stepOf({ claims: cl, ledger, lessons, open });
+  const step = (cl, lessons = [], ledger = [], settings = { last_run_summary: 'Tag · 15 Oct 10:42 · 7 claims' }) => dp.stepOf({ claims: cl, ledger, lessons, open, settings });
+  // a fresh page: nothing has written a Last run summary (the build leaves it empty, status writes nothing, the tag step writes it with the notes)
+  const fresh = (cl) => dp.stepOf({ claims: cl, ledger: [], lessons: [], open, settings: { last_run_summary: null } });
+  assert.deepEqual(fresh(claims(unread, unread)), { step: 1 });
+  assert.deepEqual(fresh(claims(unread)), { step: 1 });
+  assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [], lessons: [], open, settings: { last_run_summary: '  ' } }), { step: 1 }, 'white space is no summary');
+  assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [], lessons: [], open }), { step: 1 }, 'no settings row at all: nothing has run');
+  assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [], lessons: [], open, settings: null }), { step: 1 });
+  // a command wrote a Last run summary and the open claims still have no Agent notes: step 2
   assert.deepEqual(step(claims(unread, unread)), { step: 2 });
   assert.deepEqual(step(claims(unread)), { step: 2 }, 'one claim the agent has not read is still step 2');
   assert.deepEqual(step(claims({ review_status: 'To review', agent_notes: '  ' }, {})), { step: 2 }, 'white space is no notes, and To review is not Reviewed');
-  assert.deepEqual(step(claims()), { step: 3 });
-  assert.deepEqual(step(claims({ review_status: 'To review' }, {})), { step: 3 });
-  assert.deepEqual(step(claims(done, {})), { step: 3 }, 'one claim decided is still step 3');
-  assert.deepEqual(step(claims({ ...done, agent_notes: '' }, {})), { step: 3 }, 'a claim the editor decided before the agent read it is decided, not unread');
+  // with notes on the claims the step is 3 whatever Last run summary says (a page whose summary was cleared by hand is not sent back)
+  assert.deepEqual(fresh(claims()), { step: 3, remaining: 2 });
+  assert.deepEqual(step(claims()), { step: 3, remaining: 2 });
+  assert.deepEqual(step(claims({ review_status: 'To review' }, {})), { step: 3, remaining: 2 });
+  assert.deepEqual(step(claims(done, {})), { step: 3, remaining: 1 }, 'one claim decided is still step 3, with one claim left');
+  assert.deepEqual(step(claims({ ...done, agent_notes: '' }, {})), { step: 3, remaining: 1 }, 'a claim the editor decided before the agent read it is decided, not unread');
   assert.deepEqual(step(claims(done, done)), { step: 4 });
   const lesson = (over) => ({ Lesson: 'L', Status: 'Proposed', 'Safety check result': null, created: '2026-10-15T10:00:00Z', ...over });
   const both = claims(done, done);
@@ -253,7 +267,7 @@ test('stepOf maps every state of the design from the claims: 2, 3, 4, 5, 6, the 
   assert.equal(step(both, [lesson({ Status: 'Rolled back' })]).step, 'complete');
   assert.equal(step(both, [lesson({ Status: 'Rejected', created: '2026-10-15T09:00:00Z' }), lesson({ Lesson: 'M', Status: 'Approved', created: '2026-10-15T11:00:00Z' })]).step, 6, 'a rule change in progress wins over a rejected one');
   // the ledger is not what step 2 and 3 are read from: the claims are
-  assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [{ Key: 'a::T', 'Agent proposal': 'Applies' }], lessons: [], open }), { step: 2 });
+  assert.deepEqual(dp.stepOf({ claims: claims(unread, unread), ledger: [{ Key: 'a::T', 'Agent proposal': 'Applies' }], lessons: [], open, settings: { last_run_summary: 'Tag · 15 Oct 10:42 · 7 claims' } }), { step: 2 });
   assert.ok(dp.stepOf({ claims: [], lessons: [], open }).problem, 'a claim that is not in Claims is a problem, not a step');
   assert.match(dp.stepOf({ claims: [claim('a')], lessons: [], open }).problem, /not in Claims \(b\)/);
   assert.ok(dp.stepOf({ claims: claims(), lessons: [], open: [] }).problem, 'no claims that wait is a problem too');
@@ -356,7 +370,8 @@ test('the demos on disk: newest first, only folders with a demo.json, a ready on
     if (demo) writeFileSync(join(root, 'runs', 'demos', id, 'demo.json'), JSON.stringify(demo));
   };
   assert.deepEqual(dp.listDemos(root), []);
-  assert.throws(() => dp.pickDemo(root), /there is no practice page yet/);
+  const UNDER = '3fa273e214eb81ada268f4b511182378';
+  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER }), /there is no practice page under Demos yet/);
   make('a-old', { created_at: '2026-10-14T10:00:00Z', state: 'ready' });
   make('b-new', { created_at: '2026-10-15T10:00:00Z', state: 'planned' });
   make('c-dry-run');
@@ -364,9 +379,14 @@ test('the demos on disk: newest first, only folders with a demo.json, a ready on
   make('d-broken', null);
   writeFileSync(join(root, 'runs', 'demos', 'd-broken', 'demo.json'), '{ not json');
   assert.deepEqual(dp.listDemos(root).map((d) => d.id), ['b-new', 'a-old']);
-  assert.equal(dp.pickDemo(root).id, 'b-new');
-  assert.equal(dp.pickDemo(root, undefined, { ready: true }).id, 'a-old');
   assert.equal(dp.pickDemo(root, 'a-old').id, 'a-old');
+  assert.equal(dp.pickDemo(root, 'b-new').id, 'b-new', 'a page that is named is reached whatever its state');
+  // without a name the page is looked for under the Demos sub-page, and only a page whose profile this build reads counts (these have no profile at all)
+  assert.throws(() => dp.pickDemo(root), /the Demos page is not set in config/, 'no Demos page to look under is an error, not a guess');
+  assert.throws(() => dp.pickDemo(root, undefined, { under: '<none>' }), /the Demos page is not set/);
+  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER }), /there is no practice page under Demos yet/);
+  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER, ready: true }), /there is no finished practice page under Demos yet/);
+  assert.equal(typeof dp.profileProblem(dp.pickDemo(root, 'a-old')), 'string', 'a folder without a profile has a problem, not a crash');
   assert.throws(() => dp.pickDemo(root, 'c-dry-run'), /no demo\.json/);
   assert.throws(() => dp.pickDemo(root, 'nope'), dp.ManifestError);
   assert.throws(() => dp.pickDemo(root, '..'), dp.ManifestError);
@@ -387,7 +407,18 @@ test('the manifest describes the claims\' columns: five Reviewed claims with the
     assert.ok(['Applies', 'Does not apply'].includes(d['Agent proposal']), d.claim);
     assert.deepEqual(d[V], ['cnn', 'dallas'].includes(d.claim) ? [TAG] : [], d.claim);
     assert.ok(!('Tag outcome' in d) && !('Your reasoning' in d), 'the ledger columns are worked out from the claim, not stored');
+    // every note is a sentence that ends with a full stop; where the audit recorded no reasoning the note says which way the editor went against the agent's answer,
+    // and never "the editor agreed", which sits beside Why wrong "Agent slip" (the agent misread it) like a contradiction
+    const note = d['Challenged tags notes'];
+    assert.ok(note.endsWith('.'), `${d.claim}: the note ends with a full stop`);
+    assert.ok(!/editor agreed/.test(note), d.claim);
+    if (/no reasoning was recorded/.test(note)) {
+      const confirmed = d[V].length > 0; // the tag is among the verified tags
+      assert.equal(note, `${AUDIT_PREFIX}: the editor ${confirmed ? 'confirmed this tag, which the agent had read the other way' : 'did not confirm this tag, which the agent had applied'}; no reasoning was recorded.`, d.claim);
+      assert.equal(d['Agent proposal'], confirmed ? 'Does not apply' : 'Applies', `${d.claim}: the note says what the agent had answered`);
+    }
   }
+  assert.deepEqual(manifest.decided.filter((d) => /no reasoning was recorded/.test(d['Challenged tags notes'])).map((d) => d.claim), ['cnn', 'dallas', 'kennedy'], 'the three decisions the audit gave no words for');
   assert.deepEqual(manifest.open.map((o) => o.claim), ['presspool', 'aiforce']);
   for (const o of manifest.open) {
     assert.equal(o['Review status'], 'To review', o.claim);
@@ -1417,7 +1448,7 @@ test('when Notion refuses every view the build goes on: demo.json records views 
   // where gives the table instead of a view
   const where = await w.run(['where']);
   assert.equal(where.code, 0, where.err);
-  assert.match(where.out, /you are at step 2, /);
+  assert.match(where.out, /you are at step 1, /);
 });
 
 test('when Notion refuses only the linked views the tabs are kept, and the fallback is recorded for the steps', async () => {
@@ -1689,8 +1720,13 @@ test('where says which step the editor is at and the one thing to do, for every 
   const view = (key) => demo.views[key].url;
   const claimsTable = `https://www.notion.so/${demo.databases.claims_copy.database_id}`;
 
-  // nothing has run yet
+  // nothing has run yet: the page has just been built, and `status` (step 1) writes nothing, so the page stays at step 1 until a command that writes has run
   let r = await where();
+  assert.equal(r.sentence, `Walkthrough: you are at step 1, ${title(1)}.`);
+  assert.equal(r.next, `Next: type ${steps[0].command}.`);
+  // a command that writes has run (Last run summary is filled) and the claims have no Agent notes yet
+  w.fake.editRow(w.rows('agent_settings')[0].page_id, { 'Last run summary': 'Tag at 15 Oct 14:40' });
+  r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 2, ${title(2)}.`);
   assert.equal(r.next, `Next: type ${steps[1].command}.`);
   // the agent has read the claims
@@ -1698,9 +1734,11 @@ test('where says which step the editor is at and the one thing to do, for every 
   r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 3, ${title(3)}.`);
   assert.equal(r.next, `Next: open Your queue (${view('your_queue')}) and decide your two claims.`);
-  // one claim decided
+  // one claim decided: one is left
   decide(open[0]);
-  assert.match((await where()).sentence, /step 3,/);
+  r = await where();
+  assert.equal(r.sentence, `Walkthrough: you are at step 3, ${title(3)}.`);
+  assert.equal(r.next, `Next: open Your queue (${view('your_queue')}) and decide your remaining claim.`);
   // both decided
   decide(open[1]);
   r = await where();
@@ -1757,6 +1795,8 @@ test('where reads the step from the Review status of the two claims: the ledger 
     const c = manifest.claims.find((x) => x.key === o.claim);
     w.fake.addRow(w.db('tag_decisions'), { Claim: c['Geo Name'], Key: `${c['Geo ID']}::${TAG}`, Tag: TAG, 'Agent proposal': 'Applies' });
   }
+  assert.match(await stepLine(), /step 1,/, 'a fresh page: the ledger rows do not move it either');
+  w.fake.editRow(w.rows('agent_settings')[0].page_id, { 'Last run summary': 'Tag at 15 Oct 14:40' });
   assert.match(await stepLine(), /step 2,/);
   w.fake.editRow(claimRow('presspool').page_id, { 'Agent notes': 'no tags\nnothing waits for an editor · edition e' });
   assert.match(await stepLine(), /step 2,/, 'one of the two is still unread');
@@ -1776,7 +1816,7 @@ test('where on a page without views points at the Claims table instead of Your q
   assert.equal(demo.views, null);
   const claimsTable = `https://www.notion.so/${demo.databases.claims_copy.database_id}`;
   const first = await w.run(['where']);
-  assert.match(first.out, /you are at step 2, /);
+  assert.match(first.out, /you are at step 1, /);
   agentHasRead(w);
   const r = await w.run(['where']);
   assert.match(r.out, new RegExp(`Next: open Claims \\(${claimsTable.replace(/\./g, '\\.')}\\) and decide your two claims\\.`));
@@ -1818,7 +1858,8 @@ test('the Claims table of step 2 and the words of the story are what the tag ste
   assert.deepEqual(table.filter((r) => r[3].includes('1 waits for an editor')).map((r) => r[0]), manifest.open.map((o) => manifest.claims.find((c) => c.key === o.claim).short), 'the two claims for the editor are the two that wait');
   // the story: both wait in Your queue, and the line that rule g asks for says why the press pool claim is there
   const story = page.slice(0, page.indexOf('## Step 1'));
-  assert.match(story, /The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so it waits in Your queue like the AI Force claim, which waits because the agent is unsure\./);
+  assert.match(story, /The press pool claim was picked for the demo: the agent is fairly sure of it, but the page marks it To review, so it waits in Your queue like the AI Force claim, which the agent reads differently from run to run and which the page also marks To review\./);
+  assert.ok(!/because the agent is unsure/.test(story), 'the story does not say as a fact that the agent is unsure of the AI Force claim: its reading differs from run to run');
   const step3 = page.slice(page.indexOf('## Step 3'), page.indexOf('## Step 4'));
   assert.match(step3, /In Your queue, just below, fill in four columns on each of your two claims\./);
   assert.ok(!/not in it|in the Claims table, in The tables/.test(step3), 'both claims are decided in Your queue');
@@ -1851,7 +1892,7 @@ test('the table of Step 1 is what status prints on a page that has just been bui
   const read = await status(hooks());
   assert.equal(read.report.sentence, `Status of the practice page ${demo.title}: nothing is paused; 2 rows wait for you.`);
   assert.deepEqual(read.report.rows[1].slice(0, 2), ['Your queue', '2 rows, lowest confidence first']);
-  assert.match(read.report.next, /^Next: decide the 2 rows in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}(\?v=[0-9a-f]{32}|#[0-9a-f]{32})\)\.$/);
+  assert.match(read.report.next, /^Next: decide your two claims in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}(\?v=[0-9a-f]{32}|#[0-9a-f]{32})\)\.$/);
   assert.equal(manifest.open.length, 2, 'the two claims of the story are the two that status counts');
 });
 
@@ -1859,7 +1900,7 @@ test('where names the demo it was asked about; an unknown one is exit 2; with no
   const w = newWorld();
   const none = await w.run(['where']);
   assert.equal(none.code, 2);
-  assert.match(none.err, /there is no practice page yet/);
+  assert.match(none.err, /there is no practice page under Demos yet/);
   assert.equal((await w.start()).code, 0);
   w.clock = new Date(NOW.getTime() + 3600e3);
   assert.equal((await w.start()).code, 0);
@@ -1897,12 +1938,132 @@ test('list shows every practice page, newest first, with its link, state and ste
   assert.match(rows[0][0], /^Third practice page \(/);
   assert.deepEqual(rows[0].slice(1), ['planned', '-']);
   assert.match(rows[1][0], new RegExp(`^Training copy \\(${w.demo(b).page.url}\\)`));
-  assert.deepEqual(rows[1].slice(1), ['ready', 'step 3']);
+  assert.deepEqual(rows[1].slice(1), ['ready · used by the demo commands', 'step 3'], 'the newest finished page under Demos is the one the commands reach, and it is marked');
   assert.match(rows[2][0], new RegExp(`^Claim tagger practice · 15 Oct 14:22 \\(${w.demo(a).page.url}\\)`));
-  assert.deepEqual(rows[2].slice(1), ['ready', 'step 2']);
+  assert.deepEqual(rows[2].slice(1), ['ready', 'step 1']);
   assert.match(r.out, /^Walkthrough: 3 practice pages\./);
   assert.match(r.out, /Next: ask for the practice page again under the same link; it continues where it stopped\.$/);
   assert.ok(c);
+});
+
+test('list keeps every page and marks the one the commands reach; its Next line is for that page, not for a newer page under Demo tests', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  w.clock = new Date(NOW.getTime() + 3600e3);
+  assert.equal((await w.run(['start', '--parent', w.testsLink, '--title', 'Verification run'])).code, 0);
+  const [mine, tests] = w.demos();
+  const { manifest } = real();
+  const reviewBoth = (id) => {
+    for (const o of manifest.open) w.fake.editRow(w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === o.claim)['Geo ID'], id).page_id, { 'Review status': 'Reviewed' });
+    w.fake.addRow(w.db('rule_changes', id), { Lesson: 'A rule change', Tag: TAG, Rule: 'Context-dependent rule 3', Kind: 'Clarify wording', Status: 'Rejected' });
+  };
+  // the newer page is complete (its only rule change was rejected), so a Next line made from the newest page would say there is nothing to type
+  reviewBoth(tests);
+  const r = await w.run(['list']);
+  assert.equal(r.code, 0, r.err);
+  assert.deepEqual(lintReport(`${r.out}\n`), []);
+  const rows = r.out.split('\n').filter((l) => l.startsWith('|')).slice(2).map((l) => l.split('|').slice(1, -1).map((s) => s.trim()));
+  assert.equal(rows.length, 2, 'every page is listed');
+  assert.match(rows[0][0], /^Verification run \(/, 'newest first');
+  assert.deepEqual(rows[0].slice(1), ['ready', 'complete'], 'the page under Demo tests is not marked');
+  assert.match(rows[1][0], /^Claim tagger practice · 15 Oct 14:22 \(/);
+  assert.deepEqual(rows[1].slice(1), ['ready · used by the demo commands', 'step 1']);
+  assert.equal(lastLine(r.out), `Next: type ${manifest.steps[0].command}.`, 'the line is for the page the commands reach');
+  assert.ok(!r.out.includes('archive'), 'the archive line belongs to a page that is complete, and only when that is the page the commands reach');
+  assert.ok(mine !== tests);
+
+  // when the page the commands reach is the one that is complete, the archive line is right
+  reviewBoth(mine);
+  assert.match(lastLine((await w.run(['list'])).out), /^Next: nothing to type; archive the page by hand/);
+
+  // no page under Demos at all: nothing is marked, and the Next line says where a page has to go
+  const only = newWorld();
+  assert.equal((await only.run(['start', '--parent', only.testsLink])).code, 0);
+  const none = await only.run(['list']);
+  assert.equal(none.code, 0, none.err);
+  assert.ok(!none.out.includes('used by the demo commands'));
+  assert.match(lastLine(none.out), /^Next: ask for a practice page under the Demos page;/);
+});
+
+test('list shows the page the commands reach even when five newer pages sit above it', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  for (let i = 1; i <= 5; i += 1) {
+    w.clock = new Date(NOW.getTime() + i * 3600e3);
+    assert.equal((await w.run(['start', '--parent', w.testsLink, '--title', `Verification run ${i}`])).code, 0);
+  }
+  const r = await w.run(['list']);
+  assert.equal(r.code, 0, r.err);
+  const rows = r.out.split('\n').filter((l) => l.startsWith('|')).slice(2).map((l) => l.split('|').slice(1, -1).map((s) => s.trim()));
+  assert.equal(rows.length, 5, 'at most five rows');
+  assert.match(rows[0][0], /^Verification run 5 \(/);
+  assert.match(rows[3][0], /^Verification run 2 \(/);
+  assert.match(rows[4][0], /^Claim tagger practice · 15 Oct 14:22 \(/, 'the page the commands reach takes the last row');
+  assert.equal(rows[4][1], 'ready · used by the demo commands');
+  assert.match(r.out, /^Walkthrough: 6 practice pages, the newest 4 and the one the demo commands use below\./);
+});
+
+test('without --demo the commands act on the newest finished page under Demos: a newer page under Demo tests is never picked, a page of an older shape is skipped, and --demo reaches any page', async () => {
+  const w = newWorld();
+  const scriptsDir = standIns();
+  assert.equal((await w.start()).code, 0);
+  w.clock = new Date(NOW.getTime() + 3600e3);
+  assert.equal((await w.start(['--title', 'Older shape'])).code, 0);
+  w.clock = new Date(NOW.getTime() + 7200e3);
+  assert.equal((await w.run(['start', '--parent', w.testsLink, '--title', 'Verification run'])).code, 0);
+  const [mine, shaped, tests] = w.demos();
+  assert.equal(w.demo(mine).parent.id, w.parent.replace(/-/g, ''));
+  assert.equal(w.demo(tests).parent.id, w.testsParent.replace(/-/g, ''));
+  const rootOf = async (...argv) => childReport(await w.run(['run', ...argv, 'pull'], { scriptsDir })).root;
+  const asked = (id, kind) => readdirSync(join(w.dir(id), 'runs')).filter((n) => n.endsWith(kind)).length;
+
+  // the page under Demo tests is the newest, and still the commands do not go there
+  assert.equal(await rootOf(), w.dir(shaped), 'the newest page under Demos');
+  // the second page has the manifest of an earlier shape (a list of tags written as a text): the loader cannot read it, so it is skipped
+  const file = join(w.dir(shaped), 'walkthrough', 'manifest.json');
+  const manifest = read(file);
+  manifest.decided[0]['Claim quality tags — verified'] = 'Context-dependent';
+  writeFileSync(file, JSON.stringify(manifest));
+  assert.match(dp.profileProblem(dp.pickDemo(w.root, shaped)), /Claim quality tags — verified must be a list of tag names/);
+  assert.equal(dp.profileProblem(dp.pickDemo(w.root, mine)), null);
+  assert.equal(await rootOf(), w.dir(mine), 'the older page of the current shape');
+
+  // every command without a page named acts on that page
+  assert.equal((await w.run(['where'])).code, 0);
+  assert.equal((await w.run(['verify', '--json'])).code, 0);
+  assert.equal((await w.run(['decide', '--claim', 'presspool'])).code, 0);
+  assert.deepEqual([asked(mine, 'walkthrough-where'), asked(shaped, 'walkthrough-where'), asked(tests, 'walkthrough-where')], [1, 0, 0]);
+  assert.deepEqual([asked(mine, 'walkthrough-verify'), asked(shaped, 'walkthrough-verify'), asked(tests, 'walkthrough-verify')], [1, 0, 0]);
+  assert.deepEqual([existsSync(join(w.dir(mine), 'editor-actions.jsonl')), existsSync(join(w.dir(shaped), 'editor-actions.jsonl')), existsSync(join(w.dir(tests), 'editor-actions.jsonl'))], [true, false, false]);
+
+  // --demo reaches a page under Demo tests, and the page of the older shape is only refused for what is wrong with it
+  assert.equal(await rootOf('--demo', tests), w.dir(tests));
+  assert.equal((await w.run(['where', '--demo', tests])).code, 0);
+  assert.equal(asked(tests, 'walkthrough-where'), 1);
+  assert.equal((await w.run(['where', '--demo', shaped])).code, 2, 'a named page of the older shape is refused by the loader, with its reason');
+
+  // nothing left under Demos that can be read: the commands say so, they do not fall back to the page under Demo tests
+  const mineFile = join(w.dir(mine), 'walkthrough', 'manifest.json');
+  const mineManifest = read(mineFile);
+  mineManifest.decided[0]['Claim quality tags — verified'] = 'Context-dependent';
+  writeFileSync(mineFile, JSON.stringify(mineManifest));
+  for (const argv of [['where'], ['verify'], ['run', 'pull'], ['decide', '--claim', 'presspool'], ['approve']]) {
+    const r = await w.run(argv, { scriptsDir });
+    assert.equal(r.code, 2, argv.join(' '));
+    assert.match(r.err, /there is no (finished )?practice page under Demos yet/, argv.join(' '));
+  }
+  assert.equal(asked(tests, 'walkthrough-where'), 1, 'the page under Demo tests was not used');
+});
+
+test('the commands without --demo refuse to guess when config.json names no Demos page', async () => {
+  const w = newWorld({ configure: (config) => { config.notion.pages.demos = '<none>'; } });
+  assert.equal((await w.start()).code, 0);
+  for (const argv of [['where'], ['verify'], ['run', 'pull'], ['decide', '--claim', 'presspool']]) {
+    const r = await w.run(argv, { scriptsDir: standIns() });
+    assert.equal(r.code, 2, argv.join(' '));
+    assert.match(r.err, /the Demos page is not set in config\.json/, argv.join(' '));
+  }
+  assert.equal((await w.run(['where', '--demo', w.demos()[0]])).code, 0, 'a named page is reached all the same');
 });
 
 // ---- run ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2282,7 +2443,7 @@ test('decide enters the manifest values for one of the two claims, writes the fo
   assert.ok(first.out.includes('| Review status | Reviewed |'));
   assert.ok(first.out.includes(`| Why wrong | ${enter['Why wrong']} |`));
   assert.ok(first.out.includes(`| Challenged tags notes | ${quoted(enter['Challenged tags notes'], 100)} |`));
-  assert.match(lastLine(first.out), /^Next: open Your queue \(https:\/\/www\.notion\.so\/\S+\) and decide your two claims\.$/);
+  assert.match(lastLine(first.out), /^Next: open Your queue \(https:\/\/www\.notion\.so\/\S+\) and decide your remaining claim\.$/, 'one of the two is decided: the other one is what is left');
   assert.equal(lastLine(first.out), lastLine((await w.run(['where'])).out), 'the Next line is the one where gives');
   assert.ok(!first.out.includes('D31'), 'the report holds no code');
   assert.ok(first.err.includes(`acting as the editor on practice page ${id} (decision D31): Claims `), 'the engineer is told whose hand it is');
@@ -2393,7 +2554,7 @@ test('the editor actions stop where everything stops: a pause file, Paused in Ag
   const none = newWorld();
   const noPage = await none.run(['decide', '--claim', 'presspool']);
   assert.equal(noPage.code, 2);
-  assert.match(noPage.err, /there is no finished practice page yet/);
+  assert.match(noPage.err, /there is no finished practice page under Demos yet/);
 
   const w = newWorld();
   assert.equal((await w.start()).code, 0);

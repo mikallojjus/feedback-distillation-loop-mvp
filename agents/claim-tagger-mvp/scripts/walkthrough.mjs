@@ -27,15 +27,17 @@
 // linked views are put under the blocks they belong to. If Notion refuses a linked view the page gets, under the same block, a paragraph that says where to
 // scroll (the fallback).
 //
-// run. `node <script>.mjs <args>` as a child process with CLAIM_TAGGER_MVP_ROOT set to the demo's folder (the newest ready demo by default). It
+// run. `node <script>.mjs <args>` as a child process with CLAIM_TAGGER_MVP_ROOT set to the demo's folder (by default the newest finished demo under the Demos sub-page
+// whose profile this build reads; a page under Demo tests, or of an older shape, is reached only with --demo <id>). It
 // refuses a script that is not on the list, a folder outside runs/demos, and --confirm, --bare, --fallback-model, --unpause. For promote and followup
 // without --lesson it passes the title of the demo's only Approved (promote) or Live (followup) rule change from the newest pull. The exit code is
 // the child's.
 //
-// where. Pulls the demo's tables and says which of the seven steps the editor is at (read from the Review status of the two open claims, then from the
-// rule changes and the Follow-up of the ledger), and the one thing to do next.
+// where. Pulls the demo's tables and says which of the seven steps the editor is at (read from the Agent notes of the two open claims and Agent settings' Last run
+// summary for steps 1 and 2 - a fresh page is at step 1, and status writes nothing, so it stays there until the tag step has run - then from the Review status of the
+// two open claims, the rule changes and the Follow-up of the ledger), and the one thing to do next.
 // verify. Reads the page and the tables back and lists what differs from what was built (the page lint, the five tables, the views).
-// list. The practice pages, newest first, with their state and step.
+// list. The practice pages, newest first, with their state and step, and a mark on the one the commands reach when no page is named.
 //
 // decide, approve, reject (decision D31, the demo-only exception to hard rule 1: on a practice page the agent may act as the editor, so the
 // calibration runs and the evals of the skill can go through all seven steps). decide enters the editor's four columns of one of the two claims that
@@ -55,7 +57,7 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { CLAIMS_COPY_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, isProtected, loadConfig, tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
-import { listNames, notionUrl, plural, quoted, tableLink, viewLink } from './lib/editor-words.mjs';
+import { listNames, notionUrl, plural, quoted, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { blockText, countBlocks, lintPage } from './lib/notion-blocks.mjs';
 import { StructureError, completeViewBody, planStructure, verifyStructure, viewPlan } from './lib/notion-build.mjs';
@@ -228,6 +230,15 @@ function loadProduction(root, env) {
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
+}
+
+/**
+ * The practice page a command acts on: the one named with --demo (any page), else the newest finished page under the Demos sub-page of config.json whose profile
+ * this build reads (dp.pickDemo). Pages under Demo tests are reached only by naming them. Throws a ManifestError (a message for the person) when there is none.
+ */
+function pickPage(root, env, id, opts = {}) {
+  const under = id === undefined || id === null ? loadProduction(root, env).notion.pages?.demos : null;
+  return dp.pickDemo(root, id, { ...opts, under });
 }
 
 function loadStructureFile(root) {
@@ -1478,7 +1489,7 @@ async function startCommand(args, io, env) {
 
 /** Where the editor is, from a pull of the page: the Review status of the two open claims, the rule changes and the Follow-up of the ledger (dp.stepOf). */
 const stepFor = (ctx, loaded) => dp.stepOf({
-  claims: loaded.claims() ?? [], ledger: loaded.queue() ?? [], lessons: loaded.lessons() ?? [], open: dp.openClaims(ctx.manifest),
+  claims: loaded.claims() ?? [], ledger: loaded.queue() ?? [], lessons: loaded.lessons() ?? [], open: dp.openClaims(ctx.manifest), settings: loaded.settings(),
 });
 
 function whereParts(ctx, st) {
@@ -1491,11 +1502,15 @@ function whereParts(ctx, st) {
   }
   const head = `Walkthrough: you are at step ${st.step}, ${steps[st.step - 1].title}`;
   switch (st.step) {
+    case 1: return { sentence: `${head}.`, next: `Next: type ${command(1)}.` };
     case 2: return { sentence: `${head}.`, next: `Next: type ${command(2)}.` };
     case 3: {
       // both claims are To review, so every tag the agent judged on them waits and both are in Your queue (a view of the Claims table; without the view, the table)
       const l = link('your_queue', 'claims_copy');
-      return { sentence: `${head}.`, next: `Next: open ${l.name} (${l.href}) and decide your two claims.` };
+      // none decided yet: "your two claims" (the words of the page); some decided: the ones that are left
+      const all = st.remaining === undefined || st.remaining === ctx.manifest.open.length;
+      const which = all ? yourClaims(ctx.manifest.open.length) : `your remaining ${st.remaining === 1 ? 'claim' : 'claims'}`;
+      return { sentence: `${head}.`, next: `Next: open ${l.name} (${l.href}) and decide ${which}.` };
     }
     case 4: return { sentence: `${head}.`, next: `Next: type ${command(4)}.` };
     case 5: {
@@ -1527,7 +1542,7 @@ async function whereCommand(args, io, env) {
   const now = env.now ?? (() => new Date());
   let found;
   try {
-    found = dp.pickDemo(root, v.demo);
+    found = pickPage(root, env, v.demo);
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
@@ -1564,7 +1579,7 @@ async function verifyCommand(args, io, env) {
   const now = env.now ?? (() => new Date());
   let found;
   try {
-    found = dp.pickDemo(root, v.demo);
+    found = pickPage(root, env, v.demo);
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
@@ -1622,31 +1637,47 @@ async function listCommand(args, io, env) {
     emit(io, { sentence: 'Walkthrough: there is no practice page yet.', rows: [], next: 'Next: ask for a practice page under a Notion page of your choice.' });
     return EXIT.OK;
   }
-  const shown = all.slice(0, 5);
+  // the page the demo commands reach when none is named, and the newest page under Demos in any state (an unfinished one is what `where` reports on)
+  const reach = (opts) => {
+    try {
+      return pickPage(root, env, undefined, opts);
+    } catch (e) {
+      if (e instanceof dp.ManifestError) return null;
+      throw e;
+    }
+  };
+  const reached = reach({ ready: true });
+  const latest = reach({});
+  const newest = all.slice(0, 5);
+  const shown = reached && !newest.some((d) => d.id === reached.id) ? [...all.slice(0, 4), reached] : newest;
   const rows = [];
-  let newest = null;
-  for (const [i, found] of shown.entries()) {
+  let reachedAt = null;
+  for (const found of shown) {
     let step = '-';
-    let st = null;
     if (found.demo.state === 'ready') {
       try {
         const ctx = loadDemoContext({ root, found, env, io, now });
         const { loaded } = await pullTables(ctx, 'all');
-        st = stepFor(ctx, loaded);
+        const st = stepFor(ctx, loaded);
         step = st.problem ? 'unknown' : st.step === 'complete' ? 'complete' : `step ${st.step}`;
-        if (i === 0) newest = { ctx, st };
+        if (reached && found.id === reached.id) reachedAt = { ctx, st };
       } catch {
         step = 'unknown';
       }
     }
     const cell = `${sayable(found.demo.title)} (${found.demo.page?.url ?? 'not made yet'})`;
-    rows.push([cell, found.demo.state ?? 'unknown', step]);
+    const state = found.demo.state ?? 'unknown';
+    rows.push([cell, reached && found.id === reached.id ? `${state} · used by the demo commands` : state, step]);
   }
-  const first = all[0].demo;
-  let next = first.state === 'ready' ? `Next: open ${sayable(first.title)} (${first.page.url}).` : 'Next: ask for the practice page again under the same link; it continues where it stopped.';
-  if (newest && newest.st && !newest.st.problem) next = whereParts(newest.ctx, newest.st).next;
+  // the Next line is for the page the commands reach: its real next step (the archive line only for a page that is complete)
+  let next;
+  if (latest && latest.demo.state !== 'ready') next = 'Next: ask for the practice page again under the same link; it continues where it stopped.';
+  else if (reachedAt && !reachedAt.st.problem) next = whereParts(reachedAt.ctx, reachedAt.st).next;
+  else if (reached) next = `Next: open ${sayable(reached.demo.title)} (${reached.demo.page.url}).`;
+  else next = 'Next: ask for a practice page under the Demos page; the demo commands reach only the pages under it.';
+  const cut = all.length <= shown.length ? '' : (shown === newest ? `, the newest ${shown.length} below` : `, the newest ${shown.length - 1} and the one the demo commands use below`);
   emit(io, {
-    sentence: `Walkthrough: ${plural(all.length, 'practice page')}${all.length > shown.length ? `, the newest ${shown.length} below` : ''}.`,
+    sentence: `Walkthrough: ${plural(all.length, 'practice page')}${cut}.`,
     header: ['Practice page', 'State', 'Step'], rows, next,
   });
   return EXIT.OK;
@@ -1680,7 +1711,7 @@ async function runCommand(args, io, env) {
   }
   let found;
   try {
-    found = dp.pickDemo(root, demoId, { ready: true });
+    found = pickPage(root, env, demoId, { ready: true });
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
@@ -1750,7 +1781,7 @@ async function withEditing(command, v, args, io, env, body) {
   const now = env.now ?? (() => new Date());
   let found;
   try {
-    found = dp.pickDemo(root, v.demo, { ready: true });
+    found = pickPage(root, env, v.demo, { ready: true });
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }

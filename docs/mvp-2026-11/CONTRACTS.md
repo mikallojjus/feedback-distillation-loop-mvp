@@ -130,7 +130,7 @@ Every script ends by writing `report.json` `{ "demo": false, "sentence": "...", 
 
 ## 10. Run folders and ids
 
-`runId(kind)` gives `YYYYMMDDTHHMMSSZ-<kind>`; every script writes `runs/<run-id>/run.json` `{ run_id, script, args, started_at, finished_at, exit_code, rubric_edition, pull_id, resume: "<the exact command to continue>" }` first (started) and last (finished). every script runs `preflight` (lib/preflight.mjs) first: it refuses with exit 3 when `runs/PAUSED` exists or Agent settings' Paused is ticked in the newest pull; warns when `runs/SETUP` exists; stops with exit 4 on drift; stops with exit 4 on a model mismatch reported by the CLI wrapper.
+`runId(kind)` gives `YYYYMMDDTHHMMSSZ-<kind>`; every script writes `runs/<run-id>/run.json` `{ run_id, script, args, started_at, finished_at, exit_code, rubric_edition, pull_id, resume: "<the exact command to continue>" }` first (started) and last (finished); for a run whose state folder is a practice page (a folder directly under `runs/demos/`), `resume` goes through the runner, `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo <id> <script> <arguments>` (`lib/resume.mjs`), because the bare line has no `CLAIM_TAGGER_MVP_ROOT` and would run on the production tables. every script runs `preflight` (lib/preflight.mjs) first: it refuses with exit 3 when `runs/PAUSED` exists or Agent settings' Paused is ticked in the newest pull; warns when `runs/SETUP` exists; stops with exit 4 on drift; stops with exit 4 on a model mismatch reported by the CLI wrapper.
 
 ## 11. Exit codes
 

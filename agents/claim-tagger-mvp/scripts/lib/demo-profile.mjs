@@ -14,16 +14,18 @@
 //   rulebookRow(manifest) / claimEditorCells(manifest, claim, tagPages) / ledgerOps(manifest, claimLinks) / openKeys(manifest) / openClaims(manifest) / queueKey(claim, tag)
 //                                              -> the Rulebook row, the editor's four columns of a claim as the cells of its create, the creates of Tag decisions (the
 //                                                 ledger: the five decided claims only), the ledger keys of the claims that wait, those claims, a ledger row's key
-//   stepOf({ claims, ledger, lessons, open })  -> where the editor is: { step, branch, lesson } (the mapping of the design, read from the claims' Review status)
+//   stepOf({ claims, ledger, lessons, open, settings }) -> where the editor is: { step, branch, lesson } (the mapping of the design, read from the claims' Review status)
 //   placementFetch(inner)                      -> a fetch that spells two placements the Notion client cannot (see the function)
 //   bufferedLog()                              -> a request log that starts in memory and moves to its file when the folder exists
-//   demosDir / demoDir / listDemos / pickDemo  -> the demos under <root>/runs/demos
+//   demosDir / demoDir / listDemos / pickDemo  -> the demos under <root>/runs/demos; pickDemo is the page a command acts on (the one named, else the
+//                                                 newest finished page under the Demos sub-page whose profile the loader can read)
+//   profileProblem(found)                      -> why the current loader cannot read a demo's profile (an older manifest shape, a missing or changed copy), else null
 //   constants: PRACTICE_TITLES, VIEW_NAMES, LINKED_VIEWS, TAB_VIEWS, FALLBACK_TEXT, CONTENT_TYPES
 
 import { createHash, randomBytes } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-import { TABLES } from './config.mjs';
+import { TABLES, loadConfig } from './config.mjs';
 import { readJson } from './jsonl.mjs';
 import { blockText, parseInline, renderPreview, splitAtMarkers, toBlocks } from './notion-blocks.mjs';
 import { AUTOMATIC_TYPES, validateStructure, viewKey } from './notion-build.mjs';
@@ -509,9 +511,10 @@ const byCreated = (a, b) => text(b.created).localeCompare(text(a.created));
 /**
  * The mapping of the design (W4 9.3), from a pull of the demo's tables: claims = the rows of the Claims (geo_id, review_status, agent_notes), ledger = the rows of Tag
  * decisions (Key, Follow-up), lessons = the rows of Rule changes (Lesson, Status, Safety check result), open = the two claims that wait for the editor
- * (openClaims: geo_id and ledger key). An editor's decision is a claim whose Review status is Reviewed.
- *   { step: 2 }                          a claim of the two is not Reviewed and the agent has not written Agent notes on it yet
- *   { step: 3 }                          they have notes and one of them is not Reviewed
+ * (openClaims: geo_id and ledger key), settings = the row of Agent settings (Last run summary). An editor's decision is a claim whose Review status is Reviewed.
+ *   { step: 1 }                          a fresh page: a claim of the two is not Reviewed, has no Agent notes, and Agent settings has no Last run summary
+ *   { step: 2 }                          the same, but a command has written a Last run summary (the tag step, which writes the notes, has not finished)
+ *   { step: 3, remaining }               they have notes and `remaining` of them (1 or 2) are not Reviewed
  *   { step: 4 }                          both are Reviewed and there is no rule change
  *   { step: 5, lesson }                  a rule change is Proposed
  *   { step: 6, lesson }                  Approved, no Safety check result yet
@@ -521,7 +524,7 @@ const byCreated = (a, b) => text(b.created).localeCompare(text(a.created));
  *   { step: 'complete' }                 Live with both Fixed, or the rule change was Rejected or rolled back
  *   { problem }                          one of the two claims is not in Claims
  */
-export function stepOf({ claims = [], ledger = [], lessons = [], open = [] }) {
+export function stepOf({ claims = [], ledger = [], lessons = [], open = [], settings = null }) {
   const byId = new Map(claims.map((c) => [text(c.geo_id), c]));
   const rows = open.map((o) => byId.get(o.geo_id));
   if (open.length === 0 || rows.some((r) => !r)) {
@@ -529,8 +532,11 @@ export function stepOf({ claims = [], ledger = [], lessons = [], open = [] }) {
     return { problem: `a claim that waits for the editor is not in Claims (${missing.join(', ') || 'none are known'})` };
   }
   const reviewed = (c) => text(c.review_status) === 'Reviewed';
-  if (rows.some((c) => !reviewed(c) && text(c.agent_notes) === '')) return { step: 2 };
-  if (rows.some((c) => !reviewed(c))) return { step: 3 };
+  // Last run summary is empty from the build until the first command that writes: the tag step writes it together with the notes, and status writes nothing,
+  // so a page where only status was typed is still at step 1
+  if (rows.some((c) => !reviewed(c) && text(c.agent_notes) === '')) return text(settings?.last_run_summary) === '' ? { step: 1 } : { step: 2 };
+  const remaining = rows.filter((c) => !reviewed(c)).length;
+  if (remaining > 0) return { step: 3, remaining };
   const mine = [...lessons].sort(byCreated);
   const approved = mine.find((l) => l.Status === 'Approved');
   if (approved) return text(approved['Safety check result']) === '' ? { step: 6, lesson: approved } : { step: 6, branch: 'not-passed', lesson: approved };
@@ -590,16 +596,49 @@ export function listDemos(root) {
   return out.sort((a, b) => String(b.demo.created_at ?? '').localeCompare(String(a.demo.created_at ?? '')) || b.id.localeCompare(a.id));
 }
 
-/** The demo asked for by id, else the newest (a ready one when `ready` is set). Throws ManifestError when there is none. */
-export function pickDemo(root, id, { ready = false } = {}) {
+/**
+ * Why the current loader cannot read a demo's profile, or null when it can: its config.json is not that of a demo profile of that name, the copy of the manifest
+ * or the page template is missing, or has a shape this build does not read (the pages of 15 October have the older manifest), or its structure or page model does
+ * not load. The same files and order as `loadDemoContext` in scripts/walkthrough.mjs, but returning the first problem instead of throwing. A copy that reads but is
+ * no longer the one the page was planned from (the checksums in demo.json) is not a profile that cannot be read: that is damage, and the command that acts on the
+ * page says so out loud. `found` is { id, dir, demo } as listDemos makes it.
+ */
+export function profileProblem({ id, dir, demo }) {
+  try {
+    const config = loadConfig(dir);
+    if (config.demo !== true || config.demo_id !== id) return 'its config.json is not the profile of a practice page of that name';
+    const manifestFile = join(dir, 'walkthrough', 'manifest.json');
+    const templateFile = join(dir, 'walkthrough', 'page.md');
+    if (!existsSync(manifestFile) || !existsSync(templateFile)) return 'it has no copy of its manifest and page template';
+    loadManifest(manifestFile);
+    const template = loadTemplate(templateFile);
+    practiceStructure(readJson(join(dir, 'setup', 'structure.json')));
+    pageModel(template.text, { edition: demo?.edition, date: demo?.date });
+    return null;
+  } catch (e) {
+    return String(e?.message ?? e).split('\n').slice(0, 2).map((l) => l.trim()).join(' ');
+  }
+}
+
+/** True when the demo's page was made under the page `under` (a 32-digit id, with or without dashes). */
+export const isUnder = (found, under) => isRealId(under) && hex32(found?.demo?.parent?.id) === hex32(under);
+
+/**
+ * The practice page a command acts on. With an id: that page, wherever it is (any state, any folder). Without one: the newest page that was made under the Demos
+ * sub-page (`under`, the id in config.notion.pages.demos), whose profile the current loader can read, and, when `ready` is set, whose build is finished. A page under
+ * Demo tests (the evals and verification runs) or any other parent is never picked by default, and neither is a page of an older shape; they are reached with the id.
+ * Throws ManifestError when there is none, and when the default is asked for with no Demos page to look under.
+ */
+export function pickDemo(root, id, { ready = false, under = null } = {}) {
   if (id !== undefined && id !== null) {
     const dir = demoDir(root, id);
     const demo = readDemo(dir);
     if (!demo) throw new ManifestError(`there is no practice page "${id}" (no demo.json in its folder)`);
     return { id, dir, demo };
   }
-  const found = listDemos(root).find((d) => !ready || d.demo.state === 'ready');
-  if (!found) throw new ManifestError(ready ? 'there is no finished practice page yet; ask for one first' : 'there is no practice page yet; ask for one first');
+  if (!isRealId(under)) throw new ManifestError('the Demos page is not set in config.json (notion.pages.demos), so the newest practice page under it cannot be told; name a page with --demo <id>');
+  const found = listDemos(root).find((d) => isUnder(d, under) && (!ready || d.demo.state === 'ready') && profileProblem(d) === null);
+  if (!found) throw new ManifestError(ready ? 'there is no finished practice page under Demos yet; ask for one first' : 'there is no practice page under Demos yet; ask for one first');
   return found;
 }
 
