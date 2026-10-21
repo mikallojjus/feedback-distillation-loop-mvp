@@ -2,7 +2,7 @@
 
 | Item | Value |
 |---|---|
-| Phase | "Read the decisions" (decision P4, specification `READ-DECISIONS.md`) on the branch `read-decisions-2026-11`: stages 0 to 4 done (code, page, documents, the live step on the copy, the story frozen after calibration runs 6 to 8); stage 5 in its second loop: verification run 4 (`evidence/18-walkthrough-verification-4/`) found 1 must, 2 should and 3 nice findings, settled as decisions 78 and 79 and fixed at 234d51a (2,076 tests pass, 0 fail); verification run 5 is the re-run. Then the artifact's two tabs and a fresh page for the product owner. |
+| Phase | "Read the decisions" (decision P4, specification `READ-DECISIONS.md`) on the branch `read-decisions-2026-11`: stages 0 to 4 done; stage 5 in its third and last loop: run 4 (`evidence/18`) found six issues, settled as decisions 78 and 79 and fixed; run 5 (`evidence/19`) confirmed them and found one must from the 15 October judge (promote stopping for good after a failed extra read), settled as decision 80 and fixed at 84c0e52 (2,084 tests pass, 0 fail); run 6 is the re-run. Then the artifact's two tabs and a fresh page for the product owner. |
 | Checkpoint 1 (structure proposal) | Approved as proposed on 2026-10-15 (decision P1); page https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 |
 | Checkpoint 2 (final demo) | message sent on 2026-10-15; the MVP is agreed when the product owner runs the seven steps and says so |
 | Branch | `read-decisions-2026-11`, off `mvp-2026-11` at 8827ceb; merged into `mvp-2026-11` after stage 5, on the product owner's say-so |
