@@ -1,0 +1,89 @@
+{
+  "run": 8,
+  "date": "2026-10-22",
+  "manifest_version": "2026-10-22.1",
+  "demo_id": "20261021-2116-f511f8",
+  "page": "400273e214eb8122a008d2fb6ed44fb7",
+  "open_rows": {
+    "presspool": {
+      "decision": "apply",
+      "p": 0.85,
+      "rule_ref": "Context-dependent rule 2"
+    },
+    "aiforce": {
+      "decision": "ask_editor",
+      "p": 0.5,
+      "rule_ref": "Context-dependent rule 5"
+    },
+    "usps": {
+      "decision": "apply",
+      "p": 0.78,
+      "rule_ref": "Context-dependent rule 3"
+    },
+    "georgia": {
+      "decision": "do_not_apply",
+      "p": 0.25,
+      "rule_ref": null
+    }
+  },
+  "earlier_decisions": {
+    "cnn": "as expected (apply 0.9)",
+    "dallas": "as expected (apply 0.8)",
+    "contractor": "as expected (do_not_apply 0.05)",
+    "kennedy": "as expected (do_not_apply 0.1)",
+    "stopgap": "as expected (do_not_apply 0.1)"
+  },
+  "readings": {
+    "presspool": {
+      "reading": "Rule should change",
+      "rule": "Context-dependent rule 3",
+      "source": "model"
+    },
+    "aiforce": {
+      "reading": "Rule unclear",
+      "rule": "Context-dependent rule 3",
+      "source": "model"
+    },
+    "usps": {
+      "reading": "Agent slip",
+      "rule": "Context-dependent rule 5",
+      "source": "verbatim"
+    },
+    "georgia": {
+      "reading": null,
+      "rule": null,
+      "source": "none"
+    }
+  },
+  "lesson": {
+    "title": "Known standing groups identified; unknown names are not",
+    "rule": "Context-dependent rule 3",
+    "kind": "Change the rule",
+    "keys": [
+      "presspool",
+      "aiforce"
+    ]
+  },
+  "gate": "PASS on the draft",
+  "followup": {
+    "presspool": "Fixed",
+    "aiforce": "Fixed",
+    "usps": null,
+    "georgia": null
+  },
+  "where": "you have been through all seven steps of the practice page",
+  "status_after": "Next: type /claim-tagger demo tag to read new claims. (no \"Your decisions\" row; Your queue: 2 rows decided, waiting for the agent's next run; rulebook edition 2026-10-21.2)",
+  "canaries": "10 of 10 right under the draft",
+  "verdicts": [
+    "PASS on the draft: examples 10 of 10, earlier 6 of 6, yours 2 of 2; edition 2026-10-21.2, both rows Fixed"
+  ],
+  "notes": [
+    "The press pool row cited Context-dependent rule 2 (not rule 3) in the tag step, Applies 0.85; the criterion \"citing rule 3\" is not met on this run. The reading of the press pool (model) and the lesson are on rule 3 regardless.",
+    "AI Force: three judge runs disagreed (apply 0.65 rule 4, ask_editor 0.5, do_not_apply 0.35 rule 5); the row came out Can't tell 0.5 and the Agent reason cites rule 5.",
+    "Georgia: Does not apply at p 0.25 exactly (the Notion column shows Agent confidence 0.75), on the limit of the max_p 0.25 criterion.",
+    "Gate baseline (the rulebook in force, edition 2026-10-21.1) judged the stopgap earlier decision Applies 0.6 (against the editor's Does not apply); under the candidate it reads Does not apply 0.2. The gate counted 6 earlier decisions; which six it counted is inferred, not read from a record.",
+    "The demo ran on 2026-10-21 (system date, editions 2026-10-21.1 and .2); date \"2026-10-22\" is the value the run brief asked for.",
+    "After the follow-up the press pool reads Does not apply at confidence 0.63 (2 of 3 runs agree; the reason still cites rule 2 for \"banned networks\" while saying the press pool no longer triggers the tag) and AI Force reads Applies 0.85 citing rule 3 (1 of 1 runs); both Done on edition 2026-10-21.2.",
+    "All commands exited 0; no retries; no Editor wording needed."
+  ]
+}

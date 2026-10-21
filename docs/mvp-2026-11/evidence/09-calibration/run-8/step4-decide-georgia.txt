@@ -1,0 +1,10 @@
+walkthrough: acting as the editor on practice page 20261021-2116-f511f8 (decision D31): Claims 8f9c833b41e54eee9ca78e9c2f4ffb58: Verified tags, Challenged tags notes, Review status
+Walkthrough: acting as the editor, the claim "Georgia's gubernatorial debate should be moderated by pro..." now reads Reviewed with no tag verified.
+
+| Column | Now |
+|---|---|
+| Verified tags | none |
+| Challenged tags notes | (empty) |
+| Review status | Reviewed |
+
+Next: type /claim-tagger demo distill.

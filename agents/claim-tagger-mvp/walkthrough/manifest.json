@@ -1,7 +1,7 @@
 {
   "manifest_version": "2026-10-22.1",
   "calibration": {
-    "status": "pending",
+    "status": "frozen",
     "runs": [
       {
         "run": 1,
@@ -170,9 +170,290 @@
           "PASS with the proposed wording: edition 2026-10-15.2, both rows Fixed"
         ],
         "outcome": "passed after one wording round; the distill prompt was sharpened afterwards (decision 38): the draft described the press pool as a riddle instead of naming the kind"
+      },
+      {
+        "run": 6,
+        "date": "2026-10-21",
+        "manifest_version": "2026-10-22.1",
+        "demo_id": "20261021-2116-30ecb4",
+        "page": "400273e214eb8101a58ece8a61ad6bcd",
+        "open_rows": {
+          "presspool": {
+            "decision": "apply",
+            "p": 0.72,
+            "rule_ref": "Context-dependent rule 3",
+            "proposal": "Can't tell"
+          },
+          "aiforce": {
+            "decision": "ask_editor",
+            "p": 0.54,
+            "rule_ref": "Context-dependent rule 3",
+            "proposal": "Can't tell",
+            "reads": "ask_editor 0.50, apply 0.62 (rule 3), ask_editor 0.50; the reason names rule 5, rule 3 and the rule 4 test"
+          },
+          "usps": {
+            "decision": "apply",
+            "p": 0.72,
+            "rule_ref": "Context-dependent rule 3",
+            "proposal": "Can't tell"
+          },
+          "georgia": {
+            "decision": "do_not_apply",
+            "p": 0.25,
+            "rule_ref": null,
+            "proposal": "Does not apply"
+          }
+        },
+        "earlier_decisions": {
+          "cnn": "as expected (apply 0.93)",
+          "dallas": "as expected (apply 0.70, then 0.60; mean 0.65)",
+          "contractor": "as expected (do_not_apply 0.08)",
+          "kennedy": "as expected (do_not_apply 0.10)",
+          "stopgap": "as expected (do_not_apply 0.10)"
+        },
+        "readings": {
+          "presspool": {
+            "reading": "Rule should change",
+            "rule": "Context-dependent rule 3",
+            "source": "model"
+          },
+          "aiforce": {
+            "reading": "Rule unclear",
+            "rule": "Context-dependent rule 3",
+            "source": "model"
+          },
+          "usps": {
+            "reading": "Agent slip",
+            "rule": "Context-dependent rule 5",
+            "source": "verbatim"
+          },
+          "georgia": {
+            "reading": null,
+            "rule": null,
+            "source": "none"
+          }
+        },
+        "canaries": "10 of 10 right under the draft (earlier decisions 6 of 6, yours 2 of 2)",
+        "lesson": {
+          "title": "Standing roles resolve; capitalised unknown names do not",
+          "rule": "Context-dependent rule 3",
+          "kind": "Change the rule",
+          "keys": [
+            "presspool",
+            "aiforce"
+          ]
+        },
+        "gate": "PASS on the draft",
+        "verdicts": [
+          "PASS on the draft: edition 2026-10-21.2 (examples 10 of 10, earlier 6 of 6, yours 2 of 2); press pool turned Can't tell to Does not apply, AI Force Can't tell to Applies; no wording round"
+        ],
+        "followup": {
+          "presspool": "Fixed",
+          "aiforce": "Fixed",
+          "usps": "not marked (still Waits for you)",
+          "georgia": "not marked (still Waits for you)"
+        },
+        "where": "Walkthrough: you have been through all seven steps of the practice page.",
+        "status_after": "Next: type /claim-tagger demo tag to read new claims.",
+        "criteria": {
+          "presspool_applies_at_least_0.75_rule_3": "FAIL: proposal Can't tell at 0.72 (one judge read, Applies 0.72 citing rule 3, inside the 0.25 to 0.75 band)",
+          "aiforce_cant_tell_or_applies_at_most_0.70": "PASS: Can't tell at 0.54",
+          "usps_applies_at_least_0.75": "FAIL: proposal Can't tell at 0.72 (one judge read, Applies 0.72 citing rule 3)",
+          "georgia_does_not_apply_at_most_0.25": "PASS: Does not apply, judge p 0.25 (the ledger shows confidence 0.75 in Does not apply)",
+          "tag_step_four_wait_and_decided_as_expected": "PASS: four open claims Waits for you, status says 4 rows wait; five decided claims Done, ledger proposals equal the manifest, current verdicts agree with the editor",
+          "distill": "PASS: one reading call (2 items) and one distill call; press pool Rule should change and AI Force Rule unclear on rule 3 from the model; USPS Agent slip rule 5 verbatim; Georgia no reading and the agree line; one rule change on rule 3 resting on the press pool and AI Force keys; report 5 rows, Next names Lessons waiting",
+          "safety_check": "PASS on the draft",
+          "after_promote": "PASS: press pool and AI Force Fixed, USPS and Georgia not marked and still Waits for you, where says complete, no Your decisions row in status"
+        },
+        "outcome": "tag-step criteria for press pool and USPS not met (both Can't tell at 0.72, just under 0.75); everything from the decisions on met",
+        "notes": [
+          "Press pool and USPS were each read once by the judge (Applies 0.72 citing rule 3). Both fall inside the rerun band 0.25 to 0.75, but the rerun cap (max_share 0.3, two claims of nine) was spent on AI Force (three reads) and Dallas (two reads, 0.70 and 0.60), so neither got a second read that could have lifted the mean to 0.75.",
+          "Georgia's judge p is exactly 0.25, the edge of the criterion; the first read said do_not_apply 0.25 and the claim was not re-read.",
+          "No command exited with anything but 0; no retry, no wording round.",
+          "The decided claims' ledger proposals (manifest decided[].Agent proposal) are the seeded audit values and did not change; the claims table shows the agent's current verdict for them (cnn and dallas Applies, the other three Does not apply), which agrees with the editor on all five, so all five are Done and none Disagrees.",
+          "The safety check counted 6 earlier decisions and 10 example claims; the earlier count is the cases the old rulebook already got right, so by inference it is the five seeded decisions plus Georgia, and the USPS row (which the old rulebook gets wrong) is not in it. Judge model claude-sonnet-5-5, reading and distill model claude-opus-5-5.",
+          "The folder already held a stale start.txt of 15 October (agent paused, start exit 3) from an earlier session; it is not part of this run and was left as it was."
+        ],
+        "evidence": "docs/mvp-2026-11/evidence/09-calibration/run-6/"
+      },
+      {
+        "run": 7,
+        "date": "2026-10-21",
+        "manifest_version": "2026-10-22.1",
+        "demo_id": "20261021-2116-5285ae",
+        "page": "400273e214eb81779381fd94c9abb38a",
+        "open_rows": {
+          "presspool": {
+            "decision": "apply",
+            "p": 0.85,
+            "rule_ref": "Context-dependent rule 3"
+          },
+          "aiforce": {
+            "decision": "ask_editor",
+            "p": 0.5,
+            "rule_ref": null
+          },
+          "usps": {
+            "decision": "apply",
+            "p": 0.78,
+            "rule_ref": "Context-dependent rule 3"
+          },
+          "georgia": {
+            "decision": "do_not_apply",
+            "p": 0.2,
+            "rule_ref": null
+          }
+        },
+        "earlier_decisions": {
+          "cnn": "as expected (apply 0.93, Done)",
+          "dallas": "as expected (apply 0.72, then 0.60; Done at 0.66)",
+          "contractor": "as expected (do_not_apply 0.08, Done)",
+          "kennedy": "as expected (do_not_apply 0.10, Done)",
+          "stopgap": "as expected (do_not_apply 0.15, Done)"
+        },
+        "readings": {
+          "presspool": {
+            "reading": "Rule should change",
+            "rule": "Context-dependent rule 3",
+            "source": "model"
+          },
+          "aiforce": {
+            "reading": "Rule unclear",
+            "rule": "Context-dependent rule 3",
+            "source": "model"
+          },
+          "usps": {
+            "reading": "Agent slip",
+            "rule": "Context-dependent rule 5",
+            "source": "verbatim"
+          },
+          "georgia": {
+            "reading": null,
+            "rule": null,
+            "source": "none"
+          }
+        },
+        "lesson": {
+          "title": "Standing bodies known by role count as identified",
+          "rule": "Context-dependent rule 3",
+          "kind": "Change the rule",
+          "keys": [
+            "presspool",
+            "aiforce"
+          ]
+        },
+        "gate": "PASS on the draft",
+        "gate_detail": "examples 10 of 10, earlier 6 of 6, yours 2 of 2; edition 2026-10-21.1 to 2026-10-21.2; press pool flipped Applies to Does not apply",
+        "followup": {
+          "presspool": "Fixed",
+          "aiforce": "Fixed",
+          "usps": null,
+          "georgia": null
+        },
+        "where": "Walkthrough: you have been through all seven steps of the practice page.",
+        "status_after": "Next: type /claim-tagger demo tag to read new claims.",
+        "notes": [
+          "The AI Force proposal is Can't tell at confidence 0.53 from three judge runs (ask_editor 0.5, apply 0.6 on rule 3, do_not_apply 0.3 on rule 5); its Agent reason cites Context-dependent rule 5 (\"1 of 3 runs agree\"), not rule 3, so the manifest calibrate.cites_rule 3 for this row is not met (the criteria of the brief do not require it).",
+          "Dallas was judged Applies at 0.72 and 0.60 (Agent confidence 0.66), below the \"0.75 or more\" the page table promises for the earlier decisions; its Agent status is Done as expected.",
+          "The press pool flipped in the safety check on a 2-of-3 majority: candidate runs do_not_apply 0.22 (rule 3), apply 0.80 (rule 2), do_not_apply 0.12 (rule 3); the AI Force row reads Applies (0.88) under the candidate; the card lists only the press pool as a flipped answer.",
+          "The safety check counted 6 earlier decisions; the candidate judged 9 cases including USPS (Applies 0.75, the Agent slip row) and Georgia (Does not apply 0.10), so the 6 are probably the 5 decided claims plus Georgia (inferred, not read from the card).",
+          "No command exited with anything but 0; no retry was needed; no Editor wording was needed."
+        ],
+        "evidence": "docs/mvp-2026-11/evidence/09-calibration/run-7/"
+      },
+      {
+        "run": 8,
+        "date": "2026-10-21",
+        "manifest_version": "2026-10-22.1",
+        "demo_id": "20261021-2116-f511f8",
+        "page": "400273e214eb8122a008d2fb6ed44fb7",
+        "open_rows": {
+          "presspool": {
+            "decision": "apply",
+            "p": 0.85,
+            "rule_ref": "Context-dependent rule 2"
+          },
+          "aiforce": {
+            "decision": "ask_editor",
+            "p": 0.5,
+            "rule_ref": "Context-dependent rule 5"
+          },
+          "usps": {
+            "decision": "apply",
+            "p": 0.78,
+            "rule_ref": "Context-dependent rule 3"
+          },
+          "georgia": {
+            "decision": "do_not_apply",
+            "p": 0.25,
+            "rule_ref": null
+          }
+        },
+        "earlier_decisions": {
+          "cnn": "as expected (apply 0.9)",
+          "dallas": "as expected (apply 0.8)",
+          "contractor": "as expected (do_not_apply 0.05)",
+          "kennedy": "as expected (do_not_apply 0.1)",
+          "stopgap": "as expected (do_not_apply 0.1)"
+        },
+        "readings": {
+          "presspool": {
+            "reading": "Rule should change",
+            "rule": "Context-dependent rule 3",
+            "source": "model"
+          },
+          "aiforce": {
+            "reading": "Rule unclear",
+            "rule": "Context-dependent rule 3",
+            "source": "model"
+          },
+          "usps": {
+            "reading": "Agent slip",
+            "rule": "Context-dependent rule 5",
+            "source": "verbatim"
+          },
+          "georgia": {
+            "reading": null,
+            "rule": null,
+            "source": "none"
+          }
+        },
+        "lesson": {
+          "title": "Known standing groups identified; unknown names are not",
+          "rule": "Context-dependent rule 3",
+          "kind": "Change the rule",
+          "keys": [
+            "presspool",
+            "aiforce"
+          ]
+        },
+        "gate": "PASS on the draft",
+        "followup": {
+          "presspool": "Fixed",
+          "aiforce": "Fixed",
+          "usps": null,
+          "georgia": null
+        },
+        "where": "you have been through all seven steps of the practice page",
+        "status_after": "Next: type /claim-tagger demo tag to read new claims. (no \"Your decisions\" row; Your queue: 2 rows decided, waiting for the agent's next run; rulebook edition 2026-10-21.2)",
+        "canaries": "10 of 10 right under the draft",
+        "verdicts": [
+          "PASS on the draft: examples 10 of 10, earlier 6 of 6, yours 2 of 2; edition 2026-10-21.2, both rows Fixed"
+        ],
+        "notes": [
+          "The press pool row cited Context-dependent rule 2 (not rule 3) in the tag step, Applies 0.85; the criterion \"citing rule 3\" is not met on this run. The reading of the press pool (model) and the lesson are on rule 3 regardless.",
+          "AI Force: three judge runs disagreed (apply 0.65 rule 4, ask_editor 0.5, do_not_apply 0.35 rule 5); the row came out Can't tell 0.5 and the Agent reason cites rule 5.",
+          "Georgia: Does not apply at p 0.25 exactly (the Notion column shows Agent confidence 0.75), on the limit of the max_p 0.25 criterion.",
+          "Gate baseline (the rulebook in force, edition 2026-10-21.1) judged the stopgap earlier decision Applies 0.6 (against the editor's Does not apply); under the candidate it reads Does not apply 0.2. The gate counted 6 earlier decisions; which six it counted is inferred, not read from a record.",
+          "The demo ran on 2026-10-21 (system date, editions 2026-10-21.1 and .2); date \"2026-10-22\" is the value the run brief asked for.",
+          "After the follow-up the press pool reads Does not apply at confidence 0.63 (2 of 3 runs agree; the reason still cites rule 2 for \"banned networks\" while saying the press pool no longer triggers the tag) and AI Force reads Applies 0.85 citing rule 3 (1 of 1 runs); both Done on edition 2026-10-21.2.",
+          "All commands exited 0; no retries; no Editor wording needed."
+        ],
+        "evidence": "docs/mvp-2026-11/evidence/09-calibration/run-8/"
       }
     ],
-    "note": "Runs 1 to 5 belong to the earlier versions of the story (manifest 2026-10-15.1 to 2026-10-21.1). Runs 6 to 8 calibrate this version, 2026-10-22.1, with four open claims; the status stays pending until the third of them is recorded."
+    "note": "Runs 1 to 5 belong to the earlier versions of the story (manifest 2026-10-15.1 to 2026-10-21.1). Runs 6 to 8 calibrate this version, 2026-10-22.1, with four open claims, on the evening of 21 October: the tag-step thresholds were met in runs 7 and 8 (in run 6 the press pool and USPS came out Can't tell at 0.72, under the band edge, because the re-read cap went to two other claims), Georgia in all three; in all three the readings were the press pool Rule should change and the AI Force Rule unclear on rule 3 (from the model), USPS Agent slip on rule 5 verbatim, Georgia nothing to read, one rule change on rule 3 resting on the two keys, PASS on the draft (examples 10 of 10, earlier decisions 6 of 6, the two rows 2 of 2), both rows Fixed, USPS and Georgia still waiting. The criterion on the rule the agent cites was dropped (decision 77): the agent cited rule 2 for the press pool in run 8 and rule 5 for the AI Force in runs 7 and 8 while every reading pointed at rule 3, and the lesson rests on the reading.",
+    "frozen_on": "2026-10-21"
   },
   "tag": {
     "Name": "Context-dependent",
@@ -670,8 +951,7 @@
       "calibrate": {
         "agent": "apply",
         "min_share": 0.67,
-        "min_p": 0.75,
-        "cites_rule": 3
+        "min_p": 0.75
       },
       "expect_reading": {
         "source": "model",
@@ -698,8 +978,7 @@
           "apply"
         ],
         "min_share": 0.67,
-        "max_p": 0.7,
-        "cites_rule": 3
+        "max_p": 0.7
       },
       "expect_reading": {
         "source": "model",

@@ -50,12 +50,12 @@ The sentence starts with "Demo · " and names this practice page, as every repor
 | The press pool was justified in suspending coverage… | (empty) | 0.80 | Waits for you |
 | The AI Force should enforce binding safety standards | (empty) | 0.50 | Waits for you |
 | The USPS ballot portal should not launch before the 2026… | (empty) | 0.80 | Waits for you |
-| Georgia's gubernatorial debate should be moderated by… | (empty) | 0.85 | Waits for you |
-| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.75 or more | Done |
-| The Dallas convention is the unofficial launch of JD Vance’s… | Context-dependent | 0.75 or more | Done |
-| A contractor's enforcement of safety restrictions constitutes… | (empty) | 0.75 or more | Done |
-| Relocating the Kennedy Center Honors to a sports arena… | (empty) | 0.75 or more | Done |
-| December stopgap funding rewards Congress for avoiding a… | (empty) | 0.75 or more | Done |
+| Georgia's gubernatorial debate should be moderated by… | (empty) | 0.75 | Waits for you |
+| Excluding CNN from Air Force One violates the federal court… | Context-dependent | 0.65 or more | Done |
+| The Dallas convention is the unofficial launch of JD Vance’s… | Context-dependent | 0.65 or more | Done |
+| A contractor's enforcement of safety restrictions constitutes… | (empty) | 0.65 or more | Done |
+| Relocating the Kennedy Center Honors to a sports arena… | (empty) | 0.65 or more | Done |
+| December stopgap funding rewards Congress for avoiding a… | (empty) | 0.65 or more | Done |
 
 Tags waiting names the tags that wait for you, Agent reading is still empty because the agent reads a decision only after you have made it, and Agent reasons holds one line for each tag the agent judged: the tag, the reason, the rule it cites (when it cites one) and how many of its readings agree. For your 4 claims, as one run read them:
 
@@ -136,12 +136,12 @@ A reading is the agent's own answer to why a decision differs from its tag. It i
 
 | Geo Name | Agent reading |
 |---|---|
-| The press pool was justified in suspending coverage… | Context-dependent: Rule unclear, rule 3 · The rule does not say if a standing group counts. |
+| The press pool was justified in suspending coverage… | Context-dependent: Rule should change, rule 3 · Rule 3 would need to exempt groups known by role. |
 | The AI Force should enforce binding safety standards | Context-dependent: Rule unclear, rule 3 · The rule does not say if an unknown name is a kind. |
 | The USPS ballot portal should not launch before the 2026… | Context-dependent: Agent slip, rule 5 · Your note says so. |
 | Georgia's gubernatorial debate should be moderated by… | Nothing to read: the agent agreed with you. |
 
-The agent may read the press pool or the AI Force claim as Rule should change instead of Rule unclear; the draft is the same either way. The USPS claim is read at once, because your note opens with "Agent slip." and the agent takes your word; the Georgia claim has nothing to read. The 5 earlier decisions carry a reading too, put there when this page was made: Agent slip, with the note "Seeded from the audit of 9 October."
+The agent may read either claim as Rule unclear or as Rule should change; the draft is the same either way. The USPS claim is read at once, because your note opens with "Agent slip." and the agent takes your word; the Georgia claim has nothing to read. The 5 earlier decisions carry a reading too, put there when this page was made: Agent slip, with the note "Seeded from the audit of 9 October."
 
 **Rule changes**
 

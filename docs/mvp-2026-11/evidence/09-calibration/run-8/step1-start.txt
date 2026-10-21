@@ -1,0 +1,10 @@
+Building the page.
+Walkthrough: your practice page is ready under Demos.
+
+| Table | Now |
+|---|---|
+| Rulebook | 1 tag |
+| Claims | 9: 5 reviewed earlier, 4 for you |
+| Rule changes | empty |
+
+Next: open Claim tagger practice · calibration 8 (https://app.notion.com/p/Claim-tagger-practice-calibration-8-400273e214eb8122a008d2fb6ed44fb7) and follow step 1.

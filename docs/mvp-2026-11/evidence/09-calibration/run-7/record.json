@@ -1,0 +1,84 @@
+{
+  "run": 7,
+  "date": "2026-10-22",
+  "manifest_version": "2026-10-22.1",
+  "demo_id": "20261021-2116-5285ae",
+  "page": "400273e214eb81779381fd94c9abb38a",
+  "open_rows": {
+    "presspool": {
+      "decision": "apply",
+      "p": 0.85,
+      "rule_ref": "Context-dependent rule 3"
+    },
+    "aiforce": {
+      "decision": "ask_editor",
+      "p": 0.5,
+      "rule_ref": null
+    },
+    "usps": {
+      "decision": "apply",
+      "p": 0.78,
+      "rule_ref": "Context-dependent rule 3"
+    },
+    "georgia": {
+      "decision": "do_not_apply",
+      "p": 0.2,
+      "rule_ref": null
+    }
+  },
+  "earlier_decisions": {
+    "cnn": "as expected (apply 0.93, Done)",
+    "dallas": "as expected (apply 0.72, then 0.60; Done at 0.66)",
+    "contractor": "as expected (do_not_apply 0.08, Done)",
+    "kennedy": "as expected (do_not_apply 0.10, Done)",
+    "stopgap": "as expected (do_not_apply 0.15, Done)"
+  },
+  "readings": {
+    "presspool": {
+      "reading": "Rule should change",
+      "rule": "Context-dependent rule 3",
+      "source": "model"
+    },
+    "aiforce": {
+      "reading": "Rule unclear",
+      "rule": "Context-dependent rule 3",
+      "source": "model"
+    },
+    "usps": {
+      "reading": "Agent slip",
+      "rule": "Context-dependent rule 5",
+      "source": "verbatim"
+    },
+    "georgia": {
+      "reading": null,
+      "rule": null,
+      "source": "none"
+    }
+  },
+  "lesson": {
+    "title": "Standing bodies known by role count as identified",
+    "rule": "Context-dependent rule 3",
+    "kind": "Change the rule",
+    "keys": [
+      "presspool",
+      "aiforce"
+    ]
+  },
+  "gate": "PASS on the draft",
+  "gate_detail": "examples 10 of 10, earlier 6 of 6, yours 2 of 2; edition 2026-10-21.1 to 2026-10-21.2; press pool flipped Applies to Does not apply",
+  "followup": {
+    "presspool": "Fixed",
+    "aiforce": "Fixed",
+    "usps": null,
+    "georgia": null
+  },
+  "where": "Walkthrough: you have been through all seven steps of the practice page.",
+  "status_after": "Next: type /claim-tagger demo tag to read new claims.",
+  "notes": [
+    "The AI Force proposal is Can't tell at confidence 0.53 from three judge runs (ask_editor 0.5, apply 0.6 on rule 3, do_not_apply 0.3 on rule 5); its Agent reason cites Context-dependent rule 5 (\"1 of 3 runs agree\"), not rule 3, so the manifest calibrate.cites_rule 3 for this row is not met (the criteria of the brief do not require it).",
+    "Dallas was judged Applies at 0.72 and 0.60 (Agent confidence 0.66), below the \"0.75 or more\" the page table promises for the earlier decisions; its Agent status is Done as expected.",
+    "The press pool flipped in the safety check on a 2-of-3 majority: candidate runs do_not_apply 0.22 (rule 3), apply 0.80 (rule 2), do_not_apply 0.12 (rule 3); the AI Force row reads Applies (0.88) under the candidate; the card lists only the press pool as a flipped answer.",
+    "The safety check counted 6 earlier decisions; the candidate judged 9 cases including USPS (Applies 0.75, the Agent slip row) and Georgia (Does not apply 0.10), so the 6 are probably the 5 decided claims plus Georgia (inferred, not read from the card).",
+    "No command exited with anything but 0; no retry was needed; no Editor wording was needed."
+  ]
+}

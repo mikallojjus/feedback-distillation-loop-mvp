@@ -1,0 +1,10 @@
+walkthrough: acting as the editor on practice page 20261021-2116-30ecb4 (decision D31): Claims 92f57020ce349b27b5e56f54068cbc05: Verified tags, Challenged tags notes, Review status
+Walkthrough: acting as the editor, the claim "The AI Force should enforce binding safety standards" now reads Reviewed with Context-dependent verified.
+
+| Column | Now |
+|---|---|
+| Verified tags | Context-dependent |
+| Challenged tags notes | "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Fo..." |
+| Review status | Reviewed |
+
+Next: open Your queue (https://app.notion.com/p/Claim-tagger-practice-calibration-6-400273e214eb8101a58ece8a61ad6bcd#400273e214eb81739b3eed1ac039f5aa) and decide your remaining claims.

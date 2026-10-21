@@ -1,0 +1,152 @@
+{
+  "cnn": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "apply",
+          "p": 0.93,
+          "rule_ref": "Context-dependent rule 2"
+        }
+      ]
+    }
+  ],
+  "dallas": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "apply",
+          "p": 0.7,
+          "rule_ref": "Context-dependent rule 3"
+        }
+      ]
+    },
+    {
+      "run": "run-2.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "apply",
+          "p": 0.6,
+          "rule_ref": "Context-dependent rule 3"
+        }
+      ]
+    }
+  ],
+  "usps": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "apply",
+          "p": 0.72,
+          "rule_ref": "Context-dependent rule 3"
+        }
+      ]
+    }
+  ],
+  "stopgap": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "do_not_apply",
+          "p": 0.1,
+          "rule_ref": null
+        }
+      ]
+    }
+  ],
+  "presspool": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "apply",
+          "p": 0.72,
+          "rule_ref": "Context-dependent rule 3"
+        }
+      ]
+    }
+  ],
+  "contractor": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "do_not_apply",
+          "p": 0.08,
+          "rule_ref": null
+        }
+      ]
+    }
+  ],
+  "kennedy": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "do_not_apply",
+          "p": 0.1,
+          "rule_ref": null
+        }
+      ]
+    }
+  ],
+  "georgia": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "do_not_apply",
+          "p": 0.25,
+          "rule_ref": null
+        }
+      ]
+    }
+  ],
+  "aiforce": [
+    {
+      "run": "run-1.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "ask_editor",
+          "p": 0.5,
+          "rule_ref": null
+        }
+      ]
+    },
+    {
+      "run": "run-2.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "apply",
+          "p": 0.62,
+          "rule_ref": "Context-dependent rule 3"
+        }
+      ]
+    },
+    {
+      "run": "run-3.jsonl",
+      "status": "ok",
+      "tags": [
+        {
+          "decision": "ask_editor",
+          "p": 0.5,
+          "rule_ref": null
+        }
+      ]
+    }
+  ]
+}

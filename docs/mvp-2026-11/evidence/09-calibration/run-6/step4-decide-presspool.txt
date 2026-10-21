@@ -1,0 +1,10 @@
+walkthrough: acting as the editor on practice page 20261021-2116-30ecb4 (decision D31): Claims 5c9d133e54864197a585599669353aff: Verified tags, Challenged tags notes, Review status
+Walkthrough: acting as the editor, the claim "The press pool was justified in suspending coverage in so..." now reads Reviewed with no tag verified.
+
+| Column | Now |
+|---|---|
+| Verified tags | none |
+| Challenged tags notes | "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool,..." |
+| Review status | Reviewed |
+
+Next: open Your queue (https://app.notion.com/p/Claim-tagger-practice-calibration-6-400273e214eb8101a58ece8a61ad6bcd#400273e214eb81739b3eed1ac039f5aa) and decide your remaining claims.

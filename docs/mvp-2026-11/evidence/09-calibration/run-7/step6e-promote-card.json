@@ -1,0 +1,43 @@
+{
+  "mode": "simple",
+  "verdict": "PASS",
+  "lesson": "Standing bodies known by role count as identified",
+  "tag": "Context-dependent",
+  "checks": {
+    "canaries": {
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    },
+    "cases": {
+      "passed": 6,
+      "total": 6,
+      "newly_failing": []
+    },
+    "supporting": {
+      "passed": 2,
+      "total": 2,
+      "failures": []
+    }
+  },
+  "flips": [
+    {
+      "id": "5c9d133e54864197a585599669353aff::Context-dependent",
+      "tag": "Context-dependent",
+      "claim": "The press pool was justified in suspending coverage in solidarity with banned networks",
+      "from": "apply",
+      "to": "do_not_apply"
+    }
+  ],
+  "editions": {
+    "baseline": "2026-10-21.1",
+    "candidate": "2026-10-21.2"
+  },
+  "usage": {
+    "input": 26,
+    "cache_write": 9850,
+    "cache_read": 24790,
+    "output": 8648
+  },
+  "rejudged": 1
+}

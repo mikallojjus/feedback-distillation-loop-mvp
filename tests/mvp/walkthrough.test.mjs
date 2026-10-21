@@ -493,9 +493,10 @@ test('the manifest describes the claims\' columns: five Reviewed claims with the
   const V = dp.CLAIM_COLUMNS.verified;
   const N = dp.CLAIM_COLUMNS.notes;
   assert.equal(manifest.manifest_version, '2026-10-22.1');
-  assert.equal(manifest.calibration.status, 'pending');
+  assert.equal(manifest.calibration.status, 'frozen', 'frozen after calibration runs 6 to 8 (decision 77)');
   assert.ok(manifest.calibration.runs.length >= 5, 'the earlier calibration runs are kept');
-  assert.deepEqual(manifest.calibration.runs.map((r) => r.run), [1, 2, 3, 4, 5], 'runs 6 to 8 calibrate this version');
+  assert.deepEqual(manifest.calibration.runs.map((r) => r.run), [1, 2, 3, 4, 5, 6, 7, 8], 'runs 6 to 8 calibrated this version (frozen, decision 77)');
+  assert.ok(manifest.calibration.runs.slice(5).every((r) => r.manifest_version === '2026-10-22.1' && r.gate === 'PASS on the draft'), 'runs 6 to 8 are of this version and passed on the draft');
   assert.match(manifest.calibration.note, /Runs 6 to 8 calibrate this version/);
   assert.deepEqual(manifest.claims.map((c) => c.key), ['presspool', 'aiforce', 'usps', 'georgia', 'cnn', 'dallas', 'contractor', 'kennedy', 'stopgap']);
   assert.equal(manifest.claims.length, 9);
@@ -537,8 +538,8 @@ test('the manifest describes the claims\' columns: five Reviewed claims with the
   assert.deepEqual([georgia.enter[V], georgia.enter[N], georgia.agrees], [[], '', true], 'Georgia: the editor agrees with the agent, an empty note is the decision');
   assert.deepEqual([press.agrees, force.agrees, usps.agrees], [undefined, undefined, undefined]);
   // what the agent should say at step 2, per claim (calibration), and what the reading should make of the decision at step 4
-  assert.deepEqual(press.calibrate, { agent: 'apply', min_share: 0.67, min_p: 0.75, cites_rule: 3 });
-  assert.deepEqual(force.calibrate, { agent: ['ask_editor', 'apply'], min_share: 0.67, max_p: 0.7, cites_rule: 3 });
+  assert.deepEqual(press.calibrate, { agent: 'apply', min_share: 0.67, min_p: 0.75 });
+  assert.deepEqual(force.calibrate, { agent: ['ask_editor', 'apply'], min_share: 0.67, max_p: 0.7 });
   assert.deepEqual(usps.calibrate, { agent: 'apply', min_share: 0.67, min_p: 0.75 });
   assert.deepEqual(georgia.calibrate, { agent: 'do_not_apply', min_share: 1, max_p: 0.25 });
   const rule = { source: 'model', reading: ['Rule unclear', 'Rule should change'], rule: 3 };
@@ -893,14 +894,14 @@ test('the page text and the manifest agree: the lint is clean with the manifest\
   // step 4 explains what a reading is, shows the four lines of Agent reading as the editor will see them, and the Rule changes table
   const step4 = page.slice(page.indexOf('## Step 4'), page.indexOf('## Step 5'));
   assert.match(step4, /Only the readings that blame the rule, Rule unclear and Rule should change, become a draft\./);
-  assert.match(step4, /The agent may read the press pool or the AI Force claim as Rule should change instead of Rule unclear; the draft is the same either way\./);
+  assert.match(step4, /The agent may read either claim as Rule unclear or as Rule should change; the draft is the same either way\./);
   const cells = (row) => row.split('|').slice(1, -1).map((c) => c.trim());
   const readingRows = step4.split('\n').filter((l) => l.startsWith('|')).map(cells);
   const at = readingRows.findIndex((r) => r[0] === 'Geo Name' && r[1] === 'Agent reading');
   assert.ok(at >= 0, 'the Claims table of step 4 shows Geo Name and Agent reading');
   const readingLines = Object.fromEntries(readingRows.slice(at + 2, at + 6).map((r) => [manifest.claims.find((c) => c.short === r[0])?.key, r[1]]));
   assert.deepEqual(Object.keys(readingLines), ['presspool', 'aiforce', 'usps', 'georgia']);
-  assert.match(readingLines.presspool, /^Context-dependent: Rule unclear, rule 3 · .+\.$/);
+  assert.match(readingLines.presspool, /^Context-dependent: Rule should change, rule 3 · .+\.$/); // as the three calibration runs read it
   assert.match(readingLines.aiforce, /^Context-dependent: Rule unclear, rule 3 · .+\.$/);
   assert.equal(readingLines.usps, 'Context-dependent: Agent slip, rule 5 · Your note says so.');
   assert.equal(readingLines.georgia, 'Nothing to read: the agent agreed with you.');
@@ -3704,7 +3705,7 @@ test('the skills relay the report first and add the checklist under it: the rule
 // reads the press pool and the AI Force row as Rule unclear on rule 3 (FAKE_CLAUDE_READINGS) and answers every claim as the story expects.
 
 const STORY_NOTES = {
-  presspool: 'The rule does not say if a standing group counts.',
+  presspool: 'Rule 3 would need to exempt groups known by role.',
   aiforce: 'The rule does not say if an unknown name is a kind.',
 };
 const STORY_TEXT = 'A descriptive definite that names a kind of thing but not which one makes the claim Context-dependent: the reader must already know which one is meant. A group readers know by its standing role, such as a press corps, counts as identified; a capitalised phrase that names no body readers know does not.';
@@ -3736,7 +3737,7 @@ function storyEnv(manifest, { readings = {} } = {}) {
   const distillReply = { patterns: [{ lesson: STORY_LESSON, kind: 'Clarify wording', proposed_text: STORY_TEXT, keys: 'all' }] };
   const keyOf = (key) => `${manifest.claims.find((c) => c.key === key)['Geo ID']}::${TAG}`;
   const fakeReadings = {
-    [keyOf('presspool')]: { reading: 'Rule unclear', rule: 'Context-dependent rule 3', note: STORY_NOTES.presspool },
+    [keyOf('presspool')]: { reading: 'Rule should change', rule: 'Context-dependent rule 3', note: STORY_NOTES.presspool }, // as the three calibration runs read it
     [keyOf('aiforce')]: { reading: 'Rule unclear', rule: 'Context-dependent rule 3', note: STORY_NOTES.aiforce },
     ...readings,
   };
@@ -3826,7 +3827,7 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   const usps = ledgerRow('usps');
   const georgia = ledgerRow('georgia');
   for (const [row, key] of [[press, 'presspool'], [force, 'aiforce']]) {
-    assert.deepEqual([row['Agent reading'], row.Rule, row['Reading note']], ['Rule unclear', 'Context-dependent rule 3', STORY_NOTES[key]], key);
+    assert.deepEqual([row['Agent reading'], row.Rule, row['Reading note']], [{ presspool: 'Rule should change', aiforce: 'Rule unclear' }[key], 'Context-dependent rule 3', STORY_NOTES[key]], key);
     assert.match(row['Read under'], new RegExp(`^${EDITION.replace('.', '\\.')} · [0-9a-f]{8}$`), key);
   }
   assert.deepEqual([usps['Agent reading'], usps.Rule, usps['Reading note'], usps['Why wrong'], usps['Tag outcome']], ['Agent slip', 'Context-dependent rule 5', 'Your note says so.', 'Agent slip', 'Does not apply'], 'USPS: the reason word of the note, taken as it stands');
@@ -3838,7 +3839,7 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   const step4 = page.slice(page.indexOf('## Step 4'), page.indexOf('## Step 5'));
   const shown = Object.fromEntries(step4.split('\n').filter((l) => l.startsWith('|')).map((l) => l.split('|').slice(1, -1).map((c) => c.trim())).filter((r) => r.length === 2 && manifest.claims.some((c) => c.short === r[0])).map((r) => [manifest.claims.find((c) => c.short === r[0]).key, r[1]]));
   for (const key of open) assert.equal(claimRow(key)['Agent reading'], shown[key], `${key}: the Agent reading line is the one the page shows`);
-  assert.equal(claimRow('presspool')['Agent reading'], `${TAG}: Rule unclear, rule 3 · ${STORY_NOTES.presspool}`);
+  assert.equal(claimRow('presspool')['Agent reading'], `${TAG}: Rule should change, rule 3 · ${STORY_NOTES.presspool}`);
   assert.equal(claimRow('usps')['Agent reading'], `${TAG}: Agent slip, rule 5 · Your note says so.`);
   assert.equal(claimRow('georgia')['Agent reading'], 'Nothing to read: the agent agreed with you.');
   for (const key of decidedKeys) assert.equal(claimRow(key)['Agent reading'], SEEDED_LINE, `${key}: distill changes nothing on the seeded claims`);
@@ -3851,16 +3852,16 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   assert.equal(made.filter((l) => l.source === 'model').length, manifest.expect.readings.read - manifest.expect.readings.verbatim);
   assert.equal(lines(join(runDir, 'calls.jsonl')).filter((c) => c.purpose === 'reading').length, manifest.expect.readings.model_calls);
   assert.equal(manifest.expect.readings.agree, 1);
-  assert.deepEqual(made.map((l) => l.reading).sort(), ['Agent slip', 'Rule unclear', 'Rule unclear']);
+  assert.deepEqual(made.map((l) => l.reading).sort(), ['Agent slip', 'Rule should change', 'Rule unclear']);
   for (const o of manifest.open.filter((x) => x.expect_reading.source !== 'none')) {
     const line = made.find((l) => l.key === keyOf(o.claim));
     assert.ok(o.expect_reading.reading.includes(line.reading), `${o.claim}: ${line.reading} is a reading the manifest accepts`);
     assert.equal(line.rule, `${TAG} rule ${o.expect_reading.rule}`, o.claim);
     assert.equal(line.source, o.expect_reading.source, o.claim);
   }
-  // one rule change, on rule 3, derived as Clarify wording, resting on the press pool and the AI Force claim only
+  // one rule change, on rule 3, derived as Change the rule (the press pool reads Rule should change), resting on the press pool and the AI Force claim only
   const lesson = w.rows('rule_changes').find((r) => r.Lesson === STORY_LESSON);
-  assert.deepEqual([lesson.Status, lesson.Rule, lesson.Kind], ['Proposed', manifest.expect.lesson_rule, 'Clarify wording']);
+  assert.deepEqual([lesson.Status, lesson.Rule, lesson.Kind], ['Proposed', manifest.expect.lesson_rule, 'Change the rule']);
   assert.equal(w.rows('rule_changes').length, 1);
   const supporting = (lesson['Supporting rows'] ?? '').split('\n').map((l) => l.split(' · ').at(-1));
   assert.deepEqual(supporting.sort(), [keyOf('presspool'), keyOf('aiforce')].sort(), 'the draft rests on the two rule readings; the USPS slip and the Georgia agreement are not among its rows');

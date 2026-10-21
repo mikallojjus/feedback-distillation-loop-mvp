@@ -1,0 +1,11 @@
+Building the page.
+walkthrough: the column order of the Claims view "Default view" was set to the review order
+Walkthrough: your practice page is ready under Demos.
+
+| Table | Now |
+|---|---|
+| Rulebook | 1 tag |
+| Claims | 9: 5 reviewed earlier, 4 for you |
+| Rule changes | empty |
+
+Next: open Claim tagger practice · calibration 7 (https://app.notion.com/p/Claim-tagger-practice-calibration-7-400273e214eb81779381fd94c9abb38a) and follow step 1.

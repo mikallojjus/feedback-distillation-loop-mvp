@@ -1,0 +1,258 @@
+{
+  "pull": "20261021T182039Z-pull",
+  "open": {
+    "usps": {
+      "claim": "The USPS ballot portal should not launch before the 2026 midterms",
+      "agent_status": "Waits for you",
+      "agent_tags": [],
+      "tags_waiting": [
+        "Context-dependent"
+      ],
+      "claims_confidence": 0.72,
+      "agent_reasons": "Context-dependent: 'The USPS ballot portal' is a descriptive definite for a countable product. The claim does not say which portal, so the reader needs outside knowledge. · Context-dependent rule 3 · 1 of 1 runs agree",
+      "agent_reading": "",
+      "review_status": "To review",
+      "verified_tags": [],
+      "challenged_notes": "",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Can't tell",
+        "confidence": 0.72,
+        "reason": "'The USPS ballot portal' is a descriptive definite for a countable product. The claim does not say which portal, so the reader needs outside knowledge. · Context-dependent rule 3 · 1 of 1 runs agree",
+        "follow_up": null,
+        "tag_outcome": null,
+        "reading": null,
+        "rule": "",
+        "reading_note": "",
+        "read_under": "",
+        "decided": false
+      }
+    },
+    "presspool": {
+      "claim": "The press pool was justified in suspending coverage in solidarity with banned networks",
+      "agent_status": "Waits for you",
+      "agent_tags": [],
+      "tags_waiting": [
+        "Context-dependent"
+      ],
+      "claims_confidence": 0.72,
+      "agent_reasons": "Context-dependent: 'The press pool' is a countable definite that does not say which pool is meant. The reader needs outside context. 'banned networks' is indefinite and does not resolve it. · Context-dependent rule 3 · 1 of 1 runs agree",
+      "agent_reading": "",
+      "review_status": "To review",
+      "verified_tags": [],
+      "challenged_notes": "",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Can't tell",
+        "confidence": 0.72,
+        "reason": "'The press pool' is a countable definite that does not say which pool is meant. The reader needs outside context. 'banned networks' is indefinite and does not resolve it. · Context-dependent rule 3 · 1 of 1 runs agree",
+        "follow_up": null,
+        "tag_outcome": null,
+        "reading": null,
+        "rule": "",
+        "reading_note": "",
+        "read_under": "",
+        "decided": false
+      }
+    },
+    "georgia": {
+      "claim": "Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience",
+      "agent_status": "Waits for you",
+      "agent_tags": [],
+      "tags_waiting": [
+        "Context-dependent"
+      ],
+      "claims_confidence": 0.75,
+      "agent_reasons": "Context-dependent: 'Georgia's gubernatorial debate' is anchored by a named state and office. 'a town hall audience' is indefinite, so no rule clearly fires. · 1 of 1 runs agree",
+      "agent_reading": "",
+      "review_status": "To review",
+      "verified_tags": [],
+      "challenged_notes": "",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Does not apply",
+        "confidence": 0.75,
+        "reason": "'Georgia's gubernatorial debate' is anchored by a named state and office. 'a town hall audience' is indefinite, so no rule clearly fires. · 1 of 1 runs agree",
+        "follow_up": null,
+        "tag_outcome": null,
+        "reading": null,
+        "rule": "",
+        "reading_note": "",
+        "read_under": "",
+        "decided": false
+      }
+    },
+    "aiforce": {
+      "claim": "The AI Force should enforce binding safety standards",
+      "agent_status": "Waits for you",
+      "agent_tags": [],
+      "tags_waiting": [
+        "Context-dependent"
+      ],
+      "claims_confidence": 0.54,
+      "agent_reasons": "Context-dependent: 'The AI Force' is capitalized like a proper name, which the claim itself would resolve (rule 5). But it also reads like a descriptive definite that does not say which body is meant (rule 3, rule 4 test). The rules... · 2 of 3 runs agree",
+      "agent_reading": "",
+      "review_status": "To review",
+      "verified_tags": [],
+      "challenged_notes": "",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Can't tell",
+        "confidence": 0.54,
+        "reason": "'The AI Force' is capitalized like a proper name, which the claim itself would resolve (rule 5). But it also reads like a descriptive definite that does not say which body is meant (rule 3, rule 4 test). The rules... · 2 of 3 runs agree",
+        "follow_up": null,
+        "tag_outcome": null,
+        "reading": null,
+        "rule": "",
+        "reading_note": "",
+        "read_under": "",
+        "decided": false
+      }
+    }
+  },
+  "decided": {
+    "dallas": {
+      "claim": "The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign",
+      "agent_status": "Done",
+      "agent_tags": [
+        "Context-dependent"
+      ],
+      "tags_waiting": [],
+      "claims_confidence": 0.65,
+      "agent_reasons": "Context-dependent: 'The Dallas convention' names a kind of event but not which one; the reader must already know which convention is meant, even though JD Vance is named. · Context-dependent rule 3 · 2 of 2 runs agree",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "verified_tags": [
+        "Context-dependent"
+      ],
+      "challenged_notes": "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded.",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Does not apply",
+        "confidence": null,
+        "reason": "",
+        "follow_up": null,
+        "tag_outcome": "Applies",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · 8560829f",
+        "decided": true
+      },
+      "expected_proposal": "Does not apply",
+      "proposal_matches": true
+    },
+    "stopgap": {
+      "claim": "December stopgap funding rewards Congress for avoiding a full budget",
+      "agent_status": "Done",
+      "agent_tags": [],
+      "tags_waiting": [],
+      "claims_confidence": 0.9,
+      "agent_reasons": "Context-dependent: 'December stopgap funding' and 'a full budget' use no pronoun or definite reference needing an antecedent. 'Congress' is named, so no rule fires. · 1 of 1 runs agree",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "verified_tags": [],
+      "challenged_notes": "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it.",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Applies",
+        "confidence": null,
+        "reason": "",
+        "follow_up": null,
+        "tag_outcome": "Does not apply",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · fc77541c",
+        "decided": true
+      },
+      "expected_proposal": "Applies",
+      "proposal_matches": true
+    },
+    "contractor": {
+      "claim": "A contractor's enforcement of safety restrictions constitutes a national security supply chain risk",
+      "agent_status": "Done",
+      "agent_tags": [],
+      "tags_waiting": [],
+      "claims_confidence": 0.92,
+      "agent_reasons": "Context-dependent: 'A contractor's enforcement of safety restrictions' is indefinite and generic. It has no pronoun or unresolved definite reference, so no rule fires. · 1 of 1 runs agree",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "verified_tags": [],
+      "challenged_notes": "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’.",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Applies",
+        "confidence": null,
+        "reason": "",
+        "follow_up": null,
+        "tag_outcome": "Does not apply",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · 923e0a4b",
+        "decided": true
+      },
+      "expected_proposal": "Applies",
+      "proposal_matches": true
+    },
+    "kennedy": {
+      "claim": "Relocating the Kennedy Center Honors to a sports arena diminishes the prestige of the awards",
+      "agent_status": "Done",
+      "agent_tags": [],
+      "tags_waiting": [],
+      "claims_confidence": 0.9,
+      "agent_reasons": "Context-dependent: 'The Kennedy Center Honors' is a named entity, and 'the awards' points back to it inside the claim. 'a sports arena' is indefinite. · 1 of 1 runs agree",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "verified_tags": [],
+      "challenged_notes": "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded.",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Applies",
+        "confidence": null,
+        "reason": "",
+        "follow_up": null,
+        "tag_outcome": "Does not apply",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · 6cfb0909",
+        "decided": true
+      },
+      "expected_proposal": "Applies",
+      "proposal_matches": true
+    },
+    "cnn": {
+      "claim": "Excluding CNN from Air Force One violates the federal court order",
+      "agent_status": "Done",
+      "agent_tags": [
+        "Context-dependent"
+      ],
+      "tags_waiting": [],
+      "claims_confidence": 0.93,
+      "agent_reasons": "Context-dependent: 'the federal court order' is a definite reference that needs an outside antecedent; no name in the claim says which order is meant, even though CNN and Air Force One are named. · Context-dependent rule 2 · 1 of 1 runs agree",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "verified_tags": [
+        "Context-dependent"
+      ],
+      "challenged_notes": "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded.",
+      "agent_edition": "2026-10-21.1",
+      "ledger": {
+        "proposal": "Does not apply",
+        "confidence": null,
+        "reason": "",
+        "follow_up": null,
+        "tag_outcome": "Applies",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · 8560829f",
+        "decided": true
+      },
+      "expected_proposal": "Does not apply",
+      "proposal_matches": true
+    }
+  }
+}

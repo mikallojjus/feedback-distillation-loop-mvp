@@ -1,0 +1,10 @@
+Demo · Status of the practice page Claim tagger practice · calibration 7: nothing is paused; 4 rows wait for you.
+
+| Where | Now |
+|---|---|
+| Rulebook | 1 tag, edition 2026-10-21.1 |
+| Your queue | 4 rows, lowest confidence first |
+| Lessons waiting | none |
+| Last run | Tag · 21 Oct 21:20 · 9 claims |
+
+Next: decide your four claims in Your queue (https://app.notion.com/p/Claim-tagger-practice-calibration-7-400273e214eb81779381fd94c9abb38a#400273e214eb81519ae4e0192cf9c565).

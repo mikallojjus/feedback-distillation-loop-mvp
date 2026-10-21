@@ -1,0 +1,234 @@
+{
+  "pull": "20261021T182606Z-pull",
+  "open": {
+    "usps": {
+      "agent_status": "Waits for you",
+      "agent_tags": [],
+      "tags_waiting": [
+        "Context-dependent"
+      ],
+      "agent_confidence": 0.72,
+      "agent_edition": "2026-10-21.1",
+      "agent_reading": "Context-dependent: Agent slip, rule 5 · Your note says so.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Can't tell",
+        "confidence": 0.72,
+        "follow_up": null,
+        "tag_outcome": "Does not apply",
+        "reading": "Agent slip",
+        "rule": "Context-dependent rule 5",
+        "reading_note": "Your note says so.",
+        "read_under": "2026-10-21.1 · 6faccfae",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    },
+    "presspool": {
+      "agent_status": "Done",
+      "agent_tags": [],
+      "tags_waiting": [],
+      "agent_confidence": 0.79,
+      "agent_edition": "2026-10-21.2",
+      "agent_reading": "Context-dependent: Rule should change, rule 3 · As written, rule 3 tags any countable definite that doesn't say which one; it would need an exception for groups known by their standing role.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Can't tell",
+        "confidence": 0.72,
+        "follow_up": "Fixed",
+        "tag_outcome": "Does not apply",
+        "reading": "Rule should change",
+        "rule": "Context-dependent rule 3",
+        "reading_note": "As written, rule 3 tags any countable definite that doesn't say which one; it would need an exception for groups known by their standing role.",
+        "read_under": "2026-10-21.1 · fa97da6b",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    },
+    "georgia": {
+      "agent_status": "Waits for you",
+      "agent_tags": [],
+      "tags_waiting": [
+        "Context-dependent"
+      ],
+      "agent_confidence": 0.75,
+      "agent_edition": "2026-10-21.1",
+      "agent_reading": "Nothing to read: the agent agreed with you.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Does not apply",
+        "confidence": 0.75,
+        "follow_up": null,
+        "tag_outcome": "Does not apply",
+        "reading": null,
+        "rule": "",
+        "reading_note": "",
+        "read_under": "",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    },
+    "aiforce": {
+      "agent_status": "Done",
+      "agent_tags": [
+        "Context-dependent"
+      ],
+      "tags_waiting": [],
+      "agent_confidence": 0.81,
+      "agent_edition": "2026-10-21.2",
+      "agent_reading": "Context-dependent: Rule unclear, rule 3 · Rule 3 doesn't say whether a capitalised, name-like phrase for no known body counts as resolved by the claim or as an unidentified kind.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Can't tell",
+        "confidence": 0.54,
+        "follow_up": "Fixed",
+        "tag_outcome": "Applies",
+        "reading": "Rule unclear",
+        "rule": "Context-dependent rule 3",
+        "reading_note": "Rule 3 doesn't say whether a capitalised, name-like phrase for no known body counts as resolved by the claim or as an unidentified kind.",
+        "read_under": "2026-10-21.1 · 830960e5",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    }
+  },
+  "decided": {
+    "dallas": {
+      "agent_status": "Done",
+      "agent_tags": [
+        "Context-dependent"
+      ],
+      "tags_waiting": [],
+      "agent_confidence": 0.65,
+      "agent_edition": "2026-10-21.1",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Does not apply",
+        "confidence": null,
+        "follow_up": null,
+        "tag_outcome": "Applies",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · 8560829f",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    },
+    "stopgap": {
+      "agent_status": "Done",
+      "agent_tags": [],
+      "tags_waiting": [],
+      "agent_confidence": 0.9,
+      "agent_edition": "2026-10-21.1",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Applies",
+        "confidence": null,
+        "follow_up": null,
+        "tag_outcome": "Does not apply",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · fc77541c",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    },
+    "contractor": {
+      "agent_status": "Done",
+      "agent_tags": [],
+      "tags_waiting": [],
+      "agent_confidence": 0.92,
+      "agent_edition": "2026-10-21.1",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Applies",
+        "confidence": null,
+        "follow_up": null,
+        "tag_outcome": "Does not apply",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · 923e0a4b",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    },
+    "kennedy": {
+      "agent_status": "Done",
+      "agent_tags": [],
+      "tags_waiting": [],
+      "agent_confidence": 0.9,
+      "agent_edition": "2026-10-21.1",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Applies",
+        "confidence": null,
+        "follow_up": null,
+        "tag_outcome": "Does not apply",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · 6cfb0909",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    },
+    "cnn": {
+      "agent_status": "Done",
+      "agent_tags": [
+        "Context-dependent"
+      ],
+      "tags_waiting": [],
+      "agent_confidence": 0.93,
+      "agent_edition": "2026-10-21.1",
+      "agent_reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October.",
+      "review_status": "Reviewed",
+      "ledger": {
+        "proposal": "Does not apply",
+        "confidence": null,
+        "follow_up": null,
+        "tag_outcome": "Applies",
+        "reading": "Agent slip",
+        "rule": "",
+        "reading_note": "Seeded from the audit of 9 October.",
+        "read_under": "2026-10-21.1 · 8560829f",
+        "rulebook_edition": "2026-10-21.1",
+        "decided_under": "2026-10-21.1"
+      }
+    }
+  },
+  "lessons": [
+    {
+      "Lesson": "Standing roles resolve; capitalised unknown names do not",
+      "Tag": "Context-dependent",
+      "Rule": "Context-dependent rule 3",
+      "Kind": "Change the rule",
+      "Current text": "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").",
+      "Proposed text": "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A capitalised, name-like phrase for a body that readers do not know is still such a kind. A group that every reader knows by its standing role (such as a press pool) counts as identified. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").",
+      "Safety check result": "PASS: examples 10/10, earlier 6/6, yours 2/2",
+      "Supporting rows": "The press pool was justified in suspending coverage in so... · 5c9d133e54864197a585599669353aff::Context-dependent\nThe AI Force should enforce binding safety standards · 92f57020ce349b27b5e56f54068cbc05::Context-dependent",
+      "Editor wording": "",
+      "Status": "Live",
+      "page_id": "400273e2-14eb-81a2-b29e-ffa514327163",
+      "created": "2026-10-21T18:23:00.000Z",
+      "supporting_keys": [
+        "5c9d133e54864197a585599669353aff::Context-dependent",
+        "92f57020ce349b27b5e56f54068cbc05::Context-dependent"
+      ]
+    }
+  ],
+  "settings": {
+    "page_id": "400273e2-14eb-819b-b22d-d1381465aa60",
+    "name": "Claim tagger",
+    "paused": false,
+    "rulebook_edition": "2026-10-21.2",
+    "last_run_summary": "Promote · 21 Oct 21:25 · PASS"
+  },
+  "rulebook_edition": null
+}

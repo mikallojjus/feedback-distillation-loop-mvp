@@ -1,0 +1,3 @@
+Walkthrough: you are at step 5, Approve the draft.
+
+Next: open Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-calibration-6-400273e214eb8101a58ece8a61ad6bcd#400273e214eb81de9893d5cdf5d18665) and set Status to Approved.

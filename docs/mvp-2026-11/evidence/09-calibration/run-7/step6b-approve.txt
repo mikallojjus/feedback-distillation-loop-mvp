@@ -1,0 +1,8 @@
+walkthrough: acting as the editor on practice page 20261021-2116-5285ae (decision D31): Rule changes Standing bodies known by role count as identified: Status
+Walkthrough: acting as the editor, the rule change "Standing bodies known by role count as identified" is now Approved.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+
+Next: type /claim-tagger demo promote.
