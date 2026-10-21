@@ -1,0 +1,103 @@
+== Reports ==
+20261021T200346Z-walkthrough-start\report.md  lint=[]  extra=[]
+20261021T200522Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T200526Z-status\report.md  lint=[]  extra=[]
+20261021T200541Z-judge\report.md  lint=[]  extra=[]
+20261021T200603Z-propose\report.md  lint=[]  extra=[]
+20261021T200655Z-walkthrough-verify\report.md  lint=[]  extra=[]
+20261021T200709Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T200718Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T200724Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T200732Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T200739Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T200750Z-status\report.md  lint=[]  extra=[]
+20261021T200754Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T200809Z-distill\report.md  lint=[]  extra=[]
+20261021T200914Z-walkthrough-decide\report.md  lint=[]  extra=[]
+20261021T200920Z-status\report.md  lint=[]  extra=[]
+20261021T200932Z-distill\report.md  lint=[]  extra=[]
+20261021T201002Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T201006Z-walkthrough-approve\report.md  lint=[]  extra=[]
+20261021T201016Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T201025Z-promote-baseline\report.md  lint=[]  extra=[]
+20261021T201025Z-promote-candidate\report.md  lint=[]  extra=[]
+20261021T201025Z-promote\report.md  lint=[]  extra=[]
+20261021T201221Z-promote-baseline\report.md  lint=[]  extra=[]
+20261021T201221Z-promote-candidate\report.md  lint=[]  extra=[]
+20261021T201221Z-promote\report.md  lint=[]  extra=[]
+20261021T201333Z-promote-baseline\report.md  lint=[]  extra=[]
+20261021T201333Z-promote-candidate\report.md  lint=[]  extra=[]
+20261021T201333Z-promote\report.md  lint=[]  extra=[]
+20261021T201419Z-status\report.md  lint=[]  extra=[]
+20261021T201422Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T201440Z-walkthrough-approve\report.md  lint=[]  extra=[]
+20261021T201450Z-promote-baseline\report.md  lint=[]  extra=[]
+20261021T201450Z-promote-candidate\report.md  lint=[]  extra=[]
+20261021T201450Z-promote-followup-judge\report.md  lint=[]  extra=[]
+20261021T201450Z-promote\report.md  lint=[]  extra=[]
+20261021T201605Z-walkthrough-where\report.md  lint=[]  extra=[]
+20261021T201609Z-status\report.md  lint=[]  extra=[]
+reports with a problem: 0
+
+== Plans ==
+20261021T200414Z-rows-rulebook\plan.jsonl  (walkthrough.mjs, 1 ops)
+    create rulebook: Name, Category, Counterpart, Description, Evidence, Example Claims, Geo Status, Polarity, Status, Verified on, When to use, Work tags
+20261021T200415Z-rows-claims_copy\plan.jsonl  (walkthrough.mjs, 9 ops)
+    create claims_copy: Geo Name, Geo ID, Geo URL, Geo Sources, Geo Tags, Geo Topics, Geo Is factual, Geo Name source, Review status, Verified tags, Challenged tags notes, Agent reading
+20261021T200422Z-rows-tag_decisions\plan.jsonl  (walkthrough.mjs, 5 ops)
+    create tag_decisions: Claim, Key, Tag, Claim link, Agent proposal, Tag outcome, Your reasoning, Rulebook edition, Agent reading, Reading note, Read under
+20261021T200426Z-rows-agent_settings\plan.jsonl  (walkthrough.mjs, 1 ops)
+    create agent_settings: Name, Rulebook edition
+20261021T200603Z-propose\plan.jsonl  (propose, 19 ops)
+    update tag_decisions: Decided under
+    update claims_copy: Agent reasons, Agent tags, Agent status, Agent edition, Agent confidence, Tags waiting
+    create tag_decisions: Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Rulebook edition, Claim link
+    update agent_settings: Rulebook edition, Last run summary
+20261021T200720Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T200726Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T200734Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T200741Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T200809Z-distill\plan.jsonl  (distill, 10 ops)
+    update tag_decisions: Tag outcome, Decided under, Agent reading, Rule, Reading note, Read under, Your reasoning
+    update claims_copy: Agent reading
+    create rule_changes: Lesson, Tag, Rule, Kind, Current text, Proposed text, Status, Supporting rows
+    update agent_settings: Rulebook edition, Last run summary
+20261021T200916Z-editor-decide\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update claims_copy: Verified tags, Challenged tags notes, Review status
+20261021T200932Z-distill\plan.jsonl  (distill, 3 ops)
+    update tag_decisions: Why wrong, Your reasoning, Agent reading, Rule, Reading note, Read under
+    update claims_copy: Agent reading
+    update agent_settings: Rulebook edition, Last run summary
+20261021T201007Z-editor-approve\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update rule_changes: Status
+20261021T201441Z-editor-approve\plan.jsonl  (walkthrough.mjs, 1 ops)
+    update rule_changes: Editor wording
+20261021T201450Z-promote-followup\plan.jsonl  (followup, 4 ops)
+    update tag_decisions: Follow-up
+    update claims_copy: Agent reasons, Tags waiting, Agent status, Agent edition, Agent confidence, Agent tags
+20261021T201450Z-promote-record\plan.jsonl  (promote, 2 ops)
+    update rule_changes: Status, Safety check result
+    update agent_settings: Rulebook edition, Last run summary
+20261021T201450Z-promote\plan.jsonl  (promote, 1 ops)
+    update rulebook: When to use
+editor-column writes outside the logged editor actions and the setup creates: 0
+
+logged editor actions: 14 lines
+  2026-10-21T20:07:20.500Z decide planned claims_copy 5c9d133e54864197a585599669353aff wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T20:07:21.172Z decide done claims_copy 5c9d133e54864197a585599669353aff wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T20:07:26.894Z decide planned claims_copy 92f57020ce349b27b5e56f54068cbc05 wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T20:07:27.624Z decide done claims_copy 92f57020ce349b27b5e56f54068cbc05 wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T20:07:34.724Z decide planned claims_copy 27ad00b59c1f7d4aee71643fc8cdec94 wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T20:07:35.534Z decide done claims_copy 27ad00b59c1f7d4aee71643fc8cdec94 wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T20:07:41.399Z decide planned claims_copy 8f9c833b41e54eee9ca78e9c2f4ffb58 wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T20:07:42.034Z decide done claims_copy 8f9c833b41e54eee9ca78e9c2f4ffb58 wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T20:09:16.181Z decide planned claims_copy 27ad00b59c1f7d4aee71643fc8cdec94 wrote=Verified tags, Challenged tags notes, Review status
+  2026-10-21T20:09:16.829Z decide done claims_copy 27ad00b59c1f7d4aee71643fc8cdec94 wrote=Verified tags, Challenged tags notes, Review status read_back="ok"
+  2026-10-21T20:10:07.955Z approve planned rule_changes Known standing-role groups identified; unknown names not wrote=Status
+  2026-10-21T20:10:08.601Z approve done rule_changes Known standing-role groups identified; unknown names not wrote=Status read_back="ok"
+  2026-10-21T20:14:41.495Z approve planned rule_changes Known standing-role groups identified; unknown names not wrote=Editor wording
+  2026-10-21T20:14:42.162Z approve done rule_changes Known standing-role groups identified; unknown names not wrote=Editor wording read_back="ok"

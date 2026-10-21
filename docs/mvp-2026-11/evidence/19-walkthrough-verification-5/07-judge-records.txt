@@ -1,0 +1,144 @@
+==================== 20261021T200541Z-judge ====================
+files: calls.jsonl, report.json, report.md, run.json
+-- calls.jsonl:
+{"group":"G1","run":1,"batch":2,"items":1,"ids":["fc0cb0da0a1a4375b0fae6b5c9a67c69"],"attempts":1,"duration_ms":3436,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":1,"items":8,"ids":["1bff859247ecdb618af41a397d2eb6ba","27ad00b59c1f7d4aee71643fc8cdec94","3e0d601de961dbf8ae38154e3f3a02e5","5c9d133e54864197a585599669353aff","6dc1222aeb364918821167370d8fbc40","89fcfb7fc6684b63af7d829ed90106cd","8f9c833b41e54eee9ca78e9c2f4ffb58","92f57020ce349b27b5e56f54068cbc05"],"attempts":1,"duration_ms":15979,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":2,"batch":3,"items":1,"ids":["92f57020ce349b27b5e56f54068cbc05"],"attempts":1,"duration_ms":5136,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+-- report.json:
+{
+  "demo": true,
+  "sentence": "Judge: read 9 claims for Context-dependent; 1 unsure (practice page Claim tagger practice · verification 5).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "9",
+      ""
+    ],
+    [
+      "Unsure",
+      "1",
+      ""
+    ],
+    [
+      "Re-read",
+      "1",
+      ""
+    ]
+  ],
+  "next": "Next: type /claim-tagger demo tag to finish (it continues from here)."
+}
+-- report.md:
+Demo · Judge: read 9 claims for Context-dependent; 1 unsure (practice page Claim tagger practice · verification 5).
+
+| What | Result |
+|---|---|
+| Claims read | 9 |
+| Unsure | 1 |
+| Re-read | 1 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here).
+-- lintReport(report.md): []
+-- run.json:
+{
+  "run_id": "20261021T200541Z-judge",
+  "script": "judge",
+  "args": {
+    "items": "claims",
+    "tags": null,
+    "pull": null,
+    "ids": null,
+    "limit": null,
+    "runs_max": null,
+    "rubric": null,
+    "refresh": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T20:05:41.561Z",
+  "finished_at": "2026-10-21T20:06:02.833Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.1",
+  "pull_id": "20261021T200537Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 judge --resume 20261021T200541Z-judge",
+  "status": "done",
+  "invocations": 1,
+  "item_ids": [
+    "1bff859247ecdb618af41a397d2eb6ba",
+    "27ad00b59c1f7d4aee71643fc8cdec94",
+    "3e0d601de961dbf8ae38154e3f3a02e5",
+    "5c9d133e54864197a585599669353aff",
+    "6dc1222aeb364918821167370d8fbc40",
+    "89fcfb7fc6684b63af7d829ed90106cd",
+    "8f9c833b41e54eee9ca78e9c2f4ffb58",
+    "92f57020ce349b27b5e56f54068cbc05",
+    "fc0cb0da0a1a4375b0fae6b5c9a67c69"
+  ],
+  "groups": [
+    {
+      "name": "G1",
+      "tags": [
+        "Context-dependent"
+      ],
+      "store": "fd082dc83cbba323",
+      "prompt": "sha256:a9782c896da71e57",
+      "items": 9
+    }
+  ],
+  "refreshed": {},
+  "driver": "cli",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "prompt_version": "1",
+  "cli_version": "2.1.303 (Claude Code)",
+  "runs_max": 3,
+  "rubric_file": null,
+  "counts": {
+    "items": 9,
+    "read": 9,
+    "unsure": 1,
+    "reread": 1,
+    "failed": 0,
+    "failed_reread": 0
+  },
+  "capped": {
+    "G1": []
+  },
+  "calls": 3,
+  "failed_batches": 0,
+  "usage": {
+    "input": 6,
+    "cache_write": 6344,
+    "cache_read": 1556,
+    "output": 2147
+  }
+}
+== judgments run-1.jsonl / run-2.jsonl (id, tag, decision, p, rule_ref) ==
+-- agents/claim-tagger-mvp/runs/demos/20261021-2303-555445/runs/judgments/fd082dc83cbba323/run-1.jsonl
+{"id":"fc0cb0da0a1a4375b0fae6b5c9a67c69","keys":"id,item_hash,call,status,tags"}
+{"id":"1bff859247ecdb618af41a397d2eb6ba","keys":"id,item_hash,call,status,tags"}
+{"id":"27ad00b59c1f7d4aee71643fc8cdec94","keys":"id,item_hash,call,status,tags"}
+{"id":"3e0d601de961dbf8ae38154e3f3a02e5","keys":"id,item_hash,call,status,tags"}
+{"id":"5c9d133e54864197a585599669353aff","keys":"id,item_hash,call,status,tags"}
+{"id":"6dc1222aeb364918821167370d8fbc40","keys":"id,item_hash,call,status,tags"}
+{"id":"89fcfb7fc6684b63af7d829ed90106cd","keys":"id,item_hash,call,status,tags"}
+{"id":"8f9c833b41e54eee9ca78e9c2f4ffb58","keys":"id,item_hash,call,status,tags"}
+{"id":"92f57020ce349b27b5e56f54068cbc05","keys":"id,item_hash,call,status,tags"}
+-- agents/claim-tagger-mvp/runs/demos/20261021-2303-555445/runs/judgments/fd082dc83cbba323/run-2.jsonl
+{"id":"92f57020ce349b27b5e56f54068cbc05","keys":"id,item_hash,call,status,tags"}
+== judgments, per tag: decision, p, rule_ref ==
+-- run-1.jsonl
+fc0cb0da0a1a4375b0fae6b5c9a67c69  apply 0.93 Context-dependent rule 2
+1bff859247ecdb618af41a397d2eb6ba  apply 0.8 Context-dependent rule 3
+27ad00b59c1f7d4aee71643fc8cdec94  apply 0.78 Context-dependent rule 3
+3e0d601de961dbf8ae38154e3f3a02e5  do_not_apply 0.12 null
+5c9d133e54864197a585599669353aff  apply 0.8 Context-dependent rule 3
+6dc1222aeb364918821167370d8fbc40  do_not_apply 0.05 null
+89fcfb7fc6684b63af7d829ed90106cd  do_not_apply 0.1 null
+8f9c833b41e54eee9ca78e9c2f4ffb58  do_not_apply 0.2 null
+92f57020ce349b27b5e56f54068cbc05  ask_editor 0.55 null
+-- run-2.jsonl
+92f57020ce349b27b5e56f54068cbc05  ask_editor 0.5 null

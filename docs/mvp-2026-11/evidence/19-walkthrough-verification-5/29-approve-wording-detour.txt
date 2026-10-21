@@ -1,0 +1,19 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve --demo 20261021-2303-555445 --wording "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. This includes a capitalised, name-like phrase for a body no reader knows by that name, which is still a kind and not which one. It does not include a group every reader knows by its standing role (such as a press pool, a jury or a press corps), or abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
+exit code: 0
+started: 2026-10-21T20:14:40Z
+ended:   2026-10-21T20:14:46Z (elapsed 6 s)
+head:    4a08bf0
+
+----- stdout -----
+Walkthrough: acting as the editor, the Editor wording of the rule change "Known standing-role groups identified; unknown names not" is now filled in.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+| Editor wording | "A descriptive definite that names a kind of thing but not which one ('the Bitcoin ETF', 'the majo..." |
+
+Next: type /claim-tagger demo promote.
+----- stderr -----
+walkthrough: acting as the editor on practice page 20261021-2303-555445 (decision D31): Rule changes Known standing-role groups identified; unknown names not: Editor wording
+----- lintReport(stdout) -----
+[]

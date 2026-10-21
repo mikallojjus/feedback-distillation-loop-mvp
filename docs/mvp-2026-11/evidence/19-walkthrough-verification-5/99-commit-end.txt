@@ -1,0 +1,28 @@
+git rev-parse HEAD at end: 4a08bf01cc6e5c039226c23bd4a051a177c52b56
+time: 2026-10-21T20:17:18Z
+git status --short:
+ M docs/mvp-2026-11/report/data/counts.json
+ M docs/mvp-2026-11/report/parts/02-status.html
+ M docs/mvp-2026-11/report/parts/03-how-to-run.html
+?? docs/mvp-2026-11/evidence/19-walkthrough-verification-5/
+
+newest production run folders (outside demos):
+20261021T181144Z-distill
+20261021T181245Z-distill
+20261021T181312Z-status
+files under agents/claim-tagger-mvp/runs newer than the start of this run, outside runs/demos:
+(end of list)
+
+other demos touched since the start (local pull records from W list):
+agents/claim-tagger-mvp/runs/demos/20261021-2303-555445
+
+evidence written by the verifier:
+99
+repository files changed outside the evidence folder (git diff --stat):
+ docs/mvp-2026-11/report/data/counts.json         | 276 +++++++++++++++++------
+ docs/mvp-2026-11/report/parts/02-status.html     |  27 ++-
+ docs/mvp-2026-11/report/parts/03-how-to-run.html |  28 +--
+ 3 files changed, 237 insertions(+), 94 deletions(-)
+
+The three modified files under docs/mvp-2026-11/report/ date from 21:50:56 local (run 4) and did not change during this run.
+W list (steps 01 and 35) wrote local pull records and refreshed evals/cases.jsonl in four other demos' folders (20261021-2116-30ecb4, -5285ae, -f511f8, 20261021-2149-242961); nothing was written to Notion by those pulls.

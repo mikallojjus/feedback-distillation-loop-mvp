@@ -1,0 +1,14 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs where --demo 20261021-2303-555445
+exit code: 0
+started: 2026-10-21T20:16:05Z
+ended:   2026-10-21T20:16:08Z (elapsed 4 s)
+head:    4a08bf0
+
+----- stdout -----
+Walkthrough: you have been through all seven steps of the practice page.
+
+Next: nothing to type; archive the page by hand when you no longer need it.
+----- stderr -----
+
+----- lintReport(stdout) -----
+[]

@@ -1,0 +1,20 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs decide --demo 20261021-2303-555445 --claim usps --outcome "Does not apply"
+exit code: 0
+started: 2026-10-21T20:07:32Z
+ended:   2026-10-21T20:07:39Z (elapsed 7 s)
+head:    4a08bf0
+
+----- stdout -----
+Walkthrough: acting as the editor, the claim "The USPS ballot portal should not launch before the 2026..." now reads Reviewed with no tag verified.
+
+| Column | Now |
+|---|---|
+| Verified tags | none |
+| Challenged tags notes | (empty) |
+| Review status | Reviewed |
+
+Next: open Your queue (https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346#400273e214eb8119a797f6902312044f) and decide your remaining claim.
+----- stderr -----
+walkthrough: acting as the editor on practice page 20261021-2303-555445 (decision D31): Claims 27ad00b59c1f7d4aee71643fc8cdec94: Verified tags, Challenged tags notes, Review status
+----- lintReport(stdout) -----
+[]

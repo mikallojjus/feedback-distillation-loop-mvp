@@ -1,0 +1,20 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 judge --items claims
+exit code: 0
+started: 2026-10-21T20:05:41Z
+ended:   2026-10-21T20:06:02Z (elapsed 21 s)
+head:    4a08bf0
+
+----- stdout -----
+Demo · Judge: read 9 claims for Context-dependent; 1 unsure (practice page Claim tagger practice · verification 5).
+
+| What | Result |
+|---|---|
+| Claims read | 9 |
+| Unsure | 1 |
+| Re-read | 1 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here).
+----- stderr -----
+
+----- lintReport(stdout) -----
+[]

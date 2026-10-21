@@ -1,0 +1,20 @@
+git rev-parse HEAD at start: 4a08bf01cc6e5c039226c23bd4a051a177c52b56
+branch: read-decisions-2026-11
+time: 2026-10-21T20:03:05Z
+git status --short:
+ M docs/mvp-2026-11/report/data/counts.json
+ M docs/mvp-2026-11/report/parts/02-status.html
+ M docs/mvp-2026-11/report/parts/03-how-to-run.html
+?? docs/mvp-2026-11/evidence/19-walkthrough-verification-5/
+newest production runs:
+dry-run
+judgments
+pull
+
+The brief names 234d51a; HEAD at start is one commit later:
+4a08bf0 read-decisions: work log entry 28 (verification run 4, decisions 78 and 79, the fixes), state, five backlog rows
+files changed 234d51a..HEAD:
+ docs/mvp-2026-11/BACKLOG.md |  5 +++++
+ docs/mvp-2026-11/STATE.md   |  2 +-
+ docs/mvp-2026-11/WORKLOG.md | 16 ++++++++++++----
+ 3 files changed, 18 insertions(+), 5 deletions(-)

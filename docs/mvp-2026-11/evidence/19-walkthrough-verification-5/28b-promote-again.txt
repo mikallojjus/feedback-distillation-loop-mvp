@@ -1,0 +1,14 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 promote
+exit code: 2
+started: 2026-10-21T20:12:21Z
+ended:   2026-10-21T20:12:25Z (elapsed 4 s)
+head:    4a08bf0
+
+----- stdout -----
+Demo · Promote stopped: some claims could not be read; nothing was written to Notion (practice page Claim tagger practice · verification 5).
+
+Next: type /claim-tagger demo promote again; it continues where it stopped.
+----- stderr -----
+promote: the judge did not finish (exit 2): judge: 0 claim(s) could not be read and 2 could not be read again (error lines in the store); the next run tries them again: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 judge --resume 20261021T201221Z-promote-candidate
+----- lintReport(stdout) -----
+[]

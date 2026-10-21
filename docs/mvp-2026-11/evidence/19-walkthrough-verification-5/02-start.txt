@@ -1,0 +1,21 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent 3fa273e214eb81c2b223dcc2331b7051 --title "Claim tagger practice · verification 5"
+exit code: 0
+started: 2026-10-21T20:03:46Z
+ended:   2026-10-21T20:04:42Z (elapsed 56 s)
+head:    4a08bf0
+
+----- stdout -----
+Building the page.
+Walkthrough: your practice page is ready under Demo tests.
+
+| Table | Now |
+|---|---|
+| Rulebook | 1 tag |
+| Claims | 9: 5 reviewed earlier, 4 for you |
+| Rule changes | empty |
+
+Next: open Claim tagger practice · verification 5 (https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346) and follow step 1.
+----- stderr -----
+walkthrough: the column order of the Claims view "Default view" was set to the review order
+----- lintReport(stdout) -----
+["the sentence runs over more than one line"]

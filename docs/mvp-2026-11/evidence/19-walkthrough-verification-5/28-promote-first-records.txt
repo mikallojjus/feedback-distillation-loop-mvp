@@ -1,0 +1,432 @@
+==================== 20261021T201025Z-promote ====================
+files: calls.jsonl, candidate-rubric.json, report.json, report.md, run.json
+-- calls.jsonl:
+{"purpose":"a9782c896da71e57","model":"claude-sonnet-5-5","effort":"medium","status":"ok","duration_ms":3446}
+{"purpose":"a9782c896da71e57","model":"claude-sonnet-5-5","effort":"medium","status":"ok","duration_ms":6878}
+{"purpose":"2db06197843c635b","model":"claude-sonnet-5-5","effort":"medium","status":"ok","duration_ms":5774}
+{"purpose":"2db06197843c635b","model":"claude-sonnet-5-5","effort":"medium","status":"ok","duration_ms":6097}
+{"purpose":"2db06197843c635b","model":"claude-sonnet-5-5","effort":"medium","status":"ok","duration_ms":4469}
+-- candidate-rubric.json:
+{
+  "edition": "2026-10-21.2",
+  "built_at": "2026-10-21T20:10:28.436Z",
+  "source": {
+    "database_id": "d64991e0843c4445858e03bf8c839407",
+    "data_source_id": "411169cc0aa84d25a0fecce0df590706",
+    "read_via": "rest",
+    "read_at": "2026-10-21T20:10:28.436Z"
+  },
+  "tags": [
+    {
+      "name": "Context-dependent",
+      "page_id": "400273e2-14eb-8151-b880-c4bbd2f72678",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": "Self-contained",
+      "description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
+      "when_to_use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. This includes a capitalised, name-like phrase for a body no reader knows by that name, which is still a kind and not which one. It does not include a group every reader knows by its standing role (such as a press pool, a jury, a press corps), or abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent."
+        },
+        {
+          "n": 2,
+          "text": "A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named."
+        },
+        {
+          "n": 3,
+          "text": "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. This includes a capitalised, name-like phrase for a body no reader knows by that name, which is still a kind and not which one. It does not include a group every reader knows by its standing role (such as a press pool, a jury, a press corps), or abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
+        },
+        {
+          "n": 4,
+          "text": "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent."
+        },
+        {
+          "n": 5,
+          "text": "Do not use for indefinites, time expressions, generics, or definites the claim itself resolves."
+        }
+      ],
+      "example_claims": [
+        "Open AI's initiative went well with the target group.",
+        "He said the new model outperforms its predecessor.",
+        "The company's revenue grew 40% after the launch.",
+        "Core Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.",
+        "The Commodity Futures Trading Commission did not comment specifically on the discussions.",
+        "The Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts."
+      ],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-09-10",
+      "evidence": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+      "work_tags": [
+        "Pipeline benchmark check",
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:7cad4ba819d40429"
+    }
+  ],
+  "rubric_hash": "sha256:0f151c64756b0465"
+}
+-- report.json:
+{
+  "demo": true,
+  "sentence": "Promote stopped: some answers could not be read again, so the check could not be finished; nothing was written to Notion (practice page Claim tagger practice · verification 5).",
+  "next": "Next: type /claim-tagger demo promote again; it continues where it stopped."
+}
+-- report.md:
+Demo · Promote stopped: some answers could not be read again, so the check could not be finished; nothing was written to Notion (practice page Claim tagger practice · verification 5).
+
+Next: type /claim-tagger demo promote again; it continues where it stopped.
+-- lintReport(report.md): []
+-- run.json:
+{
+  "run_id": "20261021T201025Z-promote",
+  "script": "promote",
+  "args": {
+    "lesson": "Known standing-role groups identified; unknown names not",
+    "pull": null,
+    "driver": "cli",
+    "runs_max": null,
+    "no_commit": false
+  },
+  "started_at": "2026-10-21T20:10:25.012Z",
+  "finished_at": "2026-10-21T20:11:38.176Z",
+  "exit_code": 2,
+  "rubric_edition": "2026-10-21.1",
+  "pull_id": "20261021T201025Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 promote --lesson \"Known standing-role groups identified; unknown names not\"",
+  "status": "stopped",
+  "lesson": "Known standing-role groups identified; unknown names not",
+  "message": "2 extra read(s) could not be used"
+}
+==================== 20261021T201025Z-promote-baseline ====================
+files: calls.jsonl, report.json, report.md, run.json
+-- calls.jsonl:
+{"group":"G1","run":1,"batch":1,"items":8,"ids":["canary-1","canary-2","canary-3","canary-4","canary-5","canary-6","canary-7","canary-8"],"attempts":1,"duration_ms":7120,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":2,"items":8,"ids":["canary-9","canary-10","case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent","case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent","case-5c9d133e54864197a585599669353aff::Context-dependent","case-6dc1222aeb364918821167370d8fbc40::Context-dependent","case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent"],"attempts":1,"duration_ms":12764,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":3,"items":3,"ids":["case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","case-92f57020ce349b27b5e56f54068cbc05::Context-dependent","case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent"],"attempts":1,"duration_ms":7865,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":2,"batch":4,"items":1,"ids":["case-92f57020ce349b27b5e56f54068cbc05::Context-dependent"],"attempts":1,"duration_ms":3812,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+-- report.json:
+{
+  "demo": true,
+  "sentence": "Judge: read 19 claims for Context-dependent; 1 unsure (practice page Claim tagger practice · verification 5).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "19",
+      ""
+    ],
+    [
+      "Unsure",
+      "1",
+      ""
+    ],
+    [
+      "Re-read",
+      "1",
+      ""
+    ]
+  ],
+  "next": "Next: type /claim-tagger demo tag to finish (it continues from here)."
+}
+-- report.md:
+Demo · Judge: read 19 claims for Context-dependent; 1 unsure (practice page Claim tagger practice · verification 5).
+
+| What | Result |
+|---|---|
+| Claims read | 19 |
+| Unsure | 1 |
+| Re-read | 1 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here).
+-- lintReport(report.md): []
+-- run.json:
+{
+  "run_id": "20261021T201025Z-promote-baseline",
+  "script": "judge",
+  "args": {
+    "items": "eval",
+    "tags": [
+      "Context-dependent"
+    ],
+    "pull": null,
+    "ids": null,
+    "limit": null,
+    "runs_max": null,
+    "rubric": null,
+    "refresh": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T20:10:28.445Z",
+  "finished_at": "2026-10-21T20:10:47.466Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.1",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 judge --resume 20261021T201025Z-promote-baseline",
+  "status": "done",
+  "invocations": 1,
+  "item_ids": [
+    "canary-1",
+    "canary-2",
+    "canary-3",
+    "canary-4",
+    "canary-5",
+    "canary-6",
+    "canary-7",
+    "canary-8",
+    "canary-9",
+    "canary-10",
+    "case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent",
+    "case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent",
+    "case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent",
+    "case-5c9d133e54864197a585599669353aff::Context-dependent",
+    "case-6dc1222aeb364918821167370d8fbc40::Context-dependent",
+    "case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent",
+    "case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent",
+    "case-92f57020ce349b27b5e56f54068cbc05::Context-dependent",
+    "case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent"
+  ],
+  "groups": [
+    {
+      "name": "G1",
+      "tags": [
+        "Context-dependent"
+      ],
+      "store": "fd082dc83cbba323",
+      "prompt": "sha256:a9782c896da71e57",
+      "items": 19
+    }
+  ],
+  "refreshed": {},
+  "driver": "cli",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "prompt_version": "1",
+  "cli_version": "2.1.303 (Claude Code)",
+  "runs_max": 3,
+  "rubric_file": null,
+  "counts": {
+    "items": 19,
+    "read": 19,
+    "unsure": 1,
+    "reread": 1,
+    "failed": 0,
+    "failed_reread": 0
+  },
+  "capped": {
+    "G1": []
+  },
+  "calls": 4,
+  "failed_batches": 0,
+  "usage": {
+    "input": 8,
+    "cache_write": 4593,
+    "cache_read": 6224,
+    "output": 3201
+  }
+}
+==================== 20261021T201025Z-promote-candidate ====================
+files: calls.jsonl, report.json, report.md, run.json
+-- calls.jsonl:
+{"group":"G1","run":1,"batch":1,"items":8,"ids":["canary-1","canary-2","canary-3","canary-4","canary-5","canary-6","canary-7","canary-8"],"attempts":1,"duration_ms":10553,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":2,"items":8,"ids":["canary-9","canary-10","case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent","case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent","case-5c9d133e54864197a585599669353aff::Context-dependent","case-6dc1222aeb364918821167370d8fbc40::Context-dependent","case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent"],"attempts":1,"duration_ms":12159,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":3,"items":3,"ids":["case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","case-92f57020ce349b27b5e56f54068cbc05::Context-dependent","case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent"],"attempts":1,"duration_ms":7958,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":2,"batch":4,"items":1,"ids":["case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent"],"attempts":1,"duration_ms":5264,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+-- report.json:
+{
+  "demo": true,
+  "sentence": "Judge: read 19 claims for Context-dependent; 0 unsure (practice page Claim tagger practice · verification 5).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "19",
+      ""
+    ],
+    [
+      "Unsure",
+      "0",
+      ""
+    ],
+    [
+      "Re-read",
+      "1",
+      ""
+    ]
+  ],
+  "next": "Next: type /claim-tagger demo tag to finish (it continues from here)."
+}
+-- report.md:
+Demo · Judge: read 19 claims for Context-dependent; 0 unsure (practice page Claim tagger practice · verification 5).
+
+| What | Result |
+|---|---|
+| Claims read | 19 |
+| Unsure | 0 |
+| Re-read | 1 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here).
+-- lintReport(report.md): []
+-- run.json:
+{
+  "run_id": "20261021T201025Z-promote-candidate",
+  "script": "judge",
+  "args": {
+    "items": "eval",
+    "tags": [
+      "Context-dependent"
+    ],
+    "pull": null,
+    "ids": null,
+    "limit": null,
+    "runs_max": null,
+    "rubric": "X:\\work\\geo-agents\\agents\\claim-tagger-mvp\\runs\\demos\\20261021-2303-555445\\runs\\20261021T201025Z-promote\\candidate-rubric.json",
+    "refresh": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T20:10:47.476Z",
+  "finished_at": "2026-10-21T20:11:11.399Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.2",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 judge --resume 20261021T201025Z-promote-candidate",
+  "status": "done",
+  "invocations": 1,
+  "item_ids": [
+    "canary-1",
+    "canary-2",
+    "canary-3",
+    "canary-4",
+    "canary-5",
+    "canary-6",
+    "canary-7",
+    "canary-8",
+    "canary-9",
+    "canary-10",
+    "case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent",
+    "case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent",
+    "case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent",
+    "case-5c9d133e54864197a585599669353aff::Context-dependent",
+    "case-6dc1222aeb364918821167370d8fbc40::Context-dependent",
+    "case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent",
+    "case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent",
+    "case-92f57020ce349b27b5e56f54068cbc05::Context-dependent",
+    "case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent"
+  ],
+  "groups": [
+    {
+      "name": "G1",
+      "tags": [
+        "Context-dependent"
+      ],
+      "store": "14f395d76261bed8",
+      "prompt": "sha256:2db06197843c635b",
+      "items": 19
+    }
+  ],
+  "refreshed": {},
+  "driver": "cli",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "prompt_version": "1",
+  "cli_version": "2.1.303 (Claude Code)",
+  "runs_max": 3,
+  "rubric_file": "X:\\work\\geo-agents\\agents\\claim-tagger-mvp\\runs\\demos\\20261021-2303-555445\\runs\\20261021T201025Z-promote\\candidate-rubric.json",
+  "counts": {
+    "items": 19,
+    "read": 19,
+    "unsure": 0,
+    "reread": 1,
+    "failed": 0,
+    "failed_reread": 0
+  },
+  "capped": {
+    "G1": []
+  },
+  "calls": 4,
+  "failed_batches": 0,
+  "usage": {
+    "input": 8,
+    "cache_write": 7839,
+    "cache_read": 3236,
+    "output": 4321
+  }
+}
+== 14f395d76261bed8 {"key":"sha256:14f395d76261bed8","driver":"cli","model":"claude-sonnet-5-5","effort":"medium","pass":"text","prompt_version":"1","group":"G1","tags":[{"name":"Context-dependent","tag_hash":"sha256:7cad4ba819d40429"}],"created_at":"2026-10-21T20:10:47.545Z"}
+-- run-1.jsonl
+canary-1 ok apply 0.9 Context-dependent rule 2 20261021T201025Z-promote-candidate
+canary-2 ok apply 0.97 Context-dependent rule 1 20261021T201025Z-promote-candidate
+canary-3 ok apply 0.9 Context-dependent rule 2 20261021T201025Z-promote-candidate
+canary-4 ok apply 0.93 Context-dependent rule 2 20261021T201025Z-promote-candidate
+canary-5 ok apply 0.93 Context-dependent rule 2 20261021T201025Z-promote-candidate
+canary-6 ok apply 0.9 Context-dependent rule 3 20261021T201025Z-promote-candidate
+canary-7 ok do_not_apply 0.03 null 20261021T201025Z-promote-candidate
+canary-8 ok do_not_apply 0.1 Context-dependent rule 5 20261021T201025Z-promote-candidate
+canary-9 ok do_not_apply 0.2 null 20261021T201025Z-promote-candidate
+canary-10 ok do_not_apply 0.02 Context-dependent rule 5 20261021T201025Z-promote-candidate
+case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent ok apply 0.8 Context-dependent rule 3 20261021T201025Z-promote-candidate
+case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent ok apply 0.72 Context-dependent rule 3 20261021T201025Z-promote-candidate
+case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent ok do_not_apply 0.2 null 20261021T201025Z-promote-candidate
+case-5c9d133e54864197a585599669353aff::Context-dependent ok do_not_apply 0.2 Context-dependent rule 3 20261021T201025Z-promote-candidate
+case-6dc1222aeb364918821167370d8fbc40::Context-dependent ok do_not_apply 0.08 Context-dependent rule 5 20261021T201025Z-promote-candidate
+case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent ok do_not_apply 0.1 null 20261021T201025Z-promote-candidate
+case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent ok do_not_apply 0.2 Context-dependent rule 5 20261021T201025Z-promote-candidate
+case-92f57020ce349b27b5e56f54068cbc05::Context-dependent ok apply 0.85 Context-dependent rule 3 20261021T201025Z-promote-candidate
+case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent ok apply 0.93 Context-dependent rule 2 20261021T201025Z-promote-candidate
+-- run-2.jsonl
+case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent ok apply 0.8 Context-dependent rule 3 20261021T201025Z-promote-candidate
+case-5c9d133e54864197a585599669353aff::Context-dependent ok do_not_apply 0.15 Context-dependent rule 3 20261021T201025Z-promote
+case-92f57020ce349b27b5e56f54068cbc05::Context-dependent ok apply 0.85 Context-dependent rule 3 20261021T201025Z-promote
+-- run-3.jsonl
+case-5c9d133e54864197a585599669353aff::Context-dependent error undefined undefined undefined 20261021T201025Z-promote
+case-92f57020ce349b27b5e56f54068cbc05::Context-dependent error undefined undefined undefined 20261021T201025Z-promote
+== fd082dc83cbba323 {"key":"sha256:fd082dc83cbba323","driver":"cli","model":"claude-sonnet-5-5","effort":"medium","pass":"text","prompt_version":"1","group":"G1","tags":[{"name":"Context-dependent","tag_hash":"sha256:af49109ca891789f"}],"created_at":"2026-10-21T20:05:41.674Z"}
+-- run-1.jsonl
+fc0cb0da0a1a4375b0fae6b5c9a67c69 ok apply 0.93 Context-dependent rule 2 20261021T200541Z-judge
+1bff859247ecdb618af41a397d2eb6ba ok apply 0.8 Context-dependent rule 3 20261021T200541Z-judge
+27ad00b59c1f7d4aee71643fc8cdec94 ok apply 0.78 Context-dependent rule 3 20261021T200541Z-judge
+3e0d601de961dbf8ae38154e3f3a02e5 ok do_not_apply 0.12 null 20261021T200541Z-judge
+5c9d133e54864197a585599669353aff ok apply 0.8 Context-dependent rule 3 20261021T200541Z-judge
+6dc1222aeb364918821167370d8fbc40 ok do_not_apply 0.05 null 20261021T200541Z-judge
+89fcfb7fc6684b63af7d829ed90106cd ok do_not_apply 0.1 null 20261021T200541Z-judge
+8f9c833b41e54eee9ca78e9c2f4ffb58 ok do_not_apply 0.2 null 20261021T200541Z-judge
+92f57020ce349b27b5e56f54068cbc05 ok ask_editor 0.55 null 20261021T200541Z-judge
+canary-1 ok apply 0.93 Context-dependent rule 2 20261021T201025Z-promote-baseline
+canary-2 ok apply 0.98 Context-dependent rule 1 20261021T201025Z-promote-baseline
+canary-3 ok apply 0.85 Context-dependent rule 2 20261021T201025Z-promote-baseline
+canary-4 ok apply 0.94 Context-dependent rule 2 20261021T201025Z-promote-baseline
+canary-5 ok apply 0.95 Context-dependent rule 2 20261021T201025Z-promote-baseline
+canary-6 ok apply 0.92 Context-dependent rule 3 20261021T201025Z-promote-baseline
+canary-7 ok do_not_apply 0.03 null 20261021T201025Z-promote-baseline
+canary-8 ok do_not_apply 0.2 Context-dependent rule 5 20261021T201025Z-promote-baseline
+canary-9 ok do_not_apply 0.12 null 20261021T201025Z-promote-baseline
+canary-10 ok do_not_apply 0.02 Context-dependent rule 5 20261021T201025Z-promote-baseline
+case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent ok apply 0.8 Context-dependent rule 3 20261021T201025Z-promote-baseline
+case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent ok apply 0.8 Context-dependent rule 3 20261021T201025Z-promote-baseline
+case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent ok do_not_apply 0.2 Context-dependent rule 5 20261021T201025Z-promote-baseline
+case-5c9d133e54864197a585599669353aff::Context-dependent ok apply 0.85 Context-dependent rule 3 20261021T201025Z-promote-baseline
+case-6dc1222aeb364918821167370d8fbc40::Context-dependent ok do_not_apply 0.1 null 20261021T201025Z-promote-baseline
+case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent ok do_not_apply 0.15 null 20261021T201025Z-promote-baseline
+case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent ok do_not_apply 0.12 null 20261021T201025Z-promote-baseline
+case-92f57020ce349b27b5e56f54068cbc05::Context-dependent ok do_not_apply 0.3 null 20261021T201025Z-promote-baseline
+case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent ok apply 0.9 Context-dependent rule 2 20261021T201025Z-promote-baseline
+-- run-2.jsonl
+92f57020ce349b27b5e56f54068cbc05 ok ask_editor 0.5 null 20261021T200541Z-judge
+case-92f57020ce349b27b5e56f54068cbc05::Context-dependent ok do_not_apply 0.4 null 20261021T201025Z-promote-baseline
+case-5c9d133e54864197a585599669353aff::Context-dependent ok apply 0.88 Context-dependent rule 3 20261021T201025Z-promote
+-- run-3.jsonl
+case-5c9d133e54864197a585599669353aff::Context-dependent ok apply 0.88 Context-dependent rule 3 20261021T201025Z-promote
+case-92f57020ce349b27b5e56f54068cbc05::Context-dependent ok do_not_apply 0.3 null 20261021T201025Z-promote

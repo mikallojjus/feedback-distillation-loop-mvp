@@ -1,0 +1,123 @@
+==================== 20261021T200603Z-propose ====================
+files: ledger.jsonl, plan.jsonl, report.json, report.md, requests.jsonl, run.json
+-- ledger.jsonl:
+{"op_index":0,"table":"tag_decisions","op":"update","key":"1bff859247ecdb618af41a397d2eb6ba::Context-dependent","page_id":"400273e2-14eb-8189-86ae-d7ebd1e46422","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:07.356Z"}
+{"op_index":1,"table":"claims_copy","op":"update","key":"1bff859247ecdb618af41a397d2eb6ba","page_id":"400273e2-14eb-8180-a661-f650a01a72e9","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:08.156Z"}
+{"op_index":2,"table":"tag_decisions","op":"create","key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","page_id":"400273e2-14eb-8136-b789-f165c58205b3","status":"done","read_back":"ok","sent":"create","error":null,"at":"2026-10-21T20:06:08.893Z"}
+{"op_index":3,"table":"claims_copy","op":"update","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-81cd-8efa-e2923f0bcabe","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:09.885Z"}
+{"op_index":4,"table":"tag_decisions","op":"update","key":"3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent","page_id":"400273e2-14eb-819c-bf49-e59fdcaa5730","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:10.808Z"}
+{"op_index":5,"table":"claims_copy","op":"update","key":"3e0d601de961dbf8ae38154e3f3a02e5","page_id":"400273e2-14eb-81b0-a869-cf85dafaf047","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:11.525Z"}
+{"op_index":6,"table":"tag_decisions","op":"create","key":"5c9d133e54864197a585599669353aff::Context-dependent","page_id":"400273e2-14eb-81f0-8bb3-e2aeb8c2f5e7","status":"done","read_back":"ok","sent":"create","error":null,"at":"2026-10-21T20:06:12.174Z"}
+{"op_index":7,"table":"claims_copy","op":"update","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-810d-a34c-ded139031710","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:13.002Z"}
+{"op_index":8,"table":"tag_decisions","op":"update","key":"6dc1222aeb364918821167370d8fbc40::Context-dependent","page_id":"400273e2-14eb-8130-84e4-fe0a00e787be","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:13.683Z"}
+{"op_index":9,"table":"claims_copy","op":"update","key":"6dc1222aeb364918821167370d8fbc40","page_id":"400273e2-14eb-819d-80b1-fc7d13e5a10c","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:14.390Z"}
+{"op_index":10,"table":"tag_decisions","op":"update","key":"89fcfb7fc6684b63af7d829ed90106cd::Context-dependent","page_id":"400273e2-14eb-8158-8ac2-db19df4da82e","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:15.096Z"}
+{"op_index":11,"table":"claims_copy","op":"update","key":"89fcfb7fc6684b63af7d829ed90106cd","page_id":"400273e2-14eb-81ab-8e2c-d4b97083ea64","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:15.826Z"}
+{"op_index":12,"table":"tag_decisions","op":"create","key":"8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","page_id":"400273e2-14eb-8131-a5de-ea0bc5f2271a","status":"done","read_back":"ok","sent":"create","error":null,"at":"2026-10-21T20:06:16.520Z"}
+{"op_index":13,"table":"claims_copy","op":"update","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-81ad-aad8-c3d940976314","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:17.389Z"}
+{"op_index":14,"table":"tag_decisions","op":"create","key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","page_id":"400273e2-14eb-81a6-8ad5-fe93ef65d374","status":"done","read_back":"ok","sent":"create","error":null,"at":"2026-10-21T20:06:18.048Z"}
+{"op_index":15,"table":"claims_copy","op":"update","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-816a-a2d7-c5bc50ec1dd6","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:18.817Z"}
+{"op_index":16,"table":"tag_decisions","op":"update","key":"fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent","page_id":"400273e2-14eb-8154-b68f-f822d5f6fc7f","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:19.481Z"}
+{"op_index":17,"table":"claims_copy","op":"update","key":"fc0cb0da0a1a4375b0fae6b5c9a67c69","page_id":"400273e2-14eb-8168-bd27-df1119c61bb5","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:20.271Z"}
+{"op_index":18,"table":"agent_settings","op":"update","key":"Claim tagger","page_id":"400273e2-14eb-81de-976c-f7243f736610","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:06:21.000Z"}
+-- plan.jsonl:
+{"plan":{"run_id":"20261021T200603Z-propose","script":"propose","created_at":"2026-10-21T20:06:06.698Z","rubric_edition":"2026-10-21.1","counts":{"creates":4,"updates":15}}}
+{"op":"update","table":"tag_decisions","key":"1bff859247ecdb618af41a397d2eb6ba::Context-dependent","page_id":"400273e2-14eb-8189-86ae-d7ebd1e46422","properties":{"Decided under":"2026-10-21.1"}}
+{"op":"update","table":"claims_copy","key":"1bff859247ecdb618af41a397d2eb6ba","page_id":"400273e2-14eb-8180-a661-f650a01a72e9","properties":{"Agent reasons":"Context-dependent: 'The Dallas convention' names a kind of thing (a convention) but not which one, so a reader must already know which convention is meant, even though Vance's campaign is named. · Context-dependent rule 3 · 1 of 1 runs agree","Agent tags":["400273e2-14eb-8151-b880-c4bbd2f72678"],"Agent status":"Done","Agent edition":"2026-10-21.1","Agent confidence":0.8}}
+{"op":"create","table":"tag_decisions","key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","properties":{"Claim":"The USPS ballot portal should not launch before the 2026 midterms","Key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","Tag":"Context-dependent","Agent proposal":"Applies","Agent confidence":0.78,"Agent reason":"'The USPS ballot portal' is a descriptive definite for a countable product; the claim does not say which portal is meant, so the reader needs outside knowledge. · Context-dependent rule 3 · 1 of 1 runs agree","Rulebook edition":"2026-10-21.1","Claim link":"https://app.notion.com/p/The-USPS-ballot-portal-should-not-launch-before-the-2026-midterms-400273e214eb81cd8efae2923f0bcabe"}}
+{"op":"update","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-81cd-8efa-e2923f0bcabe","properties":{"Agent reasons":"Context-dependent: 'The USPS ballot portal' is a descriptive definite for a countable product; the claim does not say which portal is meant, so the reader needs outside knowledge. · Context-dependent rule 3 · 1 of 1 runs agree","Tags waiting":["400273e2-14eb-8151-b880-c4bbd2f72678"],"Agent status":"Waits for you","Agent edition":"2026-10-21.1","Agent confidence":0.78}}
+{"op":"update","table":"tag_decisions","key":"3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent","page_id":"400273e2-14eb-819c-bf49-e59fdcaa5730","properties":{"Decided under":"2026-10-21.1"}}
+{"op":"update","table":"claims_copy","key":"3e0d601de961dbf8ae38154e3f3a02e5","page_id":"400273e2-14eb-81b0-a869-cf85dafaf047","properties":{"Agent reasons":"Context-dependent: 'December stopgap funding' and 'a full budget' have no pronoun or definite reference needing an outside antecedent; Congress is named. No rule fires. · 1 of 1 runs agree","Agent status":"Done","Agent edition":"2026-10-21.1","Agent confidence":0.88}}
+{"op":"create","table":"tag_decisions","key":"5c9d133e54864197a585599669353aff::Context-dependent","properties":{"Claim":"The press pool was justified in suspending coverage in solidarity with banned networks","Key":"5c9d133e54864197a585599669353aff::Context-dependent","Tag":"Context-dependent","Agent proposal":"Applies","Agent confidence":0.8,"Agent reason":"'The press pool' is a descriptive definite for a countable group, and 'banned networks' is also unspecified. A reader cannot tell which pool is meant. · Context-dependent rule 3 · 1 of 1 runs agree","Rulebook edition":"2026-10-21.1","Claim link":"https://app.notion.com/p/The-press-pool-was-justified-in-suspending-coverage-in-solidarity-with-banned-networks-400273e214eb810da34cded139031710"}}
+{"op":"update","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-810d-a34c-ded139031710","properties":{"Agent reasons":"Context-dependent: 'The press pool' is a descriptive definite for a countable group, and 'banned networks' is also unspecified. A reader cannot tell which pool is meant. · Context-dependent rule 3 · 1 of 1 runs agree","Tags waiting":["400273e2-14eb-8151-b880-c4bbd2f72678"],"Agent status":"Waits for you","Agent edition":"2026-10-21.1","Agent confidence":0.8}}
+{"op":"update","table":"tag_decisions","key":"6dc1222aeb364918821167370d8fbc40::Context-dependent","page_id":"400273e2-14eb-8130-84e4-fe0a00e787be","properties":{"Decided under":"2026-10-21.1"}}
+{"op":"update","table":"claims_copy","key":"6dc1222aeb364918821167370d8fbc40","page_id":"400273e2-14eb-819d-80b1-fc7d13e5a10c","properties":{"Agent reasons":"Context-dependent: 'A contractor's enforcement of safety restrictions' and 'a national security supply chain risk' are indefinite and generic. No pronoun or unresolved definite. · 1 of 1 runs agree","Agent status":"Done","Agent edition":"2026-10-21.1","Agent confidence":0.95}}
+{"op":"update","table":"tag_decisions","key":"89fcfb7fc6684b63af7d829ed90106cd::Context-dependent","page_id":"400273e2-14eb-8158-8ac2-db19df4da82e","properties":{"Decided under":"2026-10-21.1"}}
+{"op":"update","table":"claims_copy","key":"89fcfb7fc6684b63af7d829ed90106cd","page_id":"400273e2-14eb-81ab-8e2c-d4b97083ea64","properties":{"Agent reasons":"Context-dependent: 'The Kennedy Center Honors' is a specific named entity, and 'the awards' refers back to it within the claim. 'A sports arena' is indefinite. · 1 of 1 runs agree","Agent status":"Done","Agent edition":"2026-10-21.1","Agent confidence":0.9}}
+{"op":"create","table":"tag_decisions","key":"8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","properties":{"Claim":"Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience","Key":"8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","Tag":"Context-dependent","Agent proposal":"Does not apply","Agent confidence":0.8,"Agent reason":"'Georgia's gubernatorial debate' is anchored by the named state and office, and 'professional journalists' and 'a town hall audience' are generic or indefinite. No rule fires. · 1 of 1 runs agree","Rulebook edition":"2026-10-21.1","Claim link":"https://app.notion.com/p/Georgia-s-gubernatorial-debate-should-be-moderated-by-professional-journalists-rather-than-a-town-ha-400273e214eb81adaad8c3d940976314"}}
+{"op":"update","table":"claims_copy","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-81ad-aad8-c3d940976314","properties":{"Agent reasons":"Context-dependent: 'Georgia's gubernatorial debate' is anchored by the named state and office, and 'professional journalists' and 'a town hall audience' are generic or indefinite. No rule fires. · 1 of 1 runs agree","Tags waiting":["400273e2-14eb-8151-b880-c4bbd2f72678"],"Agent status":"Waits for you","Agent edition":"2026-10-21.1","Agent confidence":0.8}}
+{"op":"create","table":"tag_decisions","key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","properties":{"Claim":"The AI Force should enforce binding safety standards","Key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","Tag":"Context-dependent","Agent proposal":"Can't tell","Agent confidence":0.53,"Agent reason":"'The AI Force' is a capitalized name-like phrase, which could be a proper name (self-resolving) or a descriptive definite naming a kind of body without saying which one (rule 3). The rules do not settle which reading holds. · 2 of 2 runs agree","Rulebook edition":"2026-10-21.1","Claim link":"https://app.notion.com/p/The-AI-Force-should-enforce-binding-safety-standards-400273e214eb816aa2d7c5bc50ec1dd6"}}
+{"op":"update","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-816a-a2d7-c5bc50ec1dd6","properties":{"Agent reasons":"Context-dependent: 'The AI Force' is a capitalized name-like phrase, which could be a proper name (self-resolving) or a descriptive definite naming a kind of body without saying which one (rule 3). The rules do not settle which reading holds. · 2 of 2 runs agree","Tags waiting":["400273e2-14eb-8151-b880-c4bbd2f72678"],"Agent status":"Waits for you","Agent edition":"2026-10-21.1","Agent confidence":0.53}}
+{"op":"update","table":"tag_decisions","key":"fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent","page_id":"400273e2-14eb-8154-b68f-f822d5f6fc7f","properties":{"Decided under":"2026-10-21.1"}}
+{"op":"update","table":"claims_copy","key":"fc0cb0da0a1a4375b0fae6b5c9a67c69","page_id":"400273e2-14eb-8168-bd27-df1119c61bb5","properties":{"Agent reasons":"Context-dependent: 'the federal court order' is a definite reference needing an outside antecedent; the claim names no court, case or order, so a reader cannot tell which order is meant, even though CNN and Air Force One are named. · Context-dependent rule 2 · 1 of 1 runs agree","Agent tags":["400273e2-14eb-8151-b880-c4bbd2f72678"],"Agent status":"Done","Agent edition":"2026-10-21.1","Agent confidence":0.93}}
+{"op":"update","table":"agent_settings","key":"Claim tagger","page_id":"400273e2-14eb-81de-976c-f7243f736610","properties":{"Rulebook edition":"2026-10-21.1","Last run summary":"Tag · 21 Oct 23:06 · 9 claims"}}
+-- report.json:
+{
+  "demo": true,
+  "sentence": "Tag: the agent read 9 claims for Context-dependent; 4 wait for you (practice page Claim tagger practice · verification 5).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "9",
+      ""
+    ],
+    [
+      "Carrying Context-dependent",
+      "2 claims (earlier decisions included)",
+      ""
+    ],
+    [
+      "New rows in Your queue",
+      "4, lowest confidence first",
+      ""
+    ]
+  ],
+  "next": "Next: decide your four claims in Your queue (https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346#400273e214eb8119a797f6902312044f)."
+}
+-- report.md:
+Demo · Tag: the agent read 9 claims for Context-dependent; 4 wait for you (practice page Claim tagger practice · verification 5).
+
+| What | Result |
+|---|---|
+| Claims read | 9 |
+| Carrying Context-dependent | 2 claims (earlier decisions included) |
+| New rows in Your queue | 4, lowest confidence first |
+
+Next: decide your four claims in Your queue (https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346#400273e214eb8119a797f6902312044f).
+-- lintReport(report.md): []
+-- requests.jsonl: 38 lines (not shown)
+-- run.json:
+{
+  "run_id": "20261021T200603Z-propose",
+  "script": "propose",
+  "args": {
+    "pull": null,
+    "plan_only": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T20:06:03.093Z",
+  "finished_at": "2026-10-21T20:06:21.009Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.1",
+  "pull_id": "20261021T200603Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 propose",
+  "status": "done",
+  "plan": {
+    "creates": 4,
+    "updates": 15
+  },
+  "apply": {
+    "done": 19,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  },
+  "counts": {
+    "claims_read": 9,
+    "not_read": 0,
+    "rows_created": 4,
+    "rows_updated": 0,
+    "decisions_copied": 5,
+    "claims_updated": 9,
+    "open_rows": 4,
+    "disagreed": 0
+  }
+}

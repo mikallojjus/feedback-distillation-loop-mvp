@@ -1,0 +1,14 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs where --demo 20261021-2303-555445
+exit code: 0
+started: 2026-10-21T20:10:16Z
+ended:   2026-10-21T20:10:20Z (elapsed 4 s)
+head:    4a08bf0
+
+----- stdout -----
+Walkthrough: you are at step 6, The safety check.
+
+Next: type /claim-tagger demo promote.
+----- stderr -----
+
+----- lintReport(stdout) -----
+[]

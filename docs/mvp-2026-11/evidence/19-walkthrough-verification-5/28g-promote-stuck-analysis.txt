@@ -1,0 +1,46 @@
+Why promote stops the same way every time after a failed extra read (extracts, HEAD 4a08bf0)
+
+1. The first promote (28-promote.txt): the candidate's extra read of the two flipped claims (press pool, AI Force) failed twice:
+   store judgments/14f395d76261bed8/run-3.jsonl, both lines status error: 'the claim "case-92f57020...::Context-dependent" is missing from the reply'
+   (written by lib/answers.mjs forceRuns, which stops with exit 2: '2 extra read(s) could not be used').
+
+2. Every later promote (28b, 28c) runs the candidate judge first. judge.mjs summarize() counts any error line in runs 1 to 3 as 'could not be read again':
+        continue;
+      }
+      read.add(it.id);
+      if (lines[1]?.status === 'ok') reread.add(it.id);
+      const hadError = lines.some((l) => l?.status === 'error');
+      if (hadError) failedReread.add(it.id);
+   and judge exits 2 (line 1213):
+  if (ctx.summary && (ctx.summary.failed > 0 || ctx.summary.failedReread > 0)) return EXIT.INVALID;
+
+3. But the judge never reads those items again: planReruns() plans run 3 only for items whose runs 1 and 2 disagree (line 591):
+    if (runsMax >= 3 && l2 && !okLine(run3, item) && decisionsDiffer(l1, l2)) plan.run3.push(item.id);
+   For the candidate, press pool reads do_not_apply 0.20 then 0.15 and AI Force apply 0.85 then 0.85: no disagreement, so no run 3 is planned.
+
+4. promote.mjs stops on the judge's exit before it reaches forceRuns, the only code that would read them again (lines 377-390):
+        const base = await runJudge(ctx, { items: 'eval', tags: [tag], runId: `${ctx.runId}-baseline`, ...jc });
+        addRunUsage(base);
+        const cand = await runJudge(ctx, { items: 'eval', tags: [tag], rubric: candidateFile, runId: `${ctx.runId}-candidate`, ...jc });
+        addRunUsage(cand);
+        const ids = new Set(everyItem.map((m) => m.id));
+        const items = selectItems({ root: ctx.root, items: 'eval' }).items.filter((it) => ids.has(it.id));
+        let baseAns = readAnswers(ctx, live, tag, items);
+        let candAns = readAnswers(ctx, candidate, tag, items);
+        const flipped = items.filter((it) => baseAns.get(it.id).decision !== candAns.get(it.id).decision);
+        const extra = ctx.config.gate?.default?.flip_rejudge_runs ?? 2;
+        if (flipped.length && extra > 0) {
+          const upTo = Math.min(3, 1 + extra);
+          addUsage(usage, (await forceRuns(ctx, { rubric: live, tag, items: flipped, upTo })).usage);
+          addUsage(usage, (await forceRuns(ctx, { rubric: candidate, tag, items: flipped, upTo })).usage);
+
+   forceRuns (lib/answers.mjs) would retry them: todo = items without an ok line:
+    for (let run = 2; run <= Math.min(upTo, 3); run++) {
+      const have = store.lines(run);
+      const todo = items.filter((it) => {
+        const l = have.get(it.id);
+        return !(l && l.status === 'ok' && l.item_hash === it.item_hash);
+      });
+
+5. Origin: judge.mjs summarize since 224faf5 (15 October), answers.mjs forceRuns since ddd24fe (15 October); not introduced by this branch.
+   No test in tests/mvp covers a failed extra read followed by a second promote (grep 'could not be used' / 'extra read' finds none).

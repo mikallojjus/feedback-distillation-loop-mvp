@@ -1,0 +1,14 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 promote
+exit code: 2
+started: 2026-10-21T20:10:24Z
+ended:   2026-10-21T20:11:38Z (elapsed 73 s)
+head:    4a08bf0
+
+----- stdout -----
+Demo · Promote stopped: some answers could not be read again, so the check could not be finished; nothing was written to Notion (practice page Claim tagger practice · verification 5).
+
+Next: type /claim-tagger demo promote again; it continues where it stopped.
+----- stderr -----
+promote: 2 extra read(s) could not be used
+----- lintReport(stdout) -----
+[]

@@ -1,0 +1,110 @@
+== demo.json (selected) ==
+{
+ "demo_id": "20261021-2303-555445",
+ "created_at": "2026-10-21T20:03:46.473Z",
+ "updated_at": "2026-10-21T20:04:42.748Z",
+ "title": "Claim tagger practice · verification 5",
+ "manifest_version": "2026-10-22.1",
+ "manifest_sha256": "6d3565b92eb8e8a5d110d79bd3ef0ba45059fcbb1ea9c24d7f7d3aabdf5d61f6",
+ "page_sha256": "275300e5f6ca4505fd4c3ffff177ef6e80019e8243fa35501aedd4ebbe4f387b",
+ "api_version": "2026-03-11",
+ "parent": {
+  "id": "3fa273e214eb81c2b223dcc2331b7051",
+  "title": "Demo tests",
+  "url": "https://app.notion.com/p/Demo-tests-3fa273e214eb81c2b223dcc2331b7051"
+ },
+ "state": "ready",
+ "edition": "2026-10-21.1",
+ "date": "21 Oct",
+ "page": {
+  "id": "400273e214eb81beac86ce8c86ba1346",
+  "url": "https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346"
+ },
+ "databases": {
+  "rulebook": {
+   "database_id": "d64991e0843c4445858e03bf8c839407",
+   "data_source_id": "411169cc0aa84d25a0fecce0df590706",
+   "how": "created"
+  },
+  "claims_copy": {
+   "database_id": "eda14798d7864516b9325a1d2ea121af",
+   "data_source_id": "2cebd24af1bc472dbeb33610c5df7079",
+   "how": "created"
+  },
+  "tag_decisions": {
+   "database_id": "6ae16453109c446589d605b79d9cd8fa",
+   "data_source_id": "b21a260098fa4d709cc14db49369ba4c",
+   "how": "created"
+  },
+  "rule_changes": {
+   "database_id": "27548aa94d1a45aea7cc2a6b674d24bc",
+   "data_source_id": "7848c249dc8b430d92b26d4980f32672",
+   "how": "created"
+  },
+  "agent_settings": {
+   "database_id": "ee6c1ed8e0fe4dd18273a35fc44030ad",
+   "data_source_id": "e7233f0602c34870994efc5b5ca463f7",
+   "how": "created"
+  }
+ },
+ "views": {
+  "rulebook": {
+   "id": "400273e214eb812aa8b8000c8150db99",
+   "url": "https://www.notion.so/d64991e0843c4445858e03bf8c839407?v=400273e214eb812aa8b8000c8150db99",
+   "kind": "tab",
+   "table": "rulebook",
+   "source_database_id": "d64991e0843c4445858e03bf8c839407"
+  },
+  "needs_your_note": {
+   "id": "400273e214eb818caee5000ccc26e845",
+   "url": "https://www.notion.so/eda14798d7864516b9325a1d2ea121af?v=400273e214eb818caee5000ccc26e845",
+   "kind": "tab",
+   "table": "claims_copy",
+   "source_database_id": "eda14798d7864516b9325a1d2ea121af"
+  },
+  "agent_disagreed": {
+   "id": "400273e214eb8139ab21000cc4b9afa2",
+   "url": "https://www.notion.so/eda14798d7864516b9325a1d2ea121af?v=400273e214eb8139ab21000cc4b9afa2",
+   "kind": "tab",
+   "table": "claims_copy",
+   "source_database_id": "eda14798d7864516b9325a1d2ea121af"
+  },
+  "your_queue": {
+   "id": "400273e214eb8174a44b000cb1b3c80a",
+   "url": "https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346#400273e214eb8119a797f6902312044f",
+   "kind": "linked",
+   "table": "claims_copy",
+   "source_database_id": "eda14798d7864516b9325a1d2ea121af",
+   "linked_database_id": "400273e214eb8119a797f6902312044f",
+   "anchor": "400273e2-14eb-81d4-815c-d2541275cfbb"
+  },
+  "lessons_waiting": {
+   "id": "400273e214eb812b9276000c6cfd7e70",
+   "url": "https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346#400273e214eb81e9bd95d08d056cd7df",
+   "kind": "linked",
+   "table": "rule_changes",
+   "source_database_id": "27548aa94d1a45aea7cc2a6b674d24bc",
+   "linked_database_id": "400273e214eb81e9bd95d08d056cd7df",
+   "anchor": "400273e2-14eb-81ca-b5da-ebf9fa83a942"
+  }
+ },
+ "fallback": null,
+ "tables_position": "marker",
+ "errors": []
+}
+
+== editor-actions.jsonl ==
+{"at":"2026-10-21T20:07:20.500Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-810d-a34c-ded139031710","wrote":{"Verified tags":[],"Challenged tags notes":"Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T200720Z-editor-decide","claim":"presspool","tags":[],"status":"planned"}
+{"at":"2026-10-21T20:07:21.172Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-810d-a34c-ded139031710","wrote":{"Verified tags":[],"Challenged tags notes":"Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T200720Z-editor-decide","claim":"presspool","tags":[],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:07:26.894Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-816a-a2d7-c5bc50ec1dd6","wrote":{"Verified tags":["400273e2-14eb-8151-b880-c4bbd2f72678"],"Challenged tags notes":"Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T200726Z-editor-decide","claim":"aiforce","tags":["Context-dependent"],"status":"planned"}
+{"at":"2026-10-21T20:07:27.624Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-816a-a2d7-c5bc50ec1dd6","wrote":{"Verified tags":["400273e2-14eb-8151-b880-c4bbd2f72678"],"Challenged tags notes":"Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T200726Z-editor-decide","claim":"aiforce","tags":["Context-dependent"],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:07:34.724Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-81cd-8efa-e2923f0bcabe","wrote":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T200734Z-editor-decide","claim":"usps","tags":[],"status":"planned"}
+{"at":"2026-10-21T20:07:35.534Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-81cd-8efa-e2923f0bcabe","wrote":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T200734Z-editor-decide","claim":"usps","tags":[],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:07:41.399Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-81ad-aad8-c3d940976314","wrote":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T200741Z-editor-decide","claim":"georgia","tags":[],"status":"planned"}
+{"at":"2026-10-21T20:07:42.034Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-81ad-aad8-c3d940976314","wrote":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T200741Z-editor-decide","claim":"georgia","tags":[],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:09:16.181Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-81cd-8efa-e2923f0bcabe","wrote":{"Verified tags":[],"Challenged tags notes":"Agent slip. USPS names which portal, so rule 5 already settles it.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"plan_run":"20261021T200916Z-editor-decide","claim":"usps","tags":[],"status":"planned"}
+{"at":"2026-10-21T20:09:16.829Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"decide","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-81cd-8efa-e2923f0bcabe","wrote":{"Verified tags":[],"Challenged tags notes":"Agent slip. USPS names which portal, so rule 5 already settles it.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"plan_run":"20261021T200916Z-editor-decide","claim":"usps","tags":[],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:10:07.955Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"approve","table":"rule_changes","key":"Known standing-role groups identified; unknown names not","page_id":"400273e2-14eb-8112-a125-f5edc35e8435","wrote":{"Status":"Approved"},"before":{"Status":"Proposed"},"plan_run":"20261021T201007Z-editor-approve","status":"planned"}
+{"at":"2026-10-21T20:10:08.601Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"approve","table":"rule_changes","key":"Known standing-role groups identified; unknown names not","page_id":"400273e2-14eb-8112-a125-f5edc35e8435","wrote":{"Status":"Approved"},"before":{"Status":"Proposed"},"plan_run":"20261021T201007Z-editor-approve","status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:14:41.495Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"approve","table":"rule_changes","key":"Known standing-role groups identified; unknown names not","page_id":"400273e2-14eb-8112-a125-f5edc35e8435","wrote":{"Editor wording":"A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. This includes a capitalised, name-like phrase for a body no reader knows by that name, which is still a kind and not which one. It does not include a group every reader knows by its standing role (such as a press pool, a jury or a press corps), or abstract or mass nouns (\"the regulatory clearance\", \"the market\")."},"before":{"Editor wording":""},"plan_run":"20261021T201441Z-editor-approve","status":"planned"}
+{"at":"2026-10-21T20:14:42.162Z","demo_id":"20261021-2303-555445","sentence":"acting as the editor on practice page 20261021-2303-555445 (decision D31)","action":"approve","table":"rule_changes","key":"Known standing-role groups identified; unknown names not","page_id":"400273e2-14eb-8112-a125-f5edc35e8435","wrote":{"Editor wording":"A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. This includes a capitalised, name-like phrase for a body no reader knows by that name, which is still a kind and not which one. It does not include a group every reader knows by its standing role (such as a press pool, a jury or a press corps), or abstract or mass nouns (\"the regulatory clearance\", \"the market\")."},"before":{"Editor wording":""},"plan_run":"20261021T201441Z-editor-approve","status":"done","read_back":"ok"}

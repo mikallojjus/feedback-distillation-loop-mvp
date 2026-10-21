@@ -1,0 +1,264 @@
+==================== 20261021T201450Z-promote ====================
+files: calls.jsonl, candidate-rubric.json, card.json, card.md, ledger.jsonl, plan.jsonl, report.json, report.md, requests.jsonl, run.json
+-- calls.jsonl:
+{"purpose":"c6a8157f884c0876","model":"claude-sonnet-5-5","effort":"medium","status":"ok","duration_ms":5958}
+{"purpose":"c6a8157f884c0876","model":"claude-sonnet-5-5","effort":"medium","status":"ok","duration_ms":4306}
+-- candidate-rubric.json:
+{
+  "edition": "2026-10-21.2",
+  "built_at": "2026-10-21T20:14:54.836Z",
+  "source": {
+    "database_id": "d64991e0843c4445858e03bf8c839407",
+    "data_source_id": "411169cc0aa84d25a0fecce0df590706",
+    "read_via": "rest",
+    "read_at": "2026-10-21T20:14:54.836Z"
+  },
+  "tags": [
+    {
+      "name": "Context-dependent",
+      "page_id": "400273e2-14eb-8151-b880-c4bbd2f72678",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": "Self-contained",
+      "description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
+      "when_to_use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. This includes a capitalised, name-like phrase for a body no reader knows by that name, which is still a kind and not which one. It does not include a group every reader knows by its standing role (such as a press pool, a jury or a press corps), or abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent."
+        },
+        {
+          "n": 2,
+          "text": "A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named."
+        },
+        {
+          "n": 3,
+          "text": "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. This includes a capitalised, name-like phrase for a body no reader knows by that name, which is still a kind and not which one. It does not include a group every reader knows by its standing role (such as a press pool, a jury or a press corps), or abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
+        },
+        {
+          "n": 4,
+          "text": "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent."
+        },
+        {
+          "n": 5,
+          "text": "Do not use for indefinites, time expressions, generics, or definites the claim itself resolves."
+        }
+      ],
+      "example_claims": [
+        "Open AI's initiative went well with the target group.",
+        "He said the new model outperforms its predecessor.",
+        "The company's revenue grew 40% after the launch.",
+        "Core Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.",
+        "The Commodity Futures Trading Commission did not comment specifically on the discussions.",
+        "The Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts."
+      ],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-09-10",
+      "evidence": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+      "work_tags": [
+        "Pipeline benchmark check",
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:96ca99affe9aad91"
+    }
+  ],
+  "rubric_hash": "sha256:7a71ccab4bcbaa2b"
+}
+-- card.json:
+{
+  "mode": "simple",
+  "verdict": "PASS",
+  "lesson": "Known standing-role groups identified; unknown names not",
+  "tag": "Context-dependent",
+  "checks": {
+    "canaries": {
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    },
+    "cases": {
+      "passed": 6,
+      "total": 6,
+      "newly_failing": []
+    },
+    "supporting": {
+      "passed": 2,
+      "total": 2,
+      "failures": []
+    }
+  },
+  "flips": [
+    {
+      "id": "5c9d133e54864197a585599669353aff::Context-dependent",
+      "tag": "Context-dependent",
+      "claim": "The press pool was justified in suspending coverage in solidarity with banned networks",
+      "from": "apply",
+      "to": "do_not_apply"
+    },
+    {
+      "id": "92f57020ce349b27b5e56f54068cbc05::Context-dependent",
+      "tag": "Context-dependent",
+      "claim": "The AI Force should enforce binding safety standards",
+      "from": "do_not_apply",
+      "to": "apply"
+    }
+  ],
+  "editions": {
+    "baseline": "2026-10-21.1",
+    "candidate": "2026-10-21.2"
+  },
+  "usage": {
+    "input": 12,
+    "cache_write": 8854,
+    "cache_read": 7474,
+    "output": 5011
+  },
+  "rejudged": 2
+}
+-- card.md:
+# Safety check: Known standing-role groups identified; unknown names not
+
+Verdict: PASS for rule 3. Rulebook in force: 2026-10-21.1; tested: 2026-10-21.2 (with the Editor wording).
+
+| Check | Result |
+|---|---|
+| Example claims | 10 of 10 right |
+| Earlier decisions | 6 of 6 still right |
+| Rows this rests on | 2 of 2 now right |
+
+Answers that changed between the two rulebooks:
+- "The press pool was justified in suspending coverage in solidarity with banned...": Applies to Does not apply
+- "The AI Force should enforce binding safety standards": Does not apply to Applies
+-- ledger.jsonl:
+{"op_index":0,"table":"rulebook","op":"update","key":"Context-dependent","page_id":"400273e2-14eb-8151-b880-c4bbd2f72678","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:15:29.743Z"}
+-- plan.jsonl:
+{"plan":{"run_id":"20261021T201450Z-promote","script":"promote","created_at":"2026-10-21T20:15:28.958Z","rubric_edition":"2026-10-21.1","counts":{"creates":0,"updates":1}}}
+{"op":"update","table":"rulebook","key":"Context-dependent","page_id":"400273e2-14eb-8151-b880-c4bbd2f72678","properties":{"When to use":"1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. This includes a capitalised, name-like phrase for a body no reader knows by that name, which is still a kind and not which one. It does not include a group every reader knows by its standing role (such as a press pool, a jury or a press corps), or abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves."},"expect":{"When to use":"1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves."}}
+-- report.json:
+{
+  "demo": true,
+  "sentence": "Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-21.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger practice · verification 5).",
+  "header": [
+    "Check",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Example claims",
+      "10 of 10 right",
+      ""
+    ],
+    [
+      "Earlier decisions",
+      "6 of 6 still right",
+      ""
+    ],
+    [
+      "Your 2 rows",
+      "2 of 2 now right, marked Fixed",
+      ""
+    ]
+  ],
+  "next": "Next: look at step 7 on the practice page (https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346); the demo is then complete."
+}
+-- report.md:
+Demo · Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-21.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger practice · verification 5).
+
+| Check | Result |
+|---|---|
+| Example claims | 10 of 10 right |
+| Earlier decisions | 6 of 6 still right |
+| Your 2 rows | 2 of 2 now right, marked Fixed |
+
+Next: look at step 7 on the practice page (https://app.notion.com/p/Claim-tagger-practice-verification-5-400273e214eb81beac86ce8c86ba1346); the demo is then complete.
+-- lintReport(report.md): []
+-- requests.jsonl: 16 lines (not shown)
+-- run.json:
+{
+  "run_id": "20261021T201450Z-promote",
+  "script": "promote",
+  "args": {
+    "lesson": "Known standing-role groups identified; unknown names not",
+    "pull": null,
+    "driver": "cli",
+    "runs_max": null,
+    "no_commit": false
+  },
+  "started_at": "2026-10-21T20:14:50.665Z",
+  "finished_at": "2026-10-21T20:15:37.433Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.2",
+  "pull_id": "20261021T201450Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 promote --lesson \"Known standing-role groups identified; unknown names not\"",
+  "status": "done",
+  "lesson": "Known standing-role groups identified; unknown names not",
+  "verdict": "PASS",
+  "card": {
+    "examples": {
+      "passed": 10,
+      "total": 10,
+      "failures": []
+    },
+    "earlier": 6,
+    "yours": 2
+  },
+  "plan": {
+    "creates": 0,
+    "updates": 1
+  },
+  "apply": {
+    "done": 1,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  },
+  "counts": {
+    "fixed": 2,
+    "still_wrong": 0
+  }
+}
+==================== 20261021T201450Z-promote-record ====================
+files: ledger.jsonl, plan.jsonl, run.json
+-- ledger.jsonl:
+{"op_index":0,"table":"rule_changes","op":"update","key":"Known standing-role groups identified; unknown names not","page_id":"400273e2-14eb-8112-a125-f5edc35e8435","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:15:31.222Z"}
+{"op_index":1,"table":"agent_settings","op":"update","key":"Claim tagger","page_id":"400273e2-14eb-81de-976c-f7243f736610","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T20:15:31.952Z"}
+-- plan.jsonl:
+{"plan":{"run_id":"20261021T201450Z-promote-record","script":"promote","created_at":"2026-10-21T20:15:29.760Z","rubric_edition":"2026-10-21.2","counts":{"creates":0,"updates":2}}}
+{"op":"update","table":"rule_changes","key":"Known standing-role groups identified; unknown names not","page_id":"400273e2-14eb-8112-a125-f5edc35e8435","properties":{"Status":"Live","Safety check result":"PASS: examples 10/10, earlier 6/6, yours 2/2"},"expect":{"Status":"Approved"}}
+{"op":"update","table":"agent_settings","key":"Claim tagger","page_id":"400273e2-14eb-81de-976c-f7243f736610","properties":{"Rulebook edition":"2026-10-21.2","Last run summary":"Promote · 21 Oct 23:15 · PASS"}}
+-- run.json:
+{
+  "run_id": "20261021T201450Z-promote-record",
+  "script": "promote",
+  "args": {
+    "parent": "20261021T201450Z-promote"
+  },
+  "started_at": "2026-10-21T20:15:29.758Z",
+  "finished_at": "2026-10-21T20:15:31.954Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.2",
+  "pull_id": "20261021T201450Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2303-555445 promote --lesson \"Known standing-role groups identified; unknown names not\"",
+  "status": "done",
+  "plan": {
+    "creates": 0,
+    "updates": 2
+  },
+  "apply": {
+    "done": 2,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  }
+}
