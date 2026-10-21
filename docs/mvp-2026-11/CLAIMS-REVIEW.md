@@ -44,3 +44,35 @@ A claim with Review status empty or To review has no decision; its judged tags a
 ## 5. Documents
 
 CLAUDE.md hard rule 1 (the editor-owned fields by table), `STRUCTURE.md` (a revision section pointing here; the approved text stays as history), `CONTRACTS.md`, `AGENT.md`, the two skills and their references, `DECISIONS.md` (P2 and the decisions below), `BACKLOG.md` (the refresh job must preserve the four editor columns and Agent confidence on the real table), the artifact's Status, How to run and Structure tabs.
+
+## 6. Feedback round of 21 October (decision P3)
+
+The product owner tested the practice page and asked for seven changes; they revise sections 1 to 4 as follows.
+
+### 6.1 The claims table's columns
+
+The agent writes seven columns, all its own: Agent tags (now a relation to the Rulebook table, several tags at once), Agent confidence (number), Agent reasons (text, one line per judged tag), Agent status (select: "Waits for you", "Done", "Disagrees with your decision", "Could not read"), Tags waiting (a relation to the tags that wait for the editor), Agent edition (text, the edition the row was written under), Agent remarks (text: the "not checked: …" remark, else empty). Agent notes is retired: on the live copy it is renamed "Agent notes (old)" and hidden in every view; a practice page does not create it. On the live copy the text column Agent tags is renamed "Agent tags (old)" and hidden, and a relation named Agent tags is added, because a column's type cannot be changed in place; the next tag run fills it.
+
+The editor writes four columns: Verified tags (the relation; the config maps it, so the real table's "Claim quality tags — verified" needs only a config change later), Review status, Why wrong, Challenged tags notes.
+
+Column order, set on the table's default view and on every view of the table: Geo Name, Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks, Verified tags, Review status, Why wrong, Challenged tags notes, then the Geo columns. The review needs no horizontal scrolling.
+
+### 6.2 Agent status and the views
+
+- Agent status is "Waits for you" when any judged tag of the claim waits (an unsure tag, or any tag on a claim marked To review) and the claim is not Reviewed; "Disagrees with your decision" when the claim is Reviewed and the agent's proposal differs from the editor's verified set; "Could not read" when the judge could not read the claim; else "Done". A decided claim keeps "Waits for you" until the next tag run reads the decision: that is intended, so that the row does not vanish from Your queue the moment Review status is set (the product owner's point 5).
+- Your queue: Agent status is "Waits for you"; sorted by Agent confidence, lowest first. It no longer filters on Review status. Agent disagreed: Agent status is "Disagrees with your decision". Needs your note: Why wrong is set and Challenged tags notes is empty. The page and the reports say that a decided claim leaves Your queue at the agent's next tag run.
+- status and propose count "N wait for you" as the claims with Agent status "Waits for you" whose Review status is not Reviewed (what is still to decide); the view may show a few more, the decided ones awaiting the next run.
+
+### 6.3 The note convention for several tags
+
+A line of Challenged tags notes starts with a tag name and a colon. It may start with a reason word (Agent slip, Rule unclear, Rule should change) followed by a full stop, which overrides Why wrong for that tag; without one the tag takes the claim's Why wrong. A tag the editor agrees with needs no line; a note with no tag name applies to every tag the agent got wrong. The ledger copy stores the per-tag reason in its Why wrong and the line in Your reasoning. With one tag judged the whole note belongs to that tag, as today.
+
+### 6.4 The practice page and the skills
+
+- Step 3's Doing the work is a numbered list per claim, one column per line, the sentence to paste on its own line, Review status last only because it closes the claim (the row stays in Your queue until the next tag run).
+- The claim-tagger skill guides as the walkthrough does: after each report, when the Next line sends the editor to Notion, the skill adds a checklist of at most five lines (which view to open, which columns to fill in which order, what to look at) and names the next command, from one reference file (`references/guide.md`) shared in wording by the practice page; the report itself stays three parts and is relayed verbatim first. The same for the demo commands.
+- The practice page's step tables and the structure document show the new columns.
+
+### 6.5 The live step
+
+`setup.mjs build` (idempotent): rename the two text columns with "(old)", add the five new columns (Agent tags relation, Agent status, Tags waiting, Agent edition, Agent remarks), rename "Claim quality tags — verified" to "Verified tags", set the column order and visible columns on the default view and the three views, change Your queue's filter; then one tag run fills the agent's columns; `setup.mjs verify` compares.

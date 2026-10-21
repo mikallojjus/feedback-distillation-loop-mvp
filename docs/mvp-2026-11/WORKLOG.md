@@ -188,3 +188,11 @@ Done: an independent verifier built a fresh practice page under Demo tests and w
 Verified: `node --test tests/`: 1,945 tests pass, 0 fail (`evidence/01-tests/`); `list` works live again with the misread title among the newest pages and still marks the owner's page; the two verification reports are in the evidence with every step's report.
 
 Next: the product owner runs the seven steps on the new page; then calibration runs 6 and 7 on the new shape, the unpaused practice-page eval, a second verification of the acceptance checks.
+
+### 23. Feedback round of 21 October: seven changes to the claims table, the page and the skill (2026-10-21)
+
+Done: the product owner tested the practice page and gave seven points (decision P3, specification `CLAIMS-REVIEW.md` section 6, decisions 54 to 58): Agent tags as a relation, step 3 as a checklist, the verified column renamed Verified tags, the agent's columns before the review columns, a decided claim staying in Your queue until the next tag run, the skill guiding after each report, Agent notes replaced by Agent status, Tags waiting, Agent edition and Agent remarks. Implementation started: scripts and structure first, then the practice page and the skills, then the live change on the copy and a fresh page.
+
+Verified: nothing yet; this entry opens the work.
+
+Next: the coders' hand-backs; the live change; a fresh practice page; the documents and the artifact.
