@@ -1,0 +1,41 @@
+=== builder open
+builder session open: read the decisions (decision P4): Agent reading on the Claims copy, Why wrong renamed (old) and hidden, the ledger's four reading columns, the Needs your note filters
+exit 0
+=== build
+page "Demos": already recorded (3fa273e214eb81ada268f4b511182378)
+page "Demo tests": already recorded (3fa273e214eb81c2b223dcc2331b7051)
+table "Rulebook copy": already recorded (17b99d1873384a1bb688c0075de45f78)
+table "Claims copy": already recorded (a0e77c4711044d87bc3e38296d2ea5d5)
+table "Tag decisions": already recorded (b77d1b758c414293b14837fdd1af4754)
+table "Rule changes": already recorded (ce293cfbd61a4cc680ab3567bac6da38)
+table "Agent settings": already recorded (d941cf5880bb4b4ea5de378191ab8202)
+table "claims_copy": 1 column(s) renamed (Why wrong -> Why wrong (old))
+table "claims_copy": 1 column(s) added (Agent reading)
+table "tag_decisions": 4 column(s) added (Agent reading, Rule, Reading note, Read under)
+view "Rulebook": already there
+view "Your queue": already there
+view "Your queue": updated (columns)
+view "Needs your note": already there
+view "Needs your note": updated (filter, columns)
+view "Agent disagreed": already there
+view "Agent disagreed": updated (columns)
+view "Default view" (the table's own): column order and visibility set
+view "Your queue (ledger)": already there
+view "Your queue (ledger)": updated (columns)
+view "Needs your note (ledger)": already there
+view "Needs your note (ledger)": updated (filter, columns)
+view "Lessons waiting": already there
+pages: 0 made, 2 there already
+tables: 0 made, 5 there already
+columns: 5 added (claims_copy: Agent reading; tag_decisions: Agent reading, Rule, Reading note, Read under)
+columns renamed: 1 (claims_copy: Why wrong -> Why wrong (old))
+views: 0 made, 7 there already
+views brought to the structure: claims_copy: Your queue (column order); claims_copy: Needs your note (filter, column order); claims_copy: Agent disagreed (column order); tag_decisions: Your queue (ledger) (column order); tag_decisions: Needs your note (ledger) (filter, column order); claims_copy: Default view (column order)
+exit 0
+=== verify
+verify: rows rulebook 13, claims_copy 50, tag_decisions 50, rule_changes 0, agent_settings 1; 30 request(s), 0 write(s)
+verify: no differences
+exit 0
+=== builder close
+builder session closed
+exit 0

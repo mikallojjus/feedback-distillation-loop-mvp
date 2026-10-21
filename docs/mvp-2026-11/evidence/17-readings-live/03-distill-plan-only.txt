@@ -1,0 +1,13 @@
+=== distill --plan-only
+Distill: the plan is ready (8 decisions read, 0 rule changes) and nothing was written to Notion.
+
+| What | Result |
+|---|---|
+| Read | 8 decisions |
+| Point at a rule | none |
+| Agent slips | 8 decisions |
+| Without a note | none |
+| Rule change | none |
+
+Next: type /claim-tagger distill to write it.
+exit 0

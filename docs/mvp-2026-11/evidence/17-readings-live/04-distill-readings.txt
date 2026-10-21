@@ -1,0 +1,13 @@
+=== distill --readings 20261021T181144Z-distill (the real run)
+Distill: read 8 of your decisions; no rule change to draft; 10 decided rows name no rule problem.
+
+| What | Result |
+|---|---|
+| Read | 8 decisions |
+| Point at a rule | none |
+| Agent slips | 8 decisions |
+| Without a note | none |
+| Rule change | none |
+
+Next: type /claim-tagger status to see what is open.
+exit 0

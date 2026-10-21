@@ -1,0 +1,13 @@
+claims whose Agent reading says without your note (what the Needs your note view lists): 0
+Reviewed claims: 10
+  1bff8592 | Context-dependent: Agent slip, rule 3 · Naming the city does not identify which convention is meant, so the re
+  3e0d601d | Context-dependent: Agent slip, rule 5 · There is no definite reference here, only a time expression and generi
+  6dc1222a | Context-dependent: Agent slip, rule 5 · The claim uses only indefinites and generics, so nothing points at an 
+  78dd7750 | Nothing to read: the agent agreed with you.
+  89fcfb7f | Context-dependent: Agent slip, rule 5 · The Kennedy Center Honors are named, and the claim itself resolves the
+  8f9c833b | Nothing to read: the agent agreed with you.
+  9a0e2404 | Context-dependent: Agent slip, rule 5 · All the nouns are bare generics without definite reference; awkward wo
+  c8b676c3 | Context-dependent: Agent slip, rule 5 · The rules, the state control and the program are generic or resolved b
+  e3c28f62 | Context-dependent: Agent slip, rule 3 · The claim never says which initiative or which G20 event is meant, so 
+  fc0cb0da | Context-dependent: Agent slip, rule 2 · The phrase about the court order needs an outside antecedent; nothing 
+ledger rows with a reading: 8 | Read under sample: 2026-10-15.2 · 9536ba12

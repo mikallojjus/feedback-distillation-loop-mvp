@@ -1,0 +1,28 @@
+=== status --json (before any reading)
+{
+  "paused": false,
+  "edition": "2026-10-15.2",
+  "tags": 13,
+  "same_as_notion": true,
+  "queue": {
+    "open": 2,
+    "decided": 10,
+    "decided_listed": 0,
+    "to_read": 8,
+    "pending_rule_decisions": 0,
+    "needs_note": 0,
+    "sitting_rows": 20,
+    "more_than_a_sitting": false
+  },
+  "lessons": {
+    "Proposed": 0,
+    "Approved": 0,
+    "Rejected": 0,
+    "Live": 0,
+    "Rolled back": 0
+  },
+  "last_run": "Tag · 21 Oct 16:21 · 50 claims",
+  "promoting": null,
+  "table": "https://www.notion.so/a0e77c4711044d87bc3e38296d2ea5d5"
+}
+exit 0
