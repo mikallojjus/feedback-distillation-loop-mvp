@@ -95,7 +95,8 @@ The report: step by step (command, exit code, report shape, what happened, verdi
 ## 5. Edge cases settled here
 
 - The "agree" claim: no ledger reading, the agree line on the claim, not counted by status.
-- A disagreement without a note: read conservatively, flagged in code, listed by Needs your note, counted in `needs_note` at once (the view lags until distill writes the column; a backlog line says so), the distill Next line sends the editor there when no lesson was drafted.
+- A disagreement without a note: read conservatively, flagged in code, listed by Needs your note, counted in `needs_note` at once (the view lags until distill writes the column; a backlog line says so), the distill Next line sends the editor there when no lesson was drafted. Amended after verification run 4 (decision 78): such a row never supports a draft and is not counted as pointing at a rule until the editor writes a note.
+- A draft resting on a recanted decision (decision 79, after verification run 4): distill and status ask the editor to reject it and distill again; promote holds; the follow-up marks only rows whose reading still points at a rule.
 - A note line naming a tag the agent did not judge: its own entry (never leaks into another tag), not read, the "did not judge" line on the claim, listed in the run record.
 - Several tags later: readings are per (claim, tag); batches may mix tags; each `<row>` names its tag.
 - A reading batch failing twice: rows unread this run, the sentence says so, refused replies kept, the next run tries again; exit 2 only when nothing could be read.
