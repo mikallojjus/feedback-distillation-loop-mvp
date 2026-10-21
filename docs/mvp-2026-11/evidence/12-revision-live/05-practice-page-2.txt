@@ -1,0 +1,39 @@
+=== start (second page for the product owner)
+Building the page.
+Walkthrough: your practice page is ready under Demos.
+
+| Table | Now |
+|---|---|
+| Rulebook | 1 tag |
+| Claims | 7: 5 reviewed earlier, 2 for you |
+| Rule changes | empty |
+
+Next: open Claim tagger practice · product owner, 21 Oct afternoon (https://app.notion.com/p/Claim-tagger-practice-product-owner-21-Oct-afternoon-400273e214eb8147a715e29c018b0206) and follow step 1.
+exit 0
+demo 20261021-1348-aae97a
+=== verify
+{"ok":true,"problems":[],"counts":{"canaries":10,"linked_places_checked":2,"blocks":{"callout":1,"paragraph":51,"table":11,"table_row":36,"heading_2":8,"numbered_list_item":3,"bulleted_list_item":9,"toggle":1},"tables_on_page":5,"rulebook":1,"claims":7,"decided":5,"open":2,"tag_decisions":5,"rule_changes":0,"agent_settings":1,"linked_views":2,"tab_views":3,"fallback":null,"steps":7,"fresh":true}}
+exit 0
+=== where
+Walkthrough: you are at step 1, Meet the demo.
+
+Next: type /claim-tagger demo status.
+exit 0
+=== where without --demo (the default page)
+Walkthrough: you are at step 1, Meet the demo.
+
+Next: type /claim-tagger demo status.
+exit 0
+=== list
+Walkthrough: 9 practice pages, the newest 5 below.
+
+| Practice page | State | Step |
+|---|---|---|
+| Claim tagger practice · product owner, 21 Oct afternoon (https://app.notion.com/p/Claim-tagger-practice-product-owner-21-Oct-afternoon-400273e214eb8147a715e29c018b0206) | ready · used by the demo commands | step 1 |
+| Claim tagger practice · verification 21 Oct (https://app.notion.com/p/Claim-tagger-practice-verification-21-Oct-400273e214eb8126bf20cd1f1337681e) | ready | complete |
+| Claim tagger practice · product owner (https://app.notion.com/p/Claim-tagger-practice-product-owner-400273e214eb81cda86ae10987b9bf8c) | ready | step 1 |
+| Claim tagger practice · 15 Oct 21:44 (https://app.notion.com/p/Claim-tagger-practice-15-Oct-21-44-3fa273e214eb8125b451e4a2c04d099e) | ready | unknown |
+| Claim tagger practice · calibration 5 (https://app.notion.com/p/Claim-tagger-practice-calibration-5-3fa273e214eb81169e15d8bf8a00be98) | ready | unknown |
+
+Next: type /claim-tagger demo status.
+exit 0
