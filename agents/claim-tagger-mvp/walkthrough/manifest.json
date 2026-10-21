@@ -1,5 +1,5 @@
 {
-  "manifest_version": "2026-10-21.1",
+  "manifest_version": "2026-10-22.1",
   "calibration": {
     "status": "pending",
     "runs": [
@@ -171,7 +171,8 @@
         ],
         "outcome": "passed after one wording round; the distill prompt was sharpened afterwards (decision 38): the draft described the press pool as a riddle instead of naming the kind"
       }
-    ]
+    ],
+    "note": "Runs 1 to 5 belong to the earlier versions of the story (manifest 2026-10-15.1 to 2026-10-21.1). Runs 6 to 8 calibrate this version, 2026-10-22.1, with four open claims; the status stays pending until the third of them is recorded."
   },
   "tag": {
     "Name": "Context-dependent",
@@ -346,6 +347,51 @@
         "Debate"
       ],
       "Geo Topics": "Trump’s AI Force proposal",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "usps",
+      "short": "The USPS ballot portal should not launch before the 2026…",
+      "Geo Name": "The USPS ballot portal should not launch before the 2026 midterms",
+      "Geo ID": "27ad00b59c1f7d4aee71643fc8cdec94",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/27ad00b59c1f7d4aee71643fc8cdec94",
+      "Geo Sources": "",
+      "source_pieces": [],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "2026 U.S. midterm elections\nUSPS ballot portal controversy\nMail-in voting\nUS midterm elections\nU.S. voting rights\nElections\nRights and liberties\nTechnology\nBallot administration\nElection integrity",
+      "Geo Score": null,
+      "Geo Supporting arguments": "",
+      "Geo Opposing arguments": "",
+      "Geo Related people": "",
+      "Geo Related projects": "",
+      "Geo Is factual": false,
+      "Geo Name source": "This space"
+    },
+    {
+      "key": "georgia",
+      "short": "Georgia's gubernatorial debate should be moderated by…",
+      "Geo Name": "Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience",
+      "Geo ID": "8f9c833b41e54eee9ca78e9c2f4ffb58",
+      "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8f9c833b41e54eee9ca78e9c2f4ffb58",
+      "Geo Sources": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+      "source_pieces": [
+        {
+          "text": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+          "href": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/409d76d8f23f4fb1927c67af42d371e5"
+        }
+      ],
+      "Geo Tags": [
+        "Debate"
+      ],
+      "Geo Topics": "",
       "Geo Score": null,
       "Geo Supporting arguments": "",
       "Geo Opposing arguments": "",
@@ -574,7 +620,6 @@
         "Context-dependent"
       ],
       "Review status": "Reviewed",
-      "Why wrong": "Agent slip",
       "Challenged tags notes": "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded.",
       "source": "audit of 9 October"
     },
@@ -585,7 +630,6 @@
         "Context-dependent"
       ],
       "Review status": "Reviewed",
-      "Why wrong": "Agent slip",
       "Challenged tags notes": "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded.",
       "source": "audit of 9 October"
     },
@@ -594,7 +638,6 @@
       "Agent proposal": "Applies",
       "Verified tags": [],
       "Review status": "Reviewed",
-      "Why wrong": "Agent slip",
       "Challenged tags notes": "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’.",
       "source": "audit of 9 October"
     },
@@ -603,7 +646,6 @@
       "Agent proposal": "Applies",
       "Verified tags": [],
       "Review status": "Reviewed",
-      "Why wrong": "Agent slip",
       "Challenged tags notes": "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded.",
       "source": "audit of 9 October"
     },
@@ -612,7 +654,6 @@
       "Agent proposal": "Applies",
       "Verified tags": [],
       "Review status": "Reviewed",
-      "Why wrong": "Agent slip",
       "Challenged tags notes": "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it.",
       "source": "audit of 9 October"
     }
@@ -623,7 +664,6 @@
       "Review status": "To review",
       "enter": {
         "Verified tags": [],
-        "Why wrong": "Rule unclear",
         "Challenged tags notes": "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.",
         "Review status": "Reviewed"
       },
@@ -632,6 +672,14 @@
         "min_share": 0.67,
         "min_p": 0.75,
         "cites_rule": 3
+      },
+      "expect_reading": {
+        "source": "model",
+        "reading": [
+          "Rule unclear",
+          "Rule should change"
+        ],
+        "rule": 3
       }
     },
     {
@@ -641,7 +689,6 @@
         "Verified tags": [
           "Context-dependent"
         ],
-        "Why wrong": "Rule unclear",
         "Challenged tags notes": "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.",
         "Review status": "Reviewed"
       },
@@ -653,6 +700,55 @@
         "min_share": 0.67,
         "max_p": 0.7,
         "cites_rule": 3
+      },
+      "expect_reading": {
+        "source": "model",
+        "reading": [
+          "Rule unclear",
+          "Rule should change"
+        ],
+        "rule": 3
+      }
+    },
+    {
+      "claim": "usps",
+      "Review status": "To review",
+      "enter": {
+        "Verified tags": [],
+        "Challenged tags notes": "Agent slip. USPS names which portal, so rule 5 already settles it.",
+        "Review status": "Reviewed"
+      },
+      "calibrate": {
+        "agent": "apply",
+        "min_share": 0.67,
+        "min_p": 0.75
+      },
+      "expect_reading": {
+        "source": "verbatim",
+        "reading": [
+          "Agent slip"
+        ],
+        "rule": 5
+      }
+    },
+    {
+      "claim": "georgia",
+      "Review status": "To review",
+      "agrees": true,
+      "enter": {
+        "Verified tags": [],
+        "Challenged tags notes": "",
+        "Review status": "Reviewed"
+      },
+      "calibrate": {
+        "agent": "do_not_apply",
+        "min_share": 1,
+        "max_p": 0.25
+      },
+      "expect_reading": {
+        "source": "none",
+        "reading": null,
+        "rule": null
       }
     }
   ],
@@ -668,18 +764,6 @@
       "geo_id": "9e8c71422b0fb7f264a9ff88ef4f0e74",
       "text": "The Fairford withdrawal reduces the effectiveness of U.S. bombing operations against Iran",
       "replaces": "an open row"
-    },
-    {
-      "key": "usps-ballot-portal",
-      "geo_id": "27ad00b59c1f7d4aee71643fc8cdec94",
-      "text": "The USPS ballot portal should not launch before the 2026 midterms",
-      "replaces": "an open row"
-    },
-    {
-      "key": "georgia",
-      "geo_id": "8f9c833b41e54eee9ca78e9c2f4ffb58",
-      "text": "Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience",
-      "note": "left out on 2026-10-15: the agent judged it Does not apply at 0.15 in every reading, agreeing with the editor, so it carries no disagreement; an earlier decision Does not apply if ever needed"
     },
     {
       "key": "melania",
@@ -707,10 +791,10 @@
       "Agent settings"
     ],
     "rulebook_rows": 1,
-    "claims": 7,
+    "claims": 9,
     "ledger_rows": 5,
     "reviewed_claims": 5,
-    "open_claims": 2,
+    "open_claims": 4,
     "linked_views": 2,
     "tab_views": 3,
     "claims_views": [
@@ -720,7 +804,7 @@
     ],
     "claims_view_filters": {
       "Your queue": "Agent status is Waits for you",
-      "Needs your note": "Why wrong is not empty, and Challenged tags notes is empty",
+      "Needs your note": "Agent reading contains without your note",
       "Agent disagreed": "Agent status is Disagrees with your decision"
     },
     "claims_columns": [
@@ -732,11 +816,17 @@
       "Tags waiting",
       "Agent edition",
       "Agent remarks",
+      "Agent reading",
       "Verified tags",
       "Review status",
-      "Why wrong",
       "Challenged tags notes"
     ],
+    "readings": {
+      "read": 3,
+      "model_calls": 1,
+      "verbatim": 1,
+      "agree": 1
+    },
     "lesson_rule": "Context-dependent rule 3",
     "gate": "PASS"
   },
@@ -757,7 +847,7 @@
     },
     {
       "n": 3,
-      "title": "Decide your two claims",
+      "title": "Decide your four claims",
       "command": null,
       "affects": [
         "Claims"
@@ -765,9 +855,10 @@
     },
     {
       "n": 4,
-      "title": "The agent drafts a clearer rule 3",
+      "title": "The agent reads your decisions and drafts a clearer rule 3",
       "command": "/claim-tagger demo distill",
       "affects": [
+        "Claims",
         "Rule changes"
       ]
     },
@@ -801,5 +892,5 @@
   "quiet_columns": [
     "Agent settings.Last run summary"
   ],
-  "alternates_note": "Texts and ids from the dry run dry-1 of 2026-10-15. The three Fairford and USPS claims can replace an open row if a calibration run fails on it (they were judged Applies at 0.80 to 0.93 on 2026-10-15). Georgia and Melania were retired from the story on 2026-10-15 (decision 33), COVID-19 later the same day (decision 37)."
+  "alternates_note": "Texts and ids from the dry run dry-1 of 2026-10-15. The two Fairford claims can replace an open row if a calibration run fails on it (they were judged Applies at 0.80 to 0.93 on 2026-10-15). The USPS ballot portal and the Georgia gubernatorial debate, which were alternates, are in the story since 2026-10-22 (decision 75): the first as the claim whose note names the reason (Agent slip, read without a call), the second as the claim the editor agrees on. Melania stands in for the USPS claim, a Fairford claim for Georgia (the editor agreeing on Applies), if a calibration run fails on one of them. Melania and Georgia were retired from the first story on 2026-10-15 (decision 33), COVID-19 later the same day (decision 37)."
 }

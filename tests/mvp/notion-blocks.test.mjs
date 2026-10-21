@@ -915,28 +915,34 @@ test('rule i (closing lines): Step 7 ends with the three "adds later" lines and 
   assert.deepEqual(summary(lint(page)), [`i@${lineNo(page, '## Step 7')}`, `i@${lineNo(page, '## Step 7')}`]);
 });
 
-test('rule j (help): the Why wrong table has two columns and four values; the words list ten lines; "If something stops" three', () => {
-  const emptyRow = '| (empty) | The agent was right, or no reason given: no rule change; the row counts as an earlier decision. |\n';
+test('rule j (help): the Agent reading table has two columns and four values; the words list ten lines; "If something stops" three', () => {
+  const header = '| Agent reading | What it makes happen |';
+  const lastRow = '| (nothing to read) | You agreed with the agent: no rule change; the claim counts as an earlier decision. |\n';
   // the table
-  let page = swap(OK, emptyRow, '');
-  assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '| Why wrong | What it makes happen |')}`]);
-  assert.match(lint(page).problems[0].detail, /3 value rows; it has exactly four/);
-  page = swap(OK, emptyRow, `${emptyRow}| Another | One more. |\n`);
-  assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '| Why wrong | What it makes happen |')}`]);
+  let page = swap(OK, lastRow, '');
+  assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, header)}`]);
+  assert.match(lint(page).problems[0].detail, /Agent reading table has 3 value rows; it has exactly four/);
+  page = swap(OK, lastRow, `${lastRow}| Another | One more. |\n`);
+  assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, header)}`]);
   assert.match(lint(page).problems[0].detail, /5 value rows/);
   page = swap(OK, '| Agent slip |', '| Agent mistake |');
   assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '| Agent mistake |')}`]);
-  assert.match(lint(page).problems[0].detail, /row 1 of the Why wrong table should be "Agent slip"/);
-  page = swap(OK, '| (empty) | The agent was right', '| Empty | The agent was right');
-  assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '| Empty |')}`]);
-  assert.match(lint(page).problems[0].detail, /row 4 .* "\(empty\)"/);
-  page = swap(OK, '| Why wrong | What it makes happen |\n|---|---|', '| Why wrong | What it makes happen | More |\n|---|---|---|')
-    .replace(/^(\| (?:Agent slip|Rule unclear|Rule should change|\(empty\)) \|.*) \|$/gm, '$1 | x |');
-  assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '| Why wrong | What it makes happen | More |')}`]);
+  assert.match(lint(page).problems[0].detail, /row 1 of the Agent reading table should be "Agent slip"/);
+  page = swap(OK, '| (nothing to read) | You agreed', '| Nothing | You agreed');
+  assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '| Nothing |')}`]);
+  assert.match(lint(page).problems[0].detail, /row 4 .* "\(nothing to read\)"/);
+  page = swap(OK, '| (nothing to read) | You agreed', '| (empty) | You agreed');
+  assert.match(lint(page).problems[0].detail, /row 4 .* "\(nothing to read\)"/, 'the old fourth value, (empty), is not the agreeing decision');
+  page = swap(OK, `${header}\n|---|---|`, '| Agent reading | What it makes happen | More |\n|---|---|---|')
+    .replace(/^(\| (?:Agent slip|Rule unclear|Rule should change|\(nothing to read\)) \|.*) \|$/gm, '$1 | x |');
+  assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '| Agent reading | What it makes happen | More |')}`]);
   assert.match(lint(page).problems[0].detail, /3 columns; it has exactly two/);
-  page = swap(OK, '| Why wrong | What it makes happen |', '| Reason | What it makes happen |');
+  page = swap(OK, header, '| Reason | What it makes happen |');
   assert.deepEqual(summary(lint(page)), [`j@${lineNo(page, '## Help')}`]);
-  assert.match(lint(page).problems[0].detail, /no "Why wrong" table/);
+  assert.match(lint(page).problems[0].detail, /no "Agent reading" table/);
+  // a table called Why wrong, the old title, is no longer the one the lint looks for
+  page = swap(OK, header, '| Why wrong | What it makes happen |');
+  assert.match(lint(page).problems[0].detail, /no "Agent reading" table/);
 
   // the words list
   const word = '- **Claim**: one short statement in Geo.\n';

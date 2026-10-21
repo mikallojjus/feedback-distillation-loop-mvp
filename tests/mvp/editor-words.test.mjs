@@ -57,6 +57,7 @@ test('stampOf is "15 Oct 11:20" in local time, with no leading zero on the day a
 test('yourClaims names the claims an editor is to decide in the words of the page: one, two or three up to ten spelled out, then the figure', () => {
   assert.deepEqual([1, 2, 3, 10, 11, 14].map(yourClaims), ['your claim', 'your two claims', 'your three claims', 'your ten claims', 'your 11 claims', 'your 14 claims']);
   assert.equal(yourClaims(2), 'your two claims', 'the words where and the page use');
+  assert.equal(yourClaims(4), 'your four claims', 'the practice page has four claims for the editor');
 });
 
 test('answerWord names the three answers of the queue', () => {

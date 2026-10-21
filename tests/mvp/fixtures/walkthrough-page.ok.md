@@ -177,14 +177,14 @@ Archive this page by hand when you no longer need it.
 
 ## Help
 
-**What to choose in Why wrong.**
+**What the agent's reading makes happen.**
 
-| Why wrong | What it makes happen |
+| Agent reading | What it makes happen |
 |---|---|
-| Agent slip | The rule is fine, the agent misread it: no rule change; the row still counts as an earlier decision. |
+| Agent slip | The rule is fine, the agent misread it: no rule change; the claim counts as an earlier decision. |
 | Rule unclear | The rule does not settle this claim: the agent drafts a clearer rule from your note. |
-| Rule should change | The rule settles it, but wrongly: the agent drafts a changed rule from your note. |
-| (empty) | The agent was right, or no reason given: no rule change; the row counts as an earlier decision. |
+| Rule should change | The rule settles it, but against you: the agent drafts a changed rule from your note. |
+| (nothing to read) | You agreed with the agent: no rule change; the claim counts as an earlier decision. |
 
 **Words used on this page.**
 

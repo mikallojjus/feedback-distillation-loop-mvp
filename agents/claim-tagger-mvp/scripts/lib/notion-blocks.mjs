@@ -27,7 +27,7 @@
 // 100; a block placeholder inside it is an error). `children` sit inside the block's own object (toggle.children, table.children), as the REST
 // API wants them. Every block has `object: 'block'` and `type`.
 //
-// Nesting. The Help toggle holds the Why wrong table, so the table rows sit two levels below the toggle. The REST API takes two levels of
+// Nesting. The Help toggle holds the Agent reading table, so the table rows sit two levels below the toggle. The REST API takes two levels of
 // nesting in one request; tests/mvp/fixtures/fake-notion.mjs takes one, so against the fake a builder appends the toggle first and then
 // its children to the toggle's id (appendBlocks).
 //
@@ -44,8 +44,8 @@
 //   g story-line     a line before Step 1 says the two rows were "picked for the demo"
 //   h edition-line   Step 1 holds "an edition is a date plus a count"
 //   i closing-lines  Step 7 ends with "What the full version adds later", three bullets, and "Archive this page by hand"
-//   j help           the "## Help" section holds the two-column Why wrong table (a header and exactly four value rows: Agent slip, Rule
-//                    unclear, Rule should change and (empty), the empty value), a "Words used on this page" list of exactly ten
+//   j help           the "## Help" section holds the two-column Agent reading table (a header and exactly four value rows: Agent slip, Rule
+//                    unclear, Rule should change and (nothing to read), the agreeing decision), a "Words used on this page" list of exactly ten
 //                    lines and an "If something stops" list of exactly three (paused, the Claude allowance, the rulebook text edited by hand)
 //   k captions       with a manifest: every table in a step's `affects` has a bold caption line `**<Table>**` in that step; always: the
 //                    caption `**Agent settings**` appears in Step 6 only
@@ -786,15 +786,15 @@ function checkHelp(lines, helpAt, tables, add) {
     add('j', 1, 'the page has no "## Help" section');
     return;
   }
-  const why = tables.find((t) => t.line - 1 > helpAt && plainCell(t.header[0]).toLowerCase() === 'why wrong');
-  if (!why) add('j', helpAt + 1, 'the Help section has no "Why wrong" table');
+  const reading = tables.find((t) => t.line - 1 > helpAt && plainCell(t.header[0]).toLowerCase() === 'agent reading');
+  if (!reading) add('j', helpAt + 1, 'the Help section has no "Agent reading" table');
   else {
-    const body = why.rows.slice(1);
-    if (why.header.length !== 2) add('j', why.line, `the Why wrong table has ${why.header.length} columns; it has exactly two`);
-    if (body.length !== 4) add('j', why.line, `the Why wrong table has ${body.length} value rows; it has exactly four`);
-    const values = ['Agent slip', 'Rule unclear', 'Rule should change', '(empty)'];
+    const body = reading.rows.slice(1);
+    if (reading.header.length !== 2) add('j', reading.line, `the Agent reading table has ${reading.header.length} columns; it has exactly two`);
+    if (body.length !== 4) add('j', reading.line, `the Agent reading table has ${body.length} value rows; it has exactly four`);
+    const values = ['Agent slip', 'Rule unclear', 'Rule should change', '(nothing to read)'];
     body.slice(0, 4).forEach((row, k) => {
-      if (plainCell(row.cells[0]) !== values[k]) add('j', row.line, `row ${k + 1} of the Why wrong table should be "${values[k]}"`);
+      if (plainCell(row.cells[0]) !== values[k]) add('j', row.line, `row ${k + 1} of the Agent reading table should be "${values[k]}"`);
     });
   }
   for (const [label, count, name] of [['words used on this page', 10, 'words list'], ['if something stops', 3, '"If something stops" list']]) {

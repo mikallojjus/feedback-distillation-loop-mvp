@@ -1105,11 +1105,44 @@ test('the fixture folder holds the transcripts the tests read', () => {
 const LIST = [
   '1. Open Your queue (the link in the Next line): the claims that wait for you, lowest Agent confidence first.',
   '2. Read Agent reasons and Tags waiting: they say which tag waits and why.',
-  '3. On each claim fill in, in this order: Verified tags, Why wrong (only where the agent was wrong), Challenged tags notes, Review status.',
-  '4. Set Review status to Reviewed last: a claim you have decided stays in Your queue until the agent reads it again.',
+  '3. On each claim fill in, in this order: Verified tags, Challenged tags notes (start a line with the tag name and a colon when the agent judged several tags), Review status last.',
+  '4. You need not say why the agent was wrong: it reads your decision itself. If you know the reason, start the note with Agent slip, Rule unclear or Rule should change and a full stop; the agent then takes your word as it stands.',
   '5. When your claims are decided, type /claim-tagger distill.',
 ];
 const withList = (lines = LIST, glue = '\n\n') => `${GOOD}${glue}${lines.join('\n')}`;
+
+// the report that sends the editor to Needs your note (a distill that read a decision with no note and drafted nothing), and its checklist (the guide's "Needs your note", Demo form)
+const NOTE_REPORT = [
+  'Demo · Distill: read 1 of your decisions; no rule change to draft; 6 decided rows name no rule problem (practice page Claim tagger practice · 15 Oct 14:22).',
+  '',
+  '| What | Result |',
+  '|---|---|',
+  '| Read | 1 decision |',
+  '| Point at a rule | none |',
+  '| Agent slips | 1 decision |',
+  '| Without a note | 1 decision |',
+  '| Rule change | none |',
+  '',
+  'Next: add a note on 1 claim in Needs your note (https://www.notion.so/0123456789abcdef0123456789abcdef?v=fedcba9876543210fedcba9876543210), then type /claim-tagger demo distill again.',
+].join('\n');
+const NOTE_LIST = [
+  '1. Open Needs your note (the link in the Next line): the claims where you decided against the agent and wrote no note.',
+  '2. Read Agent reading next to your Verified tags: it says what the agent made of your decision without a note.',
+  '3. Add a line in Challenged tags notes for the tag: start with the tag name and a colon, then your words.',
+  '4. If you know the reason, start your words with Agent slip, Rule unclear or Rule should change and a full stop; the agent then takes your word as it stands.',
+  '5. When the notes are in, type /claim-tagger demo distill again.',
+];
+
+test('the report that sends the editor to Needs your note passes alone and with its checklist of five lines, and a sixth line or a second list fails it', () => {
+  assert.deepEqual(grade({ final: NOTE_REPORT }).problems, [], 'the report alone');
+  assert.deepEqual(grade({ final: `${NOTE_REPORT}\n\n${NOTE_LIST.join('\n')}` }).problems, [], 'the report and the Needs your note checklist');
+  const split = splitChecklist(`${NOTE_REPORT}\n\n${NOTE_LIST.join('\n')}`);
+  assert.equal(split.report, NOTE_REPORT);
+  assert.deepEqual([split.checklist, split.problems], [NOTE_LIST, []]);
+  assert.ok(has(grade({ final: `${NOTE_REPORT}\n\n${[...NOTE_LIST, '6. Check the Agent disagreed view.'].join('\n')}` }).problems, 'the checklist has 6 lines; the limit is 5'));
+  assert.ok(has(grade({ final: `${NOTE_REPORT}\n\n${NOTE_LIST.join('\n')}\n\n${LIST.join('\n')}` }).problems, 'more than one part follows the Next line'));
+  assert.ok(has(grade({ final: `${NOTE_REPORT}\n\n${NOTE_LIST.join('\n')}`.replace('Rule should change and a full stop', 'Rule should change and a full stop (see runs/20261021T092138Z)') }).problems, 'checklist line 4'), 'the word rules hold for this checklist too');
+});
 
 test('pass-with-checklist passes: a report, one blank line, one numbered list of five lines', () => {
   const r = checkTranscript(fixture('pass-with-checklist'), { expectStyle: 'Explanatory' });

@@ -96,7 +96,7 @@ test('cellVerdict: the practice page shows the Agent reason in the form propose 
   const rule = manifest.expect.lesson_rule; // the rule the story is about ("Context-dependent rule 3"); the page's Step 2 rows cite it
   // the rows of Step 2's Agent reasons table: the form propose writes, "<reason> · <rule, when one is cited> · <k> of <n> runs agree"
   const cells = page.split('\n').filter((l) => l.startsWith('|') && l.includes('runs agree'));
-  assert.equal(cells.length, 2, 'the two rows of Step 2');
+  assert.equal(cells.length, 4, 'the four rows of Step 2: the claims of the editor');
   for (const cell of cells) assert.match(cell, new RegExp(` · (?:${rule} · )?\\d of \\d runs agree \\|$`));
   assert.match(cells[0], new RegExp(` · ${rule} · 1 of 1 runs agree \\|$`), 'a claim the agent is sure of is read once: its line ends with one of one');
   // no figure the tag step cannot produce: three readings are never made at once (a second one only for an unsure claim, a third only when the first two disagree)
