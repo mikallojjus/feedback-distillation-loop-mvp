@@ -11,10 +11,16 @@
 //   pageModel(template, values)                -> what the page is made of: blocks before the tables, the two view slots, the Help toggle
 //   expectedContent(model, fallbackKeys)       -> the top-level content blocks the page must hold, in order
 //   annotatedPreview(model, { ... })           -> preview.md: the rendered template with a comment under each marker, and the fallback paragraphs
-//   rulebookRow(manifest) / claimEditorCells(manifest, claim, tagPages) / ledgerOps(manifest, claimLinks) / openKeys(manifest) / openClaims(manifest) / queueKey(claim, tag)
-//                                              -> the Rulebook row, the editor's four columns of a claim as the cells of its create, the creates of Tag decisions (the
-//                                                 ledger: the five decided claims only), the ledger keys of the claims that wait, those claims, a ledger row's key
-//   stepOf({ claims, ledger, lessons, open, settings }) -> where the editor is: { step, branch, lesson } (the mapping of the design, read from the claims' Review status)
+//   rulebookRow(manifest) / practiceRubric(manifest, config, { edition, now }) -> the Rulebook row, and the rulebook file the page starts with (built in memory, the way writeProfile
+//                                                 builds it: its edition is the Rulebook edition of the seeded ledger rows and the edition their Read under names)
+//   claimEditorCells(manifest, claim, tagPages) / claimAgentCells(manifest, claim, { rubric }) / ledgerCopy(manifest, claim, { rubric }) / ledgerOps(manifest, claimLinks, { rubric })
+//   openKeys(manifest) / openClaims(manifest) / queueKey(claim, tag)
+//                                              -> the editor's three columns of a claim as the cells of its create, the Agent reading a decided claim is created with, the copy
+//                                                 of a decision in the ledger (with the agent's reading of the earlier decisions that disagree with the agent's proposal, decision 73),
+//                                                 the creates of Tag decisions (the ledger: the five decided claims only), the ledger keys of the claims that wait, those claims,
+//                                                 a ledger row's key
+//   stepOf({ claims, ledger, lessons, open, settings }) -> where the editor is: { step, branch, lesson } (the mapping of the design, read from the claims' Review status; step 7
+//                                                 from the Follow-up of the rows the live rule change rests on, decision 76)
 //   placementFetch(inner)                      -> a fetch that spells two placements the Notion client cannot (see the function)
 //   bufferedLog()                              -> a request log that starts in memory and moves to its file when the folder exists
 //   demosDir / demoDir / listDemos / pickDemo  -> the demos under <root>/runs/demos; pickDemo is the page a command acts on (the one named, else the
@@ -31,7 +37,9 @@ import { blockText, parseInline, renderPreview, splitAtMarkers, toBlocks } from 
 import { AUTOMATIC_TYPES, validateStructure, viewKey } from './notion-build.mjs';
 import { normId } from './notion-values.mjs';
 import { stampOf } from './editor-words.mjs';
-import { decisionsFor } from './decisions.mjs';
+import { READINGS, decisionsFor } from './decisions.mjs';
+import { claimReadingCell, classifyRows, readingCells } from './readings.mjs';
+import { buildRubric } from './rubric.mjs';
 
 // ---- names -------------------------------------------------------------------------------------------------------------------------
 
@@ -53,18 +61,24 @@ export const TAB_VIEWS = Object.freeze({
 });
 /** What stands in a step where its linked view could not be made. */
 export const FALLBACK_TEXT = Object.freeze({
-  your_queue: 'Scroll to Claims in the tables further down this page; your two claims are the ones whose Review status is To review.',
+  your_queue: 'Scroll to Claims in the tables further down this page; your four claims are the ones whose Review status is To review.',
   lessons_waiting: 'Scroll to Rule changes at the bottom of this page and open the row with Status Proposed.',
 });
-/** The editor's four columns of a claim (the names of the production Claims copy since the revision of 21 October; config.json editor_columns.claims_copy lists the same four). */
+/** The editor's three columns of a claim (the names of the production Claims copy; config.json editor_columns.claims_copy lists the same three). Why wrong left the editor's work (decision P4). */
 export const CLAIM_COLUMNS = Object.freeze({
-  verified: 'Verified tags', review_status: 'Review status', why_wrong: 'Why wrong', notes: 'Challenged tags notes',
+  verified: 'Verified tags', review_status: 'Review status', notes: 'Challenged tags notes',
 });
+/** The agent's column for its reading of the decisions (config write_columns.reading), and the note a seeded reading carries (decision 73). */
+export const AGENT_READING_COLUMN = 'Agent reading';
+export const SEEDED_NOTE = 'Seeded from the audit of 9 October.';
 /** The block types the page template can make (anything else on the page, a table or a linked view, is not template text). */
 export const CONTENT_TYPES = new Set(['paragraph', 'heading_1', 'heading_2', 'heading_3', 'bulleted_list_item', 'numbered_list_item', 'quote', 'divider', 'callout', 'table', 'toggle']);
 
 const PROPOSALS = ['Applies', 'Does not apply', "Can't tell"];
-const WHY_WRONG = ['Agent slip', 'Rule unclear', 'Rule should change'];
+/** The editor's column that an older practice page still has in its manifest (decision P4: the agent reads each disagreement itself). */
+const OLD_COLUMN = 'Why wrong';
+/** Where a reading comes from in the story: the model reads it, the editor's note says it (a reason word, no call), or there is nothing to read (the editor agrees with the agent). */
+const READING_SOURCES = ['model', 'verbatim', 'none'];
 const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const two = (n) => String(n).padStart(2, '0');
 const isRealId = (v) => typeof v === 'string' && /^[0-9a-f]{32}$/.test(normId(v.trim()));
@@ -176,18 +190,33 @@ function manifestProblems(m) {
         if (!PROPOSALS.includes(r['Agent proposal'])) bad(`${at}: Agent proposal must be one of ${PROPOSALS.join(', ')}`);
         tagsOf(r[C.verified], at);
         if (r[C.review_status] !== 'Reviewed') bad(`${at}: ${C.review_status} must be Reviewed`);
-        if (!WHY_WRONG.includes(r[C.why_wrong])) bad(`${at}: ${C.why_wrong} must be one of ${WHY_WRONG.join(', ')}`);
+        if (Object.hasOwn(r, OLD_COLUMN)) bad(`${at}: ${OLD_COLUMN} is not a column of the editor any more; this manifest has an older shape`);
         if (typeof r[C.notes] !== 'string' || r[C.notes].trim() === '') bad(`${at}: ${C.notes} is missing (it carries the words of the audit)`);
       } else {
-        // a claim the editor still has to decide: created To review with the other three columns empty; `enter` is what the editor types
+        // a claim the editor still has to decide: created To review with the other two columns empty; `enter` is what the editor types
         if (r[C.review_status] !== undefined && r[C.review_status] !== 'To review') bad(`${at}: ${C.review_status} is To review when the page is made`);
+        if (Object.hasOwn(r, OLD_COLUMN)) bad(`${at}: ${OLD_COLUMN} is not a column of the editor any more; this manifest has an older shape`);
+        if (r.agrees !== undefined && typeof r.agrees !== 'boolean') bad(`${at}: agrees must be true or false`);
         if (r.enter !== undefined) {
           if (!isPlain(r.enter)) bad(`${at}: enter must be an object`);
           else {
+            if (Object.hasOwn(r.enter, OLD_COLUMN)) bad(`${at}.enter: ${OLD_COLUMN} is not a column of the editor any more; this manifest has an older shape`);
+            for (const column of Object.keys(r.enter)) if (column !== OLD_COLUMN && !Object.values(C).includes(column)) bad(`${at}.enter: "${column}" is not one of the editor's columns (${Object.values(C).join(', ')})`);
             tagsOf(r.enter[C.verified], `${at}.enter`);
             if (r.enter[C.review_status] !== 'Reviewed') bad(`${at}.enter: ${C.review_status} must be Reviewed`);
-            if (!WHY_WRONG.includes(r.enter[C.why_wrong])) bad(`${at}.enter: ${C.why_wrong} must be one of ${WHY_WRONG.join(', ')}`);
-            if (typeof r.enter[C.notes] !== 'string' || r.enter[C.notes].trim() === '') bad(`${at}.enter: ${C.notes} is missing`);
+            // a note may be empty only for a claim where the editor agrees with the agent: an empty note is a decision too
+            if (typeof r.enter[C.notes] !== 'string' || (r.enter[C.notes].trim() === '' && r.agrees !== true)) bad(`${at}.enter: ${C.notes} is missing`);
+          }
+        }
+        if (r.expect_reading !== undefined) {
+          const e = r.expect_reading;
+          if (!isPlain(e)) bad(`${at}: expect_reading must be an object`);
+          else {
+            if (!READING_SOURCES.includes(e.source)) bad(`${at}.expect_reading: source must be one of ${READING_SOURCES.join(', ')}`);
+            const list = e.reading;
+            if (list !== null && (!Array.isArray(list) || list.length === 0 || list.some((x) => !READINGS.includes(x)))) bad(`${at}.expect_reading: reading must be null or a list of ${READINGS.join(', ')}`);
+            if (e.rule !== undefined && e.rule !== null && !Number.isInteger(e.rule)) bad(`${at}.expect_reading: rule must be a rule number or null`);
+            if ((e.source === 'none') !== (list === null) || (e.source === 'none') !== (r.agrees === true)) bad(`${at}: expect_reading says there is nothing to read exactly when the editor agrees with the agent (agrees: true)`);
           }
         }
       }
@@ -429,8 +458,18 @@ export function rulebookRow(manifest) {
 export const queueKey = (claim, tag) => `${claim['Geo ID']}::${tag}`;
 
 /**
- * The editor's four columns of a claim as the cells of its create. A decided claim (the manifest's decided entry) is created Reviewed, with its verified tags, Why wrong and
- * the audit's words; an open claim is created with Review status To review and the other three empty. `tagPages` maps a tag name to the page id of its row in the
+ * The rulebook file a practice page starts with, built in memory the way writeProfile builds it (the one tag of the manifest, the demo's config). Its edition is the edition the seeded
+ * proposals are said to be made under (the Rulebook edition of each seeded ledger row, which the key of a reading holds: lib/readings.mjs readingHash) and the edition in the Read under of
+ * each seeded reading, so the first distill sees the readings as current and asks the model nothing about them.
+ */
+export function practiceRubric(manifest, config, { edition, now = new Date(0) } = {}) {
+  const source = { database_id: 'not made yet', data_source_id: 'not made yet', read_via: 'manifest', read_at: new Date(now).toISOString() };
+  return buildRubric([rulebookRow(manifest)], { config, edition, source, now });
+}
+
+/**
+ * The editor's three columns of a claim as the cells of its create. A decided claim (the manifest's decided entry) is created Reviewed, with its verified tags and the
+ * audit's words; an open claim is created with Review status To review and the other two empty. `tagPages` maps a tag name to the page id of its row in the
  * Rulebook (the relation holds page ids); a tag it does not know is an error. The names of the columns are CLAIM_COLUMNS.
  */
 export function claimEditorCells(manifest, claim, tagPages) {
@@ -447,39 +486,78 @@ export function claimEditorCells(manifest, claim, tagPages) {
   });
   if (ids.length) cells[C.verified] = ids;
   cells[C.review_status] = d[C.review_status];
-  cells[C.why_wrong] = d[C.why_wrong];
   cells[C.notes] = d[C.notes];
   return cells;
 }
 
-/**
- * What the ledger holds for a decided claim, as the tag step copies it (lib/decisions.mjs decisionsFor): the proposal the agent made before the audit, the editor's
- * outcome (Applies when the tag is among the verified tags), Why wrong and the words. Decided under stays empty (the audit gave no edition).
- */
-export function ledgerCopy(manifest, claim) {
+// A decided claim of the manifest as the reading step sees it (decision 73): the claim as a pull would give it, its ledger row as the page creates it, and the item that
+// classifyRows makes of the two for the one tag (the same inputs that distill hashes, so the seeded readings are current at the first distill). null for an open claim.
+function seedOf(manifest, claim, rubric) {
   const C = CLAIM_COLUMNS;
   const tag = manifest.tag.Name;
   const d = manifest.decided.find((x) => x.claim === claim.key);
   if (!d) return null;
-  const row = { Key: queueKey(claim, tag), Tag: tag, 'Agent proposal': d['Agent proposal'] };
-  const reviewed = { geo_id: claim['Geo ID'], review_status: d[C.review_status], verified_tags: d[C.verified], why_wrong: d[C.why_wrong], challenged_notes: d[C.notes] };
-  const [decision] = decisionsFor(reviewed, [row]);
-  return {
-    'Agent proposal': d['Agent proposal'], 'Tag outcome': decision.outcome, 'Why wrong': decision.why_wrong, 'Your reasoning': decision.reasoning,
+  const row = { Key: queueKey(claim, tag), Tag: tag, 'Agent proposal': d['Agent proposal'], 'Rulebook edition': rubric?.edition ?? null };
+  const reviewed = { geo_id: claim['Geo ID'], review_status: d[C.review_status], verified_tags: d[C.verified], challenged_notes: d[C.notes] };
+  const [decision] = decisionsFor(reviewed, [row], { tagNames: [tag] });
+  const differs = decision.outcome !== row['Agent proposal'];
+  let item = null;
+  if (rubric) {
+    const classes = classifyRows({ claims: [reviewed], ledgerRows: [row], rubric });
+    item = Object.values(classes).flat().find((i) => i?.key === row.Key) ?? null;
+  }
+  return { d, row, reviewed, decision, differs, item };
+}
+
+// The four ledger values of a seeded reading, for a decided claim whose outcome differs from the agent's proposal: Agent slip (the audit found that the agent slipped), the rule the
+// row's Agent reason cites (none: the seeded rows carry no Agent reason), the note "Seeded from the audit of 9 October.", and Read under with the key classifyRows computes.
+function seededCells(seed, rubric) {
+  if (!seed.differs || !seed.item) return null;
+  const rule = seed.item.citedRule === null ? null : `${seed.item.tag} rule ${seed.item.citedRule}`;
+  return readingCells(seed.item, { reading: 'Agent slip', rule, note: SEEDED_NOTE }, rubric.edition);
+}
+
+/**
+ * What the ledger holds for a decided claim, as the tag step copies it (lib/decisions.mjs decisionsFor): the proposal the agent made before the audit, the editor's
+ * outcome (Applies when the tag is among the verified tags) and the words. Decided under stays empty (the audit gave no edition; the first tag step copies it). With the page's `rubric`
+ * the row also holds the Rulebook edition of the page (the edition the proposal is said to be made under, which the key of a reading holds), and a row where the outcome differs from the
+ * proposal is created already read (decision 73): Agent reading "Agent slip", Rule, Reading note "Seeded from the audit of 9 October." and Read under; a row where the agent was right
+ * gets no reading columns.
+ */
+export function ledgerCopy(manifest, claim, { rubric = null } = {}) {
+  const seed = seedOf(manifest, claim, rubric);
+  if (!seed) return null;
+  const copy = {
+    'Agent proposal': seed.d['Agent proposal'], 'Tag outcome': seed.decision.outcome, 'Why wrong': seed.decision.why_wrong, 'Your reasoning': seed.decision.reasoning,
   };
+  return rubric ? { ...copy, 'Rulebook edition': rubric.edition, ...(seededCells(seed, rubric) ?? {}) } : copy;
+}
+
+/**
+ * The agent's own cell on a decided claim at creation: its Agent reading (decision 68), worked out by the same function that distill uses, from the claim and its ledger row with
+ * the seeded reading. A disagreement reads "Context-dependent: Agent slip · Seeded from the audit of 9 October." (with ", rule <n>" after Agent slip when a rule is cited); a claim
+ * where the agent was right reads "Nothing to read: the agent agreed with you.". An open claim has none (an empty cell means not read yet). `column` is config write_columns.reading.
+ */
+export function claimAgentCells(manifest, claim, { rubric, column = AGENT_READING_COLUMN }) {
+  const seed = seedOf(manifest, claim, rubric);
+  if (!seed || !seed.item) return {};
+  const cells = seededCells(seed, rubric);
+  const item = { ...seed.item, row: { ...seed.row, ...(cells ?? {}) } };
+  const cell = claimReadingCell({ claim: seed.reviewed, items: [item], readings: undefined, unjudged: [] });
+  return cell === null ? {} : { [column]: cell };
 }
 
 /**
  * The creates for Tag decisions (the agent's ledger): one row for each decided claim, in the order of the manifest, with Claim, Key, Tag, the link to the claim's row and
- * the copy of the decision (Agent proposal, Tag outcome, Why wrong, Your reasoning). The two open claims have no row: the tag step makes them.
- * `claimLinks` maps a Geo ID to the link of its row.
+ * the copy of the decision (Agent proposal, Tag outcome, Your reasoning) and, with the page's `rubric`, the seeded reading of a disagreement. The open claims have no row: the
+ * tag step makes them. `claimLinks` maps a Geo ID to the link of its row.
  */
-export function ledgerOps(manifest, claimLinks) {
+export function ledgerOps(manifest, claimLinks, { rubric = null } = {}) {
   const tag = manifest.tag.Name;
   return manifest.claims.filter((claim) => manifest.decided.some((d) => d.claim === claim.key)).map((claim) => {
     const properties = { Claim: claim['Geo Name'], Key: queueKey(claim, tag), Tag: tag };
     if (claimLinks[claim['Geo ID']]) properties['Claim link'] = claimLinks[claim['Geo ID']];
-    for (const [column, value] of Object.entries(ledgerCopy(manifest, claim))) if (typeof value === 'string' && value !== '') properties[column] = value;
+    for (const [column, value] of Object.entries(ledgerCopy(manifest, claim, { rubric }))) if (typeof value === 'string' && value !== '') properties[column] = value;
     return { key: properties.Key, properties };
   });
 }
@@ -510,19 +588,21 @@ const byCreated = (a, b) => text(b.created).localeCompare(text(a.created));
 
 /**
  * The mapping of the design (W4 9.3), from a pull of the demo's tables: claims = the rows of the Claims (geo_id, review_status, agent_status), ledger = the rows of Tag
- * decisions (Key, Follow-up), lessons = the rows of Rule changes (Lesson, Status, Safety check result), open = the two claims that wait for the editor
- * (openClaims: geo_id and ledger key), settings = the row of Agent settings (Last run summary). An editor's decision is a claim whose Review status is Reviewed.
- *   { step: 1 }                          a fresh page: a claim of the two is not Reviewed, has no Agent status, and Agent settings has no Last run summary
+ * decisions (Key, Follow-up), lessons = the rows of Rule changes (Lesson, Status, Safety check result, supporting_keys), open = the claims that wait for the editor
+ * (openClaims: geo_id and ledger key; four on the page), settings = the row of Agent settings (Last run summary). An editor's decision is a claim whose Review status is Reviewed.
+ *   { step: 1 }                          a fresh page: an open claim is not Reviewed, has no Agent status, and Agent settings has no Last run summary
  *   { step: 2 }                          the same, but a command has written a Last run summary (the tag step, which writes the agent's columns, has not finished)
- *   { step: 3, remaining }               they have an Agent status (the agent has read them) and `remaining` of them (1 or 2) are not Reviewed
- *   { step: 4 }                          both are Reviewed and there is no rule change
+ *   { step: 3, remaining }               they have an Agent status (the agent has read them) and `remaining` of them are not Reviewed
+ *   { step: 4 }                          all are Reviewed and there is no rule change
  *   { step: 5, lesson }                  a rule change is Proposed
  *   { step: 6, lesson }                  Approved, no Safety check result yet
  *   { step: 6, branch: 'not-passed' }    Approved, with a result that is not a PASS
- *   { step: 7, branch: 'stopped' }       Live, and the ledger row of one of the two has no Follow-up
- *   { step: 7, branch: 'read' }          Live, every row has a Follow-up and one of them is Still wrong
- *   { step: 'complete' }                 Live with both Fixed, or the rule change was Rejected or rolled back
- *   { problem }                          one of the two claims is not in Claims
+ *   { step: 7, branch: 'stopped' }       Live, and the ledger row of one of the claims it rests on has no Follow-up
+ *   { step: 7, branch: 'read' }          Live, every such row has a Follow-up and one of them is Still wrong
+ *   { step: 'complete' }                 Live with every such row Fixed, or the rule change was Rejected or rolled back
+ *   { problem }                          an open claim is not in Claims
+ * Step 7 is read from the ledger rows the live rule change rests on (its supporting_keys, decision 76), not from all the open claims: on the page it rests on two of the four, and the
+ * other two keep Agent status Waits for you until the next tag run. A live rule change that names none of the open claims (a Supporting rows cell that cannot be read) is read from all of them.
  */
 export function stepOf({ claims = [], ledger = [], lessons = [], open = [], settings = null }) {
   const byId = new Map(claims.map((c) => [text(c.geo_id), c]));
@@ -545,7 +625,9 @@ export function stepOf({ claims = [], ledger = [], lessons = [], open = [], sett
   const live = mine.find((l) => l.Status === 'Live');
   if (live) {
     const byKey = new Map(ledger.map((r) => [text(r.Key), r]));
-    const follow = open.map((o) => text(byKey.get(o.key)?.['Follow-up']));
+    const resting = new Set((live.supporting_keys ?? []).map(text));
+    const rests = open.filter((o) => resting.has(text(o.key)));
+    const follow = (rests.length > 0 ? rests : open).map((o) => text(byKey.get(o.key)?.['Follow-up']));
     if (follow.some((f) => f === '')) return { step: 7, branch: 'stopped', lesson: live };
     if (follow.some((f) => f !== 'Fixed')) return { step: 7, branch: 'read', lesson: live };
     return { step: 'complete', lesson: live };
