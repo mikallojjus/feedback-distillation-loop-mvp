@@ -1,0 +1,280 @@
+pull: 20261021T210207Z-pull
+
+== Claims (9) ==
+-- presspool: The press pool was justified in suspending coverage in solidarity with banned networks
+   agent_tags: []
+   agent_confidence: 0.85
+   agent_status: "Waits for you"
+   tags_waiting: ["Context-dependent"]
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'The press pool' is a definite for a specific countable group, and 'banned networks' is likewise unspecified; the reader cannot tell which pool or which networks are meant. · Context-dependent rule 3 · 1 of 1 runs agree"
+   agent_reading: "Context-dependent: Rule should change, rule 3 · As written, rule 3 tags the press pool as an unspecified countable group; it would need to exempt groups known by a standing role."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well."
+-- aiforce: The AI Force should enforce binding safety standards
+   agent_tags: []
+   agent_confidence: 0.5
+   agent_status: "Waits for you"
+   tags_waiting: ["Context-dependent"]
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'The AI Force' is a capitalized name-like phrase, but it reads as a descriptive definite for an unspecified body. Rule 3 would apply if it is a kind of thing; rule 5 exempts definites the claim resolves. The rules do... · 2 of 2 runs agree"
+   agent_reading: "Context-dependent: Rule unclear, rule 3 · Rule 3 does not say whether a capitalised, name-like phrase for no known body counts as a name or as an unspecified kind."
+   verified_tags: ["Context-dependent"]
+   review_status: "Reviewed"
+   challenged_notes: "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context."
+-- usps: The USPS ballot portal should not launch before the 2026 midterms
+   agent_tags: []
+   agent_confidence: 0.8
+   agent_status: "Waits for you"
+   tags_waiting: ["Context-dependent"]
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'The USPS ballot portal' is a descriptive definite for a countable product; the claim does not say which portal is meant, so the reader needs outside knowledge. · Context-dependent rule 3 · 1 of 1 runs agree"
+   agent_reading: "Context-dependent: Agent slip, rule 5 · Your note says so."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: "Agent slip. USPS names which portal, so rule 5 already settles it."
+-- georgia: Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience
+   agent_tags: []
+   agent_confidence: 0.8
+   agent_status: "Waits for you"
+   tags_waiting: ["Context-dependent"]
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'Georgia's gubernatorial debate' is identified by place and office, and 'a town hall audience' is indefinite; no pronoun or unresolved definite is present. · Context-dependent rule 5 · 1 of 1 runs agree"
+   agent_reading: "Nothing to read: the agent agreed with you."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: ""
+-- cnn: Excluding CNN from Air Force One violates the federal court order
+   agent_tags: ["Context-dependent"]
+   agent_confidence: 0.9
+   agent_status: "Done"
+   tags_waiting: []
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'the federal court order' is a definite reference that needs an outside antecedent: the claim does not say which court or which order, so a reader cannot identify it from this sentence alone. · Context-dependent rule 2 · 1 of 1 runs agree"
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: ["Context-dependent"]
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+-- dallas: The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign
+   agent_tags: ["Context-dependent"]
+   agent_confidence: 0.57
+   agent_status: "Done"
+   tags_waiting: []
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'The Dallas convention' is a descriptive definite naming a kind of event, with only a city as a clue. A reader seeing only this sentence cannot say which convention is meant, so the reference needs an outside antecedent. · Context-dependent rule 3 · 2 of 3 runs agree"
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: ["Context-dependent"]
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+-- contractor: A contractor's enforcement of safety restrictions constitutes a national security supply chain risk
+   agent_tags: []
+   agent_confidence: 0.93
+   agent_status: "Done"
+   tags_waiting: []
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'A contractor's enforcement of safety restrictions' uses an indefinite and generic terms; no pronoun or unresolved definite points outside the claim. · Context-dependent rule 5 · 1 of 1 runs agree"
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’."
+-- kennedy: Relocating the Kennedy Center Honors to a sports arena diminishes the prestige of the awards
+   agent_tags: []
+   agent_confidence: 0.88
+   agent_status: "Done"
+   tags_waiting: []
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'The Kennedy Center Honors' is a named entity, 'a sports arena' is indefinite, and 'the awards' refers back to the Honors within the claim, so it resolves itself. · Context-dependent rule 5 · 1 of 1 runs agree"
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded."
+-- stopgap: December stopgap funding rewards Congress for avoiding a full budget
+   agent_tags: []
+   agent_confidence: 0.9
+   agent_status: "Done"
+   tags_waiting: []
+   agent_edition: "2026-10-21.1"
+   agent_remarks: ""
+   agent_reasons: "Context-dependent: 'December stopgap funding' and 'a full budget' contain no pronoun or unresolved definite; the claim is a general statement with no outside reference needed. · Context-dependent rule 5 · 1 of 1 runs agree"
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it."
+
+== Tag decisions (ledger) (9) ==
+-- presspool: 5c9d133e54864197a585599669353aff::Context-dependent
+   Agent proposal: "Applies"
+   Agent confidence: 0.85
+   Agent reason: "'The press pool' is a definite for a specific countable group, and 'banned networks' is likewise unspecified; the reader cannot tell which pool or which networks are meant. · Context-dependent rule 3 · 1 of 1 runs agree"
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: null
+   Your reasoning: "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well."
+   Decided under: "2026-10-21.1"
+   Agent reading: "Rule should change"
+   Rule: "Context-dependent rule 3"
+   Reading note: "As written, rule 3 tags the press pool as an unspecified countable group; it would need to exempt groups known by a standing role."
+   Read under: "2026-10-21.1 · f6ebacfb"
+   decided: true
+-- aiforce: 92f57020ce349b27b5e56f54068cbc05::Context-dependent
+   Agent proposal: "Can't tell"
+   Agent confidence: 0.5
+   Agent reason: "'The AI Force' is a capitalized name-like phrase, but it reads as a descriptive definite for an unspecified body. Rule 3 would apply if it is a kind of thing; rule 5 exempts definites the claim resolves. The rules do... · 2 of 2 runs agree"
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Applies"
+   Why wrong: null
+   Your reasoning: "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context."
+   Decided under: "2026-10-21.1"
+   Agent reading: "Rule unclear"
+   Rule: "Context-dependent rule 3"
+   Reading note: "Rule 3 does not say whether a capitalised, name-like phrase for no known body counts as a name or as an unspecified kind."
+   Read under: "2026-10-21.1 · 830960e5"
+   decided: true
+-- usps: 27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent
+   Agent proposal: "Applies"
+   Agent confidence: 0.8
+   Agent reason: "'The USPS ballot portal' is a descriptive definite for a countable product; the claim does not say which portal is meant, so the reader needs outside knowledge. · Context-dependent rule 3 · 1 of 1 runs agree"
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: "Agent slip"
+   Your reasoning: "USPS names which portal, so rule 5 already settles it."
+   Decided under: "2026-10-21.1"
+   Agent reading: "Agent slip"
+   Rule: "Context-dependent rule 5"
+   Reading note: "Your note says so."
+   Read under: "2026-10-21.1 · 805066ea"
+   decided: true
+-- georgia: 8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent
+   Agent proposal: "Does not apply"
+   Agent confidence: 0.8
+   Agent reason: "'Georgia's gubernatorial debate' is identified by place and office, and 'a town hall audience' is indefinite; no pronoun or unresolved definite is present. · Context-dependent rule 5 · 1 of 1 runs agree"
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: null
+   Your reasoning: ""
+   Decided under: "2026-10-21.1"
+   Agent reading: null
+   Rule: ""
+   Reading note: ""
+   Read under: ""
+   decided: true
+-- cnn: fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent
+   Agent proposal: "Does not apply"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Applies"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+   Decided under: "2026-10-21.1"
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · 8560829f"
+   decided: true
+-- dallas: 1bff859247ecdb618af41a397d2eb6ba::Context-dependent
+   Agent proposal: "Does not apply"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Applies"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+   Decided under: "2026-10-21.1"
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · 8560829f"
+   decided: true
+-- contractor: 6dc1222aeb364918821167370d8fbc40::Context-dependent
+   Agent proposal: "Applies"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’."
+   Decided under: "2026-10-21.1"
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · 923e0a4b"
+   decided: true
+-- kennedy: 89fcfb7fc6684b63af7d829ed90106cd::Context-dependent
+   Agent proposal: "Applies"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded."
+   Decided under: "2026-10-21.1"
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · 6cfb0909"
+   decided: true
+-- stopgap: 3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent
+   Agent proposal: "Applies"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it."
+   Decided under: "2026-10-21.1"
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · fc77541c"
+   decided: true
+
+== Rule changes (1) ==
+-- Groups known by standing role count; unknown names do not
+   Tag: "Context-dependent"
+   Rule: "Context-dependent rule 3"
+   Kind: "Change the rule"
+   Current text: "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
+   Proposed text: "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A capitalised, name-like phrase for a body that readers do not know is still a kind of thing and not a name, so it counts as unspecified. A group that every reader knows by its standing role (\"the press pool\") counts as identified. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
+   Safety check result: ""
+   Supporting rows: "The press pool was justified in suspending coverage in so... · 5c9d133e54864197a585599669353aff::Context-dependent\nThe AI Force should enforce binding safety standards · 92f57020ce349b27b5e56f54068cbc05::Context-dependent"
+   Editor wording: ""
+   Status: "Proposed"
+   page_id: "400273e2-14eb-8168-9891-e8edf50e6916"
+   created: "2026-10-21T21:00:00.000Z"
+   supporting_keys: ["5c9d133e54864197a585599669353aff::Context-dependent","92f57020ce349b27b5e56f54068cbc05::Context-dependent"]
+
+== settings.json ==
+{
+  "page_id": "400273e2-14eb-81c9-b06a-e48a3982cf69",
+  "name": "Claim tagger",
+  "paused": false,
+  "rulebook_edition": "2026-10-21.1",
+  "last_run_summary": "Distill · 22 Oct 00:01 · no rule change"
+}
+
+== rulebook When to use ==
+-- Context-dependent
+1. A pronoun with no antecedent inside the claim ("He said ...", "its predecessor", "they announced") makes the claim Context-dependent.
+2. A definite reference that needs an outside antecedent to identify it ("the vulnerabilities", "the discussions", "the recording", "the settlement terms", "the legal dispute", "recent actions") makes the claim Context-dependent, even when other entities in the claim are named.
+3. A descriptive definite that names a kind of thing but not which one ("the Bitcoin ETF", "the major-bank stablecoin consortium", "the open-access version", "the infrastructure", "the new model") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns ("the regulatory clearance", "the market").
+4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.
+5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.

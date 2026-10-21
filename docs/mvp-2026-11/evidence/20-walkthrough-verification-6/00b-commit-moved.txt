@@ -1,0 +1,13 @@
+HEAD moved after 00-commit-start.txt (20:52:56Z) and before 01-list-before (20:54:43Z)
+2026-10-21T20:55:10Z
+291f05d6282e765f2c9d893873cd87768c8a0ce2
+291f05d 2026-10-21 23:53:13 +0300 read-decisions: work log entry 29 (verification run 5, decision 80, the fixes), state
+84c0e52 2026-10-21 23:52:08 +0300 read-decisions: the fixes of verification run 5 (decision 80): the judge counts a failed reread only in a run its plan asked for, so promote reaches the retry its Next line promises; the Help's stop cases gain the could-not-be-read case; the second distill names the decisions that already have a rule change; 2,084 tests pass
+
+
+ docs/mvp-2026-11/STATE.md   |  2 +-
+ docs/mvp-2026-11/WORKLOG.md | 10 +++++++++-
+ 2 files changed, 10 insertions(+), 2 deletions(-)
+
+code diff 84c0e52..HEAD (should be empty outside docs):
+(end)

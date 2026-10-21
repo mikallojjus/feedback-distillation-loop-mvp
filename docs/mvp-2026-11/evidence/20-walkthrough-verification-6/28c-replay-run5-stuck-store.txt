@@ -1,0 +1,38 @@
+command: node <scratchpad>/v6/replay-run5.mjs (read-only; imports judge.mjs planReruns; no model call, no Notion request)
+script:
+// Offline, read-only: the stuck candidate store of verification run 5 (demo 20261021-2303-555445, store 14f395d76261bed8) put through the judge's own plan
+// (judge.mjs planReruns, exported and pure) as summarize() at 84c0e52 does it, to show which error lines the judge would now count as "could not be read again".
+import { readFileSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+const repo = 'X:/work/geo-agents';
+const { planReruns, DEFAULT_RERUN } = await import(pathToFileURL(join(repo, 'agents/claim-tagger-mvp/scripts/judge.mjs')).href);
+const store = join(repo, 'agents/claim-tagger-mvp/runs/demos/20261021-2303-555445/runs/judgments/14f395d76261bed8');
+const lines = (n) => {
+  const f = join(store, `run-${n}.jsonl`);
+  const m = new Map();
+  if (existsSync(f)) for (const l of readFileSync(f, 'utf8').split('\n').filter(Boolean)) { const j = JSON.parse(l); m.set(j.id, j); }
+  return m;
+};
+const [run1, run2, run3] = [1, 2, 3].map(lines);
+const items = [...run1.values()].map((l) => ({ id: l.id, item_hash: l.item_hash }));
+const asks = planReruns({ items, run1, run2, run3, rerun: DEFAULT_RERUN, runsMax: 3 });
+const asked = [null, new Set(asks.run2), new Set(asks.run3)];
+console.log(`store ${store}`);
+console.log(`items ${items.length}; plan run2 ${JSON.stringify(asks.run2)}; plan run3 ${JSON.stringify(asks.run3)}; capped ${JSON.stringify(asks.capped)}`);
+for (const [i, m] of [[1, run2], [2, run3]]) {
+  for (const l of m.values()) {
+    if (l.status !== 'error') continue;
+    const old = 'counted (the rule before 84c0e52: any error line in runs 1 to 3)';
+    const now = asked[i].has(l.id) ? 'counted now (the plan asked for this read)' : 'NOT counted now (the plan did not ask for this read; forceRuns retries it)';
+    console.log(`run ${i + 1} ${l.id}: error "${String(l.error).slice(0, 90)}" -> before: ${old}; at 84c0e52: ${now}`);
+  }
+}
+
+----- output -----
+store X:\work\geo-agents\agents\claim-tagger-mvp\runs\demos\20261021-2303-555445\runs\judgments\14f395d76261bed8
+items 19; plan run2 []; plan run3 []; capped []
+run 3 case-5c9d133e54864197a585599669353aff::Context-dependent: error "the claim "case-92f57020ce349b27b5e56f54068cbc05::Context-dependent" is missing from the r" -> before: counted (the rule before 84c0e52: any error line in runs 1 to 3); at 84c0e52: NOT counted now (the plan did not ask for this read; forceRuns retries it)
+run 3 case-92f57020ce349b27b5e56f54068cbc05::Context-dependent: error "the claim "case-92f57020ce349b27b5e56f54068cbc05::Context-dependent" is missing from the r" -> before: counted (the rule before 84c0e52: any error line in runs 1 to 3); at 84c0e52: NOT counted now (the plan did not ask for this read; forceRuns retries it)
+exit code: 0

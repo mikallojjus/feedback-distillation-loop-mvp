@@ -1,0 +1,3 @@
+Walkthrough: you are at step 1, Meet the demo.
+
+Next: type /claim-tagger demo status.

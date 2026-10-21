@@ -1,0 +1,20 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 propose
+exit code: 0
+started: 2026-10-21T20:57:52Z
+ended:   2026-10-21T20:58:16Z (elapsed 24 s)
+head:    291f05d
+
+----- stdout -----
+Demo · Tag: the agent read 9 claims for Context-dependent; 4 wait for you (practice page Claim tagger practice · verification 6).
+
+| What | Result |
+|---|---|
+| Claims read | 9 |
+| Carrying Context-dependent | 2 claims (earlier decisions included) |
+| New rows in Your queue | 4, lowest confidence first |
+
+Next: decide your four claims in Your queue (https://app.notion.com/p/Claim-tagger-practice-verification-6-400273e214eb81a9beb6e7f7899530d6#400273e214eb81b2b5d5e45ce5b30040).
+----- stderr -----
+
+----- lintReport(stdout) -----
+[]

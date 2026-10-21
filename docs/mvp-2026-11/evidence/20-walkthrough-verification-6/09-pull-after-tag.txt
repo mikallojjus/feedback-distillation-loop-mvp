@@ -1,0 +1,12 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 pull --all
+exit code: 0
+started: 2026-10-21T20:58:37Z
+ended:   2026-10-21T20:58:41Z (elapsed 4 s)
+head:    291f05d
+
+----- stdout -----
+pull 20261021T205837Z-pull: rulebook 1, claims_copy 9, tag_decisions 9, rule_changes 0, agent_settings 1; drift 0 difference(s); duplicates 0; paused no
+----- stderr -----
+
+----- lintReport(stdout) -----
+["line 1 holds a run id: 20261021T205837Z","no line starts with \"Next:\""]

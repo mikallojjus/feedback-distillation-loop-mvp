@@ -1,0 +1,155 @@
+========== 20261021T205719Z-judge ==========
+----- 20261021T205719Z-judge/calls.jsonl (1234 chars) -----
+{"group":"G1","run":1,"batch":2,"items":1,"ids":["fc0cb0da0a1a4375b0fae6b5c9a67c69"],"attempts":1,"usage":{"input":2,"cache_write":0,"cache_read":2500,"output":155},"duration_ms":3432,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":1,"items":8,"ids":["1bff859247ecdb618af41a397d2eb6ba","27ad00b59c1f7d4aee71643fc8cdec94","3e0d601de961dbf8ae38154e3f3a02e5","5c9d133e54864197a585599669353aff","6dc1222aeb364918821167370d8fbc40","89fcfb7fc6684b63af7d829ed90106cd","8f9c833b41e54eee9ca78e9c2f4ffb58","92f57020ce349b27b5e56f54068cbc05"],"attempts":1,"usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807},"duration_ms":14728,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":2,"batch":3,"items":2,"ids":["92f57020ce349b27b5e56f54068cbc05","1bff859247ecdb618af41a397d2eb6ba"],"attempts":1,"usage":{"input":2,"cache_write":998,"cache_read":1556,"output":338},"duration_ms":8200,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":3,"batch":4,"items":1,"ids":["1bff859247ecdb618af41a397d2eb6ba"],"attempts":1,"usage":{"input":2,"cache_write":952,"cache_read":1556,"output":468},"duration_ms":6361,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+----- 20261021T205719Z-judge/report.json (449 chars) -----
+{
+  "demo": true,
+  "sentence": "Judge: read 9 claims for Context-dependent; 2 unsure (practice page Claim tagger practice · verification 6).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "9",
+      ""
+    ],
+    [
+      "Unsure",
+      "2",
+      ""
+    ],
+    [
+      "Re-read",
+      "2",
+      ""
+    ]
+  ],
+  "next": "Next: type /claim-tagger demo tag to finish (it continues from here)."
+}
+----- 20261021T205719Z-judge/report.md (267 chars) -----
+Demo · Judge: read 9 claims for Context-dependent; 2 unsure (practice page Claim tagger practice · verification 6).
+
+| What | Result |
+|---|---|
+| Claims read | 9 |
+| Unsure | 2 |
+| Re-read | 2 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here).
+----- 20261021T205719Z-judge/run.json (1690 chars) -----
+{
+  "run_id": "20261021T205719Z-judge",
+  "script": "judge",
+  "args": {
+    "items": "claims",
+    "tags": null,
+    "pull": null,
+    "ids": null,
+    "limit": null,
+    "runs_max": null,
+    "rubric": null,
+    "refresh": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T20:57:19.789Z",
+  "finished_at": "2026-10-21T20:57:49.262Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.1",
+  "pull_id": "20261021T205716Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 judge --resume 20261021T205719Z-judge",
+  "status": "done",
+  "invocations": 1,
+  "item_ids": [
+    "1bff859247ecdb618af41a397d2eb6ba",
+    "27ad00b59c1f7d4aee71643fc8cdec94",
+    "3e0d601de961dbf8ae38154e3f3a02e5",
+    "5c9d133e54864197a585599669353aff",
+    "6dc1222aeb364918821167370d8fbc40",
+    "89fcfb7fc6684b63af7d829ed90106cd",
+    "8f9c833b41e54eee9ca78e9c2f4ffb58",
+    "92f57020ce349b27b5e56f54068cbc05",
+    "fc0cb0da0a1a4375b0fae6b5c9a67c69"
+  ],
+  "groups": [
+    {
+      "name": "G1",
+      "tags": [
+        "Context-dependent"
+      ],
+      "store": "fd082dc83cbba323",
+      "prompt": "sha256:a9782c896da71e57",
+      "items": 9
+    }
+  ],
+  "refreshed": {},
+  "driver": "cli",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "prompt_version": "1",
+  "cli_version": "2.1.303 (Claude Code)",
+  "runs_max": 3,
+  "rubric_file": null,
+  "counts": {
+    "items": 9,
+    "read": 9,
+    "unsure": 2,
+    "reread": 2,
+    "failed": 0,
+    "failed_reread": 0
+  },
+  "capped": {
+    "G1": []
+  },
+  "calls": 4,
+  "failed_batches": 0,
+  "usage": {
+    "input": 8,
+    "cache_write": 1950,
+    "cache_read": 8523,
+    "output": 2768
+  }
+}
+
+========== judgments/fd082dc83cbba323 (the store of edition 2026-10-21.1) ==========
+----- meta.json -----
+{
+  "key": "sha256:fd082dc83cbba323",
+  "driver": "cli",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "pass": "text",
+  "prompt_version": "1",
+  "group": "G1",
+  "tags": [
+    {
+      "name": "Context-dependent",
+      "tag_hash": "sha256:af49109ca891789f"
+    }
+  ],
+  "created_at": "2026-10-21T20:57:19.900Z"
+}
+
+----- run-1.jsonl -----
+{"id":"fc0cb0da0a1a4375b0fae6b5c9a67c69","item_hash":"sha256:0bb9b679d9a3ea6e","call":{"run_id":"20261021T205719Z-judge","batch":2,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2500,"output":155}},"status":"ok","tags":[{"name":"Context-dependent","decision":"apply","p":0.9,"rule_ref":"Context-dependent rule 2","reason":"'the federal court order' is a definite reference that needs an outside antecedent: the claim does not say which court or which order, so a reader cannot identify it from this sentence alone."}]}
+{"id":"1bff859247ecdb618af41a397d2eb6ba","item_hash":"sha256:ac1e93b8342dd469","call":{"run_id":"20261021T205719Z-judge","batch":1,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807}},"status":"ok","tags":[{"name":"Context-dependent","decision":"apply","p":0.72,"rule_ref":"Context-dependent rule 3","reason":"'The Dallas convention' names a kind of event but not which one (party, industry, or other); the reader must already know which convention is meant, even though Vance and 2028 are named."}]}
+{"id":"27ad00b59c1f7d4aee71643fc8cdec94","item_hash":"sha256:4eccf8281b1316e1","call":{"run_id":"20261021T205719Z-judge","batch":1,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807}},"status":"ok","tags":[{"name":"Context-dependent","decision":"apply","p":0.8,"rule_ref":"Context-dependent rule 3","reason":"'The USPS ballot portal' is a descriptive definite for a countable product; the claim does not say which portal is meant, so the reader needs outside knowledge."}]}
+{"id":"3e0d601de961dbf8ae38154e3f3a02e5","item_hash":"sha256:c48232d3af149e59","call":{"run_id":"20261021T205719Z-judge","batch":1,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807}},"status":"ok","tags":[{"name":"Context-dependent","decision":"do_not_apply","p":0.1,"rule_ref":"Context-dependent rule 5","reason":"'December stopgap funding' and 'a full budget' contain no pronoun or unresolved definite; the claim is a general statement with no outside reference needed."}]}
+{"id":"5c9d133e54864197a585599669353aff","item_hash":"sha256:ec46f102437c5ead","call":{"run_id":"20261021T205719Z-judge","batch":1,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807}},"status":"ok","tags":[{"name":"Context-dependent","decision":"apply","p":0.85,"rule_ref":"Context-dependent rule 3","reason":"'The press pool' is a definite for a specific countable group, and 'banned networks' is likewise unspecified; the reader cannot tell which pool or which networks are meant."}]}
+{"id":"6dc1222aeb364918821167370d8fbc40","item_hash":"sha256:f0126122429a2e65","call":{"run_id":"20261021T205719Z-judge","batch":1,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807}},"status":"ok","tags":[{"name":"Context-dependent","decision":"do_not_apply","p":0.07,"rule_ref":"Context-dependent rule 5","reason":"'A contractor's enforcement of safety restrictions' uses an indefinite and generic terms; no pronoun or unresolved definite points outside the claim."}]}
+{"id":"89fcfb7fc6684b63af7d829ed90106cd","item_hash":"sha256:b2d03dbd86749b5d","call":{"run_id":"20261021T205719Z-judge","batch":1,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807}},"status":"ok","tags":[{"name":"Context-dependent","decision":"do_not_apply","p":0.12,"rule_ref":"Context-dependent rule 5","reason":"'The Kennedy Center Honors' is a named entity, 'a sports arena' is indefinite, and 'the awards' refers back to the Honors within the claim, so it resolves itself."}]}
+{"id":"8f9c833b41e54eee9ca78e9c2f4ffb58","item_hash":"sha256:6f93a3494dea7484","call":{"run_id":"20261021T205719Z-judge","batch":1,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807}},"status":"ok","tags":[{"name":"Context-dependent","decision":"do_not_apply","p":0.2,"rule_ref":"Context-dependent rule 5","reason":"'Georgia's gubernatorial debate' is identified by place and office, and 'a town hall audience' is indefinite; no pronoun or unresolved definite is present."}]}
+{"id":"92f57020ce349b27b5e56f54068cbc05","item_hash":"sha256:a93c74a822555da3","call":{"run_id":"20261021T205719Z-judge","batch":1,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":0,"cache_read":2911,"output":1807}},"status":"ok","tags":[{"name":"Context-dependent","decision":"ask_editor","p":0.5,"rule_ref":null,"reason":"'The AI Force' is capitalized like a name but could be a descriptive definite (rule 3) needing outside knowledge; the rules do not settle whether it counts as a resolved proper name."}]}
+
+----- run-2.jsonl -----
+{"id":"92f57020ce349b27b5e56f54068cbc05","item_hash":"sha256:a93c74a822555da3","call":{"run_id":"20261021T205719Z-judge","batch":3,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":998,"cache_read":1556,"output":338}},"status":"ok","tags":[{"name":"Context-dependent","decision":"ask_editor","p":0.5,"rule_ref":null,"reason":"'The AI Force' is a capitalized name-like phrase, but it reads as a descriptive definite for an unspecified body. Rule 3 would apply if it is a kind of thing; rule 5 exempts definites the claim resolves. The rules do..."}]}
+{"id":"1bff859247ecdb618af41a397d2eb6ba","item_hash":"sha256:ac1e93b8342dd469","call":{"run_id":"20261021T205719Z-judge","batch":3,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":998,"cache_read":1556,"output":338}},"status":"ok","tags":[{"name":"Context-dependent","decision":"do_not_apply","p":0.2,"rule_ref":"Context-dependent rule 5","reason":"'The Dallas convention' is resolved by the claim itself: the place 'Dallas' and the named person 'JD Vance’s 2028 presidential campaign' let a reader identify it, so no outside antecedent is needed."}]}
+
+----- run-3.jsonl -----
+{"id":"1bff859247ecdb618af41a397d2eb6ba","item_hash":"sha256:ac1e93b8342dd469","call":{"run_id":"20261021T205719Z-judge","batch":4,"attempt":1,"cli_version":"2.1.303 (Claude Code)","usage":{"input":2,"cache_write":952,"cache_read":1556,"output":468}},"status":"ok","tags":[{"name":"Context-dependent","decision":"apply","p":0.8,"rule_ref":"Context-dependent rule 3","reason":"'The Dallas convention' is a descriptive definite naming a kind of event, with only a city as a clue. A reader seeing only this sentence cannot say which convention is meant, so the reference needs an outside antecedent."}]}
+

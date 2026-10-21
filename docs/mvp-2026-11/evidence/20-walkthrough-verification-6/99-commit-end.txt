@@ -1,0 +1,25 @@
+git rev-parse HEAD (end)
+2026-10-21T21:08:54Z
+291f05d6282e765f2c9d893873cd87768c8a0ce2
+291f05d 2026-10-21 23:53:13 +0300 read-decisions: work log entry 29 (verification run 5, decision 80, the fixes), state
+84c0e52 2026-10-21 23:52:08 +0300 read-decisions: the fixes of verification run 5 (decision 80): the judge counts a failed reread only in a run its plan asked for, so promote reaches the retry its Next line promises; the Help's stop cases gain the could-not-be-read case; the second distill names the decisions that already have a rule change; 2,084 tests pass
+cc5d875 2026-10-21 23:22:43 +0300 read-decisions: stage 5, verification run 5 (every fix of run 4 held, decision 78 worked live; 1 must from 15 October code: promote stops for good after a failed extra read; 2 nice)
+
+git status --short
+ M docs/mvp-2026-11/report/data/counts.json
+ M docs/mvp-2026-11/report/parts/02-status.html
+ M docs/mvp-2026-11/report/parts/03-how-to-run.html
+?? docs/mvp-2026-11/evidence/20-walkthrough-verification-6/
+
+mtime of the three modified report files (unchanged since 21:50:56 local)
+-rw-r--r-- 1 John Malkovich 197121 10812 2026-10-21 21:50:56.193989300 +0300 docs/mvp-2026-11/report/data/counts.json
+-rw-r--r-- 1 John Malkovich 197121 13815 2026-10-21 21:50:56.193989300 +0300 docs/mvp-2026-11/report/parts/02-status.html
+-rw-r--r-- 1 John Malkovich 197121 11734 2026-10-21 21:50:56.194493800 +0300 docs/mvp-2026-11/report/parts/03-how-to-run.html
+
+code diff 84c0e52..HEAD under agents, .claude, tests:
+(end)
+
+production runs (newest 3, outside demos):
+20261021T181312Z-status
+pull
+20261021T181245Z-distill

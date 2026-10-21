@@ -1,0 +1,137 @@
+command: node <scratchpad>/v6/sweep.mjs 20261021-2355-8c6602 2026-10-21T20:52:56Z (read-only)
+
+== 1. report.md of every run of this practice page: lintReport, and an 8+ hex run outside links ==
+20261021T205514Z-walkthrough-start: lint []
+20261021T205659Z-walkthrough-where: lint []
+20261021T205703Z-status: lint []
+20261021T205719Z-judge: lint []
+20261021T205752Z-propose: lint []
+20261021T205851Z-walkthrough-verify: lint []
+20261021T205909Z-walkthrough-where: lint []
+20261021T205916Z-walkthrough-decide: lint []
+20261021T205923Z-walkthrough-decide: lint []
+20261021T205935Z-walkthrough-decide: lint []
+20261021T205941Z-walkthrough-decide: lint []
+20261021T205952Z-status: lint []
+20261021T205955Z-walkthrough-where: lint []
+20261021T210012Z-distill: lint []
+20261021T210122Z-walkthrough-decide: lint []
+20261021T210137Z-status: lint []
+20261021T210145Z-distill: lint []
+20261021T210221Z-walkthrough-where: lint []
+20261021T210224Z-walkthrough-approve: lint []
+20261021T210230Z-walkthrough-where: lint []
+20261021T210238Z-promote: lint []
+20261021T210238Z-promote-baseline: lint []
+20261021T210238Z-promote-candidate: lint []
+20261021T210238Z-promote-followup-judge: lint []
+20261021T210511Z-walkthrough-where: lint []
+20261021T210516Z-status: lint []
+reports: 26; with a problem: 0
+
+== 2. every plan.jsonl: table, op, columns written; EDITOR marks an editor column ==
+20261021T205552Z-rows-rulebook (script walkthrough.mjs, 1 ops)
+   rulebook create x1: Name, Category, Counterpart, Description, Evidence, Example Claims, Geo Status, Polarity, Status, Verified on, When to use, Work tags
+20261021T205553Z-rows-claims_copy (script walkthrough.mjs, 9 ops)
+   claims_copy create x9: Geo Name, Geo ID, Geo URL, Geo Sources, Geo Tags, Geo Topics, Geo Is factual, Geo Name source, Review status [EDITOR], Verified tags [EDITOR], Challenged tags notes [EDITOR], Agent reading
+20261021T205600Z-rows-tag_decisions (script walkthrough.mjs, 5 ops)
+   tag_decisions create x5: Claim, Key, Tag, Claim link, Agent proposal, Tag outcome, Your reasoning, Rulebook edition, Agent reading, Reading note, Read under
+20261021T205604Z-rows-agent_settings (script walkthrough.mjs, 1 ops)
+   agent_settings create x1: Name, Rulebook edition
+20261021T205752Z-propose (script propose, 19 ops)
+   tag_decisions update x5: Decided under
+   claims_copy update x9: Agent reasons, Agent tags, Agent status, Agent edition, Agent confidence, Tags waiting
+   tag_decisions create x4: Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Rulebook edition, Claim link
+   agent_settings update x1: Rulebook edition, Last run summary
+20261021T205918Z-editor-decide (script walkthrough.mjs, 1 ops)
+   claims_copy update x1: Verified tags [EDITOR], Challenged tags notes [EDITOR], Review status [EDITOR]
+20261021T205925Z-editor-decide (script walkthrough.mjs, 1 ops)
+   claims_copy update x1: Verified tags [EDITOR], Challenged tags notes [EDITOR], Review status [EDITOR]
+20261021T205937Z-editor-decide (script walkthrough.mjs, 1 ops)
+   claims_copy update x1: Verified tags [EDITOR], Challenged tags notes [EDITOR], Review status [EDITOR]
+20261021T205944Z-editor-decide (script walkthrough.mjs, 1 ops)
+   claims_copy update x1: Verified tags [EDITOR], Challenged tags notes [EDITOR], Review status [EDITOR]
+20261021T210012Z-distill (script distill, 10 ops)
+   tag_decisions update x4: Tag outcome, Decided under, Agent reading, Rule, Reading note, Read under, Your reasoning
+   claims_copy update x4: Agent reading
+   rule_changes create x1: Lesson, Tag, Rule, Kind, Current text, Proposed text, Status=Proposed, Supporting rows
+   agent_settings update x1: Rulebook edition, Last run summary
+20261021T210126Z-editor-decide (script walkthrough.mjs, 1 ops)
+   claims_copy update x1: Verified tags [EDITOR], Challenged tags notes [EDITOR], Review status [EDITOR]
+20261021T210145Z-distill (script distill, 3 ops)
+   tag_decisions update x1: Why wrong, Your reasoning, Agent reading, Rule, Reading note, Read under
+   claims_copy update x1: Agent reading
+   agent_settings update x1: Rulebook edition, Last run summary
+20261021T210226Z-editor-approve (script walkthrough.mjs, 1 ops)
+   rule_changes update x1: Status [EDITOR]
+20261021T210238Z-promote (script promote, 1 ops)
+   rulebook update x1: When to use
+20261021T210238Z-promote-followup (script followup, 4 ops)
+   tag_decisions update x2: Follow-up
+   claims_copy update x2: Agent reasons, Tags waiting, Agent status, Agent edition, Agent tags, Agent confidence
+20261021T210238Z-promote-record (script promote, 2 ops)
+   rule_changes update x1: Status=Live, Safety check result
+   agent_settings update x1: Rulebook edition, Last run summary
+
+-- every op that names an editor column --
+20261021T205553Z-rows-claims_copy: create claims_copy 5c9d133e54864197a585599669353aff: Review status
+20261021T205553Z-rows-claims_copy: create claims_copy 92f57020ce349b27b5e56f54068cbc05: Review status
+20261021T205553Z-rows-claims_copy: create claims_copy 27ad00b59c1f7d4aee71643fc8cdec94: Review status
+20261021T205553Z-rows-claims_copy: create claims_copy 8f9c833b41e54eee9ca78e9c2f4ffb58: Review status
+20261021T205553Z-rows-claims_copy: create claims_copy fc0cb0da0a1a4375b0fae6b5c9a67c69: Verified tags, Review status, Challenged tags notes
+20261021T205553Z-rows-claims_copy: create claims_copy 1bff859247ecdb618af41a397d2eb6ba: Verified tags, Review status, Challenged tags notes
+20261021T205553Z-rows-claims_copy: create claims_copy 6dc1222aeb364918821167370d8fbc40: Review status, Challenged tags notes
+20261021T205553Z-rows-claims_copy: create claims_copy 89fcfb7fc6684b63af7d829ed90106cd: Review status, Challenged tags notes
+20261021T205553Z-rows-claims_copy: create claims_copy 3e0d601de961dbf8ae38154e3f3a02e5: Review status, Challenged tags notes
+20261021T205918Z-editor-decide: update claims_copy 5c9d133e54864197a585599669353aff: Verified tags, Challenged tags notes, Review status
+20261021T205925Z-editor-decide: update claims_copy 92f57020ce349b27b5e56f54068cbc05: Verified tags, Challenged tags notes, Review status
+20261021T205937Z-editor-decide: update claims_copy 27ad00b59c1f7d4aee71643fc8cdec94: Verified tags, Challenged tags notes, Review status
+20261021T205944Z-editor-decide: update claims_copy 8f9c833b41e54eee9ca78e9c2f4ffb58: Verified tags, Challenged tags notes, Review status
+20261021T210126Z-editor-decide: update claims_copy 27ad00b59c1f7d4aee71643fc8cdec94: Verified tags, Challenged tags notes, Review status
+20261021T210226Z-editor-approve: update rule_changes Groups known by standing role count; unknown names do not: Status (Status Approved)
+
+== 3. every ledger.jsonl: status and read_back counts ==
+20261021T205552Z-rows-rulebook: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T205553Z-rows-claims_copy: 9 lines; status {"done":9}; read_back {"ok":9}
+20261021T205600Z-rows-tag_decisions: 5 lines; status {"done":5}; read_back {"ok":5}
+20261021T205604Z-rows-agent_settings: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T205752Z-propose: 19 lines; status {"done":19}; read_back {"ok":19}
+20261021T205918Z-editor-decide: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T205925Z-editor-decide: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T205937Z-editor-decide: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T205944Z-editor-decide: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T210012Z-distill: 10 lines; status {"done":10}; read_back {"ok":10}
+20261021T210126Z-editor-decide: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T210145Z-distill: 3 lines; status {"done":3}; read_back {"ok":3}
+20261021T210226Z-editor-approve: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T210238Z-promote: 1 lines; status {"done":1}; read_back {"ok":1}
+20261021T210238Z-promote-followup: 4 lines; status {"done":4}; read_back {"ok":4}
+20261021T210238Z-promote-record: 2 lines; status {"done":2}; read_back {"ok":2}
+
+== 4. editor-actions.jsonl (short) ==
+2026-10-21T20:59:18.943Z decide claims_copy presspool planned plan 20261021T205918Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T20:59:19.649Z decide claims_copy presspool done read_back ok plan 20261021T205918Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T20:59:25.585Z decide claims_copy aiforce planned plan 20261021T205925Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T20:59:26.291Z decide claims_copy aiforce done read_back ok plan 20261021T205925Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T20:59:37.715Z decide claims_copy usps planned plan 20261021T205937Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T20:59:38.366Z decide claims_copy usps done read_back ok plan 20261021T205937Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T20:59:44.077Z decide claims_copy georgia planned plan 20261021T205944Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T20:59:44.735Z decide claims_copy georgia done read_back ok plan 20261021T205944Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T21:01:26.596Z decide claims_copy usps planned plan 20261021T210126Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T21:01:27.270Z decide claims_copy usps done read_back ok plan 20261021T210126Z-editor-decide wrote ["Verified tags","Challenged tags notes","Review status"]
+2026-10-21T21:02:26.153Z approve rule_changes Groups known by standing role count; unknown names do not planned plan 20261021T210226Z-editor-approve wrote ["Status"] Status=Approved
+2026-10-21T21:02:26.883Z approve rule_changes Groups known by standing role count; unknown names do not done read_back ok plan 20261021T210226Z-editor-approve wrote ["Status"] Status=Approved
+lines: 12
+
+== 5. changed since 2026-10-21T20:52:56Z outside this practice page ==
+production runs/ entries modified since the start: none
+newest production run folder: 20261021T181312Z-status
+runs/PAUSED: absent
+runs/SETUP: absent
+runs/PROMOTING.json: absent
+demo 20261021-2116-30ecb4: run folders []; pulls ["20261021T205450Z-pull","20261021T210646Z-pull"]
+demo 20261021-2116-5285ae: run folders []; pulls ["20261021T205459Z-pull"]
+demo 20261021-2116-f511f8: run folders []; pulls ["20261021T205454Z-pull","20261021T210650Z-pull"]
+demo 20261021-2149-242961: run folders []; pulls ["20261021T205446Z-pull","20261021T210638Z-pull"]
+demo 20261021-2303-555445: run folders []; pulls ["20261021T205443Z-pull","20261021T210635Z-pull"]
+exit code: 0

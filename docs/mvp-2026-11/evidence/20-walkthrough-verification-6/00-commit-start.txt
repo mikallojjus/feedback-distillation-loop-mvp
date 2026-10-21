@@ -1,0 +1,15 @@
+git rev-parse HEAD (start)
+2026-10-21T20:52:56Z
+84c0e522e4b0ad953ea681b28d244953a8ab1a23
+84c0e52 2026-10-21 23:52:08 +0300 read-decisions: the fixes of verification run 5 (decision 80): the judge counts a failed reread only in a run its plan asked for, so promote reaches the retry its Next line promises; the Help's stop cases gain the could-not-be-read case; the second distill names the decisions that already have a rule change; 2,084 tests pass
+
+git status --short
+ M docs/mvp-2026-11/report/data/counts.json
+ M docs/mvp-2026-11/report/parts/02-status.html
+ M docs/mvp-2026-11/report/parts/03-how-to-run.html
+?? docs/mvp-2026-11/evidence/20-walkthrough-verification-6/
+
+mtime of modified files
+-rw-r--r-- 1 John Malkovich 197121 10812 2026-10-21 21:50:56.193989300 +0300 docs/mvp-2026-11/report/data/counts.json
+-rw-r--r-- 1 John Malkovich 197121 13815 2026-10-21 21:50:56.193989300 +0300 docs/mvp-2026-11/report/parts/02-status.html
+-rw-r--r-- 1 John Malkovich 197121 11734 2026-10-21 21:50:56.194493800 +0300 docs/mvp-2026-11/report/parts/03-how-to-run.html

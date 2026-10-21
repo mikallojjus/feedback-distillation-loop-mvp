@@ -1,0 +1,179 @@
+========== 20261021T210012Z-distill ==========
+----- 20261021T210012Z-distill/calls.jsonl (428 chars) -----
+{"purpose":"reading","model":"claude-opus-5-5","effort":"medium","batch":1,"attempt":1,"items":3,"status":"ok","usage":{"input":2,"cache_write":2081,"cache_read":1329,"output":837},"duration_ms":10775}
+{"purpose":"distill","model":"claude-opus-5-5","effort":"high","tag":"Context-dependent","rule":3,"attempt":1,"items":2,"status":"ok","usage":{"input":2,"cache_write":3115,"cache_read":1471,"output":1003},"duration_ms":12580}
+----- 20261021T210012Z-distill/ledger.jsonl (2443 chars) -----
+{"op_index":0,"table":"tag_decisions","op":"update","key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","page_id":"400273e2-14eb-816e-ae29-da07630f7c9b","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:44.981Z"}
+{"op_index":1,"table":"tag_decisions","op":"update","key":"5c9d133e54864197a585599669353aff::Context-dependent","page_id":"400273e2-14eb-8164-bc68-d85b4b28d561","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:45.754Z"}
+{"op_index":2,"table":"tag_decisions","op":"update","key":"8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","page_id":"400273e2-14eb-8161-8ba2-ce994c69b150","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:46.386Z"}
+{"op_index":3,"table":"tag_decisions","op":"update","key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","page_id":"400273e2-14eb-81cc-8789-e5ec63e2643b","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:47.104Z"}
+{"op_index":4,"table":"claims_copy","op":"update","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-8146-bbf2-ed2a020cc108","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:47.937Z"}
+{"op_index":5,"table":"claims_copy","op":"update","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-819d-bef9-fb34224c5929","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:49.394Z"}
+{"op_index":6,"table":"claims_copy","op":"update","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-8168-afd0-e82988bcbf8a","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:50.105Z"}
+{"op_index":7,"table":"claims_copy","op":"update","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-811d-a124-e1a44aa95c16","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:50.795Z"}
+{"op_index":8,"table":"rule_changes","op":"create","key":"Groups known by standing role count; unknown names do not","page_id":"400273e2-14eb-8168-9891-e8edf50e6916","status":"done","read_back":"ok","sent":"create","error":null,"at":"2026-10-21T21:00:51.631Z"}
+{"op_index":9,"table":"agent_settings","op":"update","key":"Claim tagger","page_id":"400273e2-14eb-81c9-b06a-e48a3982cf69","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:00:54.697Z"}
+----- 20261021T210012Z-distill/plan.jsonl (5814 chars) -----
+{"plan":{"run_id":"20261021T210012Z-distill","script":"distill","created_at":"2026-10-21T21:00:41.749Z","rubric_edition":"2026-10-21.1","counts":{"creates":1,"updates":9}}}
+{"op":"update","table":"tag_decisions","key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","page_id":"400273e2-14eb-816e-ae29-da07630f7c9b","properties":{"Tag outcome":"Does not apply","Decided under":"2026-10-21.1","Agent reading":"Rule unclear","Rule":"Context-dependent rule 3","Reading note":"without your note · Rule 3 flags owner-plus-kind definites like the Bitcoin ETF, yet rule 5 exempts definites the claim resolves, and naming USPS arguably resolves it.","Read under":"2026-10-21.1 · 5158c072"}}
+{"op":"update","table":"tag_decisions","key":"5c9d133e54864197a585599669353aff::Context-dependent","page_id":"400273e2-14eb-8164-bc68-d85b4b28d561","properties":{"Tag outcome":"Does not apply","Your reasoning":"Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.","Decided under":"2026-10-21.1","Agent reading":"Rule should change","Rule":"Context-dependent rule 3","Reading note":"As written, rule 3 tags the press pool as an unspecified countable group; it would need to exempt groups known by a standing role.","Read under":"2026-10-21.1 · f6ebacfb"}}
+{"op":"update","table":"tag_decisions","key":"8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","page_id":"400273e2-14eb-8161-8ba2-ce994c69b150","properties":{"Tag outcome":"Does not apply","Decided under":"2026-10-21.1"}}
+{"op":"update","table":"tag_decisions","key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","page_id":"400273e2-14eb-81cc-8789-e5ec63e2643b","properties":{"Tag outcome":"Applies","Your reasoning":"Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.","Decided under":"2026-10-21.1","Agent reading":"Rule unclear","Rule":"Context-dependent rule 3","Reading note":"Rule 3 does not say whether a capitalised, name-like phrase for no known body counts as a name or as an unspecified kind.","Read under":"2026-10-21.1 · 830960e5"}}
+{"op":"update","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-8146-bbf2-ed2a020cc108","properties":{"Agent reading":"Context-dependent: Rule unclear, rule 3, without your note · Rule 3 flags owner-plus-kind definites like the Bitcoin ETF, yet rule 5 exempts definites the claim resolves, and naming USPS arguably resolves it."}}
+{"op":"update","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-819d-bef9-fb34224c5929","properties":{"Agent reading":"Context-dependent: Rule should change, rule 3 · As written, rule 3 tags the press pool as an unspecified countable group; it would need to exempt groups known by a standing role."}}
+{"op":"update","table":"claims_copy","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-8168-afd0-e82988bcbf8a","properties":{"Agent reading":"Nothing to read: the agent agreed with you."}}
+{"op":"update","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-811d-a124-e1a44aa95c16","properties":{"Agent reading":"Context-dependent: Rule unclear, rule 3 · Rule 3 does not say whether a capitalised, name-like phrase for no known body counts as a name or as an unspecified kind."}}
+{"op":"create","table":"rule_changes","key":"Groups known by standing role count; unknown names do not","properties":{"Lesson":"Groups known by standing role count; unknown names do not","Tag":"Context-dependent","Rule":"Context-dependent rule 3","Kind":"Change the rule","Current text":"A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").","Proposed text":"A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A capitalised, name-like phrase for a body that readers do not know is still a kind of thing and not a name, so it counts as unspecified. A group that every reader knows by its standing role (\"the press pool\") counts as identified. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").","Status":"Proposed","Supporting rows":"The press pool was justified in suspending coverage in so... · 5c9d133e54864197a585599669353aff::Context-dependent\nThe AI Force should enforce binding safety standards · 92f57020ce349b27b5e56f54068cbc05::Context-dependent"},"children":[{"object":"block","type":"paragraph","paragraph":{"rich_text":[{"type":"text","text":{"content":"The press pool was justified in suspending coverage in solidarity with banned networks · 5c9d133e54864197a585599669353aff::Context-dependent"}}]}},{"object":"block","type":"paragraph","paragraph":{"rich_text":[{"type":"text","text":{"content":"The AI Force should enforce binding safety standards · 92f57020ce349b27b5e56f54068cbc05::Context-dependent"}}]}}]}
+{"op":"update","table":"agent_settings","key":"Claim tagger","page_id":"400273e2-14eb-81c9-b06a-e48a3982cf69","properties":{"Rulebook edition":"2026-10-21.1","Last run summary":"Distill · 22 Oct 00:00 · 1 rule change"}}
+----- 20261021T210012Z-distill/readings.jsonl (1024 chars) -----
+{"key":"27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","hash":"5158c072","edition":"2026-10-21.1","source":"model","reading":"Rule unclear","rule":"Context-dependent rule 3","note":"Rule 3 flags owner-plus-kind definites like the Bitcoin ETF, yet rule 5 exempts definites the claim resolves, and naming USPS arguably resolves it.","no_note":true}
+{"key":"5c9d133e54864197a585599669353aff::Context-dependent","hash":"f6ebacfb","edition":"2026-10-21.1","source":"model","reading":"Rule should change","rule":"Context-dependent rule 3","note":"As written, rule 3 tags the press pool as an unspecified countable group; it would need to exempt groups known by a standing role.","no_note":false}
+{"key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","hash":"830960e5","edition":"2026-10-21.1","source":"model","reading":"Rule unclear","rule":"Context-dependent rule 3","note":"Rule 3 does not say whether a capitalised, name-like phrase for no known body counts as a name or as an unspecified kind.","no_note":false}
+----- 20261021T210012Z-distill/report.json (964 chars) -----
+{
+  "demo": true,
+  "sentence": "Distill: read 3 of your decisions and drafted one rule change from 2 of them; 1 of your decisions has no note and waits in Needs your note (practice page Claim tagger practice · verification 6).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Read",
+      "3 decisions",
+      ""
+    ],
+    [
+      "Point at a rule",
+      "2 decisions",
+      ""
+    ],
+    [
+      "Agent slips",
+      "none",
+      ""
+    ],
+    [
+      "Without a note",
+      "1 decision",
+      ""
+    ],
+    [
+      "Rule change",
+      "\"Groups known by standing role count; unknown names do not\", Context-dependent rule 3",
+      ""
+    ]
+  ],
+  "next": "Next: read it in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-verification-6-400273e214eb81a9beb6e7f7899530d6#400273e214eb8187b1f0e425924ced65), where the current and the proposed text sit side by side, and approve it or write your own wording."
+}
+----- 20261021T210012Z-distill/report.md (712 chars) -----
+Demo · Distill: read 3 of your decisions and drafted one rule change from 2 of them; 1 of your decisions has no note and waits in Needs your note (practice page Claim tagger practice · verification 6).
+
+| What | Result |
+|---|---|
+| Read | 3 decisions |
+| Point at a rule | 2 decisions |
+| Agent slips | none |
+| Without a note | 1 decision |
+| Rule change | "Groups known by standing role count; unknown names do not", Context-dependent rule 3 |
+
+Next: read it in Lessons waiting (https://app.notion.com/p/Claim-tagger-practice-verification-6-400273e214eb81a9beb6e7f7899530d6#400273e214eb8187b1f0e425924ced65), where the current and the proposed text sit side by side, and approve it or write your own wording.
+----- 20261021T210012Z-distill/requests.jsonl (2522 chars) -----
+{"ts":"2026-10-21T21:00:44.712Z","method":"PATCH","path":"/pages/400273e2-14eb-816e-ae29-da07630f7c9b","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:44.980Z","method":"GET","path":"/pages/400273e2-14eb-816e-ae29-da07630f7c9b","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:45.428Z","method":"PATCH","path":"/pages/400273e2-14eb-8164-bc68-d85b4b28d561","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:45.753Z","method":"GET","path":"/pages/400273e2-14eb-8164-bc68-d85b4b28d561","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:46.137Z","method":"PATCH","path":"/pages/400273e2-14eb-8161-8ba2-ce994c69b150","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:46.386Z","method":"GET","path":"/pages/400273e2-14eb-8161-8ba2-ce994c69b150","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:46.848Z","method":"PATCH","path":"/pages/400273e2-14eb-81cc-8789-e5ec63e2643b","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:47.103Z","method":"GET","path":"/pages/400273e2-14eb-81cc-8789-e5ec63e2643b","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:47.558Z","method":"PATCH","path":"/pages/400273e2-14eb-8146-bbf2-ed2a020cc108","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:47.936Z","method":"GET","path":"/pages/400273e2-14eb-8146-bbf2-ed2a020cc108","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:49.115Z","method":"PATCH","path":"/pages/400273e2-14eb-819d-bef9-fb34224c5929","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:49.393Z","method":"GET","path":"/pages/400273e2-14eb-819d-bef9-fb34224c5929","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:49.831Z","method":"PATCH","path":"/pages/400273e2-14eb-8168-afd0-e82988bcbf8a","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:50.104Z","method":"GET","path":"/pages/400273e2-14eb-8168-afd0-e82988bcbf8a","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:50.532Z","method":"PATCH","path":"/pages/400273e2-14eb-811d-a124-e1a44aa95c16","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:50.794Z","method":"GET","path":"/pages/400273e2-14eb-811d-a124-e1a44aa95c16","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:51.373Z","method":"POST","path":"/pages","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:51.630Z","method":"GET","path":"/pages/400273e2-14eb-8168-9891-e8edf50e6916","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:52.069Z","method":"PATCH","path":"/pages/400273e2-14eb-81c9-b06a-e48a3982cf69","status":200,"attempt":1}
+{"ts":"2026-10-21T21:00:54.696Z","method":"GET","path":"/pages/400273e2-14eb-81c9-b06a-e48a3982cf69","status":200,"attempt":1}
+----- 20261021T210012Z-distill/run.json (1795 chars) -----
+{
+  "run_id": "20261021T210012Z-distill",
+  "script": "distill",
+  "args": {
+    "pull": null,
+    "plan_only": false,
+    "driver": "cli",
+    "rows": null,
+    "readings": null
+  },
+  "started_at": "2026-10-21T21:00:12.127Z",
+  "finished_at": "2026-10-21T21:00:54.705Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.1",
+  "pull_id": "20261021T210012Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 distill",
+  "status": "done",
+  "readings": {
+    "to_read": 3,
+    "read": 3,
+    "verbatim": 0,
+    "reused": 0,
+    "model": 3,
+    "could_not_read": [],
+    "current": 5,
+    "agree": 1,
+    "fixed": 0
+  },
+  "groups": [
+    {
+      "tag": "Context-dependent",
+      "rule": 3,
+      "rows": 2,
+      "shown": [
+        "5c9d133e54864197a585599669353aff::Context-dependent",
+        "92f57020ce349b27b5e56f54068cbc05::Context-dependent"
+      ],
+      "counter": [
+        "3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent",
+        "6dc1222aeb364918821167370d8fbc40::Context-dependent",
+        "89fcfb7fc6684b63af7d829ed90106cd::Context-dependent"
+      ]
+    }
+  ],
+  "lessons": [
+    {
+      "title": "Groups known by standing role count; unknown names do not",
+      "rule": "Context-dependent rule 3",
+      "kind": "Change the rule",
+      "rows": [
+        "5c9d133e54864197a585599669353aff::Context-dependent",
+        "92f57020ce349b27b5e56f54068cbc05::Context-dependent"
+      ]
+    }
+  ],
+  "plan": {
+    "creates": 1,
+    "updates": 9
+  },
+  "apply": {
+    "done": 10,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  },
+  "counts": {
+    "lessons": 1,
+    "groups": 1,
+    "decisions_copied": 4,
+    "readings": 3,
+    "could_not_read": 0
+  }
+}

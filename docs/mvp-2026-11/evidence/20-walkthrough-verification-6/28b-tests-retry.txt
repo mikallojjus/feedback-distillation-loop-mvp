@@ -1,0 +1,20 @@
+command: node --test --test-name-pattern="extra read|own plan did not ask|share a store|third read that the plan asks" tests/mvp/promote.test.mjs tests/mvp/judge.test.mjs
+(fakes only: fake Notion and fake model; no Notion request; run by the verifier to back the 'not met again' state of run 5's issue 1)
+2026-10-21T21:05:51Z
+✔ an error line in a run that the judge's own plan did not ask for is neither counted, nor read again, nor does it stop the run (328.7566ms)
+✔ a third read that the plan asks for (the first two disagree) and that fails both attempts is still "could not be read again"; the lines of reads it did not ask for are not counted with it (152.7821ms)
+✔ the tag step and the safety check share a store (one key for the rulebook in force); an extra read of the safety check that failed stops neither of them (210.8649ms)
+✔ promote PASS: an item whose answer flips is read twice more on each side, and a chance flip that the extra reads reverse does not FAIL (822.27ms)
+✔ promote PASS: a real flip that the extra reads confirm FAILs (384.7255ms)
+✔ promote: an extra read that comes back without a claim twice stops the check with exit 2 and nothing written; the next promote makes only that read again and passes (601.5898ms)
+✔ promote: an extra read that fails again stops at the extra read once more, not in the judge; the third promote passes (546.7773ms)
+✔ promote: --runs-max 1 asks for one read per item, and the extra reads of a flipped item are still made (300.7987ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2925.0431
+exit code: 0

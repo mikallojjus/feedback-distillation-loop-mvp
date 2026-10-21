@@ -1,0 +1,141 @@
+----- demo.json -----
+{
+  "demo_id": "20261021-2355-8c6602",
+  "created_at": "2026-10-21T20:55:14.323Z",
+  "updated_at": "2026-10-21T20:56:22.541Z",
+  "title": "Claim tagger practice · verification 6",
+  "manifest_version": "2026-10-22.1",
+  "manifest_sha256": "6d3565b92eb8e8a5d110d79bd3ef0ba45059fcbb1ea9c24d7f7d3aabdf5d61f6",
+  "page_sha256": "4b88316bdfcb4d65b9ea469399b2aed2132069e27b16877980707db5efcd2931",
+  "api_version": "2026-03-11",
+  "parent": {
+    "id": "3fa273e214eb81c2b223dcc2331b7051",
+    "title": "Demo tests",
+    "url": "https://app.notion.com/p/Demo-tests-3fa273e214eb81c2b223dcc2331b7051"
+  },
+  "state": "ready",
+  "edition": "2026-10-21.1",
+  "date": "21 Oct",
+  "page": {
+    "id": "400273e214eb81a9beb6e7f7899530d6",
+    "url": "https://app.notion.com/p/Claim-tagger-practice-verification-6-400273e214eb81a9beb6e7f7899530d6"
+  },
+  "databases": {
+    "rulebook": {
+      "database_id": "6f37989800694c22aa6e59ee55dc6728",
+      "data_source_id": "d4ebd1d5691a42409501f8eb5aea8d58",
+      "how": "created"
+    },
+    "claims_copy": {
+      "database_id": "22581e2bd8994254adfc822af8facb52",
+      "data_source_id": "24f3073aa36d42348c5c8e31a0bda6e5",
+      "how": "created"
+    },
+    "tag_decisions": {
+      "database_id": "ee55c67ec15a43aa84beebba0b7198b1",
+      "data_source_id": "80a248a8068c4d56840eca8aae6c0030",
+      "how": "created"
+    },
+    "rule_changes": {
+      "database_id": "9c625e578c2b4c25b5bbddba1d30e928",
+      "data_source_id": "0a6a1fe3c7dd433db0f18ad29d864aec",
+      "how": "created"
+    },
+    "agent_settings": {
+      "database_id": "7378adbbcef14e7a83faeed31bcf0d55",
+      "data_source_id": "60c60df670db4399ae56b22ffaf92d8b",
+      "how": "created"
+    }
+  },
+  "views": {
+    "rulebook": {
+      "id": "400273e214eb81e59826000ca1d17c46",
+      "url": "https://www.notion.so/6f37989800694c22aa6e59ee55dc6728?v=400273e214eb81e59826000ca1d17c46",
+      "kind": "tab",
+      "table": "rulebook",
+      "source_database_id": "6f37989800694c22aa6e59ee55dc6728"
+    },
+    "needs_your_note": {
+      "id": "400273e214eb81f090c1000c5fa833cb",
+      "url": "https://www.notion.so/22581e2bd8994254adfc822af8facb52?v=400273e214eb81f090c1000c5fa833cb",
+      "kind": "tab",
+      "table": "claims_copy",
+      "source_database_id": "22581e2bd8994254adfc822af8facb52"
+    },
+    "agent_disagreed": {
+      "id": "400273e214eb810c92a4000c8752b165",
+      "url": "https://www.notion.so/22581e2bd8994254adfc822af8facb52?v=400273e214eb810c92a4000c8752b165",
+      "kind": "tab",
+      "table": "claims_copy",
+      "source_database_id": "22581e2bd8994254adfc822af8facb52"
+    },
+    "your_queue": {
+      "id": "400273e214eb81069fdf000c30636883",
+      "url": "https://app.notion.com/p/Claim-tagger-practice-verification-6-400273e214eb81a9beb6e7f7899530d6#400273e214eb81b2b5d5e45ce5b30040",
+      "kind": "linked",
+      "table": "claims_copy",
+      "source_database_id": "22581e2bd8994254adfc822af8facb52",
+      "linked_database_id": "400273e214eb81b2b5d5e45ce5b30040",
+      "anchor": "400273e2-14eb-81a2-b426-e823a1c6aa89"
+    },
+    "lessons_waiting": {
+      "id": "400273e214eb811c9b8c000cc49d26fe",
+      "url": "https://app.notion.com/p/Claim-tagger-practice-verification-6-400273e214eb81a9beb6e7f7899530d6#400273e214eb8187b1f0e425924ced65",
+      "kind": "linked",
+      "table": "rule_changes",
+      "source_database_id": "9c625e578c2b4c25b5bbddba1d30e928",
+      "linked_database_id": "400273e214eb8187b1f0e425924ced65",
+      "anchor": "400273e2-14eb-811d-b3fd-d1541cfed9ba"
+    }
+  },
+  "fallback": null,
+  "tables_position": "marker",
+  "anchors": {
+    "your_queue": "400273e2-14eb-81a2-b426-e823a1c6aa89",
+    "lessons_waiting": "400273e2-14eb-811d-b3fd-d1541cfed9ba"
+  },
+  "request_counts": {
+    "GET": 99,
+    "POST": 36,
+    "PATCH": 6,
+    "total": 141,
+    "writes": 33
+  },
+  "errors": [],
+  "phases": {
+    "page": true,
+    "content": true,
+    "databases": true,
+    "relations": true,
+    "toggle": true,
+    "views": true,
+    "fallback": true
+  },
+  "content": {
+    "blocks_before_tables": 105
+  },
+  "toggle": {
+    "id": "400273e214eb815f9157f64f11097c2e"
+  },
+  "rows": {
+    "rulebook": true,
+    "rulebook_page": "400273e214eb8180826dfd2f1a18df13",
+    "claims_copy": true,
+    "tag_decisions": true,
+    "agent_settings": true
+  }
+}
+
+----- editor-actions.jsonl -----
+{"at":"2026-10-21T20:59:18.943Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-819d-bef9-fb34224c5929","wrote":{"Verified tags":[],"Challenged tags notes":"Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T205918Z-editor-decide","claim":"presspool","tags":[],"status":"planned"}
+{"at":"2026-10-21T20:59:19.649Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-819d-bef9-fb34224c5929","wrote":{"Verified tags":[],"Challenged tags notes":"Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T205918Z-editor-decide","claim":"presspool","tags":[],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:59:25.585Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-811d-a124-e1a44aa95c16","wrote":{"Verified tags":["400273e2-14eb-8180-826d-fd2f1a18df13"],"Challenged tags notes":"Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T205925Z-editor-decide","claim":"aiforce","tags":["Context-dependent"],"status":"planned"}
+{"at":"2026-10-21T20:59:26.291Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-811d-a124-e1a44aa95c16","wrote":{"Verified tags":["400273e2-14eb-8180-826d-fd2f1a18df13"],"Challenged tags notes":"Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T205925Z-editor-decide","claim":"aiforce","tags":["Context-dependent"],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:59:37.715Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-8146-bbf2-ed2a020cc108","wrote":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T205937Z-editor-decide","claim":"usps","tags":[],"status":"planned"}
+{"at":"2026-10-21T20:59:38.366Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-8146-bbf2-ed2a020cc108","wrote":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T205937Z-editor-decide","claim":"usps","tags":[],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T20:59:44.077Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-8168-afd0-e82988bcbf8a","wrote":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T205944Z-editor-decide","claim":"georgia","tags":[],"status":"planned"}
+{"at":"2026-10-21T20:59:44.735Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"8f9c833b41e54eee9ca78e9c2f4ffb58","page_id":"400273e2-14eb-8168-afd0-e82988bcbf8a","wrote":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"To review"},"plan_run":"20261021T205944Z-editor-decide","claim":"georgia","tags":[],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T21:01:26.596Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-8146-bbf2-ed2a020cc108","wrote":{"Verified tags":[],"Challenged tags notes":"Agent slip. USPS names which portal, so rule 5 already settles it.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"plan_run":"20261021T210126Z-editor-decide","claim":"usps","tags":[],"status":"planned"}
+{"at":"2026-10-21T21:01:27.270Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"decide","table":"claims_copy","key":"27ad00b59c1f7d4aee71643fc8cdec94","page_id":"400273e2-14eb-8146-bbf2-ed2a020cc108","wrote":{"Verified tags":[],"Challenged tags notes":"Agent slip. USPS names which portal, so rule 5 already settles it.","Review status":"Reviewed"},"before":{"Verified tags":[],"Challenged tags notes":"","Review status":"Reviewed"},"plan_run":"20261021T210126Z-editor-decide","claim":"usps","tags":[],"status":"done","read_back":"ok"}
+{"at":"2026-10-21T21:02:26.153Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"approve","table":"rule_changes","key":"Groups known by standing role count; unknown names do not","page_id":"400273e2-14eb-8168-9891-e8edf50e6916","wrote":{"Status":"Approved"},"before":{"Status":"Proposed"},"plan_run":"20261021T210226Z-editor-approve","status":"planned"}
+{"at":"2026-10-21T21:02:26.883Z","demo_id":"20261021-2355-8c6602","sentence":"acting as the editor on practice page 20261021-2355-8c6602 (decision D31)","action":"approve","table":"rule_changes","key":"Groups known by standing role count; unknown names do not","page_id":"400273e2-14eb-8168-9891-e8edf50e6916","wrote":{"Status":"Approved"},"before":{"Status":"Proposed"},"plan_run":"20261021T210226Z-editor-approve","status":"done","read_back":"ok"}

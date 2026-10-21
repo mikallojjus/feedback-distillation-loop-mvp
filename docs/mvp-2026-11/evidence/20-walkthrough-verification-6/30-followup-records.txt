@@ -1,0 +1,448 @@
+========== 20261021T210238Z-promote-baseline ==========
+----- 20261021T210238Z-promote-baseline/calls.jsonl (1902 chars) -----
+{"group":"G1","run":1,"batch":1,"items":8,"ids":["canary-1","canary-2","canary-3","canary-4","canary-5","canary-6","canary-7","canary-8"],"attempts":1,"usage":{"input":2,"cache_write":709,"cache_read":2042,"output":860},"duration_ms":7539,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":3,"items":3,"ids":["case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","case-92f57020ce349b27b5e56f54068cbc05::Context-dependent","case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent"],"attempts":1,"usage":{"input":2,"cache_write":709,"cache_read":1933,"output":474},"duration_ms":9140,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":2,"items":8,"ids":["canary-9","canary-10","case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent","case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent","case-5c9d133e54864197a585599669353aff::Context-dependent","case-6dc1222aeb364918821167370d8fbc40::Context-dependent","case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent"],"attempts":1,"usage":{"input":2,"cache_write":709,"cache_read":2217,"output":1912},"duration_ms":18060,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":2,"batch":4,"items":3,"ids":["case-92f57020ce349b27b5e56f54068cbc05::Context-dependent","case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent","case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent"],"attempts":1,"usage":{"input":2,"cache_write":1081,"cache_read":1556,"output":869},"duration_ms":16244,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":3,"batch":5,"items":1,"ids":["case-92f57020ce349b27b5e56f54068cbc05::Context-dependent"],"attempts":1,"usage":{"input":2,"cache_write":709,"cache_read":1789,"output":657},"duration_ms":7454,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+----- 20261021T210238Z-promote-baseline/report.json (451 chars) -----
+{
+  "demo": true,
+  "sentence": "Judge: read 19 claims for Context-dependent; 1 unsure (practice page Claim tagger practice · verification 6).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "19",
+      ""
+    ],
+    [
+      "Unsure",
+      "1",
+      ""
+    ],
+    [
+      "Re-read",
+      "3",
+      ""
+    ]
+  ],
+  "next": "Next: type /claim-tagger demo tag to finish (it continues from here)."
+}
+----- 20261021T210238Z-promote-baseline/report.md (269 chars) -----
+Demo · Judge: read 19 claims for Context-dependent; 1 unsure (practice page Claim tagger practice · verification 6).
+
+| What | Result |
+|---|---|
+| Claims read | 19 |
+| Unsure | 1 |
+| Re-read | 3 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here).
+----- 20261021T210238Z-promote-baseline/run.json (2101 chars) -----
+{
+  "run_id": "20261021T210238Z-promote-baseline",
+  "script": "judge",
+  "args": {
+    "items": "eval",
+    "tags": [
+      "Context-dependent"
+    ],
+    "pull": null,
+    "ids": null,
+    "limit": null,
+    "runs_max": null,
+    "rubric": null,
+    "refresh": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T21:02:42.043Z",
+  "finished_at": "2026-10-21T21:03:24.046Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.1",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 judge --resume 20261021T210238Z-promote-baseline",
+  "status": "done",
+  "invocations": 1,
+  "item_ids": [
+    "canary-1",
+    "canary-2",
+    "canary-3",
+    "canary-4",
+    "canary-5",
+    "canary-6",
+    "canary-7",
+    "canary-8",
+    "canary-9",
+    "canary-10",
+    "case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent",
+    "case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent",
+    "case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent",
+    "case-5c9d133e54864197a585599669353aff::Context-dependent",
+    "case-6dc1222aeb364918821167370d8fbc40::Context-dependent",
+    "case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent",
+    "case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent",
+    "case-92f57020ce349b27b5e56f54068cbc05::Context-dependent",
+    "case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent"
+  ],
+  "groups": [
+    {
+      "name": "G1",
+      "tags": [
+        "Context-dependent"
+      ],
+      "store": "fd082dc83cbba323",
+      "prompt": "sha256:a9782c896da71e57",
+      "items": 19
+    }
+  ],
+  "refreshed": {},
+  "driver": "cli",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "prompt_version": "1",
+  "cli_version": "2.1.303 (Claude Code)",
+  "runs_max": 3,
+  "rubric_file": null,
+  "counts": {
+    "items": 19,
+    "read": 19,
+    "unsure": 1,
+    "reread": 3,
+    "failed": 0,
+    "failed_reread": 0
+  },
+  "capped": {
+    "G1": []
+  },
+  "calls": 5,
+  "failed_batches": 0,
+  "usage": {
+    "input": 10,
+    "cache_write": 3917,
+    "cache_read": 9537,
+    "output": 4772
+  }
+}
+
+========== 20261021T210238Z-promote-candidate ==========
+----- 20261021T210238Z-promote-candidate/calls.jsonl (1254 chars) -----
+{"group":"G1","run":1,"batch":1,"items":8,"ids":["canary-1","canary-2","canary-3","canary-4","canary-5","canary-6","canary-7","canary-8"],"attempts":1,"usage":{"input":2,"cache_write":2821,"cache_read":0,"output":918},"duration_ms":7578,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":2,"items":8,"ids":["canary-9","canary-10","case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent","case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent","case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent","case-5c9d133e54864197a585599669353aff::Context-dependent","case-6dc1222aeb364918821167370d8fbc40::Context-dependent","case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent"],"attempts":1,"usage":{"input":2,"cache_write":2996,"cache_read":0,"output":1741},"duration_ms":16520,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+{"group":"G1","run":1,"batch":3,"items":3,"ids":["case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent","case-92f57020ce349b27b5e56f54068cbc05::Context-dependent","case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent"],"attempts":1,"usage":{"input":2,"cache_write":1086,"cache_read":1626,"output":890},"duration_ms":13084,"cli_version":"2.1.303 (Claude Code)","status":"ok"}
+----- 20261021T210238Z-promote-candidate/report.json (451 chars) -----
+{
+  "demo": true,
+  "sentence": "Judge: read 19 claims for Context-dependent; 0 unsure (practice page Claim tagger practice · verification 6).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "19",
+      ""
+    ],
+    [
+      "Unsure",
+      "0",
+      ""
+    ],
+    [
+      "Re-read",
+      "0",
+      ""
+    ]
+  ],
+  "next": "Next: type /claim-tagger demo tag to finish (it continues from here)."
+}
+----- 20261021T210238Z-promote-candidate/report.md (269 chars) -----
+Demo · Judge: read 19 claims for Context-dependent; 0 unsure (practice page Claim tagger practice · verification 6).
+
+| What | Result |
+|---|---|
+| Claims read | 19 |
+| Unsure | 0 |
+| Re-read | 0 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here).
+----- 20261021T210238Z-promote-candidate/run.json (2370 chars) -----
+{
+  "run_id": "20261021T210238Z-promote-candidate",
+  "script": "judge",
+  "args": {
+    "items": "eval",
+    "tags": [
+      "Context-dependent"
+    ],
+    "pull": null,
+    "ids": null,
+    "limit": null,
+    "runs_max": null,
+    "rubric": "X:\\work\\geo-agents\\agents\\claim-tagger-mvp\\runs\\demos\\20261021-2355-8c6602\\runs\\20261021T210238Z-promote\\candidate-rubric.json",
+    "refresh": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T21:03:24.052Z",
+  "finished_at": "2026-10-21T21:03:44.850Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.2",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 judge --resume 20261021T210238Z-promote-candidate",
+  "status": "done",
+  "invocations": 1,
+  "item_ids": [
+    "canary-1",
+    "canary-2",
+    "canary-3",
+    "canary-4",
+    "canary-5",
+    "canary-6",
+    "canary-7",
+    "canary-8",
+    "canary-9",
+    "canary-10",
+    "case-1bff859247ecdb618af41a397d2eb6ba::Context-dependent",
+    "case-27ad00b59c1f7d4aee71643fc8cdec94::Context-dependent",
+    "case-3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent",
+    "case-5c9d133e54864197a585599669353aff::Context-dependent",
+    "case-6dc1222aeb364918821167370d8fbc40::Context-dependent",
+    "case-89fcfb7fc6684b63af7d829ed90106cd::Context-dependent",
+    "case-8f9c833b41e54eee9ca78e9c2f4ffb58::Context-dependent",
+    "case-92f57020ce349b27b5e56f54068cbc05::Context-dependent",
+    "case-fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent"
+  ],
+  "groups": [
+    {
+      "name": "G1",
+      "tags": [
+        "Context-dependent"
+      ],
+      "store": "550ad383ec93bf89",
+      "prompt": "sha256:01a188c2408e55f6",
+      "items": 19
+    }
+  ],
+  "refreshed": {},
+  "driver": "cli",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "prompt_version": "1",
+  "cli_version": "2.1.303 (Claude Code)",
+  "runs_max": 3,
+  "rubric_file": "X:\\work\\geo-agents\\agents\\claim-tagger-mvp\\runs\\demos\\20261021-2355-8c6602\\runs\\20261021T210238Z-promote\\candidate-rubric.json",
+  "counts": {
+    "items": 19,
+    "read": 19,
+    "unsure": 0,
+    "reread": 0,
+    "failed": 0,
+    "failed_reread": 0
+  },
+  "capped": {
+    "G1": []
+  },
+  "calls": 3,
+  "failed_batches": 0,
+  "usage": {
+    "input": 6,
+    "cache_write": 6903,
+    "cache_read": 1626,
+    "output": 3549
+  }
+}
+
+========== 20261021T210238Z-promote-followup ==========
+----- 20261021T210238Z-promote-followup/ledger.jsonl (982 chars) -----
+{"op_index":0,"table":"tag_decisions","op":"update","key":"5c9d133e54864197a585599669353aff::Context-dependent","page_id":"400273e2-14eb-8164-bc68-d85b4b28d561","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:04:25.385Z"}
+{"op_index":1,"table":"tag_decisions","op":"update","key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","page_id":"400273e2-14eb-81cc-8789-e5ec63e2643b","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:04:26.098Z"}
+{"op_index":2,"table":"claims_copy","op":"update","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-819d-bef9-fb34224c5929","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:04:27.106Z"}
+{"op_index":3,"table":"claims_copy","op":"update","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-811d-a124-e1a44aa95c16","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:04:27.932Z"}
+----- 20261021T210238Z-promote-followup/plan.jsonl (1589 chars) -----
+{"plan":{"run_id":"20261021T210238Z-promote-followup","script":"followup","created_at":"2026-10-21T21:04:24.768Z","rubric_edition":"2026-10-21.2","counts":{"creates":0,"updates":4}}}
+{"op":"update","table":"tag_decisions","key":"5c9d133e54864197a585599669353aff::Context-dependent","page_id":"400273e2-14eb-8164-bc68-d85b4b28d561","properties":{"Follow-up":"Fixed"}}
+{"op":"update","table":"tag_decisions","key":"92f57020ce349b27b5e56f54068cbc05::Context-dependent","page_id":"400273e2-14eb-81cc-8789-e5ec63e2643b","properties":{"Follow-up":"Fixed"}}
+{"op":"update","table":"claims_copy","key":"5c9d133e54864197a585599669353aff","page_id":"400273e2-14eb-819d-bef9-fb34224c5929","properties":{"Agent reasons":"Context-dependent: 'The press pool' is a group every reader knows by its standing role, so rule 3 counts it as identified. 'banned networks' is indefinite, and no pronoun or other outside-dependent definite appears. · Context-dependent rule 3 · 3 of 3 runs agree","Tags waiting":[],"Agent status":"Done","Agent edition":"2026-10-21.2"}}
+{"op":"update","table":"claims_copy","key":"92f57020ce349b27b5e56f54068cbc05","page_id":"400273e2-14eb-811d-a124-e1a44aa95c16","properties":{"Agent reasons":"Context-dependent: 'The AI Force' is a capitalised, name-like body that readers do not know. Rule 3 treats it as a kind of thing, not a name, so a reader cannot tell which body is meant. · Context-dependent rule 3 · 3 of 3 runs agree","Agent tags":["400273e2-14eb-8180-826d-fd2f1a18df13"],"Tags waiting":[],"Agent status":"Done","Agent edition":"2026-10-21.2","Agent confidence":0.8}}
+----- 20261021T210238Z-promote-followup/run.json (712 chars) -----
+{
+  "run_id": "20261021T210238Z-promote-followup",
+  "script": "followup",
+  "args": {
+    "parent": "20261021T210238Z-promote"
+  },
+  "started_at": "2026-10-21T21:04:24.680Z",
+  "finished_at": "2026-10-21T21:04:27.934Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.2",
+  "pull_id": "20261021T210238Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 promote --lesson \"Groups known by standing role count; unknown names do not\"",
+  "status": "done",
+  "plan": {
+    "creates": 0,
+    "updates": 4
+  },
+  "apply": {
+    "done": 4,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  }
+}
+
+========== 20261021T210238Z-promote-followup-judge ==========
+----- 20261021T210238Z-promote-followup-judge/report.json (449 chars) -----
+{
+  "demo": true,
+  "sentence": "Judge: read 2 claims for Context-dependent; 0 unsure (practice page Claim tagger practice · verification 6).",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "2",
+      ""
+    ],
+    [
+      "Unsure",
+      "0",
+      ""
+    ],
+    [
+      "Re-read",
+      "2",
+      ""
+    ]
+  ],
+  "next": "Next: type /claim-tagger demo tag to finish (it continues from here)."
+}
+----- 20261021T210238Z-promote-followup-judge/report.md (267 chars) -----
+Demo · Judge: read 2 claims for Context-dependent; 0 unsure (practice page Claim tagger practice · verification 6).
+
+| What | Result |
+|---|---|
+| Claims read | 2 |
+| Unsure | 0 |
+| Re-read | 2 |
+
+Next: type /claim-tagger demo tag to finish (it continues from here).
+----- 20261021T210238Z-promote-followup-judge/run.json (1625 chars) -----
+{
+  "run_id": "20261021T210238Z-promote-followup-judge",
+  "script": "judge",
+  "args": {
+    "items": "eval",
+    "tags": [
+      "Context-dependent"
+    ],
+    "pull": null,
+    "ids": [
+      "case-5c9d133e54864197a585599669353aff::Context-dependent",
+      "case-92f57020ce349b27b5e56f54068cbc05::Context-dependent"
+    ],
+    "limit": null,
+    "runs_max": null,
+    "rubric": null,
+    "refresh": false,
+    "driver": "cli"
+  },
+  "started_at": "2026-10-21T21:04:24.685Z",
+  "finished_at": "2026-10-21T21:04:24.760Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.2",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 judge --resume 20261021T210238Z-promote-followup-judge",
+  "status": "done",
+  "invocations": 1,
+  "item_ids": [
+    "case-5c9d133e54864197a585599669353aff::Context-dependent",
+    "case-92f57020ce349b27b5e56f54068cbc05::Context-dependent"
+  ],
+  "groups": [
+    {
+      "name": "G1",
+      "tags": [
+        "Context-dependent"
+      ],
+      "store": "550ad383ec93bf89",
+      "prompt": "sha256:01a188c2408e55f6",
+      "items": 2
+    }
+  ],
+  "refreshed": {},
+  "driver": "cli",
+  "model": "claude-sonnet-5-5",
+  "effort": "medium",
+  "prompt_version": "1",
+  "cli_version": "2.1.303 (Claude Code)",
+  "runs_max": 3,
+  "rubric_file": null,
+  "counts": {
+    "items": 2,
+    "read": 2,
+    "unsure": 0,
+    "reread": 2,
+    "failed": 0,
+    "failed_reread": 0
+  },
+  "capped": {
+    "G1": []
+  },
+  "calls": 0,
+  "failed_batches": 0,
+  "usage": {
+    "input": 0,
+    "cache_write": 0,
+    "cache_read": 0,
+    "output": 0
+  }
+}
+
+========== 20261021T210238Z-promote-record ==========
+----- 20261021T210238Z-promote-record/ledger.jsonl (479 chars) -----
+{"op_index":0,"table":"rule_changes","op":"update","key":"Groups known by standing role count; unknown names do not","page_id":"400273e2-14eb-8168-9891-e8edf50e6916","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:04:23.936Z"}
+{"op_index":1,"table":"agent_settings","op":"update","key":"Claim tagger","page_id":"400273e2-14eb-81c9-b06a-e48a3982cf69","status":"done","read_back":"ok","sent":"update","error":null,"at":"2026-10-21T21:04:24.676Z"}
+----- 20261021T210238Z-promote-record/plan.jsonl (676 chars) -----
+{"plan":{"run_id":"20261021T210238Z-promote-record","script":"promote","created_at":"2026-10-21T21:04:23.243Z","rubric_edition":"2026-10-21.2","counts":{"creates":0,"updates":2}}}
+{"op":"update","table":"rule_changes","key":"Groups known by standing role count; unknown names do not","page_id":"400273e2-14eb-8168-9891-e8edf50e6916","properties":{"Status":"Live","Safety check result":"PASS: examples 10/10, earlier 6/6, yours 2/2"},"expect":{"Status":"Approved"}}
+{"op":"update","table":"agent_settings","key":"Claim tagger","page_id":"400273e2-14eb-81c9-b06a-e48a3982cf69","properties":{"Rulebook edition":"2026-10-21.2","Last run summary":"Promote · 22 Oct 00:04 · PASS"}}
+----- 20261021T210238Z-promote-record/run.json (709 chars) -----
+{
+  "run_id": "20261021T210238Z-promote-record",
+  "script": "promote",
+  "args": {
+    "parent": "20261021T210238Z-promote"
+  },
+  "started_at": "2026-10-21T21:04:23.241Z",
+  "finished_at": "2026-10-21T21:04:24.678Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-10-21.2",
+  "pull_id": "20261021T210238Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo 20261021-2355-8c6602 promote --lesson \"Groups known by standing role count; unknown names do not\"",
+  "status": "done",
+  "plan": {
+    "creates": 0,
+    "updates": 2
+  },
+  "apply": {
+    "done": 2,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  }
+}

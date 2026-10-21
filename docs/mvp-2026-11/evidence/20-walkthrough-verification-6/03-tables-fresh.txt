@@ -1,0 +1,207 @@
+pull: 20261021T205635Z-pull
+
+== Claims (9) ==
+-- presspool: The press pool was justified in suspending coverage in solidarity with banned networks
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: ""
+   verified_tags: []
+   review_status: "To review"
+   challenged_notes: ""
+-- aiforce: The AI Force should enforce binding safety standards
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: ""
+   verified_tags: []
+   review_status: "To review"
+   challenged_notes: ""
+-- usps: The USPS ballot portal should not launch before the 2026 midterms
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: ""
+   verified_tags: []
+   review_status: "To review"
+   challenged_notes: ""
+-- georgia: Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: ""
+   verified_tags: []
+   review_status: "To review"
+   challenged_notes: ""
+-- cnn: Excluding CNN from Air Force One violates the federal court order
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: ["Context-dependent"]
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+-- dallas: The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: ["Context-dependent"]
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+-- contractor: A contractor's enforcement of safety restrictions constitutes a national security supply chain risk
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’."
+-- kennedy: Relocating the Kennedy Center Honors to a sports arena diminishes the prestige of the awards
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded."
+-- stopgap: December stopgap funding rewards Congress for avoiding a full budget
+   agent_tags: []
+   agent_confidence: null
+   agent_status: null
+   tags_waiting: []
+   agent_edition: ""
+   agent_remarks: ""
+   agent_reasons: ""
+   agent_reading: "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+   verified_tags: []
+   review_status: "Reviewed"
+   challenged_notes: "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it."
+
+== Tag decisions (ledger) (5) ==
+-- cnn: fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent
+   Agent proposal: "Does not apply"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Applies"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+   Decided under: ""
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · 8560829f"
+   decided: true
+-- dallas: 1bff859247ecdb618af41a397d2eb6ba::Context-dependent
+   Agent proposal: "Does not apply"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Applies"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded."
+   Decided under: ""
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · 8560829f"
+   decided: true
+-- contractor: 6dc1222aeb364918821167370d8fbc40::Context-dependent
+   Agent proposal: "Applies"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’."
+   Decided under: ""
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · 923e0a4b"
+   decided: true
+-- kennedy: 89fcfb7fc6684b63af7d829ed90106cd::Context-dependent
+   Agent proposal: "Applies"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded."
+   Decided under: ""
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · 6cfb0909"
+   decided: true
+-- stopgap: 3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent
+   Agent proposal: "Applies"
+   Agent confidence: null
+   Agent reason: ""
+   Rulebook edition: "2026-10-21.1"
+   Follow-up: null
+   Tag outcome: "Does not apply"
+   Why wrong: null
+   Your reasoning: "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it."
+   Decided under: ""
+   Agent reading: "Agent slip"
+   Rule: ""
+   Reading note: "Seeded from the audit of 9 October."
+   Read under: "2026-10-21.1 · fc77541c"
+   decided: true
+
+== Rule changes (0) ==
+
+== settings.json ==
+{
+  "page_id": "400273e2-14eb-81c9-b06a-e48a3982cf69",
+  "name": "Claim tagger",
+  "paused": false,
+  "rulebook_edition": "2026-10-21.1",
+  "last_run_summary": null
+}
+
+== rulebook When to use ==
+-- Context-dependent
+1. A pronoun with no antecedent inside the claim ("He said ...", "its predecessor", "they announced") makes the claim Context-dependent.
+2. A definite reference that needs an outside antecedent to identify it ("the vulnerabilities", "the discussions", "the recording", "the settlement terms", "the legal dispute", "recent actions") makes the claim Context-dependent, even when other entities in the claim are named.
+3. A descriptive definite that names a kind of thing but not which one ("the Bitcoin ETF", "the major-bank stablecoin consortium", "the open-access version", "the infrastructure", "the new model") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns ("the regulatory clearance", "the market").
+4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.
+5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.

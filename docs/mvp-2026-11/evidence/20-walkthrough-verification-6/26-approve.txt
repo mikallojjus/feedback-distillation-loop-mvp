@@ -1,0 +1,18 @@
+command: node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve --demo 20261021-2355-8c6602
+exit code: 0
+started: 2026-10-21T21:02:24Z
+ended:   2026-10-21T21:02:30Z (elapsed 6 s)
+head:    291f05d
+
+----- stdout -----
+Walkthrough: acting as the editor, the rule change "Groups known by standing role count; unknown names do not" is now Approved.
+
+| Column | Now |
+|---|---|
+| Status | Approved |
+
+Next: type /claim-tagger demo promote.
+----- stderr -----
+walkthrough: acting as the editor on practice page 20261021-2355-8c6602 (decision D31): Rule changes Groups known by standing role count; unknown names do not: Status
+----- lintReport(stdout) -----
+[]

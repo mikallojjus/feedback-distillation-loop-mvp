@@ -1,0 +1,62 @@
+==== store fd082dc83cbba323 (edition 2026-10-21.1, baseline; shared with the tag step)
+ run 1 cnn              ok    apply         0.9   Context-dependent rule 2  20261021T205719Z-judge 
+ run 1 dallas           ok    apply         0.72  Context-dependent rule 3  20261021T205719Z-judge 
+ run 1 usps             ok    apply         0.8   Context-dependent rule 3  20261021T205719Z-judge 
+ run 1 stopgap          ok    do_not_apply  0.1   Context-dependent rule 5  20261021T205719Z-judge 
+ run 1 presspool        ok    apply         0.85  Context-dependent rule 3  20261021T205719Z-judge 
+ run 1 contractor       ok    do_not_apply  0.07  Context-dependent rule 5  20261021T205719Z-judge 
+ run 1 kennedy          ok    do_not_apply  0.12  Context-dependent rule 5  20261021T205719Z-judge 
+ run 1 georgia          ok    do_not_apply  0.2   Context-dependent rule 5  20261021T205719Z-judge 
+ run 1 aiforce          ok    ask_editor    0.5   null                      20261021T205719Z-judge 
+ run 1 canary-1         ok    apply         0.9   Context-dependent rule 2  20261021T210238Z-promote-baseline 
+ run 1 canary-2         ok    apply         0.97  Context-dependent rule 1  20261021T210238Z-promote-baseline 
+ run 1 canary-3         ok    apply         0.85  Context-dependent rule 2  20261021T210238Z-promote-baseline 
+ run 1 canary-4         ok    apply         0.93  Context-dependent rule 2  20261021T210238Z-promote-baseline 
+ run 1 canary-5         ok    apply         0.93  Context-dependent rule 2  20261021T210238Z-promote-baseline 
+ run 1 canary-6         ok    apply         0.88  Context-dependent rule 3  20261021T210238Z-promote-baseline 
+ run 1 canary-7         ok    do_not_apply  0.03  null                      20261021T210238Z-promote-baseline 
+ run 1 canary-8         ok    do_not_apply  0.12  null                      20261021T210238Z-promote-baseline 
+ run 1 case-georgia     ok    do_not_apply  0.1   null                      20261021T210238Z-promote-baseline 
+ run 1 case-aiforce     ok    apply         0.6   Context-dependent rule 3  20261021T210238Z-promote-baseline 
+ run 1 case-cnn         ok    apply         0.92  Context-dependent rule 2  20261021T210238Z-promote-baseline 
+ run 1 canary-9         ok    do_not_apply  0.05  Context-dependent rule 5  20261021T210238Z-promote-baseline 
+ run 1 canary-10        ok    do_not_apply  0.02  Context-dependent rule 5  20261021T210238Z-promote-baseline 
+ run 1 case-dallas      ok    apply         0.72  Context-dependent rule 3  20261021T210238Z-promote-baseline 
+ run 1 case-usps        ok    apply         0.72  Context-dependent rule 3  20261021T210238Z-promote-baseline 
+ run 1 case-stopgap     ok    do_not_apply  0.15  null                      20261021T210238Z-promote-baseline 
+ run 1 case-presspool   ok    apply         0.78  Context-dependent rule 3  20261021T210238Z-promote-baseline 
+ run 1 case-contractor  ok    do_not_apply  0.08  Context-dependent rule 5  20261021T210238Z-promote-baseline 
+ run 1 case-kennedy     ok    do_not_apply  0.12  Context-dependent rule 5  20261021T210238Z-promote-baseline 
+ run 2 aiforce          ok    ask_editor    0.5   null                      20261021T205719Z-judge 
+ run 2 dallas           ok    do_not_apply  0.2   Context-dependent rule 5  20261021T205719Z-judge 
+ run 2 case-aiforce     ok    ask_editor    0.5   null                      20261021T210238Z-promote-baseline 
+ run 2 case-dallas      ok    apply         0.8   Context-dependent rule 3  20261021T210238Z-promote-baseline 
+ run 2 case-usps        ok    apply         0.78  Context-dependent rule 3  20261021T210238Z-promote-baseline 
+ run 2 case-presspool   ok    apply         0.88  Context-dependent rule 3  20261021T210238Z-promote 
+ run 3 dallas           ok    apply         0.8   Context-dependent rule 3  20261021T205719Z-judge 
+ run 3 case-aiforce     ok    ask_editor    0.45  null                      20261021T210238Z-promote-baseline 
+ run 3 case-presspool   ok    apply         0.85  Context-dependent rule 3  20261021T210238Z-promote 
+==== store 550ad383ec93bf89 (candidate)
+ run 1 canary-1         ok    apply         0.9   Context-dependent rule 2  20261021T210238Z-promote-candidate 
+ run 1 canary-2         ok    apply         0.97  Context-dependent rule 1  20261021T210238Z-promote-candidate 
+ run 1 canary-3         ok    apply         0.85  Context-dependent rule 2  20261021T210238Z-promote-candidate 
+ run 1 canary-4         ok    apply         0.93  Context-dependent rule 2  20261021T210238Z-promote-candidate 
+ run 1 canary-5         ok    apply         0.93  Context-dependent rule 2  20261021T210238Z-promote-candidate 
+ run 1 canary-6         ok    apply         0.92  Context-dependent rule 3  20261021T210238Z-promote-candidate 
+ run 1 canary-7         ok    do_not_apply  0.03  null                      20261021T210238Z-promote-candidate 
+ run 1 canary-8         ok    do_not_apply  0.1   Context-dependent rule 4  20261021T210238Z-promote-candidate 
+ run 1 canary-9         ok    do_not_apply  0.1   Context-dependent rule 5  20261021T210238Z-promote-candidate 
+ run 1 canary-10        ok    do_not_apply  0.02  Context-dependent rule 5  20261021T210238Z-promote-candidate 
+ run 1 case-dallas      ok    apply         0.8   Context-dependent rule 3  20261021T210238Z-promote-candidate 
+ run 1 case-usps        ok    apply         0.8   Context-dependent rule 3  20261021T210238Z-promote-candidate 
+ run 1 case-stopgap     ok    do_not_apply  0.15  Context-dependent rule 5  20261021T210238Z-promote-candidate 
+ run 1 case-presspool   ok    do_not_apply  0.2   Context-dependent rule 3  20261021T210238Z-promote-candidate 
+ run 1 case-contractor  ok    do_not_apply  0.08  Context-dependent rule 5  20261021T210238Z-promote-candidate 
+ run 1 case-kennedy     ok    do_not_apply  0.1   Context-dependent rule 5  20261021T210238Z-promote-candidate 
+ run 1 case-georgia     ok    do_not_apply  0.12  Context-dependent rule 5  20261021T210238Z-promote-candidate 
+ run 1 case-aiforce     ok    apply         0.8   Context-dependent rule 3  20261021T210238Z-promote-candidate 
+ run 1 case-cnn         ok    apply         0.93  Context-dependent rule 2  20261021T210238Z-promote-candidate 
+ run 2 case-presspool   ok    do_not_apply  0.15  Context-dependent rule 3  20261021T210238Z-promote 
+ run 2 case-aiforce     ok    apply         0.8   Context-dependent rule 3  20261021T210238Z-promote 
+ run 3 case-presspool   ok    do_not_apply  0.1   Context-dependent rule 3  20261021T210238Z-promote 
+ run 3 case-aiforce     ok    apply         0.8   Context-dependent rule 3  20261021T210238Z-promote 
