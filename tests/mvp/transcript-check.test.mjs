@@ -1146,7 +1146,7 @@ test('the report that sends the editor to Needs your note passes alone and with 
 
 // the report that asks the editor to reject a rule change that rests on a decision they now call the agent's slip (decision 79), and the checklist "Approve in Lessons waiting", Demo form, that covers it
 const RECANTED_REPORT = [
-  'Demo · Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting; the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent\'s slip (practice page Claim tagger practice · 15 Oct 14:22).',
+  'Demo · Distill: read 1 of your decisions; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you; the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent\'s slip (practice page Claim tagger practice · 15 Oct 14:22).',
   '',
   '| What | Result |',
   '|---|---|',

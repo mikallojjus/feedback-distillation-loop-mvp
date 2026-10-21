@@ -16,6 +16,9 @@
 //   - FAKE_CLAUDE_TABLE: the path of a JSON file { "<exact claim text>": answer }. An answer is { decision, p, rule_ref?, reason? } or a list of
 //     them: the n-th time the claim is answered, the n-th entry is used (the last one repeats). That is how a test makes a second read disagree
 //     with the first. rule_ref is "<Tag> rule 1" for apply and null otherwise unless the entry says; reason has a default.
+//     An entry that is the string "drop" (or { "drop": true }) leaves the claim out of the reply, as a model sometimes does: the reply is valid JSON
+//     but does not answer every claim of the batch, so the judge refuses it ("the claim ... is missing from the reply"). The answer is still counted
+//     as one read of the claim, so a list such as [ok, "drop", "drop", ok] makes the first two attempts of a batch fail and the third succeed.
 //   - without a table entry: p is spread over 0.05 to 0.95 (0.01 steps) by the hash, decision is apply when p >= 0.5.
 // A prompt that holds a line "# Distill" (in the system prompt or the message) is answered with a fixed lesson, one that holds "# Wording"
 // with one sentence; the shapes are { patterns: [{ lesson, rule, kind, proposed_text, keys }] } and { sentence }.
@@ -141,10 +144,12 @@ function kindOf(systemText, stdin) {
   return 'judge';
 }
 
+/** What a table entry says to do with a claim: null (leave it out of the reply) or the answer for one tag. */
 function answerFor(text, tag, table, readIndex) {
   const entry = Object.hasOwn(table, text) ? table[text] : undefined;
   if (entry === undefined) return fallbackAnswer(text, tag);
   const e = Array.isArray(entry) ? entry[Math.min(readIndex, entry.length - 1)] : entry;
+  if (e === 'drop' || e?.drop === true) return null;
   const ruleRef = Object.hasOwn(e, 'rule_ref') ? e.rule_ref : (e.decision === 'apply' ? `${tag.name} rule 1` : null);
   return { name: tag.name, decision: e.decision, p: e.p, rule_ref: ruleRef, reason: e.reason ?? `Fake table: ${e.decision} for ${tag.name}.` };
 }
@@ -276,7 +281,8 @@ export async function runFake({ args = [], stdin = '', env = process.env, state 
   else {
     const tags = parseTags(systemText);
     const table = loadTable(env);
-    const items = claims.map((c) => ({ id: c.id, tags: tags.map((t) => answerFor(c.text, t, table, st.reads[c.text] ?? 0)) }));
+    const answered = claims.map((c) => ({ id: c.id, tags: tags.map((t) => answerFor(c.text, t, table, st.reads[c.text] ?? 0)) }));
+    const items = answered.filter((it) => it.tags.every((t) => t !== null)); // a claim whose entry says "drop" is left out of the reply
     if (!garbled) for (const c of claims) st.reads[c.text] = (st.reads[c.text] ?? 0) + 1;
     result = JSON.stringify({ items });
   }

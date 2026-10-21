@@ -46,7 +46,8 @@
 //   i closing-lines  Step 7 ends with "What the full version adds later", three bullets, and "Archive this page by hand"
 //   j help           the "## Help" section holds the two-column Agent reading table (a header and exactly four value rows: Agent slip, Rule
 //                    unclear, Rule should change and (nothing to read), the agreeing decision), a "Words used on this page" list of exactly ten
-//                    lines and an "If something stops" list of exactly three (paused, the Claude allowance, the rulebook text edited by hand)
+//                    lines and an "If something stops" list of exactly four (paused, the Claude allowance, answers that could not be read, the
+//                    rulebook text edited by hand)
 //   k captions       with a manifest: every table in a step's `affects` has a bold caption line `**<Table>**` in that step; always: the
 //                    caption `**Agent settings**` appears in Step 6 only
 //   l views          exactly two {{view:...}} lines, Your queue inside Step 3 and Lessons waiting inside Step 5 (or none, the no-views
@@ -797,7 +798,7 @@ function checkHelp(lines, helpAt, tables, add) {
       if (plainCell(row.cells[0]) !== values[k]) add('j', row.line, `row ${k + 1} of the Agent reading table should be "${values[k]}"`);
     });
   }
-  for (const [label, count, name] of [['words used on this page', 10, 'words list'], ['if something stops', 3, '"If something stops" list']]) {
+  for (const [label, count, name] of [['words used on this page', 10, 'words list'], ['if something stops', 4, '"If something stops" list']]) {
     const at = lines.findIndex((text, i) => i > helpAt && text.toLowerCase().includes(label));
     if (at === -1) {
       add('j', helpAt + 1, `the Help section has no "${label.charAt(0).toUpperCase()}${label.slice(1)}" label above the ${name}`);

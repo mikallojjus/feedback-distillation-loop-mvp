@@ -186,6 +186,67 @@ test('promote PASS: a real flip that the extra reads confirm FAILs', async () =>
   assert.equal(readJson(join(r.runDir, 'card.json')).verdict, 'FAIL');
 });
 
+// The extra reads that settle a flipped answer (lib/answers.mjs forceRuns) are the safety check's own. When the model leaves a claim out of the reply twice, the batch's items get error
+// lines in run 3 of the candidate's store, and the check stops with "type promote again; it continues where it stopped". That has to be true: the judge that the next promote runs first
+// must not count those lines (its own plan asked for no third read of them), so that the check reaches the extra reads again and makes them.
+const LEFT_OUT = 'drop'; // a table entry of the fake CLI: the claim is left out of the reply
+const run3Rows = (dir) => (existsSync(join(dir, 'run-3.jsonl')) ? readJsonl(join(dir, 'run-3.jsonl')).rows : []);
+const storeWithErrors = (w) => storeDirs(w).find((dir) => run3Rows(dir).some((l) => l.status === 'error')); // the candidate's store: the live one had its extra reads
+const extraReadWords = /2 extra read\(s\) could not be used/;
+
+test('promote: an extra read that comes back without a claim twice stops the check with exit 2 and nothing written; the next promote makes only that read again and passes', async () => {
+  const no = { decision: 'do_not_apply', p: 0.1 };
+  // reads of claim 1 in order: baseline run 1, run 2 (it is unsure), candidate run 1 (sure), baseline run 3 (extra), candidate run 2 (extra), run 3 twice (left out), then the next promote's run 3
+  const w = await promoteWorld({ overrides: { [claimText(1)]: [no, no, no, no, no, LEFT_OUT, LEFT_OUT, no] } });
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 2, 'the candidate\'s third read of the two flipped rows could not be used');
+  assert.match(h.io.errs.join('\n'), extraReadWords);
+  assert.equal(r.report.sentence, 'Promote stopped: some answers could not be read again, so the check could not be finished; nothing was written to Notion.');
+  assert.equal(r.report.next, 'Next: type /claim-tagger promote again; it continues where it stopped.');
+  assert.deepEqual(lintReport(r.markdown), []);
+  assert.deepEqual(w.writes(), [], 'nothing was written to Notion');
+  assert.equal(w.row('rule_changes', TITLE).Status, 'Approved');
+  const store = storeWithErrors(w);
+  assert.ok(store, 'the candidate\'s store holds error lines in run 3');
+  const failed = run3Rows(store);
+  assert.deepEqual(failed.map((l) => [l.id, l.status]), [[`case-${keyOf(1)}`, 'error'], [`case-${keyOf(2)}`, 'error']], 'both rows of the batch got an error line in run 3 of the candidate');
+  assert.match(failed[0].error, /is missing from the reply/);
+  assert.equal(existsSync(lockFile(w)), false);
+
+  // the same command again, the fake answering: the judge no longer stops on those lines, and only the missing read is asked for
+  const before = w.calls().length;
+  const h2 = w.hooks();
+  const again = await promote(h2);
+  assert.equal(again.exit, 0, h2.io.errs.join('\n'));
+  assert.equal(again.report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed.');
+  const fresh = w.calls().slice(before);
+  assert.deepEqual(fresh.map((c) => c.ids), [[`case-${keyOf(1)}`, `case-${keyOf(2)}`]], 'one call: the third read of the two rows, nothing else was judged again');
+  assert.ok(callsHolding(w, MARK).includes(fresh[0]), 'and it was for the candidate');
+  assert.deepEqual(run3Rows(store).map((l) => l.status), ['error', 'error', 'ok', 'ok'], 'the retry is a new line after the error: the last one wins');
+  assert.deepEqual(readJson(join(again.runDir, 'card.json')).flips.map((f) => [f.id, f.from, f.to]), [[keyOf(1), 'ask_editor', 'do_not_apply'], [keyOf(2), 'ask_editor', 'do_not_apply']]);
+  assert.equal(w.row('rule_changes', TITLE).Status, 'Live');
+});
+
+test('promote: an extra read that fails again stops at the extra read once more, not in the judge; the third promote passes', async () => {
+  const no = { decision: 'do_not_apply', p: 0.1 };
+  const w = await promoteWorld({ overrides: { [claimText(1)]: [no, no, no, no, no, LEFT_OUT, LEFT_OUT, LEFT_OUT, LEFT_OUT, no] } });
+  const first = await promote(w.hooks());
+  assert.equal(first.exit, 2);
+  const before = w.calls().length;
+  const h = w.hooks();
+  const second = await promote(h);
+  assert.equal(second.exit, 2, 'the model left the claim out again');
+  assert.match(h.io.errs.join('\n'), extraReadWords, 'it stopped at the extra read it retried, not at the judge before it');
+  assert.ok(!/could not be read again \(error lines/.test(h.io.errs.join('\n')), 'the judge did not stop on the lines of the extra read');
+  assert.equal(second.report.next, 'Next: type /claim-tagger promote again; it continues where it stopped.');
+  assert.deepEqual(w.writes(), []);
+  assert.deepEqual(w.calls().slice(before).map((c) => c.ids), Array(2).fill([`case-${keyOf(1)}`, `case-${keyOf(2)}`]), 'the missing read was asked for again (two attempts) and nothing else was');
+  const third = await promote(w.hooks());
+  assert.equal(third.exit, 0);
+  assert.equal(readJson(join(third.runDir, 'card.json')).verdict, 'PASS');
+});
+
 test('promote PASS: an Editor wording is the text that is tested and that goes live, and the report says it is the editor\'s wording', async () => {
   const wording = '4. Test: a general reference needs no answer unless it points at one person; every other definite reference must point at one specific thing.';
   const w = await promoteWorld({ wording, mark: 'unless it points at one person' });

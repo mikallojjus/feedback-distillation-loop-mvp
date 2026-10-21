@@ -68,6 +68,6 @@ Next: open Your queue (link) and decide your four claims.
 
 - `references/manifest.md`: the practice page's content (the nine claims, the five claims Reviewed earlier, the four claims the editor decides, the example claims), how to change it, and the calibration a change must pass.
 - `references/page-design.md`: the page template, the fixed format of the seven steps, the table limits, the banned words, the tables and views of the page, and what `W verify` checks.
-- `references/troubleshooting.md`: a stop halfway, a stop when the allowance ran out, a run that stopped before step 7, a FAIL at step 6, a paused agent, a hand edit to the rulebook.
+- `references/troubleshooting.md`: a stop halfway, a stop when the allowance ran out, a stop when some answers could not be read, a run that stopped before step 7, a FAIL at step 6, a paused agent, a hand edit to the rulebook.
 - `references/report-examples.md`: every report, as the editor sees it, and one report followed by its checklist.
 - `.claude/skills/claim-tagger/references/guide.md`: the checklists that follow a report whose Next line sends the editor to Notion (shared with the claim-tagger skill, in the words of the page).

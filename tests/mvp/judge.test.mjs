@@ -328,6 +328,10 @@ test('planReruns: run 2 for the unsure items, lowest margin first, at most floor
   assert.deepEqual(again.run3, ['c05'], 'c05 went from do_not_apply to apply between its first two reads');
   const done3 = planReruns({ items, run1, run2, run3: new Map([[ids[4], lineOf(items[4], 'apply', 0.6)]]), rerun });
   assert.deepEqual(done3.run3, [], 'an ok third read is not asked again');
+  const errorLine = (i) => lineOf(items[i - 1], 'apply', 0.6, { status: 'error', error: 'x', tags: [] });
+  assert.deepEqual(planReruns({ items, run1, run2, run3: new Map([[ids[4], errorLine(5)]]), rerun }).run3, ['c05'], 'a failed third read where the first two disagree is asked again');
+  assert.deepEqual(planReruns({ items, run1, run2, run3: new Map([[ids[2], errorLine(3)], [ids[0], errorLine(1)]]), rerun }).run3, ['c05'],
+    'an error line in run 3 of a claim whose first two reads agree (c03), or that has no second read (c01), asks for nothing: it is somebody else\'s read, and the judge does not count it (summarize)');
 
   // one second read is missing (it failed): the budget is the cap minus the ones that are done
   const partial = new Map([[ids[2], lineOf(items[2], 'ask_editor', 0.5)], [ids[4], lineOf(items[4], 'apply', 0.55, { status: 'error', error: 'x', tags: [] })]]);
@@ -1002,6 +1006,102 @@ test('a second read that fails both attempts leaves error lines in run 2, ends t
   assert.equal(again.exit, 0, again.io.errs.join('\n'));
   assert.deepEqual(fakeState.log.slice(4).map((l) => l.ids), [['c03', 'c05', 'c08'], ['c05']], 'the same three are asked again (an error line is not a read), and then the disagreement');
   assert.deepEqual(runJson(again).counts, { items: 12, read: 12, unsure: 4, reread: 3, failed: 0, failed_reread: 0 });
+});
+
+/** An error line as another reader of the store (the safety check's extra read) leaves it: appended to run <run> of a store, for the current text of the claim. */
+function addErrorLine(root, key16, run, id, text, why = 'the claim is missing from the reply') {
+  const call = { run_id: 'extra-read', batch: 1, attempt: 2, cli_version: null, usage: { input: 0, cache_write: 0, cache_read: 0, output: 0 } };
+  const file = join(root, 'runs', 'judgments', key16, `run-${run}.jsonl`);
+  writeFileSync(file, `${existsSync(file) ? readFileSync(file, 'utf8') : ''}${JSON.stringify({ id, item_hash: itemHash(text), status: 'error', error: why, tags: [], call })}\n`);
+}
+
+test('an error line in a run that the judge\'s own plan did not ask for is neither counted, nor read again, nor does it stop the run', async () => {
+  const { root } = makeRoot();
+  const fakeState = {};
+  const first = await go(root, { table: scenarioTable(), fakeState });
+  assert.equal(first.exit, 0, first.io.errs.join('\n'));
+  assert.equal(fakeState.calls, 4);
+  const key16 = key16Of(first);
+
+  // someone else's extra reads that failed: a third read of a sure claim (it has no second read), of c03 (its first two reads agree), a second read of c02 (sure after its first),
+  // and of c10, which is unsure but was left out by the cap; run 3 of c05 is not among them, because c05 flipped and has a good third read
+  addErrorLine(root, key16, 3, claimId(1), claimText(1));
+  addErrorLine(root, key16, 3, claimId(3), claimText(3));
+  addErrorLine(root, key16, 2, claimId(2), claimText(2));
+  addErrorLine(root, key16, 2, claimId(10), claimText(10));
+  const before = ['1', '2', '3'].map((n) => readFileSync(join(root, 'runs', 'judgments', key16, `run-${n}.jsonl`), 'utf8'));
+  const again = await go(root, { table: scenarioTable(), fakeState });
+  assert.equal(again.exit, 0, again.io.errs.join('\n'));
+  assert.equal(again.status, 'done');
+  assert.equal(fakeState.calls, 4, 'the judge did not read any of them again: they are not its reads');
+  assert.deepEqual(['1', '2', '3'].map((n) => readFileSync(join(root, 'runs', 'judgments', key16, `run-${n}.jsonl`), 'utf8')), before, 'and it left the store as it was');
+  assert.deepEqual(runJson(again).counts, { items: 12, read: 12, unsure: 4, reread: 3, failed: 0, failed_reread: 0 });
+  assert.deepEqual(runJson(again).capped, { G1: ['c10'] });
+  assert.equal(assertReport(again).sentence, 'Judge: read 12 claims for Context-dependent; 4 unsure.');
+  assert.deepEqual(reportJson(again).rows.map((row) => row[0]), ['Claims read', 'Unsure', 'Re-read'], 'no "Could not be read again" row');
+  assert.doesNotMatch(again.io.errs.join('\n'), /could not be read/);
+
+  // with --runs-max 1 no read after the first is asked for at all, so no error line after the first counts, not even one in a run the claim has a good line in
+  addErrorLine(root, key16, 2, claimId(3), claimText(3));
+  const one = await go(root, { table: scenarioTable(), fakeState, runsMax: 1 });
+  assert.equal(one.exit, 0, one.io.errs.join('\n'));
+  assert.equal(runJson(one).counts.failed_reread, 0);
+  assert.equal(fakeState.calls, 4);
+});
+
+test('a third read that the plan asks for (the first two disagree) and that fails both attempts is still "could not be read again"; the lines of reads it did not ask for are not counted with it', async () => {
+  const { root } = makeRoot();
+  const fakeState = {};
+  // run 1: two good calls; run 2: one good call (c03, c05, c08); run 3: c05 flipped between its first two reads, and both attempts fail
+  const r = await go(root, { table: scenarioTable(), fakeState, env: { FAKE_CLAUDE_MODE: 'invalid-always', FAKE_CLAUDE_AFTER: '3' } });
+  assert.equal(r.exit, 2);
+  assert.equal(fakeState.calls, 5, 'run 1: two calls; run 2: one; run 3: one batch, two bad attempts');
+  const key16 = key16Of(r);
+  assert.deepEqual(cellRows(root, key16, 3).map((l) => [l.id, l.status]), [['c05', 'error']]);
+  addErrorLine(root, key16, 3, claimId(3), claimText(3)); // c03's first two reads agree: nobody asked for a third, and this line must not add to the count
+  const still = await go(root, { table: scenarioTable(), fakeState, env: { FAKE_CLAUDE_MODE: 'invalid-always', FAKE_CLAUDE_AFTER: '5' } });
+  assert.equal(still.exit, 2, 'the model still fails: the third read of c05 was asked for again and failed again');
+  assert.equal(fakeState.calls, 7, 'two more bad attempts, for c05 alone');
+  assert.deepEqual(fakeState.log.slice(5).map((l) => l.ids), [['c05'], ['c05']]);
+  assert.deepEqual(runJson(still).counts, { items: 12, read: 12, unsure: 4, reread: 3, failed: 0, failed_reread: 1 });
+  const report = assertReport(still);
+  assert.equal(report.sentence, 'Judge: read 12 claims for Context-dependent; 4 unsure; 1 could not be read again.');
+  assert.equal(report.next, 'Next: type /claim-tagger tag again to read them again (it continues from here).');
+
+  const fixed = await go(root, { table: scenarioTable(), fakeState });
+  assert.equal(fixed.exit, 0, fixed.io.errs.join('\n'));
+  assert.deepEqual(fakeState.log.slice(7).map((l) => l.ids), [['c05']], 'the read it asked for is made, and only that one');
+  assert.deepEqual(runJson(fixed).counts, { items: 12, read: 12, unsure: 4, reread: 3, failed: 0, failed_reread: 0 });
+});
+
+test('the tag step and the safety check share a store (one key for the rulebook in force); an extra read of the safety check that failed stops neither of them', async () => {
+  const canaries = [
+    { id: 'canary-1', tag: 'Context-dependent', claim: 'A pronoun with no antecedent: this one is wrong.', expected: 'apply', source: 'x' },
+    { id: 'canary-2', tag: 'Context-dependent', claim: 'The 2024 budget was approved on 5 March.', expected: 'do_not_apply', source: 'x' },
+  ];
+  const { root } = makeRoot({ n: 6, canaries });
+  const fakeState = {};
+  const table = { ...scenarioTable(6), [canaries[0].claim]: { decision: 'apply', p: 0.9 }, [canaries[1].claim]: { decision: 'do_not_apply', p: 0.1 } };
+  const tag = await go(root, { table, fakeState, items: 'claims' });
+  const check = await go(root, { table, fakeState, items: 'eval' });
+  assert.equal(tag.exit, 0, tag.io.errs.join('\n'));
+  assert.equal(check.exit, 0, check.io.errs.join('\n'));
+  assert.equal(key16Of(tag), key16Of(check), 'the same rulebook, the same store: the claims and the examples are lines of one folder, told apart by their ids');
+  assert.deepEqual(storeDirs(root), [key16Of(tag)]);
+  const key16 = key16Of(tag);
+
+  // the safety check read the two examples a second and a third time (as it does for a flipped answer) and the model failed to answer: error lines, in the store of both steps
+  addErrorLine(root, key16, 2, 'canary-1', canaries[0].claim);
+  addErrorLine(root, key16, 3, 'canary-1', canaries[0].claim);
+  addErrorLine(root, key16, 3, 'canary-2', canaries[1].claim);
+  const calls = fakeState.calls;
+  const tagAgain = await go(root, { table, fakeState, items: 'claims' });
+  assert.equal(tagAgain.exit, 0, tagAgain.io.errs.join('\n'));
+  assert.equal(assertReport(tagAgain).sentence, 'Judge: read 6 claims for Context-dependent; 2 unsure.');
+  const checkAgain = await go(root, { table, fakeState, items: 'eval' });
+  assert.equal(checkAgain.exit, 0, checkAgain.io.errs.join('\n'));
+  assert.deepEqual(runJson(checkAgain).counts, { items: 2, read: 2, unsure: 0, reread: 0, failed: 0, failed_reread: 0 }, 'the examples are sure after their first read; the lines of the extra reads are the safety check\'s to retry');
+  assert.equal(fakeState.calls, calls, 'neither judge asked the model anything');
 });
 
 test('a group none of whose items is about its tags is left out: no prompt, no store; the same holds for --refresh', async () => {

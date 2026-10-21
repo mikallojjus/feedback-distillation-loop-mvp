@@ -52,14 +52,14 @@
 // Exit codes: 0 ok (also when nothing qualifies, when some rows could not be read, and when a rule change was drafted from earlier readings although no row could be read this time),
 // 1 stopped (the same command continues), 2 invalid (also: rows were to be read, none could be, and no rule change was drafted), 3 paused, 4 drift or another model, 75 usage window.
 //
-// Exports: distill, citedRule, buildGroups, buildMessage, checkReply, ngramOverlap, supportingCell, uniqueTitle, main, USAGE.
+// Exports: distill, citedRule, buildGroups, openRuleReason, buildMessage, checkReply, ngramOverlap, supportingCell, uniqueTitle, main, USAGE.
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf, readingSettings, tableEntry } from './lib/config.mjs';
 import { READINGS, RULE_WHY, isFollowedUp, isReviewed, syncDecisions } from './lib/decisions.mjs';
-import { approveNext, cutText, plural, quoted, recantedNext, stampOf, viewLink } from './lib/editor-words.mjs';
+import { approveNext, cutText, listNames, plural, quoted, recantedNext, stampOf, viewLink } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
 import {
   LoopExit, addSettingsOp, applyStep, assertApplied, callModel, judgeSettings, liveRubric, modelStop, needClaimColumns, needTables, parseCli, readEvals, resumeLine, runPreflight, supportingKeysOf, takePull, withRun,
@@ -134,7 +134,8 @@ function chooseShown(rows, cap) {
 
 /**
  * The groups of decided rows to ask the model about. `queue` is the pull's Tag decisions rows (as they will be once the readings are written), `rubric` the rulebook in force, `openLessons` the
- * lessons with Status Proposed or Approved ({ Tag, Rule }). Returns { groups, counts } with counts { decided, ruleRows, ruleRowsFollowed, ruleRowsNotJudged, groupsTooSmall, groupsOpen }.
+ * lessons with Status Proposed or Approved ({ Tag, Rule }). Returns { groups, counts, waiting } with counts { decided, ruleRows, ruleRowsFollowed, ruleRowsNotJudged, groupsTooSmall, groupsOpen }
+ * and waiting, the groups left out because their rule already has an open lesson: [{ tag, n, rows }] with the number of decisions in each (the words of openRuleReason).
  * Only rows that point at a rule build groups (pointsAtRule: the Agent reading is Rule unclear or Rule should change, and the editor wrote a note): a row read Agent slip, a row not read and a
  * reading of a decision without a note (its Reading note opens "without your note", decision 78) build none. A decision without a note is no counter-evidence either; it still counts in `decided`.
  * A row whose Follow-up is Fixed is counted in ruleRows and ruleRowsFollowed and builds no group: a rule change that rests on it went live and the agent agrees. A row marked Still wrong
@@ -164,6 +165,7 @@ export function buildGroups({ queue, rubric, config, minClaims = 2, rowCap = DEF
   }
   const open = openLessons.map((l) => ({ tag: l.Tag, n: ruleNumberOf(l.Rule) }));
   const groups = [];
+  const waiting = [];
   for (const g of byGroup.values()) {
     const claims = new Set(g.rows.map((r) => r.key));
     if (claims.size < minClaims) {
@@ -172,6 +174,7 @@ export function buildGroups({ queue, rubric, config, minClaims = 2, rowCap = DEF
     }
     if (g.n !== null && open.some((o) => o.tag === g.tag && o.n === g.n)) {
       counts.groupsOpen += 1;
+      waiting.push({ tag: g.tag, n: g.n, rows: claims.size });
       continue;
     }
     const shown = chooseShown(g.rows, rowCap);
@@ -185,7 +188,26 @@ export function buildGroups({ queue, rubric, config, minClaims = 2, rowCap = DEF
     groups.push({ tag: g.tag, n: g.n, rows: g.rows, shown, counter, current: g.n === null ? null : tag.rules.find((x) => x.n === g.n).text });
   }
   groups.sort((a, b) => b.rows.length - a.rows.length || (a.tag < b.tag ? -1 : a.tag > b.tag ? 1 : (a.n ?? 0) - (b.n ?? 0)));
-  return { groups, counts };
+  return { groups, counts, waiting };
+}
+
+/**
+ * Why distill drafts nothing when every group of decisions that points at a rule has a rule change waiting (Proposed or Approved), from buildGroups' `waiting` ([{ tag, n, rows }]):
+ *   one group    "the 2 decisions that point at rule 3 already have a rule change waiting for you" ("the decision that points at rule 3 already has ..." for one)
+ *   several      "the decisions that point at rules 3 and 4 already have a rule change waiting for you" (no count: it would add decisions that may share a rule change)
+ * `named`: the rulebook judges more than one tag, so each rule keeps its tag ("Context-dependent rule 3 and Wordy rule 1"), as promote names a rule then.
+ */
+export function openRuleReason(waiting, { named = false } = {}) {
+  const ordered = [...waiting].sort((a, b) => (a.tag < b.tag ? -1 : a.tag > b.tag ? 1 : a.n - b.n));
+  const label = (g) => `${named ? `${g.tag} ` : ''}rule ${g.n}`;
+  if (ordered.length === 1) {
+    const [only] = ordered;
+    return only.rows === 1
+      ? `the decision that points at ${label(only)} already has a rule change waiting for you`
+      : `the ${only.rows} decisions that point at ${label(only)} already have a rule change waiting for you`;
+  }
+  const rules = named ? listNames(ordered.map(label)) : `rules ${listNames(ordered.map((g) => g.n))}`;
+  return `the decisions that point at ${rules} already have a rule change waiting for you`;
 }
 
 // ---- the message --------------------------------------------------------------------------------------------------------------------
@@ -476,7 +498,7 @@ export async function distill(opts = {}) {
     const groupQueue = queue.map((r) => (unreadKeys.has(r.Key) ? { ...r, 'Agent reading': null, Rule: null, 'Reading note': null } : r));
     const lessons = ctx.pull.lessons() ?? [];
     const openLessons = lessons.filter((l) => l.Status === 'Proposed' || l.Status === 'Approved');
-    const { groups, counts } = buildGroups({ queue: groupQueue, rubric, config: ctx.config, minClaims: cfg.min_claims, rowCap, openLessons });
+    const { groups, counts, waiting } = buildGroups({ queue: groupQueue, rubric, config: ctx.config, minClaims: cfg.min_claims, rowCap, openLessons });
     ctx.record.groups = groups.map((g) => ({ tag: g.tag, rule: g.n, rows: g.rows.length, shown: g.shown.map((r) => r.key), counter: g.counter.map((r) => r.key) }));
 
     // a rule change that is Proposed or Approved and rests on a decision whose reading no longer points at a rule (re-read as Agent slip after a reason word or a changed note, or no longer a
@@ -641,7 +663,7 @@ export async function distill(opts = {}) {
       else if (counts.ruleRows === 0 && unreadN > 0) why = 'none of the decisions read so far names a rule problem';
       else if (counts.ruleRows === 0) why = counts.decided === 0 ? 'no row is decided yet' : `${plural(counts.decided, 'decided row')} ${counts.decided === 1 ? 'names' : 'name'} no rule problem`;
       else if (counts.ruleRowsFollowed === counts.ruleRows) why = 'a rule change was already made for every decided row that names a rule problem';
-      else if (counts.groupsOpen > 0 && groups.length === 0) why = 'the rules the rows point at already have a rule change waiting';
+      else if (counts.groupsOpen > 0 && groups.length === 0) why = openRuleReason(waiting, { named: rubric.tags.filter((t) => t.judged && groupOf(ctx.config, t.name) !== null).length > 1 });
       else if (counts.ruleRowsNotJudged === counts.ruleRows - counts.ruleRowsFollowed) why = 'the rows that name a rule problem are about tags the agent does not judge yet';
       else if (groups.length === 0) why = `no rule has ${cfg.min_claims} decided rows pointing at it yet`;
       else why = 'the rows do not point at a change that is safe to make';

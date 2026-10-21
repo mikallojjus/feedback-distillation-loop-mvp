@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  buildGroups, buildMessage, checkReply, citedRule, distill, main, ngramOverlap, supportingCell, uniqueTitle,
+  buildGroups, buildMessage, checkReply, citedRule, distill, main, ngramOverlap, openRuleReason, supportingCell, uniqueTitle,
 } from '../../agents/claim-tagger-mvp/scripts/distill.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
@@ -97,6 +97,8 @@ test('buildGroups: a group that already has an open lesson on the same tag and r
   const base = { queue, rubric: w.rubric(), config: w.config, minClaims: 2 };
   assert.equal(buildGroups({ ...base, openLessons: [{ Tag: 'Context-dependent', Rule: 'Context-dependent rule 4' }] }).counts.groupsOpen, 1);
   assert.deepEqual(buildGroups({ ...base, openLessons: [{ Tag: 'Context-dependent', Rule: 'Context-dependent rule 4' }] }).groups, []);
+  assert.deepEqual(buildGroups({ ...base, openLessons: [{ Tag: 'Context-dependent', Rule: 'Context-dependent rule 4' }] }).waiting, [{ tag: 'Context-dependent', n: 4, rows: 2 }], 'the skipped group is named with its number of decisions');
+  assert.deepEqual(buildGroups({ ...base, openLessons: [{ Tag: 'Context-dependent', Rule: 'Context-dependent rule 3' }] }).waiting, [], 'a lesson on another rule skips nothing');
   assert.equal(buildGroups({ ...base, openLessons: [{ Tag: 'Context-dependent', Rule: 'Context-dependent rule 3' }] }).groups.length, 1, 'another rule');
   assert.equal(buildGroups({ ...base, openLessons: [] }).groups.length, 1);
 });
@@ -390,13 +392,38 @@ test('distill: decided rows that name no rule problem give "N decided rows name 
   assert.equal((await distill(one.hooks())).report.sentence, 'Distill: nothing new to read; no rule change to draft; 1 decided row names no rule problem.');
 });
 
+test('openRuleReason: the decisions that wait behind a rule change, counted for one rule, without a count for several, named by tag when the rulebook judges more than one', () => {
+  const g = (tag, n, rows) => ({ tag, n, rows });
+  assert.equal(openRuleReason([g('Context-dependent', 3, 2)]), 'the 2 decisions that point at rule 3 already have a rule change waiting for you');
+  assert.equal(openRuleReason([g('Context-dependent', 3, 7)]), 'the 7 decisions that point at rule 3 already have a rule change waiting for you');
+  assert.equal(openRuleReason([g('Context-dependent', 3, 1)]), 'the decision that points at rule 3 already has a rule change waiting for you', 'one decision: singular, no count');
+  assert.equal(openRuleReason([g('Context-dependent', 4, 3), g('Context-dependent', 3, 2)]), 'the decisions that point at rules 3 and 4 already have a rule change waiting for you', 'two rules: in order, no count');
+  assert.equal(openRuleReason([g('Context-dependent', 4, 2), g('Context-dependent', 2, 2), g('Context-dependent', 3, 2)]), 'the decisions that point at rules 2, 3 and 4 already have a rule change waiting for you');
+  assert.equal(openRuleReason([g('Context-dependent', 3, 2)], { named: true }), 'the 2 decisions that point at Context-dependent rule 3 already have a rule change waiting for you');
+  assert.equal(openRuleReason([g('Wordy', 1, 2), g('Context-dependent', 3, 2)], { named: true }), 'the decisions that point at Context-dependent rule 3 and Wordy rule 1 already have a rule change waiting for you', 'each rule keeps its tag');
+  assert.deepEqual(lintReport(`Distill: nothing new to read; no rule change to draft; ${openRuleReason([g('Context-dependent', 3, 2)])}.\n\nNext: type /claim-tagger status to see what is open.\n`), [], 'the sentence passes the report lint');
+});
+
+test('distill: when two rules each have a rule change waiting, the sentence names both rules and counts no decisions', async () => {
+  const w = await makeWorld({
+    claims: 6,
+    queue: [row(1), row(2), row(3, { Rule: 'Context-dependent rule 3' }), row(4, { Rule: 'Context-dependent rule 3' })],
+    lessons: [lesson('A lesson on rule 4'), lesson('A lesson on rule 3', { Rule: 'Context-dependent rule 3', Status: 'Approved' })],
+  });
+  const h = w.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(w.calls().length, 0);
+  assert.equal(assertReport(h, r).sentence, 'Distill: nothing new to read; no rule change to draft; the decisions that point at rules 3 and 4 already have a rule change waiting for you.');
+});
+
 test('distill: a group that already has an open lesson on the same rule is not asked about, and an approved one counts as open too', async () => {
   for (const status of ['Proposed', 'Approved']) {
     const w = await makeWorld({ claims: 4, queue: [row(1), row(2)], lessons: [lesson('An earlier lesson', { Status: status })] });
     const r = await distill(w.hooks());
     assert.equal(r.exit, 0);
     assert.equal(w.calls().length, 0, status);
-    assert.equal(r.report.sentence, 'Distill: nothing new to read; no rule change to draft; the rules the rows point at already have a rule change waiting.');
+    assert.equal(r.report.sentence, 'Distill: nothing new to read; no rule change to draft; the 2 decisions that point at rule 4 already have a rule change waiting for you.');
     assert.equal(w.rows('rule_changes').length, 1);
   }
   const w = await makeWorld({ claims: 4, queue: [row(1), row(2)], lessons: [lesson('A finished lesson', { Status: 'Live' }), lesson('A rejected lesson', { Status: 'Rejected' })] });
@@ -737,7 +764,7 @@ test('the story, a second run: no reading call, no second lesson, and nothing wr
   assert.equal(readJsonl(join(r.runDir, 'readings.jsonl')).rows.length, 0, 'and no reading');
   assert.equal(callLines(r).length, 0, 'and no call of any kind: the open lesson blocks the group');
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: nothing new to read; no rule change to draft; the rules the rows point at already have a rule change waiting.');
+  assert.equal(report.sentence, 'Distill: nothing new to read; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you.');
   assert.equal((report.rows ?? []).length, 0);
   assert.ok(w.writes().length - before <= 1, 'only the Agent settings line');
 });
@@ -761,7 +788,7 @@ test('a changed note re-reads that one row, a reason word the editor adds is tak
   assert.notEqual(pressRow()['Read under'], was, 'the Read under follows the note');
   assert.equal(w.row('tag_decisions', keyOf(AI))['Agent reading'], 'Rule unclear', 'the other rows are as they were');
   assert.equal(w.claim(claimId(PRESS))['Agent reading'], 'Context-dependent: Rule should change, rule 3 · Rule 3 decides against a named body, so it would have to say so.', 'and the claim line follows');
-  assert.equal(assertReport(h, r).sentence, 'Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting.');
+  assert.equal(assertReport(h, r).sentence, 'Distill: read 1 of your decisions; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you.');
 
   // a reason word the editor adds: verbatim, no call
   const reads = readingCalls(w).length;
@@ -884,7 +911,7 @@ test('a rule change that rests on a decision the editor later calls the agent\'s
 
   // nothing changed: the second run has nothing to say about the draft
   const quiet = await distill(w.hooks());
-  assert.match(quiet.report.sentence, /^Distill: nothing new to read; no rule change to draft; the rules the rows point at already have a rule change waiting\.$/);
+  assert.equal(quiet.report.sentence, 'Distill: nothing new to read; no rule change to draft; the 3 decisions that point at rule 3 already have a rule change waiting for you.', 'the draft rests on three decisions');
   assert.equal(quiet.report.next, `Next: approve or reject the rule change in Lessons waiting (https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003).`, 'a rule change that is Proposed: the words of status');
 
   // the editor adds the reason word to the USPS note: the row is read Agent slip at once (no call), and the draft rests on a decision that is no longer a rule reading
@@ -895,7 +922,7 @@ test('a rule change that rests on a decision the editor later calls the agent\'s
   assert.equal(w.calls().length, calls, 'no call at all: a reason word is taken as it stands and the open lesson blocks the group');
   assert.equal(w.row('tag_decisions', keyOf(USPS))['Agent reading'], 'Agent slip');
   const report = assertRecantedReport(h, r);
-  assert.equal(report.sentence, `Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting; the rule change "${lesson0.Lesson}" rests on a decision you now call the agent's slip.`);
+  assert.equal(report.sentence, `Distill: read 1 of your decisions; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you; the rule change "${lesson0.Lesson}" rests on a decision you now call the agent's slip.`);
   assert.equal(report.next, `Next: reject the rule change "${lesson0.Lesson}" in Lessons waiting (https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003), then type /claim-tagger distill again.`);
   assert.equal(w.rows('rule_changes').length, 1, 'nothing new is drafted');
   const kept = w.row('rule_changes', lesson0.Lesson);
@@ -940,7 +967,7 @@ test('a rule change whose row is no longer a disagreement, or whose reading cann
   const quiet = await distill(w2.hooks());
   assert.equal(readJson(join(quiet.runDir, 'run.json')).recanted, undefined, 'the unread row is not named');
   assert.doesNotMatch(quiet.report.sentence, /rests on/);
-  assert.equal(quiet.report.sentence, 'Distill: no decision could be read this time; no rule change to draft; the rules the rows point at already have a rule change waiting.');
+  assert.equal(quiet.report.sentence, 'Distill: no decision could be read this time; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you.');
   assert.match(quiet.report.next, /^Next: approve or reject the rule change in Lessons waiting \(/, 'the draft stands: it is still to be approved or rejected');
 });
 

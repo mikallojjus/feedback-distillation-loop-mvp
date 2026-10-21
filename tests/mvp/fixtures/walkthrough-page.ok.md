@@ -203,4 +203,5 @@ Archive this page by hand when you no longer need it.
 
 - Claude says "paused": untick Paused in Agent settings (the last table on this page), then type the command again.
 - Claude says your Claude allowance ran out: wait until your Claude allowance is back, then type the same command again; it continues where it stopped.
+- Claude says some answers could not be read: type the same command again; it continues where it stopped. If it stops the same way twice, send the engineer the whole report.
 - Claude says the rulebook text was edited by hand: put When to use back as it was (the report links the Rulebook), or ask the engineer; then type the command again. Anything else: send the engineer the whole report.

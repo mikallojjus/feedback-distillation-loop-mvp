@@ -44,6 +44,7 @@ Every report ends with one Next line that says what to do, and a stopped command
 |---|---|
 | The agent is paused (exit 3) | A person unticks Paused in Agent settings or removes `runs/PAUSED`; then type the same command again. No command and no flag clears a pause. |
 | Your Claude allowance ran out (exit 75, the usage window) | When the allowance is back, type the same command again; it continues where it stopped. A judge run also resumes with `judge.mjs --resume <run-id>`. |
+| Some answers could not be read (exit 2: "some answers could not be read again", or "some claims could not be read") | The model left a claim out of its reply twice; nothing was written to Notion. Type the same command again; it reads again only what is missing (a promote makes only its extra reads again). If it stops the same way twice, send the engineer the whole report. |
 | A command stopped (exit 1), you stopped it half way, or the machine went down | Type the same command again. It reads Notion first, so nothing is written twice. The exact line is in `agents/claim-tagger-mvp/runs/<run-id>/run.json` under `resume`. |
 | The rulebook text in Notion no longer matches the saved edition (exit 4) | Someone edited the rules of a tag by hand. Put the text back on that tag, or the engineer runs `restore.mjs --edition <edition> --confirm` (`restore.mjs --list` shows the editions). |
 | A promote ends with FAIL (exit 11) | A result, not an error: the rulebook did not change. Put the whole rule the report hands over into Editor wording in Lessons waiting, then type the promote again. |

@@ -8,6 +8,9 @@
 //   forceRuns(ctx, { rubric, tag, items, upTo })   -> { reads, usage }: makes sure every item has ok reads in runs 2 to `upTo` in the store of that rulebook, asking the
 //                                                      judge model for the ones that are missing (the adaptive runs of judge() only re-read unsure items, so a flipped item
 //                                                      that was sure on both sides needs this). Reads are written to the store like any other, so asking again costs nothing.
+//                                                      An item whose line in a run is an error is asked for that run again: an error line is never final. The judge does not
+//                                                      count or retry such a line (judge.mjs summarize: only the reads its own plan asks for count), so the next call of the
+//                                                      safety check reaches this function and finishes the job.
 //
 // The reads follow lib/judge's batch rules: the same system prompt file (rendered from prompts/judge.md and cached under runs/judgments/prompts/), batches of
 // judge.batch_size, judge.attempts_per_batch attempts per batch with the reply checked by validateReply, the transient retries of judge.transient. A batch that
@@ -83,7 +86,7 @@ export async function forceRuns(ctx, { rubric, tag, items, upTo }) {
   try {
     for (let run = 2; run <= Math.min(upTo, 3); run++) {
       const have = store.lines(run);
-      const todo = items.filter((it) => {
+      const todo = items.filter((it) => { // no ok line for the current text: an error line of an earlier call is asked again, not taken as the answer
         const l = have.get(it.id);
         return !(l && l.status === 'ok' && l.item_hash === it.item_hash);
       });

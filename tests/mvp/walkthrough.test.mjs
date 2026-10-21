@@ -3485,7 +3485,11 @@ test('the page passes the page lint with the manifest, as the template, the text
   assert.match(step7, /\*\*What the full version adds later:\*\*\n\n- .*\n- .*\n- .*\n\nArchive this page by hand when you no longer need it\.\n*$/);
   const help = page.slice(page.indexOf('## Help'));
   assert.equal(help.slice(help.indexOf('**Words used'), help.indexOf('**If something stops')).split('\n').filter((l) => l.startsWith('- ')).length, 10);
-  assert.equal(help.slice(help.indexOf('**If something stops')).split('\n').filter((l) => l.startsWith('- ')).length, 3);
+  const stops = help.slice(help.indexOf('**If something stops')).split('\n').filter((l) => l.startsWith('- '));
+  assert.equal(stops.length, 4);
+  assert.deepEqual(stops.map((l) => l.slice(2, l.indexOf(':'))), ['Claude says "paused"', 'Claude says your Claude allowance ran out', 'Claude says some answers could not be read', 'Claude says the rulebook text was edited by hand']);
+  assert.equal(stops[2], '- Claude says some answers could not be read: type the same command again; it continues where it stopped. If it stops the same way twice, send the engineer the whole report.');
+  assert.ok(stops[3].endsWith('Anything else: send the engineer the whole report.'), '"Anything else" stays at the end of the list, after the cases');
   // every step still has its four labels in order, Agent settings is captioned in step 6 only, and the two views stand where the lint wants them
   for (let n = 1; n <= 7; n += 1) {
     const step = page.slice(page.indexOf(`## Step ${n} `), n < 7 ? page.indexOf(`## Step ${n + 1} `) : page.indexOf('## The tables'));
@@ -3881,7 +3885,7 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   assert.equal(second.exit, 0, again.io.errs.join('\n'));
   assert.equal(callsWith(state, '# Reading').length, 1, 'no second reading call');
   assert.equal(w.rows('rule_changes').length, 1, 'and no second rule change');
-  assert.match(second.report.sentence, /^Distill: nothing new to read; no rule change to draft; the rules the rows point at already have a rule change waiting/);
+  assert.match(second.report.sentence, /^Distill: nothing new to read; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you/);
 
   // step 5 and 6: the editor approves the draft, promote runs the safety check
   assert.equal((await w.run(['approve'])).code, 0);
@@ -3990,7 +3994,7 @@ test('a decision without a note is read all the same and flagged "without your n
   assert.equal(callsWith(state, '# Reading').length, 1, 'the reason word is taken as it stands: no second call');
   assert.deepEqual([ledgerRow('usps')['Agent reading'], ledgerRow('usps').Rule, ledgerRow('usps')['Reading note']], ['Agent slip', 'Context-dependent rule 5', 'Your note says so.']);
   assert.equal(claimRow('usps')['Agent reading'], `${TAG}: Agent slip, rule 5 · Your note says so.`);
-  assert.match(second.report.sentence, /^Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting \(practice page .*\)\.$/);
+  assert.match(second.report.sentence, /^Distill: read 1 of your decisions; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you \(practice page .*\)\.$/);
   assert.match(second.report.next, /^Next: approve or reject the rule change in Lessons waiting \(/, 'a rule change is Proposed: the words of status');
   assert.equal(w.rows('rule_changes').length, 1, 'no second rule change');
   assert.deepEqual(supporting(w.rows('rule_changes')[0]), [keyOf('presspool'), keyOf('aiforce')].sort(), 'the draft still rests on the two rows');
@@ -4035,7 +4039,7 @@ test('a draft that rests on a noted row the editor later calls the agent\'s slip
   assert.equal(second.exit, 0, two.io.errs.join('\n'));
   assert.ok(plainReport(second.markdown), second.markdown);
   assert.equal(callsWith(state, '# Reading').length, reads);
-  assert.match(second.report.sentence, new RegExp(`^Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting; the rule change ${quoted(lesson.Lesson).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} rests on a decision you now call the agent's slip \\(practice page .*\\)\\.$`));
+  assert.match(second.report.sentence, new RegExp(`^Distill: read 1 of your decisions; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you; the rule change ${quoted(lesson.Lesson).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')} rests on a decision you now call the agent's slip \\(practice page .*\\)\\.$`));
   assert.equal(second.report.next, reject);
   assert.equal(w.rows('rule_changes').length, 1, 'nothing is drafted while the old draft is open');
   assert.equal(w.rows('rule_changes')[0]['Proposed text'], lesson['Proposed text'], 'and the draft is not rewritten');

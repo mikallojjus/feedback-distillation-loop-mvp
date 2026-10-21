@@ -31,7 +31,9 @@
 //
 // Errors (CONTRACTS section 6). A reply that is not valid JSON, is missing an id or a tag, or breaks the schema gets one more attempt for its batch
 // (judge.attempts_per_batch), then its items are written as status error lines (they are tried again by the next run, and the run ends with
-// exit 2). A transient failure (429, overloaded, busy) is retried after judge.transient.backoff_ms; the third in a row stops the run with exit 1.
+// exit 2). Only the reads the judge's own plan asks for count: an error line in run 2 or 3 of an item that planReruns does not ask to read again
+// (an extra read of the safety check, lib/answers.mjs forceRuns, which retries it itself) is neither counted nor retried here.
+// A transient failure (429, overloaded, busy) is retried after judge.transient.backoff_ms; the third in a row stops the run with exit 1.
 // The CLI's usage-window wording stops the run with exit 75 and nothing is written for the batch. A reply from another model than the pinned one
 // stops the run with exit 4 and is not kept. Every stop leaves run.json with the exact command to continue.
 //
@@ -1113,6 +1115,11 @@ async function processBatch(ctx, batch) {
 
 // ---- the numbers for the report ------------------------------------------------------------------------------------------------
 
+// An error line counts as "could not be read again" only in a run that this judge's own plan asks for (planReruns over the store as it is now): an item
+// with a second read that failed and is still unsure after its first, or a third read that failed where the first two disagree. The judge retries exactly
+// those on its next run, so for them "the next run tries them again" is true. An error line in any other run was written by someone else's extra read
+// (the safety check reads a flipped item up to three times whatever the judge thinks of it, lib/answers.mjs forceRuns) and is that reader's to retry; the
+// judge neither reads the item again nor lets the line stop it, or the same stop would repeat for good.
 function summarize(ctx) {
   const rerun = ctx.cfg.judge.rerun;
   const all = new Set();
@@ -1120,9 +1127,11 @@ function summarize(ctx) {
   const unsure = new Set();
   const reread = new Set();
   const failed = new Set(); // no usable first read
-  const failedReread = new Set(); // read once, but a later read of it failed
+  const failedReread = new Set(); // read once, but a later read that the plan asks for failed
   for (const st of ctx.states) {
     const runs = [1, 2, 3].map((n) => st.store.lines(n));
+    const asks = planReruns({ items: st.items, run1: runs[0], run2: runs[1], run3: runs[2], rerun, runsMax: ctx.runsMax });
+    const asked = [null, new Set(asks.run2), new Set(asks.run3)]; // by index of the run: run 1 is always asked, and its failures are `failed`
     for (const it of st.items) {
       all.add(it.id);
       const lines = runs.map((m) => {
@@ -1137,7 +1146,7 @@ function summarize(ctx) {
       }
       read.add(it.id);
       if (lines[1]?.status === 'ok') reread.add(it.id);
-      const hadError = lines.some((l) => l?.status === 'error');
+      const hadError = lines.some((l, i) => i > 0 && l?.status === 'error' && asked[i].has(it.id));
       if (hadError) failedReread.add(it.id);
       for (const name of st.tagNames) {
         const entries = lines.filter((l) => l?.status === 'ok').map((l) => l.tags.find((t) => t.name === name)).filter(Boolean);

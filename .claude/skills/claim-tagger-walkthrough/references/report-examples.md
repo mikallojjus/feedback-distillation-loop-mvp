@@ -166,7 +166,7 @@ Next: add a note on 1 claim in Needs your note (link), then type /claim-tagger d
 
 The editor opened a note with "Agent slip." after the draft was made. The agent takes the word at once and asks nothing, but the draft's text was written with that decision in mind, so the sentence says so and the Next line asks the editor to reject the draft before anything else. Nothing new is drafted for that rule while the old draft is open; after the rejection, typing distill again drafts from the decisions that remain.
 
-Demo · Distill: read 1 of your decisions; no rule change to draft; the rules the rows point at already have a rule change waiting; the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent's slip (practice page Claim tagger demo · 15 Oct 10:42).
+Demo · Distill: read 1 of your decisions; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you; the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent's slip (practice page Claim tagger demo · 15 Oct 10:42).
 
 | What | Result |
 |---|---|
@@ -182,7 +182,7 @@ Next: reject the rule change "Known groups count as identified, unknown names do
 
 When a rule change already waits, the Next line is the one status gives: approve or reject it (or, for an approved one, type the promote command).
 
-Demo · Distill: nothing new to read; no rule change to draft; the rules the rows point at already have a rule change waiting (practice page Claim tagger demo · 15 Oct 10:42).
+Demo · Distill: nothing new to read; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you (practice page Claim tagger demo · 15 Oct 10:42).
 
 Next: approve or reject the rule change in Lessons waiting (link).
 

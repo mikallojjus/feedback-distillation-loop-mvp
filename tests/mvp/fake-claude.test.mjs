@@ -126,6 +126,22 @@ test('the fixture table answers by exact claim text; a list of answers is read i
   assert.deepEqual(tag(third[0]), tag(first[0]), 'a single entry answers the same every time');
 });
 
+test('a table entry "drop" (or { drop: true }) leaves the claim out of the reply; the read still counts, so a list can drop twice and then answer', async () => {
+  const { dir, systemFile } = files();
+  const table = join(dir, 'table.json');
+  const ok = { decision: 'apply', p: 0.9 };
+  writeFileSync(table, JSON.stringify({ 'Dropped twice': [ok, 'drop', { drop: true }, ok], 'Always dropped': 'drop', 'Always there': ok }));
+  const state = {};
+  const env = { FAKE_CLAUDE_TABLE: table };
+  const prompt = message(['1', 'Dropped twice'], ['2', 'Always dropped'], ['3', 'Always there']);
+  const idsOf = async () => extractJson((await call({ systemFile, prompt, env, state })).text).items.map((i) => i.id);
+  assert.deepEqual(await idsOf(), ['1', '3'], 'the first entry answers; the claim that is always dropped is missing');
+  assert.deepEqual(await idsOf(), ['3'], 'the second entry drops it');
+  assert.deepEqual(await idsOf(), ['3'], 'so does { drop: true }');
+  assert.deepEqual(await idsOf(), ['1', '3'], 'the fourth read answers again');
+  assert.equal(state.reads['Dropped twice'], 4, 'a dropped answer counts as a read');
+});
+
 // ---- the modes -----------------------------------------------------------------------------------------------------------------
 
 test('invalid-once: the first call answers in words, every later call is ok; the counter file makes that last across processes', async () => {
