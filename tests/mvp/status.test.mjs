@@ -33,13 +33,16 @@ const NOTE_LINE = 'Rule 3 does not say it.';
 const SO = 'The rule leaves this kind of case open.';
 /**
  * The ledger rows of the claims ns hold a reading, the way distill leaves them: Agent reading, Rule, Reading note and Read under (the edition and the hash of the decision as it stands:
- * the outcome, the proposal, the note line, the reason word and the hash of the tag's rules). `noteLine` and `reasonWord` are the claim's note without and with its reason word; `rules`
- * replaces the hash of the tag's rules (a reading made under other rules is stale); `noNote` opens the Reading note with "without your note", as distill does.
+ * the outcome, the proposal, the note line, the reason word and the edition the proposal was made under). `noteLine` and `reasonWord` are the claim's note without and with its reason
+ * word; `proposalEdition` replaces the edition the row holds (its Rulebook edition, null when it has none); `noNote` opens the Reading note with "without your note", as distill does.
  */
-function markRead(w, ns, { reading = 'Rule unclear', rule = `${TAG} rule 3`, note = SO, noteLine = NOTE_LINE, reasonWord = 'Rule unclear', noNote = false, rules = null, proposal = 'Applies', outcome = 'Does not apply' } = {}) {
-  const hash = readingHash({ outcome, proposal, noteLine, reasonWord, rulesHash: rules ?? w.rubric().tags.find((t) => t.name === TAG).tag_hash });
+function markRead(w, ns, { reading = 'Rule unclear', rule = `${TAG} rule 3`, note = SO, noteLine = NOTE_LINE, reasonWord = 'Rule unclear', noNote = false, proposalEdition = null, proposal = 'Applies', outcome = 'Does not apply' } = {}) {
+  const ledger = w.fake.plainRows(w.DB.tag_decisions);
   for (const n of ns) {
-    w.fake.editRow(w.ids.queue[`${id(n)}::${TAG}`], {
+    const key = `${id(n)}::${TAG}`;
+    const held = ledger.find((r) => r.Key === key) ?? {};
+    const hash = readingHash({ outcome, proposal, noteLine, reasonWord, proposalEdition: proposalEdition ?? held['Rulebook edition'] ?? null });
+    w.fake.editRow(w.ids.queue[key], {
       'Agent reading': reading, Rule: rule, 'Reading note': noNote ? `${WITHOUT_NOTE} · ${note}` : note, 'Read under': readUnder(w.rubric().edition, hash),
     });
   }
@@ -426,8 +429,8 @@ test('the counts of the decisions made follow one claim through the editor\'s wo
   // 5. the agent reads it with the note
   markRead(w, [1], { noteLine: 'Rule 3 is silent here.', reasonWord: null });
   assert.deepEqual(await countsIn(w), { toRead: 0, pending: 1, needsNote: 0 });
-  // 6. the rules of the tag changed since (a promote): the reading was made under other rules, so it is to be read again
-  markRead(w, [1], { noteLine: 'Rule 3 is silent here.', reasonWord: null, rules: 'deadbeefdeadbeef' });
+  // 6. the agent proposed the tag again under a new edition (a tag run after a promote): the reading belongs to the earlier proposal, so it is to be read again
+  w.fake.editRow(w.ids.queue[`${id(1)}::${TAG}`], { 'Rulebook edition': '2026-10-16.9' });
   assert.deepEqual(await countsIn(w), { toRead: 1, pending: 0, needsNote: 0 });
   // 7. the editor opens the note with a reason word and nothing else: a note, taken as it stands (distill needs no model for it), but it is to be read
   w.review(id(1), { tags: [], notes: 'Rule should change.' });
@@ -454,9 +457,9 @@ test('readingCounts: every combination at once, counted in claims (a claim with 
   const wordy = { ...cd, name: 'Wordy', tag_hash: 'cafe1234cafe1234' };
   const two = { ...rubric, tags: [...rubric.tags.filter((t) => t.name !== 'Wordy'), wordy] };
   const edition = rubric.edition;
-  const hash = (over = {}) => readUnder(edition, readingHash({ outcome: 'Does not apply', proposal: 'Applies', noteLine: NOTE_LINE, reasonWord: null, rulesHash: cd.tag_hash, ...over }));
+  const hash = (over = {}) => readUnder(edition, readingHash({ outcome: 'Does not apply', proposal: 'Applies', noteLine: NOTE_LINE, reasonWord: null, proposalEdition: edition, ...over }));
   const claim = (geo, notes, over = {}) => ({ geo_id: geo, claim: `Claim ${geo}`, review_status: 'Reviewed', verified_tags: [], challenged_notes: notes, agent_status: 'Done', ...over });
-  const row = (geo, over = {}, tag = TAG) => ({ Key: `${geo}::${tag}`, Tag: tag, 'Agent proposal': 'Applies', 'Agent reason': '', decided: false, page_id: `p-${geo}-${tag}`, ...over });
+  const row = (geo, over = {}, tag = TAG) => ({ Key: `${geo}::${tag}`, Tag: tag, 'Agent proposal': 'Applies', 'Agent reason': '', 'Rulebook edition': edition, decided: false, page_id: `p-${geo}-${tag}`, ...over });
   const reading = (under, over = {}) => ({ 'Agent reading': 'Rule unclear', Rule: `${TAG} rule 3`, 'Reading note': SO, 'Read under': under, ...over });
   const claims = [
     claim('stale', NOTE_LINE), // no reading yet
@@ -632,9 +635,9 @@ test('countsOf: open, decided, decided but still listed, the three counts of the
   const base = await makeWorld({ claims: 1 });
   const rubric = base.rubric();
   const cd = rubric.tags.find((t) => t.name === TAG);
-  const under = (over = {}) => readUnder(rubric.edition, readingHash({ outcome: 'Does not apply', proposal: 'Applies', noteLine: 'Rule 4.', reasonWord: null, rulesHash: cd.tag_hash, ...over }));
+  const under = (over = {}) => readUnder(rubric.edition, readingHash({ outcome: 'Does not apply', proposal: 'Applies', noteLine: 'Rule 4.', reasonWord: null, proposalEdition: rubric.edition, ...over }));
   const claim = (geo_id, over) => ({ geo_id, claim: `Claim ${geo_id}`, verified_tags: [], ...over });
-  const row = (geo_id, over = {}) => ({ Key: `${geo_id}::${TAG}`, Tag: TAG, 'Agent proposal': 'Applies', page_id: `p-${geo_id}`, ...over });
+  const row = (geo_id, over = {}) => ({ Key: `${geo_id}::${TAG}`, Tag: TAG, 'Agent proposal': 'Applies', 'Rulebook edition': rubric.edition, page_id: `p-${geo_id}`, ...over });
   const readRow = (geo_id, over = {}) => row(geo_id, { 'Agent reading': 'Rule unclear', Rule: `${TAG} rule 4`, 'Reading note': SO, 'Read under': under(), ...over });
   const c = countsOf({
     claims: [

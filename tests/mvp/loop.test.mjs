@@ -196,9 +196,9 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(st.exit, 0);
   assert.equal(st.report.sentence, 'Status: nothing is paused; 2 rows and 0 rule changes wait for you.'.replace('2 rows and 0 rule changes wait', '2 rows wait'));
   assert.match(st.report.rows[0][1], /^13 tags, edition 2026-10-16\.2$/);
-  // the rules of the tag changed (the promote), so the eight readings the agent made under the old ones are to be read again by the next distill; nothing else is
-  assert.deepEqual(st.report.rows[2], ['Your decisions', '8 to read', '']);
-  assert.deepEqual(st.report.rows[3], ['Lessons waiting', 'none', '']);
+  // the promote changed the rules, but the eight readings belong to proposals made under the old edition and stay current until the agent proposes again (decision 66): nothing is to read
+  assert.ok(!st.report.rows.some((r) => r[0] === 'Your decisions'), 'no Your decisions row after a promote alone');
+  assert.deepEqual(st.report.rows[2], ['Lessons waiting', 'none', '']);
   assert.match(st.report.next, /^Next: decide your two claims in Your queue \(/, 'deciding comes before reading');
 
   // rollback and restore

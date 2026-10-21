@@ -6,8 +6,8 @@
 //
 //   READINGS, READING_COLUMNS              the three readings (one definition, lib/decisions.mjs) and the four ledger columns that hold a reading: Agent reading, Rule, Reading note, Read under
 //   isDisagreement(row)                    true for a decided ledger row whose Tag outcome differs from its Agent proposal (Can't tell differs from both outcomes)
-//   tagRulesHash(rubric, tag)              the tag's tag_hash in the rubric file: it changes when the tag's rules change
-//   readingHash({ outcome, proposal, noteLine, reasonWord, rulesHash })   the first 8 hex characters of sha256 over a stable JSON of those five values (spaces in the note folded)
+//   readingHash({ outcome, proposal, noteLine, reasonWord, proposalEdition })   the first 8 hex characters of sha256 over a stable JSON of those five values (spaces in the note folded);
+//                                          proposalEdition is the row's Rulebook edition, the edition the agent's proposal was made under
 //   readUnder(edition, hash8)              "<edition> · <hash8>", the text of the ledger's Read under (the cache key of a reading)
 //   parseReadUnder(text)                   { edition, hash } or null. A row is current when the hash equals the current one; the edition is for people and is never compared
 //   citedRule(row), agentCitedRule(row)    the rule number a ledger row points at: in the editor's words ("rule N") first, then the agent's own citation ("<Tag> rule N"); the agent's alone
@@ -41,6 +41,8 @@
 //  - The claim's Agent reading has one line per read tag, tags in alphabetical order, then the "did not judge" line of each unjudged tag. A Reviewed claim whose judged tags all agree reads
 //    "Nothing to read: the agent agreed with you." A claim with a disagreement that has no reading yet gets no cell (null) this run. A row marked Fixed keeps the reading it has, if any.
 //  - An empty cell means "not read yet"; only distill writes it (the editor columns are never touched).
+//  - The key of a reading holds the edition the proposal was made under (the row's Rulebook edition): a promote alone makes no reading stale; the next proposal under the new
+//    edition (a tag run, or the follow-up on the rows a lesson rests on) is read again.
 
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
@@ -94,18 +96,15 @@ export function isDisagreement(row) {
   return outcome !== '' && outcome !== text(row?.['Agent proposal']).trim();
 }
 
-/** The hash of the tag's rules in the rubric file (tag_hash: the tag's name and the text of its rules), or null for a tag the rubric does not hold. */
-export function tagRulesHash(rubric, tag) {
-  return rubric?.tags?.find((t) => t.name === tag)?.tag_hash ?? null;
-}
 
 /**
  * The first 8 hex characters of sha256 over a stable JSON of the five values that make a reading (decision 66): the editor's outcome, the agent's proposal, the note line (spaces folded),
- * the reason word (null when there is none) and the hash of the tag's rules. A changed note, decision, reason word or rule gives another hash.
+ * the reason word (null when there is none) and the edition the agent's proposal was made under (the row's Rulebook edition). A changed note, decision or reason word, or a proposal
+ * made again under a new edition (a tag run or the follow-up after a promote), gives another hash; a promote alone changes nothing until the agent proposes again.
  */
-export function readingHash({ outcome, proposal, noteLine, reasonWord, rulesHash }) {
+export function readingHash({ outcome, proposal, noteLine, reasonWord, proposalEdition }) {
   const stable = JSON.stringify({
-    outcome: outcome ?? null, proposal: proposal ?? null, noteLine: squash(noteLine), reasonWord: reasonWord ?? null, rulesHash: rulesHash ?? null,
+    outcome: outcome ?? null, proposal: proposal ?? null, noteLine: squash(noteLine), reasonWord: reasonWord ?? null, proposalEdition: proposalEdition ?? null,
   });
   return createHash('sha256').update(stable, 'utf8').digest('hex').slice(0, 8);
 }
@@ -177,7 +176,7 @@ export function classifyRows({ claims, ledgerRows, rubric, config }) {
         key: d.key,
         tag: d.tag,
         decision: d,
-        hash: readingHash({ outcome: d.outcome, proposal, noteLine, reasonWord: d.why_wrong ?? null, rulesHash: tag?.tag_hash ?? null }),
+        hash: readingHash({ outcome: d.outcome, proposal, noteLine, reasonWord: d.why_wrong ?? null, proposalEdition: row['Rulebook edition'] ?? null }),
         edition,
         reasonWord: d.why_wrong ?? null,
         noteLine,

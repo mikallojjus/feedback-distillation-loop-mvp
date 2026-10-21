@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   MAX_NOTE_WORDS, READINGS, READING_COLUMNS, WITHOUT_NOTE, YOUR_NOTE_SAYS_SO, agentCitedRule, batchesOf, buildReadingMessage, checkReadings, citedRule, claimReadingCell, classifyRows,
-  clearedReadingCells, isDisagreement, parseReadUnder, readUnder, readingCells, readingHash, readingOfRow, readingRecord, renderTag, reusableReading, tagRulesHash, verbatimReading, xmlAttr, xmlText,
+  clearedReadingCells, isDisagreement, parseReadUnder, readUnder, readingCells, readingHash, readingOfRow, readingRecord, renderTag, reusableReading, verbatimReading, xmlAttr, xmlText,
 } from '../../agents/claim-tagger-mvp/scripts/lib/readings.mjs';
 import { syncDecisions } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
 import { makeWorld } from './helpers/loop-world.mjs';
@@ -13,7 +13,7 @@ const CD = 'Context-dependent';
 const world = await makeWorld({ claims: 1 });
 const rubric = world.rubric();
 const config = world.config;
-const RULES_HASH = tagRulesHash(rubric, CD);
+const PROPOSAL_EDITION = '2026-10-16.1'; // the Rulebook edition of the ledger helper's rows
 
 const claim = (id, over = {}) => ({
   geo_id: id, page_id: `p-${id}`, claim: `The claim ${id} says something.`, review_status: 'Reviewed', verified_tags: [], challenged_notes: '', agent_reading: '', ...over,
@@ -29,7 +29,7 @@ function classify(claims, rows) {
   return classifyRows({ claims, ledgerRows: synced, rubric, config });
 }
 const keysOf = (items) => items.map((i) => i.key);
-const hashOf = (over = {}) => readingHash({ outcome: 'Does not apply', proposal: 'Applies', noteLine: '', reasonWord: null, rulesHash: RULES_HASH, ...over });
+const hashOf = (over = {}) => readingHash({ outcome: 'Does not apply', proposal: 'Applies', noteLine: '', reasonWord: null, proposalEdition: PROPOSAL_EDITION, ...over });
 
 // ---- disagreements, hashes, Read under -------------------------------------------------------------------------------------------------
 
@@ -46,13 +46,13 @@ test('isDisagreement: a decided row whose outcome differs from the proposal; Can
 });
 
 test('readingHash: eight hex characters, the same for equal inputs, another for each changed input', () => {
-  const base = { outcome: 'Does not apply', proposal: 'Applies', noteLine: 'The press pool is a body readers know.', reasonWord: null, rulesHash: 'sha256:aaaa' };
+  const base = { outcome: 'Does not apply', proposal: 'Applies', noteLine: 'The press pool is a body readers know.', reasonWord: null, proposalEdition: '2026-10-15.1' };
   const h = readingHash(base);
   assert.match(h, /^[0-9a-f]{8}$/);
   assert.equal(readingHash({ ...base }), h, 'equal inputs, equal hash');
-  assert.equal(readingHash({ rulesHash: base.rulesHash, reasonWord: null, noteLine: base.noteLine, proposal: base.proposal, outcome: base.outcome }), h, 'the order of the keys does not matter');
+  assert.equal(readingHash({ proposalEdition: base.proposalEdition, reasonWord: null, noteLine: base.noteLine, proposal: base.proposal, outcome: base.outcome }), h, 'the order of the keys does not matter');
   const changes = {
-    outcome: 'Applies', proposal: "Can't tell", noteLine: 'The press pool is a body readers do not know.', reasonWord: 'Agent slip', rulesHash: 'sha256:bbbb',
+    outcome: 'Applies', proposal: "Can't tell", noteLine: 'The press pool is a body readers do not know.', reasonWord: 'Agent slip', proposalEdition: '2026-10-16.1',
   };
   const seen = new Set([h]);
   for (const [key, value] of Object.entries(changes)) {
@@ -66,14 +66,11 @@ test('readingHash: eight hex characters, the same for equal inputs, another for 
   assert.equal(readingHash({ ...base, noteLine: undefined }), readingHash({ ...base, noteLine: '' }), 'no note is an empty note');
 });
 
-test('tagRulesHash is the tag_hash of the rubric file: it changes with the tag\'s rules and with nothing else', () => {
-  assert.match(RULES_HASH, /^sha256:[0-9a-f]{16}$/);
-  assert.equal(tagRulesHash(rubric, CD), rubric.tags.find((t) => t.name === CD).tag_hash);
-  assert.equal(tagRulesHash(rubric, 'No such tag'), null);
-  assert.equal(tagRulesHash(null, CD), null);
-  const edited = structuredClone(rubric);
-  edited.tags.find((t) => t.name === CD).tag_hash = 'sha256:0000000000000000';
-  assert.notEqual(readingHash({ outcome: 'Applies', proposal: null, rulesHash: tagRulesHash(edited, CD) }), readingHash({ outcome: 'Applies', proposal: null, rulesHash: RULES_HASH }), 'a promote changes the tag hash, so its rows are read again');
+test('the key holds the edition the proposal was made under: a promote alone changes no hash, a proposal made again under the new edition does', () => {
+  const under = (proposalEdition) => readingHash({ outcome: 'Applies', proposal: null, proposalEdition });
+  assert.equal(under('2026-10-15.1'), under('2026-10-15.1'));
+  assert.notEqual(under('2026-10-15.1'), under('2026-10-16.1'), 'the agent proposed again under another edition, so the row is read again');
+  assert.equal(under(undefined), under(null), 'a row without an edition hashes as null');
 });
 
 test('readUnder and parseReadUnder: "<edition> · <hash8>", the hash is what is compared and the edition is for people', () => {
@@ -147,7 +144,7 @@ test('classifyRows: an item carries the row, the claim, the key, the decision, t
   assert.equal(classify([claim('c1', { challenged_notes: 'No rule here.' })], [ledger('c1', { 'Agent reason': 'No rule cited.' })]).toRead[0].citedRule, null);
 });
 
-test('classifyRows: a row is current when its Read under hash is unchanged and it holds a reading; a changed note, decision, reason word or rule text makes it stale; Fixed rows are never read', () => {
+test('classifyRows: a row is current when its Read under hash is unchanged and it holds a reading; a changed note, decision, reason word or proposal edition makes it stale; Fixed rows are never read', () => {
   const noteLine = 'Press pool names a body.';
   const held = (over = {}) => ({ 'Agent reading': 'Rule unclear', Rule: `${CD} rule 3`, 'Reading note': 'Open.', 'Read under': readUnder('2026-10-01.1', hashOf({ noteLine })), ...over });
   const base = (id, notes = noteLine) => claim(id, { challenged_notes: notes });
@@ -155,7 +152,7 @@ test('classifyRows: a row is current when its Read under hash is unchanged and i
   assert.deepEqual(keysOf(classify([base('c1', 'Press pool names a different body.')], [ledger('c1', held())]).toRead), [`c1::${CD}`], 'a changed note');
   assert.deepEqual(keysOf(classify([claim('c1', { challenged_notes: noteLine, verified_tags: [CD] })], [ledger('c1', held({ 'Agent proposal': "Can't tell" }))]).toRead), [`c1::${CD}`], 'a changed decision (the outcome is Applies now)');
   assert.deepEqual(keysOf(classify([base('c1', `${CD}: Agent slip. ${noteLine}`)], [ledger('c1', held())]).verbatim), [`c1::${CD}`], 'a reason word the editor added: verbatim, no call');
-  assert.deepEqual(keysOf(classify([base('c1')], [ledger('c1', held({ 'Read under': readUnder('2026-10-01.1', hashOf({ noteLine, rulesHash: 'sha256:other' })) }))]).toRead), [`c1::${CD}`], 'the rules changed after a promote');
+  assert.deepEqual(keysOf(classify([base('c1')], [ledger('c1', held({ 'Read under': readUnder('2026-10-01.1', hashOf({ noteLine, proposalEdition: '2026-10-15.1' })) }))]).toRead), [`c1::${CD}`], 'the proposal was made again under another edition');
   assert.deepEqual(keysOf(classify([base('c1')], [ledger('c1', held({ 'Agent reading': null }))]).toRead), [`c1::${CD}`], 'a Read under without a reading is not a reading');
   assert.deepEqual(keysOf(classify([base('c1')], [ledger('c1', held({ 'Read under': '' }))]).toRead), [`c1::${CD}`], 'an unread row');
   assert.deepEqual(keysOf(classify([base('c1', 'Changed.')], [ledger('c1', held({ 'Follow-up': 'Fixed' }))]).fixed), [`c1::${CD}`], 'a Fixed row is never read again, whatever changed');
