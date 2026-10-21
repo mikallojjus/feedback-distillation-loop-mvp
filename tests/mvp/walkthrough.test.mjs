@@ -691,12 +691,14 @@ test('the page text and the manifest agree: the lint is clean with the manifest\
     assert.equal(by['Why wrong'].text, `${o.enter['Why wrong']}.`, `${o.claim}: Why wrong`);
     assert.equal(by['Review status'].text, `${o.enter['Review status']}.`, `${o.claim}: Review status`);
     assert.equal(by['Challenged tags notes'].sentence, `"${o.enter['Challenged tags notes']}"`, `${o.claim}: the sentence to paste is the manifest's, word for word, on a line of its own`);
-    assert.equal(by['Challenged tags notes'].text, 'paste this sentence, as it is:');
+    assert.equal(by['Challenged tags notes'].text, 'paste the words between the quotes:', `${o.claim}: the editor pastes the words, not the quotes`);
     assert.ok(step3.includes(`\n   "${o.enter['Challenged tags notes']}"\n`), `${o.claim}: the sentence has its own line`);
     assert.ok(list.items.filter((i) => i.sentence !== null).length === 1, `${o.claim}: only the notes carry a sentence`);
   }
   assert.ok(!step3.includes('Claim quality tags'), 'the column is called Verified tags');
   assert.match(step3, /Review status comes last only because it closes the claim: a claim you have decided stays in Your queue until the agent reads it again/);
+  assert.match(step3, /stands on its own line between quotes: paste the words between the quotes, not the quotes\./);
+  assert.ok(!/as it is/.test(step3), 'the page no longer says to paste the sentence as it is');
   assert.match(step3, /so the order of the four columns does not matter for the view/);
   assert.match(step3, /\{\{view:Your queue\}\}/);
   // the list is blocks as well: two numbered lists of four items, the notes item holding a line break before its sentence
@@ -1838,6 +1840,7 @@ test('where says which step the editor is at and the one thing to do, for every 
   let r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 1, ${title(1)}.`);
   assert.equal(r.next, `Next: type ${steps[0].command}.`);
+  assert.equal(guideChecklistFor(r.sentence, r.next), null, 'a command only: no checklist');
   // a command that writes has run (Last run summary is filled) and the claims have no Agent status yet
   w.fake.editRow(w.rows('agent_settings')[0].page_id, { 'Last run summary': 'Tag at 15 Oct 14:40' });
   r = await where();
@@ -1848,11 +1851,13 @@ test('where says which step the editor is at and the one thing to do, for every 
   r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 3, ${title(3)}.`);
   assert.equal(r.next, `Next: open Your queue (${view('your_queue')}) and decide your two claims.`);
+  assert.deepEqual(guideChecklistFor(r.sentence, r.next), { checklist: 'Decide in Your queue', form: 'Demo' }, 'the guide picks the Demo checklist for this Next line');
   // one claim decided: one is left
   decide(open[0]);
   r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 3, ${title(3)}.`);
   assert.equal(r.next, `Next: open Your queue (${view('your_queue')}) and decide your remaining claim.`);
+  assert.deepEqual(guideChecklistFor(r.sentence, r.next), { checklist: 'Decide in Your queue', form: 'Demo' }, 'and for the claims that are left');
   // both decided
   decide(open[1]);
   r = await where();
@@ -1863,6 +1868,7 @@ test('where says which step the editor is at and the one thing to do, for every 
   r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 5, ${title(5)}.`);
   assert.equal(r.next, `Next: open Lessons waiting (${view('lessons_waiting')}) and set Status to Approved.`);
+  assert.deepEqual(guideChecklistFor(r.sentence, r.next), { checklist: 'Approve in Lessons waiting', form: 'Demo' });
   // approved, not yet checked
   w.fake.editRow(lessonRow, { Status: 'Approved' });
   r = await where();
@@ -1873,11 +1879,13 @@ test('where says which step the editor is at and the one thing to do, for every 
   r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 6, ${title(6)}; it did not pass.`);
   assert.equal(r.next, `Next: open Lessons waiting (${view('lessons_waiting')}) and write the rule as you want it in Editor wording.`);
+  assert.deepEqual(guideChecklistFor(r.sentence, r.next), { checklist: 'After a FAIL', form: 'Demo' });
   // live, and the run stopped before it re-checked the claims
   w.fake.editRow(lessonRow, { Status: 'Live', 'Safety check result': 'PASS: examples 11/11, earlier 5/5, yours 2/2' });
   r = await where();
   assert.equal(r.sentence, `Walkthrough: you are at step 7, ${title(7)}; the run stopped before it re-checked your claims.`);
   assert.equal(r.next, 'Next: type /claim-tagger demo follow-up.');
+  assert.equal(guideChecklistFor(r.sentence, r.next), null);
   // follow-up ran: one claim fixed, one not (the Follow-up is the ledger's)
   w.fake.editRow(ledgerRow(open[0]).page_id, { 'Follow-up': 'Fixed' });
   assert.match((await where()).sentence, /step 7, .*stopped before/);
@@ -1885,11 +1893,13 @@ test('where says which step the editor is at and the one thing to do, for every 
   r = await where();
   assert.match(r.sentence, /^Walkthrough: you are at step 7, /);
   assert.equal(r.next, `Next: add a note in Challenged tags notes on the claims in Agent disagreed (${view('agent_disagreed')}).`);
+  assert.deepEqual(guideChecklistFor(r.sentence, r.next), { checklist: 'Agent disagreed', form: 'Demo' });
   // both fixed: complete
   w.fake.editRow(ledgerRow(open[1]).page_id, { 'Follow-up': 'Fixed' });
   r = await where();
   assert.equal(r.sentence, 'Walkthrough: you have been through all seven steps of the practice page.');
   assert.equal(r.next, 'Next: nothing to type; archive the page by hand when you no longer need it.');
+  assert.equal(guideChecklistFor(r.sentence, r.next), null);
   // a rejected rule change also ends the walkthrough
   w.fake.editRow(lessonRow, { Status: 'Rejected', 'Safety check result': null });
   for (const key of open) w.fake.editRow(ledgerRow(key).page_id, { 'Follow-up': null });
@@ -3234,6 +3244,31 @@ function checklists() {
   return out;
 }
 
+/**
+ * The table of guide.md ("The Next line says" | "Checklist"): [{ forms: [the texts in backticks of the first cell], checklist: 'Decide in Your queue', demoOnly: true when the second cell says Demo form }].
+ * A form is a Next line without "Next: ", the link written as (link); what the first cell says outside the backticks (which command prints it) is for the reader.
+ */
+function guideTable() {
+  const text = readFileSync(GUIDE_FILE, 'utf8').replace(/\r\n?/g, '\n');
+  return text.split('\n').filter((l) => l.startsWith('| ') && !l.startsWith('| The Next line says')).map((l) => {
+    const [when, what] = l.split('|').slice(1, -1).map((c) => c.trim());
+    const [checklist, ...rest] = what.split(', ');
+    return { cell: when, forms: [...when.matchAll(/`([^`]+)`/g)].map((m) => m[1]), checklist, demoOnly: rest.includes('Demo form') };
+  });
+}
+
+/**
+ * What the guide picks for a report: { checklist, form } when the table lists its Next line, else null (a line that only names a command, or has nothing to type, gets no checklist).
+ * The form is Demo when the report starts with "Demo · " or "Walkthrough:" (or the table says Demo form), else Real. The link becomes (link), and the claims that are left read as
+ * "your two claims", the words of the table.
+ */
+function guideChecklistFor(sentence, next) {
+  const form = next.replace(/^Next: /, '').replace(/\(https?:\/\/[^)]*\)/, '(link)').replace('your remaining claim', 'your two claims').replace(/\.$/, '');
+  const row = guideTable().find((r) => r.forms.includes(form));
+  if (!row) return null;
+  return { checklist: row.checklist, form: row.demoOnly || /^(?:Demo · |Walkthrough:)/.test(sentence) ? 'Demo' : 'Real' };
+}
+
 test('guide.md has the four checklists, each in a real and a demo form of at most five numbered lines, ending with the command to type', () => {
   const guide = checklists();
   const { manifest } = real();
@@ -3263,6 +3298,45 @@ test('guide.md has the four checklists, each in a real and a demo form of at mos
   for (const name of ['Verified tags', 'Why wrong', 'Challenged tags notes', 'Review status', 'Agent reasons', 'Tags waiting', 'Agent confidence']) assert.ok(columns('claims_copy').includes(name), name);
   for (const name of ['Current text', 'Proposed text', 'Editor wording', 'Status']) assert.ok(columns('rule_changes').includes(name), name);
   for (const view of text.match(/Open ([A-Z][A-Za-z ]+?) \(/g).map((m) => m.slice(5, -2))) assert.ok(Object.values(dp.VIEW_NAMES).includes(view), view);
+});
+
+test('the table of guide.md picks a checklist for every Next line that sends the editor to Notion, the Next lines of where included, and a Walkthrough: report takes the Demo form', () => {
+  const guide = checklists();
+  const table = guideTable();
+  const names = Object.keys(guide).filter((n) => n !== 'How a checklist is added');
+  assert.equal(table.length, 7, 'the four Next-line forms of the commands and the three that where adds');
+  for (const row of table) {
+    assert.ok(names.includes(row.checklist), `the checklist "${row.checklist}" is one of the guide's`);
+    assert.ok(row.forms.length >= 1, 'every row lists the Next line in backticks');
+  }
+  // the rows of where: Demo form only, in the words of walkthrough.mjs; once one claim is decided the line reads "your remaining claim"
+  assert.deepEqual(table.slice(4).map((r) => [r.forms, r.checklist, r.demoOnly]), [
+    [['open Your queue (link) and decide your two claims'], 'Decide in Your queue', true],
+    [['open Lessons waiting (link) and set Status to Approved'], 'Approve in Lessons waiting', true],
+    [['open Lessons waiting (link) and write the rule as you want it in Editor wording'], 'After a FAIL', true],
+  ]);
+  assert.ok(table[4].cell.includes('your remaining claim'), 'the table says that the line reads "your remaining claim" once one claim is decided');
+  assert.ok(table.every((r) => r.cell.includes('(link)')));
+  assert.ok(table.slice(0, 4).every((r) => !r.demoOnly), 'the commands\' own rows are picked by the prefix of the report, not by the table');
+  // a Next line of where is found in the table, and its form comes from the prefix "Walkthrough:" of its sentence
+  const link = 'https://www.notion.so/0123456789abcdef0123456789abcdef?v=fedcba9876543210fedcba9876543210';
+  assert.deepEqual(guideChecklistFor('Walkthrough: you are at step 3, Decide your two claims.', `Next: add a note in Challenged tags notes on the claims in Agent disagreed (${link}).`), { checklist: 'Agent disagreed', form: 'Demo' });
+  assert.deepEqual(guideChecklistFor('Demo · Follow-up: both claims fixed.', `Next: add a note in Challenged tags notes on the claims in Agent disagreed (${link}).`), { checklist: 'Agent disagreed', form: 'Demo' });
+  assert.deepEqual(guideChecklistFor('Follow-up: 2 claims checked.', `Next: add a note in Challenged tags notes on the claims in Agent disagreed (${link}).`), { checklist: 'Agent disagreed', form: 'Real' });
+  assert.equal(guideChecklistFor('Walkthrough: you are at step 4, x.', 'Next: type /claim-tagger demo distill.'), null);
+  assert.equal(table[3].checklist, 'Agent disagreed');
+  assert.match(table[3].forms[0], /^add a note in Challenged tags notes on the claims in Agent disagreed \(link\)$/);
+  // the prefixes: Demo · and Walkthrough: take the Demo list, anything else the real one
+  const text = readFileSync(GUIDE_FILE, 'utf8').replace(/\r\n?/g, '\n');
+  assert.match(text, /A report that starts with "Demo · " or with "Walkthrough:"[^\n]*takes the Demo list, whose command is `\/claim-tagger demo \.\.\.`; any other report takes the real list\./);
+  assert.ok(!text.includes('A demo report starts with "Demo · "'), 'the old rule, that only Demo · picks the Demo list, is gone');
+  // every list stays at five lines, and the table is no list
+  for (const name of names) for (const form of ['Real', 'Demo']) assert.ok(guide[name][form].length <= 5, `${name} (${form})`);
+  // and the skills say it too
+  const ct = readFileSync(join(SKILLS, 'claim-tagger', 'SKILL.md'), 'utf8');
+  const wt = readFileSync(join(SKILLS, 'claim-tagger-walkthrough', 'SKILL.md'), 'utf8');
+  assert.match(ct, /"Demo · " or with "Walkthrough:"[^\n]*takes the demo form/);
+  assert.match(wt, /A `W where` report starts with "Walkthrough:", not "Demo · ", and takes the Demo form all the same/);
 });
 
 test('the checklists name the columns of the practice page in the page\'s order: step 3\'s lists, step 5 and the FAIL text of step 6', () => {

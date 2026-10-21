@@ -164,7 +164,7 @@ test('status --json prints the counts as JSON instead of the report, after the r
   assert.equal(r.exit, 0);
   assert.equal(h.io.outs.length, 1);
   const json = JSON.parse(h.io.outs[0]);
-  assert.deepEqual(json.queue, { open: 2, decided: 1, needs_note: 1, sitting_rows: 20, more_than_a_sitting: false });
+  assert.deepEqual(json.queue, { open: 2, decided: 1, decided_listed: 0, pending_rule_decisions: 0, needs_note: 1, sitting_rows: 20, more_than_a_sitting: false });
   assert.match(json.table, new RegExp(w.DB.claims_copy), 'the table the counts are about is the Claims copy');
   assert.deepEqual(json.lessons, { Proposed: 1, Approved: 0, Rejected: 0, Live: 1, 'Rolled back': 0 });
   assert.deepEqual([json.edition, json.tags, json.same_as_notion, json.paused], ['2026-10-16.1', 13, true, false]);
@@ -263,7 +263,7 @@ test('in production the Next line stays "decide the rows" even when other claims
   const practice = await practicePage();
   const j = practice.hooks({ json: true });
   await status(j);
-  assert.deepEqual(JSON.parse(j.io.outs[0]).queue, { open: 0, decided: 5, needs_note: 0, sitting_rows: 20, more_than_a_sitting: false });
+  assert.deepEqual(JSON.parse(j.io.outs[0]).queue, { open: 0, decided: 5, decided_listed: 0, pending_rule_decisions: 0, needs_note: 0, sitting_rows: 20, more_than_a_sitting: false });
 });
 
 test('the table of Step 1 on the practice page is what status prints on a practice page: the same header and the same rows', async () => {
@@ -302,19 +302,168 @@ test('a practice page title that the report lint refuses is left out of the sent
   assert.ok(readJson(join(r.runDir, 'run.json')).warnings.some((x) => /does not name the practice page/.test(x)));
 });
 
-test('countsOf: open, decided, needs a note, lessons by status', () => {
+// midway: the editor has decided claims and the agent has not read the decisions yet (the next tag run does), so Your queue still lists them (CLAIMS-REVIEW.md, section 6.2)
+const decidedListed = (ns, over = {}) => reviewed(ns, { 'Agent status': WAITS, 'Why wrong': 'Rule unclear', 'Challenged tags notes': 'Rule 3 does not say it.', ...over });
+// the agent's own record of the judged tag of each claim (Tag decisions): the agent proposed Applies, the editor's decision (no verified tag) differs, so Why wrong counts
+const ledger = (ns, over = {}) => ns.map((n) => ({ Claim: claimText(n), Key: `${id(n)}::Context-dependent`, Tag: 'Context-dependent', 'Agent proposal': 'Applies', ...over }));
+const DISTILL = 'Next: type /claim-tagger distill to draft a rule change from your decisions.';
+const TAG = 'Next: type /claim-tagger tag to read new claims.';
+
+test('status midway, every claim decided but still listed in Your queue: the row says how many are decided and waiting for the agent, and Next points at distill', async () => {
+  const w = await makeWorld({ claims: 4, claimRows: { ...decidedListed([1, 2]), ...read(3, 4) }, queue: ledger([1, 2]), settings: { 'Last run summary': 'Tag · 15 Oct 11:20 · 4 claims' } });
+  const h = w.hooks();
+  const r = await status(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const report = assertReport(h, r);
+  assert.equal(report.sentence, 'Status: nothing is paused and nothing waits for you.', 'nothing is left to decide');
+  assert.deepEqual(report.header, ['Where', 'Now', '']);
+  assert.deepEqual(report.rows, [
+    ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
+    ['Your queue', "2 rows decided, waiting for the agent's next run", ''],
+    ['Lessons waiting', 'none', ''],
+    ['Last run', 'Tag · 15 Oct 11:20 · 4 claims', ''],
+  ]);
+  assert.equal(report.next, DISTILL);
+  assert.ok(!/nothing waits/.test(report.rows[1][1]));
+  assert.equal(w.writes().length, 0, 'status writes nothing to Notion');
+  assert.equal(readJson(join(r.runDir, 'report.json')).next, DISTILL);
+});
+
+test('status midway: one decided claim reads in the singular, and the row says nothing waits once the agent has read the decision', async () => {
+  const one = await makeWorld({ claims: 3, claimRows: { ...decidedListed([1]), ...read(2, 3) }, queue: ledger([1]) });
+  const r1 = await status(one.hooks());
+  assert.deepEqual(r1.report.rows[1], ['Your queue', "1 row decided, waiting for the agent's next run", '']);
+  assert.equal(r1.report.sentence, 'Status: nothing is paused and nothing waits for you.');
+  assert.equal(r1.report.next, TAG, 'one decision is below distill.min_claims (2): distill would draft nothing');
+
+  // the agent has read the decisions (Agent status Done): the claims have left Your queue, so the row is "nothing waits"; distill still has the decisions to read
+  const gone = await makeWorld({ claims: 3, claimRows: { ...decidedListed([1, 2], { 'Agent status': NOTHING }), ...read(3) }, queue: ledger([1, 2]) });
+  const r2 = await status(gone.hooks());
+  assert.deepEqual(r2.report.rows[1], ['Your queue', 'nothing waits', '']);
+  assert.equal(r2.report.next, DISTILL);
+
+  // decided claims that blame the agent, not the rule, are listed until the next run all the same, but give distill nothing to read
+  const slip = await makeWorld({ claims: 3, claimRows: { ...decidedListed([1, 2], { 'Why wrong': 'Agent slip' }), ...read(3) }, queue: ledger([1, 2]) });
+  const r3 = await status(slip.hooks());
+  assert.deepEqual(r3.report.rows[1], ['Your queue', "2 rows decided, waiting for the agent's next run", '']);
+  assert.equal(r3.report.next, TAG);
+});
+
+test('status, the Next line takes the first that applies: read, decide, distill, approve, check, tag', async () => {
+  const next = async (opts) => (await status((await makeWorld({ claims: 4, ...opts })).hooks())).report.next;
+  const ruleDecisions = { ...decidedListed([1]), ...reviewed([2], { 'Why wrong': 'Rule should change' }) };
+  const queue = ledger([1, 2]);
+
+  // decide beats distill: claims that still wait for the editor come first, however many decisions blame the rule
+  assert.match(await next({ claimRows: { ...ruleDecisions, ...waiting(3) }, queue }), /^Next: decide your claim in Your queue \(/);
+  // the rows of one sitting too
+  assert.match(await next({ claimRows: { ...ruleDecisions, ...waiting(3, 4) }, queue, configure: (c) => { c.queue.sitting_rows = 1; } }), /^Next: start at the top of Your queue \(/);
+  // distill: enough decisions that blame the rule, and no rule change that is Proposed or Approved; a Live, Rejected or Rolled back one is not open
+  assert.equal(await next({ claimRows: ruleDecisions, queue }), DISTILL);
+  assert.equal(await next({ claimRows: ruleDecisions, queue, lessons: [lesson('Old', 'Live'), lesson('No', 'Rejected', { Rule: 'Context-dependent rule 2' }), lesson('Back', 'Rolled back', { Rule: 'Context-dependent rule 3' })] }), DISTILL);
+  // an open rule change takes distill's place: approve, then check
+  assert.match(await next({ claimRows: ruleDecisions, queue, lessons: [lesson('New', 'Proposed')] }), /^Next: approve or reject the rule change in Lessons waiting \(/);
+  assert.equal(await next({ claimRows: ruleDecisions, queue, lessons: [lesson('Ready', 'Approved')] }), 'Next: type /claim-tagger promote to check the approved rule change.');
+  assert.match(await next({ claimRows: ruleDecisions, queue, lessons: [lesson('New', 'Proposed'), lesson('Ready', 'Approved', { Rule: 'Context-dependent rule 2' })] }), /^Next: approve or reject the rule change in Lessons waiting \(/);
+  // nothing blames the rule: read new claims
+  assert.equal(await next({ claimRows: { ...reviewed([1, 2]), ...read(3, 4) }, queue }), TAG);
+  assert.equal(await next({ claimRows: { ...reviewed([1, 2], { 'Why wrong': null }), ...read(3, 4) }, queue }), TAG);
+  // a claim that is not Reviewed has no decision to read, whatever its Why wrong says
+  const toReview = (ns) => Object.fromEntries(ns.map((n) => [id(n), { 'Agent status': NOTHING, 'Review status': 'To review', 'Why wrong': 'Rule unclear' }]));
+  assert.equal(await next({ claimRows: { ...toReview([1, 2]), ...read(3, 4) }, queue }), TAG);
+});
+
+test('status asks for distill only while distill has something to draft: at least distill.min_claims decisions on rows not marked Fixed', async () => {
+  const claimRows = { ...decidedListed([1, 2, 3], { 'Agent status': NOTHING }), ...read(4) };
+  const next = async (opts) => (await status((await makeWorld({ claims: 4, claimRows, ...opts })).hooks())).report.next;
+  const marked = (ns, mark) => ledger(ns, { 'Follow-up': mark });
+
+  assert.equal(await next({ queue: ledger([1, 2]) }), DISTILL, 'two unmarked rows: distill drafts one lesson');
+  // Fixed means a rule change resting on the row went live and the agent agrees: a finished cycle does not ask for the same lesson again. Still wrong stays open for the next lesson
+  assert.equal(await next({ queue: marked([1, 2], 'Fixed') }), TAG, 'both marked Fixed');
+  assert.equal(await next({ queue: marked([1, 2], 'Still wrong') }), DISTILL, 'both marked Still wrong: the editor adds notes and distills again');
+  assert.equal(await next({ queue: [...marked([1], 'Fixed'), ...marked([2], 'Still wrong')] }), TAG, 'one Fixed and one Still wrong: one pending decision is below distill.min_claims');
+  assert.equal(await next({ queue: [...marked([1], 'Fixed'), ...marked([2, 3], 'Still wrong')] }), DISTILL, 'one Fixed and two Still wrong');
+  assert.equal(await next({ queue: [...marked([1], 'Fixed'), ...ledger([2])] }), TAG, 'one marked and one not: below distill.min_claims');
+  assert.equal(await next({ queue: [...marked([1], 'Fixed'), ...ledger([2, 3])] }), DISTILL, 'a third decision makes two pending again');
+  assert.equal(await next({ queue: [...marked([1, 2], 'Fixed'), ...ledger([3])] }), TAG, 'one new decision beside a finished cycle is below the minimum');
+  // the pending count is of claims: a claim with a marked row and an unmarked row of another tag is pending once, and a claim with no ledger row is not counted
+  const twoTags = [...marked([1], 'Fixed'), { ...ledger([1])[0], Key: `${id(1)}::Wordy`, Tag: 'Wordy' }];
+  assert.equal(await next({ queue: [...twoTags, ...ledger([2])] }), DISTILL, 'claim 1 still has an unmarked row, claim 2 is pending too');
+  assert.equal(await next({ queue: ledger([1]) }), TAG, 'claims 2 and 3 have no ledger row, so distill has nothing to read from them');
+  // a decision the agent already got right gives distill no rule problem to read
+  assert.equal(await next({ queue: ledger([1, 2], { 'Agent proposal': 'Does not apply' }) }), TAG);
+  // the minimum comes from the configuration
+  assert.equal(await next({ queue: ledger([1, 2]), configure: (c) => { c.distill.min_claims = 3; } }), TAG);
+  assert.equal(await next({ queue: ledger([1, 2, 3]), configure: (c) => { c.distill.min_claims = 3; } }), DISTILL);
+  assert.equal(await next({ queue: ledger([1]), configure: (c) => { c.distill.min_claims = 1; } }), DISTILL);
+  assert.equal(await next({ queue: [...marked([1], 'Fixed'), ...marked([2], 'Fixed')], configure: (c) => { c.distill.min_claims = 1; } }), TAG, 'Fixed rows never count, whatever the minimum');
+});
+
+test('status midway on a practice page: the demo distill command, and reading the claims still comes first', async () => {
+  // step 4 of the page: both claims decided with Rule unclear, the agent has not read the decisions (Agent status still Waits for you), no rule change yet
+  const w = await practicePage({ claimRows: decidedListed([1, 2]), queue: ledger([1, 2]) });
+  const h = w.hooks();
+  const r = await status(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const report = assertReport(h, r);
+  assert.equal(report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused and nothing waits for you.`);
+  assert.deepEqual(report.rows, [
+    ['Rulebook', '1 tag, edition 2026-10-16.1', ''],
+    ['Your queue', "2 rows decided, waiting for the agent's next run", ''],
+    ['Lessons waiting', 'none', ''],
+    ['Last run', 'none yet', ''],
+  ]);
+  assert.equal(report.next, 'Next: type /claim-tagger demo distill to draft a rule change from your decisions.');
+  assert.ok(r.markdown.startsWith('Demo · Status of the practice page'), r.markdown);
+
+  // a claim of the page that is still open and not read comes first; a draft that is Proposed takes distill's place
+  const unread = await status((await practicePage({ claimRows: { ...decidedListed([1]), [id(2)]: { 'Agent status': null } }, queue: ledger([1, 2]) })).hooks());
+  assert.equal(unread.report.next, TAG_FIRST);
+  const drafted = await status((await practicePage({ claimRows: decidedListed([1, 2]), queue: ledger([1, 2]), lessons: [lesson('Draft', 'Proposed')] })).hooks());
+  assert.match(drafted.report.next, /^Next: approve or reject the rule change in Lessons waiting \(/);
+
+  // the end of the cycle (step 7): the rule change is Live and the follow-up marked both rows, so the page does not ask for the same draft again
+  const finished = await status((await practicePage({
+    claimRows: decidedListed([1, 2], { 'Agent status': NOTHING }), queue: [...ledger([1], { 'Follow-up': 'Fixed' }), ...ledger([2], { 'Follow-up': 'Fixed' })], lessons: [lesson('Draft', 'Live')],
+  })).hooks());
+  assert.equal(finished.report.next, 'Next: type /claim-tagger demo tag to read new claims.');
+});
+
+test('status midway: the report stays three parts with at most five rows, the row for Needs your note included', async () => {
+  const w = await makeWorld({ claims: 3, claimRows: { ...decidedListed([1, 2], { 'Challenged tags notes': '' }), ...read(3) }, queue: ledger([1, 2]), lessons: [lesson('Old', 'Live')] });
+  const h = w.hooks();
+  const r = await status(h);
+  const report = assertReport(h, r);
+  assert.deepEqual(report.rows.map((row) => row[0]), ['Rulebook', 'Your queue', 'Needs your note', 'Lessons waiting', 'Last run']);
+  assert.equal(report.rows.length, 5);
+  assert.equal(report.rows[1][1], "2 rows decided, waiting for the agent's next run");
+  assert.equal(report.next, DISTILL);
+});
+
+test('countsOf: open, decided, decided but still listed, decisions distill would still read, needs a note, lessons by status', () => {
+  const claim = (geo_id, over) => ({ geo_id, ...over });
+  const key = (geo_id, tag = 'Context-dependent') => `${geo_id}::${tag}`;
+  const row = (geo_id, over = {}) => ({ Key: key(geo_id), Tag: 'Context-dependent', 'Agent proposal': 'Applies', ...over });
   const c = countsOf({
     claims: [
-      { agent_status: WAITS, review_status: null, why_wrong: null, challenged_notes: '' },
-      { agent_status: NOTHING, review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: ' ' },
-      { agent_status: WAITS, review_status: 'Reviewed', why_wrong: 'Agent slip', challenged_notes: 'Fine.' },
+      claim('a', { agent_status: WAITS, review_status: null, why_wrong: null, challenged_notes: '' }),
+      claim('b', { agent_status: NOTHING, review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: ' ' }),
+      claim('c', { agent_status: WAITS, review_status: 'Reviewed', why_wrong: 'Agent slip', challenged_notes: 'Fine.' }),
+      claim('d', { agent_status: ' Waits for you ', review_status: 'Reviewed', why_wrong: 'Rule should change', challenged_notes: 'Rule 4.' }),
+      claim('e', { agent_status: WAITS, review_status: 'To review', why_wrong: 'Rule unclear', challenged_notes: 'Rule 4.' }),
+      claim('f', { agent_status: NOTHING, review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: 'Rule 4.' }),
+      claim('g', { agent_status: 'Disagrees with your decision', review_status: 'Reviewed', why_wrong: 'Rule unclear', challenged_notes: 'Rule 4.' }),
     ],
+    queue: [row('a'), row('b'), row('c'), row('d'), row('e'), row('f', { 'Follow-up': 'Fixed' }), row('g', { 'Follow-up': 'Still wrong' })],
     lessons: [{ Status: 'Proposed' }, { Status: 'Approved' }, { Status: 'Live' }],
     settings: { last_run_summary: 'x' },
     sitting: 1,
   });
-  assert.deepEqual(c.queue, { open: 1, decided: 2, needs_note: 1, sitting_rows: 1, more_than_a_sitting: false });
+  // pending: b and d (Reviewed, a rule problem, not marked Fixed) and g (marked Still wrong: it stays open); c blames the agent, e is not Reviewed, f is marked Fixed
+  assert.deepEqual(c.queue, { open: 2, decided: 5, decided_listed: 2, pending_rule_decisions: 3, needs_note: 1, sitting_rows: 1, more_than_a_sitting: true });
   assert.deepEqual([c.waiting_lessons, c.last_run], [2, 'x']);
+  assert.equal(countsOf({ claims: [claim('b', { review_status: 'Reviewed', why_wrong: 'Rule unclear' })] }).queue.pending_rule_decisions, 0, 'without ledger rows distill has nothing to read');
 });
 
 test('status: a bad command line is refused with the usage', async () => {

@@ -7,6 +7,9 @@
 //   claimWaits(claim)                      -> true for a claim that is still to decide and that the agent says waits: Agent status is "Waits for you" and the claim is not Reviewed
 //                                             (a decided claim keeps the status until the next tag run reads the decision, CLAIMS-REVIEW.md section 6.2)
 //   claimDisagrees(claim)                  -> true when Agent status is "Disagrees with your decision"
+//   RULE_WHY                               -> the Why wrong values that say the rule is the problem (Rule unclear, Rule should change): what distill reads
+//   isFollowedUp(ledgerRow)                -> true when the Tag decisions row's Follow-up is Fixed: a rule change that rests on the row went live and the agent now agrees with the decision,
+//                                             so distill does not draft a lesson from the row again, and status does not count it as waiting for distill; Still wrong stays open
 //   parseTagLines(notes, tagNames)         -> Map(tag -> { text, reason }) when the notes hold lines that start with a tag name and a colon, else null; `reason` is the reason word
 //                                             (Agent slip, Rule unclear, Rule should change) that opens the line after the colon and a full stop, else null (section 6.3)
 //   parseTagNotes(notes, tagNames)         -> the same as Map(tag -> text), without the reason word
@@ -42,6 +45,15 @@ export const isToReview = (claim) => text(claim?.review_status).trim() === TO_RE
 
 /** A claim the agent says waits in Your queue: Agent status is "Waits for you" and an editor has not Reviewed it (a Reviewed claim keeps the status until the next tag run). */
 export const claimWaits = (claim) => !isReviewed(claim) && text(claim?.agent_status).trim() === AGENT_STATUS.waits;
+
+/** The values of Why wrong that say the rule is the problem: distill drafts rule changes from the decided rows that carry one of them. */
+export const RULE_WHY = new Set(['Rule unclear', 'Rule should change']);
+
+/**
+ * A Tag decisions row whose Follow-up is Fixed: a lesson resting on it went live and the agent now agrees with the decision, so no lesson is drafted from it again. A row marked Still wrong
+ * is not followed up in this sense: the editor adds a note (the Agent disagreed checklist) and distills again, so it stays open for the next lesson.
+ */
+export const isFollowedUp = (row) => text(row?.['Follow-up']).trim() === 'Fixed';
 
 /** A claim whose Agent status says that the agent still differs from the editor's decision. */
 export const claimDisagrees = (claim) => text(claim?.agent_status).trim() === AGENT_STATUS.disagrees;

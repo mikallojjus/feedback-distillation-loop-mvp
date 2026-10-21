@@ -69,13 +69,13 @@ A claim the agent is sure of is read once, so its line ends with a count of one;
 
 **Existing status.** Both of your claims are To review and wait in Your queue (step 2): Agent status reads Waits for you on both, Tags waiting holds Context-dependent and Agent tags is empty.
 
-**Doing the work.** Fill in four columns on each of your two claims, in the order of its list, in Your queue under the lists. The sentence for Challenged tags notes stands on its own line, so that you can paste it as it is. Review status comes last only because it closes the claim: a claim you have decided stays in Your queue until the agent reads it again (the next tag run does that, and in this practice the follow-up in step 7 does it for these two), so the order of the four columns does not matter for the view. What each Why wrong value makes happen is explained in Help at the bottom of the page.
+**Doing the work.** Fill in four columns on each of your two claims, in the order of its list, in Your queue under the lists. The sentence for Challenged tags notes stands on its own line between quotes: paste the words between the quotes, not the quotes. Review status comes last only because it closes the claim: a claim you have decided stays in Your queue until the agent reads it again (the next tag run does that, and in this practice the follow-up in step 7 does it for these two), so the order of the four columns does not matter for the view. What each Why wrong value makes happen is explained in Help at the bottom of the page.
 
 **The AI Force claim**
 
 1. Verified tags: Context-dependent.
 2. Why wrong: Rule unclear.
-3. Challenged tags notes: paste this sentence, as it is:\
+3. Challenged tags notes: paste the words between the quotes:\
    "Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context."
 4. Review status: Reviewed.
 
@@ -83,7 +83,7 @@ A claim the agent is sure of is read once, so its line ends with a count of one;
 
 1. Verified tags: leave it empty, because the tag does not apply.
 2. Why wrong: Rule unclear.
-3. Challenged tags notes: paste this sentence, as it is:\
+3. Challenged tags notes: paste the words between the quotes:\
    "Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well."
 4. Review status: Reviewed.
 

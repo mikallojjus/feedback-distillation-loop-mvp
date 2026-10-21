@@ -7,8 +7,8 @@ Some reports end with a Next line that sends the editor to Notion. Under such a 
 - Relay the report first, verbatim and complete: the sentence, the table, the Next line. Never reword it, and never put a word before it.
 - Then one blank line, then the checklist of the Next line (the table below picks it). A checklist is a numbered list of at most five lines, with no heading and no words before or after it.
 - A checklist says which view to open, which columns to fill in and in which order, what to look at, and ends with the next command to type.
-- A report whose Next line only names a command (`Next: type ...`), a stopped run, a refusal and a report about a pause get no checklist. In the demo, `Next: look at step 7 on the practice page` gets none either: the page has the text.
-- A demo report starts with "Demo · ": use the Demo list, whose command is `/claim-tagger demo ...`.
+- A report whose Next line only names a command (`Next: type ...`), a stopped run, a refusal and a report about a pause get no checklist. In the demo, `Next: look at step 7 on the practice page` gets none either: the page has the text; nor does a `where` report that only names a command or says there is nothing to type.
+- A report that starts with "Demo · " or with "Walkthrough:" (the report of the walkthrough skill's `where`) takes the Demo list, whose command is `/claim-tagger demo ...`; any other report takes the real list.
 - The words are the practice page's. The Demo lists name the same columns in the same order as steps 3 and 5 of the page (Verified tags, Why wrong, Challenged tags notes, Review status; Status and Editor wording), and the real lists use the same column names and order. Change the page and this file together.
 
 | The Next line says | Checklist |
@@ -16,7 +16,10 @@ Some reports end with a Next line that sends the editor to Notion. Under such a 
 | `decide ... in Your queue (link)` or `start at the top of Your queue (link)` (tag, status, and promote after a PASS when claims still wait) | Decide in Your queue |
 | `read it in Lessons waiting (link) ... and approve it or write your own wording`, or `approve or reject ... in Lessons waiting (link)` (distill, status) | Approve in Lessons waiting |
 | `in Lessons waiting (link), open the change and put this whole text into Editor wording` or `write all of the rule in Editor wording` (promote after a FAIL) | After a FAIL |
-| `add a note in Challenged tags notes on the claims in Agent disagreed (link)` (follow-up, and the demo's step 7) | Agent disagreed |
+| `add a note in Challenged tags notes on the claims in Agent disagreed (link)` (follow-up, the demo's step 7, and where at step 7) | Agent disagreed |
+| `open Your queue (link) and decide your two claims` (where at step 3; once one claim is decided it reads "your remaining claim") | Decide in Your queue, Demo form |
+| `open Lessons waiting (link) and set Status to Approved` (where at step 5) | Approve in Lessons waiting, Demo form |
+| `open Lessons waiting (link) and write the rule as you want it in Editor wording` (where at step 6, after a FAIL) | After a FAIL, Demo form |
 
 ## Decide in Your queue
 
@@ -32,7 +35,7 @@ Demo:
 
 1. Open Your queue (the link in the Next line): your two claims wait there.
 2. On each of your two claims fill in, in this order: Verified tags, Why wrong, Challenged tags notes, Review status; step 3 of the practice page gives the values.
-3. Paste the sentence for Challenged tags notes as the page gives it, and set Review status to Reviewed last.
+3. Paste the words between the quotes that the page gives for Challenged tags notes, and set Review status to Reviewed last.
 4. A decided claim stays in Your queue until the agent reads it again, which the follow-up of step 7 does for these two.
 5. When both claims are Reviewed, type /claim-tagger demo distill.
 

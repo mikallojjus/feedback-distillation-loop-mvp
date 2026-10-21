@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Distill: turns the editors' "the rule is the problem" decisions into proposed rule changes. It reads the decided rows of Tag decisions (the agent's
 // ledger, which holds a copy of every decision an editor made on a claim), groups the ones whose Why wrong is Rule unclear or Rule should change by (tag, the
-// rule they cite), asks the distill model once per group for at most three patterns, checks every reply, and writes a Rule changes row (Status Proposed) per
+// rule they cite; a row whose Follow-up is Fixed is left out: a rule change that rests on it went live and the agent now agrees, so a finished cycle does not draft the same lesson again; Still wrong stays in), asks the distill model once per group for at most three patterns, checks every reply, and writes a Rule changes row (Status Proposed) per
 // kept lesson. It never changes a rule: a rule changes only through an Approved lesson, a safety check PASS and the promote step.
 //
 // The copy of a decision is made by the tag step; a claim an editor Reviewed since the last tag step has none yet. So distill first brings the ledger up to date:
@@ -35,7 +35,7 @@
 
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf } from './lib/config.mjs';
-import { syncDecisions } from './lib/decisions.mjs';
+import { RULE_WHY, isFollowedUp, syncDecisions } from './lib/decisions.mjs';
 import { cutText, plural, quoted, stampOf, viewLink } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
 import { LoopExit, addSettingsOp, applyStep, assertApplied, callModel, judgeSettings, liveRubric, modelStop, needClaimColumns, needTables, parseCli, readEvals, resumeLine, runPreflight, takePull, withRun } from './lib/loop.mjs';
@@ -50,7 +50,6 @@ const ENGINEER = 'Next: ask the engineer to look at the message the script print
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/distill.mjs [--pull <pull-id>] [--plan-only] [--driver cli|fake] [--run-id <id>] [--rows <n>]';
 
-const RULE_WHY = new Set(['Rule unclear', 'Rule should change']);
 const KINDS = new Map([
   ['clarify wording', 'Clarify wording'], ['change the rule', 'Change the rule'], ['rule unclear', 'Clarify wording'], ['rule should change', 'Change the rule'],
 ]);
@@ -80,6 +79,7 @@ export function citedRule(row) {
 const rowOf = (r) => ({
   key: r.Key, page_id: r.page_id, tag: r.Tag, claim: text(r.Claim), outcome: outcomeOf(r), why: r['Why wrong'] ?? null, reasoning: text(r['Your reasoning']).trim(),
   agentReason: text(r['Agent reason']).trim(), proposal: r['Agent proposal'] ?? null, confidence: r['Agent confidence'] ?? null, edited: text(r.last_edited), n: citedRule(r),
+  followedUp: isFollowedUp(r),
 });
 
 const newestFirst = (a, b) => (a.edited < b.edited ? 1 : a.edited > b.edited ? -1 : (a.key < b.key ? -1 : 1));
@@ -104,16 +104,23 @@ function chooseShown(rows, cap) {
 
 /**
  * The groups of decided rows to ask the model about. `queue` is the pull's Tag decisions rows, `rubric` the rulebook in force, `openLessons` the lessons
- * with Status Proposed or Approved ({ Tag, Rule }). Returns { groups, counts } with counts { decided, ruleRows, ruleRowsNotJudged, groupsTooSmall, groupsOpen }.
+ * with Status Proposed or Approved ({ Tag, Rule }). Returns { groups, counts } with counts { decided, ruleRows, ruleRowsFollowed, ruleRowsNotJudged, groupsTooSmall, groupsOpen }.
+ * A row whose Follow-up is Fixed is counted in ruleRows and ruleRowsFollowed and builds no group: a rule change that rests on it went live and the agent agrees. A row marked Still wrong
+ * builds groups as before (the editor adds a note and distills again). A Fixed row still counts as a
+ * decided row and may serve as counter-evidence.
  * A group: { tag, n (the cited rule number or null), rows (all), shown, counter, current (the cited rule's text or null) }.
  */
 export function buildGroups({ queue, rubric, config, minClaims = 2, rowCap = DEFAULT_ROW_CAP, openLessons = [] }) {
   const decided = queue.filter((r) => r.decided && r.Key && r.Tag).map(rowOf);
-  const counts = { decided: decided.length, ruleRows: 0, ruleRowsNotJudged: 0, groupsTooSmall: 0, groupsOpen: 0 };
+  const counts = { decided: decided.length, ruleRows: 0, ruleRowsFollowed: 0, ruleRowsNotJudged: 0, groupsTooSmall: 0, groupsOpen: 0 };
   const byGroup = new Map();
   for (const r of decided) {
     if (!RULE_WHY.has(r.why)) continue;
     counts.ruleRows += 1;
+    if (r.followedUp) {
+      counts.ruleRowsFollowed += 1;
+      continue;
+    }
     const tag = rubric.tags.find((t) => t.name === r.tag);
     if (!tag || !tag.judged || groupOf(config, tag.name) === null || tag.rules.length === 0) {
       counts.ruleRowsNotJudged += 1;
@@ -393,8 +400,9 @@ export async function distill(opts = {}) {
       if (unreadable > 0) why = 'the replies could not be used';
       else if (candidates.length > 0 || dropped.length > 0) why = 'none of the drafts passed the checks';
       else if (counts.ruleRows === 0) why = counts.decided === 0 ? 'no row is decided yet' : `${plural(counts.decided, 'decided row')} ${counts.decided === 1 ? 'names' : 'name'} no rule problem`;
+      else if (counts.ruleRowsFollowed === counts.ruleRows) why = 'a rule change was already made for every decided row that names a rule problem';
       else if (counts.groupsOpen > 0 && groups.length === 0) why = 'the rules the rows point at already have a rule change waiting';
-      else if (counts.ruleRowsNotJudged === counts.ruleRows) why = 'the rows that name a rule problem are about tags the agent does not judge yet';
+      else if (counts.ruleRowsNotJudged === counts.ruleRows - counts.ruleRowsFollowed) why = 'the rows that name a rule problem are about tags the agent does not judge yet';
       else if (groups.length === 0) why = `no rule has ${cfg.min_claims} decided rows pointing at it yet`;
       else why = 'the rows do not point at a change that is safe to make';
       return {

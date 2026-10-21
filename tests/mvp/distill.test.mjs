@@ -70,7 +70,7 @@ test('buildGroups: rows group by tag and cited rule (the bigger group first, the
     ['Context-dependent', 4, [keyOf(1), keyOf(2)]],
   ]);
   assert.equal(groups[1].current.startsWith('Test: could a reader'), true, 'the group carries the text of the rule it cites');
-  assert.deepEqual(counts, { decided: 8, ruleRows: 6, ruleRowsNotJudged: 1, groupsTooSmall: 1, groupsOpen: 0 });
+  assert.deepEqual(counts, { decided: 8, ruleRows: 6, ruleRowsFollowed: 0, ruleRowsNotJudged: 1, groupsTooSmall: 1, groupsOpen: 0 });
   const one = buildGroups({ queue, rubric: w.rubric(), config: w.config, minClaims: 3 });
   assert.deepEqual(one.groups, [], 'with min_claims 3 no group is big enough');
 });
@@ -83,6 +83,42 @@ test('buildGroups: a group that already has an open lesson on the same tag and r
   assert.deepEqual(buildGroups({ ...base, openLessons: [{ Tag: 'Context-dependent', Rule: 'Context-dependent rule 4' }] }).groups, []);
   assert.equal(buildGroups({ ...base, openLessons: [{ Tag: 'Context-dependent', Rule: 'Context-dependent rule 3' }] }).groups.length, 1, 'another rule');
   assert.equal(buildGroups({ ...base, openLessons: [] }).groups.length, 1);
+});
+
+test('buildGroups: a row whose Follow-up is Fixed builds no group (a rule change resting on it went live and the agent agrees): two Fixed rows give no group, one Fixed and one not are below min_claims, two unmarked give one; Still wrong stays open', async () => {
+  const w = await makeWorld({ claims: 1 });
+  const groupsOf = (...rows) => buildGroups({ queue: queueRows(rows), rubric: w.rubric(), config: w.config, minClaims: 2 });
+
+  const fixed = groupsOf(row(1, { 'Follow-up': 'Fixed' }), row(2, { 'Follow-up': 'Fixed' }));
+  assert.deepEqual(fixed.groups, [], 'both rows are marked Fixed');
+  assert.deepEqual(fixed.counts, { decided: 2, ruleRows: 2, ruleRowsFollowed: 2, ruleRowsNotJudged: 0, groupsTooSmall: 0, groupsOpen: 0 });
+
+  // Still wrong is no reason to leave a row out: the editor adds a note (Agent disagreed) and distills again
+  const still = groupsOf(row(1, { 'Follow-up': 'Still wrong' }), row(2, { 'Follow-up': 'Still wrong' }));
+  assert.deepEqual(still.groups.map((g) => g.rows.map((r) => r.key)), [[keyOf(1), keyOf(2)]], 'two rows marked Still wrong give a group');
+  assert.equal(still.counts.ruleRowsFollowed, 0);
+  const fixedAndStill = groupsOf(row(1, { 'Follow-up': 'Fixed' }), row(2, { 'Follow-up': 'Still wrong' }));
+  assert.deepEqual(fixedAndStill.groups, [], 'one Fixed and one Still wrong: the group has one claim, below min_claims');
+  assert.deepEqual([fixedAndStill.counts.ruleRowsFollowed, fixedAndStill.counts.groupsTooSmall], [1, 1]);
+
+  const mixed = groupsOf(row(1, { 'Follow-up': 'Fixed' }), row(2));
+  assert.deepEqual(mixed.groups, [], 'one Fixed and one not: the group has one claim, below min_claims');
+  assert.deepEqual([mixed.counts.ruleRows, mixed.counts.ruleRowsFollowed, mixed.counts.groupsTooSmall], [2, 1, 1]);
+
+  const open = groupsOf(row(1), row(2));
+  assert.deepEqual(open.groups.map((g) => [g.tag, g.n, g.rows.map((r) => r.key)]), [['Context-dependent', 4, [keyOf(1), keyOf(2)]]], 'two unmarked rows give one group');
+  assert.equal(open.counts.ruleRowsFollowed, 0);
+
+  // a marked row is a decided row all the same, and the unmarked rows beside it still make a group
+  const three = groupsOf(row(1, { 'Follow-up': 'Fixed' }), row(2), row(3));
+  assert.deepEqual(three.groups.map((g) => g.rows.map((r) => r.key)), [[keyOf(2), keyOf(3)]], 'the marked row is left out of the group');
+  assert.equal(three.counts.decided, 3);
+  // an empty or blank mark is no mark
+  assert.equal(groupsOf(row(1, { 'Follow-up': null }), row(2, { 'Follow-up': ' ' })).groups.length, 1);
+
+  // a marked row decided the other way is still counter-evidence for the group
+  const counter = groupsOf(row(1), row(2), row(3, { 'Tag outcome': 'Applies', 'Agent proposal': 'Does not apply', 'Follow-up': 'Fixed' }));
+  assert.deepEqual(counter.groups[0].counter.map((r) => r.key), [keyOf(3)]);
 });
 
 test('buildGroups: a group above the cap shows the rows with the editor\'s reasoning first, newest first, both outcomes represented, and counter-evidence from the other decisions', async () => {
@@ -268,6 +304,40 @@ test('distill: a group below the threshold gets no call and no lesson, and the r
   assert.equal(w.rows('rule_changes').length, 0);
   assert.equal(assertReport(h, r).sentence, 'Distill: no rule change to draft; no rule has 2 decided rows pointing at it yet.');
   assert.equal(r.report.next, 'Next: type /claim-tagger status to see what is open.');
+});
+
+test('distill: rows a rule change already fixed (Follow-up Fixed) are not drafted from again: no call, no lesson, and the report says so; a finished cycle plus one new row is below the minimum; rows still wrong are drafted from', async () => {
+  const done = await makeWorld({ claims: 4, queue: [row(1, { 'Follow-up': 'Fixed' }), row(2, { 'Follow-up': 'Fixed' })], lessons: [lesson('A finished lesson', { Status: 'Live' })] });
+  const h = done.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(done.calls().length, 0, 'the model is not asked');
+  assert.equal(done.rows('rule_changes').length, 1, 'no second lesson from the same rows');
+  assert.equal(assertReport(h, r).sentence, 'Distill: no rule change to draft; a rule change was already made for every decided row that names a rule problem.');
+  assert.equal(r.report.next, 'Next: type /claim-tagger status to see what is open.');
+
+  const fixedAndStill = await makeWorld({ claims: 4, queue: [row(1, { 'Follow-up': 'Fixed' }), row(2, { 'Follow-up': 'Still wrong' })] });
+  const r2 = await distill(fixedAndStill.hooks());
+  assert.equal(fixedAndStill.calls().length, 0, 'one Fixed and one Still wrong: a group of one claim');
+  assert.equal(r2.report.sentence, 'Distill: no rule change to draft; no rule has 2 decided rows pointing at it yet.');
+
+  // rows the follow-up found Still wrong are drafted from again, after the editor added notes
+  const stillWrong = await makeWorld({ claims: 4, queue: [row(1, { 'Follow-up': 'Still wrong' }), row(2, { 'Follow-up': 'Still wrong' })], lessons: [lesson('A finished lesson', { Status: 'Live' })] });
+  const r4 = await distill(stillWrong.hooks());
+  assert.equal(r4.exit, 0);
+  assert.equal(stillWrong.calls().length, 1, 'two rows marked Still wrong: one call');
+  assert.equal(stillWrong.rows('rule_changes').length, 2, 'and a new lesson beside the finished one');
+
+  const mixed = await makeWorld({ claims: 4, queue: [row(1, { 'Follow-up': 'Fixed' }), row(2)] });
+  const r3 = await distill(mixed.hooks());
+  assert.equal(mixed.calls().length, 0, 'one marked and one not: a group of one claim');
+  assert.equal(r3.report.sentence, 'Distill: no rule change to draft; no rule has 2 decided rows pointing at it yet.');
+  assert.equal(mixed.rows('rule_changes').length, 0);
+
+  const fresh = await makeWorld({ claims: 4, queue: [row(1), row(2)] });
+  assert.equal((await distill(fresh.hooks())).exit, 0);
+  assert.equal(fresh.calls().length, 1, 'two unmarked rows: one call');
+  assert.equal(fresh.rows('rule_changes').length, 1, 'and one lesson');
 });
 
 test('distill: decided rows that name no rule problem give "N decided rows name no rule problem", and no decisions give "no row is decided yet"', async () => {

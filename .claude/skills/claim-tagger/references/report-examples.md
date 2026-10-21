@@ -51,6 +51,21 @@ Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing i
 
 Next: decide your two claims in Your queue (link).
 
+### status (demo, midway: both claims decided)
+
+The editor has decided both claims, but Your queue still lists them until the agent's next run reads the decisions, so the row says that and not "nothing waits". Nothing is left to decide, and both decisions blame the rule with no rule change made for them yet (at least two such decisions are needed), so the Next line is the distill step, which turns them into a draft rule. After the follow-up of step 7 has marked the two rows Fixed, the same claims no longer ask for distill: the Your queue row reads "nothing waits" and the Next line reads the tag command.
+
+Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused and nothing waits for you.
+
+| Where | Now |
+|---|---|
+| Rulebook | 1 tag, edition 2026-10-15.1 |
+| Your queue | 2 rows decided, waiting for the agent's next run |
+| Lessons waiting | none |
+| Last run | Tag · 15 Oct 10:50 · 7 claims |
+
+Next: type /claim-tagger demo distill to draft a rule change from your decisions.
+
 ### tag (demo), the report followed by its checklist
 
 Both claims of the editor are To review, so no tag is written on them and both wait; the other five are Reviewed and keep the editor's tags. The Next line sends the editor to Notion, so the checklist "Decide in Your queue" (Demo form, from `guide.md`) follows the report, after one blank line, and nothing follows it. The sentence, the table and the Next line are the report; the numbered list under it is the checklist.
@@ -67,7 +82,7 @@ Next: decide your two claims in Your queue (link).
 
 1. Open Your queue (the link in the Next line): your two claims wait there.
 2. On each of your two claims fill in, in this order: Verified tags, Why wrong, Challenged tags notes, Review status; step 3 of the practice page gives the values.
-3. Paste the sentence for Challenged tags notes as the page gives it, and set Review status to Reviewed last.
+3. Paste the words between the quotes that the page gives for Challenged tags notes, and set Review status to Reviewed last.
 4. A decided claim stays in Your queue until the agent reads it again, which the follow-up of step 7 does for these two.
 5. When both claims are Reviewed, type /claim-tagger demo distill.
 
