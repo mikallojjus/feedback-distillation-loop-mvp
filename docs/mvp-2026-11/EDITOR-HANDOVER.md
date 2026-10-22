@@ -21,7 +21,7 @@ The claim tagger is an agent that reads Geo claims against a written rulebook an
 
 6. **Follow the seven steps written on the page.** In short: step 1 `/claim-tagger demo status`; step 2 `/claim-tagger demo tag`; step 3 decide your four claims in Your queue in Notion (Verified tags, a note, Review status Reviewed); step 4 `/claim-tagger demo distill`; step 5 approve the draft in Lessons waiting; step 6 `/claim-tagger demo promote`; step 7 read what the follow-up did. At any point ask Claude "where am I in the claim tagger demo".
 
-7. **Three rules of the road.** Use the commands with `demo` in them; the ones without act on the shared copy, not on your page. Do not edit the rulebook's "When to use" by hand on the page: rule changes go through Lessons waiting, and a hand edit stops every command until it is put back. If a command stops, type it again as its report says; if it stops the same way twice, send the whole report to the engineer.
+7. **Three rules of the road.** The commands with `demo` act on your practice page and the page guides you through them; the ones without act on the shared 50-claim copy, which is a sandbox too, so you can try them as well, only others will see what you change there. Do not edit the rulebook's "When to use" by hand on the page: rule changes go through Lessons waiting, and a hand edit stops every command until it is put back. If a command stops, type it again as its report says; if it stops the same way twice, send the whole report to the engineer.
 
 ## Resources
 
