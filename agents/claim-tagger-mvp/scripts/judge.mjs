@@ -61,6 +61,7 @@ import { h16 } from './lib/hash.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { agentRoot, codeFile, ensureDir, isMain, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
+import { RESERVED_RUN_IDS, isReservedRunId } from './lib/reserved-run-ids.mjs';
 import { writeReport } from './lib/report.mjs';
 import { resumeFor } from './lib/resume.mjs';
 import { checkLock, readLock, verifyRubric } from './lib/rubric.mjs';
@@ -789,6 +790,7 @@ function prepareRun(ctx) {
     ctx.args = normalizeArgs(opts);
     let runId = (opts.runId ?? opts.run_id) ? safeName(opts.runId ?? opts.run_id) : null;
     if (runId) {
+      if (isReservedRunId(runId)) throw new ExitError(EXIT.INVALID, `--run-id "${runId}" is a name the loop keeps for its own files under runs/ (${RESERVED_RUN_IDS.join(', ')}); pick another`);
       if (existsSync(join(runsDir, runId))) throw new ExitError(EXIT.INVALID, `a run folder named ${runId} already exists; use --resume ${runId} to continue it, or pick another --run-id`);
     } else {
       const stamp = makeRunId(SCRIPT, now());

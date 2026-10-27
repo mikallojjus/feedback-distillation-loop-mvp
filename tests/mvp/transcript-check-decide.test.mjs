@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  DEFAULT_ALLOWED_SCRIPTS, DEFAULT_DECIDE_COLUMNS, checkTranscript, classifyBash, isDecideWrite, loadDecideColumns, main as checkMain,
+  DEFAULT_ALLOWED_SCRIPTS, DEFAULT_DECIDE_COLUMNS, checkTranscript, classifyBash, isDecideWrite, loadDecideColumns, loadReviewColumn, main as checkMain,
 } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
 import { isDecidePrompt, main as headlessMain } from '../../agents/claim-tagger-mvp/scripts/headless-check.mjs';
 
@@ -191,6 +191,37 @@ test('the command line takes --decide', () => {
   assert.equal(decide.code, 0, decide.out);
   assert.match(decide.out, /no problems/);
   assert.match(run(['--help']).out || run(['--help']).err, /\[--decide\]|usage/);
+});
+
+test('S7: a decide transcript whose note carries an apostrophe written as \\u0027 followed by a semicolon passes: the whole command is one script call', () => {
+  const open = `node agents/claim-tagger-mvp/scripts/decide.mjs open --decisions '[{"claim":"c01","verified_tags":["Context-dependent"],"note":"Context-dependent: Agent slip. It\\u0027s settled; the title names it."}]'`;
+  assert.ok(open.includes('\\u0027s settled;'), 'the command holds the escape, not a quote');
+  assert.deepEqual(classifyBash(open), { ok: true });
+  const text = jsonl([ev.init(), bash('node agents/claim-tagger-mvp/scripts/pull.mjs --all'), bash(open), write(), bash('node agents/claim-tagger-mvp/scripts/decide.mjs check'), ev.text(REPORT), ev.result(REPORT)]);
+  const r = checkTranscript(text, { decide: true });
+  assert.deepEqual(r.problems, []);
+  // the old way of writing an apostrophe, closing the quote and opening it again, is a command the check refuses to read as one call when it carries a semicolon
+  const quoted = open.replace('\\u0027', "'\\''");
+  assert.equal(classifyBash(quoted).ok, false, 'the \'\\\'\' form is not accepted when the note has a semicolon');
+});
+
+test('the Review status column is the one the config names, not a hard-coded string', () => {
+  const tool = (properties) => ({ name: CONNECTOR, input: { page_id: 'p', command: 'update_properties', properties } });
+  const columns = ['Verdict', 'Marks', 'Words'];
+  assert.equal(isDecideWrite(tool({ Marks: 'Reviewed', Verdict: [] }), columns, 'Marks'), true);
+  assert.equal(isDecideWrite(tool({ Marks: 'Approved' }), columns, 'Marks'), false, 'the named column is held to Reviewed or To review');
+  assert.equal(isDecideWrite(tool({ Marks: 'Approved' }), columns), true, 'with the default name, Marks is not the Review status column and is free text here');
+  assert.equal(isDecideWrite(tool({ 'Review status': 'Approved' }), ['Review status', 'Verified tags']), false, 'the default still holds');
+  const dir = tmp();
+  writeFileSync(join(dir, 'config.json'), JSON.stringify({ notion: { claims: { columns: { review_status: 'Marks' } } } }));
+  assert.equal(loadReviewColumn(dir), 'Marks');
+  assert.equal(loadReviewColumn(join(dir, 'nowhere')), 'Review status');
+  assert.equal(loadReviewColumn(), 'Review status', 'the shipped config names Review status');
+  // through the whole check
+  const custom = jsonl([ev.init(), bash('node agents/claim-tagger-mvp/scripts/decide.mjs list'), ev.tool(CONNECTOR, { page_id: 'p', command: 'update_properties', properties: { Marks: 'Approved' } }), ev.text(REPORT), ev.result(REPORT)]);
+  assert.equal(checkTranscript(custom, { decide: true, decideColumns: columns, reviewColumn: 'Marks' }).ok, false);
+  const fine = jsonl([ev.init(), bash('node agents/claim-tagger-mvp/scripts/decide.mjs list'), ev.tool(CONNECTOR, { page_id: 'p', command: 'update_properties', properties: { Marks: 'Reviewed' } }), ev.text(REPORT), ev.result(REPORT)]);
+  assert.deepEqual(checkTranscript(fine, { decide: true, decideColumns: columns, reviewColumn: 'Marks' }).problems, []);
 });
 
 // ---- the runner sets the mode from the prompt -------------------------------------------------------------------------------------------

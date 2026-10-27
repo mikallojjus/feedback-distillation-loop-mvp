@@ -12,8 +12,9 @@
 //   - command is update_properties, and the input holds only page_id, command, properties and allow_async (no icon, cover, content or skill field);
 //   - the properties are only some of the three Claims editor columns (Verified tags, Review status, Challenged tags notes), and Review status, when given, is
 //     Reviewed or To review;
-//   - the page_id (a 32-hex id, a dashed id or a notion.so address) is listed in page_ids of a live marker runs/DECIDING (written by decide.mjs open, younger than
-//     two hours), in this folder or in a practice page's folder runs/demos/<id>/;
+//   - every page id found in page_id (a 32-hex id, a dashed id or a notion.so address; there must be one) is listed in page_ids of a live marker runs/DECIDING (a regular
+//     file written by decide.mjs open, younger than two hours), in this folder or in a practice page's folder runs/demos/<id>/;
+//   - the agent is not paused: no runs/PAUSED in this folder, or in the practice page's folder for its own marker (the Paused box in Notion is for decide.mjs, which has the network);
 //   - and no protected id appears anywhere in the input (that check comes first, as for every call).
 // The page list is what keeps the protected real tables safe: their columns may share these names, their page ids are never in a marker.
 // Everything else stays as it was. Otherwise allowed only while the marker file runs/SETUP exists (the setup or walkthrough script creates it for one builder
@@ -98,47 +99,62 @@ function editorWrite(tool, toolInput, editorNames, editorStatus) {
   return null;
 }
 
-/** The 32 hex digits a page is known by, from an id, a dashed id or a notion.so address; null when the value is none of them. */
-function pageIdOf(value) {
-  const s = String(value ?? '').trim().replace(/[?#].*$/, '').replace(/[/\\]+$/, '');
-  if (!/[/\\]/.test(s)) {
-    const compact = s.replace(/-/g, '').toLowerCase();
-    return /^[0-9a-f]{32}$/.test(compact) ? compact : null;
-  }
-  const last = s.split(/[/\\]/).pop() ?? '';
-  return /[0-9a-f]{32}$/.exec(last.replace(/-/g, '').toLowerCase())?.[0] ?? null;
+// a page id as Notion writes it, with or without dashes, not part of a longer run of hex digits
+const PAGE_ID = /(?<![0-9a-f])[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}(?![0-9a-f])/gi;
+
+/** Every page id found anywhere in a value (an id, a dashed id, a notion.so address with a title in front of its id), as 32 lower-case hex digits. */
+function pageIdsIn(value) {
+  return [...String(value ?? '').matchAll(PAGE_ID)].map((m) => m[0].replace(/-/g, '').toLowerCase());
 }
 
-/** The page ids that the live runs/DECIDING markers list: this folder's and those of the practice pages under runs/demos/. A marker older than two hours, or dated in the future, counts for nothing. */
+/** A file that exists and is a regular file: a folder named like a marker is not a marker. */
+function isRegularFile(file) {
+  try {
+    return statSync(file).isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The page ids that the live runs/DECIDING markers list: this folder's and those of the practice pages under runs/demos/. A marker counts only as a regular file, younger than two
+ * hours and not dated in the future, and not while the agent is paused (runs/PAUSED in this folder, or in the practice page's folder for its own marker). Returns { ids, paused }:
+ * `paused` is true when a marker was left out because of the pause. The Paused box in Notion is for decide.mjs to read; this hook has no network.
+ */
 function decidingPageIds(root, now) {
-  const files = [join(root, 'runs', 'DECIDING')];
+  const rootPaused = existsSync(join(root, 'runs', 'PAUSED'));
+  const markers = [{ file: join(root, 'runs', 'DECIDING'), paused: rootPaused }];
   try {
     for (const entry of readdirSync(join(root, 'runs', 'demos'), { withFileTypes: true })) {
-      if (entry.isDirectory()) files.push(join(root, 'runs', 'demos', entry.name, 'runs', 'DECIDING'));
+      if (!entry.isDirectory()) continue;
+      const runs = join(root, 'runs', 'demos', entry.name, 'runs');
+      markers.push({ file: join(runs, 'DECIDING'), paused: rootPaused || existsSync(join(runs, 'PAUSED')) });
     }
   } catch {
     // no practice pages
   }
   const ids = new Set();
-  for (const file of files) {
+  let paused = false;
+  for (const marker of markers) {
     try {
-      if (!existsSync(file)) continue;
-      const data = readJsonSafe(file);
+      if (!isRegularFile(marker.file)) continue;
+      const data = readJsonSafe(marker.file);
       const opened = Date.parse(data?.opened_at);
-      const born = Number.isFinite(opened) ? opened : statSync(file).mtimeMs;
+      const born = Number.isFinite(opened) ? opened : statSync(marker.file).mtimeMs;
       if (now - born >= DECIDING_STALE_MS || born - now > 5 * 60 * 1000) continue;
-      for (const id of Array.isArray(data?.page_ids) ? data.page_ids : []) {
-        const hex = pageIdOf(id);
-        if (hex) ids.add(hex);
+      if (marker.paused) {
+        paused = true;
+        continue;
       }
+      for (const id of Array.isArray(data?.page_ids) ? data.page_ids : []) for (const hex of pageIdsIn(id)) ids.add(hex);
     } catch {
       // an unreadable marker lists nothing
     }
   }
-  return ids;
+  return { ids, paused };
 }
 
-/** May this update-page call write a decision? { ok: true, reason } or { ok: false, why }. Only called for a call that names an editor column. */
+/** May this update-page call write a decision? { ok: true, reason } or { ok: false, why }. Only called for an update-page call whose properties name an editor column, so `properties` is an object with a key in it. */
 function decideWrite(toolInput, config, root, now) {
   const no = (why) => ({ ok: false, why });
   const columns = Array.isArray(config.editor_columns?.claims) && config.editor_columns.claims.length ? config.editor_columns.claims.filter((n) => typeof n === 'string') : DEFAULT_CLAIMS_COLUMNS;
@@ -148,17 +164,20 @@ function decideWrite(toolInput, config, root, now) {
   const extra = Object.keys(toolInput).filter((k) => !DECIDE_KEYS.has(k));
   if (extra.length) return no(`a decision write carries only page_id, command, properties and allow_async; got ${extra.join(', ')}`);
   if ('allow_async' in toolInput && typeof toolInput.allow_async !== 'boolean') return no('allow_async must be true or false');
-  if (!isObject(toolInput.properties) || Object.keys(toolInput.properties).length === 0) return no('a decision write needs properties');
   const others = Object.keys(toolInput.properties).filter((k) => !lower.has(k.trim().toLowerCase()));
   if (others.length) return no(`a decision write may name only ${columns.join(', ')}; got ${others.join(', ')}`);
   for (const [key, value] of Object.entries(toolInput.properties)) {
     if (key.trim().toLowerCase() === reviewColumn && !DECIDE_REVIEW_VALUES.includes(value)) return no(`${key} may be set to ${DECIDE_REVIEW_VALUES.join(' or ')} only`);
   }
-  const pageId = pageIdOf(toolInput.page_id);
-  if (!pageId) return no('the page_id is not a page id or a notion.so address');
-  const listed = decidingPageIds(root, now);
-  if (listed.size === 0) return no('no decide run is open (runs/DECIDING is missing or older than two hours)');
-  if (!listed.has(pageId)) return no(`the page ${pageId} is not listed by an open decide run`);
+  // every page id found anywhere in page_id must be a listed one, and there must be one: an address that carries a second id is not taken for the first
+  const found = pageIdsIn(toolInput.page_id);
+  if (found.length === 0) return no('the page_id is not a page id or a notion.so address');
+  const { ids: listed, paused } = decidingPageIds(root, now);
+  const unlisted = found.filter((id) => !listed.has(id));
+  // a marker that the pause put aside is the reason when it is the one that would have listed the page
+  if (unlisted.length && paused) return no('the agent is paused (runs/PAUSED exists), so no decision is written');
+  if (listed.size === 0) return no('no decide run is open (runs/DECIDING is missing, not a file or older than two hours)');
+  if (unlisted.length) return no(`the page ${unlisted[0]} is not listed by an open decide run`);
   return { ok: true, reason: `a decision on a page that an open decide run lists (runs/DECIDING), writing only ${columns.join(', ')}` };
 }
 
@@ -190,7 +209,7 @@ export function decide(input, root = AGENT_ROOT, options = {}) {
   }
 
   const marker = join(root, 'runs', 'SETUP');
-  if (!existsSync(marker)) return deny('no builder session is open (runs/SETUP is missing): scripts write Notion through the REST client, the session does not');
+  if (!isRegularFile(marker)) return deny('no builder session is open (runs/SETUP is missing or is not a file): scripts write Notion through the REST client, the session does not');
   const registered = new Set([
     ...(config.notion?.setup_page_parents ?? []),
     ...(readJsonSafe(join(root, 'runs', 'builder', 'pages.json'))?.pages ?? []),

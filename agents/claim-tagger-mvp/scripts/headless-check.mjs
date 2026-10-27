@@ -42,7 +42,9 @@ import { USAGE_WINDOW_RE, findClaudeBin, resolveSpawnTarget, scrubEnv } from './
 import { EXIT } from './lib/exit-codes.mjs';
 import { writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { agentRoot, ensureDir, isMain, repoRoot } from './lib/paths.mjs';
-import { TOKEN_KINDS, checkTranscript, loadDecideColumns, loadEditorColumns, parseStreamJson, statsLine } from './transcript-check.mjs';
+import {
+  TOKEN_KINDS, checkTranscript, loadDecideColumns, loadEditorColumns, loadReviewColumn, parseStreamJson, statsLine,
+} from './transcript-check.mjs';
 
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/headless-check.mjs --prompt "/claim-tagger status" --out <dir> [--settings .claude/settings.json] [--cwd <repo>] [--timeout-ms 1800000] [--claude-bin <program>] [--overwrite]',
@@ -198,7 +200,7 @@ const readText = (path, cap = Infinity) => {
  */
 export async function runPrompt(options) {
   const {
-    prompt, outDir, settingsPath, cwd, bin = 'claude', timeoutMs = DEFAULT_TIMEOUT_MS, killGraceMs = KILL_GRACE_MS, env = process.env, spawnImpl = spawn, editorColumns, allowedScripts, decideColumns,
+    prompt, outDir, settingsPath, cwd, bin = 'claude', timeoutMs = DEFAULT_TIMEOUT_MS, killGraceMs = KILL_GRACE_MS, env = process.env, spawnImpl = spawn, editorColumns, allowedScripts, decideColumns, reviewColumn,
   } = options;
   ensureDir(outDir);
   const transcriptPath = join(outDir, 'transcript.jsonl');
@@ -228,7 +230,7 @@ export async function runPrompt(options) {
   const transcript = readText(transcriptPath);
   const stderr = readText(stderrPath, STDERR_CAP);
   const check = checkTranscript(transcript, {
-    editorColumns, allowedScripts, expectStyle: OUTPUT_STYLE, decide: isDecidePrompt(prompt), decideColumns,
+    editorColumns, allowedScripts, expectStyle: OUTPUT_STYLE, decide: isDecidePrompt(prompt), decideColumns, reviewColumn,
   });
   const lastResult = parseStreamJson(transcript).events.findLast((e) => e?.type === 'result');
 
@@ -404,6 +406,7 @@ export async function main(argv, io = defaultIo, env = {}) {
   const bin = findClaudeBin(values['claude-bin'] ?? configuredBin(env.root));
   const editorColumns = loadEditorColumns(env.root);
   const decideColumns = loadDecideColumns(env.root);
+  const reviewColumn = loadReviewColumn(env.root);
   const results = [];
   let code = EXIT.OK;
   try {
@@ -414,7 +417,7 @@ export async function main(argv, io = defaultIo, env = {}) {
       const prompt = prompts[i];
       io.out(`headless-check: running ${single ? '' : `${i + 1} of ${prompts.length}: `}${prompt}`);
       const result = await runPrompt({
-        prompt, outDir: dirs[i], settingsPath, cwd, bin, timeoutMs, env: env.processEnv ?? process.env, spawnImpl: env.spawnImpl ?? spawn, editorColumns, decideColumns,
+        prompt, outDir: dirs[i], settingsPath, cwd, bin, timeoutMs, env: env.processEnv ?? process.env, spawnImpl: env.spawnImpl ?? spawn, editorColumns, decideColumns, reviewColumn,
       });
       results.push({ n: i + 1, prompt, dir: dirs[i], status: result.status, ok: result.ok, problems: result.problems.length });
       report(io, result, prompt);

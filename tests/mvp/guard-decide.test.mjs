@@ -52,10 +52,116 @@ test('the page_id may be 32 hex digits, a dashed id or a notion.so address', () 
   for (const page of [hexOf(PAGE), PAGE, PAGE.toUpperCase(), `https://www.notion.so/${hexOf(PAGE)}`, `https://www.notion.so/Some-claim-title-${hexOf(PAGE)}?pvs=4`, `https://app.notion.com/p/Some-claim-${hexOf(PAGE)}`, `https://www.notion.so/workspace/${PAGE}#x`]) {
     assert.equal(verdict(decision(THREE, {}, page), root).permissionDecision, 'allow', page);
   }
-  for (const page of ['', 'x', hexOf(PAGE).slice(1), `x${hexOf(PAGE)}`, 'https://www.notion.so/', '0a9e0000-0000-4000-8000-0000000000d2', undefined]) {
+  for (const page of ['', 'x', hexOf(PAGE).slice(1), `${hexOf(PAGE)}a`, `a${hexOf(PAGE)}`, 'https://www.notion.so/', '0a9e0000-0000-4000-8000-0000000000d2', undefined]) {
     const input = decision(THREE, {}, page);
     if (page === undefined) delete input.tool_input.page_id;
     assert.equal(verdict(input, root).permissionDecision, 'deny', String(page));
+  }
+});
+
+test('S4: every page id found anywhere in page_id must be the listed one, and there must be one', () => {
+  const root = rootWith(placeholderConfig());
+  open(root);
+  const OTHER = '0a9e0000-0000-4000-8000-0000000000e7';
+  // the listed id twice is still the listed id
+  assert.equal(verdict(decision(THREE, {}, `https://www.notion.so/${hexOf(PAGE)}?p=${PAGE}`), root).permissionDecision, 'allow');
+  // a second id that the marker does not list, in the path, in the title slug position or in the query: refused, whichever the connector would take
+  for (const page of [
+    `https://www.notion.so/${hexOf(OTHER)}?p=${hexOf(PAGE)}`, `https://www.notion.so/Title-${hexOf(PAGE)}?p=${hexOf(OTHER)}`, `https://www.notion.so/${OTHER}/${hexOf(PAGE)}`,
+    `https://www.notion.so/Title-${hexOf(OTHER)}-${hexOf(PAGE)}`, `${hexOf(PAGE)},${hexOf(OTHER)}`,
+  ]) {
+    const d = verdict(decision(THREE, {}, page), root);
+    assert.equal(d.permissionDecision, 'deny', page);
+    assert.match(d.permissionDecisionReason, /is not listed by an open decide run/, page);
+  }
+  // no id at all
+  for (const page of ['https://www.notion.so/Title-only', 'not an id', '12345678-1234']) assert.equal(verdict(decision(THREE, {}, page), root).permissionDecision, 'deny', page);
+  assert.match(verdict(decision(THREE, {}, 'not an id'), root).permissionDecisionReason, /not a page id or a notion\.so address/);
+});
+
+test('G22: the marker may list its ids with dashes or in capitals; they are read as the same page', () => {
+  const root = rootWith(placeholderConfig());
+  mkdirSync(join(root, 'runs'), { recursive: true });
+  writeFileSync(join(root, 'runs', 'DECIDING'), `${JSON.stringify({ run_id: 'r1', opened_at: new Date(NOW - 60e3).toISOString(), page_ids: [PAGE.toUpperCase(), `https://www.notion.so/Some-title-${hexOf('0a9e0000-0000-4000-8000-0000000000d3')}`], root })}\n`);
+  assert.equal(verdict(decision(), root).permissionDecision, 'allow');
+  assert.equal(verdict(decision(THREE, {}, hexOf(PAGE)), root).permissionDecision, 'allow');
+  assert.equal(verdict(decision(THREE, {}, '0a9e0000-0000-4000-8000-0000000000d3'), root).permissionDecision, 'allow');
+});
+
+test('S5: a folder named like a marker is not a marker: the decide allowance and the builder session both need a regular file', () => {
+  const root = rootWith(placeholderConfig());
+  mkdirSync(join(root, 'runs', 'DECIDING'), { recursive: true });
+  writeFileSync(join(root, 'runs', 'DECIDING', 'x'), 'x');
+  assert.equal(verdict(decision(), root).permissionDecision, 'deny', 'DECIDING as a folder');
+  const demo = rootWith(placeholderConfig());
+  mkdirSync(join(demo, 'runs', 'demos', 'p1', 'runs', 'DECIDING'), { recursive: true });
+  assert.equal(verdict(decision(), demo).permissionDecision, 'deny', 'DECIDING as a folder in a practice page');
+
+  const setup = rootWith(placeholderConfig());
+  const content = { tool_name: 'mcp__notion__notion-update-page', tool_input: { page_id: '0a9e0000-0000-4000-8000-000000000001', command: 'replace_content', new_str: 'x' } };
+  mkdirSync(join(setup, 'runs', 'builder'), { recursive: true });
+  writeFileSync(join(setup, 'runs', 'builder', 'pages.json'), JSON.stringify({ pages: ['0a9e0000-0000-4000-8000-000000000001'] }));
+  mkdirSync(join(setup, 'runs', 'SETUP'), { recursive: true });
+  const folder = verdict(content, setup);
+  assert.equal(folder.permissionDecision, 'deny', 'SETUP as a folder is no builder session');
+  assert.match(folder.permissionDecisionReason, /no builder session is open/);
+  // the same session with SETUP as a file is a session
+  const real = rootWith(placeholderConfig());
+  mkdirSync(join(real, 'runs', 'builder'), { recursive: true });
+  writeFileSync(join(real, 'runs', 'builder', 'pages.json'), JSON.stringify({ pages: ['0a9e0000-0000-4000-8000-000000000001'] }));
+  writeFileSync(join(real, 'runs', 'SETUP'), '{}\n');
+  assert.equal(verdict(content, real).permissionDecision, 'allow');
+});
+
+test('S6: no decision is written while runs/PAUSED exists, in the agent folder or in the practice page\'s folder for its own marker', () => {
+  const root = rootWith(placeholderConfig());
+  open(root);
+  assert.equal(verdict(decision(), root).permissionDecision, 'allow');
+  writeFileSync(join(root, 'runs', 'PAUSED'), 'paused by a person\n');
+  const d = verdict(decision(), root);
+  assert.equal(d.permissionDecision, 'deny');
+  assert.match(d.permissionDecisionReason, /the agent is paused \(runs\/PAUSED exists\)/);
+
+  // the pause of the agent folder covers the practice pages, the pause of one practice page covers its own marker only
+  const demos = rootWith(placeholderConfig());
+  const one = join(demos, 'runs', 'demos', 'p1', 'runs');
+  const two = join(demos, 'runs', 'demos', 'p2', 'runs');
+  open(demos, { where: one, pages: ['0a9e0000-0000-4000-8000-0000000000d4'] });
+  open(demos, { where: two, pages: ['0a9e0000-0000-4000-8000-0000000000d5'] });
+  const at = (page) => verdict(decision(THREE, {}, page), demos).permissionDecision;
+  assert.equal(at('0a9e0000-0000-4000-8000-0000000000d4'), 'allow');
+  writeFileSync(join(one, 'PAUSED'), 'paused\n');
+  assert.equal(at('0a9e0000-0000-4000-8000-0000000000d4'), 'deny', 'the practice page that is paused');
+  assert.equal(at('0a9e0000-0000-4000-8000-0000000000d5'), 'allow', 'another practice page is not');
+  writeFileSync(join(demos, 'runs', 'PAUSED'), 'paused\n');
+  assert.equal(at('0a9e0000-0000-4000-8000-0000000000d5'), 'deny', 'the agent folder\'s pause covers every practice page');
+  // a stale marker under a pause is just stale, and says so as before
+  const stale = rootWith(placeholderConfig());
+  open(stale, { at: NOW - 3 * 3600e3 });
+  writeFileSync(join(stale, 'runs', 'PAUSED'), 'paused\n');
+  assert.match(verdict(decision(), stale).permissionDecisionReason, /no decide run is open/);
+});
+
+test('G13: a create-pages call is never a decision, even when it carries the top-level fields of one', () => {
+  const root = rootWith(placeholderConfig());
+  open(root);
+  const disguised = {
+    tool_name: 'mcp__notion__notion-create-pages',
+    tool_input: { parent: { page_id: PAGE }, pages: [{ properties: THREE }], page_id: PAGE, command: 'update_properties', properties: THREE },
+  };
+  const d = verdict(disguised, root);
+  assert.equal(d.permissionDecision, 'deny');
+  assert.match(d.permissionDecisionReason, /belongs to the editor \(hard rule 1\)/);
+  assert.doesNotMatch(d.permissionDecisionReason, /open decide run/);
+});
+
+test('G7: a decision whose properties name no editor column never reaches the decide rules; the refusal is the setup rule\'s', () => {
+  const root = rootWith(placeholderConfig());
+  open(root);
+  for (const properties of [{}, null, 'Verified tags']) {
+    const d = verdict(decision(properties), root);
+    assert.equal(d.permissionDecision, 'deny', JSON.stringify(properties));
+    assert.match(d.permissionDecisionReason, /no builder session is open/);
   }
 });
 
