@@ -35,6 +35,7 @@
     ],
     "ask": [
       "Bash(node agents/claim-tagger-mvp/scripts/setup.mjs:*)",
+      "Bash(node agents/claim-tagger-mvp/scripts/geo-pick.mjs:*)",
       "Bash(node agents/claim-tagger-mvp/scripts/rollback.mjs:*)",
       "Bash(node agents/claim-tagger-mvp/scripts/restore.mjs:*)",
       "mcp__claude_ai_notion__notion-update-page",
