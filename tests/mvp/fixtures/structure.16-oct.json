@@ -131,7 +131,7 @@
         }
       ]
     },
-    "claims_copy": {
+    "claims": {
       "title": "Claims copy",
       "columns": [
         {
@@ -515,7 +515,7 @@
   "views": [
     {
       "name": "Your queue",
-      "table": "claims_copy",
+      "table": "claims",
       "filter": "Review status is not Reviewed, and Agent notes contains for an editor, and Agent notes does not contain nothing waits",
       "sort": "Agent confidence, lowest first",
       "columns": [
@@ -533,7 +533,7 @@
     },
     {
       "name": "Needs your note",
-      "table": "claims_copy",
+      "table": "claims",
       "filter": "Why wrong is not empty, and Challenged tags notes is empty",
       "sort": "Agent confidence, lowest first",
       "columns": [
@@ -548,7 +548,7 @@
     },
     {
       "name": "Agent disagreed",
-      "table": "claims_copy",
+      "table": "claims",
       "filter": "Agent notes contains disagrees",
       "sort": "Agent confidence, lowest first",
       "columns": [

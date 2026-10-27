@@ -66,7 +66,7 @@ test('followup: rows that still come out wrong are marked Still wrong, the repor
   const report = assertReport(h, r);
   assert.equal(report.sentence, 'Follow-up, repeated by hand: the agent agrees with 1 of your 2 decisions; 1 still comes out wrong.');
   assert.deepEqual(report.rows.map((x) => x[1]).sort(), ['Fixed', 'Still wrong']);
-  assert.equal(report.next, `Next: add a note in Challenged tags notes on the claims in Agent disagreed (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000005).`, 'the view Agent disagreed of the Claims copy');
+  assert.equal(report.next, `Next: add a note in Challenged tags notes on the claims in Agent disagreed (https://www.notion.so/${w.DB.claims}?v=e3000000000000000000000000000005).`, 'the view Agent disagreed of the Claims copy');
   assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'], `Follow-up · ${stampOf(NOW)} · 1 Fixed, 1 Still wrong`);
 
   const both = await promoteWorld({ status: 'Live' }); // under the rule in force both rows are Can't tell
@@ -87,7 +87,7 @@ test('followup: the claims of the rows get their agent columns again, with the e
   assert.deepEqual(c01['Agent tags'], [], 'the editor decided Does not apply, so the tag is not written');
   assert.deepEqual([c01['Tags waiting'], c01['Agent status'], c01['Agent edition'], c01['Agent remarks']], [[], 'Done', '2026-10-16.1', REMARK]);
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
-  for (const op of plan.filter((o) => o.table === 'claims_copy')) assert.ok(Object.keys(op.properties).every((k) => WRITE_COLUMNS.includes(k)), 'the agent\'s own columns of the claim and nothing the editor writes');
+  for (const op of plan.filter((o) => o.table === 'claims')) assert.ok(Object.keys(op.properties).every((k) => WRITE_COLUMNS.includes(k)), 'the agent\'s own columns of the claim and nothing the editor writes');
   for (const op of plan.filter((o) => o.table === 'tag_decisions')) assert.deepEqual(Object.keys(op.properties), ['Follow-up'], 'the only column a decided row accepts');
 });
 
@@ -160,7 +160,7 @@ test('followup: a supporting row whose reading no longer points at a rule (the e
   for (const c of w.callsWith(claimText(2))) assert.fail(`the recanted row was judged: ${c.stdin}`);
   assert.deepEqual(readJson(join(r.runDir, 'run.json')).left_alone, [keyOf(2)]);
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
-  assert.ok(plan.every((op) => !(op.table === 'claims_copy' && op.key === 'c02')), 'and the claim of the recanted row is not written either');
+  assert.ok(plan.every((op) => !(op.table === 'claims' && op.key === 'c02')), 'and the claim of the recanted row is not written either');
   // a row that is no longer a disagreement is left alone the same way
   const agreed = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: no } });
   agreed.fake.editRow(agreed.ids.queue[keyOf(1)], { 'Tag outcome': "Can't tell" });
@@ -214,7 +214,7 @@ test('followup: on a Reviewed claim Agent tags are the editor\'s set, and a row 
   assert.deepEqual([c02['Agent tags'], c02['Agent status'], c02['Tags waiting']], [[], 'Disagrees with your decision', []], 'the editor\'s set wins, and the status says where the agent differs');
   assert.deepEqual([c02['Review status'], c02['Challenged tags notes']], ['Reviewed', 'Rule unclear. Rule 4 again: this reference is general too.'], 'the editor\'s columns are as they were (the reason word opens the note: the claims table has no Why wrong)');
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
-  for (const op of plan.filter((o) => o.table === 'claims_copy')) assert.ok(Object.keys(op.properties).every((k) => WRITE_COLUMNS.includes(k)), 'only the agent\'s columns of the claim');
+  for (const op of plan.filter((o) => o.table === 'claims')) assert.ok(Object.keys(op.properties).every((k) => WRITE_COLUMNS.includes(k)), 'only the agent\'s columns of the claim');
   for (const op of plan.filter((o) => o.table === 'tag_decisions')) assert.deepEqual(Object.keys(op.properties), ['Follow-up'], 'the only column of the ledger the follow-up writes');
 });
 
@@ -231,16 +231,16 @@ test('followup rewrites the Agent reasons of the claims it checks again: the lin
   w.fake.editRow(w.ids.claim.c01, { 'Agent reasons': 'Context-dependent: An old reason. · 1 of 1 runs agree' });
   const r = await followup(w.hooks());
   assert.equal(r.exit, 0);
-  const c01 = w.row('claims_copy', 'c01');
+  const c01 = w.row('claims', 'c01');
   assert.match(c01['Agent reasons'], /^Context-dependent: .+ · \d of \d runs agree$/);
   assert.doesNotMatch(c01['Agent reasons'], /An old reason/);
   assert.equal(c01['Agent reasons'].split('\n').length, 1, 'one line for the one tag');
-  assert.match(w.row('claims_copy', 'c02')['Agent reasons'], /^Context-dependent: /, 'a claim that had none gets its line');
+  assert.match(w.row('claims', 'c02')['Agent reasons'], /^Context-dependent: /, 'a claim that had none gets its line');
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
-  for (const op of plan.filter((o) => o.table === 'claims_copy')) assert.ok('Agent reasons' in op.properties);
+  for (const op of plan.filter((o) => o.table === 'claims')) assert.ok('Agent reasons' in op.properties);
   const again = await followup(w.hooks());
   assert.equal(again.exit, 0);
-  assert.equal(readJsonl(join(again.runDir, 'plan.jsonl')).rows.filter((o) => o.table === 'claims_copy').length, 0, 'a second follow-up finds the columns as they should be');
+  assert.equal(readJsonl(join(again.runDir, 'plan.jsonl')).rows.filter((o) => o.table === 'claims').length, 0, 'a second follow-up finds the columns as they should be');
 });
 
 test('followup writes Agent confidence for the claims it checks again, from the answers it has, so a claim it re-tags does not keep the confidence of its old answer', async () => {
@@ -249,27 +249,27 @@ test('followup writes Agent confidence for the claims it checks again, from the 
   w.editClaim('c01', { 'Agent tags': [], 'Agent status': 'Done', 'Agent edition': '2026-10-01.1', 'Agent confidence': 0.75 });
   const r = await followup(w.hooks());
   assert.equal(r.exit, 0);
-  assert.equal(w.row('claims_copy', 'c01')['Agent confidence'], 0.85, 'the answer under the rule now in force is Applies at 0.85: max(p, 1 - p)');
+  assert.equal(w.row('claims', 'c01')['Agent confidence'], 0.85, 'the answer under the rule now in force is Applies at 0.85: max(p, 1 - p)');
   assert.deepEqual(w.claim('c01')['Agent tags'], ['Context-dependent'], 'and the tag it argues for');
-  assert.equal(w.row('claims_copy', 'c02')['Agent confidence'], 0.9, 'a claim that had none gets it: Does not apply at p 0.1');
-  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1).filter((o) => o.table === 'claims_copy');
+  assert.equal(w.row('claims', 'c02')['Agent confidence'], 0.9, 'a claim that had none gets it: Does not apply at p 0.1');
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1).filter((o) => o.table === 'claims');
   assert.equal(plan.find((o) => o.key === 'c01').properties['Agent confidence'], 0.85);
   // a second follow-up finds the columns as they should be
   const again = await followup(w.hooks());
   assert.equal(again.exit, 0);
-  assert.equal(readJsonl(join(again.runDir, 'plan.jsonl')).rows.filter((o) => o.table === 'claims_copy').length, 0);
+  assert.equal(readJsonl(join(again.runDir, 'plan.jsonl')).rows.filter((o) => o.table === 'claims').length, 0);
   // an answer that is not sure is a coin flip: 0.5 is written over the confidence the claim had
   const unsure = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: wrong } });
   unsure.fake.editRow(unsure.ids.claim.c02, { 'Agent confidence': 0.9 });
   assert.equal((await followup(unsure.hooks())).exit, 0);
-  assert.equal(unsure.row('claims_copy', 'c02')['Agent confidence'], 0.5);
+  assert.equal(unsure.row('claims', 'c02')['Agent confidence'], 0.5);
 });
 
 test('followup: without a recorded view the Next line for rows that are still wrong links the Claims copy itself', async () => {
   const w = await promoteWorld({ status: 'Live', base: { [claimText(1)]: no, [claimText(2)]: wrong }, world: { configure: (c) => { delete c.notion.views.agent_disagreed; } } });
   const r = await followup(w.hooks());
   assert.equal(r.exit, 0);
-  assert.equal(r.report.next, `Next: add a note in Challenged tags notes on the claims in Agent disagreed (https://www.notion.so/${w.DB.claims_copy}).`);
+  assert.equal(r.report.next, `Next: add a note in Challenged tags notes on the claims in Agent disagreed (https://www.notion.so/${w.DB.claims}).`);
 });
 
 test('followup: on a claim marked To review the tag that was checked again waits, whatever the answer, and is not written to Agent tags', async () => {
@@ -295,7 +295,7 @@ test('followup never writes or clears a reading: the claim\'s Agent reading and 
   const r = await followup(w.hooks());
   assert.equal(r.exit, 0);
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
-  assert.ok(plan.some((o) => o.table === 'claims_copy') && plan.some((o) => o.table === 'tag_decisions'), 'the plan writes both the claims\' columns and the Follow-up of the rows');
+  assert.ok(plan.some((o) => o.table === 'claims') && plan.some((o) => o.table === 'tag_decisions'), 'the plan writes both the claims\' columns and the Follow-up of the rows');
   for (const op of plan) {
     for (const column of READING_COLUMNS) assert.ok(!(column in op.properties), `${op.table} ${op.key}: the plan does not name ${column}`);
   }
@@ -304,7 +304,7 @@ test('followup never writes or clears a reading: the claim\'s Agent reading and 
   for (const i of [1, 2]) {
     const row = w.row('tag_decisions', keyOf(i));
     assert.deepEqual(READING_COLUMNS.map((c) => row[c]), Object.values(held), `the ledger row of claim ${i} still holds its reading`);
-    assert.equal(w.row('claims_copy', `c0${i}`)['Agent reading'], 'Context-dependent: Rule unclear, rule 4 · Rule 4 leaves general references open.', `and so does claim ${i}`);
-    assert.equal(w.row('claims_copy', `c0${i}`)['Agent edition'], '2026-10-16.1', 'the agent\'s own columns of the claim were written again');
+    assert.equal(w.row('claims', `c0${i}`)['Agent reading'], 'Context-dependent: Rule unclear, rule 4 · Rule 4 leaves general references open.', `and so does claim ${i}`);
+    assert.equal(w.row('claims', `c0${i}`)['Agent edition'], '2026-10-16.1', 'the agent\'s own columns of the claim were written again');
   }
 });

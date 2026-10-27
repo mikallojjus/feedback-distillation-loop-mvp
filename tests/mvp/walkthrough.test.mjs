@@ -91,7 +91,7 @@ function withRealIds(config) {
   let k = 0;
   const fill = (v) => (typeof v === 'string' && v.startsWith('<') ? `7a${String((k += 1)).padStart(30, '0')}` : v);
   const n = config.notion;
-  for (const entry of [n.rulebook, ...n.claims, ...Object.values(n.databases)]) {
+  for (const entry of [n.rulebook, n.claims, ...Object.values(n.databases)]) {
     entry.database_id = fill(entry.database_id);
     entry.data_source_id = fill(entry.data_source_id);
   }
@@ -361,14 +361,15 @@ test('the config of a demo profile is valid, holds placeholders where the practi
   assert.equal(cfg.notion.parent_page_id, '0123456789abcdef0123456789abcdef');
   assert.equal(cfg.notion.demo_parent_page_id, '0123456789abcdef0123456789abcdef');
   assert.deepEqual(cfg.notion.pages, { proposal: '<none>', demos: '<none>', demo_tests: '<none>' });
-  for (const entry of [cfg.notion.rulebook, cfg.notion.claims[0], ...Object.values(cfg.notion.databases)]) {
+  for (const entry of [cfg.notion.rulebook, cfg.notion.claims, ...Object.values(cfg.notion.databases)]) {
     assert.equal(entry.database_id, '<setup>');
     assert.equal(entry.data_source_id, '<setup>');
   }
-  assert.equal(cfg.notion.claims[0].name, 'demo_claims');
-  assert.equal(cfg.notion.claims[0].label, 'Claims');
-  assert.deepEqual(cfg.notion.claims[0].columns, production.notion.claims[0].columns);
-  assert.deepEqual(cfg.notion.claims[0].write_columns, production.notion.claims[0].write_columns);
+  assert.ok(!Array.isArray(cfg.notion.claims), 'one claims table (P5): the entry is one object, not a list');
+  assert.deepEqual([cfg.notion.claims.name, cfg.notion.claims.enabled], [undefined, undefined], 'and it has no name and no enabled flag');
+  assert.equal(cfg.notion.claims.label, 'Claims');
+  assert.deepEqual(cfg.notion.claims.columns, production.notion.claims.columns);
+  assert.deepEqual(cfg.notion.claims.write_columns, production.notion.claims.write_columns);
   assert.deepEqual(cfg.notion.views, {});
   assert.deepEqual(cfg.tags, { default: 'text' });
   assert.deepEqual(cfg.judge.groups, { G1: [TAG] });
@@ -379,20 +380,20 @@ test('the config of a demo profile is valid, holds placeholders where the practi
   assert.deepEqual(cfg.editor_columns, production.editor_columns);
   const protectedIds = new Set([...cfg.notion.protected_database_ids, ...cfg.notion.protected_page_ids].map((id) => id.replace(/-/g, '')));
   for (const id of [...production.notion.protected_database_ids, ...production.notion.protected_page_ids]) assert.ok(protectedIds.has(id.replace(/-/g, '')), id);
-  for (const t of [production.notion.rulebook, production.notion.claims[0], ...Object.values(production.notion.databases)]) {
+  for (const t of [production.notion.rulebook, production.notion.claims, ...Object.values(production.notion.databases)]) {
     assert.ok(protectedIds.has(t.database_id.replace(/-/g, '')) && protectedIds.has(t.data_source_id.replace(/-/g, '')), 'a table of production is protected');
   }
   assert.ok(protectedIds.has(production.notion.parent_page_id), 'and so is the production page');
   assert.ok(cfg.notion.protected_database_ids.includes(production.notion.parent_page_id) && cfg.notion.protected_page_ids.includes(production.notion.parent_page_id), 'in both lists');
   assert.notEqual(production.demo, true, 'production is left as it was');
-  assert.equal(production.notion.claims[0].name, 'claims_copy');
+  assert.ok(!Array.isArray(production.notion.claims) && production.notion.claims.label === 'Claims copy', 'production keeps its one claims entry');
   // the ids of the practice page's tables go in as they are made
   dp.setTableIds(cfg, 'rulebook', { database_id: 'AAAAAAAA-0000-4000-8000-000000000001', data_source_id: 'bbbbbbbb000040008000000000000002' });
   assert.equal(cfg.notion.rulebook.database_id, 'aaaaaaaa000040008000000000000001');
   assert.equal(cfg.notion.rulebook.data_source_id, 'bbbbbbbb000040008000000000000002');
-  dp.setTableIds(cfg, 'claims_copy', { database_id: 'c'.repeat(32), data_source_id: 'd'.repeat(32) });
+  dp.setTableIds(cfg, 'claims', { database_id: 'c'.repeat(32), data_source_id: 'd'.repeat(32) });
   dp.setTableIds(cfg, 'rule_changes', { database_id: 'e'.repeat(32), data_source_id: 'f'.repeat(32) });
-  assert.equal(cfg.notion.claims[0].database_id, 'c'.repeat(32));
+  assert.equal(cfg.notion.claims.database_id, 'c'.repeat(32));
   assert.equal(cfg.notion.databases.rule_changes.data_source_id, 'f'.repeat(32));
   assert.equal(validateConfig(cfg).ok, true);
 });
@@ -408,7 +409,7 @@ test('the practice structure carries the practice titles and the production colu
   assert.deepEqual(dp.writableColumns(practice, 'agent_settings'), ['Name', 'Paused', 'Rulebook edition', 'Last run summary']);
   // the Claims table: Geo Name, the agent's eight columns, the editor's three, then the other twelve Geo columns; Agent tags, Tags waiting and Verified tags are relations to
   // the Rulebook, and the "(old)" columns of the earlier builds (Agent tags, Agent notes, Why wrong) are in the structure as retired (a rename makes them on the live table, a new table never does)
-  const claims = practice.tables.claims_copy.columns;
+  const claims = practice.tables.claims.columns;
   const live = claims.filter((c) => !c.retired);
   assert.deepEqual(live.map((c) => c.name), [...REVIEW_ORDER, ...CLAIMS_COPY_COLUMNS.slice(1)]);
   assert.deepEqual(claims.filter((c) => c.retired).map((c) => c.name).sort(), [...RETIRED_COLUMNS].sort());
@@ -426,16 +427,16 @@ test('the practice structure carries the practice titles and the production colu
   assert.deepEqual(claims.find((c) => c.name === 'Agent status').options, ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read']);
   assert.equal(claims.find((c) => c.name === 'Agent confidence').type, 'number');
   // a practice page makes only the live columns: the retired ones are never a column to write
-  assert.deepEqual(dp.writableColumns(practice, 'claims_copy'), live.map((c) => c.name));
-  assert.ok(!dp.writableColumns(practice, 'claims_copy').some((n) => RETIRED_COLUMNS.includes(n)));
-  assert.ok(practice.tables.claims_copy.arrange_default_view === true, 'the table\'s own view is arranged');
+  assert.deepEqual(dp.writableColumns(practice, 'claims'), live.map((c) => c.name));
+  assert.ok(!dp.writableColumns(practice, 'claims').some((n) => RETIRED_COLUMNS.includes(n)));
+  assert.ok(practice.tables.claims.arrange_default_view === true, 'the table\'s own view is arranged');
   const verified = claims.find((c) => c.name === dp.CLAIM_COLUMNS.verified);
   assert.deepEqual([verified.type, verified.relation_to], ['relation', 'rulebook']);
   assert.deepEqual(claims.find((c) => c.name === 'Review status').options, ['To review', 'Reviewed']);
   // the names of the editor's columns are the production config's own, and the config lists them as the editor's: three, and Agent reading is the agent's
-  const entry = loadConfig(codeRoot()).notion.claims[0];
+  const entry = loadConfig(codeRoot()).notion.claims;
   assert.deepEqual(dp.CLAIM_COLUMNS, { verified: entry.columns.verified, review_status: entry.columns.review_status, notes: entry.columns.notes });
-  assert.deepEqual(editorColumns(loadConfig(codeRoot()), 'claims_copy'), Object.values(dp.CLAIM_COLUMNS));
+  assert.deepEqual(editorColumns(loadConfig(codeRoot()), 'claims'), Object.values(dp.CLAIM_COLUMNS));
   assert.equal(entry.write_columns.reading, dp.AGENT_READING_COLUMN);
   // the five views of the page are in the structure, each on the table the page puts it on; the two views of the ledger are not among them
   const where = { ...Object.fromEntries(Object.entries(dp.LINKED_VIEWS)), ...Object.fromEntries(Object.entries(dp.TAB_VIEWS).map(([k, v]) => [k, v.table])) };
@@ -744,14 +745,14 @@ test('start --dry-run sends one GET and nothing else; it writes preview.md and s
   assert.ok(created.every((names) => RETIRED_COLUMNS.every((name) => !names.includes(name))), 'a retired column is never made');
   assert.deepEqual([...created[1]].sort(), [...REVIEW_ORDER.filter((n) => !RELATIONS.includes(n)), ...CLAIMS_COPY_COLUMNS.slice(1)].sort(), 'the Claims is made with its other columns');
   assert.deepEqual(plan.requests.filter((q) => q.path === '/views').map((q) => q.body.name), ['Rulebook', 'Needs your note', 'Agent disagreed', 'Your queue', 'Lessons waiting']);
-  assert.deepEqual(Object.keys(plan.rows), ['rulebook', 'claims_copy', 'tag_decisions', 'agent_settings']);
+  assert.deepEqual(Object.keys(plan.rows), ['rulebook', 'claims', 'tag_decisions', 'agent_settings']);
   assert.deepEqual(Object.values(plan.rows).map((list) => list.length), [1, 9, 5, 1], 'the ledger has a row for each decided claim and none for the four that wait');
   assert.equal(plan.plan.counts.rows, 16);
-  assert.deepEqual(plan.rows.claims_copy.find((o) => o.properties['Geo ID'] === manifest.claims.find((c) => c.key === 'cnn')['Geo ID']).properties[dp.CLAIM_COLUMNS.verified], [`<the row of ${TAG} in Rulebook>`], 'the plan holds a placeholder where the page id goes');
+  assert.deepEqual(plan.rows.claims.find((o) => o.properties['Geo ID'] === manifest.claims.find((c) => c.key === 'cnn')['Geo ID']).properties[dp.CLAIM_COLUMNS.verified], [`<the row of ${TAG} in Rulebook>`], 'the plan holds a placeholder where the page id goes');
   // the plan holds the seeded readings: the Agent reading of each claim decided earlier (none on the four open claims) and the five ledger rows already read
   const openKeys = new Set(manifest.open.map((o) => o.claim));
   for (const c of manifest.claims) {
-    const op = plan.rows.claims_copy.find((o) => o.properties['Geo ID'] === c['Geo ID']);
+    const op = plan.rows.claims.find((o) => o.properties['Geo ID'] === c['Geo ID']);
     assert.equal(op.properties['Agent reading'], openKeys.has(c.key) ? undefined : SEEDED_LINE, c.key);
   }
   assert.ok(plan.rows.tag_decisions.every((o) => o.properties['Agent reading'] === 'Agent slip' && o.properties['Reading note'] === SEEDED && /^\S+ · [0-9a-f]{8}$/.test(o.properties['Read under'])));
@@ -783,7 +784,7 @@ test('the real manifest and page template, with no --manifest, give a lint-clean
   const { manifest } = real();
   assert.equal(plan.plan.manifest_version, manifest.manifest_version);
   assert.equal(plan.rows.tag_decisions.length, manifest.decided.length);
-  assert.equal(plan.rows.claims_copy.length, manifest.claims.length);
+  assert.equal(plan.rows.claims.length, manifest.claims.length);
 });
 
 /**
@@ -961,7 +962,7 @@ test('start builds the page: one page, five tables, the text in order, two linke
   assert.equal(demo.fallback, null);
   assert.equal(demo.tables_position, 'marker');
   assert.deepEqual(demo.errors, []);
-  assert.deepEqual(Object.keys(demo.databases), ['rulebook', 'claims_copy', 'tag_decisions', 'rule_changes', 'agent_settings']);
+  assert.deepEqual(Object.keys(demo.databases), ['rulebook', 'claims', 'tag_decisions', 'rule_changes', 'agent_settings']);
   assert.deepEqual(Object.keys(demo.views).sort(), ['agent_disagreed', 'lessons_waiting', 'needs_your_note', 'rulebook', 'your_queue']);
   assert.ok(demo.page.id && demo.toggle.id && demo.anchors.your_queue && demo.anchors.lessons_waiting);
   assert.deepEqual(Object.keys(demo.phases), ['page', 'content', 'databases', 'relations', 'toggle', 'views', 'fallback']);
@@ -976,8 +977,8 @@ test('start builds the page: one page, five tables, the text in order, two linke
   assert.ok(POST_BODIES(w.fake, '/databases').every((b) => b.is_inline === true && b.parent.page_id === demo.page.id));
 
   // the Claims table carries the Geo columns, the agent's seven and the editor's four, and neither "(old)" column; the three relations point at this page's Rulebook and were added after it
-  const claimsSchema = w.fake.dataSource(demo.databases.claims_copy.data_source_id).properties;
-  const liveNames = structure.tables.claims_copy.columns.filter((c) => !c.retired).map((c) => c.name);
+  const claimsSchema = w.fake.dataSource(demo.databases.claims.data_source_id).properties;
+  const liveNames = structure.tables.claims.columns.filter((c) => !c.retired).map((c) => c.name);
   assert.deepEqual(Object.keys(claimsSchema), liveNames.filter((n) => !RELATIONS.includes(n)).concat(RELATIONS), 'the relations come last: they are added once the Rulebook exists');
   assert.deepEqual(Object.keys(claimsSchema).filter((n) => RETIRED_COLUMNS.includes(n)), [], 'a practice page never gets the two retired columns');
   for (const name of RELATIONS) {
@@ -1027,19 +1028,19 @@ test('start builds the page: one page, five tables, the text in order, two linke
     return l.body.configuration.properties.filter((p) => p.visible !== false).map((p) => byId[p.property_id]);
   };
   const queue = linked.find((l) => l.name === 'Your queue');
-  assert.equal(queue.source_database_id.replace(/-/g, ''), demo.databases.claims_copy.database_id, 'Your queue is a view of the Claims table');
+  assert.equal(queue.source_database_id.replace(/-/g, ''), demo.databases.claims.database_id, 'Your queue is a view of the Claims table');
   assert.deepEqual(queue.body.filter, planned('Your queue').body.filter);
   assert.deepEqual(queue.body.filter, { property: 'Agent status', select: { equals: 'Waits for you' } }, 'Your queue lists the claims whose Agent status is Waits for you, with no condition on Review status');
   assert.deepEqual(queue.body.sorts, [{ property: 'Agent confidence', direction: 'ascending' }]);
   assert.equal(queue.body.configuration.wrap_cells, true);
-  assert.deepEqual(shown(queue, 'claims_copy'), REVIEW_ORDER);
+  assert.deepEqual(shown(queue, 'claims'), REVIEW_ORDER);
   const lessons = linked.find((l) => l.name === 'Lessons waiting');
   assert.equal(lessons.source_database_id.replace(/-/g, ''), demo.databases.rule_changes.database_id);
   assert.equal(lessons.body.configuration.wrap_cells, true);
   assert.deepEqual(shown(lessons, 'rule_changes'), ['Lesson', 'Current text', 'Proposed text', 'Status']);
 
   // the three views that are tabs: two on the Claims, one on the Rulebook; the ledger has none
-  const tabs = w.fake.tabViews(demo.databases.claims_copy.database_id);
+  const tabs = w.fake.tabViews(demo.databases.claims.database_id);
   assert.deepEqual(tabs.map((v) => v.name), ['Needs your note', 'Agent disagreed']);
   assert.deepEqual(tabs[0].filter, planned('Needs your note').body.filter);
   assert.deepEqual(tabs[1].filter, planned('Agent disagreed').body.filter);
@@ -1052,7 +1053,7 @@ test('start builds the page: one page, five tables, the text in order, two linke
   assert.equal(rulebookSchema.Counterpart.type, 'rich_text', 'and the column stays in the table');
 
   // the rows
-  assert.deepEqual([1, 9, 5, 0, 1], ['rulebook', 'claims_copy', 'tag_decisions', 'rule_changes', 'agent_settings'].map((t) => w.rows(t).length));
+  assert.deepEqual([1, 9, 5, 0, 1], ['rulebook', 'claims', 'tag_decisions', 'rule_changes', 'agent_settings'].map((t) => w.rows(t).length));
   const book = w.rows('rulebook')[0];
   assert.equal(book.Name, TAG);
   assert.equal(book.Status, 'Verified');
@@ -1060,13 +1061,13 @@ test('start builds the page: one page, five tables, the text in order, two linke
   assert.equal(book['Example Claims'], manifest.tag['Example Claims'].join('\n'));
   assert.ok(book['Work tags'].includes('Issue'));
   for (const c of manifest.claims) {
-    const row = w.rowBy('claims_copy', 'Geo ID', c['Geo ID']);
+    const row = w.rowBy('claims', 'Geo ID', c['Geo ID']);
     assert.equal(row['Geo Name'], c['Geo Name']);
     assert.equal(row['Geo URL'], c['Geo URL']);
     assert.equal(row['Geo Is factual'], c['Geo Is factual']);
     assertAgentSideEmpty(row, c.key, seededReadingOf(manifest, c.key));
   }
-  const claimsDb = demo.databases.claims_copy.database_id;
+  const claimsDb = demo.databases.claims.database_id;
   const cnn = w.fake.rows(claimsDb).find((p) => p.properties['Geo ID'].rich_text[0].plain_text === manifest.claims.find((c) => c.key === 'cnn')['Geo ID']);
   const hrefs = cnn.properties['Geo Sources'].rich_text.map((x) => x.href).filter(Boolean);
   assert.deepEqual(hrefs, manifest.claims.find((c) => c.key === 'cnn').source_pieces.map((p) => p.href).filter(Boolean), 'Geo Sources keeps its links');
@@ -1085,7 +1086,7 @@ test('start builds the page: one page, five tables, the text in order, two linke
   assert.deepEqual(config.tags, { default: 'text' });
   assert.deepEqual(config.judge.groups, { G1: [TAG] });
   assert.equal(config.notion.rulebook.database_id, demo.databases.rulebook.database_id);
-  assert.equal(config.notion.claims[0].database_id, demo.databases.claims_copy.database_id);
+  assert.equal(config.notion.claims.database_id, demo.databases.claims.database_id);
   assert.equal(config.notion.databases.rule_changes.data_source_id, demo.databases.rule_changes.data_source_id);
   assert.deepEqual(Object.keys(config.notion.views).sort(), ['agent_disagreed', 'lessons_waiting', 'needs_your_note', 'rulebook', 'your_queue']);
   for (const prodId of [w.production.notion.rulebook.database_id, w.production.notion.databases.tag_decisions.data_source_id, w.production.notion.parent_page_id]) {
@@ -1137,7 +1138,7 @@ test('start builds the page: one page, five tables, the text in order, two linke
     [result.counts.rulebook, result.counts.claims, result.counts.tag_decisions, result.counts.decided, result.counts.open, result.counts.linked_views, result.counts.tab_views],
     [expect.rulebook_rows, expect.claims, expect.ledger_rows, expect.reviewed_claims, expect.open_claims, expect.linked_views, expect.tab_views],
   );
-  assert.deepEqual(expect.claims_views, structure.views.filter((v) => v.table === 'claims_copy').map((v) => v.name), 'the Claims views the manifest expects are the structure\'s');
+  assert.deepEqual(expect.claims_views, structure.views.filter((v) => v.table === 'claims').map((v) => v.name), 'the Claims views the manifest expects are the structure\'s');
 });
 
 test('a fresh page\'s Claims: five claims Reviewed with the audit\'s values and their seeded Agent reading, four To review, the editor\'s columns otherwise empty, and the relation points at the Rulebook row', async () => {
@@ -1146,12 +1147,12 @@ test('a fresh page\'s Claims: five claims Reviewed with the audit\'s values and 
   const V = dp.CLAIM_COLUMNS.verified;
   assert.equal((await w.start()).code, 0);
   const book = w.rows('rulebook')[0];
-  const raw = (c) => w.fake.rows(w.db('claims_copy')).find((p) => p.properties['Geo ID'].rich_text[0].plain_text === c['Geo ID']);
+  const raw = (c) => w.fake.rows(w.db('claims')).find((p) => p.properties['Geo ID'].rich_text[0].plain_text === c['Geo ID']);
   const decided = new Map(manifest.decided.map((d) => [d.claim, d]));
   const reviewed = [];
   const toReview = [];
   for (const c of manifest.claims) {
-    const row = w.rowBy('claims_copy', 'Geo ID', c['Geo ID']);
+    const row = w.rowBy('claims', 'Geo ID', c['Geo ID']);
     const d = decided.get(c.key);
     assert.equal(row['Why wrong'], undefined, `${c.key}: the Claims has no Why wrong`);
     if (d) {
@@ -1172,11 +1173,11 @@ test('a fresh page\'s Claims: five claims Reviewed with the audit\'s values and 
   }
   assert.deepEqual(reviewed, ['cnn', 'dallas', 'contractor', 'kennedy', 'stopgap']);
   assert.deepEqual(toReview, ['presspool', 'aiforce', 'usps', 'georgia']);
-  assert.deepEqual(['cnn', 'dallas'].map((k) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === k)['Geo ID'])[V].length), [1, 1]);
-  assert.equal(w.rows('claims_copy').filter((r) => r[V].length).length, 2, 'only the two Applies decisions hold the tag');
-  assert.equal(w.rows('claims_copy').filter((r) => r['Review status'] === 'Reviewed').length, 5);
+  assert.deepEqual(['cnn', 'dallas'].map((k) => w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === k)['Geo ID'])[V].length), [1, 1]);
+  assert.equal(w.rows('claims').filter((r) => r[V].length).length, 2, 'only the two Applies decisions hold the tag');
+  assert.equal(w.rows('claims').filter((r) => r['Review status'] === 'Reviewed').length, 5);
   // the agent's side (all eight columns) is empty on the claims to decide, and none of the claims says that anything waits; the decided claims hold their seeded reading only
-  for (const row of w.rows('claims_copy')) assertAgentSideEmpty(row, row['Geo Name'], row['Review status'] === 'Reviewed' ? SEEDED_LINE : null);
+  for (const row of w.rows('claims')) assertAgentSideEmpty(row, row['Geo Name'], row['Review status'] === 'Reviewed' ? SEEDED_LINE : null);
   // the editor's columns were written by the build under its marker, in creates and through the plan check; nothing was updated afterwards
   assert.equal(w.fake.requests.filter((q) => q.method === 'PATCH' && /^\/pages\//.test(q.path)).length, 0);
 });
@@ -1195,7 +1196,7 @@ test('the ledger of a fresh page: a row for each of the five decided claims with
       assert.equal(row, undefined, `${c.key} waits for the editor: the tag step makes its row`);
       continue;
     }
-    const claimRow = w.rowBy('claims_copy', 'Geo ID', c['Geo ID']);
+    const claimRow = w.rowBy('claims', 'Geo ID', c['Geo ID']);
     assert.equal(row.Claim, c['Geo Name']);
     assert.equal(row.Tag, TAG);
     assert.equal(row['Claim link'], notionUrl(claimRow.page_id), 'the ledger row links to the claim');
@@ -1217,7 +1218,7 @@ test('the ledger of a fresh page: a row for each of the five decided claims with
   // the copy is the one the tag step would make: syncing the decisions of the claims into this ledger changes nothing but one column
   const { syncDecisions } = await import('../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs');
   const claims = manifest.claims.map((c) => {
-    const row = w.rowBy('claims_copy', 'Geo ID', c['Geo ID']);
+    const row = w.rowBy('claims', 'Geo ID', c['Geo ID']);
     return { geo_id: c['Geo ID'], review_status: row['Review status'], verified_tags: row['Verified tags'].length ? [TAG] : [], challenged_notes: row['Challenged tags notes'] || '' };
   });
   const ledger = rows.map((r) => ({ ...r, decided: Boolean(r['Tag outcome']) }));
@@ -1251,7 +1252,7 @@ test('start only reads, creates and appends: no request names a protected id, no
   }
   for (const body of POST_BODIES(w.fake, '/pages').slice(1)) assert.ok(ownTables.has(String(body.parent.database_id).replace(/-/g, '')), 'a row is made in a table of the practice page');
   // the only PATCH are appends of blocks and the one request that adds the relation column, to the Claims of this page
-  const claimsSource = demo.databases.claims_copy.data_source_id;
+  const claimsSource = demo.databases.claims.data_source_id;
   for (const req of w.fake.requests.filter((q) => q.method === 'PATCH')) {
     assert.match(req.path, /^\/(blocks\/[^/]+\/children|data_sources\/[0-9a-f-]{32,36})$/, 'the only PATCH is an append of blocks or the relation');
     if (req.path.startsWith('/data_sources/')) assert.equal(req.path.replace(/^\/data_sources\//, '').replace(/-/g, ''), claimsSource);
@@ -1295,7 +1296,7 @@ test('the plan is written before anything is sent and the requests that went out
   const rowPlan = plan.rows;
   for (const [table, ops] of Object.entries(rowPlan)) {
     for (const op of ops) {
-      const row = w.rowBy(table, { rulebook: 'Name', claims_copy: 'Geo ID', tag_decisions: 'Key', agent_settings: 'Name' }[table], op.key);
+      const row = w.rowBy(table, { rulebook: 'Name', claims: 'Geo ID', tag_decisions: 'Key', agent_settings: 'Name' }[table], op.key);
       assert.ok(row, `${table} ${op.key}`);
       for (const [column, value] of Object.entries(op.properties)) {
         if (column === 'Claim link' || column === 'Geo Tags' || column === 'Work tags' || column === dp.CLAIM_COLUMNS.verified) continue; // links, option lists and the relation (a placeholder in the plan) are looked at elsewhere
@@ -1320,7 +1321,7 @@ test('a start whose request is a second ask for the same minute gets its own fol
   // each page's Claims point at that page's own Rulebook, never at the other
   for (const id of w.demos()) {
     const d = w.demo(id);
-    const relation = w.fake.dataSource(d.databases.claims_copy.data_source_id).properties[dp.CLAIM_COLUMNS.verified].relation.data_source_id.replace(/-/g, '');
+    const relation = w.fake.dataSource(d.databases.claims.data_source_id).properties[dp.CLAIM_COLUMNS.verified].relation.data_source_id.replace(/-/g, '');
     assert.equal(relation, d.databases.rulebook.data_source_id, id);
   }
 });
@@ -1364,7 +1365,7 @@ test('start without --parent asks for a link and sends nothing; a text that is n
 test('a parent that is protected is refused with exit 2 before any request: the production page, a production table, any protected id', async () => {
   const w = newWorld();
   const n = w.production.notion;
-  const candidates = [n.parent_page_id, n.rulebook.database_id, n.databases.tag_decisions.data_source_id, n.claims[0].database_id, n.protected_database_ids[0], n.protected_page_ids[0], n.sources.real_claims.database_id];
+  const candidates = [n.parent_page_id, n.rulebook.database_id, n.databases.tag_decisions.data_source_id, n.claims.database_id, n.protected_database_ids[0], n.protected_page_ids[0], n.sources.real_claims.database_id];
   for (const id of candidates) {
     const r = await w.run(['start', '--parent', `https://www.notion.so/Some-page-${id.replace(/-/g, '')}`]);
     assert.equal(r.code, 2, id);
@@ -1505,7 +1506,7 @@ test('a start that dies right after its third table was made resumes with --resu
   const [id] = w.demos();
   const half = w.demo(id);
   assert.equal(half.state, 'planned');
-  assert.deepEqual(Object.keys(half.databases), ['rulebook', 'claims_copy'], 'the third table was made but its id was not recorded');
+  assert.deepEqual(Object.keys(half.databases), ['rulebook', 'claims'], 'the third table was made but its id was not recorded');
   assert.equal(POST_BODIES(w.fake, '/databases').length, 3);
   assert.equal(half.errors.length, 1);
 
@@ -1593,7 +1594,7 @@ test('a create whose answer was lost stops the start; the same command finds wha
   assert.ok(existsSync(join(r.dir(), 'runs', 'SETUP')), 'the marker stays while the rows are not all in');
   const secondR = await r.run(['start', '--resume', r.demos()[0]]);
   assert.equal(secondR.code, 0, secondR.err);
-  assert.deepEqual([1, 9, 5, 1], ['rulebook', 'claims_copy', 'tag_decisions', 'agent_settings'].map((t) => r.rows(t).length), 'no row twice');
+  assert.deepEqual([1, 9, 5, 1], ['rulebook', 'claims', 'tag_decisions', 'agent_settings'].map((t) => r.rows(t).length), 'no row twice');
   assert.ok(!existsSync(join(r.dir(), 'runs', 'SETUP')));
   assert.equal(JSON.parse((await r.run(['verify', '--json'])).out).ok, true);
 });
@@ -1880,7 +1881,7 @@ test('verify finds what was changed after the build: an editor column of a decid
   const { manifest } = real();
   const V = dp.CLAIM_COLUMNS.verified;
   const claimOf = (key) => manifest.claims.find((c) => c.key === key);
-  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', claimOf(key)['Geo ID']);
+  const claimRow = (key) => w.rowBy('claims', 'Geo ID', claimOf(key)['Geo ID']);
   const ledgerRow = (key) => w.rowBy('tag_decisions', 'Key', `${claimOf(key)['Geo ID']}::${TAG}`);
   const book = w.rows('rulebook')[0];
   // the editor's columns of the claims decided earlier: a tag taken away, a status and the words changed
@@ -1950,7 +1951,7 @@ test('verify finds an editor column of a decided claim that was changed whatever
   assert.equal((await w.start()).code, 0);
   const { manifest } = real();
   const V = dp.CLAIM_COLUMNS.verified;
-  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
+  const claimRow = (key) => w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
   const book = w.rows('rulebook')[0];
   agentHasRead(w); // the tag step has run: from here the claims that waited may be in any state
   const same = JSON.parse((await w.run(['verify', '--json'])).out);
@@ -2053,7 +2054,7 @@ test('where says which step the editor is at and the one thing to do, for every 
   const steps = manifest.steps;
   const V = dp.CLAIM_COLUMNS.verified;
   const book = w.rows('rulebook')[0];
-  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
+  const claimRow = (key) => w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
   const ledgerRow = (key) => w.rowBy('tag_decisions', 'Key', `${manifest.claims.find((c) => c.key === key)['Geo ID']}::${TAG}`);
   const open = manifest.open.map((o) => o.claim);
   assert.equal(open.length, 4);
@@ -2158,7 +2159,7 @@ test('where reads the step from the Review status of the four claims: the ledger
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
   const { manifest } = real();
-  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
+  const claimRow = (key) => w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
   const stepLine = async () => (await w.run(['where'])).out.split('\n')[0];
   const open = manifest.open.map((o) => o.claim);
   // the ledger rows of the four exist, with a proposal, but the claims have no Agent status: the agent has not read them
@@ -2189,7 +2190,7 @@ test('where on a page without views points at the Claims table instead of Your q
   assert.equal((await w.start()).code, 0);
   const demo = w.demo();
   assert.equal(demo.views, null);
-  const claimsTable = `https://www.notion.so/${demo.databases.claims_copy.database_id}`;
+  const claimsTable = `https://www.notion.so/${demo.databases.claims.database_id}`;
   const first = await w.run(['where']);
   assert.match(first.out, /you are at step 1, /);
   agentHasRead(w);
@@ -2199,7 +2200,7 @@ test('where on a page without views points at the Claims table instead of Your q
   const { manifest } = real();
   for (const o of manifest.open) {
     const c = manifest.claims.find((x) => x.key === o.claim);
-    w.fake.editRow(w.rowBy('claims_copy', 'Geo ID', c['Geo ID']).page_id, { 'Review status': 'Reviewed' });
+    w.fake.editRow(w.rowBy('claims', 'Geo ID', c['Geo ID']).page_id, { 'Review status': 'Reviewed' });
   }
   w.fake.addRow(demo.databases.rule_changes.database_id, { Lesson: 'A rule change', Tag: TAG, Status: 'Proposed' });
   const five = await w.run(['where']);
@@ -2355,7 +2356,7 @@ test('list keeps every page and marks the one the commands reach; its Next line 
   const [mine, tests] = w.demos();
   const { manifest } = real();
   const reviewBoth = (id) => {
-    for (const o of manifest.open) w.fake.editRow(w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === o.claim)['Geo ID'], id).page_id, { 'Review status': 'Reviewed' });
+    for (const o of manifest.open) w.fake.editRow(w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === o.claim)['Geo ID'], id).page_id, { 'Review status': 'Reviewed' });
     w.fake.addRow(w.db('rule_changes', id), { Lesson: 'A rule change', Tag: TAG, Rule: 'Context-dependent rule 3', Kind: 'Clarify wording', Status: 'Rejected' });
   };
   // the newer page is complete (its only rule change was rejected), so a Next line made from the newest page would say there is nothing to type
@@ -2454,6 +2455,52 @@ test('without --demo the commands act on the newest finished page under Demos: a
     assert.match(r.err, /there is no (finished )?practice page under Demos yet/, argv.join(' '));
   }
   assert.equal(asked(tests, 'walkthrough-where'), 1, 'the page under Demo tests was not used');
+});
+
+test('a practice page of the older shape (claims as a list of tables, demo_claims) lists as unknown, is never picked, and run on it is exit 2 with one plain line (P5)', async () => {
+  const w = newWorld();
+  const scriptsDir = standIns();
+  assert.equal((await w.start()).code, 0);
+  const [id] = w.demos();
+  assert.equal(w.demo(id).state, 'ready');
+  // make the profile what a build before decision P5 wrote: notion.claims a list of one named entry, editor_columns under the old key
+  const file = join(w.dir(id), 'config.json');
+  const config = read(file);
+  config.notion.claims = [{ name: 'demo_claims', enabled: true, ...config.notion.claims }];
+  config.editor_columns.claims_copy = config.editor_columns.claims;
+  delete config.editor_columns.claims;
+  writeFileSync(file, `${JSON.stringify(config, null, 2)}\n`);
+  assert.equal(validateConfig(config).ok, false, 'the current loader refuses that shape');
+
+  // the plain line, from the helper and from the profile check that the default pick uses
+  const line = dp.olderShapeProblem(w.dir(id), id);
+  assert.match(line, new RegExp(`^the practice page ${id} is of an older shape `));
+  assert.ok(!line.includes('\n'), 'one line');
+  assert.equal(dp.profileProblem(dp.pickDemo(w.root, id)), line);
+  assert.equal(dp.olderShapeProblem(join(w.root, 'runs', 'demos', 'nowhere'), 'nowhere'), null, 'a folder without a config is not of an older shape, it is missing something else');
+
+  // list shows the page, with the step unknown, and nothing crashes
+  const listed = await w.run(['list']);
+  assert.equal(listed.code, 0, listed.err);
+  const rows = listed.out.split('\n').filter((l) => l.startsWith('|')).slice(2).map((l) => l.split('|').slice(1, -1).map((s) => s.trim()));
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0][2], 'unknown');
+  assert.match(listed.out, /^Walkthrough: 1 practice page\./);
+
+  // run on it by name is exit 2 with that one line, and the script is not started
+  const named = await w.run(['run', '--demo', id, 'status'], { scriptsDir });
+  assert.equal(named.code, 2);
+  assert.equal(named.err, line);
+  assert.ok(!named.outs.some((l) => l.startsWith('{')), 'no script was started');
+  // every other command that needs the profile says the same, and the default pick does not find the page
+  for (const argv of [['where', '--demo', id], ['verify', '--demo', id]]) {
+    const r = await w.run(argv);
+    assert.equal(r.code, 2, argv.join(' '));
+    assert.equal(r.err, line, argv.join(' '));
+  }
+  const unnamed = await w.run(['run', 'status'], { scriptsDir });
+  assert.equal(unnamed.code, 2);
+  assert.match(unnamed.err, /there is no finished practice page under Demos yet/);
 });
 
 test('the commands without --demo refuse to guess when config.json names no Demos page', async () => {
@@ -2649,7 +2696,7 @@ const planOf = (config, fill) => {
   fill(plan);
   return plan;
 };
-const queueUpdate = (config, properties = EDITOR_QUEUE) => planOf(config, (p) => p.update('claims_copy', 'abc', ROW_PAGE, properties));
+const queueUpdate = (config, properties = EDITOR_QUEUE) => planOf(config, (p) => p.update('claims', 'abc', ROW_PAGE, properties));
 const lessonUpdate = (config, properties) => planOf(config, (p) => p.update('rule_changes', 'A rule change', ROW_PAGE, properties));
 const lastLine = (out) => out.trimEnd().split('\n').at(-1);
 const patchCount = (w) => w.fake.requests.filter((q) => q.method === 'PATCH' && q.path.startsWith('/pages/')).length;
@@ -2684,7 +2731,7 @@ function agentHasRead(w, id) {
     const read = reads[o.claim] ?? reads.aiforce;
     const reason = `${claim.short.replace(/…$/, '')}: which one? · Context-dependent rule 3 · 1 of 1 runs agree`;
     const columns = claimColumns({ judgedNames: [TAG], verdicts: new Map([[TAG, read.proposal]]), toReview: true, edition, reasons: new Map([[TAG, reason]]) });
-    w.fake.editRow(w.rowBy('claims_copy', 'Geo ID', claim['Geo ID'], id).page_id, {
+    w.fake.editRow(w.rowBy('claims', 'Geo ID', claim['Geo ID'], id).page_id, {
       'Agent tags': columns.tags.map(() => book.page_id),
       'Agent confidence': read.confidence,
       'Agent reasons': columns.agent_reasons,
@@ -2726,7 +2773,7 @@ test('checkPlan with demoEditor allows, in a practice page, the editor columns o
   // Why wrong is not an editor's column any more: the plan check refuses it on the Claims, with or without the option
   const gone = checkPlan(queueUpdate(w.demo, { 'Review status': 'Reviewed', 'Why wrong': 'Agent slip' }), w.demo, opts);
   assert.equal(gone.ok, false);
-  assert.ok(gone.problems.some((p) => /"Why wrong" is not a column this plan may write to claims_copy/.test(p)), gone.problems.join('\n'));
+  assert.ok(gone.problems.some((p) => /"Why wrong" is not a column this plan may write to claims/.test(p)), gone.problems.join('\n'));
   ok(lessonUpdate(w.demo, { Status: 'Approved' }));
   ok(lessonUpdate(w.demo, { Status: 'Rejected' }));
   ok(lessonUpdate(w.demo, { Status: 'Approved', 'Editor wording': 'Test: the whole rule, as the editor wants it.' }));
@@ -2779,15 +2826,15 @@ test('checkPlan with demoEditor allows nothing else: no create, no other table, 
     assert.ok(r.problems.some((p) => pattern.test(p)), r.problems.join('\n'));
   };
   // a create is not an update: the editor columns of a create belong to the setup of a practice page, with its marker
-  refuses(planOf(w.demo, (p) => p.create('claims_copy', 'abc', { 'Geo Name': 'A claim', ...EDITOR_QUEUE })), /is a column only an editor writes/);
+  refuses(planOf(w.demo, (p) => p.create('claims', 'abc', { 'Geo Name': 'A claim', ...EDITOR_QUEUE })), /is a column only an editor writes/);
   refuses(planOf(w.demo, (p) => p.create('rule_changes', 'A rule change', { Status: 'Approved' })), /Status "Approved" is not one a script may write/);
   // other tables: Paused is the editor's and stays refused; the other tables have no editor column that this opens
   refuses(planOf(w.demo, (p) => p.update('agent_settings', 'Claim tagger', ROW_PAGE, { Paused: true })), /"Paused" is a column only an editor writes/);
   refuses(planOf(w.demo, (p) => p.update('agent_settings', 'Claim tagger', ROW_PAGE, { Paused: false })), /"Paused" is a column only an editor writes/);
   refuses(planOf(w.demo, (p) => p.update('rulebook', TAG, ROW_PAGE, { Status: 'Verified' })), /"Status" is not a column this plan may write to rulebook/);
-  refuses(planOf(w.demo, (p) => p.update('claims_copy', 'abc', ROW_PAGE, { 'Geo Name': 'Another name' })), /"Geo Name" is not a column this plan may write to claims_copy/);
+  refuses(planOf(w.demo, (p) => p.update('claims', 'abc', ROW_PAGE, { 'Geo Name': 'Another name' })), /"Geo Name" is not a column this plan may write to claims/);
   // other columns of the two tables, and other values of Status
-  refuses(queueUpdate(w.demo, { 'Review status': 'Reviewed', Nonsense: 'x' }), /"Nonsense" is not a column this plan may write to claims_copy/);
+  refuses(queueUpdate(w.demo, { 'Review status': 'Reviewed', Nonsense: 'x' }), /"Nonsense" is not a column this plan may write to claims/);
   // the ledger has no editor column: its copies of a decision are an agent's to write, with or without the option, but a person's Status on a rule change is not
   assert.deepEqual(checkPlan(planOf(w.demo, (p) => p.update('tag_decisions', `abc::${TAG}`, ROW_PAGE, { 'Tag outcome': 'Applies' })), w.demo, { root: w.root }).problems, []);
   refuses(lessonUpdate(w.demo, { Status: 'Bogus' }), /Status "Bogus" is not one a script may write/);
@@ -2795,7 +2842,7 @@ test('checkPlan with demoEditor allows nothing else: no create, no other table, 
   // a protected id is refused as ever, and one op per row
   const protectedId = dashless(w.demo.notion.protected_database_ids[0]);
   refuses(queueUpdate(w.demo, { 'Review status': 'Reviewed', 'Challenged tags notes': `see https://www.notion.so/${protectedId}` }), /mentions a protected id/);
-  refuses(planOf(w.demo, (p) => { p.update('claims_copy', 'k', ROW_PAGE, EDITOR_QUEUE); p.update('claims_copy', 'k', ROW_PAGE, EDITOR_QUEUE); }), /the key appears twice/);
+  refuses(planOf(w.demo, (p) => { p.update('claims', 'k', ROW_PAGE, EDITOR_QUEUE); p.update('claims', 'k', ROW_PAGE, EDITOR_QUEUE); }), /the key appears twice/);
 });
 
 test('applyPlan passes demoEditor on to the check: the plan that writes an editor column is refused before any request without it, and in a folder that is not a practice page with it', async () => {
@@ -2826,7 +2873,7 @@ test('decide enters the manifest values for one of the four claims, writes the t
   const EDITOR = [V, N, 'Review status'];
   const claims = manifest.open.map((o) => manifest.claims.find((c) => c.key === o.claim));
   const enter = manifest.open[0].enter; // the press pool: the tag does not apply
-  const rowOf = (claim) => w.rowBy('claims_copy', 'Geo ID', claim['Geo ID']);
+  const rowOf = (claim) => w.rowBy('claims', 'Geo ID', claim['Geo ID']);
   const book = w.rows('rulebook')[0];
   agentHasRead(w);
   const writesBefore = w.fake.writes().length;
@@ -2867,7 +2914,7 @@ test('decide enters the manifest values for one of the four claims, writes the t
     assert.equal(l.sentence, `acting as the editor on practice page ${id} (decision D31)`);
     assert.equal(l.demo_id, id);
     assert.match(l.at, /^\d{4}-\d{2}-\d{2}T/);
-    assert.deepEqual([l.action, l.table, l.key, dashless(l.page_id), l.claim], ['decide', 'claims_copy', claims[0]['Geo ID'], dashless(row.page_id), 'presspool']);
+    assert.deepEqual([l.action, l.table, l.key, dashless(l.page_id), l.claim], ['decide', 'claims', claims[0]['Geo ID'], dashless(row.page_id), 'presspool']);
     assert.deepEqual(l.wrote, { ...enter, [V]: [] });
     assert.deepEqual(Object.keys(l.before).sort(), [...EDITOR].sort());
     assert.deepEqual(l.before[V], [], 'no tag was verified');
@@ -2878,7 +2925,7 @@ test('decide enters the manifest values for one of the four claims, writes the t
   const planRun = join(w.dir(), 'runs', log[0].plan_run);
   assert.equal(lines(join(planRun, 'plan.jsonl')).length, 2, 'the plan on disk: a header and one op');
   assert.equal(lines(join(planRun, 'plan.jsonl'))[0].plan.script, 'walkthrough.mjs');
-  assert.equal(lines(join(planRun, 'plan.jsonl'))[1].table, 'claims_copy');
+  assert.equal(lines(join(planRun, 'plan.jsonl'))[1].table, 'claims');
   assert.equal(lines(join(planRun, 'ledger.jsonl')).at(-1).read_back, 'ok', 'the ledger says the row was read back');
 
   // the second claim, with the values given: the tag applies, so the relation holds the page id of the tag's row, and the sentence is the one given
@@ -2933,7 +2980,7 @@ test('decide enters the manifest values for one of the four claims, writes the t
 test('decide changes the four claims that wait and nothing else, and says why when it refuses', async () => {
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
-  const rows = () => JSON.stringify([w.rows('claims_copy'), w.rows('tag_decisions')]);
+  const rows = () => JSON.stringify([w.rows('claims'), w.rows('tag_decisions')]);
   const before = rows();
   const writes = w.fake.writes().length;
   const refused = async (argv, pattern) => {
@@ -3011,7 +3058,7 @@ test('the editor actions stop where everything stops: a pause file, Paused in Ag
 test('a write that fails, or that the read-back does not confirm, is not reported as done: the log says failed, the exit code is 1 or 2, and no success is claimed', async () => {
   const { manifest } = real();
   const claim = manifest.claims.find((c) => c.key === manifest.open[0].claim);
-  const rowOf = (w) => w.rowBy('claims_copy', 'Geo ID', claim['Geo ID']);
+  const rowOf = (w) => w.rowBy('claims', 'Geo ID', claim['Geo ID']);
 
   // Notion refuses the write
   const refusing = newWorld();
@@ -3253,7 +3300,7 @@ test('verify does not call a page damaged because the editor acted on it, and st
   const decided = manifest.decided[0];
   const earlier = manifest.claims.find((c) => c.key === decided.claim);
   const book = w.rows('rulebook')[0];
-  w.fake.editRow(w.rowBy('claims_copy', 'Geo ID', earlier['Geo ID']).page_id, { [V]: decided[V].length ? [] : [book.page_id] });
+  w.fake.editRow(w.rowBy('claims', 'Geo ID', earlier['Geo ID']).page_id, { [V]: decided[V].length ? [] : [book.page_id] });
   const changed = await w.run(['verify']);
   assert.equal(changed.code, 2);
   assert.match(changed.err, /the earlier decision .* differs from the manifest in Verified tags/);
@@ -3269,7 +3316,7 @@ function withDefaultView() {
         ...builder,
         async createDatabase(args) {
           const res = await builder.createDatabase(args);
-          if (args.title === dp.PRACTICE_TITLES.claims_copy) {
+          if (args.title === dp.PRACTICE_TITLES.claims) {
             const dataSourceId = res.data_sources[0].id;
             const properties = Object.values((await builder.retrieveDataSource(dataSourceId)).properties);
             await builder.createView({
@@ -3288,9 +3335,9 @@ function withDefaultView() {
 /** The views of the Claims table of a built page, with the names of their columns: { own (Notion's own view), queue (the linked view), tabs (all views of the table), shown, hidden }. */
 function claimsViews(w) {
   const demo = w.demo();
-  const ds = w.fake.dataSource(demo.databases.claims_copy.data_source_id);
+  const ds = w.fake.dataSource(demo.databases.claims.data_source_id);
   const names = new Map(Object.values(ds.properties).map((p) => [p.id, p.name]));
-  const tabs = w.fake.tabViews(demo.databases.claims_copy.database_id);
+  const tabs = w.fake.tabViews(demo.databases.claims.database_id);
   return {
     own: tabs.find((v) => v.name === 'Table'),
     queue: w.fake.linked().find((l) => l.name === 'Your queue'),
@@ -3312,7 +3359,7 @@ test('the Claims table of a built page shows the agent\'s columns first, then th
   // the table's own view: every column shown, in the order of the structure (the relations were added last and would otherwise come last)
   assert.deepEqual(v.shown(v.own.configuration), [...REVIEW_ORDER, ...geo]);
   assert.deepEqual(v.hidden(v.own.configuration), []);
-  assert.deepEqual(dp.practiceStructure(read(join(AGENT, 'setup', 'structure.json'))).tables.claims_copy.columns.filter((c) => !c.retired).map((c) => c.name), v.shown(v.own.configuration), 'it is the structure\'s order');
+  assert.deepEqual(dp.practiceStructure(read(join(AGENT, 'setup', 'structure.json'))).tables.claims.columns.filter((c) => !c.retired).map((c) => c.name), v.shown(v.own.configuration), 'it is the structure\'s order');
   // the three views: the twelve review columns in that order, the Geo columns hidden, cells wrapping
   const three = [['Your queue', v.queue.body.configuration], ...v.tabs.filter((t) => t.name !== 'Table').map((t) => [t.name, t.configuration])];
   assert.deepEqual(three.map(([name]) => name), ['Your queue', 'Needs your note', 'Agent disagreed']);
@@ -3372,7 +3419,7 @@ test('the three Claims views on a fresh page: Your queue lists the claims whose 
   const demo = w.demo();
   const structure = dp.practiceStructure(read(join(AGENT, 'setup', 'structure.json')));
   const planned = (name) => viewPlan(structure, structure.views.find((v) => v.name === name));
-  const tabs = w.fake.tabViews(demo.databases.claims_copy.database_id);
+  const tabs = w.fake.tabViews(demo.databases.claims.database_id);
   const queue = w.fake.linked().find((l) => l.name === 'Your queue');
   const view = { 'Your queue': queue.body, ...Object.fromEntries(tabs.map((t) => [t.name, t])) };
   assert.deepEqual(view['Your queue'].filter, { property: 'Agent status', select: { equals: 'Waits for you' } }, 'no condition on Review status');
@@ -3387,10 +3434,10 @@ test('the three Claims views on a fresh page: Your queue lists the claims whose 
 
   // the filters at work on the rows of the page
   const client = builderClient(w, '2025-09-03');
-  const dataSourceId = demo.databases.claims_copy.data_source_id;
+  const dataSourceId = demo.databases.claims.data_source_id;
   const listed = async (name) => (await client.queryDataSourceAll(dataSourceId, { filter: view[name].filter, sorts: view[name].sorts })).map((p) => p.properties['Geo Name'].title.map((t) => t.plain_text).join(''));
   const nameOf = (key) => manifest.claims.find((c) => c.key === key)['Geo Name'];
-  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
+  const claimRow = (key) => w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
   assert.deepEqual([await listed('Your queue'), await listed('Agent disagreed'), await listed('Needs your note')], [[], [], []], 'a fresh page: the agent has read nothing, and the five earlier decisions carry their seeded reading (which is not "without your note")');
   agentHasRead(w);
   assert.deepEqual(await listed('Your queue'), [nameOf('aiforce'), nameOf('presspool'), nameOf('usps'), nameOf('georgia')], 'after the tag step all four wait, the least sure first');
@@ -3426,20 +3473,20 @@ test('decide writes the three editor columns under their new names, in the order
   assert.ok(!JSON.stringify(sent[0].body).includes('Why wrong'), 'and no reason is written: the agent reads it');
   assert.ok(r.out.includes('| Verified tags | Context-dependent |'));
   assert.ok(!r.out.includes('Claim quality tags') && !r.out.includes('Why wrong'));
-  const row = w.rowBy('claims_copy', 'Geo ID', claim['Geo ID']);
+  const row = w.rowBy('claims', 'Geo ID', claim['Geo ID']);
   assert.deepEqual([row['Verified tags'].map(dashless), row['Review status'], row['Challenged tags notes']], [[dashless(book.page_id)], 'Reviewed', manifest.open[1].enter['Challenged tags notes']]);
   const log = actionsOf(w).filter((l) => l.status === 'done');
   assert.deepEqual(Object.keys(log[0].wrote), ['Verified tags', 'Challenged tags notes', 'Review status']);
   // the ledger copy the tag step makes from this claim is under the same words
-  assert.deepEqual(loadConfig(w.dir()).editor_columns.claims_copy, ['Verified tags', 'Review status', 'Challenged tags notes']);
-  assert.ok(!loadConfig(w.dir()).editor_columns.claims_copy.includes('Claim quality tags — verified'));
+  assert.deepEqual(loadConfig(w.dir()).editor_columns.claims, ['Verified tags', 'Review status', 'Challenged tags notes']);
+  assert.ok(!loadConfig(w.dir()).editor_columns.claims.includes('Claim quality tags — verified'));
 });
 
 test('where reads Agent status: no status is a claim the agent has not read, whatever else is written, and each of the four values is a claim it has read', async () => {
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
   const { manifest } = real();
-  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
+  const claimRow = (key) => w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === key)['Geo ID']);
   const stepLine = async () => (await w.run(['where'])).out.split('\n')[0];
   w.fake.editRow(w.rows('agent_settings')[0].page_id, { 'Last run summary': 'Tag at 15 Oct 14:40' });
   assert.match(await stepLine(), /step 2,/);
@@ -3585,7 +3632,7 @@ test('guide.md has the four checklists, each in a real and a demo form of at mos
   const structure = read(join(AGENT, 'setup', 'structure.json'));
   const columns = (table) => structure.tables[table].columns.map((c) => c.name);
   const text = Object.values(guide).flatMap((forms) => Object.values(forms).flat()).map((i) => i.text).join('\n');
-  for (const name of ['Verified tags', 'Challenged tags notes', 'Review status', 'Agent reasons', 'Agent reading', 'Tags waiting', 'Agent confidence']) assert.ok(columns('claims_copy').includes(name), name);
+  for (const name of ['Verified tags', 'Challenged tags notes', 'Review status', 'Agent reasons', 'Agent reading', 'Tags waiting', 'Agent confidence']) assert.ok(columns('claims').includes(name), name);
   assert.ok(!/Why wrong/.test(text), 'no checklist names the column that said why the agent was wrong');
   for (const name of ['Current text', 'Proposed text', 'Editor wording', 'Status']) assert.ok(columns('rule_changes').includes(name), name);
   for (const view of text.match(/Open ([A-Z][A-Za-z ]+?) \(/g).map((m) => m.slice(5, -2))) assert.ok(Object.values(dp.VIEW_NAMES).includes(view), view);
@@ -3777,7 +3824,7 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   const hooks = (extra) => loopHooks(w, state, env, extra);
   const claimOf = (key) => manifest.claims.find((c) => c.key === key);
   const keyOf = (key) => `${claimOf(key)['Geo ID']}::${TAG}`;
-  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', claimOf(key)['Geo ID']);
+  const claimRow = (key) => w.rowBy('claims', 'Geo ID', claimOf(key)['Geo ID']);
   const ledgerRow = (key) => w.rowBy('tag_decisions', 'Key', keyOf(key));
   const open = manifest.open.map((o) => o.claim);
   const decidedKeys = manifest.decided.map((d) => d.claim);
@@ -3942,7 +3989,7 @@ async function pageWithoutUspsNote() {
   const hooks = (extra) => loopHooks(w, state, env, extra);
   const claimOf = (key) => manifest.claims.find((c) => c.key === key);
   const keyOf = (key) => `${claimOf(key)['Geo ID']}::${TAG}`;
-  const claimRow = (key) => w.rowBy('claims_copy', 'Geo ID', claimOf(key)['Geo ID']);
+  const claimRow = (key) => w.rowBy('claims', 'Geo ID', claimOf(key)['Geo ID']);
   const ledgerRow = (key) => w.rowBy('tag_decisions', 'Key', keyOf(key));
   assert.equal((await pull({ root: w.dir(), tables: 'all', fetchImpl: w.fake.fetchImpl, token: w.fake.token, sleep: noSleep, now: () => w.clock })).code, 0);
   assert.equal((await judge({ root: w.dir(), driver: 'fake', items: 'claims', io: quietIo(), env: hooks().env, fakeState: state, fakeScript: FAKE_SCRIPT, sleep: noSleep, now: () => w.clock })).exit, 0);

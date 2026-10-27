@@ -66,7 +66,7 @@ test('the Status values Approved and Rejected stay the editor\'s', () => {
 
 test('the names come from whatever lists config.editor_columns holds; a config that has none falls back to the shipped names', () => {
   const custom = placeholderConfig();
-  custom.editor_columns = { claims_copy: ['My review'], elsewhere: ['Other column'], rule_changes_status_editor_values: ['Signed off'] };
+  custom.editor_columns = { claims: ['My review'], elsewhere: ['Other column'], rule_changes_status_editor_values: ['Signed off'] };
   const root = rootWith(custom);
   assert.match(decide(update({ 'My review': 'x' }), root).permissionDecisionReason, /belongs to the editor/);
   assert.match(decide(update({ 'Other column': 'x' }), root).permissionDecisionReason, /belongs to the editor/);
@@ -94,6 +94,6 @@ test('the shipped guard imports none of the agent\'s library modules and the liv
   const source = readFileSync(join(codeRoot(), 'scripts', 'hooks', 'guard.mjs'), 'utf8');
   assert.doesNotMatch(source, /from '\.\.?\/lib\//, 'it reads config.json and the markers itself');
   const live = JSON.parse(readFileSync(join(codeRoot(), 'config.json'), 'utf8'));
-  assert.deepEqual(live.editor_columns.claims_copy, ['Verified tags', 'Review status', 'Challenged tags notes']);
+  assert.deepEqual(live.editor_columns.claims, ['Verified tags', 'Review status', 'Challenged tags notes']);
   assert.equal(live.editor_columns.tag_decisions, undefined);
 });

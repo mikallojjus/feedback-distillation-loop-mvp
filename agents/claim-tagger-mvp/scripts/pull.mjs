@@ -6,7 +6,7 @@
 //   node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --dry-run [--run-id <id>]
 //   node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --pick 50 --seed <string> --audit <audit json> [--from <dry-run id>]
 //
-// The tables are rulebook, claims_copy, tag_decisions, rule_changes and agent_settings (aliases: claims, queue, lessons, settings). A table whose
+// The tables are rulebook, claims, tag_decisions, rule_changes and agent_settings (aliases: queue, decisions, lessons, settings). A table whose
 // id in config.json is still a placeholder ("<setup>") or missing is skipped and listed in pull.json; a pull that reads no table at all does not
 // become runs/pull/LATEST. A pull of a paused agent completes: pull.json and the result say `paused`, and the caller decides.
 //
@@ -55,7 +55,7 @@ import { validate } from './lib/validate.mjs';
 export { claimDisagrees, claimWaits, decisionsFor, isReviewed, isToReview, parseTagLines, parseTagNotes };
 
 export const USAGE = [
-  'usage: node agents/claim-tagger-mvp/scripts/pull.mjs --all | --tables <rulebook,claims_copy,tag_decisions,rule_changes,agent_settings> [--pull-id <id>]',
+  'usage: node agents/claim-tagger-mvp/scripts/pull.mjs --all | --tables <rulebook,claims,tag_decisions,rule_changes,agent_settings> [--pull-id <id>]',
   '       node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --dry-run [--run-id <id>]',
   '       node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --pick 50 --seed <string> --audit <audit json> [--from <dry-run id>]',
 ].join('\n');
@@ -63,10 +63,10 @@ export const USAGE = [
 class UsageError extends Error {}
 
 const NORM_FILES = Object.freeze({
-  rulebook: 'rulebook.json', claims_copy: 'claims.jsonl', tag_decisions: 'queue.jsonl', rule_changes: 'lessons.jsonl', agent_settings: 'settings.json',
+  rulebook: 'rulebook.json', claims: 'claims.jsonl', tag_decisions: 'queue.jsonl', rule_changes: 'lessons.jsonl', agent_settings: 'settings.json',
 });
 const ALIASES = Object.freeze({
-  claims: 'claims_copy', queue: 'tag_decisions', decisions: 'tag_decisions', lessons: 'rule_changes', settings: 'agent_settings',
+  queue: 'tag_decisions', decisions: 'tag_decisions', lessons: 'rule_changes', settings: 'agent_settings',
 });
 export const QUEUE_COLUMNS = Object.freeze([
   'Claim', 'Key', 'Tag', 'Agent proposal', 'Agent confidence', 'Agent reason', 'Claim link', 'Rulebook edition', 'Follow-up', 'Tag outcome', 'Why wrong', 'Your reasoning',
@@ -354,7 +354,7 @@ function claimsNorm(entry, table, decoded, pagesById, warnings, tagNames = new M
     const raw = pagesById.get(normId(row.page_id));
     const links = geoSourceLinks(raw?.properties?.[cols.sources]?.rich_text, text(p[cols.sources]));
     return {
-      table: entry.name ?? table,
+      table,
       geo_id: key,
       page_id: row.page_id,
       notion_url: row.url ?? null,
@@ -453,7 +453,7 @@ function casesFrom(queueRows) {
 function expectedColumns(table, entry) {
   switch (table) {
     case 'rulebook': return [entry.key, 'When to use', 'Work tags'];
-    case 'claims_copy': return [entry.key, ...Object.values(entry.columns ?? {}), ...Object.values(entry.write_columns ?? {})];
+    case 'claims': return [entry.key, ...Object.values(entry.columns ?? {}), ...Object.values(entry.write_columns ?? {})];
     case 'tag_decisions': return [...QUEUE_COLUMNS];
     case 'rule_changes': return [...LESSON_COLUMNS];
     default: return [...SETTINGS_COLUMNS];
@@ -548,7 +548,7 @@ export async function pull({
     const schema = await notion.retrieveDatabase(entry.database_id);
     writeJsonAtomic(join(dir, 'schema', `${table}.json`), schema);
     const pages = await notion.queryAll(entry.database_id, { pageSize });
-    if (table === 'claims_copy' && entry.columns?.sources) await completeLongText(notion, pages, entry.columns.sources);
+    if (table === 'claims' && entry.columns?.sources) await completeLongText(notion, pages, entry.columns.sources);
     writeTextAtomic(join(dir, 'raw', `${table}.jsonl`), jsonl(pages));
     pulledTables.push(table);
     counts[table] = pages.length;
@@ -574,14 +574,14 @@ export async function pull({
     rulebookRows = out;
     writeJsonAtomic(norm(NORM_FILES.rulebook), out);
   }
-  if (decoded.claims_copy) {
-    const { out, duplicates: d } = claimsNorm(safeEntry(config, 'claims_copy'), 'claims_copy', decoded.claims_copy, pagesById.claims_copy, warnings, tagNamesById(config, decoded.rulebook, root));
+  if (decoded.claims) {
+    const { out, duplicates: d } = claimsNorm(safeEntry(config, 'claims'), 'claims', decoded.claims, pagesById.claims, warnings, tagNamesById(config, decoded.rulebook, root));
     duplicates.push(...d);
     for (const row of out) {
       const bad = validate(rowSchema('claim-row'), row).errors;
-      if (bad.length) warnings.push(`claims_copy: the claim ${row.geo_id} does not fit schemas/claim-row.schema.json (${bad.slice(0, 2).join('; ')})`);
+      if (bad.length) warnings.push(`claims: the claim ${row.geo_id} does not fit schemas/claim-row.schema.json (${bad.slice(0, 2).join('; ')})`);
     }
-    writeTextAtomic(norm(NORM_FILES.claims_copy), jsonl(out));
+    writeTextAtomic(norm(NORM_FILES.claims), jsonl(out));
   }
   if (decoded.tag_decisions) {
     const { out, duplicates: d } = queueNorm(safeEntry(config, 'tag_decisions'), 'tag_decisions', decoded.tag_decisions, warnings);
@@ -822,7 +822,7 @@ export async function dryRun({
   if (!client) throw new UsageError('there is no NOTION_TOKEN in .env, so Notion cannot be read by script');
   mkdirSync(dir, { recursive: true });
 
-  const claimsEntry = safeEntry(config, 'claims_copy');
+  const claimsEntry = safeEntry(config, 'claims');
   const columns = {
     key: source.key || 'Geo ID',
     claim: claimsEntry?.columns?.claim ?? DEFAULT_COLUMNS.claim,
@@ -922,7 +922,7 @@ export function pickClaims({
   if (!existsSync(rowsFile)) return fail(`dry run "${dryId}" has no rows.jsonl`);
   const rows = readJsonl(rowsFile).rows;
   const keyColumn = config.notion?.sources?.real_claims?.key || 'Geo ID';
-  const nameColumn = safeEntry(config, 'claims_copy')?.columns?.claim ?? DEFAULT_COLUMNS.claim;
+  const nameColumn = safeEntry(config, 'claims')?.columns?.claim ?? DEFAULT_COLUMNS.claim;
   const idOf = (r) => text(r[keyColumn]).trim();
 
   const byId = new Map();

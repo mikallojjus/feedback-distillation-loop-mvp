@@ -11,7 +11,7 @@
 //
 // A plan is runs/<run-id>/plan.jsonl: a header line { "plan": { run_id, script, created_at, rubric_edition, counts } } and then one
 // op per line { op, table, key, page_id (update only), properties, expect, children } (schemas/plan.schema.json). Values are plain:
-// strings, numbers, booleans, null, lists of strings. The tables are rulebook, claims_copy, tag_decisions, rule_changes and
+// strings, numbers, booleans, null, lists of strings. The tables are rulebook, claims, tag_decisions, rule_changes and
 // agent_settings, and a create carries its key column in its properties (the builder adds it when it is given the config).
 //
 // applyPlan is the only code that turns a plan into requests. It checks the plan again, makes sure the plan file on disk is the plan
@@ -41,11 +41,11 @@ export const AUDIT_PREFIX = 'From the audit of 9 October';
 export const MAX_CONSECUTIVE_FAILURES = 3;
 
 const DEFAULT_KEYS = Object.freeze({
-  rulebook: 'Name', claims_copy: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name',
+  rulebook: 'Name', claims: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name',
 });
 
 /** The tables whose rows an agent acting as the editor on a practice page may update (decision D31): the claims (the four editor columns) and the rule changes. */
-export const DEMO_EDITOR_TABLES = Object.freeze(['claims_copy', 'rule_changes']);
+export const DEMO_EDITOR_TABLES = Object.freeze(['claims', 'rule_changes']);
 
 /** True when `root` is the state folder of a practice page: a folder directly under .../runs/demos/ (letter case is ignored, as on Windows). */
 export function isDemoRoot(root) {
@@ -245,7 +245,7 @@ const SCHEMA_WORDS = new Map([
  *   appears once per table; the header counts match the ops.
  *
  * `demoEditor: true` is decision D31, the demo-only exception to hard rule 1: an agent may act as the editor on a practice page. It allows,
- * and only when config.demo is true and `root` is a folder directly under runs/demos/ (isDemoRoot), an UPDATE on claims_copy to write the
+ * and only when config.demo is true and `root` is a folder directly under runs/demos/ (isDemoRoot), an UPDATE on claims to write the
  * editor's four columns (Verified tags, Review status, Why wrong, Challenged tags notes) and an UPDATE on rule_changes to write Editor wording and a Status that is one of
  * config.editor_columns.rule_changes_status_editor_values (Approved, Rejected). Without the option, on a production config, outside
  * runs/demos/, on a create, and on any other table or column, every editor column and those two Status values stay refused.
@@ -310,9 +310,9 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot(), dem
       return;
     }
     const editor = new Set(editorColumns(config, op.table));
-    const notesColumn = tableEntryOrNull(config, 'claims_copy')?.columns?.notes ?? 'Challenged tags notes';
+    const notesColumn = tableEntryOrNull(config, 'claims')?.columns?.notes ?? 'Challenged tags notes';
     const challenged = op.properties[notesColumn];
-    const seeded = setup && op.table === 'claims_copy' && typeof challenged === 'string' && challenged.startsWith(AUDIT_PREFIX);
+    const seeded = setup && op.table === 'claims' && typeof challenged === 'string' && challenged.startsWith(AUDIT_PREFIX);
     const mayWriteEditor = seeded || (demoOpen && op.op === 'create') || (editorMayUpdate && op.op === 'update' && DEMO_EDITOR_TABLES.includes(op.table));
     for (const name of Object.keys(op.properties)) {
       const base = name.endsWith(':end') ? name.slice(0, -4) : name; // the end of a date goes with its start

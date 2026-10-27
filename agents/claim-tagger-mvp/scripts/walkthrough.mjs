@@ -260,6 +260,8 @@ function loadStructureFile(root) {
 /** The context every command that works on a made practice page needs: its folder, demo.json, config, the copies of the manifest and the template, the page model. */
 function loadDemoContext({ root, found, env, io, now }) {
   const { id, dir, demo } = found;
+  const older = dp.olderShapeProblem(dir, id);
+  if (older) throw stop(EXIT.INVALID, older);
   let config;
   try {
     config = loadConfig(dir);
@@ -415,19 +417,19 @@ export function buildSetupPlan(ctx) {
 function rowOpsFor(ctx, claimLinks, tagPages) {
   const { manifest, structure, demo } = ctx;
   const columns = (table) => dp.writableColumns(structure, table);
-  const claimsEntry = tableEntry(ctx.config, 'claims_copy');
+  const claimsEntry = tableEntry(ctx.config, 'claims');
   // the rulebook file the page starts with: its edition is the Rulebook edition of the seeded ledger rows, which the key of the seeded readings holds
   const rubric = dp.practiceRubric(manifest, ctx.config, { edition: demo.edition, now: new Date(demo.created_at) });
   // the pick carries the real table's own values for the editor's columns; none of them is copied (the manifest says what each claim starts with)
-  const skip = [...Object.values(claimsEntry.write_columns ?? {}), ...editorColumns(ctx.config, 'claims_copy')];
-  const claims = claimOps({ rows: manifest.claims }, columns('claims_copy'), { keyColumn: claimsEntry.key, skip });
+  const skip = [...Object.values(claimsEntry.write_columns ?? {}), ...editorColumns(ctx.config, 'claims')];
+  const claims = claimOps({ rows: manifest.claims }, columns('claims'), { keyColumn: claimsEntry.key, skip });
   for (const op of claims) {
     const claim = manifest.claims.find((c) => c[claimsEntry.key] === op.key);
     Object.assign(op.properties, dp.claimEditorCells(manifest, claim, tagPages), dp.claimAgentCells(manifest, claim, { rubric, column: claimsEntry.write_columns.reading }));
   }
   return {
     rulebook: rulebookOps({ rows: [dp.rulebookRow(manifest)] }, columns('rulebook')),
-    claims_copy: claims,
+    claims,
     tag_decisions: dp.ledgerOps(manifest, claimLinks, { rubric }),
     agent_settings: [{
       key: SETTINGS_NAME,
@@ -464,7 +466,7 @@ function writeProfile({ dir, production, practice, manifest, manifestFile, templ
 
 function protectedSet(production) {
   const n = production.notion;
-  const tables = [n.rulebook, ...(n.claims ?? []), ...Object.values(n.databases ?? {})].flatMap((t) => [t?.database_id, t?.data_source_id]);
+  const tables = [n.rulebook, n.claims, ...Object.values(n.databases ?? {})].flatMap((t) => [t?.database_id, t?.data_source_id]);
   return new Set([...(n.protected_database_ids ?? []), ...(n.protected_page_ids ?? []), ...tables].map((id) => normId(String(id ?? ''))).filter((id) => /^[0-9a-f]{32}$/.test(id)));
 }
 
@@ -799,10 +801,10 @@ async function ensureViews(ctx) {
 async function arrangeClaimsView(ctx) {
   const { demo, structure } = ctx;
   const { builder } = ctx.clients;
-  const database = demo.databases.claims_copy;
+  const database = demo.databases.claims;
   const plan = planStructure(structure, { notion: { parent_page_id: demo.page.id } });
   try {
-    const changed = await arrangeOwnViews({ client: builder, plan, table: 'claims_copy', databaseId: database.database_id, dataSourceId: database.data_source_id });
+    const changed = await arrangeOwnViews({ client: builder, plan, table: 'claims', databaseId: database.database_id, dataSourceId: database.data_source_id });
     if (changed.length) ctx.io.err(`walkthrough: the column order of the Claims view${changed.length === 1 ? '' : 's'} ${changed.map((n) => `"${n}"`).join(', ')} was set to the review order`);
   } catch (e) {
     if (!refusal(e)) throw e;
@@ -933,18 +935,18 @@ async function seedRows(ctx) {
   const first = rowOpsFor(ctx, emptyLinks, tagPages);
 
   let claimPages = {};
-  if (!demo.rows.claims_copy) {
-    const claimsEntry = tableEntry(ctx.config, 'claims_copy');
+  if (!demo.rows.claims) {
+    const claimsEntry = tableEntry(ctx.config, 'claims');
     const byGeoId = new Map(manifest.claims.filter((c) => (c.source_pieces ?? []).some((p) => p.href)).map((c) => [c['Geo ID'], c.source_pieces]));
     const inLinks = protectedInLinks(ctx.config, byGeoId);
     if (inLinks.length) throw stop(EXIT.INVALID, `the links of Geo Sources of ${inLinks.length} claim(s) point at a protected table or page; protected ids are never written`);
     const wrap = (client) => withLinkedSources(client, byGeoId, { column: claimsEntry.columns?.sources ?? 'Geo Sources', keyColumn: claimsEntry.key, onWarning: (w) => ctx.io.err(`walkthrough: warning: ${w}`) });
-    claimPages = await createRows(ctx, { table: 'claims_copy', ops: first.claims_copy, wrap });
-    demo.rows.claims_copy = true;
+    claimPages = await createRows(ctx, { table: 'claims', ops: first.claims, wrap });
+    demo.rows.claims = true;
     persist(ctx);
   } else {
-    const { loaded } = await pullTables(ctx, ['claims_copy']);
-    claimPages = Object.fromEntries(Object.entries(loaded.pulled(['claims_copy']).claims_copy).map(([k, row]) => [k, row.page_id]));
+    const { loaded } = await pullTables(ctx, ['claims']);
+    claimPages = Object.fromEntries(Object.entries(loaded.pulled(['claims']).claims).map(([k, row]) => [k, row.page_id]));
   }
 
   if (!demo.rows.tag_decisions) {
@@ -1122,21 +1124,21 @@ export async function verifyDemo(ctx, { loaded, fresh }) {
     }
   }
 
-  const claims = rowsOf('claims_copy');
+  const claims = rowsOf('claims');
   counts.claims = claims.length;
   if (claims.length !== manifest.claims.length) add(`Claims has ${claims.length} rows, it should have ${manifest.claims.length}`);
-  const claimsEntry = tableEntry(ctx.config, 'claims_copy');
+  const claimsEntry = tableEntry(ctx.config, 'claims');
   const C = claimsEntry.columns; // verified, review_status, notes: the editor's three columns
   const editorCols = [C.verified, C.review_status, C.notes];
   const readingColumn = claimsEntry.write_columns.reading; // the agent's own column on the claims: its reading of the editor's decisions
-  const absentClaims = missingColumns('claims_copy', [...CLAIMS_COPY_COLUMNS, ...Object.values(claimsEntry.write_columns), ...editorCols]);
+  const absentClaims = missingColumns('claims', [...CLAIMS_COPY_COLUMNS, ...Object.values(claimsEntry.write_columns), ...editorCols]);
   if (absentClaims.length) add(`Claims has no column ${absentClaims.join(', ')}`);
   const claimByGeo = new Map(claims.map((r) => [text(r[claimsEntry.key]), r]));
-  const rawClaims = new Map(loaded.pages('claims_copy').map((p) => [normId(p.id), p]));
+  const rawClaims = new Map(loaded.pages('claims').map((p) => [normId(p.id), p]));
   const rulebookPage = rulebook[0]?.page_id ?? null; // the relation of the decided claims points at the row of the tag
   const tagPages = rulebookPage ? { [tag]: rulebookPage } : {};
   const decidedBy = new Map(manifest.decided.map((d) => [d.claim, d]));
-  const schemaClaims = schemaOf('claims_copy');
+  const schemaClaims = schemaOf('claims');
   // the rulebook file the page started with, whose tag hash the seeded readings carry
   const seedRubric = dp.practiceRubric(manifest, ctx.config, { edition: demo.edition, now: new Date(demo.created_at) });
   for (const c of manifest.claims) {
@@ -1250,9 +1252,9 @@ export async function verifyDemo(ctx, { loaded, fresh }) {
 
   // 5. the columns of every table and the views. First the shape the manifest expects of the Claims table and its three views: the structure the page was built from has to say
   // the same, and the live columns and views are compared with that structure below.
-  const claimsViews = structure.views.filter((v) => v.table === 'claims_copy');
+  const claimsViews = structure.views.filter((v) => v.table === 'claims');
   if (Array.isArray(expects.claims_columns)) {
-    const liveColumns = structure.tables.claims_copy.columns.filter((c) => !c.retired).map((c) => c.name);
+    const liveColumns = structure.tables.claims.columns.filter((c) => !c.retired).map((c) => c.name);
     if (JSON.stringify(liveColumns.slice(0, expects.claims_columns.length)) !== JSON.stringify(expects.claims_columns)) add(`the structure of Claims starts with ${liveColumns.slice(0, expects.claims_columns.length).join(', ')}, the manifest expects ${expects.claims_columns.join(', ')}`);
     for (const view of claimsViews) {
       if (JSON.stringify(view.columns) !== JSON.stringify(expects.claims_columns)) add(`the structure shows ${view.columns.join(', ')} on the view ${view.name}, the manifest expects ${expects.claims_columns.join(', ')}`);
@@ -1575,7 +1577,7 @@ function whereParts(ctx, st) {
     case 2: return { sentence: `${head}.`, next: `Next: type ${command(2)}.` };
     case 3: {
       // every open claim is To review, so every tag the agent judged on them waits and all are in Your queue (a view of the Claims table; without the view, the table)
-      const l = link('your_queue', 'claims_copy');
+      const l = link('your_queue', 'claims');
       // none decided yet: "your four claims" (the words of the page, counted from the manifest); some decided: the ones that are left
       const all = st.remaining === undefined || st.remaining === ctx.manifest.open.length;
       const which = all ? yourClaims(ctx.manifest.open.length) : `your remaining ${st.remaining === 1 ? 'claim' : 'claims'}`;
@@ -1595,7 +1597,7 @@ function whereParts(ctx, st) {
     }
     default: {
       if (st.branch === 'stopped') return { sentence: `${head}; the run stopped before it re-checked your claims.`, next: 'Next: type /claim-tagger demo follow-up.' };
-      const l = link('agent_disagreed', 'claims_copy');
+      const l = link('agent_disagreed', 'claims');
       return { sentence: `${head}.`, next: `Next: add a note in Challenged tags notes on the claims in ${l.name} (${l.href}).` };
     }
   }
@@ -1785,6 +1787,8 @@ async function runCommand(args, io, env) {
     throw stop(EXIT.INVALID, e.message);
   }
   if (found.demo.state !== 'ready') throw stop(EXIT.INVALID, `the practice page ${found.id} is not finished (its state is "${found.demo.state}"); ask for it again under the same link`);
+  const older = dp.olderShapeProblem(found.dir, found.id);
+  if (older) throw stop(EXIT.INVALID, older);
   let config;
   try {
     config = loadConfig(found.dir);
@@ -1937,7 +1941,7 @@ async function decideCommand(args, io, env) {
   return withEditing('decide', v, args, io, env, async (ctx, run) => {
     const { manifest } = ctx;
     const tag = manifest.tag.Name;
-    const claimsEntry = tableEntry(ctx.config, 'claims_copy');
+    const claimsEntry = tableEntry(ctx.config, 'claims');
     const C = claimsEntry.columns; // verified, review_status, notes
     const editorCols = [C.verified, C.review_status, C.notes];
     const waiting = manifest.open.map((o) => o.claim);
@@ -1960,8 +1964,8 @@ async function decideCommand(args, io, env) {
     if (Object.hasOwn(wrote, C.review_status) && wrote[C.review_status] !== 'Reviewed') throw stop(EXIT.INVALID, `decide: ${C.review_status} is Reviewed once the claim is decided`);
     if (Object.hasOwn(wrote, C.verified) && (!Array.isArray(wrote[C.verified]) || wrote[C.verified].some((t) => t !== tag))) throw stop(EXIT.INVALID, `decide: ${C.verified} holds the tag ${tag} or nothing`);
 
-    const loaded = await pullForEditing(ctx, ['claims_copy', 'rulebook']);
-    const row = loaded.pulled(['claims_copy']).claims_copy[claim[claimsEntry.key]];
+    const loaded = await pullForEditing(ctx, ['claims', 'rulebook']);
+    const row = loaded.pulled(['claims']).claims[claim[claimsEntry.key]];
     if (!row) throw stop(EXIT.INVALID, `Claims has no row for "${claim.key}" (${claim[claimsEntry.key]})`);
     const tagPages = Object.fromEntries(Object.entries(loaded.pulled(['rulebook']).rulebook ?? {}).map(([name, r]) => [name, r.page_id]));
     const planned = { ...wrote };
@@ -1972,12 +1976,12 @@ async function decideCommand(args, io, env) {
       });
     }
     const before = Object.fromEntries(Object.keys(planned).map((column) => [column, row[column] ?? null]));
-    const schema = loaded.schema('claims_copy');
+    const schema = loaded.schema('claims');
     const unchanged = sameColumns(schema, planned, before);
     const key = claim[claimsEntry.key];
     const note = { claim: claim.key, tags: Object.hasOwn(wrote, C.verified) ? wrote[C.verified] : undefined };
-    if (unchanged) logEditorAction(ctx, { action: 'decide', status: 'unchanged', table: 'claims_copy', key, page_id: row.page_id, wrote: planned, before, ...note });
-    else await updateAsEditor(ctx, { action: 'decide', table: 'claims_copy', key, pageId: row.page_id, wrote: planned, before, loaded, note });
+    if (unchanged) logEditorAction(ctx, { action: 'decide', status: 'unchanged', table: 'claims', key, page_id: row.page_id, wrote: planned, before, ...note });
+    else await updateAsEditor(ctx, { action: 'decide', table: 'claims', key, pageId: row.page_id, wrote: planned, before, loaded, note });
 
     const tagsNow = Object.hasOwn(wrote, C.verified) ? wrote[C.verified] : null;
     const rows = Object.keys(planned).map((column) => {

@@ -602,12 +602,12 @@ test('distill: decisions the editor made on the claims since the last tag step a
   assert.deepEqual([three['Agent reading'], three.Rule, three['Reading note'], three['Read under']], [null, '', '', ''], 'and no reading');
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
   assert.deepEqual(plan.map((op) => [op.table, op.op]).sort(), [
-    ['agent_settings', 'update'], ['claims_copy', 'update'], ['claims_copy', 'update'], ['claims_copy', 'update'], ['rule_changes', 'create'], ['tag_decisions', 'update'], ['tag_decisions', 'update'], ['tag_decisions', 'update'],
+    ['agent_settings', 'update'], ['claims', 'update'], ['claims', 'update'], ['claims', 'update'], ['rule_changes', 'create'], ['tag_decisions', 'update'], ['tag_decisions', 'update'], ['tag_decisions', 'update'],
   ].sort());
   assert.ok(plan.filter((op) => op.table === 'tag_decisions').every((op) => Object.keys(op.properties).every((k) => ['Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under', 'Agent reading', 'Rule', 'Reading note', 'Read under'].includes(k))));
-  assert.ok(plan.filter((op) => op.table === 'claims_copy').every((op) => Object.keys(op.properties).join() === 'Agent reading'), 'a claim gets its Agent reading and nothing else');
+  assert.ok(plan.filter((op) => op.table === 'claims').every((op) => Object.keys(op.properties).join() === 'Agent reading'), 'a claim gets its Agent reading and nothing else');
   assert.equal(readJson(join(r.runDir, 'run.json')).counts.decisions_copied, 3);
-  assert.equal(w.rows('claims_copy').filter((c) => c['Review status'] === 'Reviewed').length, 3, 'the claims are as the editor left them');
+  assert.equal(w.rows('claims').filter((c) => c['Review status'] === 'Reviewed').length, 3, 'the claims are as the editor left them');
   for (const req of w.writes()) assert.ok(!Object.keys(req.body?.properties ?? {}).includes('Review status'), 'no write names a claim\'s Review status');
   assert.equal(w.claim(claimId(1))['Agent reading'], 'Context-dependent: Rule unclear, rule 4 · Your note says so.');
   assert.equal(w.claim(claimId(3))['Agent reading'], 'Nothing to read: the agent agreed with you.');
@@ -826,7 +826,7 @@ function assertRecantedReport(h, r) {
   return r.report;
 }
 const READ_USPS_OPEN = { reading: 'Rule unclear', rule: 'Context-dependent rule 3', note: 'Rule 3 leaves a portal open.' };
-const NEEDS_YOUR_NOTE = (w) => `https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000002`;
+const NEEDS_YOUR_NOTE = (w) => `https://www.notion.so/${w.DB.claims}?v=e3000000000000000000000000000002`;
 
 test('a disagreement without a note is read all the same, flagged "without your note" in the ledger and on the claim, counted and listed, and never grouped: two without a note and one with a note on the same rule draft nothing, the same three with notes draft a rule change', async () => {
   // the press pool and the AI Force claim have no note, the USPS claim has one that is no reason word: all three are read Rule unclear on rule 3 in one call
@@ -1043,7 +1043,7 @@ test('exit 2 only when something was to read, nothing at all could be read, and 
   assert.equal(r.exit, 2);
   assert.equal(assertReport(h, r).sentence, 'Distill: no decision could be read this time; no rule change to draft; none of the decisions read so far names a rule problem.');
   assert.ok(none.rows('tag_decisions').every((x) => x['Agent reading'] === null), 'no row holds a reading');
-  assert.deepEqual(none.rows('claims_copy').filter((c) => c['Agent reading'] !== '').map((c) => c['Geo ID']), [claimId(GEORGIA)], 'only the claim the agent agreed on has its line: "Nothing to read"');
+  assert.deepEqual(none.rows('claims').filter((c) => c['Agent reading'] !== '').map((c) => c['Geo ID']), [claimId(GEORGIA)], 'only the claim the agent agreed on has its line: "Nothing to read"');
   assert.deepEqual(readJson(join(r.runDir, 'run.json')).readings.could_not_read.sort(), [keyOf(PRESS), keyOf(AI), keyOf(USPS)].sort());
   assert.equal(readJson(join(r.runDir, 'run.json')).exit_code, 2);
   // --plan-only follows the same rule
@@ -1102,7 +1102,7 @@ test('--plan-only asks the model and writes readings.jsonl but nothing to Notion
   const planOps = readJsonl(join(planned.runDir, 'plan.jsonl')).rows.slice(1);
   assert.equal(planOps.filter((op) => op.table === 'tag_decisions').length, 4, 'the ledger updates: the four decisions are copied');
   assert.equal(planOps.filter((op) => op.table === 'tag_decisions' && op.properties['Agent reading']).length, 3, 'and three of them carry a reading');
-  assert.equal(planOps.filter((op) => op.table === 'claims_copy').length, 4, 'and the claim lines');
+  assert.equal(planOps.filter((op) => op.table === 'claims').length, 4, 'and the claim lines');
 
   // the live step: zero reading calls
   const live = await distill(w.hooks({ readings: planned.runId }));

@@ -25,7 +25,7 @@ const NOW = () => new Date('2026-10-15T10:00:00.000Z');
 const noSleep = async () => {};
 const DB = {
   rulebook: 'b2000000000000000000000000000001',
-  claims_copy: 'b2000000000000000000000000000002',
+  claims: 'b2000000000000000000000000000002',
   tag_decisions: 'b2000000000000000000000000000003',
   rule_changes: 'b2000000000000000000000000000004',
   agent_settings: 'b2000000000000000000000000000005',
@@ -55,15 +55,15 @@ async function world({ placeholders = [], populate = true, textAgentTags = false
   const root = tmp();
   const config = placeholderConfig();
   config.notion.requests_per_second = 1000;
-  const entries = { rulebook: config.notion.rulebook, claims_copy: config.notion.claims[0], ...config.notion.databases };
+  const entries = { rulebook: config.notion.rulebook, claims: config.notion.claims, ...config.notion.databases };
   const notion = createFakeNotion();
   for (const [table, entry] of Object.entries(entries)) {
     if (placeholders.includes(table)) continue;
     entry.database_id = DB[table];
     entry.data_source_id = `c200000000000000000000000000000${Object.keys(DB).indexOf(table) + 1}`;
     const spec = { ...TABLE_SPECS[table] };
-    if (table === 'claims_copy' && textAgentTags) spec['Agent tags'] = 'rich_text'; // a table the setup build has not rebuilt yet
-    if (table === 'claims_copy' && placeholders.includes('rulebook')) for (const relation of ['Agent tags', 'Tags waiting', 'Verified tags']) delete spec[relation]; // no Rulebook copy for the relations to point at
+    if (table === 'claims' && textAgentTags) spec['Agent tags'] = 'rich_text'; // a table the setup build has not rebuilt yet
+    if (table === 'claims' && placeholders.includes('rulebook')) for (const relation of ['Agent tags', 'Tags waiting', 'Verified tags']) delete spec[relation]; // no Rulebook copy for the relations to point at
     notion.addDatabase({ id: entry.database_id, dataSourceId: entry.data_source_id, title: table, properties: restProps(spec, config.notion.rulebook.data_source_id) });
   }
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
@@ -90,9 +90,9 @@ async function fill(w) {
     }
     ids.otherTag = notion.addRow(DB.rulebook, { Name: 'Not an issue tag', 'Work tags': ['Pipeline benchmark check'], 'When to use': '1. Nothing.' });
   }
-  if (w.config.notion.claims[0].database_id === DB.claims_copy) {
+  if (w.config.notion.claims.database_id === DB.claims) {
     await client.createPage({
-      parentDatabaseId: DB.claims_copy,
+      parentDatabaseId: DB.claims,
       properties: {
         'Geo Name': titleOf('Claim one has two sources'),
         'Geo ID': richText('geo-1'),
@@ -106,8 +106,8 @@ async function fill(w) {
         ...(hasRulebook ? { 'Tags waiting': { relation: [{ id: ids['tag:Context-dependent'] }] } } : {}),
       },
     });
-    ids.claim2 = notion.addRow(DB.claims_copy, { 'Geo Name': 'Claim two has no sources', 'Geo ID': 'geo-2', 'Geo URL': 'https://www.geobrowser.io/space/s/geo-2' });
-    ids.claim3 = notion.addRow(DB.claims_copy, {
+    ids.claim2 = notion.addRow(DB.claims, { 'Geo Name': 'Claim two has no sources', 'Geo ID': 'geo-2', 'Geo URL': 'https://www.geobrowser.io/space/s/geo-2' });
+    ids.claim3 = notion.addRow(DB.claims, {
       'Geo Name': 'Claim three is written out', 'Geo ID': 'geo-3', 'Geo Sources': '[Written out](https://www.geobrowser.io/space/s/entity-c)<br>https://example.com/bare.',
       'Agent reasons': 'Context-dependent: A pronoun with no antecedent. · Context-dependent rule 1 · 2 of 2 runs agree', 'Agent status': 'Done', 'Agent edition': '2026-10-16.1', 'Agent confidence': 0.81,
       ...(hasRulebook ? { 'Agent tags': w.textAgentTags ? 'Wordy, Context-dependent, , Wordy' : [ids['tag:Context-dependent']], 'Verified tags': [ids['tag:Context-dependent']] } : {}),
@@ -174,8 +174,8 @@ test('supportingKeys takes the key at the end of each line, whatever the claim h
 });
 
 test('tablesFor resolves the aliases, keeps the order of the tables, and refuses a name it does not know', () => {
-  assert.deepEqual(tablesFor('all'), ['rulebook', 'claims_copy', 'tag_decisions', 'rule_changes', 'agent_settings']);
-  assert.deepEqual(tablesFor(['settings', 'claims', 'queue', 'claims_copy']), ['claims_copy', 'tag_decisions', 'agent_settings']);
+  assert.deepEqual(tablesFor('all'), ['rulebook', 'claims', 'tag_decisions', 'rule_changes', 'agent_settings']);
+  assert.deepEqual(tablesFor(['settings', 'claims', 'queue', 'claims']), ['claims', 'tag_decisions', 'agent_settings']);
   assert.throws(() => tablesFor(['claims', 'runs']), /unknown table name\(s\): runs/);
   assert.throws(() => tablesFor([]), /\(none given\)/);
 });
@@ -189,7 +189,7 @@ test('pull --all reads the five tables, writes schema, raw and the norm files, t
   assert.equal(r.code, EXIT.OK, r.err.join('\n'));
   assert.equal(w.notion.writes().length, writesBefore, 'a pull sends no write');
   assert.equal(r.out.length, 1);
-  assert.match(r.out[0], /^pull p1: rulebook 7, claims_copy 3, tag_decisions 3, rule_changes 1, agent_settings 1; drift not checked \(no lock\); duplicates 0; paused no$/);
+  assert.match(r.out[0], /^pull p1: rulebook 7, claims 3, tag_decisions 3, rule_changes 1, agent_settings 1; drift not checked \(no lock\); duplicates 0; paused no$/);
 
   const dir = join(w.root, 'runs', 'pull', 'p1');
   for (const table of Object.keys(DB)) {
@@ -198,7 +198,7 @@ test('pull --all reads the five tables, writes schema, raw and the norm files, t
   }
   assert.equal(readFileSync(join(w.root, 'runs', 'pull', 'LATEST'), 'utf8').trim(), 'p1');
   assert.equal(JSON.parse(readFileSync(join(dir, 'schema', 'tag_decisions.json'), 'utf8')).properties.Key.type, 'rich_text');
-  assert.equal(lines(join(dir, 'raw', 'claims_copy.jsonl')).length, 3);
+  assert.equal(lines(join(dir, 'raw', 'claims.jsonl')).length, 3);
   assert.deepEqual(JSON.parse(readFileSync(join(dir, 'drift.json'), 'utf8')), { skipped: 'no lock' });
 
   // the request log: every attempt, reads only
@@ -210,9 +210,9 @@ test('pull --all reads the five tables, writes schema, raw and the norm files, t
   const manifest = JSON.parse(readFileSync(join(dir, 'pull.json'), 'utf8'));
   assert.equal(manifest.pull_id, 'p1');
   assert.equal(manifest.taken_at, '2026-10-15T10:00:00.000Z');
-  assert.deepEqual(manifest.tables, ['rulebook', 'claims_copy', 'tag_decisions', 'rule_changes', 'agent_settings']);
+  assert.deepEqual(manifest.tables, ['rulebook', 'claims', 'tag_decisions', 'rule_changes', 'agent_settings']);
   assert.deepEqual(manifest.skipped, []);
-  assert.deepEqual(manifest.counts, { rulebook: 7, claims_copy: 3, tag_decisions: 3, rule_changes: 1, agent_settings: 1 });
+  assert.deepEqual(manifest.counts, { rulebook: 7, claims: 3, tag_decisions: 3, rule_changes: 1, agent_settings: 1 });
   assert.equal(manifest.paused, false);
   assert.equal(manifest.request_log, 'requests.jsonl');
 });
@@ -228,7 +228,7 @@ test('the norm files: claims with their links, the rulebook copy as plain rows, 
   const one = claims[0];
   assert.deepEqual(Object.keys(one), ['table', 'geo_id', 'page_id', 'notion_url', 'claim', 'geo_url', 'sources_text', 'source_links', 'is_factual', 'agent_tags', 'agent_status', 'tags_waiting',
     'agent_confidence', 'agent_reasons', 'agent_edition', 'agent_remarks', 'agent_reading', 'verified_tags', 'review_status', 'challenged_notes', 'last_edited']);
-  assert.equal(one.table, 'claims_copy');
+  assert.equal(one.table, 'claims');
   assert.equal(one.claim, 'Claim one has two sources');
   assert.equal(one.geo_url, 'https://www.geobrowser.io/space/s/geo-1');
   assert.equal(one.sources_text, 'Source A\nSource B');
@@ -347,9 +347,9 @@ test('a table whose id is still a placeholder is skipped and listed; a pull that
   const w = await world({ placeholders: ['rulebook', 'rule_changes'] });
   const r = await run(w, ['--all', '--pull-id', 'p1']);
   assert.equal(r.code, EXIT.OK, r.err.join('\n'));
-  assert.match(r.out[0], /^pull p1: claims_copy 3, tag_decisions 3, agent_settings 1; skipped rulebook, rule_changes \(not created yet\); /);
+  assert.match(r.out[0], /^pull p1: claims 3, tag_decisions 3, agent_settings 1; skipped rulebook, rule_changes \(not created yet\); /);
   const manifest = JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'pull.json'), 'utf8'));
-  assert.deepEqual(manifest.tables, ['claims_copy', 'tag_decisions', 'agent_settings']);
+  assert.deepEqual(manifest.tables, ['claims', 'tag_decisions', 'agent_settings']);
   assert.deepEqual(manifest.skipped.map((s) => s.table), ['rulebook', 'rule_changes']);
   assert.match(manifest.skipped[0].reason, /not created yet/);
   assert.equal(existsSync(join(w.root, 'runs', 'pull', 'p1', 'raw', 'rulebook.jsonl')), false);
@@ -362,7 +362,7 @@ test('a table whose id is still a placeholder is skipped and listed; a pull that
   const c = cap();
   const code = await main(['--all', '--pull-id', 'empty'], c.io, { root: fresh, config: shipped, client: null, now: NOW });
   assert.equal(code, EXIT.OK, c.err.join('\n'));
-  assert.match(c.out[0], /^pull empty: no table read; skipped rulebook, claims_copy, tag_decisions, rule_changes, agent_settings \(not created yet\)/);
+  assert.match(c.out[0], /^pull empty: no table read; skipped rulebook, claims, tag_decisions, rule_changes, agent_settings \(not created yet\)/);
   assert.equal(latestPullId(fresh), null);
   assert.deepEqual(JSON.parse(readFileSync(join(fresh, 'runs', 'pull', 'empty', 'pull.json'), 'utf8')).tables, []);
 });
@@ -503,14 +503,14 @@ test('loadPull gives applyPlan its `pulled`: an update with expect is sent for a
   assert.deepEqual(Object.keys(byKey), ['aud-1::Context-dependent', 'geo-1::Context-dependent', 'geo-9::Context-dependent']);
   assert.equal(byKey['geo-1::Context-dependent'].page_id, w.ids.open);
   assert.equal(byKey['geo-9::Context-dependent']['Tag outcome'], 'Applies');
-  assert.equal(p.plainRows('claims_copy').length, 3);
-  assert.deepEqual(Object.keys(p.pulled(['claims_copy', 'agent_settings'])), ['claims_copy', 'agent_settings']);
-  assert.equal(p.byKey('claims_copy')['geo-2'].page_id, w.ids.claim2);
+  assert.equal(p.plainRows('claims').length, 3);
+  assert.deepEqual(Object.keys(p.pulled(['claims', 'agent_settings'])), ['claims', 'agent_settings']);
+  assert.equal(p.byKey('claims')['geo-2'].page_id, w.ids.claim2);
 
   const plan = newPlan({ runId: 'r1', script: 'test', rubricEdition: '2026-10-16.1', config: w.config, now: NOW });
   plan.update('tag_decisions', 'geo-1::Context-dependent', byKey['geo-1::Context-dependent'].page_id, { 'Agent proposal': 'Applies', 'Agent confidence': 0.9 }, { expect: { 'Tag outcome': null } });
   plan.update('tag_decisions', 'geo-9::Context-dependent', byKey['geo-9::Context-dependent'].page_id, { 'Agent proposal': 'Does not apply' }, { expect: { 'Tag outcome': null } });
-  plan.update('claims_copy', 'geo-2', p.byKey('claims_copy')['geo-2'].page_id, { 'Agent edition': '2026-10-16.1' }, { expect: { 'Agent edition': '' } });
+  plan.update('claims', 'geo-2', p.byKey('claims')['geo-2'].page_id, { 'Agent edition': '2026-10-16.1' }, { expect: { 'Agent edition': '' } });
   const schemas = Object.fromEntries(p.tables.map((t) => [t, p.schema(t)]));
   const client = createClient({ token: w.notion.token, fetchImpl: w.notion.fetchImpl, requestsPerSecond: 1000, sleep: noSleep });
   const result = await applyPlan({ plan, dir: join(w.root, 'runs', 'r1'), client, config: w.config, schemas, pulled: p.pulled(), root: w.root, now: NOW });
@@ -758,12 +758,12 @@ test('a Geo Sources cell that Notion cut at 25 pieces is read whole, in the dry 
 
   // the same for the claims of a pull
   const pulls = await world({ populate: false });
-  await pulls.client.createPage({ parentDatabaseId: DB.claims_copy, properties: { 'Geo Name': titleOf('A claim with fifteen sources'), 'Geo ID': richText('geo-long'), 'Geo Sources': fifteenLinks(2) } });
+  await pulls.client.createPage({ parentDatabaseId: DB.claims, properties: { 'Geo Name': titleOf('A claim with fifteen sources'), 'Geo ID': richText('geo-long'), 'Geo Sources': fifteenLinks(2) } });
   const p = await run(pulls, ['--tables', 'claims', '--pull-id', 'p1'], { fetchImpl: cutAt25(pulls.notion.fetchImpl, 'Geo Sources') });
   assert.equal(p.code, EXIT.OK, p.err.join('\n'));
   const pull = loadPull(pulls.root, 'p1', { config: pulls.config });
   assert.equal(pull.claims()[0].source_links.length, 15);
-  assert.equal(pull.pages('claims_copy')[0].properties['Geo Sources'].rich_text.length, 29, 'the raw file holds the whole cell');
+  assert.equal(pull.pages('claims')[0].properties['Geo Sources'].rich_text.length, 29, 'the raw file holds the whole cell');
 });
 
 test('a cell with fewer than 25 pieces costs no extra request', async () => {
@@ -954,7 +954,7 @@ test('a reference in Verified tags that is no tag of the rulebook is left out of
   assert.equal(r.code, EXIT.OK);
   const three = loadPull(w.root, 'p1', { config: w.config }).claims().find((c) => c.geo_id === 'geo-3');
   assert.deepEqual(three.verified_tags, ['Context-dependent', 'Not an issue tag'], 'every row of the Rulebook copy names a tag, also one the rulebook file leaves out');
-  assert.ok(r.err.some((l) => /claims_copy: 1 reference\(s\) in Verified tags name no tag of the rulebook/.test(l)), r.err.join('\n'));
+  assert.ok(r.err.some((l) => /claims: 1 reference\(s\) in Verified tags name no tag of the rulebook/.test(l)), r.err.join('\n'));
   assert.match(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'pull.json'), 'utf8')).warnings.join(' '), /name no tag of the rulebook/);
 });
 
@@ -962,14 +962,14 @@ test('a pull of the claims alone reads the relation through the page ids of the 
   const w = await world();
   assert.equal((await run(w, ['--tables', 'rulebook', '--pull-id', 'p0'])).code, EXIT.OK);
   writeEdition(w.root, buildRubric(loadPull(w.root, 'p0', { config: w.config }).rulebook(), { config: w.config, edition: '2026-10-16.1', now: new Date('2026-10-16T09:00:00.000Z') }), { reason: 'test edition' });
-  const r = await run(w, ['--tables', 'claims_copy', '--pull-id', 'p1']);
+  const r = await run(w, ['--tables', 'claims', '--pull-id', 'p1']);
   assert.equal(r.code, EXIT.OK);
   const claims = loadPull(w.root, 'p1', { config: w.config }).claims();
   assert.deepEqual(claims.find((c) => c.geo_id === 'geo-3').verified_tags, ['Context-dependent']);
   assert.deepEqual(r.err.filter((l) => /name no tag/.test(l)), []);
   // without an edition the ids cannot be read: said, not guessed
   const bare = await world();
-  const none = await run(bare, ['--tables', 'claims_copy', '--pull-id', 'p1']);
+  const none = await run(bare, ['--tables', 'claims', '--pull-id', 'p1']);
   assert.deepEqual(loadPull(bare.root, 'p1', { config: bare.config }).claims().find((c) => c.geo_id === 'geo-3').verified_tags, []);
   assert.ok(none.err.some((l) => /name no tag of the rulebook/.test(l)));
 });
@@ -1000,6 +1000,6 @@ test('a Claims copy that still has the text column Agent tags is read the same w
   assert.equal(warned.code, EXIT.OK);
   const claim = loadPull(odd.root, 'p1', { config: odd.config }).claims().find((c) => c.geo_id === 'geo-3');
   assert.deepEqual([claim.agent_tags, claim.tags_waiting], [['Context-dependent'], []]);
-  assert.ok(warned.err.some((l) => /claims_copy: 1 reference\(s\) in Agent tags name no tag of the rulebook/.test(l)), warned.err.join('\n'));
-  assert.ok(warned.err.some((l) => /claims_copy: 1 reference\(s\) in Tags waiting name no tag of the rulebook/.test(l)));
+  assert.ok(warned.err.some((l) => /claims: 1 reference\(s\) in Agent tags name no tag of the rulebook/.test(l)), warned.err.join('\n'));
+  assert.ok(warned.err.some((l) => /claims: 1 reference\(s\) in Tags waiting name no tag of the rulebook/.test(l)));
 });

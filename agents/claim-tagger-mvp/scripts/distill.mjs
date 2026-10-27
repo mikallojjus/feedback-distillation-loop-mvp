@@ -436,7 +436,7 @@ export async function distill(opts = {}) {
     await takePull(ctx);
     needTables(ctx, 'tag_decisions', 'rule_changes');
     runPreflight(ctx);
-    if (ctx.pull.covers('claims_copy')) needClaimColumns(ctx);
+    if (ctx.pull.covers('claims')) needClaimColumns(ctx);
     const rubric = liveRubric(ctx);
     const cfg = ctx.config.distill;
     const rs = readingSettings(ctx.config);
@@ -448,7 +448,7 @@ export async function distill(opts = {}) {
 
     // step 1: the decisions are copied to the ledger rows, and the disagreements are read
     const claims = ctx.pull.claims() ?? [];
-    const claimsEntry = ctx.pull.covers('claims_copy') ? tableEntry(ctx.config, 'claims_copy') : null;
+    const claimsEntry = ctx.pull.covers('claims') ? tableEntry(ctx.config, 'claims') : null;
     const readingColumn = claimsEntry?.write_columns?.reading ?? null;
     const { changes: copies, rows: queue } = syncDecisions(claims, ctx.pull.queue() ?? [], { tagNames: rubric.tags.map((t) => t.name) });
     const classes = classifyRows({ claims, ledgerRows: queue, rubric, config: ctx.config });
@@ -574,7 +574,7 @@ export async function distill(opts = {}) {
     const plan = newPlan({ runId: ctx.runId, script: 'distill', rubricEdition: rubric.edition, config: ctx.config, now: ctx.now });
     const lessonSchema = readJson(codeFile(ctx.root, 'schemas', 'lesson.schema.json'));
     for (const [key, op] of ledgerOps) plan.update('tag_decisions', key, op.page_id, op.changes);
-    for (const c of claimOps) plan.update('claims_copy', c.geo_id, c.page_id, { [readingColumn]: c.cell });
+    for (const c of claimOps) plan.update('claims', c.geo_id, c.page_id, { [readingColumn]: c.cell });
     for (const k of kept) {
       const row = {
         Lesson: k.title, Tag: k.tag, Rule: k.rule, Kind: k.kind, 'Current text': k.current, 'Proposed text': k.text, Status: 'Proposed', 'Supporting rows': supportingCell(k.rows, maxText),

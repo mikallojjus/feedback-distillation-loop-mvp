@@ -259,7 +259,7 @@ export async function withRun({ script, label, again = '/claim-tagger', opts = {
 
 // ---- reading Notion -----------------------------------------------------------------------------------------------------------------
 
-const TABLE_WORDS = { rulebook: 'Rulebook copy', claims_copy: 'Claims copy', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings' };
+const TABLE_WORDS = { rulebook: 'Rulebook copy', claims: 'Claims copy', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings' };
 
 /** Pull every table of the agent (or load the pull named by --pull) and make it ctx.pull. A pull with duplicate keys or a missing key column ends the run. */
 export async function takePull(ctx, { pullId = ctx.opts.pull ?? null } = {}) {
@@ -333,9 +333,9 @@ const LEDGER_READING_TYPES = Object.freeze({ 'Agent reading': 'select', Rule: 'r
  * there, and every Reviewed claim would look decided as "Does not apply". The message names the columns of the revision of 21 October, or those of the reading of 22 October, or both.
  */
 export function needClaimColumns(ctx) {
-  const schema = ctx.pull.schema('claims_copy');
+  const schema = ctx.pull.schema('claims');
   const ledger = ctx.pull.schema('tag_decisions');
-  const entry = schema?.properties || ledger?.properties ? tableEntry(ctx.config, 'claims_copy') : null;
+  const entry = schema?.properties || ledger?.properties ? tableEntry(ctx.config, 'claims') : null;
   const found = (props, name, type) => (props[name] ? `${name} (${props[name].type}, not ${type})` : `${name} (missing)`);
   const wrong = [];
   const reading = [];

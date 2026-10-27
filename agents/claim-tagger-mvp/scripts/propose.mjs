@@ -226,7 +226,7 @@ export async function propose(opts = {}) {
     resume: resumeLine('propose', opts.driver === 'fake' ? ['--driver', 'fake'] : []),
   }, async (ctx) => {
     await takePull(ctx);
-    needTables(ctx, 'claims_copy', 'tag_decisions');
+    needTables(ctx, 'claims', 'tag_decisions');
     runPreflight(ctx);
     needClaimColumns(ctx);
     const rubric = liveRubric(ctx);
@@ -252,7 +252,7 @@ export async function propose(opts = {}) {
 
     const ledger = ctx.pull.queue() ?? [];
     const ledgerByKey = new Map(ledger.filter((r) => r.Key).map((r) => [r.Key, r]));
-    const writeColumns = tableEntry(ctx.config, 'claims_copy').write_columns;
+    const writeColumns = tableEntry(ctx.config, 'claims').write_columns;
     const tagPages = tagPagesOf(ctx, rubric);
     const claims = ctx.pull.claims() ?? [];
 
@@ -360,7 +360,7 @@ export async function propose(opts = {}) {
       const props = claimProps({ claim, columns, writeColumns, tagPages });
       if (claim.agent_confidence === null || round2(claim.agent_confidence) !== confidence) props[writeColumns.confidence] = confidence;
       if (Object.keys(props).length) {
-        plan.update('claims_copy', claim.geo_id, claim.page_id, props);
+        plan.update('claims', claim.geo_id, claim.page_id, props);
         claimUpdates += 1;
       }
     }

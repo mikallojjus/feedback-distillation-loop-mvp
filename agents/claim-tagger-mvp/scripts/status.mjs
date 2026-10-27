@@ -252,7 +252,7 @@ export async function status(opts = {}) {
       recanted_lessons: recanted.map((x) => x.title),
       last_run: counts.last_run,
       promoting,
-      table: tableLink(ctx.config, 'claims_copy'),
+      table: tableLink(ctx.config, 'claims'),
     };
     return {
       exit: EXIT.OK, sentence, header: ['Where', 'Now', ''], rows, next, details: { counts, json }, ...(ctx.opts.json ? { print: JSON.stringify(json, null, 2) } : {}),

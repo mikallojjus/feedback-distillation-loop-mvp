@@ -28,7 +28,7 @@ const tmp = () => {
 
 const DB = {
   rulebook: 'b1000000000000000000000000000001',
-  claims_copy: 'b1000000000000000000000000000002',
+  claims: 'b1000000000000000000000000000002',
   tag_decisions: 'b1000000000000000000000000000003',
   rule_changes: 'b1000000000000000000000000000004',
   agent_settings: 'b1000000000000000000000000000005',
@@ -50,7 +50,7 @@ async function world({ rows = true } = {}) {
     entry.data_source_id = `c100000000000000000000000000000${n}`;
   };
   set(config.notion.rulebook, 'rulebook', 1);
-  set(config.notion.claims[0], 'claims_copy', 2);
+  set(config.notion.claims, 'claims', 2);
   set(config.notion.databases.tag_decisions, 'tag_decisions', 3);
   set(config.notion.databases.rule_changes, 'rule_changes', 4);
   set(config.notion.databases.agent_settings, 'agent_settings', 5);
@@ -63,8 +63,8 @@ async function world({ rows = true } = {}) {
   for (const table of Object.keys(TABLE_SPECS)) schemas[table] = await client.retrieveDatabase(DB[table]);
   const ids = {};
   if (rows) {
-    ids.claimA = notion.addRow(DB.claims_copy, { 'Geo Name': 'Claim A', 'Geo ID': 'geo-a', 'Geo Is factual': false });
-    ids.claimB = notion.addRow(DB.claims_copy, { 'Geo Name': 'Claim B', 'Geo ID': 'geo-b', 'Geo Is factual': false });
+    ids.claimA = notion.addRow(DB.claims, { 'Geo Name': 'Claim A', 'Geo ID': 'geo-a', 'Geo Is factual': false });
+    ids.claimB = notion.addRow(DB.claims, { 'Geo Name': 'Claim B', 'Geo ID': 'geo-b', 'Geo Is factual': false });
     ids.decision = notion.addRow(DB.tag_decisions, { Claim: 'Claim A', Key: 'geo-a::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': 'Can\'t tell', 'Agent confidence': 0.5 });
   }
   const root = tmp();
@@ -73,7 +73,7 @@ async function world({ rows = true } = {}) {
 
 /** What pull.mjs hands to applyPlan: pulled[table][key] = the plain row by Notion column names, plus page_id. */
 function pullFrom(w, tables = Object.keys(TABLE_SPECS)) {
-  const keyOf = { rulebook: 'Name', claims_copy: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name' };
+  const keyOf = { rulebook: 'Name', claims: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name' };
   const out = {};
   for (const table of tables) out[table] = Object.fromEntries(w.notion.plainRows(DB[table]).map((row) => [row[keyOf[table]], row]));
   return out;
@@ -95,7 +95,7 @@ test('newPlan collects ops, adds the key column of a create, and writes the head
   const w = await world();
   const plan = newP(w);
   decision(plan, 'geo-9');
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent edition': 'Context-dependent', 'Agent remarks': 'one line\nsecond line' }, { expect: { 'Agent edition': '' } });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Agent edition': 'Context-dependent', 'Agent remarks': 'one line\nsecond line' }, { expect: { 'Agent edition': '' } });
   plan.create('rule_changes', 'Hedged claims are not context-dependent', { Tag: 'Context-dependent', Status: 'Proposed' }, { children: [{ object: 'block', type: 'paragraph', paragraph: { rich_text: [] } }] });
   assert.equal(plan.ops.length, 3);
   assert.equal(plan.ops[0].properties.Key, 'geo-9::Context-dependent', 'the builder put the key column in');
@@ -180,12 +180,12 @@ test('checkPlan accepts a plan made of agent columns only', async () => {
   plan.update('tag_decisions', 'geo-a::Context-dependent', w.ids.decision, {
     'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Follow-up': 'Fixed', 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Rule 3 says too little.', 'Decided under': EDITION,
   });
-  plan.update('claims_copy', 'geo-b', w.ids.claimB, { 'Agent edition': '', 'Agent remarks': 'no tags\nnothing waits for an editor' });
+  plan.update('claims', 'geo-b', w.ids.claimB, { 'Agent edition': '', 'Agent remarks': 'no tags\nnothing waits for an editor' });
   plan.create('rule_changes', 'A lesson', { Tag: 'Context-dependent', Rule: 'Context-dependent rule 2', Kind: 'Change the rule', 'Current text': 'old', 'Proposed text': 'new', 'Safety check result': 'PASS', 'Supporting rows': 'x · k', Status: 'Proposed' });
   plan.update('agent_settings', 'claim-tagger-mvp', 'a-page-id', { 'Rulebook edition': EDITION, 'Last run summary': 'Tag · 15 Oct 11:20' });
   plan.update('rulebook', 'Context-dependent', 'another-page-id', { 'When to use': '1. A pronoun with no antecedent.' });
   // the agent's three columns on the claims, and the ledger's copies of a decision (Tag outcome, Why wrong, Your reasoning, Decided under): none of them is an editor column now
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent edition': 'Context-dependent', 'Agent remarks': 'Context-dependent\nnothing waits for an editor · edition 2026-10-16.1', 'Agent confidence': 0.83 });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Agent edition': 'Context-dependent', 'Agent remarks': 'Context-dependent\nnothing waits for an editor · edition 2026-10-16.1', 'Agent confidence': 0.83 });
   decision(plan, 'geo-2', { 'Tag outcome': 'Does not apply', 'Why wrong': 'Agent slip', 'Your reasoning': 'It reads on its own.', 'Decided under': EDITION });
   const checked = checkPlan(plan, w.config, { root: w.root });
   assert.deepEqual(checked, { ok: true, problems: [], counts: { creates: 3, updates: 5 } });
@@ -194,10 +194,10 @@ test('checkPlan accepts a plan made of agent columns only', async () => {
 test('checkPlan: the table must be one of the five', async () => {
   const w = await world();
   const plan = newP(w);
-  plan.create('claims', 'k', { Key: 'k' });
+  plan.create('claims_copy', 'k', { Key: 'k' }); // the key of the table before decision P5: it is claims now
   plan.create('runs', 'k', { Key: 'k' });
   const problems = problemsOf(plan, w);
-  assert.ok(mentions(problems, /"claims" is not one of this agent's tables/), problems.join('\n'));
+  assert.ok(mentions(problems, /"claims_copy" is not one of this agent's tables/), problems.join('\n'));
   assert.ok(mentions(problems, /"runs" is not one of/));
   assert.equal(checkPlan(plan, w.config).ok, false);
 });
@@ -206,15 +206,15 @@ test('checkPlan: a column outside the table\'s writable set is refused, with the
   const w = await world();
   const plan = newP(w);
   decision(plan, 'geo-1', { 'Decided by': 'someone' });
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Geo Name': 'A rewritten claim' });
-  plan.update('claims_copy', 'geo-b', w.ids.claimB, { 'Review notes': 'x' });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Geo Name': 'A rewritten claim' });
+  plan.update('claims', 'geo-b', w.ids.claimB, { 'Review notes': 'x' });
   plan.update('rulebook', 'Context-dependent', 'p1', { Description: 'x' });
   plan.update('agent_settings', 'claim-tagger-mvp', 'p2', { Name: 'renamed', Reason: 'x' });
   plan.create('rule_changes', 'L', { Tag: 'Context-dependent', Foo: 'x' });
   const problems = problemsOf(plan, w);
   assert.ok(mentions(problems, /"Decided by" is not a column this plan may write to tag_decisions/), problems.join('\n'));
-  assert.ok(mentions(problems, /"Geo Name" is not a column this plan may write to claims_copy/));
-  assert.ok(mentions(problems, /"Review notes" is not a column this plan may write to claims_copy/));
+  assert.ok(mentions(problems, /"Geo Name" is not a column this plan may write to claims/));
+  assert.ok(mentions(problems, /"Review notes" is not a column this plan may write to claims/));
   assert.ok(mentions(problems, /"Description" is not a column this plan may write to rulebook/));
   assert.ok(mentions(problems, /"Name" is not a column this plan may write to agent_settings/));
   assert.ok(mentions(problems, /"Reason" is not a column this plan may write to agent_settings/));
@@ -226,7 +226,7 @@ test('checkPlan: setup lets a create fill what the one-time setup fills, and onl
   const plan = newP(w);
   plan.create('agent_settings', 'claim-tagger-mvp', { 'Rulebook edition': EDITION });
   plan.create('rulebook', 'Context-dependent', { Category: 'Quality', Description: 'd', 'Example Claims': 'e', 'Work tags': ['Issue'], Status: 'Verified', 'Verified on': '2026-09-10', 'When to use': '1. x' });
-  plan.create('claims_copy', 'geo-9', { 'Geo Name': 'A claim', 'Geo URL': 'https://example.com/x', 'Geo Sources': 'x', 'Geo Tags': ['Debate'], 'Geo Score': 3, 'Geo Is factual': true, 'Agent edition': '', 'Agent remarks': '' });
+  plan.create('claims', 'geo-9', { 'Geo Name': 'A claim', 'Geo URL': 'https://example.com/x', 'Geo Sources': 'x', 'Geo Tags': ['Debate'], 'Geo Score': 3, 'Geo Is factual': true, 'Agent edition': '', 'Agent remarks': '' });
   assert.ok(mentions(problemsOf(plan, w, { setup: false }), /not a column/), 'without setup the same plan is refused');
   assert.deepEqual(problemsOf(plan, w, { setup: true }), []);
   const update = newP(w);
@@ -239,9 +239,9 @@ const CLAIM_EDITOR = { 'Verified tags': [], 'Review status': 'Reviewed', 'Challe
 test('checkPlan: an editor column is refused on every table, in every form, without the audit seed', async () => {
   const w = await world();
   const plan = newP(w);
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Verified tags': [] });
-  plan.update('claims_copy', 'geo-b', w.ids.claimB, { 'Review status': 'Reviewed' });
-  plan.create('claims_copy', 'geo-d', { 'Challenged tags notes': 'because' });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Verified tags': [] });
+  plan.update('claims', 'geo-b', w.ids.claimB, { 'Review status': 'Reviewed' });
+  plan.create('claims', 'geo-d', { 'Challenged tags notes': 'because' });
   plan.create('rule_changes', 'L', { Tag: 'Context-dependent', 'Editor wording': 'my words' });
   plan.update('agent_settings', 'claim-tagger-mvp', 'p', { Paused: true });
   const problems = problemsOf(plan, w);
@@ -254,11 +254,11 @@ test('checkPlan: an editor column is refused on every table, in every form, with
 test('checkPlan: the claims have no Why wrong column any more, so writing one is refused as a column nobody may write; the agent\'s Agent reading is its own to write, on the claims and in the ledger', async () => {
   const w = await world();
   const refused = newP(w);
-  refused.update('claims_copy', 'geo-a', w.ids.claimA, { 'Why wrong': 'Rule unclear' });
-  assert.ok(mentions(problemsOf(refused, w), /"Why wrong" is not a column this plan may write to claims_copy/));
+  refused.update('claims', 'geo-a', w.ids.claimA, { 'Why wrong': 'Rule unclear' });
+  assert.ok(mentions(problemsOf(refused, w), /"Why wrong" is not a column this plan may write to claims/));
   assert.ok(!mentions(problemsOf(refused, w), /only an editor writes/), 'and it is no editor column either');
   const ok = newP(w);
-  ok.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent reading': 'Context-dependent: Rule unclear, rule 3 · The rule leaves this kind of case open.' });
+  ok.update('claims', 'geo-a', w.ids.claimA, { 'Agent reading': 'Context-dependent: Rule unclear, rule 3 · The rule leaves this kind of case open.' });
   ok.update('tag_decisions', 'geo-a::Context-dependent', w.ids.decision, {
     'Agent reading': 'Rule unclear', Rule: 'Context-dependent rule 3', 'Reading note': 'The rule leaves this kind of case open.', 'Read under': `${EDITION} · 0123abcd`,
   });
@@ -279,22 +279,22 @@ test('checkPlan: the audit seed is the one exception, a setup create or update o
   const seeded = (notes, extra = {}) => ({ ...CLAIM_EDITOR, 'Challenged tags notes': notes, ...extra });
 
   const ok = newP(w);
-  ok.update('claims_copy', 'geo-a', w.ids.claimA, seeded(`${AUDIT_PREFIX}: the claim reads on its own.`));
-  ok.create('claims_copy', 'geo-9', seeded(`${AUDIT_PREFIX}: x`, { 'Geo Name': 'A claim' }));
+  ok.update('claims', 'geo-a', w.ids.claimA, seeded(`${AUDIT_PREFIX}: the claim reads on its own.`));
+  ok.create('claims', 'geo-9', seeded(`${AUDIT_PREFIX}: x`, { 'Geo Name': 'A claim' }));
   assert.deepEqual(problemsOf(ok, w, { setup: true }), [], 'setup + audit prefix: the three columns are allowed, on an update and on a create');
   assert.ok(mentions(problemsOf(ok, w, { setup: false }), /"Review status" is a column only an editor writes/), 'no setup flag: refused');
 
   const noPrefix = newP(w);
-  noPrefix.update('claims_copy', 'geo-a', w.ids.claimA, seeded('My own reasoning'));
+  noPrefix.update('claims', 'geo-a', w.ids.claimA, seeded('My own reasoning'));
   assert.ok(mentions(problemsOf(noPrefix, w, { setup: true }), /"Review status" is a column only an editor writes/), 'setup but not an audit decision: refused');
 
   const almost = newP(w);
-  almost.update('claims_copy', 'geo-a', w.ids.claimA, seeded('from the audit of 9 October'));
+  almost.update('claims', 'geo-a', w.ids.claimA, seeded('from the audit of 9 October'));
   assert.ok(mentions(problemsOf(almost, w, { setup: true }), /"Challenged tags notes" is a column only an editor writes/), 'the prefix is exact');
 
   const otherColumn = newP(w);
-  otherColumn.update('claims_copy', 'geo-a', w.ids.claimA, seeded(`${AUDIT_PREFIX}: x`, { 'Review notes': 'someone' }));
-  assert.ok(mentions(problemsOf(otherColumn, w, { setup: true }), /"Review notes" is not a column this plan may write to claims_copy/), 'the seed opens the three columns, nothing else');
+  otherColumn.update('claims', 'geo-a', w.ids.claimA, seeded(`${AUDIT_PREFIX}: x`, { 'Review notes': 'someone' }));
+  assert.ok(mentions(problemsOf(otherColumn, w, { setup: true }), /"Review notes" is not a column this plan may write to claims/), 'the seed opens the three columns, nothing else');
 
   const wrongTable = newP(w);
   wrongTable.create('rule_changes', 'L', { Tag: 'Context-dependent', 'Editor wording': `${AUDIT_PREFIX}: x` });
@@ -309,14 +309,14 @@ test('checkPlan: a demo profile may fill the claims\' editor columns on a create
   w.config.demo = true;
   w.config.demo_id = 'practice-1';
   const plan = newP(w);
-  plan.create('claims_copy', 'geo-9', { 'Geo Name': 'A claim', ...CLAIM_EDITOR });
+  plan.create('claims', 'geo-9', { 'Geo Name': 'A claim', ...CLAIM_EDITOR });
   plan.create('rule_changes', 'L', { Tag: 'Context-dependent', 'Editor wording': 'my words', Status: 'Proposed' });
   assert.ok(mentions(problemsOf(plan, w, { setup: true }), /only an editor writes/), 'no SETUP marker: refused');
   mkdirSync(join(w.root, 'runs'), { recursive: true });
   writeFileSync(join(w.root, 'runs', 'SETUP'), '{}\n');
   assert.deepEqual(problemsOf(plan, w, { setup: true }), []);
   const update = newP(w);
-  update.update('claims_copy', 'geo-a', w.ids.claimA, { 'Review status': 'Reviewed' });
+  update.update('claims', 'geo-a', w.ids.claimA, { 'Review status': 'Reviewed' });
   assert.ok(mentions(problemsOf(update, w), /only an editor writes/), 'never on an update');
   const production = structuredClone(w.config);
   production.demo = false;
@@ -330,7 +330,7 @@ test('checkPlan: demoEditor lets an agent act as the editor on a practice page: 
   w.config.demo = true;
   w.config.demo_id = 'practice-1';
   const plan = newP(w);
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { ...CLAIM_EDITOR });
+  plan.update('claims', 'geo-a', w.ids.claimA, { ...CLAIM_EDITOR });
   plan.update('rule_changes', 'A lesson', 'p1', { 'Editor wording': 'my words', Status: 'Approved' });
   plan.update('rule_changes', 'Another lesson', 'p2', { Status: 'Rejected' });
   assert.deepEqual(problemsOf(plan, w, { root: practiceRoot, demoEditor: true }), []);
@@ -340,7 +340,7 @@ test('checkPlan: demoEditor lets an agent act as the editor on a practice page: 
   production.demo = false;
   assert.ok(mentions(checkPlan(plan, production, { root: practiceRoot, demoEditor: true }).problems, /only an editor writes/), 'a production config: refused');
   const create = newP(w);
-  create.create('claims_copy', 'geo-9', { 'Geo Name': 'A claim', 'Review status': 'Reviewed' });
+  create.create('claims', 'geo-9', { 'Geo Name': 'A claim', 'Review status': 'Reviewed' });
   assert.ok(mentions(problemsOf(create, w, { root: practiceRoot, demoEditor: true }), /only an editor writes/), 'never on a create');
   const ledger = newP(w);
   ledger.update('agent_settings', 'claim-tagger-mvp', 'p', { Paused: true });
@@ -374,11 +374,11 @@ test('checkPlan: a protected id anywhere in the plan is refused (dashes and case
     'a property value': (p) => decision(p, 'geo-1', { 'Agent reason': `see https://www.notion.so/${PROTECTED_DB}` }),
     'a dashed id in a value': (p) => decision(p, 'geo-1', { 'Agent reason': '72197563-38b2-416f-8fa8-af83d75ec47d' }),
     'an upper-case id': (p) => decision(p, 'geo-1', { 'Agent reason': PROTECTED_DB.toUpperCase() }),
-    'a page id': (p) => p.update('claims_copy', 'geo-a', PROTECTED_PAGE, { 'Agent edition': 'x' }),
-    'a dashed page id': (p) => p.update('claims_copy', 'geo-a', '3da273e2-14eb-80c1-80d5-fd0894bc2db8', { 'Agent edition': 'x' }),
+    'a page id': (p) => p.update('claims', 'geo-a', PROTECTED_PAGE, { 'Agent edition': 'x' }),
+    'a dashed page id': (p) => p.update('claims', 'geo-a', '3da273e2-14eb-80c1-80d5-fd0894bc2db8', { 'Agent edition': 'x' }),
     'a key': (p) => p.create('rule_changes', `Lesson ${PROTECTED_DB}`, { Tag: 'Context-dependent' }),
     'a block of page content': (p) => p.create('rule_changes', 'L', { Tag: 'Context-dependent' }, { children: [{ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: 'x', link: { url: `https://www.notion.so/${PROTECTED_PAGE}` } } }] } }] }),
-    'an expect value': (p) => p.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent edition': 'x' }, { expect: { 'Agent remarks': PROTECTED_DB } }),
+    'an expect value': (p) => p.update('claims', 'geo-a', w.ids.claimA, { 'Agent edition': 'x' }, { expect: { 'Agent remarks': PROTECTED_DB } }),
   };
   for (const [name, build] of Object.entries(spots)) {
     const plan = newP(w);
@@ -487,7 +487,7 @@ test('applyPlan sends the ops in order, ledgers each one, reads every page back,
   const w = await world();
   const plan = newP(w);
   decision(plan, 'geo-1', { 'Agent confidence': 0.8333333 });
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent edition': 'Context-dependent', 'Agent remarks': 'Context-dependent\n1 waits for an editor · edition 2026-10-16.1' });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Agent edition': 'Context-dependent', 'Agent remarks': 'Context-dependent\n1 waits for an editor · edition 2026-10-16.1' });
   plan.create('rule_changes', 'Hedged claims are not context-dependent', { Tag: 'Context-dependent', Rule: 'Context-dependent rule 2', Kind: 'Clarify wording', 'Current text': 'old', 'Proposed text': 'new', Status: 'Proposed' }, { children: [{ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: 'the supporting claims' } }] } }] });
   plan.update('tag_decisions', 'geo-a::Context-dependent', w.ids.decision, { 'Agent proposal': 'Applies', 'Agent confidence': 0.91 });
   const requestsBefore = w.notion.requests.length;
@@ -535,7 +535,7 @@ test('applyPlan refuses what checkPlan refuses, before any request, and an edito
   const w = await world();
   const plan = newP(w);
   decision(plan, 'geo-1');
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Review status': 'Reviewed' });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Review status': 'Reviewed' });
   const before = w.notion.requests.length;
   await assert.rejects(() => apply(w, plan), (e) => e instanceof PlanError && /refused/.test(e.message) && e.problems.some((p) => /only an editor writes/.test(p)));
   const protectedPlan = newP(w);
@@ -550,9 +550,9 @@ test('applyPlan encodes every value with the table\'s schema before the first re
   const w = await world();
   const plan = newP(w);
   decision(plan, 'geo-1');
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent edition': 'x' });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Agent edition': 'x' });
   const schemas = structuredClone(w.schemas);
-  delete schemas.claims_copy.properties['Agent edition']; // the column is not there (setup has not added it)
+  delete schemas.claims.properties['Agent edition']; // the column is not there (setup has not added it)
   const before = w.notion.writes().length;
   await assert.rejects(() => apply(w, plan, { schemas }), (e) => e instanceof PlanError && e.problems.some((p) => /op 2 .*unknown property "Agent edition"/.test(p)));
   assert.equal(w.notion.writes().length, before);
@@ -571,26 +571,26 @@ test('the agent\'s seven columns of a claim are all writable, the two relations 
   const w = await world();
   const tag = w.notion.addRow(DB.rulebook, { Name: 'Context-dependent', 'Work tags': ['Issue'] });
   const plan = newP(w);
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, {
+  plan.update('claims', 'geo-a', w.ids.claimA, {
     'Agent tags': [tag], 'Agent confidence': 0.83, 'Agent reasons': 'Context-dependent: A pronoun has no antecedent.', 'Agent status': 'Waits for you', 'Tags waiting': [tag],
     'Agent edition': EDITION, 'Agent remarks': 'not checked: 5 tags without rules',
   });
   assert.deepEqual(problemsOf(plan, w), []);
   const result = await apply(w, plan);
   assert.equal(result.code, EXIT.OK, JSON.stringify(result.lists));
-  const row = w.notion.plainRows(DB.claims_copy).find((r) => r['Geo ID'] === 'geo-a');
+  const row = w.notion.plainRows(DB.claims).find((r) => r['Geo ID'] === 'geo-a');
   assert.deepEqual([row['Agent tags'], row['Tags waiting'], row['Agent status'], row['Agent edition'], row['Agent remarks']], [[tag], [tag], 'Waits for you', EDITION, 'not checked: 5 tags without rules']);
   const again = newP(w);
-  again.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent tags': [], 'Tags waiting': [], 'Agent status': 'Done', 'Agent remarks': '' });
+  again.update('claims', 'geo-a', w.ids.claimA, { 'Agent tags': [], 'Tags waiting': [], 'Agent status': 'Done', 'Agent remarks': '' });
   assert.equal((await apply(w, again, { dir: join(tmp(), 'run-2') })).code, EXIT.OK, 'a relation is cleared with an empty list');
-  const cleared = w.notion.plainRows(DB.claims_copy).find((r) => r['Geo ID'] === 'geo-a');
+  const cleared = w.notion.plainRows(DB.claims).find((r) => r['Geo ID'] === 'geo-a');
   assert.deepEqual([cleared['Agent tags'], cleared['Tags waiting'], cleared['Agent status']], [[], [], 'Done']);
 
   const notes = newP(w);
-  notes.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent notes': 'no tags' });
-  assert.ok(mentions(problemsOf(notes, w), /"Agent notes" is not a column this plan may write to claims_copy/), 'retired with the revision of 21 October');
+  notes.update('claims', 'geo-a', w.ids.claimA, { 'Agent notes': 'no tags' });
+  assert.ok(mentions(problemsOf(notes, w), /"Agent notes" is not a column this plan may write to claims/), 'retired with the revision of 21 October');
   const setup = newP(w);
-  setup.create('claims_copy', 'geo-9', { 'Geo Name': 'A claim', 'Agent notes (old)': 'x' });
+  setup.create('claims', 'geo-9', { 'Geo Name': 'A claim', 'Agent notes (old)': 'x' });
   assert.ok(mentions(problemsOf(setup, w, { setup: true }), /"Agent notes \(old\)" is not a column this plan may write/), 'the two "(old)" columns are never written either');
 });
 
@@ -602,7 +602,7 @@ test('applyPlan skips an update whose expect no longer holds, and an update whos
   plan.update('tag_decisions', 'geo-b::Context-dependent', decided, { 'Agent proposal': 'Applies' }, { expect: { 'Tag outcome': null } });
   plan.update('tag_decisions', 'geo-a::Context-dependent', open, { 'Agent proposal': 'Applies' }, { expect: { 'Tag outcome': null, 'Agent proposal': 'Can\'t tell' } });
   plan.update('tag_decisions', 'geo-zzz::Context-dependent', open, { 'Agent reason': 'x' }, { expect: { 'Tag outcome': null } });
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent edition': 'x' }, { expect: {} });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Agent edition': 'x' }, { expect: {} });
   const result = await apply(w, plan, { pulled: pullFrom(w) });
   assert.deepEqual([result.done, result.skipped, result.failed], [2, 2, 0]);
   assert.equal(result.code, EXIT.OK, 'a skip is not a problem');
@@ -690,8 +690,8 @@ test('applyPlan resumes: done ops are not sent again, a failed op is sent again,
   const plan = newP(w);
   decision(plan, 'geo-1');
   decision(plan, 'geo-2');
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, { 'Agent edition': 'Context-dependent' });
-  plan.update('claims_copy', 'geo-b', w.ids.claimB, { 'Agent edition': '' });
+  plan.update('claims', 'geo-a', w.ids.claimA, { 'Agent edition': 'Context-dependent' });
+  plan.update('claims', 'geo-b', w.ids.claimB, { 'Agent edition': '' });
   w.notion.failNext('PATCH', /^\/pages\//, 400, 1, { code: 'validation_error', message: 'not accepted' });
   const first = await apply(w, plan);
   assert.equal(first.code, EXIT.ERROR);
@@ -785,8 +785,8 @@ test('applyPlan stops at once when Notion refuses the token, and after failures 
   const w2 = await world();
   const many = newP(w2);
   assert.equal(MAX_CONSECUTIVE_FAILURES, 3);
-  many.update('claims_copy', 'geo-a', w2.ids.claimA, { 'Agent edition': 't0' });
-  many.update('claims_copy', 'geo-b', w2.ids.claimB, { 'Agent edition': 't1' });
+  many.update('claims', 'geo-a', w2.ids.claimA, { 'Agent edition': 't0' });
+  many.update('claims', 'geo-b', w2.ids.claimB, { 'Agent edition': 't1' });
   many.update('tag_decisions', 'geo-a::Context-dependent', w2.ids.decision, { 'Agent reason': 't2' });
   decision(many, 'geo-late');
   w2.notion.failNext('PATCH', /^\/pages\//, 400, 99, { code: 'validation_error', message: 'not accepted' });
@@ -819,7 +819,7 @@ test('applyPlan with setup writes the audit seed (the three editor columns of a 
   const w = await world();
   const tag = w.notion.addRow(DB.rulebook, { Name: 'Context-dependent', 'When to use': '1. x' });
   const plan = newP(w);
-  plan.update('claims_copy', 'geo-a', w.ids.claimA, {
+  plan.update('claims', 'geo-a', w.ids.claimA, {
     'Verified tags': [tag], 'Review status': 'Reviewed', 'Challenged tags notes': `${AUDIT_PREFIX}: the claim makes sense on its own.`, 'Agent confidence': 0.83,
   });
   const before = w.notion.requests.length;
@@ -838,7 +838,7 @@ test('applyPlan creates the setup rows of the rulebook, the claims copy and the 
   const w = await world({ rows: false });
   const plan = newP(w, { rubricEdition: null });
   plan.create('rulebook', 'Context-dependent', { Category: 'Quality', Polarity: 'Issue', Status: 'Verified', 'Verified on': '2026-09-10', 'Work tags': ['Pipeline benchmark check', 'Issue'], 'When to use': '1. A pronoun with no antecedent.\n2. A definite article with no referent.', Evidence: 'https://example.com/report' });
-  plan.create('claims_copy', 'geo-1', { 'Geo Name': 'A claim', 'Geo URL': 'https://www.geobrowser.io/space/s/geo-1', 'Geo Sources': 'Source one\nSource two', 'Geo Tags': ['Debate', 'Politics'], 'Geo Score': 4.5, 'Geo Is factual': true, 'Agent edition': '', 'Agent remarks': '' });
+  plan.create('claims', 'geo-1', { 'Geo Name': 'A claim', 'Geo URL': 'https://www.geobrowser.io/space/s/geo-1', 'Geo Sources': 'Source one\nSource two', 'Geo Tags': ['Debate', 'Politics'], 'Geo Score': 4.5, 'Geo Is factual': true, 'Agent edition': '', 'Agent remarks': '' });
   plan.create('agent_settings', 'claim-tagger-mvp', { 'Rulebook edition': EDITION, 'Last run summary': 'Setup · 15 Oct 11:20' });
   const result = await apply(w, plan, { setup: true });
   assert.equal(result.code, EXIT.OK, JSON.stringify(result.lists));

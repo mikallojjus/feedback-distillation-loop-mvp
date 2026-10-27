@@ -102,7 +102,7 @@ export async function followUp(ctx, { tag, keys: allKeys, rubric, summary = true
   const groups = groupsFor(judgeSettings(ctx), rubric, null);
   const judgedNames = [...new Set(groups.flatMap((g) => g.tags.map((t) => t.name)))].sort();
   const notChecked = notCheckedParts(rubric, new Set(judgedNames));
-  const writeColumns = tableEntry(ctx.config, 'claims_copy').write_columns;
+  const writeColumns = tableEntry(ctx.config, 'claims').write_columns;
   const tagPages = tagPagesOf(ctx, rubric);
   const claims = new Map((ctx.pull.claims() ?? []).map((c) => [c.geo_id, c]));
   let claimUpdates = 0;
@@ -141,7 +141,7 @@ export async function followUp(ctx, { tag, keys: allKeys, rubric, summary = true
       if (claim.agent_confidence === null || claim.agent_confidence === undefined || round2(claim.agent_confidence) !== confidence) props[writeColumns.confidence] = confidence;
     }
     if (Object.keys(props).length) {
-      plan.update('claims_copy', id, claim.page_id, props);
+      plan.update('claims', id, claim.page_id, props);
       claimUpdates += 1;
     }
   }
@@ -164,7 +164,7 @@ export async function followup(opts = {}) {
     resume: resumeLine('followup', [...(opts.lesson ? ['--lesson', opts.lesson] : []), ...(opts.driver === 'fake' ? ['--driver', 'fake'] : [])]),
   }, async (ctx) => {
     await takePull(ctx);
-    needTables(ctx, 'tag_decisions', 'rule_changes', 'claims_copy');
+    needTables(ctx, 'tag_decisions', 'rule_changes', 'claims');
     runPreflight(ctx);
     needClaimColumns(ctx);
     const rubric = liveRubric(ctx);

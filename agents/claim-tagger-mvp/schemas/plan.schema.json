@@ -7,7 +7,7 @@
     { "$ref": "#/definitions/op" }
   ],
   "definitions": {
-    "table": { "type": "string", "enum": ["tag_decisions", "rule_changes", "agent_settings", "rulebook", "claims_copy"] },
+    "table": { "type": "string", "enum": ["tag_decisions", "rule_changes", "agent_settings", "rulebook", "claims"] },
     "plainValue": { "type": ["string", "number", "boolean", "null", "array"], "items": { "type": "string" } },
     "plainValues": { "type": "object", "additionalProperties": { "$ref": "#/definitions/plainValue" } },
     "blocks": { "type": "array", "items": { "type": "object", "required": ["type"], "properties": { "type": { "type": "string", "minLength": 1 } } } },

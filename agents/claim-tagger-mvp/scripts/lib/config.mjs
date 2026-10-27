@@ -4,14 +4,14 @@
 //   loadConfig(root = agentRoot())              -> the parsed config.json of a state root; throws one Error listing every problem found
 //   validateConfig(config)                      -> { ok, errors: string[] } (messages such as "notion.rulebook.key: expected a non-empty string")
 //   isDemo(config)                              -> true for a demo profile (config.demo === true)
-//   tableEntry(config, name)                    -> the entry of one table: rulebook, claims_copy (the first enabled entry of notion.claims),
+//   tableEntry(config, name)                    -> the entry of one table: rulebook, claims (notion.claims, one object: there is one claims table, P5),
 //                                                  tag_decisions, rule_changes or agent_settings. It is the entry object itself, not a copy,
 //                                                  so setup can write the ids it learns into it before it saves the file.
 //   isProtected(config, id)                     -> true when the id is in protected_database_ids or protected_page_ids (dashes and case ignored)
 //   writableProperties(config, table, { setup }) -> Set of the column names a plan may write to that table (CONTRACTS section 8); with
 //                                                  setup: true also what a create made by the one-time setup may fill
 //   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the two exceptions of hard rule 1):
-//                                                  three on claims_copy (Verified tags, Review status, Challenged tags notes), Editor wording on rule_changes,
+//                                                  three on claims (Verified tags, Review status, Challenged tags notes), Editor wording on rule_changes,
 //                                                  Paused on agent_settings; [] for the others
 //                                                  (tag_decisions, the agent's ledger, has none)
 //   capabilityOf(config, tag)                   -> text, deterministic, source or corpus (config.tags, with its default)
@@ -31,7 +31,8 @@ import { normId } from './notion-values.mjs';
 import { agentRoot } from './paths.mjs';
 
 export const AGENT_NAME = 'claim-tagger-mvp';
-export const TABLES = Object.freeze(['rulebook', 'claims_copy', 'tag_decisions', 'rule_changes', 'agent_settings']);
+// The internal key of the claims table is `claims` (it was `claims_copy` until decision P5, 27 Oct 2026: there is one claims table, not a list).
+export const TABLES = Object.freeze(['rulebook', 'claims', 'tag_decisions', 'rule_changes', 'agent_settings']);
 export const CAPABILITIES = Object.freeze(['text', 'deterministic', 'source', 'corpus']);
 
 /** The thirteen columns of the Rulebook copy (the taxonomy's, without its two relations). Setup creates a row with all of them. */
@@ -46,10 +47,10 @@ export const CLAIMS_COPY_COLUMNS = Object.freeze([
   'Geo Related people', 'Geo Related projects', 'Geo Is factual', 'Geo Name source',
 ]);
 
-/** The keys of notion.claims[].columns that name the three columns an editor fills on the Claims copy (they must also be listed in editor_columns.claims_copy). Why wrong left the editor's work (READ-DECISIONS.md, decision P4). */
+/** The keys of notion.claims.columns that name the three columns an editor fills on the Claims copy (they must also be listed in editor_columns.claims). Why wrong left the editor's work (READ-DECISIONS.md, decision P4). */
 export const CLAIMS_EDITOR_KEYS = Object.freeze(['verified', 'review_status', 'notes']);
 /**
- * The keys of notion.claims[].write_columns: the eight columns the agent fills on the Claims copy (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting,
+ * The keys of notion.claims.write_columns: the eight columns the agent fills on the Claims copy (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting,
  * Agent edition, Agent remarks; CLAIMS-REVIEW.md section 6.1; and Agent reading, READ-DECISIONS.md). Agent notes is retired: a config that still names it is refused.
  */
 export const CLAIMS_WRITE_KEYS = Object.freeze(['tags', 'confidence', 'reasons', 'status', 'waiting', 'edition', 'remarks', 'reading']);
@@ -164,11 +165,13 @@ export function validateConfig(config) {
       table('notion.rulebook', n.rulebook);
       text('notion.rulebook.work_tag', n.rulebook.work_tag);
     }
-    list('notion.claims', n.claims, (path, c) => {
-      if (!obj(path, c)) return;
-      text(`${path}.name`, c.name);
+    // there is one claims table (P5): notion.claims is one object, never a list
+    if (Array.isArray(n.claims)) {
+      bad('notion.claims', 'expected one object: there is one claims table (P5), not a list of tables; this config has the older shape');
+    } else if (obj('notion.claims', n.claims)) {
+      const path = 'notion.claims';
+      const c = n.claims;
       text(`${path}.label`, c.label);
-      bool(`${path}.enabled`, c.enabled);
       table(path, c);
       if (obj(`${path}.columns`, c.columns)) for (const k of ['claim', 'link', 'sources', 'is_factual', ...CLAIMS_EDITOR_KEYS]) text(`${path}.columns.${k}`, c.columns[k]);
       if (obj(`${path}.write_columns`, c.write_columns)) {
@@ -177,11 +180,6 @@ export function validateConfig(config) {
         const names = CLAIMS_WRITE_KEYS.map((k) => c.write_columns[k]).filter((v) => typeof v === 'string' && v.trim() !== '');
         if (new Set(names).size !== names.length) bad(`${path}.write_columns`, 'two keys name the same column');
       }
-    }, { min: 1 });
-    if (Array.isArray(n.claims)) {
-      if (!n.claims.some((c) => c?.enabled === true)) bad('notion.claims', 'no entry is enabled');
-      const names = n.claims.map((c) => c?.name);
-      if (new Set(names).size !== names.length) bad('notion.claims', 'two entries have the same name');
     }
     if (obj('notion.databases', n.databases)) for (const k of ['tag_decisions', 'rule_changes', 'agent_settings']) table(`notion.databases.${k}`, n.databases[k]);
     if (obj('notion.sources', n.sources)) {
@@ -208,7 +206,7 @@ export function validateConfig(config) {
           if (isPlain(s) && typeof s[f] === 'string' && !protectedIds.has(normId(s[f]))) bad(`notion.sources.${k}.${f}`, 'must also be listed in protected_database_ids');
         }
       }
-      const own = [['notion.rulebook', n.rulebook], ...(Array.isArray(n.claims) ? n.claims.map((c, i) => [`notion.claims[${i}]`, c]) : []),
+      const own = [['notion.rulebook', n.rulebook], ['notion.claims', n.claims],
         ...Object.entries(isPlain(n.databases) ? n.databases : {}).map(([k, v]) => [`notion.databases.${k}`, v])];
       for (const [path, t] of own) {
         for (const f of ['database_id', 'data_source_id']) {
@@ -218,27 +216,25 @@ export function validateConfig(config) {
     }
   }
 
-  // editor_columns: three on the Claims copy, Editor wording and the two Status values on Rule changes, Paused on Agent settings. The ledger (Tag decisions)
+  // editor_columns: three on the claims table, Editor wording and the two Status values on Rule changes, Paused on Agent settings. The ledger (Tag decisions)
   // has none; an old config that still lists one is only checked for its shape.
   if (obj('editor_columns', config.editor_columns)) {
-    for (const k of ['claims_copy', 'rule_changes', 'rule_changes_status_editor_values', 'agent_settings']) {
+    for (const k of ['claims', 'rule_changes', 'rule_changes_status_editor_values', 'agent_settings']) {
       list(`editor_columns.${k}`, config.editor_columns[k], (path, v) => text(path, v));
     }
     if (config.editor_columns.tag_decisions !== undefined) list('editor_columns.tag_decisions', config.editor_columns.tag_decisions, (path, v) => text(path, v));
-    // the claims table must name every column it needs: the three editor columns are the ones editor_columns.claims_copy lists, and none of the agent's
-    if (Array.isArray(n?.claims) && Array.isArray(config.editor_columns.claims_copy)) {
-      n.claims.forEach((c, i) => {
-        if (!isPlain(c)) return;
-        const listed = new Set(config.editor_columns.claims_copy);
-        for (const k of CLAIMS_EDITOR_KEYS) {
-          const name = c.columns?.[k];
-          if (typeof name === 'string' && name.trim() !== '' && !listed.has(name)) bad(`notion.claims[${i}].columns.${k}`, `"${name}" is not listed in editor_columns.claims_copy`);
-        }
-        for (const k of CLAIMS_WRITE_KEYS) {
-          const name = c.write_columns?.[k];
-          if (typeof name === 'string' && listed.has(name)) bad(`notion.claims[${i}].write_columns.${k}`, `"${name}" is an editor column (editor_columns.claims_copy), so the agent could never write it`);
-        }
-      });
+    // the claims table must name every column it needs: the three editor columns are the ones editor_columns.claims lists, and none of the agent's
+    if (isPlain(n?.claims) && Array.isArray(config.editor_columns.claims)) {
+      const c = n.claims;
+      const listed = new Set(config.editor_columns.claims);
+      for (const k of CLAIMS_EDITOR_KEYS) {
+        const name = c.columns?.[k];
+        if (typeof name === 'string' && name.trim() !== '' && !listed.has(name)) bad(`notion.claims.columns.${k}`, `"${name}" is not listed in editor_columns.claims`);
+      }
+      for (const k of CLAIMS_WRITE_KEYS) {
+        const name = c.write_columns?.[k];
+        if (typeof name === 'string' && listed.has(name)) bad(`notion.claims.write_columns.${k}`, `"${name}" is an editor column (editor_columns.claims), so the agent could never write it`);
+      }
     }
   }
 
@@ -329,7 +325,7 @@ export function isDemo(config) {
 }
 
 /**
- * The entry of one table. rulebook is notion.rulebook, claims_copy the first enabled entry of notion.claims, and tag_decisions,
+ * The entry of one table. rulebook is notion.rulebook, claims is notion.claims (one object: there is one claims table, P5), and tag_decisions,
  * rule_changes and agent_settings are notion.databases.<name>. Each has database_id, data_source_id and key. It is the entry object itself.
  */
 export function tableEntry(config, name) {
@@ -339,9 +335,8 @@ export function tableEntry(config, name) {
     case 'rulebook':
       entry = n.rulebook;
       break;
-    case 'claims_copy':
-      entry = (n.claims ?? []).find((c) => c?.enabled === true);
-      if (!entry) throw new Error('tableEntry: no entry of notion.claims is enabled');
+    case 'claims':
+      entry = n.claims;
       break;
     case 'tag_decisions':
     case 'rule_changes':
@@ -372,7 +367,7 @@ export function isProtected(config, id) {
  *                    (the Status values are limited to RULE_CHANGES_AGENT_STATUS)
  *   agent_settings   Rulebook edition, Last run summary; with setup also the key column (Name)
  *   rulebook         When to use; with setup every column of the copy
- *   claims_copy      the eight write columns (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks, Agent reading); with setup also every copied column
+ *   claims           the eight write columns (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks, Agent reading); with setup also every copied column
  * Editor columns are never in these sets. A setup plan that seeds the audit, or a demo profile's setup, is the only way one is
  * written, and that exception is checked by the plan code, not here.
  */
@@ -394,10 +389,10 @@ export function writableProperties(config, table, { setup = false } = {}) {
       add(...RULEBOOK_WRITABLE);
       if (setup) add(...RULEBOOK_COLUMNS, tableEntry(config, 'rulebook').key);
       break;
-    case 'claims_copy': {
-      const entry = tableEntry(config, 'claims_copy');
+    case 'claims': {
+      const entry = tableEntry(config, 'claims');
       add(...CLAIMS_WRITE_KEYS.map((k) => entry.write_columns[k]).filter(Boolean));
-      const editor = new Set(editorColumns(config, 'claims_copy'));
+      const editor = new Set(editorColumns(config, 'claims'));
       if (setup) add(entry.key, ...Object.values(entry.columns).filter((c) => !editor.has(c)), ...CLAIMS_COPY_COLUMNS);
       break;
     }

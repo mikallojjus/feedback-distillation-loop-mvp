@@ -39,7 +39,8 @@ test('the config.json in the agent folder is valid, before and after setup has f
   assert.equal(isDemo(config), false);
   assert.match(config.notion.rulebook.database_id, /^(<|[0-9a-f]{8}-?[0-9a-f]{4})/, 'a placeholder until setup has run, then a Notion id');
   assert.equal(config.notion.rulebook.key, 'Name');
-  assert.equal(config.notion.claims[0].name, 'claims_copy');
+  assert.ok(!Array.isArray(config.notion.claims), 'one claims table (P5): notion.claims is one object');
+  assert.equal(config.notion.claims.key, 'Geo ID');
   assert.equal(groupOf(config, 'Context-dependent'), 'G1', 'only Context-dependent has rules and is judged');
   assert.deepEqual(validateConfig(config), { ok: true, errors: [] });
   for (const table of TABLES) {
@@ -198,21 +199,43 @@ test('validateConfig: the sources must be read only and protected, and the own t
   assert.ok(mentions(c, 'notion.databases.tag_decisions.data_source_id: is in the protected lists'));
 });
 
-test('validateConfig: the claims copy entries need one enabled entry, unique names and their column maps', () => {
-  const none = shipped();
-  none.notion.claims[0].enabled = false;
-  assert.ok(mentions(none, 'notion.claims: no entry is enabled'));
-  const twice = shipped();
-  twice.notion.claims.push({ ...structuredClone(twice.notion.claims[0]), enabled: false });
-  assert.ok(mentions(twice, 'notion.claims: two entries have the same name'));
+test('validateConfig: the claims entry is one object with its ids, a label and its column maps', () => {
+  const noLabel = shipped();
+  delete noLabel.notion.claims.label;
+  assert.ok(mentions(noLabel, 'notion.claims.label: expected a non-empty string'));
+  const noIds = shipped();
+  noIds.notion.claims.database_id = 'not an id';
+  delete noIds.notion.claims.key;
+  assert.ok(mentions(noIds, 'notion.claims.database_id'));
+  assert.ok(mentions(noIds, 'notion.claims.key: expected a non-empty string'));
   const cols = shipped();
-  delete cols.notion.claims[0].columns.link;
-  cols.notion.claims[0].write_columns.tags = '';
-  assert.ok(mentions(cols, 'notion.claims[0].columns.link'));
-  assert.ok(mentions(cols, 'notion.claims[0].write_columns.tags'));
+  delete cols.notion.claims.columns.link;
+  cols.notion.claims.write_columns.tags = '';
+  assert.ok(mentions(cols, 'notion.claims.columns.link'));
+  assert.ok(mentions(cols, 'notion.claims.write_columns.tags'));
+  const missing = shipped();
+  delete missing.notion.claims;
+  assert.ok(mentions(missing, 'notion.claims: expected an object'));
+});
+
+test('validateConfig: an array of claims tables is refused (P5, there is one claims table)', () => {
+  const list = shipped();
+  list.notion.claims = [list.notion.claims];
+  assert.ok(mentions(list, 'one claims table (P5)'), 'the message says why');
+  assert.equal(validateConfig(list).ok, false);
+  assert.throws(() => tableEntry(list, 'claims'), /no entry for the table "claims"/, 'and no entry is made of a list');
+  // two tables, the shape D3 allowed, is refused the same way; an empty list too
+  const two = shipped();
+  two.notion.claims = [two.notion.claims, structuredClone(two.notion.claims)];
+  assert.ok(mentions(two, 'one claims table (P5)'));
   const empty = shipped();
   empty.notion.claims = [];
-  assert.ok(mentions(empty, 'notion.claims: expected at least 1 item'));
+  assert.ok(mentions(empty, 'one claims table (P5)'));
+  // the editor columns of the old key do not stand in for the new one
+  const oldKey = shipped();
+  oldKey.editor_columns.claims_copy = oldKey.editor_columns.claims;
+  delete oldKey.editor_columns.claims;
+  assert.ok(mentions(oldKey, 'editor_columns.claims: expected an array'));
 });
 
 test('validateConfig: tags and judge groups', () => {
@@ -304,26 +327,22 @@ test('a demo profile needs a demo_id that is safe as a folder name', () => {
 test('tableEntry returns the entry of each table, the object itself', () => {
   const config = shipped();
   assert.equal(tableEntry(config, 'rulebook'), config.notion.rulebook);
-  assert.equal(tableEntry(config, 'claims_copy'), config.notion.claims[0]);
+  assert.equal(tableEntry(config, 'claims'), config.notion.claims);
   assert.equal(tableEntry(config, 'tag_decisions'), config.notion.databases.tag_decisions);
   assert.equal(tableEntry(config, 'rule_changes'), config.notion.databases.rule_changes);
   assert.equal(tableEntry(config, 'agent_settings'), config.notion.databases.agent_settings);
-  assert.equal(tableEntry(config, 'claims_copy').key, 'Geo ID');
+  assert.equal(tableEntry(config, 'claims').key, 'Geo ID');
   assert.equal(tableEntry(config, 'rule_changes').key, 'Lesson');
   tableEntry(config, 'rulebook').database_id = '0123456789abcdef0123456789abcdef';
   assert.equal(config.notion.rulebook.database_id, '0123456789abcdef0123456789abcdef', 'setup can fill an id through the entry');
 });
 
-test('tableEntry takes the first enabled claims entry and fails clearly otherwise', () => {
+test('tableEntry fails clearly for an unknown table, the old key claims_copy included, and for a table the config lacks', () => {
   const config = shipped();
-  const second = structuredClone(config.notion.claims[0]);
-  second.name = 'claims_world';
-  config.notion.claims[0].enabled = false;
-  config.notion.claims.push(second);
-  assert.equal(tableEntry(config, 'claims_copy').name, 'claims_world');
-  second.enabled = false;
-  assert.throws(() => tableEntry(config, 'claims_copy'), /no entry of notion\.claims is enabled/);
   assert.throws(() => tableEntry(config, 'taxonomy'), /unknown table "taxonomy"/);
+  assert.throws(() => tableEntry(config, 'claims_copy'), /unknown table "claims_copy"/, 'the key is claims now');
+  delete config.notion.claims;
+  assert.throws(() => tableEntry(config, 'claims'), /no entry for the table "claims"/);
   delete config.notion.databases.rule_changes;
   assert.throws(() => tableEntry(config, 'rule_changes'), /no entry for the table "rule_changes"/);
   assert.throws(() => tableEntry({}, 'rulebook'), /no entry for the table "rulebook"/);
@@ -363,7 +382,7 @@ test('writableProperties: the sets of CONTRACTS section 8', () => {
     ['Current text', 'Kind', 'Lesson', 'Proposed text', 'Rule', 'Safety check result', 'Status', 'Supporting rows', 'Tag'].sort());
   assert.deepEqual([...writableProperties(config, 'agent_settings')].sort(), ['Last run summary', 'Rulebook edition']);
   assert.deepEqual([...writableProperties(config, 'rulebook')], ['When to use']);
-  assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(),
+  assert.deepEqual([...writableProperties(config, 'claims')].sort(),
     ['Agent confidence', 'Agent edition', 'Agent reading', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'], 'the agent writes eight columns; Agent notes is not one of them');
 });
 
@@ -373,7 +392,7 @@ test('writableProperties: a setup create may fill more', () => {
   const rulebook = writableProperties(config, 'rulebook', { setup: true });
   assert.deepEqual([...rulebook].sort(), [...RULEBOOK_COLUMNS].sort());
   assert.equal(rulebook.size, 13);
-  const claims = writableProperties(config, 'claims_copy', { setup: true });
+  const claims = writableProperties(config, 'claims', { setup: true });
   assert.deepEqual([...claims].sort(), [...CLAIMS_COPY_COLUMNS, 'Agent confidence', 'Agent edition', 'Agent reading', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'].sort());
   assert.equal(claims.size, 21, 'the three editor columns of the claims are not among them');
   assert.deepEqual([...writableProperties(config, 'tag_decisions', { setup: true })].sort(), [...writableProperties(config, 'tag_decisions')].sort(), 'tag decisions have no setup extras');
@@ -382,14 +401,14 @@ test('writableProperties: a setup create may fill more', () => {
 
 test('writableProperties follows the configured column names and key columns', () => {
   const config = shipped();
-  config.notion.claims[0].write_columns = {
+  config.notion.claims.write_columns = {
     tags: 'Tags by agent', confidence: 'How sure', reasons: 'Why so', status: 'State', waiting: 'Open tags', edition: 'Edition used', remarks: 'Remarks', reading: 'What I read',
   };
-  config.notion.claims[0].key = 'Claim ID';
-  config.notion.claims[0].columns.claim = 'Claim text';
+  config.notion.claims.key = 'Claim ID';
+  config.notion.claims.columns.claim = 'Claim text';
   config.notion.databases.agent_settings.key = 'Setting';
-  assert.deepEqual([...writableProperties(config, 'claims_copy')].sort(), ['Edition used', 'How sure', 'Open tags', 'Remarks', 'State', 'Tags by agent', 'What I read', 'Why so']);
-  const setup = writableProperties(config, 'claims_copy', { setup: true });
+  assert.deepEqual([...writableProperties(config, 'claims')].sort(), ['Edition used', 'How sure', 'Open tags', 'Remarks', 'State', 'Tags by agent', 'What I read', 'Why so']);
+  const setup = writableProperties(config, 'claims', { setup: true });
   assert.ok(setup.has('Claim ID') && setup.has('Claim text') && setup.has('Geo Name'));
   assert.ok(writableProperties(config, 'agent_settings', { setup: true }).has('Setting'));
 });
@@ -407,7 +426,7 @@ test('writableProperties gives a new Set every time and refuses an unknown table
 
 test('editorColumns lists what only an editor writes', () => {
   const config = shipped();
-  assert.deepEqual(editorColumns(config, 'claims_copy'), ['Verified tags', 'Review status', 'Challenged tags notes'], 'three: Why wrong left the editor\'s work (decision P4)');
+  assert.deepEqual(editorColumns(config, 'claims'), ['Verified tags', 'Review status', 'Challenged tags notes'], 'three: Why wrong left the editor\'s work (decision P4)');
   assert.deepEqual(editorColumns(config, 'rule_changes'), ['Editor wording']);
   assert.deepEqual(editorColumns(config, 'agent_settings'), ['Paused']);
   assert.deepEqual(editorColumns(config, 'rulebook'), []);
@@ -447,43 +466,43 @@ test('groupOf finds the judge group of a tag', () => {
 
 test('the claims entry names the three editor columns and the eight agent columns, and a config that lacks one is refused with its name', () => {
   const config = shipped();
-  const claims = config.notion.claims[0];
+  const claims = config.notion.claims;
   assert.deepEqual(claims.write_columns, {
     tags: 'Agent tags', confidence: 'Agent confidence', reasons: 'Agent reasons', status: 'Agent status', waiting: 'Tags waiting', edition: 'Agent edition', remarks: 'Agent remarks', reading: 'Agent reading',
   });
   assert.deepEqual([claims.columns.verified, claims.columns.review_status, claims.columns.notes], ['Verified tags', 'Review status', 'Challenged tags notes']);
   assert.equal(claims.columns.why_wrong, undefined, 'the claims table has no Why wrong column in the config any more');
-  assert.deepEqual(config.editor_columns.claims_copy, ['Verified tags', 'Review status', 'Challenged tags notes']);
+  assert.deepEqual(config.editor_columns.claims, ['Verified tags', 'Review status', 'Challenged tags notes']);
   assert.equal(config.editor_columns.tag_decisions, undefined, 'the ledger has no editor column');
 
   for (const key of ['verified', 'review_status', 'notes']) {
     const bad = shipped();
-    delete bad.notion.claims[0].columns[key];
-    assert.ok(mentions(bad, `notion.claims[0].columns.${key}: expected a non-empty string`), key);
+    delete bad.notion.claims.columns[key];
+    assert.ok(mentions(bad, `notion.claims.columns.${key}: expected a non-empty string`), key);
   }
   for (const key of ['tags', 'confidence', 'reasons', 'status', 'waiting', 'edition', 'remarks', 'reading']) {
     const bad = shipped();
-    delete bad.notion.claims[0].write_columns[key];
-    assert.ok(mentions(bad, `notion.claims[0].write_columns.${key}: expected a non-empty string`), key);
+    delete bad.notion.claims.write_columns[key];
+    assert.ok(mentions(bad, `notion.claims.write_columns.${key}: expected a non-empty string`), key);
   }
   const retired = shipped();
-  retired.notion.claims[0].write_columns.notes = 'Agent notes';
-  assert.ok(mentions(retired, 'notion.claims[0].write_columns.notes: Agent notes is retired'), 'Agent notes is no longer a column the agent writes, so a config that names it is refused');
+  retired.notion.claims.write_columns.notes = 'Agent notes';
+  assert.ok(mentions(retired, 'notion.claims.write_columns.notes: Agent notes is retired'), 'Agent notes is no longer a column the agent writes, so a config that names it is refused');
   const twice = shipped();
-  twice.notion.claims[0].write_columns.remarks = 'Agent edition';
-  assert.ok(mentions(twice, 'notion.claims[0].write_columns: two keys name the same column'));
+  twice.notion.claims.write_columns.remarks = 'Agent edition';
+  assert.ok(mentions(twice, 'notion.claims.write_columns: two keys name the same column'));
   const noList = shipped();
-  delete noList.editor_columns.claims_copy;
-  assert.ok(mentions(noList, 'editor_columns.claims_copy: expected an array'));
+  delete noList.editor_columns.claims;
+  assert.ok(mentions(noList, 'editor_columns.claims: expected an array'));
 });
 
 test('an editor column of the claims must be listed in editor_columns, and an agent column must not be', () => {
   const unlisted = shipped();
-  unlisted.editor_columns.claims_copy = unlisted.editor_columns.claims_copy.filter((c) => c !== 'Review status');
-  assert.ok(mentions(unlisted, 'notion.claims[0].columns.review_status: "Review status" is not listed in editor_columns.claims_copy'));
+  unlisted.editor_columns.claims = unlisted.editor_columns.claims.filter((c) => c !== 'Review status');
+  assert.ok(mentions(unlisted, 'notion.claims.columns.review_status: "Review status" is not listed in editor_columns.claims'));
   const writable = shipped();
-  writable.editor_columns.claims_copy.push('Agent confidence');
-  assert.ok(mentions(writable, 'notion.claims[0].write_columns.confidence: "Agent confidence" is an editor column'));
+  writable.editor_columns.claims.push('Agent confidence');
+  assert.ok(mentions(writable, 'notion.claims.write_columns.confidence: "Agent confidence" is an editor column'));
   const old = shipped();
   old.editor_columns.tag_decisions = ['Tag outcome'];
   assert.deepEqual(problems(old), [], 'an older config that still lists the ledger columns is only checked for its shape');
@@ -494,7 +513,7 @@ test('an editor column of the claims must be listed in editor_columns, and an ag
 test('the claims\' editor columns are never writable, with setup or without; the ledger\'s copies of a decision are', () => {
   const config = shipped();
   for (const setup of [false, true]) {
-    const claims = writableProperties(config, 'claims_copy', { setup });
+    const claims = writableProperties(config, 'claims', { setup });
     for (const column of ['Verified tags', 'Claim quality tags — verified', 'Agent notes', 'Review status', 'Why wrong', 'Challenged tags notes']) assert.ok(!claims.has(column), `${column} (setup ${setup})`);
     assert.ok(claims.has('Agent reading'), `the agent's own reading column (setup ${setup})`);
     const ledger = writableProperties(config, 'tag_decisions', { setup });

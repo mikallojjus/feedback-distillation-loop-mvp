@@ -12,8 +12,8 @@ const SETUP_PLACEHOLDER = '<setup>';
 const base = () => {
   const c = placeholderConfig();
   delete c.notion.views;
-  c.notion.claims[0].database_id = SETUP_PLACEHOLDER;
-  c.notion.claims[0].data_source_id = SETUP_PLACEHOLDER;
+  c.notion.claims.database_id = SETUP_PLACEHOLDER;
+  c.notion.claims.data_source_id = SETUP_PLACEHOLDER;
   c.notion.rulebook.database_id = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
   c.notion.databases.tag_decisions.database_id = 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb';
   c.notion.databases.rule_changes.database_id = 'cccccccccccccccccccccccccccccccc';
@@ -68,7 +68,7 @@ test('notionUrl and tableLink: the plain address of a table, dashes taken out', 
   assert.equal(notionUrl('aaaaaaaa-aaaa-AAAA-aaaa-aaaaaaaaaaaa'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
   const c = base();
   assert.equal(tableLink(c, 'rulebook'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
-  assert.equal(tableLink(c, 'claims_copy'), `https://www.notion.so/${c.notion.parent_page_id}`, 'a table that setup has not made yet points at the page');
+  assert.equal(tableLink(c, 'claims'), `https://www.notion.so/${c.notion.parent_page_id}`, 'a table that setup has not made yet points at the page');
 });
 
 test('notionUrl with a title is the form Notion gives a page: the words of the title joined by dashes, then the id', () => {
@@ -83,7 +83,7 @@ test('viewLink: a view id gives ?v=, a link is used as it is, an object works, a
   const c = base();
   assert.equal(viewLink(c, 'your_queue'), `https://www.notion.so/${c.notion.parent_page_id}`, 'the Claims copy is the table of Your queue; while it is not made the link goes to the page');
   assert.equal(viewLink(c, 'your_queue_ledger'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'the old view of the ledger is a view of Tag decisions');
-  c.notion.claims[0].database_id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
+  c.notion.claims.database_id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
   assert.equal(viewLink(c, 'your_queue'), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
   assert.equal(viewLink(c, 'agent_disagreed'), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
   c.notion.views = {
