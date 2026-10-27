@@ -1,0 +1,22 @@
+{
+  "day": "20261027T19",
+  "runs": [
+    {
+      "run": "20261027T194249Z-propose",
+      "requests": 796,
+      "writes": 398,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    }
+  ],
+  "totals": {
+    "requests": 796,
+    "writes": 398,
+    "deletes": 0,
+    "trash_fields": 0,
+    "failed": 0
+  },
+  "editor_ops": [],
+  "editor_ops_not_audit": 0
+}

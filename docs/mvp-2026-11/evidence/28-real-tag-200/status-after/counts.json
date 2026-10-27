@@ -1,0 +1,28 @@
+{
+  "paused": false,
+  "edition": "2026-10-27.1",
+  "tags": 13,
+  "same_as_notion": true,
+  "queue": {
+    "open": 6,
+    "decided": 3,
+    "decided_listed": 0,
+    "to_read": 3,
+    "pending_rule_decisions": 0,
+    "needs_note": 0,
+    "unread": 0,
+    "sitting_rows": 20,
+    "more_than_a_sitting": false
+  },
+  "lessons": {
+    "Proposed": 0,
+    "Approved": 0,
+    "Rejected": 0,
+    "Live": 0,
+    "Rolled back": 0
+  },
+  "recanted_lessons": [],
+  "last_run": "Tag · 27 Oct 21:42 · 200 claims",
+  "promoting": null,
+  "table": "https://www.notion.so/c838378afca148d498a1fdec96e9d7cb"
+}

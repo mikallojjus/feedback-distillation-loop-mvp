@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 42): "The hub and the Geo claims" (P5 to P17, `HUB-AND-GEO-CLAIMS.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 8. The root page is "Claim tagger", the hub. The first build sits in its archive sub-page. A fresh set of five full-page tables holds 200 Geo claims, and verify is clean. The practice-page dry run and the headless status pass. Production status counts unread claims (decision 112) and now sends the editor to tag the 197 unread ones first. 2,220 tests pass. Next: step 9 (the tag run) on the product owner's go.
+- Phase (entry 43): "The hub and the Geo claims" (P5 to P17, `HUB-AND-GEO-CLAIMS.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9. The root page is "Claim tagger", the hub. The first build sits in its archive sub-page. A fresh set of five full-page tables holds 200 Geo claims, and verify is clean. The tag run read all 200 (398 writes, all read back): 6 claims wait in Your queue and 194 are Done. Production status counts unread claims (decision 112). 2,220 tests pass. Next: step 10, people's decisions, of which only 6 are in Your queue (entry 43).
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -393,3 +393,24 @@ Verified: 2,220 tests pass, 0 fail (`evidence/01-tests/node-test-claims-hub-stat
 That is 197, not 200, because the 3 audit claims are Reviewed. The `--json` queue has `unread: 197` (`evidence/27-status/status-after-fix/`). Nothing was written to Notion.
 
 Next: step 9, `/claim-tagger tag` on the 200 claims (`evidence/28-real-tag-200/`), on the product owner's go.
+
+### 43. Live runbook step 9: the tag run on Claims (2026-10-27)
+
+Done: on the product owner's go, `/claim-tagger tag` ran through the skill (`evidence/28-real-tag-200/`, `console.txt` holds the three printed outputs).
+- `pull.mjs --all`: rulebook 13, claims 200, tag decisions 3; no drift; not paused.
+- `judge.mjs --items claims`, under edition 2026-10-27.1:
+  - read 200 claims for Context-dependent, 7 unsure and re-read;
+  - 27 model calls, all ok, in 3 min 16 s; the runbook estimated about 30 calls and 5 minutes;
+  - the judge is pinned to claude-sonnet-5-5, and a mismatch would have stopped it with exit 4.
+- `propose.mjs`, in 5 min 29 s:
+  - wrote the agent's side of all 200 claims and 197 new Tag decisions rows (the 3 audit claims had theirs), and the settings row;
+  - its report: "the agent read 200 claims for Context-dependent; 6 wait for you"; 3 claims carry Context-dependent, earlier decisions included.
+
+Verified:
+- **Writes.** The propose run sent 796 requests: 398 writes (200 claim updates, 197 ledger creates, 1 settings update), each read back "ok". There were 0 errors, 0 DELETE, no trash fields and no failed request. Its plan touches no editor field (`requests-audit.json`).
+- **Status after the run** (`status-after/`): "6 rows wait for you"; Your queue "6 rows, lowest confidence first"; Your decisions "3 to read"; `unread` 0; Next "decide your six claims in Your queue". Agent status is now Done on 194 claims and Waits for you on 6.
+- **The view's filter, read live.** The last item left from entry 39 is now checked. The Your queue view's filter is "Agent status is Waits for you and (Review status is not Reviewed or is empty)". Run as a query on the Claims data source (a POST query, which only reads), it keeps exactly the 6 claims, all with an empty Review status, at confidence 0.54 to 0.78 (`status-after/your-queue-view-filter.txt`). So the "or is empty" half (decision 106) does what MF-1 needed.
+
+Found: runbook step 10 asks a person to decide "at least 10 claims in Your queue", but the tag run put only 6 there. The other 194 are Done, since Context-dependent seldom applies to these Debate claims. Ten decisions need 4 more claims, taken from All claims. The 3 audit decisions are already decided and do not count. How many to decide is the product owner's call.
+
+Next: step 10. People decide in Your queue, and possibly in All claims; then `distill --plan-only`, an Opus review, `distill`, a person's approval in Lessons waiting, `promote` and the follow-up (`evidence/29-people-loop/`).

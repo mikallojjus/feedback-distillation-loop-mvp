@@ -1,0 +1,27 @@
+{
+  "demo": false,
+  "sentence": "Judge: read 200 claims for Context-dependent; 7 unsure.",
+  "header": [
+    "What",
+    "Result",
+    ""
+  ],
+  "rows": [
+    [
+      "Claims read",
+      "200",
+      ""
+    ],
+    [
+      "Unsure",
+      "7",
+      ""
+    ],
+    [
+      "Re-read",
+      "7",
+      ""
+    ]
+  ],
+  "next": "Next: type /claim-tagger tag to finish (it continues from here)."
+}

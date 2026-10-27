@@ -1,0 +1,8 @@
+view Your queue {"and":[{"property":"stck","select":{"equals":"Waits for you"}},{"or":[{"property":"W_Zs","select":{"does_not_equal":"Reviewed"}},{"property":"W_Zs","select":{"is_empty":true}}]}]}
+rows the filter keeps: 6
+{"claim":"The FCC’s early review of ABC licenses exceeds its legitimat","confidence":0.54,"status":"Waits for you","review":null}
+{"claim":"The federal noncitizen voting ban lacks a workable remedy fo","confidence":0.59,"status":"Waits for you","review":null}
+{"claim":"The Part D premium stabilization rule should be made permane","confidence":0.6,"status":"Waits for you","review":null}
+{"claim":"The US-led campaign against Iran should be considered unsucc","confidence":0.64,"status":"Waits for you","review":null}
+{"claim":"The government should cut funding to universities that fail ","confidence":0.7,"status":"Waits for you","review":null}
+{"claim":"Short extensions of the US–China trade truce prolong economi","confidence":0.78,"status":"Waits for you","review":null}

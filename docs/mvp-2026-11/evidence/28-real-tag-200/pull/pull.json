@@ -1,0 +1,32 @@
+{
+  "pull_id": "20261027T193920Z-pull",
+  "taken_at": "2026-10-27T19:39:20.914Z",
+  "tables": [
+    "rulebook",
+    "claims",
+    "tag_decisions",
+    "rule_changes",
+    "agent_settings"
+  ],
+  "skipped": [],
+  "counts": {
+    "rulebook": 13,
+    "claims": 200,
+    "tag_decisions": 3,
+    "rule_changes": 0,
+    "agent_settings": 1
+  },
+  "cases": 3,
+  "duplicates": [],
+  "problems": [],
+  "paused": false,
+  "warnings": [],
+  "drift": {
+    "checked": true,
+    "judged": 0,
+    "adopted": 0,
+    "missing": 0,
+    "added": 0
+  },
+  "request_log": "requests.jsonl"
+}
