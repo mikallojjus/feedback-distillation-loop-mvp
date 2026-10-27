@@ -1,0 +1,5836 @@
+{
+  "plan": {
+    "demo_id": "20261027-2054-9deb8c",
+    "title": "Claim tagger practice · 27 Oct 20:54",
+    "created_at": "2026-10-27T18:54:30.415Z",
+    "parent_page_id": "406273e214eb81a881dcd1480c5d015e",
+    "manifest_version": "2026-10-22.1",
+    "manifest_sha256": "bc2415b686336af110246683d2c3a40a6b304ed742ffd765f7168f477feea39a",
+    "edition": "2026-10-27.1",
+    "counts": {
+      "requests": 19,
+      "rows": 16
+    }
+  },
+  "requests": [
+    {
+      "n": 1,
+      "method": "GET",
+      "path": "/pages/406273e214eb81a881dcd1480c5d015e",
+      "note": "read the parent page (the only request of a dry run)"
+    },
+    {
+      "n": 2,
+      "method": "POST",
+      "path": "/pages",
+      "note": "the practice page",
+      "body": {
+        "parent": {
+          "page_id": "406273e214eb81a881dcd1480c5d015e"
+        },
+        "title": "Claim tagger practice · 27 Oct 20:54"
+      }
+    },
+    {
+      "n": 3,
+      "method": "PATCH",
+      "path": "/blocks/<page>/children",
+      "note": "the text before the tables (blocks 1 to 100 of 105)",
+      "blocks": [
+        {
+          "object": "block",
+          "type": "callout",
+          "callout": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "You type four commands yourself (status, tag, distill and promote); the follow-up runs by itself after a PASS, and the engineer sets things up and fixes what breaks.\nA practice copy of the editor feedback loop: its own rulebook (one tag) and 9 real claims that you review in a Claims table like the real one. Nothing here changes the real tables or Geo. Do the steps in order; you can stop after any step and come back. Commands go into Claude Code, opened in the geo-agents folder. Commands act on the newest practice page under Onboarding; if one was made after yours, ask the engineer before you continue."
+                }
+              }
+            ],
+            "icon": {
+              "type": "emoji",
+              "emoji": "📝"
+            }
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Rule 3 of Context-dependent says that a descriptive definite which names a kind of thing but not which one (\"the Bitcoin ETF\", \"the new model\") makes the claim Context-dependent: the reader must already know which one is meant. Editors read it with two gaps: a group every reader knows by its standing role, such as the press pool, is identified, and a capitalised phrase that names no body readers know, such as the AI Force, is not."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 3,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Claim"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Rule 3, read strictly"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The editor"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The press pool was justified in suspending coverage…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Tag: which press pool?"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "No tag: everyone knows it"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The AI Force should enforce binding safety standards"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Can't tell: a name, or a kind?"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Tag: which body is that?"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The USPS ballot portal should not launch before the 2026…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Tag: which portal?"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "No tag: USPS says which one"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Georgia's gubernatorial debate should be moderated by…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "No tag: it names its place"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "No tag: the claim reads well"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The four are yours: you decide them in Your queue, the agent reads your decisions and drafts a clearer rule 3 from the ones that blame the rule, you approve it, and a safety check makes sure the earlier decisions still come out right before the new rule is used. They show the ways a decision can go: the press pool and the AI Force blame rule 3, the USPS claim blames the agent, and on the Georgia claim you agree with the agent."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The four claims were picked for the demo: the agent is fairly sure of three of them, but the page marks all four To review, so their Agent status reads Waits for you and all four sit in Your queue. The AI Force claim is the one the agent reads differently from run to run. For real, a claim waits when someone marks it To review or when the agent is unsure."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "heading_2",
+          "heading_2": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Step 1 · Meet the demo"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Goal of the step."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Check that the demo is set up and see what waits for whom."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Existing status."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Rulebook: 1 tag, Context-dependent, edition 2026-10-27.1 (an edition is a date plus a count; it goes up when a rule changes). Claims: 9 rows, Agent tags empty; 5 are Reviewed, decided earlier by an editor, and 4 are To review, for you. Agent reading holds a line on each of the 5 earlier decisions and nothing on yours. Rule changes: empty. Nothing is paused."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Doing the work."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " In Claude Code, type "
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": "/claim-tagger demo status"
+                },
+                "annotations": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": "."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Explaining the outputs."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " No table changes. Claude replies with one sentence, this table and a \"Next:\" line:"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 2,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Where"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Now"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Rulebook"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "1 tag, edition 2026-10-27.1"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Your queue"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "nothing waits"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Lessons waiting"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "none"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Last run"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "none yet"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The sentence starts with \"Demo · \" and names this practice page, as every report in the demo does, and says that nothing waits for you yet: Your queue lists a claim only once the agent has read it, and the agent has not read the claims yet. The Next line points at step 2."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "heading_2",
+          "heading_2": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Step 2 · The agent reads the claims"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Goal of the step."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " The agent reads the 9 claims against the rulebook and writes its columns on every claim, your 4 included."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Existing status."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Your 4 claims, the press pool, the AI Force, the USPS claim and the Georgia claim, are To review and the agent has written nothing on them; the agent's columns (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition and Agent remarks) are empty on all 9 claims, and Agent reading is empty on your 4 (step 1)."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Doing the work."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Type "
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": "/claim-tagger demo tag"
+                },
+                "annotations": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ". It is a short wait; Notion changes only at the end."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Explaining the outputs."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claims"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " (all 9)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 4,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Geo Name"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent tags"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent confidence"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent status"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The press pool was justified in suspending coverage…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.80"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Waits for you"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The AI Force should enforce binding safety standards"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.50"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Waits for you"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The USPS ballot portal should not launch before the 2026…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.80"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Waits for you"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Georgia's gubernatorial debate should be moderated by…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.75"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Waits for you"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Excluding CNN from Air Force One violates the federal court…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.65 or more"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Done"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The Dallas convention is the unofficial launch of JD Vance’s…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.65 or more"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Done"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "A contractor's enforcement of safety restrictions constitutes…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.65 or more"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Done"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Relocating the Kennedy Center Honors to a sports arena…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.65 or more"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Done"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "December stopgap funding rewards Congress for avoiding a…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "0.65 or more"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Done"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Tags waiting names the tags that wait for you, Agent reading is still empty because the agent reads a decision only after you have made it, and Agent reasons holds one line for each tag the agent judged: the tag, the reason, the rule it cites (when it cites one) and how many of its readings agree. For your 4 claims, as one run read them:"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 4,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Geo Name"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Tags waiting"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent reading"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent reasons"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The press pool was justified in suspending coverage…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent: \"the press pool\": which one? · Context-dependent rule 3 · 1 of 1 runs agree"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The AI Force should enforce binding safety standards"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent: \"The AI Force\": a name or a kind? · 2 of 2 runs agree"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The USPS ballot portal should not launch before the 2026…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent: \"the USPS portal\": which one? · Context-dependent rule 3 · 1 of 1 runs agree"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Georgia's gubernatorial debate should be moderated by…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent: names its place and its office · Context-dependent rule 5 · 1 of 1 runs agree"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "A claim the agent is sure of is read once, so its line ends with a count of one; the agent reads a claim again only when it is unsure, and a third time only when the first two readings disagree. The figures differ from run to run, and the AI Force claim most of all: the agent may read it as Can't tell, as here, or answer with confidence either way, and then its line may cite a rule or none. All four claims are To review, so each waits for you whatever the agent reads: Agent tags stays empty on all four, Agent status reads Waits for you and Tags waiting holds the tag. All four are now in Your queue, lowest confidence first. Agent confidence is the lowest confidence among the tags the agent judged on a claim. The agent agrees with all 5 earlier decisions: their Agent tags are the tags an editor confirmed, their Agent status is Done and their Tags waiting is empty. Agent edition holds 2026-10-27.1 on all 9 claims, and Agent remarks stays empty, because the rulebook has no tag that was left unchecked."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "heading_2",
+          "heading_2": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Step 3 · Decide your four claims (you, as the editor)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Goal of the step."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Record your decision on each of the four claims. You say whether the tag applies and add a note; the agent reads the reason from your decision in step 4."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Existing status."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " All four of your claims are To review and wait in Your queue (step 2): Agent status reads Waits for you on all four, Tags waiting holds Context-dependent, Agent tags is empty and Agent reading is empty."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Doing the work."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Fill in three columns on each of your four claims, in the order of its list, in Your queue under the lists. The sentence for Challenged tags notes stands on its own line between quotes: paste the words between the quotes, not the quotes. Review status comes last because it closes the claim. A claim leaves Your queue as soon as you set Review status to Reviewed. On the real Claims table the agent judges several tags: keep the Agent tags you agree with in Verified tags."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The AI Force claim"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Verified tags: Context-dependent."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Challenged tags notes: paste the words between the quotes:\n\"Rule 3 does not say that a capitalised phrase which names no body readers know, such as the AI Force, is still a kind of thing and not which one; it is: the claim needs context.\""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Review status: Reviewed."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The press pool claim"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Verified tags: leave it empty, because the tag does not apply."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Challenged tags notes: paste the words between the quotes:\n\"Rule 3 does not say that a group every reader knows by its standing role, such as the press pool, counts as identified; it does: the claim reads well.\""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Review status: Reviewed."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The USPS ballot portal claim"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Verified tags: leave it empty, because the tag does not apply."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Challenged tags notes: paste the words between the quotes:\n\"Agent slip. USPS names which portal, so rule 5 already settles it.\""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Review status: Reviewed."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The Georgia debate claim"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Verified tags: leave it empty, because the tag does not apply."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Challenged tags notes: leave it empty. An empty note is a decision too: you agree with the agent."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Review status: Reviewed."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "A note that starts with \"Agent slip.\", \"Rule unclear.\" or \"Rule should change.\" is taken as it stands and the agent does not read that tag; without one the agent reads your decision itself. If you disagree with the agent and leave the note empty, the agent still reads your decision, marks its reading \"without your note\", lists the claim in Needs your note and drafts nothing from it until you add a note."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Explaining the outputs."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claims"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " (your 4 claims)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 4,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Geo Name"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Verified tags"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Review status"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Challenged tags notes"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The AI Force should enforce binding safety standards"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Reviewed"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Rule 3 does not say that a capitalised phrase which names no body…"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The press pool was justified in suspending coverage…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Reviewed"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Rule 3 does not say that a group every reader knows by its…"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The USPS ballot portal should not launch before the 2026…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Reviewed"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent slip. USPS names which portal, so rule 5 already settles it."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Georgia's gubernatorial debate should be moderated by…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Reviewed"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Challenged tags notes holds your sentence on three of the claims and nothing on the Georgia claim. The agent is not involved and no other table changes: its columns still show what it wrote in step 2, so all four claims still read Waits for you in Agent status until the next tag run, but each has left Your queue because you set it Reviewed. All four claims are earlier decisions now."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "heading_2",
+          "heading_2": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Step 4 · The agent reads your decisions and drafts a clearer rule 3"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Goal of the step."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Let the agent read each of your decisions, then turn the ones that blame rule 3 into one proposed rewording of rule 3."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Existing status."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Rule changes is empty; Agent reading is empty on your 4 claims, and your decisions are in (step 3)."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Doing the work."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Type "
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": "/claim-tagger demo distill"
+                },
+                "annotations": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ". It is a short wait."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Explaining the outputs."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "A reading is the agent's own answer to why a decision differs from its tag. It is one of three: Agent slip (the rule as written settles it your way and the agent misread it), Rule unclear (the rule can honestly be read both ways on this claim) or Rule should change (the rule as written decides against you). It names the rule and gives one line of why. Only the readings that blame the rule, Rule unclear and Rule should change, become a draft."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claude's report counts what was read, what points at a rule, the agent's slips and the decisions without a note, and its Next line opens Lessons waiting."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claims"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " (your 4 claims)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 2,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Geo Name"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent reading"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The press pool was justified in suspending coverage…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent: Rule should change, rule 3 · Rule 3 would need to exempt groups known by role."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The AI Force should enforce binding safety standards"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent: Rule unclear, rule 3 · The rule does not say if an unknown name is a kind."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The USPS ballot portal should not launch before the 2026…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent: Agent slip, rule 5 · Your note says so."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Georgia's gubernatorial debate should be moderated by…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Nothing to read: the agent agreed with you."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The agent may read either claim as Rule unclear or as Rule should change; the draft is the same either way. The USPS claim is read at once, because your note opens with \"Agent slip.\" and the agent takes your word; the Georgia claim has nothing to read. The 5 earlier decisions carry a reading too, put there when this page was made: Agent slip, with the note \"Seeded from the audit of 9 October.\""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Rule changes"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 4,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Lesson"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Rule"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Status"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Supporting rows"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Known groups count as identified, unknown names do not"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent rule 3"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Proposed"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The press pool was justified in suspending coverage… · 5c9d133e…::Context-dependent"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Current text holds today's rule 3. Proposed text keeps it and adds what the notes on the press pool and the AI Force claim say, for example: \"A group readers know by its standing role, such as a press corps, counts as identified; a capitalised phrase that names no body readers know does not.\" Supporting rows lists the claims the draft rests on, the press pool and the AI Force, one line each (the table shows the first). The USPS claim drafts nothing: it blames the agent, not the rule, and stays an earlier decision. Each Supporting rows line ends with the claim's id and the tag; you can skip it."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The Rulebook does not change: a draft changes nothing until you approve it and it passes the safety check."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "heading_2",
+          "heading_2": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Step 5 · Approve the draft (you, as the rule owner)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Goal of the step."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Decide whether the draft may be tested; approving does not change the rule yet."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Existing status."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " The draft from step 4 is Proposed."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Doing the work."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " In Lessons waiting, just below, read Current text and Proposed text side by side; the cells wrap, so you read both in place. If the draft says what you meant, set Status to Approved right there. If not, open the row, write all of rule 3 as you want it in Editor wording, then set Status to Approved; your wording is tested instead of the draft."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Explaining the outputs."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Rule changes"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 3,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Lesson"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Editor wording"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Status"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Known groups count as identified, unknown names do not"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty: the draft is tested)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Approved"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "heading_2",
+          "heading_2": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Step 6 · The safety check"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Goal of the step."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Test the approved rule 3 against everything already decided, and switch to it only if nothing breaks."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Existing status."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " The Rulebook still has today's rule 3; the change is Approved (step 5)."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Doing the work."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Type "
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": "/claim-tagger demo promote"
+                },
+                "annotations": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ". This is the longest wait of the seven steps: the agent reads the 10 example claims, the earlier decisions (the 5 from the audit, and your USPS and Georgia claims) and the press pool and AI Force claims the draft rests on, once with each version of rule 3, and twice more any claim whose answer differs between the two versions. When the check passes, the same command re-checks the claims the draft rests on (step 7)."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Explaining the outputs."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " When the check passes, Claude's report says PASS in its sentence, its table counts what came out right (the example claims, the earlier decisions and the claims the draft rests on), and its Next line points at step 7. These tables change:"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Rulebook"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 2,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Name"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "When to use, rule 3"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Today's rule, plus: \"a group known by its role is identified; an unknown name-like phrase is not.\""
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Rule changes"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 3,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Lesson"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Status"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Safety check result"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Known groups count as identified, unknown names do not"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Live"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "PASS: examples 10/10, earlier 6/6, yours 2/2"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Agent settings"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 3,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Name"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Rulebook edition"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Last run summary"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Claim tagger"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "the next edition"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Promote · 27 Oct 11:20 · PASS"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The press pool and the AI Force claim are now earlier decisions too: every future safety check tests a new rule against them. The check counts only the earlier decisions the agent had right before the change, which is why the USPS claim, where the agent slipped, is not in the count."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "If it does not pass."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Rule changes shows Status Approved and a Safety check result such as \"FAIL: 'Excluding CNN from Air Force One violates the federal court…' now Does not apply\". The Rulebook is unchanged. Claude's report says FAIL in its sentence and quotes that claim; its Next line hands you the whole text for Editor wording: the rule as it was tested, with a sentence written from that claim added at the end. For example, the added sentence reads: \"A definite that names one particular order, case or document the claim does not identify still makes the claim Context-dependent.\""
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Open the change in Lessons waiting. Editor wording must hold all of rule 3: put the whole text the report gives you into it (the rule as it was tested, with the added sentence at the end), or write all of rule 3 as you want it. Edit the added sentence if it does not say what you mean. You may also reject the change."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Type "
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": "/claim-tagger demo promote"
+                },
+                "annotations": {
+                  "code": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " again."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "numbered_list_item",
+          "numbered_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "If it fails again, set Status to Rejected. The rule stays as it was, the demo ends here, and the safety check has done its job."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The same three steps apply when the check names one of your own claims instead of an example claim: the Safety check result then reads like \"FAIL: 'The press pool was justified in suspending coverage…' now Applies\", and the report proposes a sentence for that claim in the same way."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "heading_2",
+          "heading_2": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Step 7 · The agent re-checks your claims"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Goal of the step."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Confirm that the agent now agrees with the decisions the rule change rests on, the press pool and the AI Force claim, and see that the other two wait for the next tag run."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Existing status."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " You decided all four claims in step 3 and the new rule 3 went live in step 6; in step 2 all four claims waited for you, so the agent had written no tag on any of them, and all four still read Waits for you in Agent status."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Doing the work."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " Nothing to type: the follow-up ran by itself at the end of the safety check. It takes the answers the check already gave for the claims the draft rests on, under the new rule 3, so there was nothing more to wait for. Open the Claims table among the tables just below."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Explaining the outputs."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claims"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": " (your 4 claims)"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 4,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Geo Name"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent tags"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent status"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent edition"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The press pool was justified in suspending coverage…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Done"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "the next edition"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The AI Force should enforce binding safety standards"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Context-dependent"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Done"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "the next edition"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The USPS ballot portal should not launch before the 2026…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Waits for you"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "2026-10-27.1"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Georgia's gubernatorial debate should be moderated by…"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(empty)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Waits for you"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "2026-10-27.1"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Agent tags now holds the tags you decided on the press pool and the AI Force claim: the AI Force claim carries the tag and the press pool claim does not. Agent status reads Done on both; neither claim says Disagrees with your decision, and a claim that did would show up in Agent disagreed and would need a clearer rule. Agent edition names the next edition, the one the safety check put in force, and Agent confidence follows the new reading. The USPS and Georgia claims were not part of the change, so the follow-up leaves them as they were: they keep Waits for you in Agent status until the next tag run reads them again, and they are not in Your queue, because you set them Reviewed in step 3. Only the claims the change rests on name the new edition: the other two and the 5 earlier decisions keep theirs until the next tag run. That is one full cycle: the agent read your decisions, the notes that blamed rule 3 became a clearer rule 3, it was tested against every earlier decision before it went live, and the press pool and AI Force claims are earlier decisions now, checked by every future safety check."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "What the full version adds later:"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "All 13 tags are judged, not only Context-dependent."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Duplicates are found by searching all claims."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Each editor gets a queue of their own when more editors join."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "When you are done, leave this page under Onboarding; it does no harm."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "heading_2",
+          "heading_2": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "The tables"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Rulebook"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": one row per tag (here one). The agent changes When to use only after a passed safety check. Do not edit When to use by hand: every command then stops until the text is put back."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "n": 4,
+      "method": "PATCH",
+      "path": "/blocks/<page>/children",
+      "note": "the text before the tables (blocks 101 to 105 of 105)",
+      "blocks": [
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claims"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": one row per claim, shaped like the real claims table. The agent writes Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks and Agent reading; you write Verified tags, Review status and Challenged tags notes."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Tag decisions"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": the agent's own record of each decision; nothing to do here."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Rule changes"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": one row per proposed rule change. You set Status and may write Editor wording."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Agent settings"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": one row. Tick Paused to stop the agent; Last run summary always describes the latest command."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Hover over a column name to see what it means."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "n": 5,
+      "method": "POST",
+      "path": "/databases",
+      "note": "the table Rulebook",
+      "body": {
+        "parent": {
+          "page_id": "<page>"
+        },
+        "title": "Rulebook",
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Name": {
+              "type": "title",
+              "title": {},
+              "description": "The tag's name; one row per tag."
+            },
+            "Category": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Nature",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "Form",
+                    "color": "purple"
+                  },
+                  {
+                    "name": "Quality",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Style",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Tone",
+                    "color": "orange"
+                  },
+                  {
+                    "name": "Format",
+                    "color": "pink"
+                  },
+                  {
+                    "name": "Meaning",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Usage",
+                    "color": "gray"
+                  },
+                  {
+                    "name": "Check",
+                    "color": "red"
+                  }
+                ]
+              },
+              "description": "The tag's group."
+            },
+            "Counterpart": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The opposite tag it pairs with (Self-contained for Context-dependent)."
+            },
+            "Description": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "One or two sentences describing a claim that carries the tag."
+            },
+            "Evidence": {
+              "type": "url",
+              "url": {},
+              "description": "The report the tag's verification rests on."
+            },
+            "Example Claims": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Claims that show the tag, one per line."
+            },
+            "Geo Status": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Existing in Geo",
+                    "color": "green"
+                  },
+                  {
+                    "name": "To be created",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Implemented differently",
+                    "color": "orange"
+                  }
+                ]
+              },
+              "description": "Whether the tag exists in Geo."
+            },
+            "Geo Tag ID": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The tag's id in Geo."
+            },
+            "Polarity": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Classification",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "Positive",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Issue",
+                    "color": "red"
+                  }
+                ]
+              },
+              "description": "Kept as in the taxonomy; the agent does not use it."
+            },
+            "Status": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Verified",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Proposed",
+                    "color": "yellow"
+                  }
+                ]
+              },
+              "description": "Whether the tag is verified."
+            },
+            "Verified on": {
+              "type": "date",
+              "date": {},
+              "description": "When the tag was verified."
+            },
+            "When to use": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The numbered rules the agent applies; a tag is judged only when this holds rules."
+            },
+            "Work tags": {
+              "type": "multi_select",
+              "multi_select": {
+                "options": [
+                  {
+                    "name": "Pipeline benchmark check",
+                    "color": "gray"
+                  },
+                  {
+                    "name": "Issue",
+                    "color": "orange"
+                  }
+                ]
+              },
+              "description": "The work the tag belongs to; every row here has Issue."
+            },
+            "Created": {
+              "type": "created_time",
+              "created_time": {},
+              "description": "When the row was made."
+            },
+            "Created by": {
+              "type": "created_by",
+              "created_by": {},
+              "description": "Who made the row."
+            },
+            "Last edited": {
+              "type": "last_edited_time",
+              "last_edited_time": {},
+              "description": "When the row last changed."
+            },
+            "Last edited by": {
+              "type": "last_edited_by",
+              "last_edited_by": {},
+              "description": "Who last changed the row."
+            }
+          }
+        }
+      }
+    },
+    {
+      "n": 6,
+      "method": "POST",
+      "path": "/databases",
+      "note": "the table Claims",
+      "body": {
+        "parent": {
+          "page_id": "<page>"
+        },
+        "title": "Claims",
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Geo Name": {
+              "type": "title",
+              "title": {},
+              "description": "The claim text."
+            },
+            "Agent confidence": {
+              "type": "number",
+              "number": {
+                "format": "number"
+              },
+              "description": "How sure the agent is: the lowest confidence among the tags it judged on the claim, from 0.5 (a coin flip) to 1 (certain). Your queue is sorted by it, lowest first."
+            },
+            "Agent reasons": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Why the agent proposed what it did: one line per judged tag, \"<Tag>: <reason> · <rule cited> · <k> of <n> runs agree\", so you can decide without opening the agent's record."
+            },
+            "Agent status": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Waits for you",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Done",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Disagrees with your decision",
+                    "color": "red"
+                  },
+                  {
+                    "name": "Could not read",
+                    "color": "gray"
+                  }
+                ]
+              },
+              "description": "What the agent says about the claim: Waits for you (a tag needs your decision), Done, Disagrees with your decision, or Could not read. Your queue lists Waits for you until you set Review status to Reviewed."
+            },
+            "Agent edition": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The rulebook edition the agent wrote this row under."
+            },
+            "Agent remarks": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "What the agent could not check, such as \"not checked: 6 tags without rules\"; empty when it checked everything."
+            },
+            "Agent reading": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "What the agent made of your decision, one line per tag where you differed from it: Agent slip, Rule unclear or Rule should change, the rule, and why. Empty until the agent has read your decision."
+            },
+            "Review status": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "To review",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Reviewed",
+                    "color": "green"
+                  }
+                ]
+              },
+              "description": "To review or Reviewed. A claim is decided once it is Reviewed; anything else leaves it open. Set it last: the claim leaves Your queue as soon as it is Reviewed."
+            },
+            "Challenged tags notes": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Your words. A line that starts with a tag name and a colon belongs to that tag. Open it with Agent slip, Rule unclear or Rule should change and a full stop to say what you think went wrong; otherwise the agent reads it. \"rule 4\" names the rule."
+            },
+            "Geo ID": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The claim's identity in Geo; the queue's Key starts with it."
+            },
+            "Geo URL": {
+              "type": "url",
+              "url": {},
+              "description": "The claim's page in Geo."
+            },
+            "Geo Space": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "U.S. Politics",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "World affairs",
+                    "color": "green"
+                  },
+                  {
+                    "name": "AI",
+                    "color": "purple"
+                  },
+                  {
+                    "name": "Health",
+                    "color": "red"
+                  },
+                  {
+                    "name": "Crypto",
+                    "color": "orange"
+                  },
+                  {
+                    "name": "Technology",
+                    "color": "gray"
+                  }
+                ]
+              },
+              "description": "The Geo space the claim was read from."
+            },
+            "Geo Created": {
+              "type": "date",
+              "date": {},
+              "description": "The day the claim was made in Geo."
+            },
+            "Geo Sources": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The claim's sources, as Geo lists them."
+            },
+            "Geo Is factual": {
+              "type": "checkbox",
+              "checkbox": {},
+              "description": "Ticked when Geo marks the claim as factual."
+            },
+            "Geo Tags": {
+              "type": "multi_select",
+              "multi_select": {
+                "options": [
+                  {
+                    "name": "Debate",
+                    "color": "brown"
+                  },
+                  {
+                    "name": "Featured",
+                    "color": "orange"
+                  },
+                  {
+                    "name": "Main claim",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Top Debate",
+                    "color": "pink"
+                  }
+                ]
+              },
+              "description": "The claim's tags in Geo."
+            },
+            "Geo Topics": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The claim's topics in Geo."
+            }
+          }
+        }
+      }
+    },
+    {
+      "n": 7,
+      "method": "POST",
+      "path": "/databases",
+      "note": "the table Tag decisions",
+      "body": {
+        "parent": {
+          "page_id": "<page>"
+        },
+        "title": "Tag decisions",
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Claim": {
+              "type": "title",
+              "title": {},
+              "description": "The claim text."
+            },
+            "Key": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The claim's Geo ID, two colons, the tag; one row per claim and tag."
+            },
+            "Tag": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Context-dependent",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Exact duplicate",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Factually challenged",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Improper capitalization",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Improperly sourced",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Incorrect grammar",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Multi-sentence",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Poor wording",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Semantically duplicated",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Source inaccessible",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Trailing period",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Unsourced",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Wordy",
+                    "color": "default"
+                  }
+                ]
+              },
+              "description": "The tag the row is about."
+            },
+            "Agent proposal": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Applies",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Does not apply",
+                    "color": "red"
+                  },
+                  {
+                    "name": "Can't tell",
+                    "color": "yellow"
+                  }
+                ]
+              },
+              "description": "The agent's answer."
+            },
+            "Agent confidence": {
+              "type": "number",
+              "number": {
+                "format": "number"
+              },
+              "description": "How sure the agent is of its answer, from 0.5 (a coin flip) to 1 (certain); the queue is sorted by it, lowest first."
+            },
+            "Agent reason": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "At most 40 words, then the rule cited and how many runs agreed."
+            },
+            "Claim link": {
+              "type": "url",
+              "url": {},
+              "description": "Link to the claim's row in the Claims table."
+            },
+            "Rulebook edition": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The edition the proposal was made under."
+            },
+            "Follow-up": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Fixed",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Still wrong",
+                    "color": "red"
+                  }
+                ]
+              },
+              "description": "Set after a safety check PASS, on the rows the change rests on."
+            },
+            "Tag outcome": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Applies",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Does not apply",
+                    "color": "red"
+                  }
+                ]
+              },
+              "description": "Copied by the agent from the claim once an editor has Reviewed it: Applies when the tag is in Verified tags, else Does not apply."
+            },
+            "Why wrong": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Agent slip",
+                    "color": "gray"
+                  },
+                  {
+                    "name": "Rule unclear",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Rule should change",
+                    "color": "orange"
+                  }
+                ]
+              },
+              "description": "Copied by the agent from your note on the claim: the reason word that opens the tag's line (Agent slip, Rule unclear or Rule should change), for a tag whose outcome differs from the proposal."
+            },
+            "Your reasoning": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Copied by the agent from Challenged tags notes: the tag's own line, else the whole text."
+            },
+            "Decided under": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The edition the proposal you saw was made under, recorded when the agent copies your decision from the claim."
+            },
+            "Agent reading": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Agent slip",
+                    "color": "gray"
+                  },
+                  {
+                    "name": "Rule unclear",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Rule should change",
+                    "color": "orange"
+                  }
+                ]
+              },
+              "description": "What the agent made of your decision where you differed from it: Agent slip (the rule settles it your way), Rule unclear (it reads both ways) or Rule should change (it decides against you). Written by the agent."
+            },
+            "Rule": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The rule the reading points at, for example \"Context-dependent rule 3\"."
+            },
+            "Reading note": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "One line of why. It opens with \"without your note\" when you wrote nothing for the tag."
+            },
+            "Read under": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The edition and a short mark of what the reading rests on: your decision, your note and the proposal the agent made. The agent reads a row again only when one of those changes."
+            }
+          }
+        }
+      }
+    },
+    {
+      "n": 8,
+      "method": "POST",
+      "path": "/databases",
+      "note": "the table Rule changes",
+      "body": {
+        "parent": {
+          "page_id": "<page>"
+        },
+        "title": "Rule changes",
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Lesson": {
+              "type": "title",
+              "title": {},
+              "description": "A short name for the change."
+            },
+            "Tag": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Context-dependent",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Exact duplicate",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Factually challenged",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Improper capitalization",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Improperly sourced",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Incorrect grammar",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Multi-sentence",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Poor wording",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Semantically duplicated",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Source inaccessible",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Trailing period",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Unsourced",
+                    "color": "default"
+                  },
+                  {
+                    "name": "Wordy",
+                    "color": "default"
+                  }
+                ]
+              },
+              "description": "The tag the change is about."
+            },
+            "Rule": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "Which rule, for example \"Context-dependent rule 3\"."
+            },
+            "Kind": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Clarify wording",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "Change the rule",
+                    "color": "purple"
+                  },
+                  {
+                    "name": "Initial rules",
+                    "color": "gray"
+                  }
+                ]
+              },
+              "description": "What kind of change."
+            },
+            "Current text": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The rule's text now."
+            },
+            "Proposed text": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The text the agent proposes."
+            },
+            "Safety check result": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "For example \"PASS: examples 11/11, earlier 10/10, yours 2/2\" or \"FAIL: 'Excluding CNN from Air Force One violates the federal court order' now Does not apply\"."
+            },
+            "Supporting rows": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "One line per decided row the change rests on: the claim shortened, \" · \", the row's Key."
+            },
+            "Editor wording": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The rule as the editor words it; when filled, the safety check tests it instead of the Proposed text. Never written by the agent."
+            },
+            "Status": {
+              "type": "select",
+              "select": {
+                "options": [
+                  {
+                    "name": "Proposed",
+                    "color": "yellow"
+                  },
+                  {
+                    "name": "Approved",
+                    "color": "blue"
+                  },
+                  {
+                    "name": "Rejected",
+                    "color": "red"
+                  },
+                  {
+                    "name": "Live",
+                    "color": "green"
+                  },
+                  {
+                    "name": "Rolled back",
+                    "color": "gray"
+                  }
+                ]
+              },
+              "description": "The editor sets Approved and Rejected; the agent sets Proposed, Live and Rolled back."
+            }
+          }
+        }
+      }
+    },
+    {
+      "n": 9,
+      "method": "POST",
+      "path": "/databases",
+      "note": "the table Agent settings",
+      "body": {
+        "parent": {
+          "page_id": "<page>"
+        },
+        "title": "Agent settings",
+        "is_inline": true,
+        "initial_data_source": {
+          "properties": {
+            "Name": {
+              "type": "title",
+              "title": {},
+              "description": "The row's name, Claim tagger."
+            },
+            "Paused": {
+              "type": "checkbox",
+              "checkbox": {},
+              "description": "Ticked by a person, every command then refuses; cleared by a person."
+            },
+            "Rulebook edition": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "The edition in force: a date plus a count, such as 2026-10-16.1; it goes up when a rule changes."
+            },
+            "Last run summary": {
+              "type": "rich_text",
+              "rich_text": {},
+              "description": "One short line, such as \"Promote · 16 Oct 11:20 · PASS\"."
+            }
+          }
+        }
+      }
+    },
+    {
+      "n": 10,
+      "method": "PATCH",
+      "path": "/data_sources/<Claims>",
+      "note": "the column Agent tags, Tags waiting, Verified tags of the table Claims, a relation to the table Rulebook, Rulebook, Rulebook",
+      "body": {
+        "properties": {
+          "Agent tags": {
+            "type": "relation",
+            "relation": {
+              "data_source_id": "<Rulebook>",
+              "single_property": {}
+            },
+            "description": "The tags that apply, from the Rulebook. The agent writes it; on a claim you have Reviewed it holds your Verified tags. Tags that wait for you are in Tags waiting instead."
+          },
+          "Tags waiting": {
+            "type": "relation",
+            "relation": {
+              "data_source_id": "<Rulebook>",
+              "single_property": {}
+            },
+            "description": "The tags that wait for your decision on this claim, from the Rulebook. Empty when nothing waits."
+          },
+          "Verified tags": {
+            "type": "relation",
+            "relation": {
+              "data_source_id": "<Rulebook>",
+              "single_property": {}
+            },
+            "description": "Every tag that applies, Agent tags included. A judged tag you leave out counts as Does not apply."
+          }
+        }
+      }
+    },
+    {
+      "n": 11,
+      "method": "PATCH",
+      "path": "/blocks/<page>/children",
+      "note": "the Help toggle, then its text",
+      "blocks": [
+        {
+          "object": "block",
+          "type": "toggle",
+          "toggle": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Help"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "n": 12,
+      "method": "PATCH",
+      "path": "/blocks/<toggle>/children",
+      "note": "the text inside the Help toggle (19 blocks)",
+      "blocks": [
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "What the agent's reading makes happen."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "table",
+          "table": {
+            "table_width": 2,
+            "has_column_header": true,
+            "has_row_header": false,
+            "children": [
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent reading"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "What it makes happen"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Agent slip"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The rule is fine, the agent misread it: no rule change; the claim counts as an earlier decision."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Rule unclear"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The rule does not settle this claim: the agent drafts a clearer rule from your note."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "Rule should change"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "The rule settles it, but against you: the agent drafts a changed rule from your note."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              },
+              {
+                "object": "block",
+                "type": "table_row",
+                "table_row": {
+                  "cells": [
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "(nothing to read)"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "type": "text",
+                        "text": {
+                          "content": "You agreed with the agent: no rule change; the claim counts as an earlier decision."
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "If you already know the reason, start your note with \"Agent slip.\", \"Rule unclear.\" or \"Rule should change.\": the agent takes that as it stands and does not read that tag."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Words used on this page."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Rulebook"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": the numbered rules for each tag, kept in When to use; it changes only after a passed safety check."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Edition"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": the rulebook's version, a date plus a count (2026-10-27.1); it goes up when a rule changes."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Safety check"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": the test a rule change must pass before it is used: example claims, earlier decisions and your claims must all come out right; its result, PASS or FAIL, is written in Safety check result."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Earlier decision"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": a claim an editor already decided (here the 5 from the audit of 9 October, when editors checked the agent's tags on real claims); the agent must keep getting it right."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Example claim"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": one of the tag's 6 examples in the Rulebook, or one of 4 examples of its opposite tag, Self-contained, which the agent keeps in its own files (they are not on this page); it must always come out right."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Agent confidence"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": how sure the agent is of its answers on a claim, from 0.5 (a coin flip) to 1 (certain); Your queue shows the least sure claims first."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Agent status"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": what the agent says about a claim: Waits for you, Done, Disagrees with your decision or Could not read; Your queue lists Waits for you until you set Review status to Reviewed."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Verified tags"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": the tags you confirm on a claim; it always wins over the agent's answer."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Review status"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": To review until you decide a claim, then Reviewed; a Reviewed claim is an earlier decision and leaves Your queue."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Views"
+                },
+                "annotations": {
+                  "bold": true
+                }
+              },
+              {
+                "type": "text",
+                "text": {
+                  "content": ": the Claims table has Your queue (the claims whose Agent status is Waits for you and whose Review status is not Reviewed), Needs your note (the claims the agent read without a note from you) and Agent disagreed (the agent disagrees with your decision); Lessons waiting shows the Rule changes not yet decided."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "If something stops."
+                },
+                "annotations": {
+                  "bold": true
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claude says \"paused\": untick Paused in Agent settings (the last table on this page), then type the command again."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claude says your Claude allowance ran out: wait until your Claude allowance is back, then type the same command again; it continues where it stopped."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claude says some answers could not be read: type the same command again; it continues where it stopped. If it stops the same way twice, send the engineer the whole report."
+                }
+              }
+            ]
+          }
+        },
+        {
+          "object": "block",
+          "type": "bulleted_list_item",
+          "bulleted_list_item": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Claude says the rulebook text was edited by hand: put When to use back as it was (the report links the Rulebook), or ask the engineer; then type the command again. Anything else: send the engineer the whole report."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "n": 13,
+      "method": "POST",
+      "path": "/views",
+      "note": "the view Rulebook of the table Rulebook (a tab, first)",
+      "body": {
+        "name": "Rulebook",
+        "type": "table",
+        "configuration": {
+          "type": "table",
+          "wrap_cells": true,
+          "properties": [
+            {
+              "name": "Name",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Category",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "When to use",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Example Claims",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Counterpart",
+              "visible": false
+            },
+            {
+              "name": "Description",
+              "visible": false
+            },
+            {
+              "name": "Evidence",
+              "visible": false
+            },
+            {
+              "name": "Geo Status",
+              "visible": false
+            },
+            {
+              "name": "Geo Tag ID",
+              "visible": false
+            },
+            {
+              "name": "Polarity",
+              "visible": false
+            },
+            {
+              "name": "Verified on",
+              "visible": false
+            },
+            {
+              "name": "Work tags",
+              "visible": false
+            },
+            {
+              "name": "Created",
+              "visible": false
+            },
+            {
+              "name": "Created by",
+              "visible": false
+            },
+            {
+              "name": "Last edited",
+              "visible": false
+            },
+            {
+              "name": "Last edited by",
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 14,
+      "method": "POST",
+      "path": "/views",
+      "note": "the view Needs your note of the table Claims (a tab, last)",
+      "body": {
+        "name": "Needs your note",
+        "type": "table",
+        "filter": {
+          "property": "Agent reading",
+          "rich_text": {
+            "contains": "without your note"
+          }
+        },
+        "sorts": [
+          {
+            "property": "Agent confidence",
+            "direction": "ascending"
+          }
+        ],
+        "configuration": {
+          "type": "table",
+          "wrap_cells": true,
+          "properties": [
+            {
+              "name": "Geo Name",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent tags",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent confidence",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent reasons",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Tags waiting",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent edition",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent remarks",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent reading",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Verified tags",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Review status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Challenged tags notes",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Geo ID",
+              "visible": false
+            },
+            {
+              "name": "Geo URL",
+              "visible": false
+            },
+            {
+              "name": "Geo Space",
+              "visible": false
+            },
+            {
+              "name": "Geo Created",
+              "visible": false
+            },
+            {
+              "name": "Geo Sources",
+              "visible": false
+            },
+            {
+              "name": "Geo Is factual",
+              "visible": false
+            },
+            {
+              "name": "Geo Tags",
+              "visible": false
+            },
+            {
+              "name": "Geo Topics",
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 15,
+      "method": "POST",
+      "path": "/views",
+      "note": "the view Agent disagreed of the table Claims (a tab, last)",
+      "body": {
+        "name": "Agent disagreed",
+        "type": "table",
+        "filter": {
+          "property": "Agent status",
+          "select": {
+            "equals": "Disagrees with your decision"
+          }
+        },
+        "sorts": [
+          {
+            "property": "Agent confidence",
+            "direction": "ascending"
+          }
+        ],
+        "configuration": {
+          "type": "table",
+          "wrap_cells": true,
+          "properties": [
+            {
+              "name": "Geo Name",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent tags",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent confidence",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent reasons",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Tags waiting",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent edition",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent remarks",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent reading",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Verified tags",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Review status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Challenged tags notes",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Geo ID",
+              "visible": false
+            },
+            {
+              "name": "Geo URL",
+              "visible": false
+            },
+            {
+              "name": "Geo Space",
+              "visible": false
+            },
+            {
+              "name": "Geo Created",
+              "visible": false
+            },
+            {
+              "name": "Geo Sources",
+              "visible": false
+            },
+            {
+              "name": "Geo Is factual",
+              "visible": false
+            },
+            {
+              "name": "Geo Tags",
+              "visible": false
+            },
+            {
+              "name": "Geo Topics",
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 16,
+      "method": "POST",
+      "path": "/views",
+      "note": "the linked view Your queue of the table Claims, put on the page after the block that ends the line before it",
+      "body": {
+        "name": "Your queue",
+        "type": "table",
+        "create_database": {
+          "parent": {
+            "page_id": "<page>"
+          },
+          "position": {
+            "type": "after_block",
+            "block_id": "<the block before the view>"
+          }
+        },
+        "filter": {
+          "and": [
+            {
+              "property": "Agent status",
+              "select": {
+                "equals": "Waits for you"
+              }
+            },
+            {
+              "or": [
+                {
+                  "property": "Review status",
+                  "select": {
+                    "does_not_equal": "Reviewed"
+                  }
+                },
+                {
+                  "property": "Review status",
+                  "select": {
+                    "is_empty": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "sorts": [
+          {
+            "property": "Agent confidence",
+            "direction": "ascending"
+          }
+        ],
+        "configuration": {
+          "type": "table",
+          "wrap_cells": true,
+          "properties": [
+            {
+              "name": "Geo Name",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent tags",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent confidence",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent reasons",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Tags waiting",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent edition",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent remarks",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Agent reading",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Verified tags",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Review status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Challenged tags notes",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Geo ID",
+              "visible": false
+            },
+            {
+              "name": "Geo URL",
+              "visible": false
+            },
+            {
+              "name": "Geo Space",
+              "visible": false
+            },
+            {
+              "name": "Geo Created",
+              "visible": false
+            },
+            {
+              "name": "Geo Sources",
+              "visible": false
+            },
+            {
+              "name": "Geo Is factual",
+              "visible": false
+            },
+            {
+              "name": "Geo Tags",
+              "visible": false
+            },
+            {
+              "name": "Geo Topics",
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 17,
+      "method": "POST",
+      "path": "/views",
+      "note": "the linked view Lessons waiting of the table Rule changes, put on the page after the block that ends the line before it",
+      "body": {
+        "name": "Lessons waiting",
+        "type": "table",
+        "create_database": {
+          "parent": {
+            "page_id": "<page>"
+          },
+          "position": {
+            "type": "after_block",
+            "block_id": "<the block before the view>"
+          }
+        },
+        "filter": {
+          "or": [
+            {
+              "property": "Status",
+              "select": {
+                "equals": "Proposed"
+              }
+            },
+            {
+              "property": "Status",
+              "select": {
+                "equals": "Approved"
+              }
+            }
+          ]
+        },
+        "configuration": {
+          "type": "table",
+          "wrap_cells": true,
+          "properties": [
+            {
+              "name": "Lesson",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Current text",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Proposed text",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Status",
+              "visible": true,
+              "wrap": true
+            },
+            {
+              "name": "Tag",
+              "visible": false
+            },
+            {
+              "name": "Rule",
+              "visible": false
+            },
+            {
+              "name": "Kind",
+              "visible": false
+            },
+            {
+              "name": "Safety check result",
+              "visible": false
+            },
+            {
+              "name": "Supporting rows",
+              "visible": false
+            },
+            {
+              "name": "Editor wording",
+              "visible": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "n": 18,
+      "method": "PATCH",
+      "path": "/blocks/<page>/children",
+      "note": "only if the view Your queue is refused: one paragraph after the same block",
+      "blocks": [
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Scroll to Claims in the tables further down this page; your four claims are the ones whose Review status is To review."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "n": 19,
+      "method": "PATCH",
+      "path": "/blocks/<page>/children",
+      "note": "only if the view Lessons waiting is refused: one paragraph after the same block",
+      "blocks": [
+        {
+          "object": "block",
+          "type": "paragraph",
+          "paragraph": {
+            "rich_text": [
+              {
+                "type": "text",
+                "text": {
+                  "content": "Scroll to Rule changes at the bottom of this page and open the row with Status Proposed."
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "rows": {
+    "rulebook": [
+      {
+        "key": "Context-dependent",
+        "properties": {
+          "Name": "Context-dependent",
+          "Category": "Quality",
+          "Counterpart": "Self-contained",
+          "Description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
+          "Evidence": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+          "Example Claims": "Open AI's initiative went well with the target group.\nHe said the new model outperforms its predecessor.\nThe company's revenue grew 40% after the launch.\nCore Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.\nThe Commodity Futures Trading Commission did not comment specifically on the discussions.\nThe Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts.",
+          "Geo Status": "To be created",
+          "Polarity": "Issue",
+          "Status": "Verified",
+          "Verified on": "2026-09-10",
+          "When to use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+          "Work tags": [
+            "Pipeline benchmark check",
+            "Issue"
+          ]
+        }
+      }
+    ],
+    "claims": [
+      {
+        "key": "5c9d133e54864197a585599669353aff",
+        "properties": {
+          "Geo Name": "The press pool was justified in suspending coverage in solidarity with banned networks",
+          "Geo ID": "5c9d133e54864197a585599669353aff",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/5c9d133e54864197a585599669353aff",
+          "Geo Sources": "White House TV pool resumes coverage of Trump after CNN regains access\nNetworks share coverage of Trump after CNN's credentials are restored\nUS TV networks to resume Trump coverage after CNN access restored\nUS TV networks to resume coverage of Trump events, CNN says",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Geo Topics": "White House press-access ban",
+          "Review status": "To review"
+        }
+      },
+      {
+        "key": "92f57020ce349b27b5e56f54068cbc05",
+        "properties": {
+          "Geo Name": "The AI Force should enforce binding safety standards",
+          "Geo ID": "92f57020ce349b27b5e56f54068cbc05",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/92f57020ce349b27b5e56f54068cbc05",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Geo Topics": "Trump’s AI Force proposal",
+          "Review status": "To review"
+        }
+      },
+      {
+        "key": "27ad00b59c1f7d4aee71643fc8cdec94",
+        "properties": {
+          "Geo Name": "The USPS ballot portal should not launch before the 2026 midterms",
+          "Geo ID": "27ad00b59c1f7d4aee71643fc8cdec94",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/27ad00b59c1f7d4aee71643fc8cdec94",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Geo Topics": "2026 U.S. midterm elections\nUSPS ballot portal controversy\nMail-in voting\nUS midterm elections\nU.S. voting rights\nElections\nRights and liberties\nTechnology\nBallot administration\nElection integrity",
+          "Review status": "To review"
+        }
+      },
+      {
+        "key": "8f9c833b41e54eee9ca78e9c2f4ffb58",
+        "properties": {
+          "Geo Name": "Georgia's gubernatorial debate should be moderated by professional journalists rather than a town hall audience",
+          "Geo ID": "8f9c833b41e54eee9ca78e9c2f4ffb58",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/8f9c833b41e54eee9ca78e9c2f4ffb58",
+          "Geo Sources": "60 minutes to win Georgia: What to watch for in the Jackson-Bottoms debate",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Review status": "To review"
+        }
+      },
+      {
+        "key": "fc0cb0da0a1a4375b0fae6b5c9a67c69",
+        "properties": {
+          "Geo Name": "Excluding CNN from Air Force One violates the federal court order",
+          "Geo ID": "fc0cb0da0a1a4375b0fae6b5c9a67c69",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/fc0cb0da0a1a4375b0fae6b5c9a67c69",
+          "Geo Sources": "CNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction\nCNN left off Air Force One for Trump's upcoming trip, White House signals in new media restriction\nWhite House bars CNN from covering Trump on behalf of major TV networks as he travels to Tennessee | CNN Politics\nWhite House bans CNN from Air Force One trip despite federal judge's decision - report",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Geo Topics": "White House press-access ban",
+          "Verified tags": [
+            "<the row of Context-dependent in Rulebook>"
+          ],
+          "Review status": "Reviewed",
+          "Challenged tags notes": "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded.",
+          "Agent reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+        }
+      },
+      {
+        "key": "1bff859247ecdb618af41a397d2eb6ba",
+        "properties": {
+          "Geo Name": "The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign",
+          "Geo ID": "1bff859247ecdb618af41a397d2eb6ba",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/1bff859247ecdb618af41a397d2eb6ba",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Geo Topics": "Society and culture\nGovernment and institutions\nConservative politics\nPolitical parties\nTrump administration\n2026 U.S. midterm elections\nElections\nPolitical campaigning\nUS midterm elections\nRepublican Midterm Convention in Dallas\n2028 United States presidential election\nPresidential Elections",
+          "Verified tags": [
+            "<the row of Context-dependent in Rulebook>"
+          ],
+          "Review status": "Reviewed",
+          "Challenged tags notes": "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded.",
+          "Agent reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+        }
+      },
+      {
+        "key": "6dc1222aeb364918821167370d8fbc40",
+        "properties": {
+          "Geo Name": "A contractor's enforcement of safety restrictions constitutes a national security supply chain risk",
+          "Geo ID": "6dc1222aeb364918821167370d8fbc40",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/6dc1222aeb364918821167370d8fbc40",
+          "Geo Sources": "Appeals Court Lets the Pentagon Designate Anthropic a Supply-Chain Risk\nFederal appeals court upholds Pentagon designation of Anthropic as supply chain risk\nCourt rules Pentagon can blacklist Anthropic for refusing to enable Claude features\nU.S. appeals court upholds Pentagon designation of Anthropic as supply chain risk",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Review status": "Reviewed",
+          "Challenged tags notes": "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’.",
+          "Agent reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+        }
+      },
+      {
+        "key": "89fcfb7fc6684b63af7d829ed90106cd",
+        "properties": {
+          "Geo Name": "Relocating the Kennedy Center Honors to a sports arena diminishes the prestige of the awards",
+          "Geo ID": "89fcfb7fc6684b63af7d829ed90106cd",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/89fcfb7fc6684b63af7d829ed90106cd",
+          "Geo Sources": "Kennedy Center Honors Moved To Capital One Arena Amid Trump Naming Dispute\nKennedy Center Honors to be held off-site for the first time in the ceremony’s history\nThe Kennedy Center Honors Will Be Held at Capital One Arena\nKennedy Center Honors to be held at Capital One Arena amid fight over adding Trump's name\nKennedy Center Honors Relocates to Capital One Arena During Building Closure\nKennedy Center Honors awards moved to new venue amid Trump’s onslaught\nKennedy Center Honors to be held at Capital One Arena amid demolition fight | Reuters",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Review status": "Reviewed",
+          "Challenged tags notes": "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded.",
+          "Agent reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+        }
+      },
+      {
+        "key": "3e0d601de961dbf8ae38154e3f3a02e5",
+        "properties": {
+          "Geo Name": "December stopgap funding rewards Congress for avoiding a full budget",
+          "Geo ID": "3e0d601de961dbf8ae38154e3f3a02e5",
+          "Geo URL": "https://www.geobrowser.io/space/4582fbbee28a16589154f7e36f1ee3c5/3e0d601de961dbf8ae38154e3f3a02e5",
+          "Geo Is factual": false,
+          "Geo Tags": [
+            "Debate"
+          ],
+          "Geo Topics": "Congress\nPublic budgeting\nGovernment and institutions\nEconomy\nShutdown delayed past 2026 midterms",
+          "Review status": "Reviewed",
+          "Challenged tags notes": "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it.",
+          "Agent reading": "Context-dependent: Agent slip · Seeded from the audit of 9 October."
+        }
+      }
+    ],
+    "tag_decisions": [
+      {
+        "key": "fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent",
+        "properties": {
+          "Claim": "Excluding CNN from Air Force One violates the federal court order",
+          "Key": "fc0cb0da0a1a4375b0fae6b5c9a67c69::Context-dependent",
+          "Tag": "Context-dependent",
+          "Claim link": "<link to the row of cnn in Claims>",
+          "Agent proposal": "Does not apply",
+          "Tag outcome": "Applies",
+          "Your reasoning": "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded.",
+          "Rulebook edition": "2026-10-27.1",
+          "Agent reading": "Agent slip",
+          "Reading note": "Seeded from the audit of 9 October.",
+          "Read under": "2026-10-27.1 · a8adcee5"
+        }
+      },
+      {
+        "key": "1bff859247ecdb618af41a397d2eb6ba::Context-dependent",
+        "properties": {
+          "Claim": "The Dallas convention is the unofficial launch of JD Vance’s 2028 presidential campaign",
+          "Key": "1bff859247ecdb618af41a397d2eb6ba::Context-dependent",
+          "Tag": "Context-dependent",
+          "Claim link": "<link to the row of dallas in Claims>",
+          "Agent proposal": "Does not apply",
+          "Tag outcome": "Applies",
+          "Your reasoning": "From the audit of 9 October: the editor confirmed this tag, which the agent had read the other way; no reasoning was recorded.",
+          "Rulebook edition": "2026-10-27.1",
+          "Agent reading": "Agent slip",
+          "Reading note": "Seeded from the audit of 9 October.",
+          "Read under": "2026-10-27.1 · a8adcee5"
+        }
+      },
+      {
+        "key": "6dc1222aeb364918821167370d8fbc40::Context-dependent",
+        "properties": {
+          "Claim": "A contractor's enforcement of safety restrictions constitutes a national security supply chain risk",
+          "Key": "6dc1222aeb364918821167370d8fbc40::Context-dependent",
+          "Tag": "Context-dependent",
+          "Claim link": "<link to the row of contractor in Claims>",
+          "Agent proposal": "Applies",
+          "Tag outcome": "Does not apply",
+          "Your reasoning": "From the audit of 9 October: The claim makes sense on its own, although it leaves the reader asking questions like ‘why?’ ‘in what instances’.",
+          "Rulebook edition": "2026-10-27.1",
+          "Agent reading": "Agent slip",
+          "Reading note": "Seeded from the audit of 9 October.",
+          "Read under": "2026-10-27.1 · 43bb2c75"
+        }
+      },
+      {
+        "key": "89fcfb7fc6684b63af7d829ed90106cd::Context-dependent",
+        "properties": {
+          "Claim": "Relocating the Kennedy Center Honors to a sports arena diminishes the prestige of the awards",
+          "Key": "89fcfb7fc6684b63af7d829ed90106cd::Context-dependent",
+          "Tag": "Context-dependent",
+          "Claim link": "<link to the row of kennedy in Claims>",
+          "Agent proposal": "Applies",
+          "Tag outcome": "Does not apply",
+          "Your reasoning": "From the audit of 9 October: the editor did not confirm this tag, which the agent had applied; no reasoning was recorded.",
+          "Rulebook edition": "2026-10-27.1",
+          "Agent reading": "Agent slip",
+          "Reading note": "Seeded from the audit of 9 October.",
+          "Read under": "2026-10-27.1 · 82ea9a55"
+        }
+      },
+      {
+        "key": "3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent",
+        "properties": {
+          "Claim": "December stopgap funding rewards Congress for avoiding a full budget",
+          "Key": "3e0d601de961dbf8ae38154e3f3a02e5::Context-dependent",
+          "Tag": "Context-dependent",
+          "Claim link": "<link to the row of stopgap in Claims>",
+          "Agent proposal": "Applies",
+          "Tag outcome": "Does not apply",
+          "Your reasoning": "From the audit of 9 October: this is text: independent, and the claim makes sense to me from reading it.",
+          "Rulebook edition": "2026-10-27.1",
+          "Agent reading": "Agent slip",
+          "Reading note": "Seeded from the audit of 9 October.",
+          "Read under": "2026-10-27.1 · ede484d7"
+        }
+      }
+    ],
+    "agent_settings": [
+      {
+        "key": "Claim tagger",
+        "properties": {
+          "Name": "Claim tagger",
+          "Rulebook edition": "2026-10-27.1"
+        }
+      }
+    ]
+  }
+}

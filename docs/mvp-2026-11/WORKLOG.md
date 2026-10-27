@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 40): "The hub and the Geo claims" (P5 to P17, `HUB-AND-GEO-CLAIMS.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 7. The root page is "Claim tagger", the hub. The first build sits in its archive sub-page. A fresh set of five full-page tables holds 200 Geo claims, and verify is clean. 2,211 tests pass. Next: step 8 (the practice-page dry run and status), then step 9 (the tag run) on the product owner's go.
+- Phase (entry 41): "The hub and the Geo claims" (P5 to P17, `HUB-AND-GEO-CLAIMS.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 8. The root page is "Claim tagger", the hub. The first build sits in its archive sub-page. A fresh set of five full-page tables holds 200 Geo claims, and verify is clean. The practice-page dry run and the headless status pass. 2,211 tests pass. Open: status points to distill rather than tag while claims are unread (entry 41). Next: step 9 (the tag run) on the product owner's go.
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -349,3 +349,25 @@ Verified: the last `setup.mjs verify` reports no differences, 49 requests and 0 
 Every plan op that touches an editor-owned field (3, all migrate-decisions on Claims) carries the audit prefix. The Claims tab order was checked by a person, since verify cannot read it. Also seen live: a view filter of an `and` holding an `or` is accepted (the build made Your queue), a view is accepted when created `after_view`, and a table description is accepted on create and stored (a GET of each of the five tables reads its description back, with `is_inline` false). Not verified yet: that "is not Reviewed, or is empty" keeps the claims whose Review status is empty. Your queue lists claims only once the tag run has set Agent status, so step 8's status and step 9's tag run show it.
 
 Next: runbook step 8, the walkthrough's `start --parent <Onboarding> --dry-run` and the headless `/claim-tagger status` (`evidence/27-…`). Then step 9, the tag run on the 200 claims, which writes about 400 rows and waits for the product owner's go.
+
+### 41. Live runbook step 8: the practice-page dry run under Onboarding and the headless status check (2026-10-27)
+
+Done: on the product owner's word ("Stop before the tag run"), two read-only checks ran (`evidence/27-status/`).
+
+`walkthrough.mjs start --parent 406273e214eb81a881dcd1480c5d015e --dry-run` passed the page check. It planned 7 steps, 5 tables, 5 views, 16 rows and 19 requests, sent nothing but the parent GET, and built nothing (`walkthrough-dry-run/`: output, preview.md, setup-plan.json).
+- Of the 16 planned rows, 9 claims carry an editor column. The 5 decided claims are the audit seeding, each note opening "From the audit of 9 October". The 4 open claims start at Review status "To review". The manifest is frozen at 2026-10-22.1 and unchanged.
+- The dry run leaves `runs/demos/20261027-2054-9deb8c/` with no demo.json. `listDemos` lists only folders that hold one, so the demo commands do not see it.
+
+`status.mjs` run directly said:
+- "nothing is paused; the agent has 3 of your decisions to read";
+- the Rulebook at 13 tags, edition 2026-10-27.1, the same as Notion;
+- Your queue: nothing waits; Lessons waiting: none;
+- Next: "type /claim-tagger distill".
+
+`headless-check.mjs --prompt "/claim-tagger status"` gave PASS: 2 turns, 1 Bash call (`status.mjs`), 0 Notion reads or writes through tools, no problems, 16 s. Its final message is word for word the direct run's. The CLI was 2.1.303 on its default model, claude-fable-5-1. That is the editor's own CLI, not a subagent of this build; status makes no model call, and the judge stays pinned to claude-sonnet-5-5 in config.json.
+
+Found: status's Next line rests on an assumption the fresh Claims table breaks. `status.mjs` (lines 228-231) counts claims with no Agent status only on a practice page: "In production the agent has always filled its side of a claim before the claim waits". With 200 claims seeded and none read yet, production status skips them. It says "Your queue: nothing waits" and points to distill (for the 3 audit decisions) instead of tag. Notion and the counts are right; only the advice is off. The gap closes after the tag run, since every claim then has an Agent status, and comes back whenever new claims are added (the pick refresh in the backlog). Whether to fix it is the product owner's call.
+
+Verified: both checks exit 0. The headless settings and transcript hold no token. Nothing was written to Notion in this step.
+
+Next: the product owner decides on the status gap. Then step 9, `/claim-tagger tag` on the 200 claims (`evidence/28-real-tag-200/`), on the product owner's go.

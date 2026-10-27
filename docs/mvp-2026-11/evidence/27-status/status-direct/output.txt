@@ -1,0 +1,12 @@
+Status: nothing is paused; the agent has 3 of your decisions to read.
+
+| Where | Now |
+|---|---|
+| Rulebook | 13 tags, edition 2026-10-27.1 |
+| Your queue | nothing waits |
+| Your decisions | 3 to read |
+| Lessons waiting | none |
+| Last run | Setup · 27 Oct 18:43 · 5 tables |
+
+Next: type /claim-tagger distill to draft a rule change from your decisions.
+exit 0
