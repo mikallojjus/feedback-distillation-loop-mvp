@@ -2,6 +2,8 @@
 
 The page is built from `agents/claim-tagger-mvp/walkthrough/page.md` (repository Markdown) by `walkthrough.mjs start`, through `scripts/lib/notion-blocks.mjs`. Placeholders: `{{edition}}` and `{{date}}` are text the builder fills; `{{view:Your queue}}` and `{{view:Lessons waiting}}` mark where the two linked views go (under the last line of "Doing the work" of steps 3 and 5: in step 3 that is the sentence about reason words under the four lists, in step 5 the Doing the work line itself); `{{tables}}` marks where the five inline tables sit (after step 7); `{{help}}` marks the Help toggle, whose content is the `## Help` section at the end of the file.
 
+A practice page is built under the Onboarding page of the hub "Claim tagger", for onboarding new editors (decision P7). Its five tables stay inline on the page, under the steps that talk about them, while production's five tables are full-page tables under the hub (decision 86). The editor fills steps 3 and 5 by hand; no command does it for them.
+
 ## Layout, top to bottom
 
 1. A callout whose first line is exactly: "You type four commands yourself (status, tag, distill and promote); the follow-up runs by itself after a PASS, and the engineer sets things up and fixes what breaks."
@@ -24,4 +26,4 @@ In the tables: five inline tables with the practice titles; Rulebook 1 row, Cont
 
 In the profile: the rulebook holds the one judged tag, and its edition is the page's edition or a later one whose history still holds the page's edition (a passed safety check moves the rulebook on; the page keeps naming the edition it was built with).
 
-`W verify` reads the page once nothing has run as "fresh" (Last run summary empty and no editor action other than an unchanged one) and holds the open claims and the seeded readings on the ledger and on the decided claims to their first state only then (the agent reads again after a change of rule, so a reading is the agent's to change once a command has run). `W verify --json` prints `{ ok, problems, counts }`; the walkthrough's evals grade with it.
+`W verify` reads the page once nothing has run as "fresh" (Last run summary empty and no editor action other than an unchanged one) and holds the open claims and the seeded readings on the ledger and on the decided claims to their first state only then (the agent reads again after a change of rule, so a reading is the agent's to change once a command has run). `W verify --json` prints `{ ok, problems, counts }`; the fake seven-step test checks with it. A practice page in the hub's archive (one made before 27 October 2026) is read only: `W verify` refuses it with exit 2 and reads nothing.

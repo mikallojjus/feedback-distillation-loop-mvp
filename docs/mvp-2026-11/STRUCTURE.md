@@ -1,5 +1,7 @@
 # Structure proposal
 
+> From 27 October 2026 the structure is in `docs/mvp-2026-11/HUB-AND-GEO-CLAIMS.md` and `agents/claim-tagger-mvp/setup/structure.json` (the hub "Claim tagger", Claims seeded from Geo, the archive). The text below is the approved proposal of 15 October with its revisions of 16 to 22 October, kept unchanged as history; tests parse it.
+
 This page proposes how the claim tagger MVP sits in Notion: five tables, four views and three sub-pages, all under the page "Feedback Distillation MVP". Nothing else is built in Notion until it is approved.
 
 To approve, say go as it stands, or edit this page first and then say go; the build follows the page as you leave it.
