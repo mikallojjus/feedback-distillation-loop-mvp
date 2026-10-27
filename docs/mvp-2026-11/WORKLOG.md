@@ -481,3 +481,22 @@ Verified: after these fixes 2,289 tests pass, 0 fail (`evidence/01-tests/node-te
 Not verified live: whether the connector treats markdown characters in a note as formatting; whether `[]` clears a relation the way `null` does; the connector's async answer. CONTRACTS section 19 lists these. The guard trusts a marker file on disk, as it trusts `runs/SETUP`: it stops mistakes, not a session set on getting around it.
 
 Next: the first live decide, on the product owner's word. "decide the first 6" on Claims writes through the connector, with one permission prompt per claim. Then distill for runbook step 10.
+
+### 46. Decisions P21 to P25: the decide step becomes a conversation; the plan (2026-10-28)
+
+Done: the product owner found the decide step too strict for how editors will work. An editor sorts All claims by confidence, reads the agent's tags, and where they disagree either tells their Claude in their own words ("claim x should be y because z") or corrects the tags by hand and asks Claude to write the note, iterating until satisfied. The product owner decided:
+- Claude drafts and the editor approves; nothing is written before the OK (P21);
+- any claim may be decided, Reviewed or not; an editor may change another editor's review on their OK, and the new tags and note replace the old (P22);
+- no permission prompt per write (P23);
+- a write may change only the tags, only the note, or both (P24);
+- the editor's reasoning stays theirs; Claude adds structure, not substance (P25).
+
+The plan (engineering decisions 117 to 120):
+- `list` prints a `seen` fingerprint per claim, and `open` refuses a claim that changed since;
+- `list --all` covers the whole table;
+- `verified_tags` and `note` become optional in `open`;
+- `check` compares only what was written, adds the row "Changed an earlier review", and its mismatch Next line always offers decide again.
+
+The guard hook is unchanged: it already allows any subset of the three columns.
+
+Next: a Sonnet coder builds it off this branch (2,289 tests at the start), then an Opus review; no live decide until the merge and the product owner's word.
