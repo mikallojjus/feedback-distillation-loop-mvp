@@ -284,3 +284,11 @@ Done: a Sonnet coder (74e13c3). `lib/notion-rest.mjs` gains `movePage` (`POST /p
 Verified: after the merge 2,156 tests pass, 0 fail (2,128 + 28); the rewritten config validates under stage 2's page keys (placeholders starting with "<" are accepted). Not verified live: whether an inline database's parent reads back as the archive page after a parent-only PATCH, and whether a moved page takes its sub-pages and tables with it (the reference says nothing); the `--plan-only` run is the first live check, and a refusal has the drag path.
 
 Next: stage 5 (Sonnet, fresh structure and hub) and stage 6 (Opus, docs, hard rules and skills) in parallel worktrees.
+
+### 35. The app crashed during stages 5 and 6; recovered from the worktrees (2026-10-27)
+
+Done: the Claude app crashed while the stage 5 coder and the stage 6 drafter were running. Nothing committed was lost (the branch stood at f07243b). Each worktree still held its uncommitted work: stage 5 had five files changed (structure.json, notion-build, setup-steps, config, archive's read-back) and one new fixture, with tests, `setup.mjs` and `pull.mjs` still to do; stage 6 had nineteen documents and skill files changed, with decisions 81 to 97, the four hard rules and a valid evals.json already in. Both diffs were saved as patches in the session's scratch folder as a safety net, and both agents were resumed from their saved transcripts with the instruction to finish from where they stopped, not to redo.
+
+Verified: `git worktree list` shows both worktrees at adec9a8 with their changes; the patches hold 6 and 19 files; nothing was written to Notion or Geo.
+
+Next: the two hand-backs, merged one at a time with the full suite after each; then stage 7.
