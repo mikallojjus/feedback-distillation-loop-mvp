@@ -122,7 +122,12 @@ function chunk(s) {
 
 // ---- the fake --------------------------------------------------------------------------------------------------------------------------
 
-export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedIds = [], now = null } = {}) {
+// `emptySelectIsNot` says what a select filter "does_not_equal X" does with a row that has no value: true (the default, and what the tests of the fake settled on) keeps it, false is the
+// stricter reading, which Notion's documentation does not rule out: only `is_empty` finds such a row. The tests of Your queue (P13) run on the strict fake as well, so they prove that the
+// filter that is sent keeps the new claims, whichever way Notion answers.
+// `ownView` is the name of the view that a table made by POST /databases starts with (Notion makes one: "Default view" through the API, "Table" in the app); null (the default) makes none, so the
+// views of a table are only the ones a test or a build creates. The views of a database are kept in tab order (position start, end or after_view), and GET /views lists them in that order.
+export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedIds = [], now = null, emptySelectIsNot = true, ownView = null } = {}) {
   let counter = 0;
   let clock = 0;
   const KIND = { page: '0a9e', database: '0db0', data_source: '0d50', block: '0b10', view: '0e10' };
@@ -562,6 +567,7 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
         const name = value.select?.name ?? null;
         if (empty !== null) return (name === null) === empty;
         const wanted = Array.isArray(arg) ? arg : [arg];
+        if (name === null && op === 'does_not_equal' && !emptySelectIsNot) return false;
         return op === 'equals' ? wanted.includes(name) : !wanted.includes(name);
       }
       case 'multi_select': {
@@ -776,6 +782,17 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
     const properties = newSchema(body.initial_data_source.properties, 'body.initial_data_source.properties');
     const description = body.description === undefined ? [] : richTextIn(body.description, 'body.description');
     const made = makeDatabase({ parent: { type: 'page_id', page_id: above.id }, title, description, isInline: body.is_inline === true, icon: body.icon, properties });
+    if (ownView) {
+      // what Notion does for a table made through the API: one table view of its own, showing every column, which is the only tab until others are made (the views in tab order: this one first)
+      const ds = dataSources.get(normId(made.data_source_id));
+      const at = stamp();
+      const own = {
+        id: nextId('view'), parent: { database_id: made.database_id }, database_id: made.database_id, data_source_id: ds.id, name: ownView, type: 'table', filter: null, sorts: null, quick_filters: null,
+        configuration: { type: 'table', wrap_cells: false, properties: Object.values(ds.properties).map((p) => ({ property_id: p.id, visible: true })) }, created_time: at, last_edited_time: at,
+      };
+      views.set(normId(own.id), clone(own));
+      viewsOfDatabase.set(normId(made.database_id), [own.id]);
+    }
     return databaseObject(databases.get(normId(made.database_id)));
   }
 

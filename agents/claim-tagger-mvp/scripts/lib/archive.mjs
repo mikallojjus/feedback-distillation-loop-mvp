@@ -26,6 +26,8 @@
 //                                            builder registry set aside under runs/builder/before-archive/
 //   readArchiveState(root), archivedIds(root), setAsideBuilder(root), leftoversOf(children, ...), archivePath(root)
 //   archiveFirst(root, config)            -> true while the first build's tables are still on the hub and the archive has not run (setup.mjs refuses every other step then); ARCHIVE_FIRST_MESSAGE
+//   archiveRewritten(config, archive)     -> does config.json name the Archive page that a "done" record names? false after a config rewrite that failed (setup.mjs then refuses every
+//                                            other step with ARCHIVE_NOT_REWRITTEN_MESSAGE until `archive` has run again; that run sends nothing)
 //   linksBack(block, hubId)               -> is this block the Archive page's first line, with "Claim tagger" linked to the hub page (matched by the page's id)
 //
 // Resuming. Nothing is remembered between runs except setup/archive.json (state "moving" while the step is under way, "done" at the end) and what Notion
@@ -163,6 +165,19 @@ export function archiveFirst(root, config) {
 }
 
 export const ARCHIVE_FIRST_MESSAGE = "the first build's tables are still on the hub page; run setup.mjs archive first (P9)";
+
+/**
+ * Has config.json been rewritten for an archive record that says "done"? True when config.notion.pages.archive is the record's Archive page. stepArchive writes the record before it rewrites
+ * config.json, so a rewrite that failed (a config that would not validate, a disk error) leaves a "done" record next to a config that still names the first build's tables: the gate of
+ * setup.mjs must not let a build or a row step through then (SH-1 of the second pre-live check; they would write into the archived tables, hard rule 10). A record without a real Archive
+ * page id is never "rewritten": there is nothing the config could name.
+ */
+export function archiveRewritten(config, archive) {
+  const page = realId(archive?.archive_page);
+  return page !== null && realId(config?.notion?.pages?.archive) === page;
+}
+
+export const ARCHIVE_NOT_REWRITTEN_MESSAGE = 'the archive step moved everything in Notion but config.json was not rewritten; run setup.mjs archive again (it sends nothing to Notion)';
 
 // ---- reading it back (verify) --------------------------------------------------------------------------------------------------------------
 
@@ -687,8 +702,7 @@ export async function stepArchive(ctx, { planOnly = false } = {}) {
 
   if (existing.state === 'done') {
     const archive = existing.data;
-    const rewritten = realId(config?.notion?.pages?.archive) === realId(archive.archive_page);
-    if (rewritten) return { code: EXIT.OK, lines: [`archive: done already (${archive.archived_at}); the Archive page is ${archive.archive_page}; nothing was sent`] };
+    if (archiveRewritten(config, archive)) return { code: EXIT.OK, lines: [`archive: done already (${archive.archived_at}); the Archive page is ${archive.archive_page}; nothing was sent`] };
     if (planOnly) return { code: EXIT.OK, lines: ['archive: the pages and tables are moved already, but config.json still has the old ids; run it without --plan-only to finish that (it sends nothing to Notion)'] };
     try {
       const local = finishLocally(ctx, archive);

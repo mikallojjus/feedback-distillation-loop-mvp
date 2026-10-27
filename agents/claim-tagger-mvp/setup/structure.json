@@ -133,6 +133,7 @@
         }
       ],
       "default_view": {
+        "name": "Rulebook",
         "columns": [
           "Name",
           "Category",
@@ -683,20 +684,6 @@
         "Current text",
         "Proposed text",
         "Status"
-      ],
-      "wrap": true
-    },
-    {
-      "name": "Rulebook",
-      "table": "rulebook",
-      "filter": "all rows",
-      "sort": "none",
-      "columns": [
-        "Name",
-        "Category",
-        "Status",
-        "When to use",
-        "Example Claims"
       ],
       "wrap": true
     }

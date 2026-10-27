@@ -633,6 +633,20 @@ test('query filters: text, select, multi_select, number, checkbox, date, and/or,
   assert.deepEqual(await names({ property: 'Created', created_time: { after: '2000-01-01T00:00:00Z' } }), ['Apple pie', 'Banana split', 'Cherry tart']);
 });
 
+test('emptySelectIsNot: false is the strict reading of "does_not_equal" on a select: a row with no value is not kept by it, and only is_empty (or an or with it) finds the row', async () => {
+  for (const [emptySelectIsNot, kept] of [[true, ['Apple pie', 'Cherry tart']], [false, ['Apple pie']]]) {
+    const { fake, db } = world({ emptySelectIsNot });
+    fake.addRow(db, { Claim: 'Apple pie', Tag: 'Wordy' });
+    fake.addRow(db, { Claim: 'Banana split', Tag: 'Context-dependent' });
+    fake.addRow(db, { Claim: 'Cherry tart', Tag: null });
+    const names = async (filter) => (await post(fake, `/databases/${db}/query`, { filter })).body.results.map((p) => p.properties.Claim.title[0].plain_text);
+    assert.deepEqual(await names({ property: 'Tag', select: { does_not_equal: 'Context-dependent' } }), kept, `emptySelectIsNot ${emptySelectIsNot}`);
+    assert.deepEqual(await names({ property: 'Tag', select: { is_empty: true } }), ['Cherry tart'], 'is_empty finds it either way');
+    assert.deepEqual(await names({ or: [{ property: 'Tag', select: { does_not_equal: 'Context-dependent' } }, { property: 'Tag', select: { is_empty: true } }] }), ['Apple pie', 'Cherry tart'], 'and so does the or');
+    assert.deepEqual(await names({ property: 'Tag', select: { equals: 'Wordy' } }), ['Apple pie'], 'equals is not touched');
+  }
+});
+
 test('query filters that name no property, mix types or hold two conditions are 400, not ignored', async () => {
   const { fake, db } = world();
   fake.addRow(db, row(1));
@@ -888,6 +902,32 @@ test('POST /views makes a tab of a database, answers with the partial view and r
   assert.deepEqual(fake.views(db).map((v) => [v.name, v.type]), [['Your queue', 'table']]);
   assert.deepEqual(fake.views(db)[0].filter, body.filter);
   assert.deepEqual(fake.views(db)[0].configuration, body.configuration);
+});
+
+test('ownView: a table made by POST /databases starts with one view of that name, the first tab; the others go by their position; a table made with no option, or by addDatabase, has none', async () => {
+  const none = createFakeNotion();
+  const noneRoot = none.addPage({ title: 'Root' });
+  const made = await post(none, '/databases', { parent: { type: 'page_id', page_id: noneRoot }, title: text('T'), initial_data_source: { properties: { Name: { type: 'title', title: {} } } } }, { version: VIEWS });
+  assert.equal(made.status, 200, JSON.stringify(made.body));
+  assert.deepEqual(none.views(made.body.id), [], 'no option, no view of its own');
+
+  const fake = createFakeNotion({ ownView: 'Default view' });
+  const root = fake.addPage({ title: 'Root' });
+  const helper = fake.addDatabase({ parentPageId: root, title: 'By helper', properties: props });
+  assert.deepEqual(fake.views(helper.database_id), [], 'addDatabase makes no view of its own: the tests that seed a table are not changed by the option');
+  const res = await post(fake, '/databases', { parent: { type: 'page_id', page_id: root }, title: text('By the API'), initial_data_source: { properties: { Name: { type: 'title', title: {} }, Note: { type: 'rich_text', rich_text: {} } } } }, { version: VIEWS });
+  assert.equal(res.status, 200, JSON.stringify(res.body));
+  const db = res.body.id;
+  const ds = res.body.data_sources[0].id;
+  const own = fake.views(db);
+  assert.deepEqual(own.map((v) => [v.name, v.type]), [['Default view', 'table']]);
+  assert.equal(own[0].configuration.properties.filter((p) => p.visible).length, 2, 'it shows every column');
+  const make = async (name, position) => (await post(fake, '/views', { database_id: db, data_source_id: ds, name, type: 'table', ...(position ? { position } : {}) }, { version: VIEWS })).body.id;
+  await make('After the first', { type: 'after_view', view_id: own[0].id });
+  await make('At the start', { type: 'start' });
+  assert.deepEqual(fake.views(db).map((v) => v.name), ['At the start', 'Default view', 'After the first']);
+  const listed = await get(fake, `/views?database_id=${db}`, { version: VIEWS });
+  assert.deepEqual(listed.body.results.map((r) => r.id), fake.views(db).map((v) => v.id), 'GET /views lists them in tab order');
 });
 
 test('views are listed by GET /views?database_id= and GET /databases/{id}/views, as references, in order, and page', async () => {

@@ -26,7 +26,7 @@ Some reports end with a Next line that sends the editor to Notion. Under such a 
 
 Real:
 
-1. Open Your queue (the link in the Next line): the claims that wait for you, lowest Agent confidence first. A claim leaves it as soon as you set Review status to Reviewed.
+1. Open Your queue (the link in the Next line): the claims that wait for you, lowest Agent confidence first. A claim leaves Your queue as soon as you set Review status to Reviewed.
 2. Read Agent reasons and Tags waiting: they say which tag waits and why.
 3. On each claim fill in three columns. Verified tags: every tag that applies, the ones in Agent tags included; one left out counts as Does not apply. Challenged tags notes: start a line with the tag name and a colon. Review status last.
 4. A note is optional when you agree. When you overrule the agent, add one line why: without it the agent drafts no rule change. If you know the reason, start it with Agent slip, Rule unclear or Rule should change and a full stop.

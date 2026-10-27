@@ -287,9 +287,13 @@ export const practiceViewColumns = (structure) => structure.tables.claims.column
  *   the table's own view       the Claims table's own view shows every live column in the structure's order (arrange_default_view), as the manifest's checks and the page's explaining tables
  *                              expect; production's lean "All claims" (default_view, P15) is left out, and so are the other four tables' arranged own views and every table description
  *                              (the description of Claims says it holds 200 claims; a practice page's table is not that table)
+ *   the view Rulebook          production has no such named view: its Rulebook table's own view carries the name (default_view, so that the table does not show two identical tabs). A practice
+ *                              page makes the tab Rulebook as it always did (TAB_VIEWS, the five views of its page), so the copy names it again, with the columns of that default_view,
+ *                              all rows, no sort, cells wrapped: the one view a practice page has that production does not
  */
 export function practiceStructure(structure) {
   const copy = structuredClone(structure);
+  const rulebookOwn = copy.tables?.rulebook?.default_view;
   for (const [key, title] of Object.entries(PRACTICE_TITLES)) {
     if (!copy.tables?.[key]) throw new ManifestError(`the structure has no table "${key}"`);
     copy.tables[key].title = title;
@@ -303,6 +307,9 @@ export function practiceStructure(structure) {
   const reviewColumns = practiceViewColumns(copy);
   for (const view of copy.views) {
     if (view.table === 'claims') view.columns = [...reviewColumns];
+  }
+  if (rulebookOwn && !copy.views.some((v) => v.name === VIEW_NAMES.rulebook)) {
+    copy.views.push({ name: VIEW_NAMES.rulebook, table: 'rulebook', filter: 'all rows', sort: 'none', columns: [...rulebookOwn.columns], wrap: true });
   }
   return validateStructure(copy);
 }

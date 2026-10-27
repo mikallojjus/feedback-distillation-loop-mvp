@@ -109,11 +109,11 @@ export function testConfig({ parent }) {
  * structure the build uses now (freshStructure: full-page tables, the hub block) and uses the fake that keeps child pages and tables among a page's blocks (fixtures/fake-notion-pages.mjs),
  * because the hub page is read back block by block.
  */
-export function newWorld({ structure = false, protectedIds = null } = {}) {
+export function newWorld({ structure = false, protectedIds = null, fakeOptions = {} } = {}) {
   const root = tmp('setup');
   const probe = placeholderConfig();
   const make = structure === 'fresh' ? createPagesFake : createFakeNotion;
-  const fake = make({ protected: protectedIds ?? [...probe.notion.protected_database_ids, ...probe.notion.protected_page_ids] });
+  const fake = make({ protected: protectedIds ?? [...probe.notion.protected_database_ids, ...probe.notion.protected_page_ids], ...fakeOptions });
   const parent = fake.addPage({ title: structure === 'fresh' ? 'Claim tagger' : 'Feedback Distillation MVP' }); // the hub page is renamed by setup.mjs archive before a fresh build
   const config = testConfig({ parent });
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
