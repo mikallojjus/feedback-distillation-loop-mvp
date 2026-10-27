@@ -47,6 +47,7 @@ import { appendJsonl, readJson, readJsonl, writeJsonAtomic } from './jsonl.mjs';
 import { clientFromConfig, requestLogger } from './notion-rest.mjs';
 import { decodePage, sameValue } from './notion-values.mjs';
 import { agentRoot, codeRoot, ensureDir, repoRoot, runId as makeRunId, safeName } from './paths.mjs';
+import { RESERVED_RUN_IDS, isReservedRunId } from './reserved-run-ids.mjs';
 import { applyPlan, checkPlan } from './plan.mjs';
 import { writeReport } from './report.mjs';
 import { preflight, refusedReport } from './preflight.mjs';
@@ -119,6 +120,7 @@ function openRun({ script, label, again, opts, args, resume }) {
   const asked = opts.runId ?? opts.run_id;
   if (asked !== undefined && asked !== null) {
     if (!ID_RE.test(String(asked))) throw new LoopExit(EXIT.INVALID, `--run-id may only use letters, digits, '.', '_' and '-', got "${asked}"`);
+    if (isReservedRunId(asked)) throw new LoopExit(EXIT.INVALID, `--run-id "${asked}" is a name the loop keeps for its own files under runs/ (${RESERVED_RUN_IDS.join(', ')}); pick another`);
     id = String(asked);
     if (existsSync(join(runsDir, id))) throw new LoopExit(EXIT.INVALID, `a run folder named ${id} already exists; pick another --run-id`);
   } else {

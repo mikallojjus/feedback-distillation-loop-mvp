@@ -30,6 +30,7 @@
       "Bash(node agents/claim-tagger-mvp/scripts/promote.mjs:*)",
       "Bash(node agents/claim-tagger-mvp/scripts/followup.mjs:*)",
       "Bash(node agents/claim-tagger-mvp/scripts/status.mjs:*)",
+      "Bash(node agents/claim-tagger-mvp/scripts/decide.mjs:*)",
       "Bash(node agents/claim-tagger-mvp/scripts/walkthrough.mjs:*)",
       "Bash(node agents/claim-tagger-mvp/scripts/hooks/guard.mjs:*)"
     ],

@@ -26,13 +26,14 @@ Agents of the Geo content team, one folder per agent.
 ```
 /claim-tagger status              what is open: is the agent paused, which edition of the rulebook is in force, what waits for whom
 /claim-tagger tag                 read the claims, put the answers the agent is unsure about in Your queue
-   ... editors decide the rows in "Your queue" on the Notion page ...
+   ... editors decide the rows in "Your queue" on the Notion page, or tell Claude to: ...
+/claim-tagger decide <what to do>  Claude decides the claims you name or the first N of Your queue, then reads each one back
 /claim-tagger distill             turn the decisions into proposed rule changes (Lessons waiting)
    ... the rule owner sets Approved or Rejected, and may write the rule in Editor wording ...
 /claim-tagger promote "<title>"   run the safety check on the approved change; a PASS puts the new rule live
 ```
 
-These are the four commands an editor types; the title can be left out when only one change is Approved. They act on Claims, the real training table: every decision made there is training data, and only people make them. After a PASS the follow-up runs by itself and marks the rows the change rests on Fixed or Still wrong; a FAIL or HOLD leaves the rulebook as it is. `/claim-tagger follow-up` only repeats the follow-up when a promote stopped before it. Setting things up (`setup`) and putting an earlier rule back (`rollback`, `restore`) are the engineer's, in `agents/claim-tagger-mvp/AGENT.md`. A new editor starts with `/claim-tagger-walkthrough`, which builds a practice page under the hub's Onboarding page and says what to type next; the practice page's own commands are `/claim-tagger demo ...`.
+These are the commands an editor types; the title can be left out when only one change is Approved. They act on Claims, the real training table: every decision made there is training data, whether the editor types it in Notion or tells Claude to enter it (`/claim-tagger decide`, which writes only the three Claims columns). After a PASS the follow-up runs by itself and marks the rows the change rests on Fixed or Still wrong; a FAIL or HOLD leaves the rulebook as it is. `/claim-tagger follow-up` only repeats the follow-up when a promote stopped before it. Setting things up (`setup`) and putting an earlier rule back (`rollback`, `restore`) are the engineer's, in `agents/claim-tagger-mvp/AGENT.md`. A new editor starts with `/claim-tagger-walkthrough`, which builds a practice page under the hub's Onboarding page and says what to type next; the practice page's own commands are `/claim-tagger demo ...`.
 
 Plain words also work: "tag the new claims and tell me what is waiting for me".
 
