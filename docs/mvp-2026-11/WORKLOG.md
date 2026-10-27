@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 41): "The hub and the Geo claims" (P5 to P17, `HUB-AND-GEO-CLAIMS.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 8. The root page is "Claim tagger", the hub. The first build sits in its archive sub-page. A fresh set of five full-page tables holds 200 Geo claims, and verify is clean. The practice-page dry run and the headless status pass. 2,211 tests pass. Open: status points to distill rather than tag while claims are unread (entry 41). Next: step 9 (the tag run) on the product owner's go.
+- Phase (entry 42): "The hub and the Geo claims" (P5 to P17, `HUB-AND-GEO-CLAIMS.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 8. The root page is "Claim tagger", the hub. The first build sits in its archive sub-page. A fresh set of five full-page tables holds 200 Geo claims, and verify is clean. The practice-page dry run and the headless status pass. Production status counts unread claims (decision 112) and now sends the editor to tag the 197 unread ones first. 2,220 tests pass. Next: step 9 (the tag run) on the product owner's go.
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -371,3 +371,25 @@ Found: status's Next line rests on an assumption the fresh Claims table breaks. 
 Verified: both checks exit 0. The headless settings and transcript hold no token. Nothing was written to Notion in this step.
 
 Next: the product owner decides on the status gap. Then step 9, `/claim-tagger tag` on the 200 claims (`evidence/28-real-tag-200/`), on the product owner's go.
+
+### 42. Status counts the claims the agent has not read (decision 112); stopped before the tag run (2026-10-27)
+
+Done: the product owner decided to fix the gap of entry 41 before the tag run. In production, status counts the unread claims, shows them in the Your queue cell, and says to type the tag command after any claims to decide and ahead of distill (decision 112, amending 101).
+
+A Sonnet coder made the change. Its first worktree was cut from an old main (a7730fe), not this branch. The coder caught it from the test count (2,084, not 2,211), and the commit was redone on the branch (052d4f9). Coder briefs now name the branch to start from and the expected count; the memory has a note.
+
+An Opus reviewer said GO with no must-fix:
+- 14 deliberately wrong versions of status.mjs were all caught by the tests;
+- the parent's tests fail on the new code only where the spec asks;
+- no other doc is made wrong.
+
+Merged as e35ca37. Then the reviewer's three smaller points: decision 112 records the amendment; the example numbers in AGENT.md became N; status.mjs's header was rewrapped. CONTRACTS keeps its "3a" in section 17, the lettering it already used for decision 79's "4a". A claim with a Geo ID but no text would stay unread after every tag run, since the judge skips it (the reviewer's COULD 1). The pick only takes claims with a name, so it cannot happen with these 200; it is left for the backlog.
+
+Verified: 2,220 tests pass, 0 fail (`evidence/01-tests/node-test-claims-hub-status-unread.txt`). Live status, which only reads, now says:
+- "Your queue | nothing waits; 197 new claims not read yet";
+- "Your decisions | 3 to read";
+- "Next: type /claim-tagger tag to read 197 new claims."
+
+That is 197, not 200, because the 3 audit claims are Reviewed. The `--json` queue has `unread: 197` (`evidence/27-status/status-after-fix/`). Nothing was written to Notion.
+
+Next: step 9, `/claim-tagger tag` on the 200 claims (`evidence/28-real-tag-200/`), on the product owner's go.

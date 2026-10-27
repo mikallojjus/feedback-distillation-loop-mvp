@@ -12,8 +12,8 @@
 // cell ends "; <n> new claims not read yet", see below), Your decisions (what the agent still has to do with the
 // decisions made: "3 to read, 1 without a note", see below, which is where a decided claim that the agent has not read yet is told; no row when all three counts are zero), Lessons waiting and the last run (the Last run summary, else "none yet"), at
 // most five rows, and one Next line, the first that applies: read the claims (practice page only) / start at the top of Your queue or decide the rows / type tag to read the new claims
-// (production only: claims the agent has not read yet, see below) / type distill (something
-// is to read, or at least distill.min_claims claims point at a rule, and no rule change is Proposed or Approved: distill has something to read or draft) / reject a recanted rule change /
+// (production only: claims the agent has not read yet, see below) / type distill (something is to read, or at least distill.min_claims claims point at a rule, and no rule change
+// is Proposed or Approved: distill has something to read or draft) / reject a recanted rule change /
 // approve or reject the rule change / check the approved one / read new claims (when nothing else applies). The Rulebook row does not say that Notion agrees: a drift of the rulebook text on a judged tag is checked before the
 // report and ends the command with the drift report (exit 4, naming the tag and the column and telling the editor to ask the engineer to restore the rulebook text); only a
 // difference that does not stop the command (a tag without rules edited or added in Notion) or a drift check that could not run is said in the row. A paused agent ends with
