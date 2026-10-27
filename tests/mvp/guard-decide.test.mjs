@@ -46,6 +46,24 @@ test('the three Claims columns, or some of them, on a page that a live marker li
   assert.equal(verdict(decision({ 'verified tags': [], 'REVIEW STATUS': 'Reviewed' }), root).permissionDecision, 'allow', 'letter case does not matter');
 });
 
+test('a note-only write and a tags-only write, each with Review status (P24), on a page that a live marker lists, are allowed; the note alone too', () => {
+  const root = rootWith(placeholderConfig());
+  open(root);
+  const note = 'Context-dependent: Agent slip. The title names it.';
+  const noteOnly = { 'Challenged tags notes': note, 'Review status': 'Reviewed' };
+  const tagsOnly = { 'Verified tags': [hexOf('0a9e0000-0000-4000-8000-0000000000a1')], 'Review status': 'Reviewed' };
+  for (const properties of [noteOnly, tagsOnly, { 'Challenged tags notes': note }, { 'Challenged tags notes': '', 'Review status': 'Reviewed' }]) {
+    const d = verdict(decision(properties), root);
+    assert.equal(d.permissionDecision, 'allow', JSON.stringify(properties));
+    assert.match(d.permissionDecisionReason, /open decide run/);
+  }
+  assert.equal(verdict(decision(noteOnly, { allow_async: false }), root).permissionDecision, 'allow', 'with the one flag the printed call carries');
+  // the page still has to be the one the marker lists, and the note is no way round the other rules
+  assert.equal(verdict(decision(noteOnly, {}, '0a9e0000-0000-4000-8000-0000000000e1'), root).permissionDecision, 'deny');
+  assert.equal(verdict(decision({ ...noteOnly, 'Agent reading': 'x' }), root).permissionDecision, 'deny');
+  assert.equal(verdict(decision({ 'Challenged tags notes': note, 'Review status': 'Approved' }), root).permissionDecision, 'deny');
+});
+
 test('the page_id may be 32 hex digits, a dashed id or a notion.so address', () => {
   const root = rootWith(placeholderConfig());
   open(root);

@@ -12,7 +12,7 @@ import { RESERVED_RUN_IDS } from '../../agents/claim-tagger-mvp/scripts/lib/rese
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { NOW, claimText, makeWorld, quietIo } from './helpers/loop-world.mjs';
 import {
-  TAG, callsIn, cid, claudeWrites, hex, json, ledgerRow, markerOf, openedOutput, waits, world,
+  TAG, callsIn, cid, claudeWrites, hex, json, ledgerRow, markerOf, openedOutput, seenIn, seenOf, waits, withSeen, world,
 } from './helpers/decide-world.mjs';
 
 // The fix pass after the review of the decide step: a check that cannot read Notion (M1), the work of a person never overwritten (S1), every path after open ending in check
@@ -26,14 +26,14 @@ const q = (n) => quoted(claimText(n));
 test('M1: check re-reads the newest decide run from its record when there is no marker, and --run picks another; it never opens a write window', async () => {
   const w = await world();
   const a = w.hooks();
-  const opened = await openDecisions({ ...a, decisions: json([{ claim: 'c01', verified_tags: [TAG], note: '' }]) });
+  const opened = await openDecisions({ ...a, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [TAG], note: '' }]) });
   claudeWrites(w, openedOutput(a));
   assert.equal((await checkDecisions(w.hooks())).exit, 0);
   assert.ok(!existsSync(markerPath(w.root)));
 
   // a second run, written, and its check cannot read Notion
   const b = w.hooks({ now: later(60e3) });
-  const second = await openDecisions({ ...b, decisions: json([{ claim: 'c02', verified_tags: [], note: '' }]) });
+  const second = await openDecisions({ ...b, decisions: await withSeen(w, [{ claim: 'c02', verified_tags: [], note: '' }]) });
   claudeWrites(w, openedOutput(b));
   const offline = await checkDecisions(w.hooks({ fetchImpl: async () => { throw new Error('offline'); } }));
   assert.equal(offline.exit, 1);
@@ -61,7 +61,7 @@ test('M1: check re-reads the newest decide run from its record when there is no 
 test('M1: a stale marker is read back like a live one, and --run must name a run that has a record', async () => {
   const w = await world();
   const h = w.hooks();
-  await openDecisions({ ...h, decisions: json([{ claim: 'c01', verified_tags: [TAG], note: '' }]) });
+  await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [TAG], note: '' }]) });
   claudeWrites(w, openedOutput(h));
   writeFileSync(markerPath(w.root), `${JSON.stringify({ ...markerOf(w), opened_at: new Date(NOW.getTime() - 3 * 3600e3).toISOString() })}\n`);
   assert.equal((await checkDecisions(w.hooks())).exit, 0);
@@ -79,7 +79,7 @@ test('M1: a stale marker is read back like a live one, and --run must name a run
 test('M1: check reads back while the agent is paused: reading is allowed, and the report is the report of a read-back', async () => {
   const w = await world();
   const open = w.hooks();
-  await openDecisions({ ...open, decisions: json([{ claim: 'c01', verified_tags: [TAG], note: '' }, { claim: 'c02', verified_tags: [], note: '' }]) });
+  await openDecisions({ ...open, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [TAG], note: '' }, { claim: 'c02', verified_tags: [], note: '' }]) });
   claudeWrites(w, openedOutput(open));
   w.setPaused(true);
   const h = w.hooks();
@@ -92,7 +92,7 @@ test('M1: check reads back while the agent is paused: reading is allowed, and th
   // a mismatch under a pause, and the pause file: still the mismatch report, never "nothing was done"
   const w2 = await world();
   const open2 = w2.hooks();
-  await openDecisions({ ...open2, decisions: json([{ claim: 'c01', verified_tags: [TAG], note: '' }]) });
+  await openDecisions({ ...open2, decisions: await withSeen(w2, [{ claim: 'c01', verified_tags: [TAG], note: '' }]) });
   claudeWrites(w2, openedOutput(open2));
   w2.fake.editRow(w2.ids.claim.c01, { 'Verified tags': [] });
   mkdirSync(join(w2.root, 'runs'), { recursive: true });
@@ -104,22 +104,27 @@ test('M1: check reads back while the agent is paused: reading is allowed, and th
   assert.ok(!existsSync(markerPath(w2.root)));
 });
 
-// ---- S1: no overwriting a person's work -------------------------------------------------------------------------------------------------
+// ---- S1: no overwriting a person's work (rewritten for P22 and decision 117: the fingerprint `seen` guards what the refusals of removed tags and words once did) --------------------------------
 
-test('S1: open pulls the claims itself: what a person did since the listing shows, and --pull is not an option of open', async () => {
+test('S1: open pulls the claims itself: what a person did since the listing shows (the claim is refused as changed), and --pull is not an option of open', async () => {
   const w = await world();
   const listed = w.hooks();
   await listClaims(listed);
   assert.match(openedOutput(listed), new RegExp(claimText(2)));
+  const seen = seenIn(openedOutput(listed)).get('c02');
   // after the listing a person reviews c02 in Notion
   w.editClaim('c02', { 'Review status': 'Reviewed', 'Verified tags': [TAG] });
   const before = w.requests().length;
   const h = w.hooks();
-  const r = await openDecisions({ ...h, decisions: json([{ claim: 'c02', verified_tags: [TAG], note: '' }]), pull: 'an-old-pull' });
+  const r = await openDecisions({ ...h, decisions: json([{ claim: 'c02', seen, verified_tags: [TAG], note: '' }]), pull: 'an-old-pull' });
   assert.equal(r.exit, 2);
-  assert.equal(r.report.sentence, `Decide: nothing was done, because ${q(2)} is already Reviewed.`);
+  assert.equal(r.report.sentence, `Decide: nothing was done, because ${q(2)} changed in Notion since Claude read it.`);
+  assert.equal(r.report.next, 'Next: type /claim-tagger decide again; Claude reads the claims again first.');
   assert.ok(w.requests().length > before, 'open read Notion');
   assert.ok(!existsSync(markerPath(w.root)));
+  // read again, the claim is Reviewed: that is what Claude decides on now (P22)
+  const again = await openDecisions({ ...w.hooks(), decisions: await withSeen(w, [{ claim: 'c02', verified_tags: [TAG], note: 'x' }]) });
+  assert.equal(again.exit, 0);
 
   for (const argv of [['open', '--decisions', '[]', '--pull', 'x']]) {
     const bad = quietIo();
@@ -128,38 +133,37 @@ test('S1: open pulls the claims itself: what a person did since the listing show
   }
 });
 
-test('S1: open refuses a decision that drops a Verified tag the claim has, or leaves out words of its note', async () => {
-  const w = await world();
-  const cases = [];
-  const refuse = async (name, decisions, sentence) => {
-    const h = w.hooks();
-    const r = await openDecisions({ ...h, decisions: json(decisions) });
-    assert.equal(r.exit, 2, name);
-    assert.equal(r.report.sentence, sentence, name);
-    assert.equal(r.report.next, 'Next: type /claim-tagger decide again; Claude keeps the tags and words already there.', name);
-    assert.deepEqual(lintReport(r.markdown), [], name);
-    assert.ok(!existsSync(markerPath(w.root)), name);
-    assert.ok(!existsSync(join(r.runDir, 'decisions.json')), name);
-    cases.push(name);
+test('S1: a decision may take a Verified tag away or replace the words of a note (P22); the record says what each claim held before', async () => {
+  const setup = async () => {
+    const w = await world();
+    w.editClaim('c01', { 'Verified tags': [TAG] });
+    w.editClaim('c02', { 'Challenged tags notes': 'Looks fine to me.' });
+    w.editClaim('c03', { 'Verified tags': [TAG, 'Wordy'], 'Challenged tags notes': 'Two tags, one note.' });
+    w.editClaim('c04', { 'Verified tags': ['Wordy'] });
+    return w;
   };
-  w.editClaim('c01', { 'Verified tags': [TAG] });
-  w.editClaim('c02', { 'Challenged tags notes': 'Looks fine to me.' });
-  w.editClaim('c03', { 'Verified tags': [TAG, 'Wordy'], 'Challenged tags notes': 'Two tags, one note.' });
-  w.editClaim('c04', { 'Verified tags': ['Wordy'] });
+  // each of these was refused before P22: a tag dropped, words dropped, both, two tags dropped, and several claims at once
+  for (const [name, list] of [
+    ['a tag dropped', [{ claim: 'c01', verified_tags: [], note: '' }]],
+    ['words dropped', [{ claim: 'c02', verified_tags: [], note: 'Something else entirely.' }]],
+    ['a tag and words dropped', [{ claim: 'c03', verified_tags: [TAG], note: '' }]],
+    ['two tags dropped', [{ claim: 'c03', verified_tags: [], note: 'Two tags, one note.' }]],
+    ['several claims', [{ claim: 'c01', verified_tags: [], note: '' }, { claim: 'c04', verified_tags: [], note: '' }]],
+    ['a note-only decision that clears the note', [{ claim: 'c02', note: '' }]],
+  ]) {
+    const w = await setup();
+    const h = w.hooks();
+    const r = await openDecisions({ ...h, decisions: await withSeen(w, list) });
+    assert.equal(r.exit, 0, `${name}: ${h.io.errs.join('\n')}`);
+    assert.ok(existsSync(markerPath(w.root)), name);
+  }
 
-  await refuse('a tag dropped', [{ claim: 'c01', verified_tags: [], note: '' }], `Decide: nothing was done, because ${q(1)} already has the Verified tag "${TAG}" that the decision would remove.`);
-  await refuse('words dropped', [{ claim: 'c02', verified_tags: [], note: 'Something else entirely.' }], `Decide: nothing was done, because ${q(2)} already has the note "Looks fine to me." that the decision would remove.`);
-  await refuse('a tag and words dropped', [{ claim: 'c03', verified_tags: [TAG], note: '' }], `Decide: nothing was done, because ${q(3)} already has the Verified tag "Wordy" and the note "Two tags, one note." that the decision would remove.`);
-  await refuse('two tags dropped', [{ claim: 'c03', verified_tags: [], note: 'Two tags, one note.' }], `Decide: nothing was done, because ${q(3)} already has the Verified tags "${TAG}" and "Wordy" that the decision would remove.`);
-  await refuse('several claims', [{ claim: 'c01', verified_tags: [], note: '' }, { claim: 'c04', verified_tags: [], note: '' }],
-    `Decide: nothing was done, because ${q(1)} and ${q(4)} already have Verified tags or note words that the decision would remove.`);
-  assert.equal(cases.length, 5);
-
-  // keeping what is there is fine, adding to it is fine, and the record says what the claims held before
+  // the record says what the claims held before, whatever the decision does
+  const w = await setup();
   const h = w.hooks();
   const ok = await openDecisions({
     ...h,
-    decisions: json([
+    decisions: await withSeen(w, [
       { claim: 'c01', verified_tags: [TAG, 'Wordy'], note: '' }, { claim: 'c02', verified_tags: [], note: `Looks fine to me.\n${TAG}: Agent slip. It names the budget.` },
       { claim: 'c03', verified_tags: ['Wordy', TAG], note: 'Two tags, one note.' },
     ]),
@@ -169,13 +173,21 @@ test('S1: open refuses a decision that drops a Verified tag the claim has, or le
   assert.deepEqual(record.claims[0].before, { verified_ids: [hex(w.ids.tag[TAG])], note: '', review_status: 'To review' });
   assert.deepEqual(record.claims[1].before, { verified_ids: [], note: 'Looks fine to me.', review_status: 'To review' });
   assert.deepEqual(record.claims[2].before.verified_ids, [hex(w.ids.tag[TAG]), hex(w.ids.tag.Wordy)].sort());
+  assert.deepEqual(openedOutput(h).split('\n').filter((l) => /^c0\d: /.test(l)), [
+    'c01: tags Context-dependent → Context-dependent, Wordy; note as before',
+    'c02: tags none (as before); note replaced',
+    'c03: tags Context-dependent, Wordy (as before); note as before',
+  ]);
 });
 
-test('S1: the existing note is compared as trimmed text with the line ends made alike', async () => {
+test('S1: the fingerprint folds the line ends and trims the note like check does: a note stored with other line ends is the same claim', async () => {
   const w = await world();
   w.editClaim('c01', { 'Challenged tags notes': '  first line\r\nsecond line  ' });
+  const listed = await seenOf(w, 'c01');
+  w.editClaim('c01', { 'Challenged tags notes': 'first line\nsecond line' });
+  assert.equal(await seenOf(w, 'c01'), listed, 'the same fingerprint');
   const h = w.hooks();
-  const r = await openDecisions({ ...h, decisions: json([{ claim: 'c01', verified_tags: [], note: 'first line\nsecond line\nand mine' }]) });
+  const r = await openDecisions({ ...h, decisions: json([{ claim: 'c01', seen: listed, note: 'first line\nsecond line\nand mine' }]) });
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
 });
 
@@ -184,7 +196,7 @@ test('S1: the existing note is compared as trimmed text with the line ends made 
 test('S2: claims that were not written are reported as not written, not as a mismatch of values (all, one, a mix)', async () => {
   const w = await world();
   const h = w.hooks();
-  await openDecisions({ ...h, decisions: json([{ claim: 'c01', verified_tags: [TAG], note: '' }, { claim: 'c02', verified_tags: [], note: 'y' }, { claim: 'c03', verified_tags: [TAG], note: '' }]) });
+  await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [TAG], note: '' }, { claim: 'c02', verified_tags: [], note: 'y' }, { claim: 'c03', verified_tags: [TAG], note: '' }]) });
   claudeWrites(w, openedOutput(h), [1]); // the hook refused, or the editor declined, the other two
   const r = await checkDecisions(w.hooks());
   assert.equal(r.exit, 1);
@@ -199,7 +211,7 @@ test('S2: claims that were not written are reported as not written, not as a mis
   // one claim, none written
   const w1 = await world();
   const h1 = w1.hooks();
-  await openDecisions({ ...h1, decisions: json([{ claim: 'c04', verified_tags: [TAG], note: '' }]) });
+  await openDecisions({ ...h1, decisions: await withSeen(w1, [{ claim: 'c04', verified_tags: [TAG], note: '' }]) });
   const one = await checkDecisions(w1.hooks());
   assert.equal(one.report.sentence, 'Decide: 1 of 1 claim was not written.');
   assert.deepEqual(one.report.rows, [[quoted(claimText(4), 40), 'not written', '']]);
@@ -207,19 +219,19 @@ test('S2: claims that were not written are reported as not written, not as a mis
   // a mix: c01 not written, c02 written and then changed by somebody
   const w2 = await world();
   const h2 = w2.hooks();
-  await openDecisions({ ...h2, decisions: json([{ claim: 'c01', verified_tags: [TAG], note: '' }, { claim: 'c02', verified_tags: [TAG], note: '' }]) });
+  await openDecisions({ ...h2, decisions: await withSeen(w2, [{ claim: 'c01', verified_tags: [TAG], note: '' }, { claim: 'c02', verified_tags: [TAG], note: '' }]) });
   claudeWrites(w2, openedOutput(h2), [1]);
   w2.fake.editRow(w2.ids.claim.c02, { 'Verified tags': [] });
   const mix = await checkDecisions(w2.hooks());
   assert.equal(mix.report.sentence, 'Decide: 2 of 2 claims did not read back as decided.');
   assert.deepEqual(mix.report.rows, [[quoted(claimText(1), 40), 'not written', ''], [quoted(claimText(2), 40), 'Verified tags', '']]);
-  assert.match(mix.report.next, /^Next: open All claims \(/, 'c02 is Reviewed, so it needs a hand');
+  assert.equal(mix.report.next, `Next: type /claim-tagger decide again and name ${q(1)} and ${q(2)}.`, 'c02 is Reviewed, and a Reviewed claim can be decided again (P22, decision 120)');
 });
 
 test('S2: a claim written in part (the tags and the note, not the Review status) is a mismatch of Review status, and is still open to decide', async () => {
   const w = await world();
   const h = w.hooks();
-  await openDecisions({ ...h, decisions: json([{ claim: 'c01', verified_tags: [TAG], note: 'Done.' }]) });
+  await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [TAG], note: 'Done.' }]) });
   w.fake.editRow(w.ids.claim.c01, { 'Verified tags': [w.ids.tag[TAG]], 'Challenged tags notes': 'Done.' });
   const r = await checkDecisions(w.hooks());
   assert.equal(r.exit, 1);
@@ -232,7 +244,7 @@ test('S3: the Next line of a mismatch names three claims and counts the rest; th
   const w = await makeWorld({ claims: 8, claimRows: Object.fromEntries([1, 2, 3, 4, 5, 6, 7, 8].map((n) => [cid(n), waits(0.5 + n / 100)])) });
   const h = w.hooks();
   const decisions = [1, 2, 3, 4, 5, 6, 7].map((n) => ({ claim: cid(n), verified_tags: [], note: '' }));
-  await openDecisions({ ...h, decisions: json(decisions) });
+  await openDecisions({ ...h, decisions: await withSeen(w, decisions) });
   const r = await checkDecisions(w.hooks());
   assert.equal(r.report.sentence, 'Decide: 7 of 7 claims were not written.');
   assert.equal(r.report.rows.length, 5);
@@ -241,10 +253,10 @@ test('S3: the Next line of a mismatch names three claims and counts the rest; th
   assert.deepEqual(lintReport(r.markdown), []);
 });
 
-test('S3: when every claim that differs is Reviewed or gone the Next line sends the editor to All claims; a claim that is gone is "not found" (D27)', async () => {
+test('S3: when every claim that differs is gone the Next line sends the editor to All claims (a claim that is gone is "not found", D27); with one that can be decided again among them it says to decide again', async () => {
   const w = await world();
   const h = w.hooks();
-  const opened = await openDecisions({ ...h, decisions: json([{ claim: 'c01', verified_tags: [TAG], note: '' }]) });
+  const opened = await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [TAG], note: '' }]) });
   claudeWrites(w, openedOutput(h));
   // the record names a page that the new pull does not hold
   const file = join(opened.runDir, 'decisions.json');
@@ -256,6 +268,32 @@ test('S3: when every claim that differs is Reviewed or gone the Next line sends 
   assert.equal(r.report.sentence, 'Decide: 1 of 1 claim did not read back as decided.');
   assert.deepEqual(r.report.rows, [[quoted(claimText(1), 40), 'not found', '']]);
   assert.equal(r.report.next, `Next: open All claims (${tableLink(w.config, 'claims')}), check ${q(1)} and correct it by hand.`);
+
+  // two gone: the same line, naming both
+  const w2 = await world();
+  const h2 = w2.hooks();
+  const opened2 = await openDecisions({ ...h2, decisions: await withSeen(w2, [{ claim: 'c01', verified_tags: [TAG] }, { claim: 'c02', note: 'x' }, { claim: 'c03', note: 'y' }]) });
+  claudeWrites(w2, openedOutput(h2), [2]); // c03 is written; c01 is gone, c02 gone, and c03 reads back
+  const file2 = join(opened2.runDir, 'decisions.json');
+  const record2 = readJson(file2);
+  record2.claims[0].page_id = 'aaaaaaaaaaaa4000a000aaaaaaaaaaaa';
+  record2.claims[1].page_id = 'bbbbbbbbbbbb4000b000bbbbbbbbbbbb';
+  writeFileSync(file2, JSON.stringify(record2));
+  const r2 = await checkDecisions(w2.hooks());
+  assert.deepEqual(r2.report.rows, [[quoted(claimText(1), 40), 'not found', ''], [quoted(claimText(2), 40), 'not found', '']]);
+  assert.equal(r2.report.next, `Next: open All claims (${tableLink(w2.config, 'claims')}), check ${q(1)} and ${q(2)} and correct them by hand.`);
+
+  // a claim that is gone next to one that did not read back: a person looks for the one that is gone, but only the other can be decided again, and the Next line names it
+  const w3 = await world();
+  const h3 = w3.hooks();
+  const opened3 = await openDecisions({ ...h3, decisions: await withSeen(w3, [{ claim: 'c01', verified_tags: [TAG] }, { claim: 'c02', note: 'x' }]) });
+  const file3 = join(opened3.runDir, 'decisions.json');
+  const record3 = readJson(file3);
+  record3.claims[0].page_id = 'aaaaaaaaaaaa4000a000aaaaaaaaaaaa';
+  writeFileSync(file3, JSON.stringify(record3));
+  const r3 = await checkDecisions(w3.hooks()); // nothing was written to c02
+  assert.deepEqual(r3.report.rows, [[quoted(claimText(1), 40), 'not found', ''], [quoted(claimText(2), 40), 'not written', '']]);
+  assert.equal(r3.report.next, `Next: type /claim-tagger decide again and name ${q(2)}.`);
 });
 
 // ---- the survivors of the mutation run (S8) ------------------------------------------------------------------------------------------------
@@ -263,11 +301,11 @@ test('S3: when every claim that differs is Reviewed or gone the Next line sends 
 test('D6: a claim whose page is protected is refused by open as if it were not in the Claims table', async () => {
   const w = await world();
   w.config.notion.protected_page_ids.push(hex(w.ids.claim.c01));
-  const r = await openDecisions({ ...w.hooks(), decisions: json([{ claim: 'c01', verified_tags: [], note: '' }]) });
+  const r = await openDecisions({ ...w.hooks(), decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [], note: '' }]) });
   assert.equal(r.exit, 2);
   assert.match(r.report.sentence, /is not in the Claims table\.$/);
   assert.ok(!existsSync(markerPath(w.root)));
-  const fine = await openDecisions({ ...w.hooks(), decisions: json([{ claim: 'c02', verified_tags: [], note: '' }]) });
+  const fine = await openDecisions({ ...w.hooks(), decisions: await withSeen(w, [{ claim: 'c02', verified_tags: [], note: '' }]) });
   assert.equal(fine.exit, 0, 'the other claims are not affected');
 });
 
@@ -312,7 +350,7 @@ test('S5: a folder named DECIDING is no marker for open, check or readMarker, an
   mkdirSync(join(w.root, 'runs', 'DECIDING'), { recursive: true });
   assert.equal(readMarker(w.root, w.now), null);
   const h = w.hooks();
-  const r = await openDecisions({ ...h, decisions: json([{ claim: 'c01', verified_tags: [], note: '' }]) });
+  const r = await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [], note: '' }]) });
   assert.equal(r.exit, 2);
   assert.equal(r.report.sentence, 'Decide: nothing was done, because another decide run is still open.');
   assert.ok(!existsSync(join(r.runDir, 'decisions.json')), 'a run that never opened leaves no record for check to find');
@@ -330,22 +368,22 @@ test('open names the stale run it dropped and how to read it back', async () => 
   const openedAt = new Date(NOW.getTime() - 3 * 3600e3).toISOString();
   writeFileSync(markerPath(w.root), `${JSON.stringify({ run_id: 'old-run-1', opened_at: openedAt, page_ids: [], root: w.root })}\n`);
   const h = w.hooks();
-  const r = await openDecisions({ ...h, decisions: json([{ claim: 'c01', verified_tags: [], note: '' }]) });
+  const r = await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [], note: '' }]) });
   assert.equal(r.exit, 0);
   const lines = openedOutput(h).split('\n');
   assert.equal(lines[1], `A stale decide run was dropped: old-run-1 (opened ${openedAt}). decide.mjs check --run old-run-1 reads it back.`);
-  assert.equal(lines[2], '1. c01');
+  assert.equal(lines[2], 'c01: tags none (as before); note as before');
 
   const w2 = await world();
   writeFileSync(markerPath(w2.root), `${JSON.stringify({ opened_at: openedAt })}\n`);
   const h2 = w2.hooks();
-  await openDecisions({ ...h2, decisions: json([{ claim: 'c01', verified_tags: [], note: '' }]) });
+  await openDecisions({ ...h2, decisions: await withSeen(w2, [{ claim: 'c01', verified_tags: [], note: '' }]) });
   assert.equal(openedOutput(h2).split('\n')[1], 'A stale marker of an unreadable decide run was dropped.');
   // a fresh open has no such line
   const w3 = await world();
   const h3 = w3.hooks();
-  await openDecisions({ ...h3, decisions: json([{ claim: 'c01', verified_tags: [], note: '' }]) });
-  assert.equal(openedOutput(h3).split('\n')[1], '1. c01');
+  await openDecisions({ ...h3, decisions: await withSeen(w3, [{ claim: 'c01', verified_tags: [], note: '' }]) });
+  assert.equal(openedOutput(h3).split('\n')[1], 'c01: tags none (as before); note as before');
 });
 
 test('list puts the agent\'s reasons and the rules between their own tags and defuses a closing tag inside them', async () => {
@@ -364,7 +402,7 @@ test('the printed call and the record of a decision carry the Rulebook ids and t
   const w = await world();
   const h = w.hooks();
   const raw = '[{"claim":"c01","verified_tags":["Context-dependent"],"note":"It\\u0027s fine; really"}]';
-  const r = await openDecisions({ ...h, decisions: raw });
+  const r = await openDecisions({ ...h, decisions: raw.replace('"claim":"c01",', `"claim":"c01","seen":"${await seenOf(w, 'c01')}",`) });
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assert.equal(callsIn(openedOutput(h))[0].properties['Challenged tags notes'], "It's fine; really");
 });
