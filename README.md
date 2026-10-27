@@ -4,14 +4,14 @@ Agents of the Geo content team, one folder per agent.
 
 | Agent | Folder | Status |
 |---|---|---|
-| **Claim tagger with its editor feedback loop**, built as an MVP in October 2026 from the overnight research "Learning from editor feedback" | `agents/claim-tagger-mvp/` | The live build. Works under the Notion page "Feedback Distillation MVP". Runbook: `agents/claim-tagger-mvp/AGENT.md` |
+| **Claim tagger with its editor feedback loop**, built as an MVP in October 2026 from the overnight research "Learning from editor feedback" | `agents/claim-tagger-mvp/` | The live build. Works under the Notion page "Claim tagger" (the hub): one table, Claims, of 200 Geo claims tagged Debate, which people decide on and the rulebook learns from. The first build of 15 to 22 October sits in the hub's archive page, read only. Runbook: `agents/claim-tagger-mvp/AGENT.md` |
 | Claim tagger, previous build | `agents/claim-tagger/` | Read-only history: kept for orientation, never run against Notion again, never edited. The live build still imports eight small helper modules from its `scripts/lib/`, so the folder stays |
 
 ## Install
 
 1. Node 22 or later (built with Node 26). No npm dependencies: `npm test` runs `node --test tests/`.
 2. Claude Code on the subscription. The headless judge uses `claude -p` with a pinned model; no API key.
-3. A Notion integration token for scripted reads and writes: copy `.env.example` to `.env` and set `NOTION_TOKEN=...`. The line must read exactly `NOTION_TOKEN=<the token>`, with no quotes, spaces or comment; `.env` is git-ignored and never printed. The integration must be connected to the Notion page "Feedback Distillation MVP" (page → ⋯ → Connections). Without a token (no `.env`, an empty value or the placeholder from `.env.example`) every script that reaches Notion stops with exit 2 and a report that says so, and nothing is written. The Notion tables were set up once by the engineer with the `setup.mjs` sequence in `agents/claim-tagger-mvp/AGENT.md` (section 3); editors never run it.
+3. A Notion integration token for scripted reads and writes: copy `.env.example` to `.env` and set `NOTION_TOKEN=...`. The line must read exactly `NOTION_TOKEN=<the token>`, with no quotes, spaces or comment; `.env` is git-ignored and never printed. The integration must be connected to the Notion page "Claim tagger" (page → ⋯ → Connections). If your checkout is from before 27 October 2026, run `git pull` before anything else: older code still names the tables that are now in the archive, and would write to them. Without a token (no `.env`, an empty value or the placeholder from `.env.example`) every script that reaches Notion stops with exit 2 and a report that says so, and nothing is written. The Notion tables were set up once by the engineer with the `setup.mjs` sequence in `agents/claim-tagger-mvp/AGENT.md` (section 3); editors never run it.
 4. Open Claude Code in this folder. The skills `/claim-tagger` and `/claim-tagger-walkthrough` are discovered from `.claude/skills/`; the first interactive session asks you to trust the folder, after which `.claude/settings.json` (the allow rules for the scripts and the guard hook) applies.
 5. Headless use (`claude -p`): a folder never opened interactively is untrusted, so pass the settings explicitly, and in Git Bash stop MSYS from rewriting the leading slash of the skill name:
 
@@ -32,7 +32,7 @@ Agents of the Geo content team, one folder per agent.
 /claim-tagger promote "<title>"   run the safety check on the approved change; a PASS puts the new rule live
 ```
 
-These are the four commands an editor types; the title can be left out when only one change is Approved. After a PASS the follow-up runs by itself and marks the rows the change rests on Fixed or Still wrong; a FAIL or HOLD leaves the rulebook as it is. `/claim-tagger follow-up` only repeats the follow-up when a promote stopped before it. Setting things up (`setup`) and putting an earlier rule back (`rollback`, `restore`) are the engineer's, in `agents/claim-tagger-mvp/AGENT.md`. A new editor starts with `/claim-tagger-walkthrough`, which builds a practice page under a Notion page they name and says what to type next.
+These are the four commands an editor types; the title can be left out when only one change is Approved. They act on Claims, the real training table: every decision made there is training data, and only people make them. After a PASS the follow-up runs by itself and marks the rows the change rests on Fixed or Still wrong; a FAIL or HOLD leaves the rulebook as it is. `/claim-tagger follow-up` only repeats the follow-up when a promote stopped before it. Setting things up (`setup`) and putting an earlier rule back (`rollback`, `restore`) are the engineer's, in `agents/claim-tagger-mvp/AGENT.md`. A new editor starts with `/claim-tagger-walkthrough`, which builds a practice page under the hub's Onboarding page and says what to type next; the practice page's own commands are `/claim-tagger demo ...`.
 
 Plain words also work: "tag the new claims and tell me what is waiting for me".
 
@@ -62,7 +62,8 @@ CLAUDE.md                      hard rules + routing
 agents/claim-tagger-mvp/       the live agent
   AGENT.md README.md config.json rubric/ prompts/ schemas/ evals/ setup/ walkthrough/ scripts/ runs/
 agents/claim-tagger/           the previous build, read-only history
-docs/mvp-2026-11/              the live build's session: contracts, decisions, structure, work log, evidence, report
+docs/mvp-2026-11/              the live build's session: contracts, decisions, structure, work log, evidence, report;
+                               HUB-AND-GEO-CLAIMS.md is the plan of 27 October (the hub, Claims from Geo, the archive)
 docs/mvp-2026-10/              the previous build's session
 tests/                         node:test unit tests and fixtures (tests/mvp/ is the live agent's)
 ```

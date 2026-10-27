@@ -17,7 +17,7 @@ Status: nothing is paused; 46 rows and 1 rule change wait for you, more than fit
 | Rulebook | 13 tags, edition 2026-11-04.2 |
 | Your queue | 46 rows, lowest confidence first |
 | Lessons waiting | 1 rule change to approve |
-| Last run | Tag · 4 Nov 09:12 · 214 claims |
+| Last run | Tag · 4 Nov 09:12 · 200 claims |
 
 Next: start at the top of Your queue (link).
 
@@ -87,13 +87,15 @@ Next: decide your four claims in Your queue (link).
 4. A decided claim stays in Your queue until the agent reads it again, which the follow-up of step 7 does for the claims the rule change rests on.
 5. When all four claims are Reviewed, type /claim-tagger demo distill.
 
-### tag (real claims, the first run: Context-dependent only)
+### tag (Claims, the first run: Context-dependent only)
 
-Tag: the agent read 214 claims for Context-dependent; 9 wait for you.
+The real training table, Claims, holds 200 Geo claims; the decided audit claims among them keep the editor's tags.
+
+Tag: the agent read 200 claims for Context-dependent; 9 wait for you.
 
 | What | Result |
 |---|---|
-| Claims read | 214 |
+| Claims read | 200 |
 | Carrying Context-dependent | 31 claims (earlier decisions included) |
 | New rows in Your queue | 9, lowest confidence first |
 
@@ -245,9 +247,9 @@ Next: when your Claude allowance is back, type /claim-tagger demo tag again; it 
 
 ### Walkthrough: start
 
-If the request has no link, the skill first asks one question and does nothing else: "Under which Notion page should the demo go? Paste a link."
+If the request has no link, the skill first asks one question and does nothing else: "Under which Notion page should the demo go? Paste a link, or say Onboarding to use the Onboarding page of the hub (link)." Practice pages are for onboarding, and they go under Onboarding.
 
-Walkthrough: your practice page is ready under Editor onboarding.
+Walkthrough: your practice page is ready under Onboarding.
 
 | Table | Now |
 |---|---|

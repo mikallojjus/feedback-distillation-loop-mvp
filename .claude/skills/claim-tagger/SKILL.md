@@ -1,6 +1,6 @@
 ---
 name: claim-tagger
-description: Run the claim tagger's editor feedback loop against the Notion page "Feedback Distillation MVP" - tag the copied claims on Context-dependent, show what waits in the queue, turn the editor's decisions into a proposed rule change, run the safety check and switch to an approved change, repeat the follow-up, roll back a change, or show the agent's state. Use when an editor or engineer asks to run the tagging loop, check what is waiting, tag claims, distill feedback, promote or roll back a rule change, or asks about the agent's state. Subcommands - status, tag, distill, promote, follow-up, rollback, setup, demo <subcommand>.
+description: Run the claim tagger's editor feedback loop against the Notion page "Claim tagger" - tag the claims in Claims on Context-dependent, show what waits in the queue, turn the editor's decisions into a proposed rule change, run the safety check and switch to an approved change, repeat the follow-up, roll back a change, or show the agent's state. Use when an editor or engineer asks to run the tagging loop, check what is waiting, tag claims, distill feedback, promote or roll back a rule change, or asks about the agent's state. Subcommands - status, tag, distill, promote, follow-up, rollback, setup, demo <subcommand> (the practice page's commands, for onboarding).
 ---
 
 # Claim tagger
@@ -18,6 +18,8 @@ description: Run the claim tagger's editor feedback loop against the Notion page
 
 ## Subcommands
 
+Without `demo`, every subcommand acts on Claims, the real training table under the hub "Claim tagger": 200 Geo claims, decided by people only, and every decision there is training data the rulebook learns from.
+
 | You are asked | Commands, in order |
 |---|---|
 | status (what waits, which edition is in force) | `node agents/claim-tagger-mvp/scripts/status.mjs` |
@@ -33,7 +35,7 @@ For `tag`, the report to relay is the one `propose.mjs` prints; what `pull.mjs` 
 
 ## Demo mode
 
-A practice page, made by `/claim-tagger-walkthrough`, has its own small tables under the Demos sub-page. The demo subcommands run the same scripts against the newest practice page under Demos (the newest finished page under the Demos sub-page that the script can read; a page under Demo tests is never the one) through the walkthrough runner: replace `node agents/claim-tagger-mvp/scripts/<x>.mjs` with `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run <x>` and keep the arguments. `promote` and `followup` without `--lesson` take the demo's only Approved (or Live) rule change. Every demo report starts with "Demo · ", and its links point at the practice page's views. Every demo report names the practice page it acted on. Steps 3 and 5 of the practice page happen in Notion: never fill those columns for the editor; the report's Next line links the view, and the Demo checklist of `references/guide.md` under the report says what to fill in there, in the words of the page. Step 4, `demo distill`, first reads each of the editor's decisions (the agent writes its reading in the Agent reading column of the Claims table, and asks the model only for a decision whose note does not open with a reason word) and then drafts a rule change from the readings that blame the rule; when a decision has no note, its Next line points at Needs your note. The practice page has four claims for the editor: two that blame rule 3, one that blames the agent and one the editor agrees on. Step 7 needs no command, because the follow-up runs by itself after a PASS; `demo follow-up` only repeats it after a run that stopped early. No git commit happens after a demo promote.
+A practice page, made by `/claim-tagger-walkthrough` to onboard a new editor, has its own small tables under the hub's Onboarding page. The demo subcommands are the practice page's commands, the ones its seven steps name. They run the same scripts against the newest practice page under Onboarding (the newest finished page there that the script can read; a page in the hub's archive is read only and never the one) through the walkthrough runner: replace `node agents/claim-tagger-mvp/scripts/<x>.mjs` with `node agents/claim-tagger-mvp/scripts/walkthrough.mjs run <x>` and keep the arguments. `promote` and `followup` without `--lesson` take the demo's only Approved (or Live) rule change. Every demo report starts with "Demo · ", and its links point at the practice page's views. Every demo report names the practice page it acted on. Steps 3 and 5 of the practice page happen in Notion and are the editor's alone: no command fills those columns, and neither do you; the report's Next line links the view, and the Demo checklist of `references/guide.md` under the report says what to fill in there, in the words of the page. Step 4, `demo distill`, first reads each of the editor's decisions (the agent writes its reading in the Agent reading column of the Claims table, and asks the model only for a decision whose note does not open with a reason word) and then drafts a rule change from the readings that blame the rule; when a decision has no note, its Next line points at Needs your note. The practice page has four claims for the editor: two that blame rule 3, one that blames the agent and one the editor agrees on. Step 7 needs no command, because the follow-up runs by itself after a PASS; `demo follow-up` only repeats it after a run that stopped early. No git commit happens after a demo promote.
 
 ## Reporting style
 
@@ -64,7 +66,7 @@ Status: nothing is paused; 46 rows and 1 rule change wait for you, more than fit
 | Rulebook | 13 tags, edition 2026-11-04.2 |
 | Your queue | 46 rows, lowest confidence first |
 | Lessons waiting | 1 rule change to approve |
-| Last run | Tag · 4 Nov 09:12 · 214 claims |
+| Last run | Tag · 4 Nov 09:12 · 200 claims |
 
 Next: start at the top of Your queue (link).
 
