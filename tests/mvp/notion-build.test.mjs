@@ -932,7 +932,9 @@ test('the structure file written from the repository proposal is the file the bu
 
 test('parseViewFilter reads "is not <value>", "contains" and "does not contain", and the clauses that follow them', () => {
   const claims = revisedStructure().tables.claims;
-  assert.deepEqual(parseViewFilter('Review status is not Reviewed', claims), { property: 'Review status', select: { does_not_equal: 'Reviewed' } });
+  assert.deepEqual(parseViewFilter('Review status is not Reviewed', claims), {
+    or: [{ property: 'Review status', select: { does_not_equal: 'Reviewed' } }, { property: 'Review status', select: { is_empty: true } }],
+  }, 'a select "is not" keeps the rows with no value (P13): a new claim has no Review status');
   assert.deepEqual(parseViewFilter('Agent reasons contains disagrees', claims), { property: 'Agent reasons', rich_text: { contains: 'disagrees' } });
   assert.deepEqual(parseViewFilter('Agent reasons contains "waits for an editor"', claims), { property: 'Agent reasons', rich_text: { contains: 'waits for an editor' } }, 'quotes around the text are dropped');
   assert.deepEqual(parseViewFilter('Agent reasons does not contain nothing waits', claims), { property: 'Agent reasons', rich_text: { does_not_contain: 'nothing waits' } });
@@ -945,7 +947,7 @@ test('parseViewFilter reads "is not <value>", "contains" and "does not contain",
   assert.deepEqual(parseViewFilter('Why wrong (old) is not empty, and Challenged tags notes is empty', claims), {
     and: [{ property: 'Why wrong (old)', select: { is_not_empty: true } }, { property: 'Challenged tags notes', rich_text: { is_empty: true } }],
   }, 'a retired column can still be named in a filter');
-  assert.deepEqual(parseViewFilter('Review status is not Reviewed, and Agent reasons contains for an editor, and Agent reasons does not contain nothing waits', claims).and.map((f) => Object.keys(f)[1]), ['select', 'rich_text', 'rich_text']);
+  assert.deepEqual(parseViewFilter('Review status is not Reviewed, and Agent reasons contains for an editor, and Agent reasons does not contain nothing waits', claims).and.map((f) => Object.keys(f)[1] ?? Object.keys(f)[0]), ['or', 'rich_text', 'rich_text']);
   assert.deepEqual(parseViewFilter('Agent tags (old) is empty', claims), { property: 'Agent tags (old)', rich_text: { is_empty: true } }, 'a column name with brackets, and one that starts with the name of another column');
   assert.throws(() => parseViewFilter('Review status is not Done', claims, 'view "V"'), /view "V": "Done" is not a value of "Review status"/);
   assert.throws(() => parseViewFilter('Review status contains Rev', claims, 'view "V"'), /view "V": "contains" needs a text column, and "Review status" is a select/);

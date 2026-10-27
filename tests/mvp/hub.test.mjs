@@ -7,6 +7,7 @@ import { TABLES, tableEntry } from '../../agents/claim-tagger-mvp/scripts/lib/co
 import {
   HUB_LINK_TEXT, StructureError, defaultViewPlan, hubDifferences, hubPlan, ownViewName, parseViewFilter, planStructure, readHub, runStructure, validateStructure, verifyStructure, withGeoOptions,
 } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
+import { claimWaits } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
 import { builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, newWorld, readAuditFile, readJson, revisedStructure, makePick, writeInputs, SPACE_NAMES, tmp } from './helpers/setup-world.mjs';
@@ -24,8 +25,8 @@ const TOP = [NOTE, ...LINKS].map((l) => `paragraph|${l}`); // the first four blo
 const TABLE_TITLES = ['Claims', 'Rulebook', 'Rule changes', 'Tag decisions', 'Agent settings'];
 
 /** A fresh world (the hub page called Claim tagger), the plan from the fresh structure, a builder client. */
-function world() {
-  const w = newWorld({ structure: 'fresh' });
+function world(fakeOptions = {}) {
+  const w = newWorld({ structure: 'fresh', fakeOptions });
   const structure = forFake(freshStructure());
   const plan = planStructure(structure, w.config);
   return { ...w, structure, plan, client: builderClient(w.fake) };
@@ -53,7 +54,7 @@ test('the fresh structure file is valid: made from the specification, Onboarding
   assert.deepEqual(Object.values(s.tables).map((t) => t.title), ['Rulebook', 'Claims', 'Tag decisions', 'Rule changes', 'Agent settings']);
   for (const t of Object.values(s.tables)) for (const c of t.columns) assert.ok(c.retired === undefined && c.renamed_from === undefined && !/\(old\)/.test(c.name), `${t.title}.${c.name}`);
   for (const v of s.views) assert.ok(v.renamed_from === undefined && !v.columns.some((c) => /\(old\)/.test(c)), v.name);
-  assert.deepEqual(s.views.map((v) => v.name), ['Your queue', 'Needs your note', 'Agent disagreed', 'Your queue (ledger)', 'Needs your note (ledger)', 'Lessons waiting', 'Rulebook']);
+  assert.deepEqual(s.views.map((v) => v.name), ['Your queue', 'Needs your note', 'Agent disagreed', 'Your queue (ledger)', 'Needs your note (ledger)', 'Lessons waiting'], 'six named views: the Rulebook has only its own view, called Rulebook');
   // the Claims columns, in this order
   assert.deepEqual(s.tables.claims.columns.map((c) => c.name), [
     'Geo Name', 'Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', 'Agent reading',
@@ -77,7 +78,9 @@ test('the fresh structure file is valid: made from the specification, Onboarding
   assert.ok(!s.views.some((v) => v.columns.includes('Geo Space')), 'no view shows a Geo column but Geo Name');
   // the table's own view, called and arranged by the structure (P15)
   assert.deepEqual(s.tables.claims.default_view, { name: 'All claims', columns: ['Geo Name', 'Geo Space', 'Agent tags', 'Agent status', 'Verified tags', 'Review status', 'Geo URL'] });
-  assert.deepEqual(s.tables.rulebook.default_view, { columns: ['Name', 'Category', 'Status', 'When to use', 'Example Claims'] });
+  assert.deepEqual(s.tables.rulebook.default_view, { name: 'Rulebook', columns: ['Name', 'Category', 'Status', 'When to use', 'Example Claims'] }, 'the table\'s own view is the Rulebook: no second view with the same five columns');
+  assert.ok(!s.views.some((v) => v.table === 'rulebook'), 'and no named view of the Rulebook table');
+  assert.equal(s.views.length, 6);
   assert.deepEqual(s.tables.rule_changes.default_view, { columns: ['Lesson', 'Tag', 'Status', 'Current text', 'Proposed text', 'Safety check result'] });
   assert.deepEqual(s.tables.tag_decisions.default_view, { columns: ['Claim', 'Tag', 'Agent proposal', 'Tag outcome', 'Agent reading'] });
   assert.deepEqual(s.tables.agent_settings.default_view, { columns: s.tables.agent_settings.columns.map((c) => c.name) }, 'Agent settings shows all its columns');
@@ -152,9 +155,12 @@ test('defaultViewPlan: default_view shows exactly its columns and hides the rest
   assert.deepEqual(claims.shown, ['Geo Name', 'Geo Space', 'Agent tags', 'Agent status', 'Verified tags', 'Review status', 'Geo URL']);
   assert.deepEqual(claims.hidden, s.tables.claims.columns.map((c) => c.name).filter((n) => !claims.shown.includes(n)));
   assert.equal(claims.shown.length + claims.hidden.length, s.tables.claims.columns.length);
-  assert.equal(defaultViewPlan(s, 'rulebook').name, null, 'a table that gives no name keeps Notion\'s');
+  assert.equal(defaultViewPlan(s, 'rulebook').name, 'Rulebook', 'the Rulebook\'s own view is called Rulebook');
+  assert.equal(defaultViewPlan(s, 'rule_changes').name, null, 'a table that gives no name keeps Notion\'s');
+  assert.ok(['claims', 'rulebook', 'rule_changes', 'tag_decisions', 'agent_settings'].every((t) => defaultViewPlan(s, t).first === true), 'a default_view is the first tab of its table');
   const old = revisedStructure();
   const arranged = defaultViewPlan(old, 'claims');
+  assert.equal(arranged.first, undefined, 'arrange_default_view leaves the named views in front of the own view');
   assert.equal(arranged.name, null);
   assert.deepEqual(arranged.shown, old.tables.claims.columns.filter((c) => !c.retired).map((c) => c.name));
   assert.deepEqual(arranged.hidden, old.tables.claims.columns.filter((c) => c.retired).map((c) => c.name));
@@ -209,7 +215,7 @@ test('runStructure with a hub block: the tables in the hub\'s order, their colum
   assert.ok(last(tables.at(-1)) < first('columns'), 'then the columns (the relations need the Rulebook)');
   assert.ok(first('columns') < first('page Onboarding'), 'then the page');
   assert.ok(first('page Onboarding') < first('view'), 'then the views');
-  assert.equal(seq.filter((x) => x === 'view').length, 7);
+  assert.equal(seq.filter((x) => x === 'view').length, 6);
   assert.ok(last('view') < first('blocks'), 'then the hub part');
   assert.equal(seq.filter((x) => x === 'blocks').length, 1, 'the warning line and the link lines go in one request');
   assert.equal(seq.filter((x) => x === 'blocks').length + seq.filter((x) => x === 'view').length + seq.filter((x) => x?.startsWith('table ')).length + 1 + 1, seq.length, 'nothing else was sent');
@@ -572,32 +578,81 @@ test('options set after the build: the table keeps the options it has, and verif
 
 // ---- Your queue empties as you decide (P13) --------------------------------------------------------------------------------------------------------
 
-test('parseViewFilter reads an AND of two conditions on selects, the second with "is not": the filter of Your queue (P13)', () => {
+// "Review status is not Reviewed" is sent as "is not Reviewed, or is empty": a new claim has no Review status, and Notion's documentation does not say whether a bare does_not_equal on a select keeps
+// such a row. The tests run on both readings of the fake (emptySelectIsNot true and false).
+const REVIEWED_OPEN = (column) => ({ or: [{ property: column, select: { does_not_equal: 'Reviewed' } }, { property: column, select: { is_empty: true } }] });
+
+test('parseViewFilter reads an AND of two conditions on selects, the second with "is not": the filter of Your queue (P13); "is not X" is sent as "is not X, or is empty"', () => {
   const claims = freshStructure().tables.claims;
   const waits = { property: 'Agent status', select: { equals: 'Waits for you' } };
-  const open = { property: 'Review status', select: { does_not_equal: 'Reviewed' } };
+  const open = REVIEWED_OPEN('Review status');
   assert.deepEqual(parseViewFilter('Agent status is Waits for you and Review status is not Reviewed', claims), { and: [waits, open] });
   assert.deepEqual(parseViewFilter('Review status is not Reviewed and Agent status is Waits for you', claims), { and: [open, waits] }, 'in the other order too');
+  assert.deepEqual(parseViewFilter('Review status is not Reviewed', claims), open, 'alone it is the or itself');
   assert.throws(() => parseViewFilter('Agent status is Waits for you and Review status is not Done', claims), (e) => e instanceof StructureError && /"Done" is not a value of "Review status"/.test(e.message));
   const plan = planStructure(forFake(freshStructure()), newWorld().config);
-  assert.deepEqual(plan.views.find((v) => v.name === 'Your queue').body.filter, { and: [waits, open] }, 'the plan sends it as one AND');
+  assert.deepEqual(plan.views.find((v) => v.name === 'Your queue').body.filter, { and: [waits, open] }, 'the plan sends one AND with the or inside it: two levels, which the views API allows');
   assert.deepEqual(plan.views.find((v) => v.name === 'Needs your note').body.filter, { property: 'Agent reading', rich_text: { contains: 'without your note' } }, 'the other two views are as they were');
+  // the words in structure.json, which the frozen walkthrough manifest repeats, are the same as before
+  assert.equal(freshStructure().views.find((v) => v.name === 'Your queue').filter, 'Agent status is Waits for you and Review status is not Reviewed');
 });
 
-test('the filter of Your queue at work on the rows of the built table: a claim waits until it is Reviewed, whatever its Agent status says; an empty Review status waits too', async () => {
-  const w = world();
+test('the filter of Your queue at work on the rows of the built table, on either reading of an empty select: a claim with no Review status that waits is listed, a Reviewed one is not; the bare filter of before would lose the new claims on the strict reading', async () => {
+  for (const emptySelectIsNot of [true, false]) {
+    const w = world({ emptySelectIsNot });
+    assert.equal((await run(w)).ok, true);
+    const entry = tableEntry(w.config, 'claims');
+    const rows = [
+      ['waits, to review', 'Waits for you', 'To review'],
+      ['waits, no review status', 'Waits for you', null],
+      ['waits, decided', 'Waits for you', 'Reviewed'],
+      ['done, no review status', 'Done', null],
+      ['done, decided', 'Done', 'Reviewed'],
+      ['disagrees, decided', 'Disagrees with your decision', 'Reviewed'],
+      ['not read yet, no review status', null, null],
+    ];
+    for (const [name, status, review] of rows) w.fake.addRow(entry.database_id, { 'Geo Name': name, ...(status ? { 'Agent status': status } : {}), ...(review ? { 'Review status': review } : {}) });
+    const listed = async (filter) => (await w.client.queryDataSourceAll(entry.data_source_id, { filter })).map((p) => p.properties['Geo Name'].title.map((t) => t.plain_text).join('')).sort();
+    const queue = w.fake.views(entry.database_id).find((v) => v.name === 'Your queue');
+    assert.deepEqual(queue.filter, { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, REVIEWED_OPEN('Review status')] }, 'the view in Notion has the new filter');
+    assert.deepEqual(await listed(queue.filter), ['waits, no review status', 'waits, to review'], `emptySelectIsNot ${emptySelectIsNot}: a Waits for you claim with an empty Review status is listed, a Reviewed one is not`);
+    // the same rows, as status.mjs counts them (claimWaits: Waits for you and not Reviewed, an empty Review status being not Reviewed)
+    const counted = rows.filter(([, status, review]) => claimWaits({ agent_status: status, review_status: review })).map(([name]) => name).sort();
+    assert.deepEqual(counted, await listed(queue.filter), 'status counts what the view lists');
+    const bare = { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { property: 'Review status', select: { does_not_equal: 'Reviewed' } }] };
+    assert.deepEqual(await listed(bare), emptySelectIsNot ? ['waits, no review status', 'waits, to review'] : ['waits, to review'], 'the old filter: on the strict reading it loses every claim that has no Review status yet');
+  }
+});
+
+test('a second build sends nothing for Your queue; a view that still has the bare filter of before is brought to the new one by the update path, once, and verify finds no difference either way', async () => {
+  const w = world({ emptySelectIsNot: false });
   assert.equal((await run(w)).ok, true);
   const entry = tableEntry(w.config, 'claims');
-  const add = (name, status, review) => w.fake.addRow(entry.database_id, { 'Geo Name': name, ...(status ? { 'Agent status': status } : {}), ...(review ? { 'Review status': review } : {}) });
-  add('waits, to review', 'Waits for you', 'To review');
-  add('waits, no review status', 'Waits for you', null);
-  add('waits, decided', 'Waits for you', 'Reviewed');
-  add('done, no review status', 'Done', null);
-  add('done, decided', 'Done', 'Reviewed');
-  add('disagrees, decided', 'Disagrees with your decision', 'Reviewed');
-  const filter = w.plan.views.find((v) => v.name === 'Your queue').body.filter;
-  const rows = await w.client.queryDataSourceAll(entry.data_source_id, { filter });
-  assert.deepEqual(rows.map((p) => p.properties['Geo Name'].title.map((t) => t.plain_text).join('')).sort(), ['waits, no review status', 'waits, to review']);
+  const queue = () => w.fake.views(entry.database_id).find((v) => v.name === 'Your queue');
+  const wanted = { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, REVIEWED_OPEN('Review status')] };
+  assert.deepEqual(queue().filter, wanted);
+  assert.deepEqual((await structureVerify(w)).differences, [], 'the new filter reads back as the structure says (nothing flattens the or inside the and)');
+  const writes = w.fake.writes().length;
+  const again = await run(w);
+  assert.deepEqual([again.ok, again.updated, again.created.views, again.created.views_updated], [true, {}, 0, 0]);
+  assert.equal(w.fake.writes().length, writes, 'not one write');
+
+  // a view made by the build of before: the bare filter
+  const bare = { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { property: 'Review status', select: { does_not_equal: 'Reviewed' } }] };
+  await w.client.updateView(queue().id, { filter: bare });
+  assert.deepEqual(queue().filter, bare);
+  const stale = await structureVerify(w);
+  assert.deepEqual(stale.differences.map((d) => [d.table, d.kind]), [['claims', 'view filter']], 'verify names the old filter');
+  const mark = w.fake.writes().length;
+  const fixed = await run(w);
+  assert.deepEqual(fixed.updated, { claims: { 'Your queue': ['filter'] } }, 'the existing update path sends the filter, and nothing else');
+  assert.equal(w.fake.writes().length, mark + 1, 'one PATCH');
+  assert.deepEqual(queue().filter, wanted);
+  assert.deepEqual((await structureVerify(w)).differences, []);
+  const last = w.fake.writes().length;
+  const once = await run(w);
+  assert.deepEqual([once.updated, once.created.views_updated], [{}, 0]);
+  assert.equal(w.fake.writes().length, last, 'and the next run sends nothing');
 });
 
 // ---- the table's own view and the description under each table (P15, ED-8) --------------------------------------------------------------------------------------
@@ -653,7 +708,8 @@ test('the table\'s own view of every table shows exactly the columns of its defa
   assert.deepEqual(viewsOf(w, 'claims')['My filter'], mine, 'a view somebody made is not touched');
   assert.equal(viewsOf(w, 'claims')['All claims'].shown.length, 7);
   assert.equal(viewsOf(w, 'agent_settings').Table.shown.length, 4, 'Agent settings has no named view and its own view is still arranged');
-  assert.deepEqual(Object.keys(result.views).sort(), ['claims', 'rule_changes', 'rulebook', 'tag_decisions'], 'a table with no named view has no entry among the views made');
+  assert.deepEqual(Object.keys(result.views).sort(), ['claims', 'rule_changes', 'tag_decisions'], 'a table with no named view (the Rulebook, Agent settings) has no entry among the views made');
+  assert.deepEqual(Object.keys(viewsOf(w, 'rulebook')), ['Rulebook'], 'the Rulebook has the one view, its own, and it is called Rulebook');
   // verify is clean, and a second run changes nothing
   const clean = await structureVerify({ ...w, root: w.root });
   assert.deepEqual(clean.differences, []);
@@ -676,12 +732,12 @@ test('verify names a table\'s own view with a column shown that the structure hi
   const entry = tableEntry(config, 'rulebook');
   const ds = w.fake.dataSource(entry.data_source_id);
   const evidence = Object.values(ds.properties).find((p) => p.name === 'Evidence');
-  const view = w.fake.views(entry.database_id).find((v) => v.name === 'Table');
+  const view = w.fake.views(entry.database_id).find((v) => v.name === 'Rulebook');
   await w.client.updateView(view.id, { configuration: { type: 'table', properties: view.configuration.properties.map((p) => (p.property_id === evidence.id ? { ...p, visible: true } : p)) } });
   const extra = await check();
   assert.deepEqual(extra.differences.map((d) => [d.table, d.kind]), [['rulebook', 'view columns']]);
-  assert.match(extra.differences[0].detail, /^"Table" \(the table's own view\): expected Name, Category, Status, When to use, Example Claims; found .*Evidence/);
-  assert.ok(rulebook.Table);
+  assert.match(extra.differences[0].detail, /^"Rulebook" \(the table's own view\): expected Name, Category, Status, When to use, Example Claims; found .*Evidence/);
+  assert.ok(rulebook.Rulebook);
 
   const all = viewsOf(w, 'claims')['All claims'];
   await w.client.updateView(all.id, { name: 'Table' });
@@ -690,12 +746,76 @@ test('verify names a table\'s own view with a column shown that the structure hi
   assert.match(renamed[0].detail, /^the table's own view is called "Table" and the structure calls it "All claims"$/);
 });
 
-test('without the table\'s own view (Notion makes one; a person may have removed it) there is nothing to arrange and verify says nothing about it', async () => {
+test('without the table\'s own view (Notion makes one; a person may have removed it) there is nothing to arrange and verify says nothing about it; the first named view goes to the start, as before', async () => {
   const w = world();
   const result = await run(w);
   assert.equal(result.ok, true, JSON.stringify(result.stopped));
   assert.deepEqual(result.arranged, {});
   assert.deepEqual((await structureVerify({ ...w })).differences, []);
+  assert.deepEqual(tabs(w, 'claims'), ['Your queue', 'Needs your note', 'Agent disagreed']);
+  const first = w.fake.requests.find((q) => q.method === 'POST' && q.path === '/views' && q.body.name === 'Your queue');
+  assert.deepEqual(first.body.position, { type: 'start' }, 'nothing to stand behind');
+  assert.deepEqual(result.warnings, []);
+});
+
+// ---- the table's own view is its first tab (P15, ED-6) ----------------------------------------------------------------------------------------------------
+
+const tabs = (w, table) => w.fake.views(tableEntry(w.config, table).database_id).map((v) => v.name);
+const viewPosts = (w) => Object.fromEntries(w.fake.requests.filter((q) => q.method === 'POST' && q.path === '/views').map((q) => [q.body?.name, q.body?.position]));
+
+test('a fresh build makes each table open on its own view: All claims, Your queue, Needs your note and Agent disagreed on Claims; Rule changes and Tag decisions have their own view first; a rerun sends nothing, and verify is clean', async () => {
+  for (const ownView of ['Default view', 'Table']) {
+    const w = world({ ownView }); // Notion makes a view for every table made through the API; the shared fake makes none unless it is asked to
+    const result = await run(w);
+    assert.equal(result.ok, true, `${ownView}: ${JSON.stringify(result.stopped)}`);
+    assert.deepEqual(tabs(w, 'claims'), ['All claims', 'Your queue', 'Needs your note', 'Agent disagreed'], `${ownView}: Claims opens on All claims`);
+    assert.deepEqual(tabs(w, 'rulebook'), ['Rulebook'], 'the Rulebook has one tab, its own, called Rulebook');
+    assert.deepEqual(tabs(w, 'rule_changes'), [ownView, 'Lessons waiting'], 'Rule changes: its own view keeps Notion\'s name and is first');
+    assert.deepEqual(tabs(w, 'tag_decisions'), [ownView, 'Your queue (ledger)', 'Needs your note (ledger)']);
+    assert.deepEqual(tabs(w, 'agent_settings'), [ownView]);
+    // each named view was asked for right after the one before it, the first right after the table's own view
+    const posted = viewPosts(w);
+    const claimsViews = w.fake.views(tableEntry(w.config, 'claims').database_id);
+    assert.deepEqual(posted['Your queue'], { type: 'after_view', view_id: claimsViews[0].id });
+    assert.deepEqual(posted['Needs your note'], { type: 'after_view', view_id: claimsViews[1].id });
+    assert.deepEqual(posted['Agent disagreed'], { type: 'after_view', view_id: claimsViews[2].id });
+    assert.equal(claimsViews[0].name, 'All claims');
+    assert.ok(Object.values(posted).every((p) => p.type === 'after_view'), 'no view is put at the start any more');
+    assert.deepEqual(result.warnings, []);
+    assert.deepEqual((await structureVerify(w)).differences, [], `${ownView}: verify`);
+    const writes = w.fake.writes().length;
+    const again = await run(w);
+    assert.deepEqual([again.ok, again.updated, again.arranged, again.created.views, again.created.views_updated], [true, {}, {}, 0, 0], `${ownView}: a rerun`);
+    assert.equal(w.fake.writes().length, writes, `${ownView}: not one write`);
+    assert.deepEqual(tabs(w, 'claims'), ['All claims', 'Your queue', 'Needs your note', 'Agent disagreed']);
+  }
+});
+
+test('a view that Notion will not place after the own view is made without a place, and the run says that the tab order may need a drag', async () => {
+  const w = world({ ownView: 'Default view' });
+  w.fake.failNext('POST', /^\/views$/, 400, 1, { message: 'body.position should not be present' });
+  const log = [];
+  const result = await run(w, { log: (l) => log.push(l) });
+  assert.equal(result.ok, true, JSON.stringify(result.stopped));
+  assert.equal(result.created.views, 6, 'every view was made, the refused one on the second ask');
+  assert.equal(result.warnings.length, 1);
+  assert.match(result.warnings[0], /^the view "Your queue" of the table "Claims" was made without its place in the tab bar, so the tab order may need a drag: drag the tab "All claims" to the front of the table "Claims" by hand in Notion$/);
+  assert.ok(log.some((l) => /did not take its place in the tab bar/.test(l)));
+  assert.ok(log.some((l) => /may need a drag/.test(l)), 'and the log says so');
+  assert.equal(w.fake.requests.filter((q) => q.method === 'POST' && q.path === '/views').length, 7, 'six views and one ask that was refused: with a place, then without');
+});
+
+test('a table without a default_view keeps the named views in front of its own view, as before: the practice page\'s Claims (arrange_default_view)', async () => {
+  const w = world({ ownView: 'Table' });
+  const structure = forFake(freshStructure());
+  structure.tables.claims = { ...structure.tables.claims, arrange_default_view: true };
+  delete structure.tables.claims.default_view;
+  const plan = planStructure(structure, w.config);
+  const result = await runStructure({ plan, client: w.client, root: w.root, config: w.config });
+  assert.equal(result.ok, true, JSON.stringify(result.stopped));
+  assert.deepEqual(tabs(w, 'claims'), ['Your queue', 'Needs your note', 'Agent disagreed', 'Table'], 'ours first, Notion\'s own view last');
+  assert.deepEqual(viewPosts(w)['Your queue'], { type: 'start' });
+  assert.deepEqual(tabs(w, 'rule_changes'), ['Table', 'Lessons waiting'], 'the tables that do have a default_view are as in the fresh build');
 });
 
 

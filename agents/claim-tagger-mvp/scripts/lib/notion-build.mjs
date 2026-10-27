@@ -57,7 +57,8 @@
 // Where the ids go. Pages: config.json notion.pages.<key> (demos, demo_tests) and runs/builder/pages.json. Tables: notion.rulebook, notion.claims,
 // notion.databases.<table> (database_id, data_source_id) and runs/builder/databases.json (the table's id and its data source's, under <table> and
 // <table>_data_source). Views: config.json notion.views.<key> = { id, url } for each view that exists (your_queue, needs_your_note, agent_disagreed, your_queue_ledger,
-// needs_your_note_ledger, lessons_waiting, rulebook); the key is left out for a view that could not be made, so the scripts fall back to the table's address. runs/builder/state.json keeps
+// needs_your_note_ledger, lessons_waiting; and rulebook in the structure of the first build, whose Rulebook table has a view of that name; the production structure names none, the table's own view
+// is called Rulebook); the key is left out for a view that could not be made, so the scripts fall back to the table's address. runs/builder/state.json keeps
 // what the last run found, the views that failed included ("views": "failed: <message>").
 //
 // The client must be a builder client (clientFromConfig(config, { apiVersion: BUILDER_API_VERSION })): database creates, data sources and views
@@ -311,8 +312,8 @@ const leaf = (column, condition) => ({ property: column.name, [column.type]: con
 
 /**
  * The data-source query filter for a view's "Rows shown" text, or null for "all rows". The words it reads: "<Column> is empty", "<Column> is not empty",
- * "<Column> is <A> or <B>", "<Column> is not <A>" (a select), "<Column> contains <text>" and "<Column> does not contain <text>" (a text column), clauses
- * joined by ", and ". Values of a select must be options of the column.
+ * "<Column> is <A> or <B>", "<Column> is not <A>" (a select; sent as "is not A, or is empty", so a row with no value is kept), "<Column> contains <text>" and
+ * "<Column> does not contain <text>" (a text column), clauses joined by ", and ". Values of a select must be options of the column.
  */
 export function parseViewFilter(text, table, where = 'view') {
   const source = String(text ?? '').trim();
@@ -341,7 +342,9 @@ export function parseViewFilter(text, table, where = 'view') {
     if (column.type === 'select' && /^not\s/i.test(rest)) {
       const value = rest.slice(4).trim();
       if (!column.options.includes(value)) throw new StructureError(`${where}: "${value}" is not a value of "${name}" (values: ${column.options.join(', ')})`);
-      return leaf(column, { does_not_equal: value });
+      // "is not X" keeps the rows with no value at all, whatever Notion does with a bare `does_not_equal` on an empty select (its documentation does not say, and a new claim has an empty Review
+      // status, P13): the words are the same, the filter sent says "is not X, or is empty". Inside the `and` of a view this is two levels deep, which the views API allows.
+      return { or: [leaf(column, { does_not_equal: value }), leaf(column, { is_empty: true })] };
     }
     let values;
     if (column.type === 'select' || column.type === 'multi_select') {
@@ -735,13 +738,15 @@ export function planStructure(structure, config, { inline = false } = {}) {
 
 /**
  * How the table's own view (Notion's default view, the one the structure's views do not name) is arranged, or null when the structure leaves it alone. { name, shown, hidden }:
- *   default_view { name?, columns }   it shows exactly those columns in that order, every other column hidden, and is called name (null: it keeps Notion's name)  (P15)
- *   arrange_default_view: true        it shows every live column in the structure's order and the retired ones are hidden; the name is left (the practice page's Claims)
+ *   default_view { name?, columns }   it shows exactly those columns in that order, every other column hidden, and is called name (null: it keeps Notion's name)  (P15);
+ *                                     `first` is true: it is the table's first tab, so the named views are made after it (clicking a table on the hub opens it, P15)
+ *   arrange_default_view: true        it shows every live column in the structure's order and the retired ones are hidden; the name is left (the practice page's Claims); no `first`:
+ *                                     the named views keep going in front of it
  */
 export function defaultViewPlan(structure, table) {
   const t = structure.tables[table];
   if (t.default_view) {
-    return { name: t.default_view.name ?? null, shown: [...t.default_view.columns], hidden: t.columns.map((c) => c.name).filter((n) => !t.default_view.columns.includes(n)) };
+    return { name: t.default_view.name ?? null, shown: [...t.default_view.columns], hidden: t.columns.map((c) => c.name).filter((n) => !t.default_view.columns.includes(n)), first: true };
   }
   if (t.arrange_default_view === true) return { name: null, shown: liveColumns(structure, table).map((c) => c.name), hidden: t.columns.filter((c) => c.retired === true).map((c) => c.name) };
   return null;
@@ -1209,7 +1214,18 @@ async function buildViews(ctx) {
       stopWith(ctx, `the views of "${table}"`, e);
       return;
     }
-    let previous = null; // the view before this one in the tab bar: ours go first, in the order of the proposal, ahead of Notion's own default view
+    // `previous` is the view before this one in the tab bar. A table that has a default_view opens on its own view (P15: clicking a table on the hub opens its first tab, which is lean), so
+    // the named views are made after it, one after the other, in the order of the structure: `previous` starts as the id of that view, found the way the arranging below finds it. A table
+    // without a default_view (the practice page's, the earlier builds') keeps its own view last, as it was: ours go first, ahead of Notion's own default view. A table whose own view is
+    // gone (somebody removed it) has nothing to stand behind, so its first named view goes to the start. The place of a view cannot be changed afterwards (the views API moves nothing),
+    // so a table that was built the other way round needs a drag by hand.
+    let previous = null;
+    let own = null; // the name the table's own view has now, when it is to stay first
+    if (plan.arrange?.[table]?.first === true) {
+      const named = new Set(wanted.flatMap((v) => [v.name, v.renamed_from].filter(Boolean)));
+      own = ownViewName([...have.keys()].filter((n) => !named.has(n)), plan.arrange[table].name);
+      if (own) previous = have.get(own).id;
+    }
     for (const v of wanted) {
       let id = null;
       let status = null;
@@ -1271,6 +1287,13 @@ async function buildViews(ctx) {
           // a refused create makes nothing, so it is safe to ask again without the place in the tab bar
           log(`view "${v.name}": Notion did not take its place in the tab bar (${e.message}); asking again without it`);
           res = await make(undefined);
+          if (own) {
+            // made without a place, so Notion put it at the end or at the start: the table's own view may not be first, and no script can move a tab
+            const title = plan.databases.find((d) => d.table === table)?.title ?? table;
+            const message = `the view "${v.name}" of the table "${title}" was made without its place in the tab bar, so the tab order may need a drag: drag the tab "${plan.arrange[table].name ?? own}" to the front of the table "${title}" by hand in Notion`;
+            log(`view "${v.name}": ${message}`);
+            result.warnings.push(message);
+          }
         }
         have.set(v.name, { id: res.id, name: v.name });
         previous = res.id;
@@ -1775,11 +1798,14 @@ export function renderPreview(structure) {
     const views = structure.views.filter((v) => v.table === key);
     const own = defaultViewPlan(structure, key);
     if (views.length || own) {
-      lines.push('', 'Views:', '');
+      lines.push('', 'Views, in the order of the tabs:', '');
+      // the table's own view is the first tab when the structure gives it a default_view (P15: clicking the table on the hub opens it); the named views follow in their order
+      const ownLine = own ? `- The table's own view (Notion's default)${own.first ? ', the first tab' : ''}${own.name ? `, called ${own.name}` : ''}: shows ${own.shown.join(', ')}${own.hidden.length ? `; the other ${own.hidden.length} column${own.hidden.length === 1 ? ' is' : 's are'} hidden` : ''}` : null;
+      if (ownLine && own.first) lines.push(ownLine);
       for (const v of views) {
         lines.push(`- **${v.name}**${v.renamed_from ? ` (the view "${v.renamed_from}" of an earlier build is renamed to this)` : ''}: rows shown: ${v.filter}; sorted by: ${v.sort}; columns: ${v.columns.join(', ')}${v.wrap ? '; cells wrap' : ''}`);
       }
-      if (own) lines.push(`- The table's own view (Notion's default)${own.name ? `, called ${own.name}` : ''}: shows ${own.shown.join(', ')}${own.hidden.length ? `; the other ${own.hidden.length} column${own.hidden.length === 1 ? ' is' : 's are'} hidden` : ''}`);
+      if (ownLine && !own.first) lines.push(ownLine);
     }
     lines.push('');
   }

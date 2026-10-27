@@ -412,7 +412,11 @@ test('the practice structure carries the practice titles and the production colu
   assert.ok(!original.views[0].columns.includes('Geo Topics'), 'and nor are its views');
   practice.tables.rulebook.title = 'Rulebook';
   practice.views[0].columns.pop();
-  assert.equal(practice.views.length, original.views.length);
+  // the one view a practice page has that production has not: production's Rulebook table has only its own view, called Rulebook; a practice page keeps the tab Rulebook that it has always made
+  assert.equal(practice.views.length, original.views.length + 1);
+  assert.ok(!original.views.some((v) => v.name === 'Rulebook'), 'production names no view Rulebook: its own view carries the name');
+  assert.deepEqual(practice.views.at(-1), { name: 'Rulebook', table: 'rulebook', filter: 'all rows', sort: 'none', columns: original.tables.rulebook.default_view.columns, wrap: true }, 'the practice page\'s Rulebook tab is as production had it: all rows, the five columns, cells wrapped');
+  assert.deepEqual(practice.views.slice(0, -1).map((v) => v.name), original.views.map((v) => v.name), 'and every other view is production\'s, in its order');
   assert.equal(original.hub.title, 'Claim tagger', 'production has a hub block');
   assert.equal(practice.hub, undefined, 'a practice page is not a hub');
   assert.equal(practice.made_from, undefined);
@@ -1055,7 +1059,7 @@ test('start builds the page: one page, five tables, the text in order, two linke
   const queue = linked.find((l) => l.name === 'Your queue');
   assert.equal(queue.source_database_id.replace(/-/g, ''), demo.databases.claims.database_id, 'Your queue is a view of the Claims table');
   assert.deepEqual(queue.body.filter, planned('Your queue').body.filter);
-  assert.deepEqual(queue.body.filter, { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { property: 'Review status', select: { does_not_equal: 'Reviewed' } }] }, 'Your queue lists the claims whose Agent status is Waits for you and whose Review status is not Reviewed (P13)');
+  assert.deepEqual(queue.body.filter, { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { or: [{ property: 'Review status', select: { does_not_equal: 'Reviewed' } }, { property: 'Review status', select: { is_empty: true } }] }] }, 'Your queue lists the claims whose Agent status is Waits for you and whose Review status is not Reviewed (P13)');
   assert.deepEqual(queue.body.sorts, [{ property: 'Agent confidence', direction: 'ascending' }]);
   assert.equal(queue.body.configuration.wrap_cells, true);
   assert.deepEqual(shown(queue, 'claims'), REVIEW_ORDER);
@@ -3191,7 +3195,7 @@ test('the three Claims views on a fresh page: Your queue lists the claims whose 
   const tabs = w.fake.tabViews(demo.databases.claims.database_id);
   const queue = w.fake.linked().find((l) => l.name === 'Your queue');
   const view = { 'Your queue': queue.body, ...Object.fromEntries(tabs.map((t) => [t.name, t])) };
-  assert.deepEqual(view['Your queue'].filter, { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { property: 'Review status', select: { does_not_equal: 'Reviewed' } }] }, 'a Reviewed claim is not in it (P13)');
+  assert.deepEqual(view['Your queue'].filter, { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { or: [{ property: 'Review status', select: { does_not_equal: 'Reviewed' } }, { property: 'Review status', select: { is_empty: true } }] }] }, 'a Reviewed claim is not in it (P13)');
   assert.deepEqual(view['Agent disagreed'].filter, { property: 'Agent status', select: { equals: 'Disagrees with your decision' } });
   assert.deepEqual(view['Needs your note'].filter, planned('Needs your note').body.filter, 'the view is the structure\'s');
   assert.deepEqual(view['Needs your note'].filter, { property: 'Agent reading', rich_text: { contains: 'without your note' } }, 'Needs your note filters on the flag the agent sets in Agent reading');
@@ -3462,7 +3466,7 @@ test('the checklists name the columns of the practice page in the page\'s order:
   assert.match(guide['Decide in Your queue'].Demo[2].text, /Review status to Reviewed last/);
   assert.match(page, /Review status comes last because it closes the claim\. A claim leaves Your queue as soon as you set Review status to Reviewed\./);
   assert.equal(guide['Decide in Your queue'].Demo[3].text, 'A claim leaves Your queue as soon as you set Review status to Reviewed.', 'the demo list says it in the words of the page (P13)');
-  assert.match(guide['Decide in Your queue'].Real[0].text, /A claim leaves it as soon as you set Review status to Reviewed\.$/, 'and the real list too');
+  assert.match(guide['Decide in Your queue'].Real[0].text, / A claim leaves Your queue as soon as you set Review status to Reviewed\.$/, 'and the real list too, in the words of ED-4');
   // the words of the editor review (ED-1, ED-7)
   assert.ok(guide['Decide in Your queue'].Real[2].text.includes('Verified tags: every tag that applies, the ones in Agent tags included; one left out counts as Does not apply.'), 'ED-1 in step 3 of the real list');
   assert.equal(guide['Decide in Your queue'].Real[3].text, 'A note is optional when you agree. When you overrule the agent, add one line why: without it the agent drafts no rule change. If you know the reason, start it with Agent slip, Rule unclear or Rule should change and a full stop.');

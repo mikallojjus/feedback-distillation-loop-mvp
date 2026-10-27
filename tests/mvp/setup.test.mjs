@@ -187,12 +187,12 @@ test('preview prints what would be built; without a structure file it says how t
   assert.match(none.err[0], /structure --from-proposal/);
 });
 
-test('preview of the fresh structure shows the five tables in the hub\'s order, the lean Claims set, the seven views, Onboarding and the hub block', async () => {
+test('preview of the fresh structure shows the five tables in the hub\'s order, the lean Claims set, the six views, Onboarding and the hub block', async () => {
   const w = newWorld({ structure: 'fresh' });
   const r = await w.run(['preview']);
   assert.equal(r.code, 0);
   const md = r.out[0];
-  assert.match(md, /^# Structure preview\n\n5 tables, \d+ columns, 7 views and 1 sub-pages/);
+  assert.match(md, /^# Structure preview\n\n5 tables, \d+ columns, 6 views and 1 sub-pages/);
   assert.match(md, /## Hub page "Claim tagger"/);
   assert.match(md, /3 link lines at the top: Your queue: the claims that wait for your decision; Needs your note: .*; Lessons waiting: /);
   assert.match(md, /the 5 tables as full-page tables, in this order: Claims, Rulebook, Rule changes, Tag decisions, Agent settings/);
@@ -203,14 +203,17 @@ test('preview of the fresh structure shows the five tables in the hub\'s order, 
   assert.match(md, /\| Geo Created \| date \|/);
   assert.match(md, /\| Geo Tags \| multi_select \| Debate(, [^|]+)? \|/, 'Debate first, then the tag names the committed pick added, if it has run');
   assert.doesNotMatch(md, /\(old\)|Geo Score|Geo Name source|renamed|retired|Claims copy|Rulebook copy/);
-  assert.equal((md.match(/^- \*\*/gm) ?? []).length, 7);
+  assert.equal((md.match(/^- \*\*/gm) ?? []).length, 6, 'six named views; the Rulebook shows its own view once, not twice');
   // the warning line first (P14), then the links
   assert.match(md, /1\. the warning line at the very top: Claims is the real table: every decision you make there trains the rulebook\. To practise, open Onboarding\.\n2\. 3 link lines at the top: /);
   // the lean views and the table's own views (P13, P15), the description under each table (ED-8)
   assert.match(md, /- \*\*Your queue\*\*: rows shown: Agent status is Waits for you and Review status is not Reviewed; sorted by: Agent confidence, lowest first; columns: Geo Name, Tags waiting, Agent reasons, Agent tags, Verified tags, Challenged tags notes, Review status; cells wrap\n/);
   assert.match(md, /- \*\*Needs your note\*\*: rows shown: Agent reading contains without your note; sorted by: Agent confidence, lowest first; columns: Geo Name, Verified tags, Agent reading, Challenged tags notes, Review status; cells wrap\n/);
   assert.match(md, /- \*\*Agent disagreed\*\*: rows shown: Agent status is Disagrees with your decision; sorted by: Agent confidence, lowest first; columns: Geo Name, Agent reasons, Agent reading, Verified tags, Challenged tags notes, Review status; cells wrap\n/);
-  assert.match(md, /- The table's own view \(Notion's default\), called All claims: shows Geo Name, Geo Space, Agent tags, Agent status, Verified tags, Review status, Geo URL; the other 13 columns are hidden\n/);
+  assert.match(md, /- The table's own view \(Notion's default\), the first tab, called All claims: shows Geo Name, Geo Space, Agent tags, Agent status, Verified tags, Review status, Geo URL; the other 13 columns are hidden\n/);
+  assert.match(md, /- The table's own view \(Notion's default\), the first tab, called Rulebook: shows Name, Category, Status, When to use, Example Claims; the other \d+ columns are hidden\n/);
+  // the own view stands before the named views in the list, as it does in the tab bar
+  assert.match(md, /Views, in the order of the tabs:\n\n- The table's own view \(Notion's default\), the first tab, called All claims: .*\n- \*\*Your queue\*\*: /);
   assert.equal((md.match(/^- The table's own view/gm) ?? []).length, 5, 'every table arranges its own view');
   assert.equal((md.match(/^Description under the table's name: /gm) ?? []).length, 5);
   assert.match(md, /^Description under the table's name: Tick Paused to stop every command; untick to resume\.$/m);
@@ -503,16 +506,16 @@ test('verify checks that config.json links every view that exists, and no view t
   const config = readJson(join(w.root, 'config.json'));
   const kept = structuredClone(config.notion.views);
   delete config.notion.views.needs_your_note;
-  config.notion.views.rulebook.id = 'f'.repeat(32);
+  config.notion.views.lessons_waiting.id = 'f'.repeat(32);
   config.notion.views.stray = { id: 'a'.repeat(32), url: 'https://www.notion.so/x' };
   writeFileSync(join(w.root, 'config.json'), JSON.stringify(config, null, 2));
   const r = await w.run(['verify', '--taxonomy', 'x', '--claims', 'x', '--audit', 'x']);
   const text = r.err.join('\n');
   assert.match(text, /claims: view link - "Needs your note" is in Notion but config\.json has no notion\.views\.needs_your_note; run "setup\.mjs views" to record it/);
-  assert.match(text, /rulebook: view link - notion\.views\.rulebook in config\.json says .*, but the view in Notion is /);
+  assert.match(text, /rule_changes: view link - notion\.views\.lessons_waiting in config\.json says .*, but the view in Notion is /);
   const fix = await w.run(['views']);
   assert.equal(fix.code, 0, fix.text);
-  assert.deepEqual(readJson(join(w.root, 'config.json')).notion.views.rulebook, kept.rulebook, 'the next run puts the right id back');
+  assert.deepEqual(readJson(join(w.root, 'config.json')).notion.views.lessons_waiting, kept.lessons_waiting, 'the next run puts the right id back');
   assert.deepEqual(readJson(join(w.root, 'config.json')).notion.views.needs_your_note, kept.needs_your_note);
   const again = await w.run(['verify', '--taxonomy', 'x', '--claims', 'x', '--audit', 'x']);
   assert.doesNotMatch(again.text, /view link/);
@@ -1296,7 +1299,7 @@ test('canaries: six example claims of Context-dependent expected to apply, five 
   assert.ok(rows.every((x) => x.tag === 'Context-dependent'));
   assert.deepEqual(rows.slice(0, 6).map((x) => [x.claim, x.expected, x.source]), CONTEXT_DEPENDENT_EXAMPLES.map((c) => [c, 'apply', 'example claims of Context-dependent']));
   assert.deepEqual(rows.slice(6).map((x) => [x.claim, x.expected, x.source]), SELF_CONTAINED_EXAMPLES.map((c) => [c, 'do_not_apply', 'example claims of Self-contained']));
-  assert.equal(w.fake.writes().length, 15, 'no Notion request: the file is local (the 15 writes are the build of the structure)');
+  assert.equal(w.fake.writes().length, 14, 'no Notion request: the file is local (the 14 writes are the build of the structure)');
 
   const again = await w.run(['canaries', '--from', w.inputs.taxonomy]);
   assert.equal(again.code, 0, 'the same file again is fine');
@@ -1397,7 +1400,7 @@ test('all: every step in order, each with its own run folder, the table counts r
   for (const step of ['rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'settings']) {
     assert.ok(existsSync(join(lastRun(w.root, step), 'plan.jsonl')) && existsSync(join(lastRun(w.root, step), 'ledger.jsonl')) && existsSync(join(lastRun(w.root, step), 'requests.jsonl')), step);
   }
-  assert.equal(w.fake.writes().length, 2 + 5 + 1 + 7 + 2 + 13 + 10 + 10 + 1, 'the structure, then the rows and the ten migrated decisions: nothing else was written');
+  assert.equal(w.fake.writes().length, 2 + 5 + 1 + 6 + 2 + 13 + 10 + 10 + 1, 'the structure, then the rows and the ten migrated decisions: nothing else was written');
   assert.ok(w.fake.requests.every((x) => x.method !== 'DELETE'));
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.deepEqual(verify.differences, []);

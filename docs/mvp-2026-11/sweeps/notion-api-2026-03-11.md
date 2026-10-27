@@ -16,6 +16,8 @@ Response: a partial view (`object:"view"`, `id`, `parent {type:"database_id", da
 
 Eight view endpoints exist since 19 March 2026: create, retrieve, update, delete, list views of a database, query a view. The builder uses create, retrieve and list; never delete.
 
+Tab order (read again on 27 October 2026, the reference "list views" and the guide "working with views"): `position` on create is the only way to place a tab ("start" places the new view as the first tab, "end" the last, the default, and "after_view" right after the view named); update takes no position, so a tab cannot be moved afterwards. Neither page says in what order `GET /v1/views` lists the views, so the order of the list is not taken as the order of the tabs and `verify` does not check it (decision 107). The guide says a database made through the API starts with one table view named "Default view" (the app calls it "Table"; the builder finds either).
+
 ## Other
 
 The connector's `notion-create-view` tool (view DSL: `FILTER "P" = "v"; SORT BY "P" ASC; SHOW "A","B"`) is the fallback when the REST view call fails; written instructions in the page are the last fallback, as the brief says.

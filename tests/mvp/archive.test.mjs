@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  ARCHIVE_TITLE, ARCHIVE_WARNING, ArchiveError, HUB_TITLE, applyArchive, archiveConfigChange, archiveFirst, archivedIds, checkArchivePlan, knownObjects, linksBack, planArchive, snapshotRoot, walkArchiveTree,
+  ARCHIVE_TITLE, ARCHIVE_WARNING, ArchiveError, HUB_TITLE, applyArchive, archiveConfigChange, archiveFirst, archiveRewritten, archivedIds, checkArchivePlan, knownObjects, linksBack, planArchive, snapshotRoot, walkArchiveTree,
 } from '../../agents/claim-tagger-mvp/scripts/lib/archive.mjs';
 import { isProtected, loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { planStructure, runStructure } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
@@ -493,10 +493,15 @@ test('every step but archive refuses with exit 2 while setup/archive.json is not
     assert.equal(unreadable.code, 2, name);
     assert.match(unreadable.err[0], /cannot be read/, name);
   }
-  writeFileSync(file, `${JSON.stringify({ state: 'done' })}\n`);
+  // "done" with the Archive page that config.json names: the archive and the config rewrite both happened
+  const page = 'a'.repeat(32);
+  writeFileSync(file, `${JSON.stringify({ state: 'done', archive_page: page })}\n`);
+  const config = readJson(join(w.root, 'config.json'));
+  config.notion.pages.archive = page;
+  writeFileSync(join(w.root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
   for (const name of ['build', 'rulebook', 'claims']) {
     const through = await w.run([name]);
-    assert.doesNotMatch(through.text, /archive stopped halfway|run setup\.mjs archive first/, `${name}: done lets the step through to its own work`);
+    assert.doesNotMatch(through.text, /archive stopped halfway|run setup\.mjs archive first|was not rewritten/, `${name}: done lets the step through to its own work`);
   }
 });
 
@@ -520,6 +525,64 @@ test('with no setup/archive.json and the first build named in config.json, every
   const done = await w.run(['archive']);
   assert.equal(done.code, 0, done.text);
   assert.doesNotMatch((await w.run(['build'])).text, /run setup\.mjs archive first/, 'once archive.json is "done" the gate is open');
+});
+
+const NOT_REWRITTEN_WORDS = 'the archive step moved everything in Notion but config.json was not rewritten; run setup.mjs archive again (it sends nothing to Notion)';
+
+test('SH-1: archive.json says "done" but config.json was not rewritten: every step but archive refuses with exit 2 and the words for it; archive again finishes locally with no request, and then the steps pass the gate', async () => {
+  const w = await world();
+  const oldConfigText = readFileSync(join(w.root, 'config.json'), 'utf8');
+  assert.equal((await w.run(['archive'])).code, 0);
+  // the rewrite of config.json failed after the record was written "done": the config still names the first build's tables, which now sit in the archive
+  writeFileSync(join(w.root, 'config.json'), oldConfigText);
+  const record = w.archiveRecord();
+  assert.equal(record.state, 'done');
+  assert.equal(archiveRewritten(loadConfig(w.root), record), false);
+  const count = w.fake.requests.length;
+  for (const name of GATED_STEPS) {
+    const r = await w.run([name]);
+    assert.equal(r.code, 2, name);
+    assert.equal(r.err[0], `setup ${name}: ${NOT_REWRITTEN_WORDS}`, name);
+  }
+  assert.equal(w.fake.requests.length, count, 'no request, not even a read: nothing was built, nothing written into the archived tables');
+
+  // archive is not held back by it; it finishes the local part and sends nothing
+  const plan = await w.run(['archive', '--plan-only']);
+  assert.equal(plan.code, 0, plan.text);
+  assert.match(plan.text, /config\.json still has the old ids/);
+  const fix = await w.run(['archive']);
+  assert.equal(fix.code, 0, fix.text);
+  assert.match(fix.text, /finished now/);
+  assert.equal(w.fake.requests.length, count, 'a local finish: no request');
+  assert.equal(archiveRewritten(loadConfig(w.root), record), true);
+  for (const name of ['build', 'rulebook', 'claims']) {
+    const through = await w.run([name]);
+    assert.doesNotMatch(through.text, /was not rewritten|run setup\.mjs archive first|archive stopped halfway/, `${name}: the gate is open`);
+  }
+});
+
+test('SH-1: a "done" record that names no Archive page, or another one than config.json names, holds the steps back too; a config that cannot be read is reported by its own message', async () => {
+  const w = await world();
+  mkdirSync(join(w.root, 'setup'), { recursive: true });
+  const file = join(w.root, 'setup', 'archive.json');
+  const config = loadConfig(w.root);
+  assert.equal(archiveRewritten(config, { state: 'done' }), false, 'no Archive page in the record: nothing the config could name');
+  assert.equal(archiveRewritten(config, { state: 'done', archive_page: 'not an id' }), false);
+  assert.equal(archiveRewritten(config, null), false);
+  assert.equal(archiveRewritten({ notion: { pages: { archive: '<setup>' } } }, { archive_page: null }), false, 'two placeholders are not a match');
+  assert.equal(archiveRewritten({ notion: { pages: { archive: `${'a'.repeat(8)}-${'a'.repeat(4)}-${'a'.repeat(4)}-${'a'.repeat(4)}-${'a'.repeat(12)}` } } }, { archive_page: 'a'.repeat(32) }), true, 'dashes do not matter');
+  for (const record of [{ state: 'done' }, { state: 'done', archive_page: 'b'.repeat(32) }]) {
+    writeFileSync(file, `${JSON.stringify(record)}\n`);
+    for (const name of ['build', 'all']) {
+      const r = await w.run([name]);
+      assert.equal(r.code, 2, JSON.stringify(record));
+      assert.equal(r.err[0], `setup ${name}: ${NOT_REWRITTEN_WORDS}`, name);
+    }
+  }
+  writeFileSync(join(w.root, 'config.json'), '{ not json');
+  const broken = await w.run(['build']);
+  assert.equal(broken.code, 2);
+  assert.doesNotMatch(broken.err[0], /was not rewritten/);
 });
 
 test('archiveFirst: true only without archive.json, with a real id among the eight old objects and no build mark in runs/builder/state.json', async () => {

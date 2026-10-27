@@ -24,8 +24,9 @@
 //                                                         tags — verified to Verified tags), adds the columns the table lacks (the revision of 21 October: Agent tags as a relation,
 //                                                         Agent status, Tags waiting, Agent edition, Agent remarks), renames a view of an older build that the structure renames
 //                                                         (not made again), and brings every view of a table to the structure: its filter, sorts, shown columns in order, wrap; the
-//                                                         table's own view (Notion's default view) is arranged as the structure's default_view says: Claims calls it "All claims", and every table
-//                                                         shows only the columns listed there (the description under each table's name is written when the table is made). It says what it did,
+//                                                         table's own view (Notion's default view) is arranged as the structure's default_view says: Claims calls it "All claims", the Rulebook "Rulebook", and every table
+//                                                         shows only the columns listed there (the description under each table's name is written when the table is made); it stays the first tab, the
+//                                                         views the structure names are made after it (a view Notion would not place is made without a place and the run says the tab needs a drag). It says what it did,
 //                                                         and a second run does nothing
 //   setup.mjs rulebook [--from setup/taxonomy-issue.json] the 13 rows of the Rulebook (a setup plan, applied and read back)
 //   setup.mjs claims [--from setup/geo-claims-pick.json]  the rows of the Geo pick (200) in the Claims table, Geo Sources with its links; the pick comes from geo-pick.mjs
@@ -51,7 +52,8 @@
 //                                                         hand, then run it again. Run it again after any stop: it reads first and does only what is missing. After it says done, a
 //                                                         run says "done already" and sends nothing. Until it is done, every other step that builds or writes (pages, databases, views, hub, build,
 //                                                         rulebook, claims, seed-audit, migrate-decisions, rubric, canaries, settings, all) refuses with exit 2, also while setup/archive.json is missing
-//                                                         and config.json still names the first build's tables ("run setup.mjs archive first (P9)"); a fresh install, whose config holds placeholders, builds
+//                                                         and config.json still names the first build's tables ("run setup.mjs archive first (P9)"), and also when archive.json says "done" but
+//                                                         config.json was not rewritten (the rewrite failed: run archive again, it sends nothing); a fresh install, whose config holds placeholders, builds
 //
 // Why a builder session: the connector guard (scripts/hooks/guard.mjs) denies every Notion write unless runs/SETUP exists and the
 // target is registered in runs/builder/pages.json or runs/builder/databases.json. Opening a session is a deliberate, logged act; the
@@ -69,7 +71,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { ARCHIVE_FIRST_MESSAGE, ArchiveError, archiveFirst, readArchiveState, stepArchive } from './lib/archive.mjs';
+import { ARCHIVE_FIRST_MESSAGE, ARCHIVE_NOT_REWRITTEN_MESSAGE, ArchiveError, archiveFirst, archiveRewritten, readArchiveState, stepArchive } from './lib/archive.mjs';
 import { builderPaths, logLine, readJsonOr, register } from './lib/builder-registry.mjs';
 import { loadConfig } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
@@ -394,7 +396,8 @@ async function runCommand(name, args, io, env) {
     io.err(`setup ${name}: runs/PAUSED exists, so the agent is paused and nothing was done; a person has to remove it`);
     return EXIT.PAUSED;
   }
-  // Every step that builds or fills the hub, all of them but archive itself, waits for the archive (P9, M1 of the pre-live gate): until setup/archive.json says "done", and, with no archive
+  // Every step that builds or fills the hub, all of them but archive itself, waits for the archive (P9, M1 of the pre-live gate): until setup/archive.json says "done" and config.json names
+  // the Archive page it made (SH-1: a rewrite of the config that failed after "done" was written holds everything back until `archive` has run again), and, with no archive
   // file, while the first build's tables are still named in config.json (archiveFirst). A fresh install (a config of placeholders) has no file and nothing to archive.
   if (spec.setup && name !== 'archive') {
     const archive = readArchiveState(root);
@@ -405,6 +408,19 @@ async function runCommand(name, args, io, env) {
     if (archive.exists && archive.state !== 'done') {
       io.err(`setup ${name}: the archive stopped halfway (setup/archive.json says state "${archive.state}"); run setup.mjs archive again`);
       return EXIT.INVALID;
+    }
+    if (archive.exists) {
+      // "done" is written before config.json is rewritten: if that rewrite failed, the config still names the first build's tables, and a build or a row step would write into the archived ones (SH-1)
+      let rewritten = true;
+      try {
+        rewritten = archiveRewritten(env.config ?? loadConfig(root), archive.data);
+      } catch {
+        rewritten = true; // a config that cannot be read is reported just below, with its own message
+      }
+      if (!rewritten) {
+        io.err(`setup ${name}: ${ARCHIVE_NOT_REWRITTEN_MESSAGE}`);
+        return EXIT.INVALID;
+      }
     }
     if (!archive.exists) {
       let held = false;
