@@ -4,7 +4,7 @@
 // editor is, and runs the loop scripts against it.
 //
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent <link or id> [--dry-run] [--resume <id>] [--manifest <path>] [--title <text>]
-//   node agents/claim-tagger-mvp/scripts/walkthrough.mjs run [--demo <id>] <pull|judge|propose|distill|promote|followup|status> [args...]
+//   node agents/claim-tagger-mvp/scripts/walkthrough.mjs run [--demo <id>] <pull|judge|propose|distill|promote|followup|status|decide> [args...]
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs where [--demo <id>]
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs verify [--demo <id>] [--json]
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs list
@@ -36,7 +36,8 @@
 // whose profile this build reads; a page under Demos or Demo tests, or of an older shape, is reached only with --demo <id>). It
 // refuses a script that is not on the list, a folder outside runs/demos, and --confirm, --bare, --fallback-model, --unpause. For promote and followup
 // without --lesson it passes the title of the demo's only Approved (promote) or Live (followup) rule change from the newest pull. The exit code is
-// the child's.
+// the child's. decide is on the list since P18 to P20 (an editor's Claude may decide claims): its marker runs/DECIDING lives in the practice page's folder, where the guard hook
+// looks for it. The walkthrough's own subcommands decide, approve and reject (decisions P7 and 93) stay gone.
 //
 // where. Pulls the demo's tables and says which of the seven steps the editor is at (read from the Agent status of the four open claims - no status means the agent has not
 // read the claim, "Waits for you" means it has read it and it waits - and Agent settings' Last run summary for steps 1 and 2 - a fresh page is at step 1, and status writes
@@ -76,13 +77,13 @@ import * as dp from './lib/demo-profile.mjs';
 
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent <link or id> [--dry-run] [--resume <id>] [--manifest <path>] [--title <text>]',
-  '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs run [--demo <id>] <pull|judge|propose|distill|promote|followup|status> [args...]',
+  '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs run [--demo <id>] <pull|judge|propose|distill|promote|followup|status|decide> [args...]',
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs where [--demo <id>]',
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs verify [--demo <id>] [--json]',
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs list',
 ].join('\n');
 
-export const RUN_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status']);
+export const RUN_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status', 'decide']);
 /** Notion takes at most this many blocks in one request (the client splits a longer list the same way). */
 const MAX_BLOCKS_PER_REQUEST = 100;
 export const REFUSED_ARGS = Object.freeze(['--confirm', '--bare', '--fallback-model', '--unpause']);

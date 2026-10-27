@@ -239,6 +239,20 @@ Demo · Follow-up, repeated by hand: the agent now agrees with both of your deci
 
 Next: nothing; the demo is complete.
 
+### decide (Claims)
+
+The editor asked Claude to decide six claims. Claude wrote the three Claims columns through the connector and `decide.mjs check` read every claim back, so this is the report of `check`; what `list` and `open` print is for Claude and is not shown. The rows count the decisions: the ones that equal the agent's proposal, and the ones that differ, with how many of those carry a note line that names the tag and a reason word (without one distill drafts nothing). The Next line only names a command, so no checklist follows. On a practice page the report starts "Demo · " and the command is `/claim-tagger demo distill`. When a claim does not read back, the sentence says how many did not, the table names each claim and the column that differs, and the Next line sends the editor to Your queue to check them and type `/claim-tagger decide` again.
+
+Decide: 6 claims decided and read back; 2 differ from the agent.
+
+| What | Result |
+|---|---|
+| Decided | 6 |
+| Same as the agent | 4 |
+| Different from the agent | 2, both with a note |
+
+Next: type /claim-tagger distill to read the decisions.
+
 ### A stopped run
 
 Demo · Tag stopped: your Claude allowance ran out; nothing was written to Notion (practice page Claim tagger demo · 15 Oct 10:42).

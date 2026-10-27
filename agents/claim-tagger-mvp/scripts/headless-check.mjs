@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // headless-check.mjs: start the Claude Code CLI headless with the Explanatory output style on, save the transcript and grade it
 // (MVP-PROMPT section 8, item 7: the final message of each run has the three parts, and after the Next line at most one checklist of five numbered lines, no insight block, no JSON, no time words, no
-// dollars, and the transcript shows no write to an editor column). The grading is transcript-check.mjs; this script is the runner.
+// dollars, and the transcript shows no write to an editor column). The grading is transcript-check.mjs; this script is the runner. A prompt that starts with "/claim-tagger decide"
+// or "/claim-tagger demo decide" is graded in decide mode (decision 115): its connector writes of the three Claims columns are not a problem, any other write of an editor column still is.
 //
 //   node agents/claim-tagger-mvp/scripts/headless-check.mjs --prompt "/claim-tagger status" --out <dir>
 //        [--settings .claude/settings.json] [--cwd <repo>] [--timeout-ms 1800000] [--claude-bin <name or path>] [--overwrite]
@@ -41,7 +42,7 @@ import { USAGE_WINDOW_RE, findClaudeBin, resolveSpawnTarget, scrubEnv } from './
 import { EXIT } from './lib/exit-codes.mjs';
 import { writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { agentRoot, ensureDir, isMain, repoRoot } from './lib/paths.mjs';
-import { TOKEN_KINDS, checkTranscript, loadEditorColumns, parseStreamJson, statsLine } from './transcript-check.mjs';
+import { TOKEN_KINDS, checkTranscript, loadDecideColumns, loadEditorColumns, parseStreamJson, statsLine } from './transcript-check.mjs';
 
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/headless-check.mjs --prompt "/claim-tagger status" --out <dir> [--settings .claude/settings.json] [--cwd <repo>] [--timeout-ms 1800000] [--claude-bin <program>] [--overwrite]',
@@ -93,6 +94,14 @@ export function buildArgs({ prompt, settingsPath } = {}) {
     throw new TypeError(`buildArgs: the prompt "${shown(prompt)}" starts with a drive path; Git Bash turns a leading "/" into one before Node sees it. Start this command with MSYS_NO_PATHCONV=1`);
   }
   return args;
+}
+
+/**
+ * Is this the prompt of a decide step ("/claim-tagger decide ..." or "/claim-tagger demo decide ...")? Only then does the transcript check accept the connector writes of the
+ * three Claims columns (decision 115); the same write in the transcript of any other prompt is a problem.
+ */
+export function isDecidePrompt(prompt) {
+  return /^\/claim-tagger\s+(?:demo\s+)?decide(?:\s|$)/i.test(String(prompt ?? '').trim());
 }
 
 /** A name for a prompt's folder: lower case, letters and digits joined by single dashes, at most 40 characters ("/claim-tagger status" -> "claim-tagger-status"). */
@@ -189,7 +198,7 @@ const readText = (path, cap = Infinity) => {
  */
 export async function runPrompt(options) {
   const {
-    prompt, outDir, settingsPath, cwd, bin = 'claude', timeoutMs = DEFAULT_TIMEOUT_MS, killGraceMs = KILL_GRACE_MS, env = process.env, spawnImpl = spawn, editorColumns, allowedScripts,
+    prompt, outDir, settingsPath, cwd, bin = 'claude', timeoutMs = DEFAULT_TIMEOUT_MS, killGraceMs = KILL_GRACE_MS, env = process.env, spawnImpl = spawn, editorColumns, allowedScripts, decideColumns,
   } = options;
   ensureDir(outDir);
   const transcriptPath = join(outDir, 'transcript.jsonl');
@@ -218,7 +227,9 @@ export async function runPrompt(options) {
 
   const transcript = readText(transcriptPath);
   const stderr = readText(stderrPath, STDERR_CAP);
-  const check = checkTranscript(transcript, { editorColumns, allowedScripts, expectStyle: OUTPUT_STYLE });
+  const check = checkTranscript(transcript, {
+    editorColumns, allowedScripts, expectStyle: OUTPUT_STYLE, decide: isDecidePrompt(prompt), decideColumns,
+  });
   const lastResult = parseStreamJson(transcript).events.findLast((e) => e?.type === 'result');
 
   // The status, and the problems that go with it. A program that never started has no transcript to grade, so its start error is the
@@ -392,6 +403,7 @@ export async function main(argv, io = defaultIo, env = {}) {
   }
   const bin = findClaudeBin(values['claude-bin'] ?? configuredBin(env.root));
   const editorColumns = loadEditorColumns(env.root);
+  const decideColumns = loadDecideColumns(env.root);
   const results = [];
   let code = EXIT.OK;
   try {
@@ -402,7 +414,7 @@ export async function main(argv, io = defaultIo, env = {}) {
       const prompt = prompts[i];
       io.out(`headless-check: running ${single ? '' : `${i + 1} of ${prompts.length}: `}${prompt}`);
       const result = await runPrompt({
-        prompt, outDir: dirs[i], settingsPath, cwd, bin, timeoutMs, env: env.processEnv ?? process.env, spawnImpl: env.spawnImpl ?? spawn, editorColumns,
+        prompt, outDir: dirs[i], settingsPath, cwd, bin, timeoutMs, env: env.processEnv ?? process.env, spawnImpl: env.spawnImpl ?? spawn, editorColumns, decideColumns,
       });
       results.push({ n: i + 1, prompt, dir: dirs[i], status: result.status, ok: result.ok, problems: result.problems.length });
       report(io, result, prompt);

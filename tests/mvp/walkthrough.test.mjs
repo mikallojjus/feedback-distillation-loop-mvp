@@ -2685,11 +2685,17 @@ test('run refuses a script that is not on the list, a folder outside runs/demos,
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
   const scriptsDir = standIns();
-  for (const script of ['setup', 'rollback', 'restore', 'walkthrough', 'decide', 'approve', 'reject', '../pull', 'pull.mjs', 'hooks/guard', '']) {
+  // decide is not in this list since P18 to P20: it is decide.mjs, which run starts like the other loop scripts (the next lines)
+  for (const script of ['setup', 'rollback', 'restore', 'walkthrough', 'approve', 'reject', '../pull', 'pull.mjs', 'hooks/guard', '']) {
     const r = await w.run(['run', script], { scriptsDir });
     assert.equal(r.code, 2, `"${script}"`);
     assert.equal(r.outs.filter((l) => l.startsWith('{')).length, 0, 'nothing was started');
   }
+  const decideRun = await w.run(['run', 'decide', 'list', '--claims', 'c01'], { scriptsDir });
+  assert.equal(decideRun.code, 0, decideRun.err);
+  assert.deepEqual(JSON.parse(decideRun.outs.find((l) => l.startsWith('{'))).argv, ['list', '--claims', 'c01'], 'decide runs with its arguments, and the practice page as its state folder');
+  assert.equal(JSON.parse(decideRun.outs.find((l) => l.startsWith('{'))).root, w.dir());
+  assert.equal((await w.run(['run', 'decide', 'check', '--confirm'], { scriptsDir })).code, 2, 'and the arguments that must never be passed are refused for it too');
   assert.equal((await w.run(['run'], { scriptsDir })).code, 2);
   assert.equal((await w.run(['run', '--demo'], { scriptsDir })).code, 2);
   for (const bad of ['..', '../..', '../../agents', 'a/b', '/etc', 'C:\\Windows', '.']) {
@@ -2984,7 +2990,10 @@ test('the decided rows of a practice page are written by a create, the audit-see
   assert.ok(!existsSync(join(w.dir(), 'editor-actions.jsonl')), 'and no agent acted as the editor');
 });
 
-test('decide, approve and reject are gone (decision P7): the usage does not list them, each answers it with exit 2, run starts none of them, and nothing is sent', async () => {
+// Since P18 to P20 the word decide is also the name of a script that `run` starts (decide.mjs: an editor's Claude decides claims through the connector, between its open and its check).
+// What stays gone is the walkthrough's own subcommands decide, approve and reject (decisions P7 and 93): the usage lists none of them as a subcommand, each answers with exit 2, and
+// run starts neither approve nor reject.
+test('decide, approve and reject are gone as subcommands (decision P7): the usage does not list them, each answers it with exit 2, run starts neither approve nor reject, and nothing is sent', async () => {
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
   const sent = w.fake.requests.length;
@@ -2998,13 +3007,14 @@ test('decide, approve and reject are gone (decision P7): the usage does not list
     assert.equal(r.code, 2, argv.join(' '));
     assert.equal(r.out, '', 'no report');
     assert.ok(r.err.startsWith('usage: node agents/claim-tagger-mvp/scripts/walkthrough.mjs start'), `${argv.join(' ')}: the usage`);
-    assert.ok(!/decide|approve|reject/.test(r.err), `${argv.join(' ')}: the usage names none of them`);
+    assert.ok(!/walkthrough\.mjs (decide|approve|reject)|approve|reject/.test(r.err), `${argv.join(' ')}: the usage names none of them as a subcommand`);
   }
   assert.equal(w.fake.requests.length, sent, 'no request was sent');
-  // run does not start them as scripts, even when a file of that name exists
+  assert.ok(RUN_SCRIPTS.includes('decide'), 'decide.mjs is a script that run starts (P18 to P20)');
+  // run does not start approve and reject as scripts, even when a file of that name exists
   const scriptsDir = standIns();
   const marker = join(tmp('markers'), 'started');
-  for (const name of ['decide', 'approve', 'reject']) {
+  for (const name of ['approve', 'reject']) {
     assert.ok(!RUN_SCRIPTS.includes(name), name);
     writeFileSync(join(scriptsDir, `${name}.mjs`), `import { writeFileSync } from 'node:fs';\nwriteFileSync(${JSON.stringify(marker)}, 'started');\n`);
     const r = await w.run(['run', name], { scriptsDir });
