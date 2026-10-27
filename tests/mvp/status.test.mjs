@@ -6,7 +6,7 @@ import { countsOf, decisionsCell, main, readingCounts, status } from '../../agen
 import { readJson } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { WITHOUT_NOTE, readUnder, readingHash } from '../../agents/claim-tagger-mvp/scripts/lib/readings.mjs';
-import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
+import { MAX_ROWS, lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { claimText, makeWorld } from './helpers/loop-world.mjs';
 
 function assertReport(h, r) {
@@ -92,7 +92,7 @@ test('status counts a claim by its Agent status: Done and a Reviewed claim do no
   });
   const r = await status(w.hooks());
   assert.equal(r.report.sentence, 'Status: nothing is paused; 2 rows wait for you.', 'c01 and c02; c03 says nothing waits, c04 is Reviewed, c05 was not read');
-  assert.deepEqual(r.report.rows[1], ['Your queue', '2 rows, lowest confidence first', '']);
+  assert.deepEqual(r.report.rows[1], ['Your queue', '2 rows, lowest confidence first; 1 new claim not read yet', ''], 'c05 has no Agent status: it does not wait, it is new');
 });
 
 test('status, more rows wait than fit one sitting: the count is in the sentence and Next says where to start', async () => {
@@ -106,23 +106,24 @@ test('status, more rows wait than fit one sitting: the count is in the sentence 
 });
 
 test('status, only rule changes wait: approve or reject; an approved one is ready to check; singular and plural read right', async () => {
-  const one = await makeWorld({ claims: 2, lessons: [lesson('One', 'Proposed')] });
+  // both claims are read already: a claim the agent has not read would send the editor to the tag command first
+  const one = await makeWorld({ claims: 2, claimRows: read(1, 2), lessons: [lesson('One', 'Proposed')] });
   const r1 = await status(one.hooks());
   assert.equal(r1.report.sentence, 'Status: nothing is paused; 1 rule change waits for you.');
   assert.match(r1.report.next, /^Next: approve or reject the rule change in Lessons waiting \(https:\/\/www\.notion\.so\//);
 
-  const two = await makeWorld({ claims: 2, lessons: [lesson('One', 'Proposed'), lesson('Two', 'Proposed', { Rule: 'Context-dependent rule 2' })] });
+  const two = await makeWorld({ claims: 2, claimRows: read(1, 2), lessons: [lesson('One', 'Proposed'), lesson('Two', 'Proposed', { Rule: 'Context-dependent rule 2' })] });
   const r2 = await status(two.hooks());
   assert.equal(r2.report.sentence, 'Status: nothing is paused; 2 rule changes wait for you.');
   assert.match(r2.report.next, /^Next: approve or reject the rule changes in Lessons waiting/);
 
-  const ready = await makeWorld({ claims: 2, lessons: [lesson('Ready', 'Approved'), lesson('Done', 'Live')] });
+  const ready = await makeWorld({ claims: 2, claimRows: read(1, 2), lessons: [lesson('Ready', 'Approved'), lesson('Done', 'Live')] });
   const r3 = await status(ready.hooks());
   assert.equal(r3.report.sentence, 'Status: nothing is paused; 1 rule change waits for you.');
   assert.deepEqual(r3.report.rows.find((x) => x[0] === 'Lessons waiting'), ['Lessons waiting', '1 approved, ready to check', '']);
   assert.equal(r3.report.next, 'Next: type /claim-tagger promote to check the approved rule change.');
 
-  const both = await makeWorld({ claims: 2, lessons: [lesson('A', 'Proposed'), lesson('B', 'Approved', { Rule: 'Context-dependent rule 2' })] });
+  const both = await makeWorld({ claims: 2, claimRows: read(1, 2), lessons: [lesson('A', 'Proposed'), lesson('B', 'Approved', { Rule: 'Context-dependent rule 2' })] });
   assert.deepEqual((await status(both.hooks())).report.rows.find((x) => x[0] === 'Lessons waiting'), ['Lessons waiting', '1 rule change to approve, 1 approved, ready to check', '']);
 });
 
@@ -193,7 +194,7 @@ test('status --json prints the counts as JSON instead of the report, after the r
   assert.equal(r.exit, 0);
   assert.equal(h.io.outs.length, 1);
   const json = JSON.parse(h.io.outs[0]);
-  assert.deepEqual(json.queue, { open: 2, decided: 1, decided_listed: 0, to_read: 1, pending_rule_decisions: 0, needs_note: 1, sitting_rows: 20, more_than_a_sitting: false }, 'the three counts of the decisions made are under queue');
+  assert.deepEqual(json.queue, { open: 2, decided: 1, decided_listed: 0, to_read: 1, pending_rule_decisions: 0, needs_note: 1, unread: 0, sitting_rows: 20, more_than_a_sitting: false }, 'the three counts of the decisions made, and the claims not read yet, are under queue');
   assert.match(json.table, new RegExp(w.DB.claims), 'the table the counts are about is the Claims copy');
   assert.deepEqual(json.lessons, { Proposed: 1, Approved: 0, Rejected: 0, Live: 1, 'Rolled back': 0 });
   assert.deepEqual([json.edition, json.tags, json.same_as_notion, json.paused], ['2026-10-16.1', 13, true, false]);
@@ -288,11 +289,12 @@ test('in production the Next line stays "decide the rows" even when other claims
   const report = assertReport(h, r);
   assert.match(report.next, DECIDE);
   assert.ok(!/demo|step 2/.test(report.next));
+  assert.deepEqual(report.rows[1], ['Your queue', '2 rows, lowest confidence first; 1 new claim not read yet', ''], 'c03 is counted in the cell, after the rows to decide');
 
   const practice = await practicePage();
   const j = practice.hooks({ json: true });
   await status(j);
-  assert.deepEqual(JSON.parse(j.io.outs[0]).queue, { open: 0, decided: 5, decided_listed: 0, to_read: 0, pending_rule_decisions: 0, needs_note: 0, sitting_rows: 20, more_than_a_sitting: false });
+  assert.deepEqual(JSON.parse(j.io.outs[0]).queue, { open: 0, decided: 5, decided_listed: 0, to_read: 0, pending_rule_decisions: 0, needs_note: 0, unread: 2, sitting_rows: 20, more_than_a_sitting: false });
 });
 
 test('the table of Step 1 on the practice page is what status prints on a practice page: the same header and the same rows', async () => {
@@ -338,9 +340,12 @@ const decidedListed = (ns, over = {}) => reviewed(ns, { 'Agent status': WAITS, '
 const DISTILL = 'Next: type /claim-tagger distill to draft a rule change from your decisions.';
 const NEXT_TAG = 'Next: type /claim-tagger tag to read new claims.';
 
+// The tables of these tests have been tagged already: a claim a test does not set is read (Agent status Done), so that "new claims not read yet" shows only where a test puts such a claim there.
+const tagged = (claims, claimRows = {}) => ({ ...read(...Array.from({ length: claims }, (_, i) => i + 1)), ...claimRows });
+
 /** A world, with the ledger rows of `read` (claim numbers) already holding the reading `readOpts` describes. */
-async function world({ read = [], readOpts = {}, claims = 4, ...opts } = {}) {
-  const w = await makeWorld({ claims, ...opts });
+async function world({ read = [], readOpts = {}, claims = 4, claimRows = {}, ...opts } = {}) {
+  const w = await makeWorld({ claims, claimRows: tagged(claims, claimRows), ...opts });
   if (read.length) markRead(w, read, readOpts);
   return w;
 }
@@ -769,7 +774,7 @@ test('countsOf: open, decided, decided but still listed, the three counts of the
     config: base.config,
   });
   // to read: b and h (never read); pointing at a rule: c, d and g (Still wrong stays open); without a note: b. a and e are not decided, f is Fixed
-  assert.deepEqual(c.queue, { open: 2, decided: 6, decided_listed: 2, to_read: 2, pending_rule_decisions: 3, needs_note: 1, sitting_rows: 1, more_than_a_sitting: true });
+  assert.deepEqual(c.queue, { open: 2, decided: 6, decided_listed: 2, to_read: 2, pending_rule_decisions: 3, needs_note: 1, unread: 0, sitting_rows: 1, more_than_a_sitting: true });
   assert.deepEqual([c.waiting_lessons, c.last_run], [2, 'x']);
   const bare = countsOf({ claims: [claim('b', { review_status: 'Reviewed', challenged_notes: '' })], rubric, config: base.config });
   assert.deepEqual([bare.queue.to_read, bare.queue.pending_rule_decisions, bare.queue.needs_note], [0, 0, 0], 'without ledger rows there is nothing to read');
@@ -792,9 +797,290 @@ test('status counts a claim marked To review the way propose wrote it: it waits 
       [id(1)]: { 'Agent status': WAITS, 'Agent confidence': 0.9, 'Review status': 'To review' }, // a confident answer on a claim marked To review: propose wrote Waits for you
       [id(2)]: { 'Agent status': NOTHING, 'Agent confidence': 0.9 }, // Review status empty and a confident answer
       [id(3)]: { 'Agent status': NOTHING, 'Agent confidence': 0.9, 'Review status': 'Reviewed' },
+      ...read(4),
     },
   });
   const r = await status(w.hooks());
   assert.equal(r.report.sentence, 'Status: nothing is paused; 1 row waits for you.');
   assert.deepEqual(r.report.rows[1], ['Your queue', '1 row, lowest confidence first', '']);
+});
+
+// ---- the claims the agent has not read yet: production only ------------------------------------------------------------------------------------------------------------
+// A claim that is not Reviewed and has no Agent status has not been read by the agent. A table that was just filled holds many of them; a practice page holds two at step 1 and keeps its own words.
+
+const NEW_CLAIMS_TAG = (n) => `Next: type /claim-tagger tag to read ${n === 1 ? '1 new claim' : `${n} new claims`}.`;
+/** assertReport, and the table has the five rows at most (a row is never added for the claims that are not read yet). */
+function assertFiveRowsAtMost(h, r) {
+  const report = assertReport(h, r);
+  assert.ok(report.rows.length <= MAX_ROWS, `${report.rows.length} rows: ${r.markdown}`);
+  return report;
+}
+
+test('status in production, a table just filled with claims nobody has tagged: Your queue says how many, Next sends the editor to the tag command and not to distill, the sentence still names the decisions to read', async () => {
+  // c01 to c03 are decisions the agent has not read; c04 to c203 have no Agent status
+  const w = await makeWorld({ claims: 203, claimRows: decidedListed([1, 2, 3], { 'Agent status': NOTHING }), queue: ledgerOf([1, 2, 3]) });
+  const h = w.hooks();
+  const r = await status(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const report = assertFiveRowsAtMost(h, r);
+  assert.equal(report.sentence, 'Status: nothing is paused; the agent has 3 of your decisions to read.', 'the decisions come first in the sentence, as they did');
+  assert.deepEqual(report.rows, [
+    ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
+    ['Your queue', 'nothing waits; 200 new claims not read yet', ''],
+    ['Your decisions', '3 to read', ''],
+    ['Lessons waiting', 'none', ''],
+    ['Last run', 'none yet', ''],
+  ]);
+  assert.equal(report.next, 'Next: type /claim-tagger tag to read 200 new claims.', 'tag, not distill: the 200 claims have no tags yet');
+  assert.equal(report.rows.length, 5);
+  assert.equal(r.json.queue.unread, 200);
+  assert.equal(r.json.queue.to_read, 3);
+  assert.equal(readJson(join(r.runDir, 'report.json')).next, 'Next: type /claim-tagger tag to read 200 new claims.');
+  assert.equal(w.writes().length, 0, 'status writes nothing to Notion');
+
+  // the same table, printed as JSON: the count is under queue with the others
+  const j = w.hooks({ json: true });
+  await status(j);
+  assert.deepEqual(JSON.parse(j.io.outs[0]).queue, { open: 0, decided: 3, decided_listed: 0, to_read: 3, pending_rule_decisions: 0, needs_note: 0, unread: 200, sitting_rows: 20, more_than_a_sitting: false });
+});
+
+test('status in production, claims wait for the editor and others are not read yet: the cell has both parts, and Next is still to decide the rows (or to start at the top)', async () => {
+  const w = await makeWorld({ claims: 8, claimRows: { ...waiting(1, 2, 3), ...read(4) } }); // c05 to c08 have no Agent status
+  const h = w.hooks();
+  const report = assertFiveRowsAtMost(h, await status(h));
+  assert.equal(report.sentence, 'Status: nothing is paused; 3 rows wait for you.', 'the claims not read yet do not wait for the editor');
+  assert.deepEqual(report.rows, [
+    ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
+    ['Your queue', '3 rows, lowest confidence first; 4 new claims not read yet', ''],
+    ['Lessons waiting', 'none', ''],
+    ['Last run', 'none yet', ''],
+  ]);
+  assert.match(report.next, DECIDE);
+  assert.equal(DECIDE.exec(report.next)[1], 'three');
+  assert.ok(!/tag|new claims/.test(report.next), report.next);
+
+  // more rows wait than fit one sitting: start at the top, the cell still has both parts
+  const many = await makeWorld({ claims: 8, claimRows: waiting(1, 2, 3), configure: (c) => { c.queue.sitting_rows = 2; } });
+  const hm = many.hooks();
+  const reportMany = assertFiveRowsAtMost(hm, await status(hm));
+  assert.equal(reportMany.sentence, 'Status: nothing is paused; 3 rows wait for you, more than fit one sitting.');
+  assert.deepEqual(reportMany.rows[1], ['Your queue', '3 rows, lowest confidence first; 5 new claims not read yet', '']);
+  assert.match(reportMany.next, /^Next: start at the top of Your queue \(/);
+
+  // a rule change waiting beside the rows and the new claims
+  const lessonToo = await makeWorld({ claims: 5, claimRows: waiting(1), lessons: [lesson('A', 'Proposed')] });
+  const hl = lessonToo.hooks();
+  const reportLesson = assertFiveRowsAtMost(hl, await status(hl));
+  assert.equal(reportLesson.sentence, 'Status: nothing is paused; 1 row and 1 rule change wait for you.');
+  assert.deepEqual(reportLesson.rows[1], ['Your queue', '1 row, lowest confidence first; 4 new claims not read yet', '']);
+  assert.match(reportLesson.next, /^Next: decide your claim in Your queue \(/);
+
+  // a decided claim (Reviewed, Agent status still Waits for you) is not in Your queue (P13) and is not unread: only the claims with no Agent status are counted, and Next reads them before distill
+  const listed = await makeWorld({ claims: 4, claimRows: { ...decidedListed([1]), ...read(2) }, queue: ledgerOf([1]) });
+  const hd = listed.hooks();
+  const reportListed = assertFiveRowsAtMost(hd, await status(hd));
+  assert.deepEqual(reportListed.rows[1], ['Your queue', 'nothing waits; 2 new claims not read yet', '']);
+  assert.deepEqual(reportListed.rows[2], ['Your decisions', '1 to read', '']);
+  assert.equal(reportListed.next, NEW_CLAIMS_TAG(2), 'nothing is left to decide: reading the new claims comes before distill');
+});
+
+test('status in production, one claim nobody has tagged and nothing else to say: "nothing waits; 1 new claim not read yet", the sentence names the claim, Next is the tag command', async () => {
+  const w = await makeWorld({ claims: 3, claimRows: { ...reviewed([1]), ...read(2) }, settings: { 'Last run summary': 'Tag · 15 Oct 11:20 · 2 claims' } });
+  const h = w.hooks();
+  const r = await status(h);
+  const report = assertFiveRowsAtMost(h, r);
+  assert.equal(report.sentence, 'Status: nothing is paused; the agent has 1 new claim to read.');
+  assert.deepEqual(report.rows, [
+    ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
+    ['Your queue', 'nothing waits; 1 new claim not read yet', ''],
+    ['Lessons waiting', 'none', ''],
+    ['Last run', 'Tag · 15 Oct 11:20 · 2 claims', ''],
+  ]);
+  assert.equal(report.next, 'Next: type /claim-tagger tag to read 1 new claim.');
+  assert.equal(r.json.queue.unread, 1);
+  assert.equal(w.writes().length, 0, 'status writes nothing to Notion');
+
+  // several: the plural form in the sentence, the cell and the Next line
+  const several = await makeWorld({ claims: 6, claimRows: read(1, 2) });
+  const hs = several.hooks();
+  const reportSeveral = assertFiveRowsAtMost(hs, await status(hs));
+  assert.equal(reportSeveral.sentence, 'Status: nothing is paused; the agent has 4 new claims to read.');
+  assert.deepEqual(reportSeveral.rows[1], ['Your queue', 'nothing waits; 4 new claims not read yet', '']);
+  assert.equal(reportSeveral.next, 'Next: type /claim-tagger tag to read 4 new claims.');
+});
+
+test('status in production, no claim is unread: the report is what it was, "nothing waits for you" and the tag command to read new claims, and --json holds unread 0', async () => {
+  // Reviewed claims with no Agent status (decided by hand, never tagged by the agent), a claim the agent could not read and claims it has read: none of them is unread
+  const w = await makeWorld({
+    claims: 5,
+    claimRows: { ...reviewed([1, 2], { 'Agent status': null }), [id(3)]: { 'Agent status': 'Could not read' }, ...read(4, 5) },
+    settings: { 'Last run summary': 'Tag · 15 Oct 11:20 · 5 claims' },
+  });
+  const h = w.hooks();
+  const r = await status(h);
+  const report = assertFiveRowsAtMost(h, r);
+  assert.equal(report.sentence, 'Status: nothing is paused and nothing waits for you.');
+  assert.deepEqual(report.rows, [
+    ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
+    ['Your queue', 'nothing waits', ''],
+    ['Lessons waiting', 'none', ''],
+    ['Last run', 'Tag · 15 Oct 11:20 · 5 claims', ''],
+  ]);
+  assert.equal(report.next, 'Next: type /claim-tagger tag to read new claims.', 'the final fallback keeps its words');
+  assert.equal(r.json.queue.unread, 0);
+  assert.ok(!/not read yet/.test(r.markdown), r.markdown);
+});
+
+test('on a practice page the claims the agent has not read keep the words of step 1: the cell, the sentence and the Next line are as they were, and --json holds the count', async () => {
+  const page = await practicePage(); // c01 and c02 are open and not read
+  const h = page.hooks();
+  const r = await status(h);
+  const report = assertFiveRowsAtMost(h, r);
+  assert.equal(report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused and nothing waits for you.`);
+  assert.deepEqual(report.rows[1], ['Your queue', 'nothing waits', ''], 'no "not read yet" on a practice page');
+  assert.equal(report.next, TAG_FIRST);
+  assert.equal(r.json.queue.unread, 2);
+
+  // one of the two read: a row waits, the other is not read; still the demo tag command first
+  const one = await practicePage({ claimRows: waiting(1) });
+  const h1 = one.hooks();
+  const r1 = await status(h1);
+  const report1 = assertFiveRowsAtMost(h1, r1);
+  assert.deepEqual(report1.rows[1], ['Your queue', '1 row, lowest confidence first', '']);
+  assert.equal(report1.next, TAG_FIRST);
+  assert.equal(r1.json.queue.unread, 1);
+
+  // both read: nothing is unread, the editor decides
+  const both = await practicePage({ claimRows: waiting(1, 2) });
+  const h2 = both.hooks();
+  const r2 = await status(h2);
+  const report2 = assertFiveRowsAtMost(h2, r2);
+  assert.match(report2.next, DECIDE);
+  assert.equal(r2.json.queue.unread, 0);
+
+  // decisions to read, nothing unread: distill, as it was
+  const midway = await practicePage({ claimRows: decidedListed([1, 2]), queue: ledgerOf([1, 2]) });
+  const h3 = midway.hooks();
+  const r3 = await status(h3);
+  assert.equal(assertFiveRowsAtMost(h3, r3).next, 'Next: type /claim-tagger demo distill to draft a rule change from your decisions.');
+  assert.equal(r3.json.queue.unread, 0);
+
+  // more rows wait than fit one sitting, one claim not read: the cell has no second part, the demo tag command still comes first
+  const many = await practicePage({ claims: 9, claimRows: { ...waiting(1, 2, 8), [id(9)]: {} }, configure: (c) => { c.demo_title = PRACTICE_TITLE; c.queue.sitting_rows = 2; } });
+  const h4 = many.hooks();
+  const r4 = await status(h4);
+  const report4 = assertFiveRowsAtMost(h4, r4);
+  assert.deepEqual(report4.rows[1], ['Your queue', '3 rows, lowest confidence first', '']);
+  assert.equal(report4.next, TAG_FIRST);
+  assert.equal(r4.json.queue.unread, 1);
+});
+
+test('countsOf: queue.unread counts the claims that are not Reviewed and whose Agent status is empty after trim; a Reviewed claim, "Could not read" and every other status are not unread', () => {
+  const claim = (geo_id, over = {}) => ({ geo_id, claim: `Claim ${geo_id}`, verified_tags: [], challenged_notes: '', ...over });
+  const c = countsOf({
+    claims: [
+      claim('empty', { agent_status: '', review_status: null }), // unread
+      claim('null', { agent_status: null, review_status: null }), // unread
+      claim('missing', { review_status: null }), // unread: no Agent status at all
+      claim('blank', { agent_status: '   ', review_status: 'To review' }), // unread: only spaces, and To review is not Reviewed
+      claim('reviewed', { agent_status: '', review_status: 'Reviewed' }), // an editor decided it: nothing for the agent to read first
+      claim('reviewed-null', { agent_status: null, review_status: 'Reviewed' }),
+      claim('could-not-read', { agent_status: 'Could not read', review_status: null }), // the agent tried
+      claim('done', { agent_status: 'Done', review_status: null }),
+      claim('waits', { agent_status: WAITS, review_status: null }),
+      claim('disagrees', { agent_status: 'Disagrees with your decision', review_status: 'Reviewed' }),
+    ],
+  });
+  assert.equal(c.queue.unread, 4);
+  assert.equal(countsOf({}).queue.unread, 0, 'no claims');
+  assert.equal(countsOf({ claims: [claim('x', { agent_status: ' Could not read ', review_status: null })] }).queue.unread, 0, 'a status with spaces around it is a status');
+});
+
+test('status in production: the sentence names the new claims only when it would have said that nothing waits; every other sentence is as it was', async () => {
+  // a rule change waits: the sentence is about it, the Next line is the tag command (new claims come before approving)
+  const lessonWaits = await makeWorld({ claims: 4, claimRows: read(1, 2), lessons: [lesson('A', 'Proposed')] });
+  const h1 = lessonWaits.hooks();
+  const r1 = await status(h1);
+  const report1 = assertFiveRowsAtMost(h1, r1);
+  assert.equal(report1.sentence, 'Status: nothing is paused; 1 rule change waits for you.');
+  assert.deepEqual(report1.rows.find((row) => row[0] === 'Your queue'), ['Your queue', 'nothing waits; 2 new claims not read yet', '']);
+  assert.equal(report1.next, NEW_CLAIMS_TAG(2));
+
+  // a decision has no note (read, flagged): its sentence stays
+  const bare = await makeWorld({ claims: 4, claimRows: { ...reviewed([1], { 'Why wrong': null, 'Challenged tags notes': '' }), ...read(2, 3) }, queue: ledgerOf([1]) });
+  markRead(bare, [1], { reading: 'Agent slip', noNote: true, noteLine: '', reasonWord: null });
+  const h2 = bare.hooks();
+  const report2 = assertFiveRowsAtMost(h2, await status(h2));
+  assert.equal(report2.sentence, 'Status: nothing is paused; 1 of your decisions has no note.');
+  assert.deepEqual(report2.rows.find((row) => row[0] === 'Your queue'), ['Your queue', 'nothing waits; 1 new claim not read yet', '']);
+  assert.equal(report2.next, NEW_CLAIMS_TAG(1));
+
+  // decisions to read: its sentence stays (and the cell and the Next line are the ones of the first test)
+  const toRead = await makeWorld({ claims: 5, claimRows: { ...decidedListed([1, 2], { 'Agent status': NOTHING }), ...read(3) }, queue: ledgerOf([1, 2]) });
+  const h3 = toRead.hooks();
+  const report3 = assertFiveRowsAtMost(h3, await status(h3));
+  assert.equal(report3.sentence, 'Status: nothing is paused; the agent has 2 of your decisions to read.');
+  assert.equal(report3.next, NEW_CLAIMS_TAG(2));
+});
+
+test('status in production, the Next line for new claims comes after deciding the rows and before distill, rejecting a recanted rule change, approving and promoting', async () => {
+  const nextOfWorld = async (w) => {
+    const h = w.hooks();
+    const r = await status(h);
+    assert.equal(r.exit, 0, h.io.errs.join('\n'));
+    return assertFiveRowsAtMost(h, r).next;
+  };
+  // c05 has no Agent status in every world below
+  const pointing = { claims: 5, claimRows: { ...decidedListed([1, 2], { 'Agent status': NOTHING }), ...read(3, 4) }, queue: ledgerOf([1, 2]) };
+  const pointed = async (extra = {}) => { const w = await makeWorld({ ...pointing, ...extra }); markRead(w, [1, 2]); return w; };
+
+  // distill would be next (two decisions that point at a rule): not while a claim is not read
+  assert.equal(await nextOfWorld(await pointed()), NEW_CLAIMS_TAG(1), 'before distill');
+  // a rule change that is Proposed or Approved
+  assert.equal(await nextOfWorld(await pointed({ lessons: [lesson('New', 'Proposed')] })), NEW_CLAIMS_TAG(1), 'before approve or reject');
+  assert.equal(await nextOfWorld(await pointed({ lessons: [lesson('Ready', 'Approved')] })), NEW_CLAIMS_TAG(1), 'before promote');
+  // a rule change that rests on a decision the editor now calls the agent's slip: the Lessons waiting row says so, the Next line is the tag command
+  const lines = (...ns) => ns.map((n) => `${claimText(n)} · ${id(n)}::${TAG}`).join('\n');
+  const recanted = await makeWorld({
+    claims: 5, claimRows: { ...reviewed([1, 2, 3], { 'Why wrong': 'Rule unclear', 'Challenged tags notes': NOTE_LINE }), ...read(4) }, queue: ledgerOf([1, 2, 3]),
+    lessons: [lesson('Draft', 'Proposed', { 'Supporting rows': lines(1, 2, 3) })],
+  });
+  markRead(recanted, [1, 2, 3]);
+  recanted.review(id(3), { tags: [], why: 'Agent slip', notes: 'Rule 5 settles it.' });
+  const hr = recanted.hooks();
+  const rr = await status(hr);
+  const reportRecanted = assertRecantedReport(hr, rr);
+  assert.equal(reportRecanted.rows.find((row) => row[0] === 'Lessons waiting')[1], '1 rule change to reject (rests on a decision you now call a slip)');
+  assert.equal(reportRecanted.next, NEW_CLAIMS_TAG(1), 'before rejecting');
+  // claims that wait for the editor come first
+  assert.match(await nextOfWorld(await pointed({ claimRows: { ...pointing.claimRows, ...waiting(4) } })), /^Next: decide your claim in Your queue \(/);
+  // once the new claims are read the line is what it was
+  assert.equal(await nextOfWorld(await pointed({ claimRows: { ...pointing.claimRows, ...read(5) } })), DISTILL);
+});
+
+test('status in production, the table never has more than five rows with claims not read yet: every row at once, and the Your decisions row left out', async () => {
+  // every row at once: the Your decisions row, a rule change, rows to decide, new claims
+  const full = await makeWorld({
+    claims: 9,
+    claimRows: { ...waiting(4), ...decidedListed([1, 2], { 'Agent status': NOTHING }), ...read(3) }, // c05 to c09 are not read
+    queue: ledgerOf([1, 2]),
+    lessons: [lesson('A', 'Proposed')],
+    settings: { 'Last run summary': 'Tag · 15 Oct 11:20 · 4 claims' },
+  });
+  const h = full.hooks();
+  const report = assertFiveRowsAtMost(h, await status(h));
+  assert.deepEqual(report.rows.map((row) => row[0]), ['Rulebook', 'Your queue', 'Your decisions', 'Lessons waiting', 'Last run']);
+  assert.equal(report.rows.length, 5);
+  assert.deepEqual(report.rows[1], ['Your queue', '1 row, lowest confidence first; 5 new claims not read yet', '']);
+  assert.equal(report.sentence, 'Status: nothing is paused; 1 row and 1 rule change wait for you.');
+  assert.match(report.next, /^Next: decide your claim in Your queue \(/);
+
+  // while a safety check runs, the last row says so and the table is still five rows or fewer
+  const checking = await makeWorld({ claims: 4, claimRows: { ...decidedListed([1, 2], { 'Agent status': NOTHING }), ...read(3) }, queue: ledgerOf([1, 2]), lessons: [lesson('A', 'Approved')] });
+  checking.write('runs/PROMOTING.json', { run_id: 'x', lesson: 'A long running change', phase: 'judging', since: new Date(Date.UTC(2026, 9, 16, 8, 30)).toISOString() });
+  const hc = checking.hooks();
+  const reportChecking = assertFiveRowsAtMost(hc, await status(hc));
+  assert.equal(reportChecking.rows.length, 5);
+  assert.deepEqual(reportChecking.rows[1], ['Your queue', 'nothing waits; 1 new claim not read yet', '']);
+  assert.equal(reportChecking.next, NEW_CLAIMS_TAG(1));
 });
