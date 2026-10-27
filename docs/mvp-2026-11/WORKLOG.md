@@ -414,3 +414,21 @@ Verified:
 Found: runbook step 10 asks a person to decide "at least 10 claims in Your queue", but the tag run put only 6 there. The other 194 are Done, since Context-dependent seldom applies to these Debate claims. Ten decisions need 4 more claims, taken from All claims. The 3 audit decisions are already decided and do not count. How many to decide is the product owner's call.
 
 Next: step 10. People decide in Your queue, and possibly in All claims; then `distill --plan-only`, an Opus review, `distill`, a person's approval in Lessons waiting, `promote` and the follow-up (`evidence/29-people-loop/`).
+
+### 44. Decisions P18 to P20: an editor's Claude may decide claims; the design of the decide step (2026-10-27)
+
+Done: the product owner asked me to decide the first 6 claims in Your queue. I declined under hard rule 1 and P8. The product owner then changed the rule: editors will talk to their own Claude, and Claude should be able to decide when instructed. Asked four questions, the product owner chose:
+- Claude may decide, including judging the claims itself (P18);
+- the three Claims editor columns, on Claims and on practice pages (P18); rule-change approvals and Paused stay with people;
+- the Notion connector under the editor's login (P19);
+- no marker (P20).
+
+The design is in `CLAUDE-DECIDES.md`, engineering decisions 113 to 116:
+- `decide.mjs list`, `open` (records the decisions and writes `runs/DECIDING`) and `check` (reads back and removes the marker);
+- the guard hook allows a connector `update-page` naming only the three columns, on a page id an open marker lists;
+- the transcript check accepts such writes only in a decide transcript;
+- the frozen practice page text waits for a backlog row.
+
+Before deciding, the product owner connected the Notion connector in this session.
+
+Next: a Sonnet coder builds it in a worktree off this branch (2,220 tests expected at the start), then an Opus review; no live decision until the merge and the product owner's word.
