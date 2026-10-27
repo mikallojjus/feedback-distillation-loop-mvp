@@ -17,7 +17,7 @@
 //   capabilityOf(config, tag)                   -> text, deterministic, source or corpus (config.tags, with its default)
 //   groupOf(config, tag)                        -> the judge group the tag belongs to (config.judge.groups), or null
 //   readingSettings(config)                     -> { reading_prompt, reading_batch, reading_effort }: config.distill's three reading settings, with READING_DEFAULTS for a missing one
-//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_COPY_COLUMNS, CLAIMS_EDITOR_KEYS, CLAIMS_WRITE_KEYS, AGENT_STATUS, READING_DEFAULTS, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
+//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_GEO_COLUMNS, CLAIMS_EDITOR_KEYS, CLAIMS_WRITE_KEYS, AGENT_STATUS, READING_DEFAULTS, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
 //              RULE_CHANGES_AGENT_STATUS (the Status values a script may write; Approved and Rejected belong to the editor,
 //              see config.editor_columns.rule_changes_status_editor_values)
 //
@@ -41,10 +41,13 @@ export const RULEBOOK_COLUMNS = Object.freeze([
   'When to use', 'Work tags',
 ]);
 
-/** The thirteen Geo columns of the real claims table that the Claims copy carries. Setup creates a row with all of them. */
-export const CLAIMS_COPY_COLUMNS = Object.freeze([
-  'Geo Name', 'Geo ID', 'Geo URL', 'Geo Sources', 'Geo Tags', 'Geo Topics', 'Geo Score', 'Geo Supporting arguments', 'Geo Opposing arguments',
-  'Geo Related people', 'Geo Related projects', 'Geo Is factual', 'Geo Name source',
+/**
+ * The nine Geo columns of the Claims table (P12, the lean Geo set): the claim's name, its identity and address in Geo, the space it was read from, the day it was made, its
+ * sources, whether Geo marks it factual, its tags and its topics. Setup creates a row with all of them (from a row of the Geo pick, scripts/geo-pick.mjs). It was
+ * CLAIMS_COPY_COLUMNS, thirteen columns of the old copy of the real table, until the fresh structure of 27 Oct 2026.
+ */
+export const CLAIMS_GEO_COLUMNS = Object.freeze([
+  'Geo Name', 'Geo ID', 'Geo URL', 'Geo Space', 'Geo Created', 'Geo Sources', 'Geo Is factual', 'Geo Tags', 'Geo Topics',
 ]);
 
 /** The keys of notion.claims.columns that name the three columns an editor fills on the Claims copy (they must also be listed in editor_columns.claims). Why wrong left the editor's work (READ-DECISIONS.md, decision P4). */
@@ -393,7 +396,7 @@ export function writableProperties(config, table, { setup = false } = {}) {
       const entry = tableEntry(config, 'claims');
       add(...CLAIMS_WRITE_KEYS.map((k) => entry.write_columns[k]).filter(Boolean));
       const editor = new Set(editorColumns(config, 'claims'));
-      if (setup) add(entry.key, ...Object.values(entry.columns).filter((c) => !editor.has(c)), ...CLAIMS_COPY_COLUMNS);
+      if (setup) add(entry.key, ...Object.values(entry.columns).filter((c) => !editor.has(c)), ...CLAIMS_GEO_COLUMNS);
       break;
     }
     default:

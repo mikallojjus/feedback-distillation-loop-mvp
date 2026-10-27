@@ -12,20 +12,30 @@
 //                                                  A relation column names the table it points at in relation_to; a view that was another view of the same table under an
 //                                                  older name says so in renamed_from, and the builder renames that view instead of making a new one.
 //   validateStructure(structure), loadStructure(root), saveStructure(root, structure), structurePath(root), countStructure(structure)
-//   planStructure(structure, config)           -> { parent_page_id, pages: [{ key, title, text }], databases: [{ table, title, body }], columns: [{ table, name, type, relation_to, renamed_from, retired, body }],
+//   planStructure(structure, config, { inline }) -> { parent_page_id, pages: [{ key, title, text }], hub, databases: [{ table, title, body }], columns: [{ table, name, type, relation_to, renamed_from, retired, body }],
 //                                                   views: [{ table, name, columns, hidden, retired, wrap, renamed_from, body }], arrange: { <table>: { shown, hidden } } }
 //                                                  body of a database is the POST /databases body (relation columns left out: the table they point at may not exist yet);
 //                                                  columns lists every column but the title, so that what a table lacks can be added (PATCH data source); body of a view is the
 //                                                  POST /views body without the ids
 //   completeViewBody(viewPlan, dataSource, { databaseId }) -> the POST /views body, property ids filled from the created data source
 //   arrangeOwnViews({ client, plan, table, databaseId, dataSourceId, log }) -> the names of the table's own views (Notion's default view) whose column order was set to the structure's
-//   runStructure({ plan, client, root, config, log, parts }) -> { ok, code, stopped, pages, databases, columns, columnsRenamed, views, updated, arranged, warnings, created }
+//                                                  inline false (the default) makes full-page tables (the production tables, P10), true inline ones (the practice page of the walkthrough). hub is the plan of the hub
+//                                                  page's body (hubPlan) or null for a structure without a hub block; with a hub block the databases are planned in hub.table_order
+//   hubPlan(structure), hubDifferences({ hub, config, children }), readHub({ client, config, hub })   the hub page (P11): its plan; its body compared with the plan (pure); the same read from Notion (GET only)
+//   withGeoOptions(structure, { tagNames, spaceNames }) -> { structure, changes, changed }   the options of Geo Tags and Geo Space (setup.mjs structure --options-from); optionColor(table, column, name)
+//   runStructure({ plan, client, root, config, log, parts }) -> { ok, code, stopped, pages, databases, columns, columnsRenamed, views, updated, arranged, hub, warnings, created }
 //                                                  columnsRenamed: { <table>: [{ from, to }] }; updated: { <table>: { <view name>: ['filter', 'sorts', 'columns', 'wrap'] } } (views the table had
 //                                                  that were brought to the structure); arranged: { <table>: [view names] } (the table's own views whose column order was set)
 //   verifyStructure({ client, config, structure })  -> { ok, differences: [{ table, kind, detail }], views: { <table>: { <view name>: <view id> } } }
 //   renderPreview(structure)                   -> Markdown for the dry run
 //   parseViewFilter(text, table, where), parseViewSort(text, table, where)
 //   viewKey(name), viewUrl(databaseId, viewId) -> 'your_queue'; 'https://www.notion.so/<database id>?v=<view id>' (ids without dashes)
+//
+// The hub (decisions P9 to P11). A structure with a "hub" block ({ title, view_links, table_order, pages_after }) is built in this order: the tables in table_order (full-page tables), their
+// columns, the pages (Onboarding), the views, and then the hub part, which appends the one-line links to some views at the start of the hub page (found by their text, so a run again adds none)
+// and reads the page's body back: [the link lines][the tables in table_order][the pages in pages_after, the archive page last]. What is out of place is a difference in plain words (the
+// archive page above the tables: drag it to the bottom of the page in Notion), a block that belongs to none of them is a leftover; the hub part only appends, and never moves, edits or removes.
+// A structure without a hub block (the fixtures of the earlier builds) is valid and builds as before.
 //
 // Columns. After the tables exist, runStructure first renames the columns of an earlier build that the structure gives another name (a column's `renamed_from`: the text columns
 // Agent tags and Agent notes become "Agent tags (old)" and "Agent notes (old)", the relation "Claim quality tags — verified" becomes "Verified tags", and the select Why wrong of the
@@ -51,7 +61,7 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { archivedIds } from './archive.mjs';
+import { ARCHIVE_TITLE, archivedIds } from './archive.mjs';
 import { TABLES, isProtected, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { readJson, writeJsonAtomic } from './jsonl.mjs';
@@ -109,7 +119,7 @@ export const OPTION_COLORS = Object.freeze({
     'Work tags': { 'Pipeline benchmark check': 'gray', Issue: 'orange' },
   },
   claims: {
-    'Geo Name source': { 'This space': 'green', 'Other space (fallback)': 'orange' },
+    'Geo Space': { 'U.S. Politics': 'blue', 'World affairs': 'green', AI: 'purple', Health: 'red', Crypto: 'orange', Technology: 'gray' },
     'Review status': { 'To review': 'yellow', Reviewed: 'green' },
     'Agent status': { 'Waits for you': 'yellow', Done: 'green', 'Disagrees with your decision': 'red', 'Could not read': 'gray' },
   },
@@ -126,8 +136,32 @@ export const OPTION_COLORS = Object.freeze({
   },
 });
 
+/**
+ * The colours an option takes when it is not listed in OPTION_COLORS and its column is one whose options come from a file (the Geo Tags of the Claims, from the pick): one of these,
+ * chosen by a hash of the option's name alone, so a name keeps its colour whatever else is in the list and in whatever order (setup.mjs structure --options-from, run twice, changes nothing).
+ */
+export const HASHED_COLORS = Object.freeze({ claims: { 'Geo Tags': ['blue', 'brown', 'gray', 'green', 'orange', 'pink', 'purple', 'red', 'yellow'] } });
+
+// FNV-1a over the UTF-8 bytes of the name: small, stable on every machine, no dependency.
+function nameHash(name) {
+  let h = 0x811c9dc5;
+  for (const byte of Buffer.from(String(name), 'utf8')) {
+    h ^= byte;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return h;
+}
+
+/** The colour of one option of a select column: the listed one, else the hashed one for a column that takes its options from a file, else 'default'. */
+export function optionColor(table, column, name) {
+  const listed = OPTION_COLORS[table]?.[column]?.[name];
+  if (listed) return listed;
+  const palette = HASHED_COLORS[table]?.[column];
+  return palette ? palette[nameHash(name) % palette.length] : 'default';
+}
+
 const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-const escapeRe = (s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRe =(s) => String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const realId = (v) => {
   if (typeof v !== 'string') return null;
   const n = normId(v.trim());
@@ -468,7 +502,34 @@ export function validateStructure(structure) {
     parseViewSort(v.sort, structure.tables[v.table], where);
   }
   if (!Array.isArray(structure.pages) || structure.pages.some((p) => typeof p !== 'string' || p === '')) bad('pages must be a list of page titles');
+  if (structure.made_from !== undefined && (typeof structure.made_from !== 'string' || structure.made_from.trim() === '')) bad('made_from must be text naming the document the structure was made from');
+  if (structure.hub !== undefined) validateHub(structure, bad);
   return structure;
+}
+
+const HUB_KEYS = Object.freeze(['title', 'view_links', 'table_order', 'pages_after']);
+
+// The hub block (P11): what the hub page holds besides its title, in order: the link lines to some views, the five tables, then some pages. A structure without one (the earlier
+// builds) is valid and builds as before.
+function validateHub(structure, bad) {
+  const hub = structure.hub;
+  if (!isPlain(hub)) bad('hub must be an object');
+  const extra = Object.keys(hub).filter((k) => !HUB_KEYS.includes(k));
+  if (extra.length) bad(`hub: "${extra[0]}" is not part of the hub block (it has ${HUB_KEYS.join(', ')})`);
+  if (typeof hub.title !== 'string' || hub.title.trim() === '') bad('hub: title must be the name of the hub page');
+  const list = (name, value) => {
+    if (!Array.isArray(value) || value.length === 0 || value.some((x) => typeof x !== 'string' || x === '')) bad(`hub: ${name} must be a list of names`);
+    if (new Set(value).size !== value.length) bad(`hub: ${name} names something twice`);
+  };
+  list('view_links', hub.view_links);
+  const viewKeys = new Set(structure.views.map((v) => viewKey(v.name)));
+  for (const k of hub.view_links) if (!viewKeys.has(k)) bad(`hub: view_links names "${k}", which is not the key of a view (the keys are ${[...viewKeys].join(', ')})`);
+  list('table_order', hub.table_order);
+  if (hub.table_order.length !== TABLES.length || TABLES.some((t) => !hub.table_order.includes(t))) bad(`hub: table_order must name each of the five tables once (${TABLES.join(', ')})`);
+  list('pages_after', hub.pages_after);
+  const pageKeys = structure.pages.map(pageKey);
+  for (const k of hub.pages_after) if (k !== 'archive' && !pageKeys.includes(k)) bad(`hub: pages_after names "${k}", which is neither "archive" nor one of the pages (${pageKeys.join(', ') || 'none'})`);
+  for (const k of pageKeys) if (!hub.pages_after.includes(k)) bad(`hub: pages_after does not place the page "${k}"`);
 }
 
 export function loadStructure(root = agentRoot()) {
@@ -481,6 +542,35 @@ export function saveStructure(root, structure) {
   validateStructure(structure);
   writeJsonAtomic(structurePath(root), structure);
   return structurePath(root);
+}
+
+const byCodePoints = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * The structure with the options of two columns of the Claims set from the Geo pick (setup.mjs structure --options-from): Geo Tags gets `tagNames` (the pick's tag_names, sorted
+ * by code points here as well) and Geo Space gets `spaceNames` in the order given (config.geo.spaces). `structure` is not changed. Returns
+ * { structure, changes: [{ column, added, removed, reordered }], changed }; running it again on its own result changes nothing. A list that is empty or names something twice is refused:
+ * a select needs its values, and Notion would not take the same option twice.
+ */
+export function withGeoOptions(structure, { tagNames, spaceNames } = {}) {
+  validateStructure(structure);
+  const copy = structuredClone(structure);
+  const changes = [];
+  const plan = [['Geo Space', 'select', spaceNames], ['Geo Tags', 'multi_select', Array.isArray(tagNames) ? [...tagNames].sort(byCodePoints) : tagNames]];
+  for (const [name, type, wanted] of plan) {
+    const column = copy.tables.claims.columns.find((c) => c.name === name);
+    if (!column) throw new StructureError(`the Claims table of the structure has no column "${name}"`);
+    if (column.type !== type) throw new StructureError(`the column "${name}" of the Claims table is a ${column.type}, not a ${type}`);
+    if (!Array.isArray(wanted) || wanted.length === 0 || wanted.some((x) => typeof x !== 'string' || x === '')) throw new StructureError(`there are no options to set for "${name}"; a select needs its values`);
+    if (new Set(wanted).size !== wanted.length) throw new StructureError(`the options for "${name}" name something twice`);
+    const before = column.options;
+    const added = wanted.filter((o) => !before.includes(o));
+    const removed = before.filter((o) => !wanted.includes(o));
+    const reordered = added.length === 0 && removed.length === 0 && JSON.stringify(before) !== JSON.stringify(wanted);
+    column.options = [...wanted];
+    changes.push({ column: name, added, removed, reordered });
+  }
+  return { structure: validateStructure(copy), changes, changed: changes.some((c) => c.added.length || c.removed.length || c.reordered) };
 }
 
 /** { tables, columns, views, pages } for the line that `setup.mjs structure` prints. */
@@ -511,7 +601,7 @@ function propertyConfig(table, column) {
   if (column.type === 'relation') body.relation = { single_property: {} }; // the data source id of the table it points at is added with the column, once that table exists
   else if (column.type === 'number') body.number = { format: 'number' };
   else if (column.type === 'select' || column.type === 'multi_select') {
-    body[column.type] = { options: column.options.map((name) => ({ name, color: OPTION_COLORS[table]?.[column.name]?.[name] ?? 'default' })) };
+    body[column.type] = { options: column.options.map((name) => ({ name, color: optionColor(table, column.name, name) })) };
   } else body[column.type] = {};
   return { type: column.type, ...body, ...(column.description ? { description: column.description } : {}) };
 }
@@ -546,18 +636,48 @@ export function viewPlan(structure, view) {
   };
 }
 
-/** The REST plan for a structure under config.notion.parent_page_id. Pure: nothing is sent. */
-export function planStructure(structure, config) {
+/** What each link line on the hub page says after the view's name ("Your queue: the claims that wait for your decision"). Any other view gets its name in quotes. */
+export const HUB_LINK_TEXT = Object.freeze({
+  your_queue: 'the claims that wait for your decision',
+  needs_your_note: 'the decisions you made without telling the agent why',
+  lessons_waiting: 'the rule changes that wait for your approval',
+});
+
+/** The plan of the hub page's body (P11), or null for a structure without a hub block: the link lines with their text, the tables and pages in the order they stand. Pure. */
+export function hubPlan(structure) {
+  const hub = structure?.hub;
+  if (!hub) return null;
+  return {
+    title: hub.title,
+    table_order: [...hub.table_order],
+    pages_after: [...hub.pages_after],
+    tables: Object.fromEntries(TABLES.map((t) => [t, structure.tables[t].title])),
+    pages: Object.fromEntries(structure.pages.map((title) => [pageKey(title), title])),
+    view_links: hub.view_links.map((key) => {
+      const view = structure.views.find((v) => viewKey(v.name) === key);
+      return { key, name: view.name, text: `${view.name}: ${HUB_LINK_TEXT[key] ?? `the view "${view.name}"`}` };
+    }),
+  };
+}
+
+/**
+ * The REST plan for a structure under config.notion.parent_page_id. Pure: nothing is sent. `inline` says whether the tables are made as inline tables on the page
+ * (is_inline true) or as full-page tables (false, the default: the production tables are full-page, P10); the practice page of the walkthrough passes true. With a hub block
+ * the tables are planned in hub.table_order (the order they stand on the hub page), without one in the order of TABLES, and `hub` holds the plan of the page body.
+ */
+export function planStructure(structure, config, { inline = false } = {}) {
   validateStructure(structure);
   const parent = config?.notion?.parent_page_id;
   if (!realId(parent)) throw new StructureError('config.json has no notion.parent_page_id');
+  const order = structure.hub ? structure.hub.table_order : TABLES;
   return {
     parent_page_id: parent,
     pages: structure.pages.map((title) => {
       const key = pageKey(title);
       return { key, title, text: PAGE_TEXT[key] ?? `${title}.` };
     }),
-    databases: TABLES.map((table) => {
+    hub: hubPlan(structure),
+    databases: order.map((table) => {
       const t = structure.tables[table];
       const properties = {};
       for (const column of t.columns) if (column.type !== 'relation' && column.retired !== true) properties[column.name] = propertyConfig(table, column);
@@ -567,7 +687,7 @@ export function planStructure(structure, config) {
         body: {
           parent: { type: 'page_id', page_id: parent },
           title: [{ type: 'text', text: { content: t.title } }],
-          is_inline: true,
+          is_inline: inline === true,
           initial_data_source: { properties },
         },
       };
@@ -787,7 +907,7 @@ async function buildDatabases(ctx) {
     } else {
       let created;
       try {
-        created = await client.createDatabase({ parentPageId: plan.parent_page_id, title: db.title, isInline: true, properties: db.body.initial_data_source.properties });
+        created = await client.createDatabase({ parentPageId: plan.parent_page_id, title: db.title, isInline: db.body.is_inline === true, properties: db.body.initial_data_source.properties });
         dataSourceId = created.data_sources?.[0]?.id ?? null;
         if (!dataSourceId) dataSourceId = (await client.retrieveDatabase(created.id)).data_sources?.[0]?.id ?? null;
       } catch (e) {
@@ -1115,6 +1235,173 @@ async function buildViews(ctx) {
   }
 }
 
+// ---- the hub page (P11) ---------------------------------------------------------------------------------------------------------------------
+
+const plainText = (rich) => (Array.isArray(rich) ? rich.map((x) => x?.plain_text ?? x?.text?.content ?? '').join('') : '');
+const short = (s, n = 60) => {
+  const t = String(s ?? '');
+  return t.length > n ? `${t.slice(0, n - 1)}…` : t;
+};
+const blockWords = (b) => {
+  if (b?.type === 'child_page') return b.child_page?.title ?? '';
+  if (b?.type === 'child_database') return b.child_database?.title ?? '';
+  return plainText(b?.[b?.type]?.rich_text);
+};
+
+// One link line: the view's name linked to the view, then the words that say what is in it.
+function linkBlock(line, url) {
+  return {
+    object: 'block',
+    type: 'paragraph',
+    paragraph: { rich_text: [{ type: 'text', text: { content: line.name, link: { url } } }, { type: 'text', text: { content: line.text.slice(line.name.length) } }] },
+  };
+}
+
+// What the hub page should hold, in order, each with a test that tells whether a block is it: the link lines (matched by their text), the tables (by id), the pages (by id).
+// A table or page whose id is not known yet is left out (the table check and the "not built yet" line say so); no archive page is expected before setup.mjs archive has recorded one.
+function hubExpected(hub, config) {
+  const items = [];
+  const notBuilt = [];
+  for (const l of hub.view_links) {
+    items.push({ id: `link:${l.key}`, label: `the link line "${l.name}"`, short: `link "${l.name}"`, match: (b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === l.text });
+  }
+  for (const key of hub.table_order) {
+    let id = null;
+    try {
+      id = realId(tableEntry(config, key).database_id);
+    } catch {
+      id = null;
+    }
+    if (!id) continue;
+    const title = hub.tables[key] ?? key;
+    items.push({ id: `table:${key}`, label: `the table "${title}"`, short: title, match: (b) => b?.type === 'child_database' && normId(b.id) === id });
+  }
+  for (const key of hub.pages_after) {
+    const id = realId(config?.notion?.pages?.[key]);
+    if (key === 'archive') {
+      if (!id) continue;
+      items.push({ id: 'page:archive', label: `the archive page "${ARCHIVE_TITLE}"`, short: 'the archive page', match: (b) => b?.type === 'child_page' && normId(b.id) === id });
+      continue;
+    }
+    const title = hub.pages[key] ?? key;
+    if (!id) {
+      notBuilt.push(`the page "${title}" is not built yet (config.json has no id for it); run setup.mjs pages`);
+      continue;
+    }
+    items.push({ id: `page:${key}`, label: `the page "${title}"`, short: title, match: (b) => b?.type === 'child_page' && normId(b.id) === id });
+  }
+  return { items, notBuilt };
+}
+
+/**
+ * The hub page's body compared with its plan, from the blocks listed: { differences: [{ kind, detail }], leftovers: [{ id, type, text }] }. Pure. Differences are plain lines for
+ * a person: a thing missing, things out of order (each with the one drag that puts it right), a block that belongs to none of them (a leftover, left alone), a link line that is there twice.
+ */
+export function hubDifferences({ hub, config, children }) {
+  const { items, notBuilt } = hubExpected(hub, config);
+  const differences = notBuilt.map((detail) => ({ kind: 'missing', detail }));
+  const found = new Map();
+  const leftovers = [];
+  const actual = [];
+  for (const b of children) {
+    const item = items.find((i) => i.match(b));
+    if (item && !found.has(item.id)) {
+      found.set(item.id, b);
+      actual.push(item.id);
+    } else {
+      leftovers.push({ id: normId(b.id), type: b.type ?? 'unknown', text: blockWords(b), duplicate: Boolean(item) });
+    }
+  }
+  for (const item of items) if (!found.has(item.id)) differences.push({ kind: 'missing', detail: `${item.label} is not on the hub page` });
+  const present = items.map((i) => i.id).filter((id) => found.has(id));
+  const names = (ids) => ids.map((id) => items.find((i) => i.id === id)?.short ?? id).join(', ');
+  let now = actual;
+  let want = present;
+  const archiveAt = now.indexOf('page:archive');
+  if (archiveAt >= 0 && archiveAt !== now.length - 1) {
+    const after = now[archiveAt + 1];
+    const above = after.startsWith('table:') || now.slice(archiveAt + 1).some((x) => x.startsWith('table:')) ? 'the tables' : after.startsWith('page:') ? 'Onboarding' : 'the link lines';
+    differences.push({ kind: 'order', detail: `the archive page sits above ${above}: drag it to the bottom of the page in Notion` });
+    now = now.filter((x) => x !== 'page:archive');
+    want = want.filter((x) => x !== 'page:archive');
+  }
+  if (JSON.stringify(now) !== JSON.stringify(want)) {
+    differences.push({ kind: 'order', detail: `the blocks of the hub page are not in order: they should be ${names(want)}, and they are ${names(now)}; drag them into that order in Notion` });
+  }
+  for (const l of leftovers) {
+    differences.push({
+      kind: 'leftover',
+      detail: `${l.duplicate ? 'a second copy of a link line' : 'a block that is none of these'} is on the hub page and was left as it is: ${l.type}${l.text ? ` "${short(l.text)}"` : ''} (${l.id}); remove it by hand if it should not be there`,
+    });
+  }
+  return { differences, leftovers };
+}
+
+/** GET only: the hub page's title and body against the plan. Returns { title, children, differences, leftovers }; a page that cannot be read is a difference, not an exception. */
+export async function readHub({ client, config, hub }) {
+  const rootId = realId(config?.notion?.parent_page_id);
+  let title = null;
+  let children = [];
+  const differences = [];
+  try {
+    const page = await client.retrievePage(rootId);
+    title = plainText(page?.properties?.title?.title);
+    if (title !== hub.title) differences.push({ kind: 'title', detail: `the hub page is called "${title}" and should be called "${hub.title}": setup.mjs archive renames it, or rename it in Notion` });
+  } catch (e) {
+    differences.push({ kind: 'unreadable', detail: `the hub page cannot be read (${e.message})` });
+    return { title, children, differences, leftovers: [] };
+  }
+  try {
+    children = await client.retrieveBlockChildren(rootId);
+  } catch (e) {
+    differences.push({ kind: 'unreadable', detail: `the blocks of the hub page cannot be read (${e.message})` });
+    return { title, children, differences, leftovers: [] };
+  }
+  const body = hubDifferences({ hub, config, children });
+  return { title, children, differences: [...differences, ...body.differences], leftovers: body.leftovers };
+}
+
+// The hub part of a run: the three link lines at the start of the hub page (only the ones that are not there; a line is found by its text, so a second run adds nothing), then a
+// report of the page's body against the plan. It adds blocks and changes none: nothing is moved, edited or removed here, and what is out of place is said in plain words.
+async function buildHub(ctx) {
+  const { plan, client, config, log, result } = ctx;
+  const hub = plan.hub;
+  const rootId = plan.parent_page_id;
+  result.created.hub_links = 0;
+  const added = [];
+  const missing = [];
+  let children;
+  try {
+    children = await client.retrieveBlockChildren(rootId);
+    const views = config.notion?.views ?? {};
+    const blocks = [];
+    for (const line of hub.view_links) {
+      if (children.some((b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === line.text)) continue;
+      const url = views[line.key]?.url;
+      if (typeof url !== 'string' || url === '') {
+        missing.push({ kind: 'link', line: line.name, detail: `the link line "${line.name}" cannot be added: config.json has no address for the view (notion.views.${line.key}); run setup.mjs views` });
+        continue;
+      }
+      blocks.push({ line, block: linkBlock(line, url) });
+    }
+    if (blocks.length) {
+      await client.appendBlocks(rootId, blocks.map((b) => b.block), { position: { type: 'start' } });
+      added.push(...blocks.map((b) => b.line.text));
+      result.created.hub_links += blocks.length;
+      log(`hub page: ${blocks.length} link line(s) added at the top (${blocks.map((b) => b.line.name).join(', ')})`);
+    }
+  } catch (e) {
+    stopWith(ctx, 'the link lines on the hub page', e);
+    return;
+  }
+  const read = await readHub({ client, config, hub });
+  // a link line that could not be added is said once, with its reason, not again as "not on the hub page"
+  const said = new Set(missing.map((m) => `the link line "${m.line}" is not on the hub page`));
+  const differences = [...missing, ...read.differences.filter((d) => !said.has(d.detail))];
+  result.hub = { added, differences, leftovers: read.leftovers, ok: differences.length === 0 };
+  if (!added.length && !differences.length) log('hub page: the link lines are there and the body is in order');
+}
+
 function writeState(ctx) {
   const { root, result, plan } = ctx;
   const file = join(builderPaths(root).dir, 'state.json');
@@ -1140,25 +1427,41 @@ function writeState(ctx) {
  * Make the pages, tables and views of a plan, in that order, recording every id the moment it is known. Resumable: what config.json (or the
  * registry) already holds is not made again, a page or table of the right title already under the parent page is adopted, and a view whose name
  * the table already has is left alone. A create whose answer was lost stops the run (result.stopped says what to check); a view that Notion
- * refuses (400 or 404) is recorded as failed and the run goes on. `parts` limits the run to some of 'pages', 'databases', 'views'.
+ * refuses (400 or 404) is recorded as failed and the run goes on. `parts` limits the run to some of 'pages', 'databases', 'views', 'hub'.
+ *
+ * With a hub block (plan.hub, P11) the order is: the tables in hub.table_order, their columns, the pages (Onboarding), the views, and a hub part that puts the link lines at the start
+ * of the hub page and reports the page's body (result.hub: { added, differences, leftovers, ok }); the tables come first so that the pages made after them stand below them. The hub
+ * part adds blocks and never moves, edits or removes one. Without a hub block the order is pages, tables, views, as it was.
  */
-export async function runStructure({ plan, client, root = agentRoot(), config, log = () => {}, parts = ['pages', 'databases', 'views'] } = {}) {
+export async function runStructure({ plan, client, root = agentRoot(), config, log = () => {}, parts = ['pages', 'databases', 'views', 'hub'] } = {}) {
   if (!plan || !Array.isArray(plan.pages) || !Array.isArray(plan.databases) || !Array.isArray(plan.views)) throw new TypeError('runStructure: a plan from planStructure is required');
   if (!client || typeof client.createDatabase !== 'function') throw new TypeError('runStructure: a Notion client is required');
   if (!config) throw new TypeError('runStructure: the config is required');
   if (isProtected(config, plan.parent_page_id)) throw new StructureError('the parent page is on the protected list of config.json; the builder never builds there');
   const result = {
-    ok: true, code: EXIT.OK, stopped: null, pages: {}, databases: {}, columns: {}, columnsRenamed: {}, views: {}, updated: {}, arranged: {}, warnings: [],
-    created: { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0, columns_renamed: 0, views_updated: 0 },
+    ok: true, code: EXIT.OK, stopped: null, pages: {}, databases: {}, columns: {}, columnsRenamed: {}, views: {}, updated: {}, arranged: {}, hub: null, warnings: [],
+    created: { pages: 0, databases: 0, columns: 0, views: 0, renamed: 0, columns_renamed: 0, views_updated: 0 }, // plus hub_links when the plan has a hub block
   };
   const ctx = { plan, client, root, config, log, result, children: null };
-  try {
+  const doPages = async () => {
     if (parts.includes('pages')) await buildPages(ctx);
-    if (result.ok && parts.includes('databases')) {
+  };
+  const doTables = async () => {
+    if (parts.includes('databases')) {
       await buildDatabases(ctx);
       if (result.ok) await buildColumns(ctx);
     }
+  };
+  try {
+    if (plan.hub) {
+      await doTables();
+      if (result.ok) await doPages();
+    } else {
+      await doPages();
+      if (result.ok) await doTables();
+    }
     if (result.ok && parts.includes('views')) await buildViews(ctx);
+    if (result.ok && plan.hub && parts.includes('hub')) await buildHub(ctx);
   } finally {
     writeState(ctx);
   }
@@ -1322,8 +1625,24 @@ export async function verifyStructure({ client, config, structure } = {}) {
     compareColumns(add, key, t, dataSource, config);
     const wanted = structure.views.filter((v) => v.table === key);
     if (wanted.length) await compareViews(add, key, structure, wanted, entry, client, dataSource, seen);
+    if (structure.hub) await compareFullPage(add, key, t, entry, client);
+  }
+  if (structure.hub) {
+    // the hub page: its title, the order of its body and its leftovers, as the hub part of the build reports them (an order difference is a difference here, so verify is ok only when the page is in order)
+    const read = await readHub({ client, config, hub: hubPlan(structure) });
+    for (const d of read.differences) add('hub', d.kind, d.detail);
   }
   return { ok: differences.length === 0, differences, views: seen };
+}
+
+// A production table is a full-page table (P10): is_inline is false. An inline table would sit inside the hub page's body instead of being a page of its own.
+async function compareFullPage(add, key, t, entry, client) {
+  try {
+    const db = await client.retrieveDatabase(entry.database_id);
+    if (db?.is_inline !== false) add(key, 'inline', `"${t.title}" ${db?.is_inline === true ? 'is an inline table' : `reads is_inline ${JSON.stringify(db?.is_inline ?? null)}`}, but the structure builds full-page tables; turn it into a full-page table in Notion`);
+  } catch (e) {
+    add(key, 'inline', `"${t.title}" cannot be read to see whether it is a full-page table (${e.message})`);
+  }
 }
 
 // ---- the dry run ----------------------------------------------------------------------------------------------------------------------------
@@ -1339,7 +1658,16 @@ export function renderPreview(structure) {
   lines.push('## Sub-pages', '');
   for (const title of structure.pages) lines.push(`- ${title}: ${PAGE_TEXT[pageKey(title)] ?? `${title}.`}`);
   lines.push('');
-  for (const key of TABLES) {
+  const hub = hubPlan(structure);
+  if (hub) {
+    lines.push(`## Hub page "${hub.title}"`, '');
+    lines.push('The hub page holds only links, in this order (nothing on it is moved, edited or removed by a later run; what is out of place is reported):', '');
+    lines.push(`1. ${hub.view_links.length} link lines at the top: ${hub.view_links.map((l) => l.text).join('; ')}`);
+    lines.push(`2. the ${hub.table_order.length} tables as full-page tables, in this order: ${hub.table_order.map((t) => hub.tables[t]).join(', ')}`);
+    lines.push(`3. then: ${hub.pages_after.map((k) => (k === 'archive' ? `the archive page "${ARCHIVE_TITLE}" (made by setup.mjs archive; it sits above the tables until a person drags it down)` : hub.pages[k])).join(', ')}`);
+    lines.push('');
+  }
+  for (const key of structure.hub ? structure.hub.table_order : TABLES) {
     const t = structure.tables[key];
     lines.push(`## ${t.title} (${t.columns.length} columns)`, '');
     lines.push('| Column | Type | Options | Meaning |', '|---|---|---|---|');

@@ -9,8 +9,9 @@ import { countRequests, createClient } from '../../agents/claim-tagger-mvp/scrip
 import { applyPlan, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { buildRubric, writeEdition } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import {
-  LESSON_COLUMNS, QUEUE_COLUMNS, geoSourceLinks, latestPullId, loadPull, main, pickClaims, readOnlyFetch, richTextLinks, supportingKeys, tablesFor,
+  LESSON_COLUMNS, PICK_RETIRED, QUEUE_COLUMNS, USAGE, geoSourceLinks, latestPullId, loadPull, main, readOnlyFetch, richTextLinks, supportingKeys, tablesFor,
 } from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
+import * as pullModule from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
 import { createFakeNotion } from './fixtures/fake-notion.mjs';
 import { placeholderConfig } from './helpers/config-fixture.mjs';
 import { TABLE_SPECS, realClaimsSpec, restProps } from './helpers/tables.mjs';
@@ -796,140 +797,42 @@ test('a default pull or dry-run id that is taken gets a number after it; an id t
   assert.deepEqual(readdirSync(join(real.root, 'runs', 'dry-run')).sort(), ['20261015T100000Z-dry-run', '20261015T100000Z-dry-run-2']);
 });
 
-// ---- the pick------------------------------------------------------------------------------------------------------------------
+// ---- the pick is retired ------------------------------------------------------------------------------------------------------
 
-async function pickWorld(extra = {}) {
-  const w = await realWorld(extra);
+// The 50-claim pick of the first build was replaced by the Geo pick (decision P6, scripts/geo-pick.mjs): --pick answers with where the claims are picked now and exits 2, whatever else is given.
+
+const RETIRED = /^pull: the claims are picked from Geo now: node agents\/claim-tagger-mvp\/scripts\/geo-pick\.mjs --seed <s> --audit <file>$/;
+
+test('--source real_claims --pick is retired: it exits 2 with a pointer to geo-pick.mjs, writes no pick file and sends no request, with or without the old arguments', async () => {
+  const w = await realWorld();
+  const before = w.notion.requests.length;
+  for (const argv of [
+    ['--source', 'real_claims', '--pick', '50', '--seed', 'seed-1', '--audit', AUDIT_FILE],
+    ['--source', 'real_claims', '--pick', '50', '--seed', 'seed-1', '--audit', AUDIT_FILE, '--from', 'dry-1'],
+    ['--source', 'real_claims', '--pick', '50'],
+    ['--pick', '5'],
+    ['--pick', 'many', '--all'],
+  ]) {
+    const r = await run(w, argv);
+    assert.equal(r.code, EXIT.INVALID, JSON.stringify(argv));
+    assert.match(r.err.join('\n'), RETIRED, JSON.stringify(argv));
+    assert.deepEqual(r.out, [], JSON.stringify(argv));
+  }
+  assert.equal(existsSync(join(w.root, 'setup', 'claims-pick.json')), false, 'no pick file was written');
+  assert.equal(w.notion.requests.length, before, 'no request');
+  assert.equal(PICK_RETIRED, 'the claims are picked from Geo now: node agents/claim-tagger-mvp/scripts/geo-pick.mjs --seed <s> --audit <file>');
+  assert.doesNotMatch(USAGE, /--pick/, 'the usage no longer lists it');
+  assert.equal(typeof pullModule.pickClaims, 'undefined', 'and the function is gone');
+});
+
+test('--dry-run of the real claims table still works, read only, after the pick was retired', async () => {
+  const w = await realWorld();
+  const writes = w.notion.writes().length;
   const dry = await run(w, ['--source', 'real_claims', '--dry-run', '--run-id', 'dry-1']);
   assert.equal(dry.code, EXIT.OK, dry.err.join('\n'));
-  return w;
-}
-const pickArgs = (seed = 'seed-1', extra = []) => ['--source', 'real_claims', '--pick', '50', '--seed', seed, '--audit', AUDIT_FILE, ...extra];
-const readPick = (w) => JSON.parse(readFileSync(join(w.root, 'setup', 'claims-pick.json'), 'utf8'));
-
-test('the pick is the ten audit claims in the audit file\'s order and forty random ones, written to setup/claims-pick.json', async () => {
-  const w = await pickWorld();
-  const r = await run(w, pickArgs());
-  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
-  assert.match(r.out[0], /^pick: 50 claims \(10 from the audit, 40 at random, seed "seed-1"\) from dry run dry-1 -> /);
-  const pick = readPick(w);
-  assert.deepEqual(Object.keys(pick), ['seed', 'picked_at', 'dry_run', 'audit_ids', 'random_ids', 'rows']);
-  assert.equal(pick.seed, 'seed-1');
-  assert.equal(pick.picked_at, '2026-10-15T10:00:00.000Z');
-  assert.equal(pick.dry_run, 'dry-1');
-  assert.deepEqual(pick.audit_ids, AUDIT_IDS, 'the audit ids, in the order of the audit file');
-  assert.equal(pick.random_ids.length, 40);
-  assert.equal(new Set(pick.random_ids).size, 40, 'no claim twice');
-  assert.ok(pick.random_ids.every((id) => !AUDIT_IDS.includes(id)));
-  assert.equal(pick.rows.length, 50);
-  assert.deepEqual(pick.rows.map((x) => x['Geo ID']), [...AUDIT_IDS, ...pick.random_ids], 'audit rows first, then the random ones in picked order');
-  assert.ok(pick.rows.every((x) => x['Geo Name'].trim() !== ''), 'no claim without a name');
-  assert.ok(pick.rows.every((x) => 'page_id' in x && 'url' in x && 'last_edited_time' in x && Array.isArray(x.source_links)), 'full plain rows');
-  assert.equal(pick.rows[0]['Geo Name'], 'Claim number 0');
-  const dryRows = lines(join(w.root, 'runs', 'dry-run', 'dry-1', 'rows.jsonl'));
-  assert.deepEqual(pick.rows[3], dryRows.find((x) => x['Geo ID'] === AUDIT_IDS[3]), 'a row is the dry run\'s row, unchanged');
-  assert.ok(!pick.random_ids.includes(`geo-${pad(15)}`) && !pick.random_ids.includes(`geo-${pad(16)}`), 'the rows without a name are not chosen');
-});
-
-test('the pick is the same for the same seed and dry run, whatever the order of the rows, and another seed picks others', async () => {
-  const w = await pickWorld();
-  assert.equal((await run(w, pickArgs('seed-1'))).code, EXIT.OK);
-  const first = readPick(w);
-  assert.equal((await run(w, pickArgs('seed-1'), { now: () => new Date('2026-10-16T08:00:00.000Z') })).code, EXIT.OK);
-  const second = readPick(w);
-  assert.equal(second.picked_at, '2026-10-16T08:00:00.000Z');
-  assert.deepEqual({ ...second, picked_at: null }, { ...first, picked_at: null }, 'the same pick');
-
-  assert.equal((await run(w, pickArgs('seed-2'))).code, EXIT.OK);
-  const other = readPick(w);
-  assert.notDeepEqual(other.random_ids, first.random_ids);
-  assert.deepEqual(other.audit_ids, first.audit_ids);
-
-  // the same rows in the reverse order, as another dry run: the same pick
-  const original = lines(join(w.root, 'runs', 'dry-run', 'dry-1', 'rows.jsonl'));
-  const dir = join(w.root, 'runs', 'dry-run', 'dry-reversed');
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'rows.jsonl'), `${original.reverse().map((x) => JSON.stringify(x)).join('\n')}\n`);
-  writeFileSync(join(dir, 'report.json'), `${JSON.stringify({ read_at: '2026-10-14T00:00:00.000Z' })}\n`);
-  assert.equal((await run(w, pickArgs('seed-1', ['--from', 'dry-reversed']))).code, EXIT.OK);
-  const reversed = readPick(w);
-  assert.equal(reversed.dry_run, 'dry-reversed');
-  assert.deepEqual(reversed.random_ids, first.random_ids);
-  assert.deepEqual(reversed.rows.map((x) => x['Geo ID']), first.rows.map((x) => x['Geo ID']));
-});
-
-test('without --from the pick reads the newest dry run', async () => {
-  const w = await pickWorld();
-  const older = lines(join(w.root, 'runs', 'dry-run', 'dry-1', 'rows.jsonl')).filter((x) => x['Geo ID'] !== AUDIT_IDS[5]);
-  const dir = join(w.root, 'runs', 'dry-run', 'zzz-older');
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(join(dir, 'rows.jsonl'), `${older.map((x) => JSON.stringify(x)).join('\n')}\n`);
-  writeFileSync(join(dir, 'report.json'), `${JSON.stringify({ read_at: '2026-10-01T00:00:00.000Z' })}\n`);
-  const r = await run(w, pickArgs());
-  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
-  assert.equal(readPick(w).dry_run, 'dry-1', 'the newest by read time, not by name');
-  const named = await run(w, pickArgs('seed-1', ['--from', 'zzz-older']));
-  assert.equal(named.code, EXIT.INVALID, 'the named dry run lacks an audit claim');
-  assert.match(named.err.join('\n'), /1 audit claim\(s\) are not in dry run zzz-older: /);
-});
-
-test('the pick fails with exit 2 when an audit claim is missing, and then writes nothing', async () => {
-  const w = await pickWorld({ count: 230 });
-  const rows = lines(join(w.root, 'runs', 'dry-run', 'dry-1', 'rows.jsonl')).filter((x) => x['Geo ID'] !== AUDIT_IDS[7]);
-  writeFileSync(join(w.root, 'runs', 'dry-run', 'dry-1', 'rows.jsonl'), `${rows.map((x) => JSON.stringify(x)).join('\n')}\n`);
-  const r = await run(w, pickArgs());
-  assert.equal(r.code, EXIT.INVALID);
-  assert.match(r.err.join('\n'), /pick: 1 audit claim\(s\) are not in dry run dry-1: /);
-  assert.equal(existsSync(join(w.root, 'setup', 'claims-pick.json')), false);
-});
-
-test('the pick matches an audit id that Notion writes with dashes or capitals', async () => {
-  const w = await pickWorld({ count: 80 });
-  const file = join(w.root, 'runs', 'dry-run', 'dry-1', 'rows.jsonl');
-  const rows = lines(file);
-  const dashed = (id) => `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`.toUpperCase();
-  rows[2]['Geo ID'] = dashed(rows[2]['Geo ID']);
-  writeFileSync(file, `${rows.map((x) => JSON.stringify(x)).join('\n')}\n`);
-  const r = await run(w, pickArgs());
-  assert.equal(r.code, EXIT.OK, r.err.join('\n'));
-  assert.equal(readPick(w).audit_ids[2], dashed(AUDIT_IDS[2]), 'the id as the table writes it');
-});
-
-test('both rows of a repeated Geo ID stay out of the random pool', async () => {
-  // 52 rows: 10 audit, 2 without a name, 2 that share an id, leaving 38 of the 40 needed; with the repeated ones in, the pick would succeed
-  const w = await pickWorld({ count: 52, duplicate: true });
-  const r = await run(w, pickArgs());
-  assert.equal(r.code, EXIT.INVALID);
-  assert.match(r.err.join('\n'), /only 38 rows are left to choose from, 40 are needed/);
-  const roomy = await pickWorld({ count: 54, duplicate: true });
-  assert.equal((await run(roomy, pickArgs())).code, EXIT.OK);
-  assert.ok(!readPick(roomy).random_ids.includes('geo-0041'), 'with exactly 40 others left, neither repeated row is among them');
-});
-
-test('the pick needs a seed, an audit file, enough claims, a dry run, and a count that holds the audit claims', async () => {
-  const w = await pickWorld({ count: 30 });
-  const noSeed = await run(w, ['--source', 'real_claims', '--pick', '50', '--audit', AUDIT_FILE]);
-  assert.equal(noSeed.code, EXIT.INVALID);
-  assert.match(noSeed.err.join('\n'), /--seed <string> is required/);
-  const noAudit = await run(w, ['--source', 'real_claims', '--pick', '50', '--seed', 's']);
-  assert.match(noAudit.err.join('\n'), /--audit <path to the audit json> is required/);
-  const missingFile = await run(w, pickArgs('s').map((a) => (a === AUDIT_FILE ? join(w.root, 'nope.json') : a)));
-  assert.equal(missingFile.code, EXIT.INVALID);
-  assert.match(missingFile.err.join('\n'), /the audit file cannot be read/);
-  const tooMany = await run(w, pickArgs());
-  assert.equal(tooMany.code, EXIT.INVALID);
-  assert.match(tooMany.err.join('\n'), /only 18 rows are left to choose from, 40 are needed/);
-  const tooFew = await run(w, ['--source', 'real_claims', '--pick', '5', '--seed', 's', '--audit', AUDIT_FILE]);
-  assert.match(tooFew.err.join('\n'), /--pick 5 is fewer than the 10 audit claims/);
-  const notANumber = await run(w, ['--source', 'real_claims', '--pick', 'many', '--seed', 's', '--audit', AUDIT_FILE]);
-  assert.equal(notANumber.code, EXIT.INVALID);
-  assert.match(notANumber.err.join('\n'), /--pick needs a whole number/);
-  const noDry = await world({ populate: false });
-  const none = await run(noDry, pickArgs());
-  assert.match(none.err.join('\n'), /there is no dry run with rows yet/);
-  assert.equal(existsSync(join(w.root, 'setup', 'claims-pick.json')), false, 'nothing was written by any of these');
-  // direct call: the same checks, as a library
-  assert.throws(() => pickClaims({ root: w.root, config: w.config, count: 50, seed: '', auditPath: AUDIT_FILE }), /--seed/);
+  assert.match(dry.out[0], /^dry run dry-1: \d+ rows/);
+  assert.match(dry.out[0], /writes 0$/);
+  assert.equal(w.notion.writes().length, writes, 'the dry run wrote nothing');
 });
 
 test('the command line refuses a mix of modes, an unknown flag and a source it does not know, and --help prints the usage', async () => {

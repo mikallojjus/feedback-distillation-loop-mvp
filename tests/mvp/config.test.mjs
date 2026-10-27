@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  CAPABILITIES, CLAIMS_COPY_COLUMNS, READING_DEFAULTS, RULE_CHANGES_AGENT_STATUS, RULEBOOK_COLUMNS, TABLES,
+  CAPABILITIES, CLAIMS_GEO_COLUMNS, READING_DEFAULTS, RULE_CHANGES_AGENT_STATUS, RULEBOOK_COLUMNS, TABLES,
   capabilityOf, editorColumns, groupOf, isDemo, isProtected, loadConfig, readingSettings, tableEntry, validateConfig, writableProperties,
 } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
@@ -393,8 +393,11 @@ test('writableProperties: a setup create may fill more', () => {
   assert.deepEqual([...rulebook].sort(), [...RULEBOOK_COLUMNS].sort());
   assert.equal(rulebook.size, 13);
   const claims = writableProperties(config, 'claims', { setup: true });
-  assert.deepEqual([...claims].sort(), [...CLAIMS_COPY_COLUMNS, 'Agent confidence', 'Agent edition', 'Agent reading', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'].sort());
-  assert.equal(claims.size, 21, 'the three editor columns of the claims are not among them');
+  assert.deepEqual([...claims].sort(), [...CLAIMS_GEO_COLUMNS, 'Agent confidence', 'Agent edition', 'Agent reading', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'].sort());
+  assert.equal(claims.size, 17, 'the lean nine Geo columns and the eight agent columns; the three editor columns of the claims are not among them');
+  assert.ok(['Geo Space', 'Geo Created'].every((c) => claims.has(c)));
+  for (const gone of ['Geo Score', 'Geo Supporting arguments', 'Geo Opposing arguments', 'Geo Related people', 'Geo Related projects', 'Geo Name source']) assert.ok(!claims.has(gone), gone);
+  assert.equal(CLAIMS_GEO_COLUMNS.length, 9);
   assert.deepEqual([...writableProperties(config, 'tag_decisions', { setup: true })].sort(), [...writableProperties(config, 'tag_decisions')].sort(), 'tag decisions have no setup extras');
   assert.deepEqual([...writableProperties(config, 'rule_changes', { setup: true })].sort(), [...writableProperties(config, 'rule_changes')].sort());
 });

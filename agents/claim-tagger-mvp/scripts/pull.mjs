@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Pull: read the agent's tables from Notion into a local copy, plus the one read-only dry run of the real claims table and the pick of 50 claims.
+// Pull: read the agent's tables from Notion into a local copy, plus the one read-only dry run of the real claims table.
 // Nothing here writes Notion. Every request goes through lib/notion-rest.mjs and is logged to a requests.jsonl next to the files it produced.
 //
 //   node agents/claim-tagger-mvp/scripts/pull.mjs --all | --tables <a,b> [--pull-id <id>]
 //   node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --dry-run [--run-id <id>]
-//   node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --pick 50 --seed <string> --audit <audit json> [--from <dry-run id>]
+//   (--source real_claims --pick is retired: the claims are picked from Geo now, node agents/claim-tagger-mvp/scripts/geo-pick.mjs --seed <s> --audit <file>; the option answers with that and exits 2)
 //
 // The tables are rulebook, claims, tag_decisions, rule_changes and agent_settings (aliases: queue, decisions, lessons, settings). A table whose
 // id in config.json is still a placeholder ("<setup>") or missing is skipped and listed in pull.json; a pull that reads no table at all does not
@@ -32,12 +32,10 @@
 // last_edited_time, source_links, source_pieces), report.json, report.md, requests.jsonl. The client behind it cannot send a write, and the run ends
 // by counting the request log: writes must be 0.
 //
-// setup/claims-pick.json (--pick): { seed, picked_at, dry_run, audit_ids, random_ids, rows }, the ten audit claims first, then the random ones.
-//
 // Exit codes: 0 ok, 1 unexpected error (also: a dry run whose request log shows a write), 2 invalid (usage, no token, a duplicate key in a table,
-// a missing key column, a pick that cannot be made, Notion refused).
+// a missing key column, the retired --pick option, Notion refused).
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { TABLES, isProtected, loadConfig, tableEntry } from './lib/config.mjs';
@@ -47,7 +45,6 @@ import { BUILDER_API_VERSION, clientFromConfig, countRequests, requestLogger } f
 import { decodePage, normId } from './lib/notion-values.mjs';
 import { agentRoot, codeFile, isMain, repoRoot as defaultRepoRoot, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
-import { mulberry32, sample, seedFromString } from './lib/rng.mjs';
 import { computeDrift, readLock, readRubric } from './lib/rubric.mjs';
 import { claimDisagrees, claimWaits, decisionsFor, isReviewed, isToReview, parseTagLines, parseTagNotes } from './lib/decisions.mjs';
 import { validate } from './lib/validate.mjs';
@@ -57,10 +54,12 @@ export { claimDisagrees, claimWaits, decisionsFor, isReviewed, isToReview, parse
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/pull.mjs --all | --tables <rulebook,claims,tag_decisions,rule_changes,agent_settings> [--pull-id <id>]',
   '       node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --dry-run [--run-id <id>]',
-  '       node agents/claim-tagger-mvp/scripts/pull.mjs --source real_claims --pick 50 --seed <string> --audit <audit json> [--from <dry-run id>]',
 ].join('\n');
 
 class UsageError extends Error {}
+
+/** What `--source real_claims --pick` answers now (exit 2): the 50-claim pick of the first build was replaced by the Geo pick (P6). */
+export const PICK_RETIRED = 'the claims are picked from Geo now: node agents/claim-tagger-mvp/scripts/geo-pick.mjs --seed <s> --audit <file>';
 
 const NORM_FILES = Object.freeze({
   rulebook: 'rulebook.json', claims: 'claims.jsonl', tag_decisions: 'queue.jsonl', rule_changes: 'lessons.jsonl', agent_settings: 'settings.json',
@@ -877,88 +876,6 @@ export async function dryRun({
   return { code: EXIT.OK, runId: id, dir, report, line };
 }
 
-// ---- the pick ------------------------------------------------------------------------------------------------------------------
-
-function newestDryRun(root) {
-  const base = dryBase(root);
-  if (!existsSync(base)) return null;
-  const found = readdirSync(base, { withFileTypes: true }).filter((d) => d.isDirectory() && existsSync(join(base, d.name, 'rows.jsonl'))).map((d) => {
-    let at = '';
-    try {
-      at = String(readJson(join(base, d.name, 'report.json')).read_at ?? '');
-    } catch {
-      at = new Date(statSync(join(base, d.name, 'rows.jsonl')).mtimeMs).toISOString();
-    }
-    return { id: d.name, at };
-  }).sort((a, b) => byCodePoints(b.at, a.at) || byCodePoints(b.id, a.id));
-  return found[0]?.id ?? null;
-}
-
-/**
- * Pick the claims for the Claims copy: the rows named by the audit file first (in its order), then random ones. Deterministic for a seed and a
- * dry run (the pool is put in Geo ID order before the seeded shuffle). Writes <root>/setup/claims-pick.json and returns { code, pick, path, line }.
- */
-export function pickClaims({
-  root = agentRoot(), config = loadConfig(root), count = 50, seed, auditPath, from, now = () => new Date(),
-} = {}) {
-  if (typeof seed !== 'string' || seed.trim() === '') throw new UsageError('--seed <string> is required (the same seed and dry run give the same pick)');
-  if (!Number.isInteger(count) || count < 1) throw new UsageError('--pick needs a whole number of claims, for example 50');
-  if (!auditPath) throw new UsageError('--audit <path to the audit json> is required');
-  const fail = (message) => ({ code: EXIT.INVALID, pick: null, path: null, line: `pick: ${message}` });
-
-  let audit;
-  try {
-    audit = readJson(resolve(auditPath));
-  } catch (e) {
-    return fail(`the audit file cannot be read (${e.message})`);
-  }
-  const auditIds = (audit?.decisions ?? []).map((d) => d?.geo_id).filter((v) => typeof v === 'string' && v !== '');
-  if (auditIds.length === 0) return fail('the audit file has no decisions[].geo_id');
-  if (new Set(auditIds.map(normId)).size !== auditIds.length) return fail('the audit file repeats a geo_id');
-
-  const dryId = from ? safeName(from) : newestDryRun(root);
-  if (!dryId) return fail('there is no dry run with rows yet: run --dry-run first');
-  const rowsFile = join(dryBase(root), dryId, 'rows.jsonl');
-  if (!existsSync(rowsFile)) return fail(`dry run "${dryId}" has no rows.jsonl`);
-  const rows = readJsonl(rowsFile).rows;
-  const keyColumn = config.notion?.sources?.real_claims?.key || 'Geo ID';
-  const nameColumn = safeEntry(config, 'claims')?.columns?.claim ?? DEFAULT_COLUMNS.claim;
-  const idOf = (r) => text(r[keyColumn]).trim();
-
-  const byId = new Map();
-  for (const r of rows) {
-    const key = normId(idOf(r));
-    if (key === '') continue;
-    byId.set(key, [...(byId.get(key) ?? []), r]);
-  }
-  const missing = auditIds.filter((a) => !byId.has(normId(a)));
-  if (missing.length) return fail(`${missing.length} audit claim(s) are not in dry run ${dryId}: ${missing.map((m) => m.slice(0, 12)).join(', ')}`);
-  const repeated = auditIds.filter((a) => byId.get(normId(a)).length > 1);
-  if (repeated.length) return fail(`${repeated.length} audit claim(s) appear on more than one row of dry run ${dryId}`);
-  const auditRows = auditIds.map((a) => byId.get(normId(a))[0]);
-
-  const randomCount = count - auditRows.length;
-  if (randomCount < 0) return fail(`--pick ${count} is fewer than the ${auditRows.length} audit claims`);
-  const taken = new Set(auditIds.map(normId));
-  const pool = rows
-    .filter((r) => idOf(r) !== '' && !taken.has(normId(idOf(r))) && byId.get(normId(idOf(r))).length === 1 && text(r[nameColumn]).trim() !== '')
-    .sort((a, b) => byCodePoints(normId(idOf(a)), normId(idOf(b))));
-  if (pool.length < randomCount) return fail(`only ${pool.length} rows are left to choose from, ${randomCount} are needed`);
-  const chosen = sample(pool, randomCount, mulberry32(seedFromString(seed)));
-
-  const pick = {
-    seed,
-    picked_at: now().toISOString(),
-    dry_run: dryId,
-    audit_ids: auditRows.map(idOf),
-    random_ids: chosen.map(idOf),
-    rows: [...auditRows, ...chosen],
-  };
-  const path = join(root, 'setup', 'claims-pick.json');
-  writeJsonAtomic(path, pick);
-  return { code: EXIT.OK, pick, path, line: `pick: ${pick.rows.length} claims (${auditRows.length} from the audit, ${chosen.length} at random, seed "${seed}") from dry run ${dryId} -> ${path}` };
-}
-
 // ---- command line ------------------------------------------------------------------------------------------------------------------
 
 const defaultIo = { out: (s) => console.log(s), err: (s) => console.error(s) };
@@ -986,13 +903,17 @@ export async function main(argv, io = defaultIo, env = {}) {
     io.out(USAGE);
     return EXIT.OK;
   }
-  const modes = [Boolean(args.all || args.tables), Boolean(args['dry-run']), args.pick !== undefined].filter(Boolean).length;
-  if (modes !== 1 || (args.all && args.tables)) {
-    io.err(`pull: give exactly one of --all / --tables, --source real_claims --dry-run, or --source real_claims --pick\n${USAGE}`);
+  if (args.pick !== undefined) {
+    io.err(`pull: ${PICK_RETIRED}`);
     return EXIT.INVALID;
   }
-  if ((args['dry-run'] || args.pick !== undefined) && args.source !== 'real_claims') {
-    io.err(`pull: --dry-run and --pick need --source real_claims\n${USAGE}`);
+  const modes = [Boolean(args.all || args.tables), Boolean(args['dry-run'])].filter(Boolean).length;
+  if (modes !== 1 || (args.all && args.tables)) {
+    io.err(`pull: give exactly one of --all / --tables, or --source real_claims --dry-run\n${USAGE}`);
+    return EXIT.INVALID;
+  }
+  if (args['dry-run'] && args.source !== 'real_claims') {
+    io.err(`pull: --dry-run needs --source real_claims\n${USAGE}`);
     return EXIT.INVALID;
   }
   const root = env.root ?? agentRoot();
@@ -1007,12 +928,6 @@ export async function main(argv, io = defaultIo, env = {}) {
     const now = env.now;
     if (args['dry-run']) {
       const r = await dryRun({ root, config, runId: args['run-id'], now, fetchImpl: env.fetchImpl, token: env.token, repoRoot: env.repoRoot, sleep: env.sleep });
-      (r.code === EXIT.OK ? io.out : io.err)(r.line);
-      return r.code;
-    }
-    if (args.pick !== undefined) {
-      const count = Number(args.pick);
-      const r = pickClaims({ root, config, count, seed: args.seed, auditPath: args.audit, from: args.from, now });
       (r.code === EXIT.OK ? io.out : io.err)(r.line);
       return r.code;
     }

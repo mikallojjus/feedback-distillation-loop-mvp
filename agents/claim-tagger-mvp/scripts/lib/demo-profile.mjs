@@ -271,7 +271,13 @@ export function templateFileFor(manifestFile, fallback) {
 
 // ---- the structure and the config ----------------------------------------------------------------------------------------------------
 
-/** The structure of the five tables with the practice page's titles (a copy; validated). The sub-pages of production are left out. */
+/** The Claims columns that production's views show and a practice page's views do not (its manifest has no value for them). */
+export const PRODUCTION_ONLY_VIEW_COLUMNS = Object.freeze(['Geo Space']);
+
+/**
+ * The structure of the five tables with the practice page's titles (a copy; validated). The sub-pages of production and its hub block are left out: a practice page is
+ * not a hub (its tables are inline, in the order of TABLES, and its page text has its own links), and it does not say where the structure was made from.
+ */
 export function practiceStructure(structure) {
   const copy = structuredClone(structure);
   for (const [key, title] of Object.entries(PRACTICE_TITLES)) {
@@ -279,6 +285,13 @@ export function practiceStructure(structure) {
     copy.tables[key].title = title;
   }
   copy.pages = [];
+  delete copy.hub;
+  delete copy.made_from;
+  // The views of a practice page show the columns its manifest froze (2026-10-22.1). Production's Claims views also show Geo Space (P12), and the manifest's claims carry no space: the
+  // column is on the practice table (empty) but its views leave it out, as they did before the column existed.
+  for (const view of copy.views) {
+    if (view.table === 'claims') view.columns = view.columns.filter((c) => !PRODUCTION_ONLY_VIEW_COLUMNS.includes(c));
+  }
   return validateStructure(copy);
 }
 

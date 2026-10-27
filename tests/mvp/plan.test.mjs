@@ -226,7 +226,7 @@ test('checkPlan: setup lets a create fill what the one-time setup fills, and onl
   const plan = newP(w);
   plan.create('agent_settings', 'claim-tagger-mvp', { 'Rulebook edition': EDITION });
   plan.create('rulebook', 'Context-dependent', { Category: 'Quality', Description: 'd', 'Example Claims': 'e', 'Work tags': ['Issue'], Status: 'Verified', 'Verified on': '2026-09-10', 'When to use': '1. x' });
-  plan.create('claims', 'geo-9', { 'Geo Name': 'A claim', 'Geo URL': 'https://example.com/x', 'Geo Sources': 'x', 'Geo Tags': ['Debate'], 'Geo Score': 3, 'Geo Is factual': true, 'Agent edition': '', 'Agent remarks': '' });
+  plan.create('claims', 'geo-9', { 'Geo Name': 'A claim', 'Geo URL': 'https://example.com/x', 'Geo Sources': 'x', 'Geo Tags': ['Debate'], 'Geo Space': 'AI', 'Geo Created': '2026-09-14', 'Geo Is factual': true, 'Agent edition': '', 'Agent remarks': '' });
   assert.ok(mentions(problemsOf(plan, w, { setup: false }), /not a column/), 'without setup the same plan is refused');
   assert.deepEqual(problemsOf(plan, w, { setup: true }), []);
   const update = newP(w);
@@ -853,15 +853,17 @@ test('applyPlan with setup writes the audit seed (the three editor columns of a 
   assert.equal(page.properties['Agent confidence'].number, 0.83);
 });
 
-test('applyPlan creates the setup rows of the rulebook, the claims copy and the settings through a setup plan, with every value read back', async () => {
+test('applyPlan creates the setup rows of the rulebook, the claims and the settings through a setup plan, with every value read back', async () => {
   const w = await world({ rows: false });
   const plan = newP(w, { rubricEdition: null });
   plan.create('rulebook', 'Context-dependent', { Category: 'Quality', Polarity: 'Issue', Status: 'Verified', 'Verified on': '2026-09-10', 'Work tags': ['Pipeline benchmark check', 'Issue'], 'When to use': '1. A pronoun with no antecedent.\n2. A definite article with no referent.', Evidence: 'https://example.com/report' });
-  plan.create('claims', 'geo-1', { 'Geo Name': 'A claim', 'Geo URL': 'https://www.geobrowser.io/space/s/geo-1', 'Geo Sources': 'Source one\nSource two', 'Geo Tags': ['Debate', 'Politics'], 'Geo Score': 4.5, 'Geo Is factual': true, 'Agent edition': '', 'Agent remarks': '' });
+  plan.create('claims', 'geo-1', { 'Geo Name': 'A claim', 'Geo URL': 'https://www.geobrowser.io/space/s/geo-1', 'Geo Sources': 'Source one\nSource two', 'Geo Tags': ['Debate', 'Politics'], 'Geo Space': 'Health', 'Geo Created': '2026-10-02', 'Geo Is factual': true, 'Agent edition': '', 'Agent remarks': '' });
   plan.create('agent_settings', 'claim-tagger-mvp', { 'Rulebook edition': EDITION, 'Last run summary': 'Setup · 15 Oct 11:20' });
   const result = await apply(w, plan, { setup: true });
   assert.equal(result.code, EXIT.OK, JSON.stringify(result.lists));
   assert.equal(result.done, 3);
   assert.equal(w.notion.page(result.created['Context-dependent']).properties['Work tags'].multi_select.length, 2);
-  assert.equal(w.notion.page(result.created['geo-1']).properties['Geo Score'].number, 4.5);
+  const made = w.notion.page(result.created['geo-1']).properties;
+  assert.equal(made['Geo Created'].date.start, '2026-10-02', 'Geo Created is a date');
+  assert.equal(made['Geo Space'].select.name, 'Health', 'Geo Space is a select');
 });

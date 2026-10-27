@@ -1,8 +1,9 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { RULEBOOK_COLUMNS, CLAIMS_COPY_COLUMNS, loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
+import { RULEBOOK_COLUMNS, CLAIMS_GEO_COLUMNS, loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
+import { optionColor, planStructure } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
 import { countRequests } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { READING_COLUMNS } from '../../agents/claim-tagger-mvp/scripts/lib/readings.mjs';
@@ -10,11 +11,11 @@ import { AUDIT_PREFIX, checkPlan, readPlan } from '../../agents/claim-tagger-mvp
 import { readEdition, readLock, readRubric } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
 import {
-  AUDIT_NOTE, InputError, NO_REASONING, auditOps, auditProperties, buildCanaries, claimLink, claimOps, formatWhen, readAudit, readPick, readTaxonomy, richTextFromPieces,
+  AUDIT_NOTE, InputError, NO_REASONING, auditForPick, auditOps, auditProperties, buildCanaries, claimLink, claimOps, formatWhen, readAudit, readPick, readTaxonomy, richTextFromPieces,
   migrationOps, protectedInLinks, rulebookOps, settingsProperties, unknownOptions, withLinkedSources,
 } from '../../agents/claim-tagger-mvp/scripts/lib/setup-steps.mjs';
 import {
-  AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_PICK, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, builderClient, cleanTmp, forFake, fullTaxonomy, makePick, newWorld, readAuditFile,
+  AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, SPACE_NAMES, builderClient, cleanTmp, forFake, freshStructure, fullTaxonomy, makePick, newWorld, readAuditFile,
   readJson, readLines, restClient, revisedStructure, smallTaxonomy, tmp, writeInputs,
 } from './helpers/setup-world.mjs';
 
@@ -26,13 +27,22 @@ after(cleanTmp);
 const SESSION = ['builder', 'open', '--reason', 'test'];
 const posts = (fake, path) => fake.requests.filter((r) => r.method === 'POST' && r.path === path);
 
-/** A world with the structure file written, a builder session open and the tables built. */
-async function built({ pick, taxonomy, audit } = {}) {
-  const w = newWorld({ structure: true });
+/**
+ * A world with the fresh structure file written (full-page tables, the hub block), the options of the Geo columns set from the pick (setup.mjs structure --options-from), a builder session
+ * open and the tables built (with the hub page's link lines). `old: true` takes the structure of the first build instead (inline tables, no hub, Claims copy) and sets no options.
+ */
+async function built({ pick, taxonomy, audit, old = false } = {}) {
+  const w = newWorld({ structure: old ? true : 'fresh' });
   assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
+  const inputs = writeInputs(join(w.root, 'inputs'), { ...(pick ? { pick } : {}), ...(taxonomy ? { taxonomy } : {}), ...(audit ? { audit } : {}) });
+  mkdirSync(join(w.root, 'setup'), { recursive: true });
+  copyFileSync(inputs.claims, join(w.root, 'setup', 'geo-claims-pick.json')); // the default input of claims, seed-audit, migrate-decisions and verify
+  if (!old) {
+    const o = await w.run(['structure', '--options-from', inputs.claims]);
+    assert.equal(o.code, 0, o.text);
+  }
   const r = await w.run(['build']);
   assert.equal(r.code, 0, r.text);
-  const inputs = writeInputs(join(w.root, 'inputs'), { ...(pick ? { pick } : {}), ...(taxonomy ? { taxonomy } : {}), ...(audit ? { audit } : {}) });
   return { ...w, inputs };
 }
 
@@ -175,6 +185,132 @@ test('preview prints what would be built; without a structure file it says how t
   const none = await newWorld().run(['preview']);
   assert.equal(none.code, 2);
   assert.match(none.err[0], /structure --from-proposal/);
+});
+
+test('preview of the fresh structure shows the five tables in the hub\'s order, the lean Claims set, the seven views, Onboarding and the hub block', async () => {
+  const w = newWorld({ structure: 'fresh' });
+  const r = await w.run(['preview']);
+  assert.equal(r.code, 0);
+  const md = r.out[0];
+  assert.match(md, /^# Structure preview\n\n5 tables, \d+ columns, 7 views and 1 sub-pages/);
+  assert.match(md, /## Hub page "Claim tagger"/);
+  assert.match(md, /3 link lines at the top: Your queue: the claims that wait for your decision; Needs your note: .*; Lessons waiting: /);
+  assert.match(md, /the 5 tables as full-page tables, in this order: Claims, Rulebook, Rule changes, Tag decisions, Agent settings/);
+  assert.match(md, /then: Onboarding, the archive page "Feedback Distillation MVP \(archive, to 27 Oct 2026\)"/);
+  assert.deepEqual([...md.matchAll(/^## (.+)$/gm)].map((m) => m[1].replace(/ \(\d+ columns\)$/, '')).slice(2), ['Claims', 'Rulebook', 'Rule changes', 'Tag decisions', 'Agent settings']);
+  assert.match(md, /## Claims \(20 columns\)/, 'the lean Claims set: nine Geo columns, eight agent columns, three editor columns');
+  assert.match(md, /\| Geo Space \| select \| U\.S\. Politics, World affairs, AI, Health, Crypto, Technology \|/);
+  assert.match(md, /\| Geo Created \| date \|/);
+  assert.match(md, /\| Geo Tags \| multi_select \| Debate \|/);
+  assert.doesNotMatch(md, /\(old\)|Geo Score|Geo Name source|renamed|retired|Claims copy|Rulebook copy/);
+  assert.equal((md.match(/^- \*\*/gm) ?? []).length, 7);
+  assert.equal(w.fake.requests.length, 0, 'local files only');
+});
+
+test('structure --options-from sets Geo Tags (the pick\'s tag names, sorted) and Geo Space (the six spaces), writes setup/structure.json, says what changed, and run again changes nothing', async () => {
+  const w = newWorld({ structure: 'fresh' });
+  const dir = join(w.root, 'inputs');
+  const pick = makePick({ audit: readAuditFile(), extra: 3 });
+  pick.rows[3]['Geo Tags'] = ['Debate', 'Immigration', 'Economy'];
+  pick.tag_names = ['Debate', 'Economy', 'Immigration'];
+  mkdirSync(dir, { recursive: true });
+  const file = join(dir, 'pick.json');
+  writeFileSync(file, JSON.stringify(pick));
+  const columns = () => readJson(join(w.root, 'setup', 'structure.json')).tables.claims.columns;
+  assert.deepEqual(columns().find((c) => c.name === 'Geo Tags').options, ['Debate'], 'until it runs, Geo Tags has the option Debate only');
+
+  const r = await w.run(['structure', '--options-from', file]);
+  assert.equal(r.code, 0, r.text);
+  assert.deepEqual(columns().find((c) => c.name === 'Geo Tags').options, ['Debate', 'Economy', 'Immigration']);
+  assert.deepEqual(columns().find((c) => c.name === 'Geo Space').options, SPACE_NAMES);
+  assert.ok(r.out.includes('structure: Geo Tags: added Economy, Immigration (3 in all)'), r.out.join('\n'));
+  assert.ok(r.out.includes('structure: Geo Space: its 6 options are the pick\'s already'));
+  assert.ok(r.out.some((l) => /^structure: setup\/structure\.json written$/.test(l)));
+  assert.match(r.out.join('\n'), /Geo Tags colours: Debate \w+, Economy \w+, Immigration \w+/);
+  assert.match(r.out.join('\n'), /Geo Space colours: U\.S\. Politics blue, World affairs green, AI purple, Health red, Crypto orange, Technology gray/);
+  assert.equal(w.fake.requests.length, 0, 'files only: no request, no session needed');
+  const after = readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8');
+
+  // run again: nothing changes, the file is not touched
+  const again = await w.run(['structure', '--options-from', file]);
+  assert.equal(again.code, 0, again.text);
+  assert.ok(again.out.includes('structure: nothing changed'));
+  assert.equal(readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8'), after);
+
+  // a tag that left the pick leaves the options: the options are the pick's
+  pick.tag_names = ['Debate'];
+  pick.rows = pick.rows.map((x) => ({ ...x, 'Geo Tags': ['Debate'] }));
+  writeFileSync(file, JSON.stringify(pick));
+  const fewer = await w.run(['structure', '--options-from', file]);
+  assert.ok(fewer.out.includes('structure: Geo Tags: removed Economy, Immigration (1 in all)'), fewer.out.join('\n'));
+});
+
+test('the colours of the Geo options are the same on every run and for every order of the names: Geo Space has its own, Geo Tags a hash of the name', () => {
+  assert.equal(optionColor('claims', 'Geo Space', 'AI'), 'purple');
+  assert.equal(optionColor('claims', 'Geo Tags', 'Debate'), optionColor('claims', 'Geo Tags', 'Debate'));
+  const names = ['Debate', 'Economy', 'Politics', 'Immigration', 'Featured', 'Main claim'];
+  const forward = names.map((n) => optionColor('claims', 'Geo Tags', n));
+  const backward = [...names].reverse().map((n) => optionColor('claims', 'Geo Tags', n)).reverse();
+  assert.deepEqual(forward, backward);
+  assert.ok(forward.every((c) => ['blue', 'brown', 'gray', 'green', 'orange', 'pink', 'purple', 'red', 'yellow'].includes(c)), 'real Notion colours, never "default"');
+  assert.equal(optionColor('claims', 'Review status', 'Reviewed'), 'green');
+  assert.equal(optionColor('claims', 'Agent confidence', 'x'), 'default', 'a column that takes no colours from a file keeps the default');
+  const body = planStructure(forFake(freshStructure()), { notion: { parent_page_id: '3fa273e214eb805199f3d12ef01db453' } }).databases.find((d) => d.table === 'claims').body.initial_data_source.properties;
+  assert.deepEqual(body['Geo Space'].select.options.map((o) => [o.name, o.color]), [['U.S. Politics', 'blue'], ['World affairs', 'green'], ['AI', 'purple'], ['Health', 'red'], ['Crypto', 'orange'], ['Technology', 'gray']]);
+});
+
+test('structure --options-from refuses what it cannot set: no geo.spaces in the config, a space or tag the pick lists inconsistently, a file that is not a Geo pick, or other options with it', async () => {
+  const w = newWorld({ structure: 'fresh' });
+  const dir = join(w.root, 'inputs');
+  mkdirSync(dir, { recursive: true });
+  const put = (name, value) => {
+    const f = join(dir, name);
+    writeFileSync(f, JSON.stringify(value));
+    return f;
+  };
+  const pick = makePick({ audit: readAuditFile(), extra: 2 });
+  const before = readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8');
+  let r = await w.run(['structure', '--options-from', put('stray-space.json', { ...pick, rows: pick.rows.map((x, i) => (i === 0 ? { ...x, 'Geo Space': 'Elsewhere' } : x)) })]);
+  assert.equal(r.code, 2);
+  assert.match(r.err[0], /1 claim\(s\) of the pick have a Geo Space that is not one of config\.json's geo\.spaces \(Elsewhere\)/);
+  r = await w.run(['structure', '--options-from', put('unlisted-tag.json', { ...pick, tag_names: ['Debate'] })]);
+  assert.equal(r.code, 2);
+  assert.match(r.err[0], /the pick's tag_names does not list 1 tag\(s\) that its rows carry \(Economy\)/);
+  r = await w.run(['structure', '--options-from', put('old.json', { seed: 's', rows: [{ 'Geo ID': 'g', 'Geo Name': 'n' }] })]);
+  assert.equal(r.code, 2);
+  assert.match(r.err[0], /50-row pick of the first build/);
+  r = await w.run(['structure', '--options-from', join(dir, 'missing.json')]);
+  assert.equal(r.code, 2);
+  assert.match(r.err[0], /the claims pick does not exist/);
+  r = await w.run(['structure', '--options-from', put('ok.json', pick), '--replace']);
+  assert.equal(r.code, 2);
+  assert.match(r.err[0], /takes no other option/);
+  assert.equal(readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8'), before, 'the structure file is as it was after every refusal');
+  const config = readJson(join(w.root, 'config.json'));
+  delete config.geo;
+  writeFileSync(join(w.root, 'config.json'), JSON.stringify(config, null, 2));
+  r = await w.run(['structure', '--options-from', put('ok2.json', pick)]);
+  assert.equal(r.code, 2);
+  assert.match(r.err[0], /config\.json has no geo\.spaces/);
+});
+
+test('structure --from-proposal does not write over a structure that says where it was made from, unless --replace is given', async () => {
+  const w = newWorld({ structure: 'fresh' });
+  const proposal = join(import.meta.dirname, '..', '..', 'docs', 'mvp-2026-11', 'STRUCTURE.md');
+  const before = readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8');
+  assert.match(JSON.parse(before).made_from, /HUB-AND-GEO-CLAIMS\.md \(P10-P12\)/);
+  for (const argv of [['structure', '--from-proposal', proposal], ['structure']]) {
+    const r = await w.run(argv);
+    assert.equal(r.code, 2, argv.join(' '));
+    assert.match(r.err[0], /setup\/structure\.json was made from docs\/mvp-2026-11\/HUB-AND-GEO-CLAIMS\.md \(P10-P12\) and --from-proposal would replace it with the first build's structure; give --replace/);
+  }
+  assert.equal(readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8'), before, 'untouched');
+  const replaced = await w.run(['structure', '--from-proposal', proposal, '--replace']);
+  assert.equal(replaced.code, 0, replaced.text);
+  assert.match(replaced.out[0], /^structure: 5 tables, 58 columns, 4 views, 2 sub-pages -> /);
+  assert.equal(JSON.parse(readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8')).made_from, undefined);
+  // a structure without made_from (the first build's) is written over as it always was
+  assert.equal((await w.run(['structure', '--from-proposal', proposal])).code, 0);
 });
 
 test('api-check makes one GET of the parent page under 2026-03-11 and writes runs/builder/api-check.json', async () => {
@@ -464,13 +600,33 @@ test('a value that is not an option of its column is refused before anything is 
   r = await w.run(['claims', '--from', join(w.root, 'odd-pick.json')]);
   assert.equal(r.code, 2);
   assert.match(r.err.join('\n'), /Geo Tags is "Weekend"/);
+  assert.match(r.err.join('\n'), /setup\.mjs structure --options-from <pick file>/, 'it names the command that sets the options from a pick');
+  pick.rows[1]['Geo Tags'] = ['Debate'];
+  pick.rows[0]['Geo Space'] = 'Elsewhere';
+  writeFileSync(join(w.root, 'odd-space.json'), JSON.stringify(pick));
+  r = await w.run(['claims', '--from', join(w.root, 'odd-space.json')]);
+  assert.equal(r.code, 2);
+  assert.match(r.err.join('\n'), /Geo Space is "Elsewhere", which is not one of U\.S\. Politics, World affairs, AI, Health, Crypto, Technology/);
   assert.equal(w.fake.writes().length, writes, 'no request at all');
   assert.deepEqual(unknownOptions(tmp('no-structure'), 'rulebook', [{ key: 'x', properties: { Category: 'Whatever' } }]), [], 'without a structure file there is nothing to compare with');
 });
 
 // ---- the claims ----------------------------------------------------------------------------------------------------------------------------------------
 
-test('claims: the Geo columns by their names, the agent\'s columns empty, Geo Sources with its links, the pages kept for the seed', async () => {
+// What a row of the Claims table holds, read back, for one row of the pick: the lean Geo columns by their names as the table takes them.
+function assertClaimRow(got, want, label = want['Geo ID']) {
+  assert.equal(got['Geo Name'], want['Geo Name'], `${label}: Geo Name`);
+  assert.equal(got['Geo ID'], want['Geo ID'], `${label}: Geo ID`);
+  assert.equal(got['Geo URL'], want['Geo URL'], `${label}: Geo URL`);
+  assert.equal(got['Geo Space'], want['Geo Space'], `${label}: Geo Space is a select`);
+  assert.equal(got['Geo Created'], want['Geo Created'], `${label}: Geo Created is a date, its start the day of the pick`);
+  assert.equal(got['Geo Sources'], want['Geo Sources'], `${label}: Geo Sources`);
+  assert.equal(got['Geo Is factual'], want['Geo Is factual'] === true, `${label}: Geo Is factual (null is unticked)`);
+  assert.deepEqual([...got['Geo Tags']].sort(), [...want['Geo Tags']].sort(), `${label}: Geo Tags is a multi-select`);
+  assert.equal(got['Geo Topics'], want['Geo Topics'], `${label}: Geo Topics`);
+}
+
+test('claims: the nine Geo columns of the pick (a select, a date, a multi-select, a box, linked sources), the agent\'s columns empty, the pages kept for the seed', async () => {
   const w = await built({ pick: makePick({ extra: 3 }) });
   const pick = readJson(w.inputs.claims);
   const r = await w.run(['claims', '--from', w.inputs.claims]);
@@ -479,38 +635,42 @@ test('claims: the Geo columns by their names, the agent\'s columns empty, Geo So
   const dir = lastRun(w.root, 'claims');
   const plan = readPlan(dir);
   for (const op of plan.ops) {
-    assert.ok(Object.keys(op.properties).every((c) => CLAIMS_COPY_COLUMNS.includes(c)), `only Geo columns: ${Object.keys(op.properties).join(', ')}`);
-    assert.ok(!('page_id' in op.properties) && !('url' in op.properties) && !('Review status' in op.properties) && !('Agent tags' in op.properties) && !('Agent status' in op.properties) && !('Agent notes' in op.properties) && !('source_pieces' in op.properties));
+    assert.ok(Object.keys(op.properties).every((c) => CLAIMS_GEO_COLUMNS.includes(c)), `only Geo columns: ${Object.keys(op.properties).join(', ')}`);
+    assert.ok(!('month' in op.properties) && !('source_pieces' in op.properties) && !('Review status' in op.properties) && !('Agent tags' in op.properties) && !('Agent status' in op.properties));
   }
   const rows = rowsOf(w, 'claims');
   assert.equal(rows.length, 3);
   for (const want of pick.rows) {
     const got = rows.find((x) => x['Geo ID'] === want['Geo ID']);
     assert.ok(got, want['Geo ID']);
-    for (const column of CLAIMS_COPY_COLUMNS) {
-      const expected = want[column];
-      const found = got[column];
-      if (typeof expected === 'boolean' || typeof expected === 'number') assert.equal(found, expected, `${want['Geo ID']}: ${column}`);
-      else if (Array.isArray(expected)) assert.deepEqual(found, expected, `${want['Geo ID']}: ${column}`);
-      else assert.equal(found ?? '', expected ?? '', `${want['Geo ID']}: ${column}`);
-    }
+    assertClaimRow(got, want);
     assert.deepEqual([got['Agent tags'], got['Tags waiting'], got['Agent status'], got['Agent edition'], got['Agent remarks']], [[], [], null, '', ''], 'the agent fills its columns at its first tag run');
-    assert.ok(!('Agent notes' in got) && !('Agent notes (old)' in got));
   }
-  assert.equal(rows.find((x) => x['Geo ID'] === pick.rows[1]['Geo ID'])['Geo Score'], 0.25);
   assert.equal(rows.find((x) => x['Geo ID'] === pick.rows[2]['Geo ID'])['Geo Is factual'], true);
+  assert.equal(rows.find((x) => x['Geo ID'] === pick.rows[1]['Geo ID'])['Geo Is factual'], false);
+  // a claim of the pick whose Geo Is factual is null stays unticked
+  const planned = plan.ops.find((op) => op.key === pick.rows[0]['Geo ID']);
+  assert.equal(planned.properties['Geo Is factual'] ?? false, false);
+  // the plan holds plain values: a day, a space name, a list of tag names
+  assert.equal(planned.properties['Geo Created'], pick.rows[0]['Geo Created']);
+  assert.equal(planned.properties['Geo Space'], pick.rows[0]['Geo Space']);
+  assert.deepEqual(planned.properties['Geo Tags'], pick.rows[0]['Geo Tags']);
 
-  // the links of Geo Sources survive: the plan holds the text, the write adds where each piece points
+  // the links of Geo Sources survive: each source's name is linked to its address; the plan holds the text, the write adds where each piece points
   const claimsDb = tableEntries(w.root).claims.database_id;
   const pages = w.fake.rows(claimsDb);
   for (const want of pick.rows) {
     const page = pages.find((p) => p.properties['Geo ID'].rich_text.map((t) => t.plain_text).join('') === want['Geo ID']);
     const hrefs = page.properties['Geo Sources'].rich_text.map((t) => t.href).filter(Boolean);
-    assert.deepEqual(hrefs, want.source_pieces.map((p) => p.href).filter(Boolean), want['Geo ID']);
+    assert.deepEqual(hrefs, want.source_pieces.map((p) => p.url), want['Geo ID']);
     assert.equal(page.properties['Geo Sources'].rich_text.map((t) => t.plain_text).join(''), want['Geo Sources']);
+    for (const piece of want.source_pieces) {
+      assert.ok(page.properties['Geo Sources'].rich_text.some((t) => t.plain_text === piece.name && t.href === piece.url), `${piece.name} is linked to its address`);
+    }
   }
   const sidecar = readJson(join(dir, 'rich-text.json'));
   assert.deepEqual(Object.keys(sidecar), [pick.rows[0]['Geo ID'], pick.rows[2]['Geo ID']]);
+  assert.deepEqual(sidecar[pick.rows[0]['Geo ID']].map((p) => Object.keys(p).sort()), [['href', 'text'], ['href', 'text'], ['href', 'text']], 'the pieces are text and href (the names, a line break, the names)');
 
   const pagesFile = readJson(join(w.root, 'setup', 'claims-pages.json'));
   assert.deepEqual(Object.fromEntries(rows.map((x) => [x['Geo ID'], x.page_id])), pagesFile);
@@ -520,11 +680,124 @@ test('claims: the Geo columns by their names, the agent\'s columns empty, Geo So
   assert.equal(w.fake.writes().length, writes);
 });
 
+test('claims from a 200-row Geo pick: every row has its date, space, tags and source links, and the step takes the pick as its default input', async () => {
+  const audit = readAuditFile();
+  const pick = makePick({ audit, extra: 190 });
+  assert.equal(pick.rows.length, 200);
+  const w = await built({ pick });
+  // no --from: setup/geo-claims-pick.json is the default
+  mkdirSync(join(w.root, 'setup'), { recursive: true });
+  writeFileSync(join(w.root, 'setup', 'geo-claims-pick.json'), `${JSON.stringify(pick, null, 2)}\n`);
+  const r = await w.run(['claims']);
+  assert.equal(r.code, 0, r.text);
+  assert.deepEqual(r.out, ['claims: 200 row(s) written and read back ok']);
+  const rows = rowsOf(w, 'claims');
+  assert.equal(rows.length, 200);
+  const byId = new Map(rows.map((x) => [x['Geo ID'], x]));
+  for (const want of pick.rows) assertClaimRow(byId.get(want['Geo ID']), want);
+  assert.deepEqual([...new Set(rows.map((x) => x['Geo Space']))].sort(), [...SPACE_NAMES].sort(), 'all six spaces');
+  assert.ok(rows.every((x) => /^2026-0[89]-\d\d$|^2026-10-\d\d$/.test(x['Geo Created'])), 'a day for every claim');
+  const linked = pick.rows.filter((x) => x.source_pieces.length);
+  assert.ok(linked.length > 90);
+  const pages = w.fake.rows(tableEntries(w.root).claims.database_id);
+  const withLinks = pages.filter((p) => p.properties['Geo Sources'].rich_text.some((t) => t.href));
+  assert.equal(withLinks.length, linked.length);
+
+  // the whole setup on the 200 claims, then verify: 200 = the pick; a pick of 201 rows is a difference
+  const all = await w.run(allArgs(w));
+  assert.equal(all.code, 0, all.text);
+  const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
+  assert.deepEqual(verify.differences, []);
+  assert.equal(verify.counts.claims, 200);
+  assert.equal(verify.counts.tag_decisions, 10);
+  writeFileSync(join(w.root, 'bigger.json'), JSON.stringify(makePick({ audit, extra: 191 })));
+  const bigger = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', join(w.root, 'bigger.json'), '--audit', w.inputs.audit]);
+  assert.equal(bigger.code, 2);
+  assert.match(bigger.err.join('\n'), /claims: row count - 200 rows in the Claims table, 201 in the pick/);
+});
+
+test('setup verify with a hub block reads the hub title, the order of its body, the archive record and the protected ids back; it is clean only when the page is in order', async () => {
+  const w = await filled();
+  const ok = await w.run(verifyArgs(w));
+  assert.equal(ok.code, 0, ok.text);
+  assert.equal(readJson(join(w.root, 'runs', 'builder', 'verify.json')).ok, true);
+
+  const client = builderClient(w.fake);
+  const rename = (title) => client.updatePage(w.parent, { properties: { title: { title: [{ type: 'text', text: { content: title } }] } } });
+  await rename('Feedback Distillation MVP');
+  let r = await w.run(verifyArgs(w));
+  assert.equal(r.code, 2);
+  assert.match(r.err.join('\n'), /hub: title - the hub page is called "Feedback Distillation MVP" and should be called "Claim tagger"/);
+  await rename('Claim tagger');
+
+  // a block that is none of the hub's: reported, so verify is not ok
+  await client.appendBlocks(w.parent, [{ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: 'Stray note' } }] } }], { position: { type: 'start' } });
+  r = await w.run(verifyArgs(w));
+  assert.equal(r.code, 2);
+  assert.match(r.err.join('\n'), /hub: leftover - a block that is none of these is on the hub page and was left as it is: paragraph "Stray note"/);
+
+  // the archive record: an archive step that stopped halfway, then one that is done but names a page that cannot be read
+  writeFileSync(join(w.root, 'setup', 'archive.json'), JSON.stringify({ state: 'moving' }));
+  r = await w.run(verifyArgs(w));
+  assert.match(r.err.join('\n'), /archive: archive file - setup\/archive\.json says state "moving": the archive step has not finished/);
+  writeFileSync(join(w.root, 'setup', 'archive.json'), JSON.stringify({ state: 'done', archive_page: 'e'.repeat(32), moved: [], practice_pages: [], tables: [] }));
+  r = await w.run(verifyArgs(w));
+  assert.match(r.err.join('\n'), /archive: archive page - the Archive page cannot be read/);
+  assert.equal(readJson(join(w.root, 'runs', 'builder', 'verify.json')).requests.writes, 0, 'verify only read');
+});
+
+test('a claim with a tag that is not an option of Geo Tags is refused before anything is written, and the message names setup.mjs structure --options-from', async () => {
+  const w = await built();
+  const pick = makePick({ audit: readAuditFile(), extra: 5 });
+  pick.rows[4]['Geo Tags'] = ['Debate', 'Immigration'];
+  pick.tag_names = ['Debate', 'Economy', 'Immigration'];
+  writeFileSync(join(w.root, 'more-tags.json'), JSON.stringify(pick));
+  const writes = w.fake.writes().length;
+  const r = await w.run(['claims', '--from', join(w.root, 'more-tags.json')]);
+  assert.equal(r.code, 2);
+  assert.match(r.err.join('\n'), /nothing was written, because Notion would add options/);
+  assert.match(r.err.join('\n'), /Geo Tags is "Immigration", which is not one of Debate, Economy/);
+  assert.match(r.err.join('\n'), /run "setup\.mjs structure --options-from <pick file>"/);
+  assert.equal(w.fake.writes().length, writes);
+  // the options from this pick make it pass
+  const o = await w.run(['structure', '--options-from', join(w.root, 'more-tags.json')]);
+  assert.equal(o.code, 0, o.text);
+  assert.deepEqual(readJson(join(w.root, 'setup', 'structure.json')).tables.claims.columns.find((c) => c.name === 'Geo Tags').options, ['Debate', 'Economy', 'Immigration']);
+});
+
+test('a claims-pages.json or rulebook-pages.json of an earlier build is never merged: a key the input does not have stops the step with exit 2 and says to set the file aside', async () => {
+  const w = await built();
+  mkdirSync(join(w.root, 'setup'), { recursive: true });
+  const old = { [`${'a'.repeat(31)}1`]: '3f2273e2-14eb-819a-89ae-e658e01e094b' };
+  writeFileSync(join(w.root, 'setup', 'claims-pages.json'), JSON.stringify(old));
+  const writes = w.fake.writes().length;
+  let r = await w.run(['claims', '--from', w.inputs.claims]);
+  assert.equal(r.code, 2);
+  assert.match(r.err.join('\n'), /claims-pages\.json holds 1 claim\(s\) that the current input does not have/);
+  assert.match(r.err.join('\n'), /Set it aside \(git mv it to setup\/archive-2026-10\/\)/);
+  assert.equal(w.fake.writes().length, writes, 'nothing was written');
+  assert.deepEqual(readJson(join(w.root, 'setup', 'claims-pages.json')), old, 'and the file is as it was');
+
+  writeFileSync(join(w.root, 'setup', 'rulebook-pages.json'), JSON.stringify({ 'Old tag': '3f2273e2-14eb-819a-89ae-e658e01e094c' }));
+  r = await w.run(['rulebook', '--from', w.inputs.taxonomy]);
+  assert.equal(r.code, 2);
+  assert.match(r.err.join('\n'), /rulebook-pages\.json holds 1 tag\(s\) that the current input does not have \(Old tag\)/);
+  r = await w.run(['rubric', '--from', w.inputs.taxonomy]);
+  assert.equal(r.code, 2, 'the rubric step does not read the ids of another build either');
+  assert.match(r.err.join('\n'), /rulebook-pages\.json holds 1 tag\(s\)/);
+
+  // set aside, the steps run, and the file holds only the new ids
+  rmSync(join(w.root, 'setup', 'claims-pages.json'));
+  rmSync(join(w.root, 'setup', 'rulebook-pages.json'));
+  assert.equal((await w.run(['claims', '--from', w.inputs.claims])).code, 0);
+  assert.equal(Object.keys(readJson(join(w.root, 'setup', 'claims-pages.json'))).length, 13);
+});
+
 test('a link in Geo Sources that points at a protected table or page is refused: the links go in beside the plan, so setup looks at them itself', async () => {
   const w = await built();
   const pick = makePick({ extra: 2 });
   const protectedId = w.config.notion.protected_database_ids[0].replace(/-/g, '');
-  pick.rows[0].source_pieces[0].href = `https://www.notion.so/${protectedId}`;
+  pick.rows[0].source_pieces[0].url = `https://www.notion.so/${protectedId}`;
   writeFileSync(join(w.root, 'trap-pick.json'), JSON.stringify(pick));
   const writes = w.fake.writes().length;
   const r = await w.run(['claims', '--from', join(w.root, 'trap-pick.json')]);
@@ -534,21 +807,26 @@ test('a link in Geo Sources that points at a protected table or page is refused:
   assert.deepEqual(protectedInLinks(w.config, new Map([['g', [{ text: 'x', href: 'https://example.com/a' }, { text: 'y', href: null }]]])), []);
 });
 
-test('a pick with a repeated Geo ID, no Geo Name or no rows is refused with exit 2', async () => {
+test('a pick that is not a Geo pick is refused with exit 2: the 50-row pick of the first build, a repeated Geo ID, no Geo Name, no rows, a claim the audit block says is included but is not there', async () => {
   const w = await built();
   const bad = (pick, re) => {
     const file = join(w.root, `pick-${Math.random().toString(36).slice(2)}.json`);
     writeFileSync(file, JSON.stringify(pick));
     return w.run(['claims', '--from', file]).then((r) => {
       assert.equal(r.code, 2);
-      assert.match(r.err[0], re);
+      assert.match(r.err.join('\n'), re);
     });
   };
   const good = makePick({ extra: 2 });
   await bad({ ...good, rows: [good.rows[0], good.rows[0]] }, /appears twice/);
-  await bad({ ...good, rows: [{ ...good.rows[0], 'Geo Name': '' }] }, /has no Geo Name/);
-  await bad({ ...good, rows: [] }, /has no rows/);
+  await bad({ ...good, rows: [{ ...good.rows[0], 'Geo Name': '' }] }, /is not a Geo pick[\s\S]*Geo Name/);
+  await bad({ ...good, rows: [] }, /is not a Geo pick[\s\S]*rows/);
+  await bad({ ...good, audit: { ...good.audit, included: ['f'.repeat(32)] } }, /includes 1 audit claim\(s\) that are not among its rows/);
+  // the old pick of 50 rows (no pick_version) is named for what it is, with the way to the new one
+  const oldPick = { seed: 'x', picked_at: '2026-10-15T11:32:48.918Z', dry_run: 'dry-1', audit_ids: [], random_ids: [], rows: [{ 'Geo ID': 'g', 'Geo Name': 'n' }] };
+  await bad(oldPick, /is the 50-row pick of the first build[\s\S]*geo-pick\.mjs --seed <s> --audit <file>/);
   assert.equal(rowsOf(w, 'claims').length, 0);
+  assert.throws(() => readPick(join(w.root, 'nope.json')), /the claims pick does not exist/);
 });
 
 // ---- the seeded audit decisions -------------------------------------------------------------------------------------------------------------------
@@ -574,20 +852,88 @@ test('auditProperties: the agent\'s answer from the flag, Agent slip only when i
   assert.equal(claimLink('3F2273E2-14EB-819A-89AE-E658E01E094B'), 'https://www.notion.so/3f2273e214eb819a89aee658e01e094b');
 });
 
-test('seed-audit needs the claims first, and every audited claim must have its row in the Claims copy', async () => {
+test('seed-audit needs the claims first, and every audited claim must have its row in the Claims table', async () => {
   const w = await built();
-  let r = await w.run(['seed-audit', '--from', w.inputs.audit]);
+  const r = await w.run(['seed-audit', '--from', w.inputs.audit, '--claims', w.inputs.claims]);
   assert.equal(r.code, 2);
   assert.match(r.err[0], /claims-pages\.json does not exist: run "setup\.mjs claims" first/);
   await w.run(['claims', '--from', w.inputs.claims]);
-  const audit = readAuditFile();
-  audit.decisions.push({ ...audit.decisions[0], geo_id: 'f'.repeat(32) });
-  const file = join(w.root, 'audit-extra.json');
-  writeFileSync(file, JSON.stringify(audit));
-  r = await w.run(['seed-audit', '--from', file]);
-  assert.equal(r.code, 2);
-  assert.match(r.err[0], /1 audited claim\(s\) have no row in the Claims copy yet/);
+  // a claim of the pick that is in the file of pages but whose row is not there would be named: the unit says so
+  assert.throws(() => auditOps(readAuditFile(), { [readAuditFile().decisions[0].geo_id]: 'p' }), (e) => e instanceof InputError && /9 audited claim\(s\) have no row in the Claims table yet/.test(e.message));
   assert.equal(rowsOf(w, 'tag_decisions').length, 0);
+});
+
+test('seed-audit seeds only the audit claims the pick includes, names each one it left out with the pick\'s reason, and refuses an audit file that is not the one the pick was made with', async () => {
+  const audit = readAuditFile();
+  const include = audit.decisions.slice(0, 6).map((d) => d.geo_id);
+  const pick = makePick({ audit, extra: 2, include });
+  assert.equal(pick.audit.left_out.length, 4);
+  pick.audit.left_out[0].reason = 'not tagged Debate in a canonical space (tagged Debate in space b00, which is not one of the 6 pick spaces)';
+  const w = await built({ pick });
+  await w.run(['claims', '--from', w.inputs.claims]);
+
+  // another audit file (one more decision, so other bytes): refused with the digests, nothing written
+  const other = structuredClone(audit);
+  other.decisions.push({ ...audit.decisions[0], geo_id: 'f'.repeat(32) });
+  writeFileSync(join(w.root, 'audit-other.json'), `${JSON.stringify(other, null, 2)}\n`);
+  const writes = w.fake.writes().length;
+  let r = await w.run(['seed-audit', '--from', join(w.root, 'audit-other.json'), '--claims', w.inputs.claims]);
+  assert.equal(r.code, 2);
+  assert.match(r.err[0], /is not the one the pick was made with \(its sha256 is [0-9a-f]{12}…, the pick recorded [0-9a-f]{12}…\)/);
+  assert.equal(w.fake.writes().length, writes);
+  assert.equal(rowsOf(w, 'tag_decisions').length, 0);
+
+  // the file the pick was made with: six decisions, four left out and named
+  r = await w.run(['seed-audit', '--from', w.inputs.audit, '--claims', w.inputs.claims]);
+  assert.equal(r.code, 0, r.text);
+  assert.equal(r.out[0], 'seed-audit: 6 row(s) written and read back ok');
+  assert.ok(r.out.includes(`seed-audit: ${AUDIT_NOTE}`));
+  assert.ok(r.out.includes('seed-audit: 6 of the 10 audit claims are in the pick; the others:'));
+  const leftLines = r.out.filter((l) => /left out of the pick, so not seeded/.test(l));
+  assert.equal(leftLines.length, 4);
+  for (const l of pick.audit.left_out) assert.ok(leftLines.some((x) => x.includes(l.geo_id) && x.includes(l.reason)), `${l.geo_id} is named with its reason`);
+  const rows = rowsOf(w, 'tag_decisions');
+  assert.deepEqual(rows.map((x) => x.Key.split('::')[0]).sort(), [...include].sort());
+  assert.equal(readJson(join(w.root, 'setup', 'audit-decisions.json')).decisions.length, 10, 'the audit file is kept as it is');
+  const plan = readPlan(lastRun(w.root, 'seed-audit'));
+  assert.deepEqual(plan.header.plan.counts, { creates: 6, updates: 0 });
+
+  // migrate-decisions carries over the same six and no others
+  await w.run(['rulebook', '--from', w.inputs.taxonomy]);
+  const m = await w.run(['migrate-decisions', '--claims', w.inputs.claims]);
+  assert.equal(m.code, 0, m.text);
+  assert.match(m.out[0], /^migrate-decisions: 6 claim\(s\) carried over,/);
+  assert.equal(rowsOf(w, 'claims').filter((c) => c['Review status'] === 'Reviewed').length, 6);
+});
+
+test('seed-audit with a pick that includes no audit claim seeds nothing and says so, and the left-out claims are still named', async () => {
+  const audit = readAuditFile();
+  const pick = makePick({ audit, extra: 3, include: [] });
+  assert.deepEqual(pick.audit.included, []);
+  const w = await built({ pick });
+  await w.run(['claims', '--from', w.inputs.claims]);
+  const writes = w.fake.writes().length;
+  const r = await w.run(['seed-audit', '--from', w.inputs.audit, '--claims', w.inputs.claims]);
+  assert.equal(r.code, 0, r.text);
+  assert.equal(r.out[0], 'seed-audit: the pick includes none of the 10 audit claims, so no decision was seeded');
+  assert.equal(r.out.filter((l) => /left out of the pick/.test(l)).length, 10);
+  assert.equal(w.fake.writes().length, writes);
+  assert.equal(rowsOf(w, 'tag_decisions').length, 0);
+  const m = await w.run(['migrate-decisions', '--claims', w.inputs.claims]);
+  assert.equal(m.code, 0, m.text);
+  assert.match(m.out[0], /nothing to carry over/);
+});
+
+test('auditForPick: the decisions the pick includes in the audit file\'s order, the others with the pick\'s reason (or the missing one), and the digest checked only when a file is given', () => {
+  const audit = readAuditFile();
+  const pick = makePick({ audit, extra: 0, include: [audit.decisions[3].geo_id, audit.decisions[1].geo_id] });
+  const r = auditForPick(audit, pick);
+  assert.deepEqual(r.decisions.map((d) => d.geo_id), [audit.decisions[1].geo_id, audit.decisions[3].geo_id]);
+  assert.equal(r.left.length, 8);
+  assert.equal(r.left[0].reason, 'not tagged Debate in a canonical space');
+  assert.equal(auditForPick(audit, { ...pick, audit: { ...pick.audit, left_out: [] } }).left[0].reason, 'the pick lists it neither as included nor as left out');
+  assert.throws(() => auditForPick({ decisions: audit.decisions.slice(0, 2) }, pick), /includes 1 audit claim\(s\) that the audit file does not hold/);
+  assert.throws(() => auditForPick(audit, pick, AUDIT_FILE), /is not the one the pick was made with/, 'a file whose bytes are other than the ones the pick recorded (the evidence copy is formatted differently)');
 });
 
 test('seed-audit: ten decided rows of the ledger through a setup plan; the ledger has no editor column, so the plan needs no exception', async () => {
@@ -595,7 +941,7 @@ test('seed-audit: ten decided rows of the ledger through a setup plan; the ledge
   await w.run(['claims', '--from', w.inputs.claims]);
   const r = await w.run(['seed-audit', '--from', w.inputs.audit]);
   assert.equal(r.code, 0, r.text);
-  assert.deepEqual(r.out, ['seed-audit: 10 row(s) written and read back ok', `seed-audit: ${AUDIT_NOTE}`]);
+  assert.deepEqual(r.out, ['seed-audit: 10 row(s) written and read back ok', `seed-audit: ${AUDIT_NOTE}`, 'seed-audit: 10 of the 10 audit claims are in the pick']);
   assert.equal(AUDIT_NOTE, 'seeded from the audit of 9 October');
   const dir = lastRun(w.root, 'seed-audit');
   assert.equal(readJson(join(dir, 'run.json')).note, 'seeded from the audit of 9 October');
@@ -673,14 +1019,12 @@ async function seeded() {
 }
 const claimOf = (w, geoId) => rowsOf(w, 'claims').find((c) => c['Geo ID'] === geoId);
 
-test('claims: the editor columns of the Claims copy stay empty even when the picked row carries the real table\'s own values', async () => {
+test('claims: the editor columns of the Claims table and the agent\'s stay empty on a new row', async () => {
   const w = await built();
-  const pick = readJson(w.inputs.claims);
-  assert.equal(pick.rows[0]['Challenged tags notes'], 'QA audit', 'the pick holds the real table\'s notes and relation');
   await w.run(['claims', '--from', w.inputs.claims]);
   for (const c of rowsOf(w, 'claims')) {
     assert.deepEqual([c['Verified tags'], c['Review status'], c['Challenged tags notes'], c['Agent confidence'], c['Agent reading']], [[], null, '', null, ''], c['Geo ID']);
-    assert.ok(!('Why wrong' in c) && !('Why wrong (old)' in c), 'the Claims copy has no Why wrong column to fill, and a new table makes no retired one');
+    assert.ok(!('Why wrong' in c) && !('Why wrong (old)' in c), 'the Claims table has no Why wrong column to fill, and a new table makes no retired one');
   }
 });
 
@@ -742,29 +1086,36 @@ test('migrate-decisions: an open ledger row gives its claim the Agent confidence
   const other = rowsOf(w, 'claims').filter((c) => c['Geo ID'].startsWith('ee'))[1];
   w.fake.addRow(entries.tag_decisions.database_id, { Claim: 'Another claim', Key: `${other['Geo ID']}::Context-dependent`, Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Tag outcome': 'Does not apply', 'Your reasoning': 'My words.' });
 
+  // an open ledger row on one of the audit claims gives that claim its Agent confidence
+  const audited = audit.decisions[4];
+  w.fake.addRow(entries.tag_decisions.database_id, { Claim: 'An audited claim, open again', Key: `${audited.geo_id}::Exact duplicate`, Tag: 'Exact duplicate', 'Agent proposal': "Can't tell", 'Agent confidence': 0.58 });
+
   const r = await w.run(['migrate-decisions']);
   assert.equal(r.code, 0, r.text);
-  assert.match(r.out[0], /^migrate-decisions: 9 claim\(s\) carried over, 1 ledger row\(s\) got Decided under, 1 claim\(s\) got Agent confidence; read back ok; 1 were carried over already; 1 decided ledger row\(s\) are not from the audit and were left/);
+  assert.match(r.out[0], /^migrate-decisions: 9 claim\(s\) carried over, 1 ledger row\(s\) got Decided under, 1 claim\(s\) got Agent confidence; read back ok; 1 were carried over already; 2 ledger row\(s\) are for claims the pick does not include and were left/);
   assert.equal(decided(first)['Decided under'], '2026-10-15.1');
   assert.equal(decided(second)['Decided under'], '', 'the claim was not carried over, so its ledger row is not touched');
   assert.equal(claimOf(w, second.geo_id)['Review status'], 'To review', 'the editor\'s own work stays');
   assert.equal(claimOf(w, second.geo_id)['Challenged tags notes'], 'Context-dependent: my own note');
-  assert.equal(claimOf(w, extra['Geo ID'])['Agent confidence'], 0.65);
+  // only the audit claims the pick includes are migrated: the ledger rows of the other two claims are left, whatever they hold
+  assert.equal(claimOf(w, extra['Geo ID'])['Agent confidence'], null);
   assert.equal(claimOf(w, extra['Geo ID'])['Review status'], null, 'an open claim is not Reviewed by a script');
   assert.equal(claimOf(w, other['Geo ID'])['Review status'], null);
   assert.deepEqual(claimOf(w, other['Geo ID'])['Verified tags'], []);
+  assert.equal(claimOf(w, audited.geo_id)['Review status'], 'Reviewed');
+  assert.equal(claimOf(w, audited.geo_id)['Agent confidence'], 0.58, 'an open ledger row of an audit claim still gives the claim its confidence');
   const plan = readPlan(lastRun(w.root, 'migrate-decisions'));
-  assert.deepEqual(plan.header.plan.counts, { creates: 0, updates: 11 }, 'nine claims with a decision, one claim with a confidence, one ledger row');
-  assert.ok(plan.ops.filter((op) => op.table === 'claims' && !('Review status' in op.properties)).every((op) => Object.keys(op.properties).join() === 'Agent confidence' && !op.expect));
+  assert.deepEqual(plan.header.plan.counts, { creates: 0, updates: 10 }, 'nine claims with a decision, one ledger row');
+  assert.ok(plan.ops.every((op) => op.table === 'tag_decisions' || 'Review status' in op.properties), 'no claim got a confidence alone');
 });
 
-test('migrate-decisions needs the Rulebook copy for the tags the audit says apply: without it nothing is written and the exit is 2', async () => {
+test('migrate-decisions needs the Rulebook for the tags the audit says apply: without it nothing is written and the exit is 2', async () => {
   const w = await built();
   await w.run(['claims', '--from', w.inputs.claims]);
   await w.run(['seed-audit', '--from', w.inputs.audit]);
   const noTag = await w.run(['migrate-decisions']);
   assert.equal(noTag.code, 2, 'no Rulebook row for Context-dependent yet');
-  assert.match(noTag.err.join('\n'), /was decided Applies for Context-dependent, which has no row in the Rulebook copy/);
+  assert.match(noTag.err.join('\n'), /was decided Applies for Context-dependent, which has no row in the Rulebook/);
   assert.equal(rowsOf(w, 'claims').filter((c) => c['Review status']).length, 0, 'nothing was written');
   await w.run(['rulebook', '--from', w.inputs.taxonomy]);
   const fixed = await w.run(['migrate-decisions']);
@@ -795,8 +1146,18 @@ test('migrationOps: the plan from the rows, without a request', () => {
     { key: 'd', page_id: 'p-d', properties: { C: 0.61 } },
   ]);
   assert.deepEqual(ops.ledgerOps, [{ key: 'a::Context-dependent', page_id: 'l-a', properties: { 'Decided under': '2026-10-15.1' } }]);
-  assert.deepEqual(ops.summary, { carried: 2, alreadyCarried: 1, notFromAudit: 0, noClaim: 1, decidedUnder: 1, confidence: 1 });
-  assert.throws(() => migrationOps([claim('a')], [audit('a', 'Applies')], {}, columns), (e) => e instanceof InputError && /no row in the Rulebook copy/.test(e.message));
+  assert.deepEqual(ops.summary, { carried: 2, alreadyCarried: 1, notFromAudit: 0, noClaim: 1, decidedUnder: 1, confidence: 1, notIncluded: 0 });
+  // with `only` (the audit claims the pick includes) a ledger row for any other claim is left alone, confidence rows included
+  const some = migrationOps(
+    [claim('a'), claim('b'), claim('d')],
+    [audit('a', 'Applies'), audit('b', 'Does not apply'), row('d', { 'Agent confidence': 0.61 })],
+    { 'Context-dependent': 'tag-page' },
+    columns,
+    { only: new Set(['a']) },
+  );
+  assert.deepEqual(some.claimOps.map((o) => o.key), ['a']);
+  assert.deepEqual(some.summary, { carried: 1, alreadyCarried: 0, notFromAudit: 0, noClaim: 0, decidedUnder: 0, confidence: 0, notIncluded: 2 });
+  assert.throws(() => migrationOps([claim('a')], [audit('a', 'Applies')], {}, columns), (e) => e instanceof InputError && /no row in the Rulebook/.test(e.message));
 });
 
 test('verify finds an audit decision that was not carried over to its claim, and one whose claim says something else', async () => {
@@ -863,6 +1224,50 @@ test('rubric run again changes nothing and adds no second changelog line; other 
   const refused = await w.run(['rubric', '--from', join(w.root, 'changed.json')]);
   assert.equal(refused.code, 2);
   assert.match(refused.err[0], new RegExp(`edition ${EDITION} is in force already with other rules`));
+});
+
+test('rubric on fresh tables (P9): the same rules with other Rulebook page ids make the next edition, with the reason said; other rules are refused; run again says "in force already"', async () => {
+  const w = await built();
+  await w.run(['rulebook', '--from', w.inputs.taxonomy]);
+  assert.equal((await w.run(['rubric', '--from', w.inputs.taxonomy])).code, 0);
+  const first = readRubric(w.root);
+  assert.equal(first.edition, EDITION);
+
+  // the Rulebook is a new table now: its rows have other page ids (the pages file is rewritten by the rulebook step from the table)
+  const pagesFile = join(w.root, 'setup', 'rulebook-pages.json');
+  const fresh = Object.fromEntries(Object.keys(readJson(pagesFile)).map((name, i) => [name, `3f2273e2-14eb-81aa-8000-00000000000${i + 1}`]));
+  writeFileSync(pagesFile, JSON.stringify(fresh));
+
+  // the rules differ: refused, nothing is written
+  const changed = smallTaxonomy();
+  changed.rows[0]['When to use'] = '1. A different first rule.';
+  writeFileSync(join(w.root, 'changed.json'), JSON.stringify(changed));
+  const refused = await w.run(['rubric', '--from', join(w.root, 'changed.json')]);
+  assert.equal(refused.code, 2);
+  assert.match(refused.err[0], new RegExp(`edition ${EDITION} is in force already with other rules`));
+  assert.equal(readRubric(w.root).edition, EDITION);
+
+  // the rules are the same: the next edition, same rules, the new page ids
+  const r = await w.run(['rubric', '--from', w.inputs.taxonomy]);
+  assert.equal(r.code, 0, r.text);
+  const next = EDITION.replace(/\.1$/, '.2');
+  assert.match(r.out[0], new RegExp(`^rubric: edition ${next.replace(/\./g, '\\.')} written \\(the Rulebook is a fresh table, so its page ids are new; the rules are those of edition ${EDITION.replace(/\./g, '\\.')}\\); 2 tags, 1 with rules \\(Context-dependent\\)$`));
+  const rubric = readRubric(w.root);
+  assert.equal(rubric.edition, next);
+  assert.equal(rubric.rubric_hash, first.rubric_hash, 'the rules are the same rules');
+  assert.deepEqual(rubric.tags.map((t) => [t.name, t.page_id]), Object.entries(fresh).sort(([a], [b]) => (a < b ? -1 : 1)).map(([name, id]) => [name, id]));
+  assert.deepEqual(readEdition(w.root, EDITION), first, 'the first edition stays in the history');
+  assert.deepEqual(readEdition(w.root, next), rubric);
+  assert.equal(readLock(w.root).edition, next);
+  assert.equal(readFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), 'utf8'), `- ${EDITION.slice(0, 10)} · edition ${EDITION} · setup: copied from the taxonomy\n- ${next.slice(0, 10)} · edition ${next} · setup: fresh tables under the hub (P9), copied from the taxonomy\n`);
+
+  // a run again finds it in force and writes nothing
+  const before = readFileSync(join(w.root, 'rubric', 'rubric.json'), 'utf8');
+  const again = await w.run(['rubric', '--from', w.inputs.taxonomy]);
+  assert.equal(again.code, 0);
+  assert.match(again.out[0], new RegExp(`edition ${next.replace(/\./g, '\\.')} is in force already \\(files checked\\)`));
+  assert.equal(readFileSync(join(w.root, 'rubric', 'rubric.json'), 'utf8'), before);
+  assert.equal(readFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), 'utf8').trim().split('\n').length, 2);
 });
 
 // ---- canaries ----------------------------------------------------------------------------------------------------------------------------------------
@@ -967,7 +1372,7 @@ test('all: every step in order, each with its own run folder, the table counts r
   assert.equal(rowsOf(w, 'agent_settings').length, 1);
   assert.equal(rowsOf(w, 'claims').filter((c) => c['Review status'] === 'Reviewed').length, 10, 'the ten audit decisions were carried over to their claims');
   const overall = readJson(join(lastRun(w.root, 'all'), 'run.json'));
-  assert.deepEqual(overall.steps.map((s) => s.step), ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify']);
+  assert.deepEqual(overall.steps.map((s) => s.step), ['api-check', 'databases', 'pages', 'views', 'hub', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'], 'with a hub block the tables come before the pages, and the hub part follows the views');
   assert.ok(overall.steps.every((s) => s.exit_code === 0));
   assert.equal(overall.exit_code, 0);
   assert.equal(overall.rubric_edition, EDITION);
@@ -977,7 +1382,7 @@ test('all: every step in order, each with its own run folder, the table counts r
     assert.ok(run.finished_at, step.step);
     assert.match(run.resume, /^node agents\/claim-tagger-mvp\/scripts\/setup\.mjs /);
   }
-  assert.match(readJson(join(w.root, 'runs', overall.steps[4].run_id, 'run.json')).resume, /rulebook --from .*taxonomy-issue\.json$/);
+  assert.match(readJson(join(w.root, 'runs', overall.steps.find((x) => x.step === 'rulebook').run_id, 'run.json')).resume, /rulebook --from .*taxonomy-issue\.json$/);
   for (const step of ['rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'settings']) {
     assert.ok(existsSync(join(lastRun(w.root, step), 'plan.jsonl')) && existsSync(join(lastRun(w.root, step), 'ledger.jsonl')) && existsSync(join(lastRun(w.root, step), 'requests.jsonl')), step);
   }
@@ -1004,7 +1409,7 @@ test('all run again is idempotent: it reads, finds everything, writes nothing an
 for (const applied of [false, true]) {
   test(`all stops at a lost row create (${applied ? 'it landed' : 'it did not land'}) and the same command finishes the job without a duplicate`, async () => {
     const w = await built();
-    for (const step of ['pages', 'databases', 'views']) await w.run([step]);
+    for (const step of ['databases', 'pages', 'views', 'hub']) await w.run([step]);
     w.fake.failNext('POST', /^\/pages$/, 503, 1, { applied });
     const first = await w.run(allArgs(w));
     assert.equal(first.code, 1);
@@ -1021,7 +1426,7 @@ for (const applied of [false, true]) {
   });
 }
 
-test('verify finds an edited Rulebook copy row, an edited claim, an edited seeded row, an edited settings row and an extra row', async () => {
+test('verify finds an edited Rulebook row, an edited claim, an edited seeded row, an edited settings row and an extra row', async () => {
   const w = await filled();
   const v0 = await w.run(verifyArgs(w));
   assert.equal(v0.code, 0, v0.text);
@@ -1031,7 +1436,7 @@ test('verify finds an edited Rulebook copy row, an edited claim, an edited seede
   const cd = rowsOf(w, 'rulebook').find((x) => x.Name === 'Context-dependent');
   w.fake.editRow(cd.page_id, { 'When to use': '1. A rule an editor rewrote by hand.' });
   const claim = rowsOf(w, 'claims')[4];
-  w.fake.editRow(claim.page_id, { 'Geo Name': 'A claim somebody retitled', 'Geo Score': 0.9 });
+  w.fake.editRow(claim.page_id, { 'Geo Name': 'A claim somebody retitled', 'Geo Topics': 'Topics an editor typed' });
   const seeded = rowsOf(w, 'tag_decisions')[2];
   w.fake.editRow(seeded.page_id, { 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear' });
   const settings = rowsOf(w, 'agent_settings')[0];
@@ -1044,9 +1449,9 @@ test('verify finds an edited Rulebook copy row, an edited claim, an edited seede
   assert.match(text, /verify: \d+ difference\(s\)/);
   assert.match(text, /rulebook: field - "Context-dependent": When to use differs/);
   assert.match(text, /claims: field - .*Geo Name differs/);
-  assert.match(text, /claims: field - .*Geo Score differs/);
-  assert.match(text, /claims: row count - 14 rows in the Claims copy, 13 in the pick/);
-  assert.match(text, /claims: extra row - the claim extra-1 is in the Claims copy but not in the pick/);
+  assert.match(text, /claims: field - .*Geo Topics differs/);
+  assert.match(text, /claims: row count - 14 rows in the Claims table, 13 in the pick/);
+  assert.match(text, /claims: extra row - the claim extra-1 is in the Claims table but not in the pick/);
   assert.match(text, /tag_decisions: seeded row - .*Tag outcome differs/);
   assert.match(text, /tag_decisions: seeded row - .*Why wrong differs/);
   assert.match(text, /agent_settings: settings - Rulebook edition is "2099-01-01\.7", the edition in force is /);
@@ -1067,8 +1472,8 @@ test('verify names a column added to a table, a missing row and a file it cannot
   writeFileSync(join(w.root, 'bigger.json'), JSON.stringify(bigger));
   const r = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', join(w.root, 'bigger.json'), '--audit', w.inputs.audit]);
   assert.equal(r.code, 2);
-  assert.match(r.err.join('\n'), /claims: row count - 13 rows in the Claims copy, 14 in the pick/);
-  assert.match(r.err.join('\n'), /claims: missing row - the claim ee030+ is not in the Claims copy/);
+  assert.match(r.err.join('\n'), /claims: row count - 13 rows in the Claims table, 14 in the pick/);
+  assert.match(r.err.join('\n'), /claims: missing row - the claim ee030+ is not in the Claims table/);
   const entry = tableEntries(w.root).tag_decisions;
   await restClient(w.fake).retrieveDatabase(entry.database_id);
   const added = builderClient(w.fake);
@@ -1080,35 +1485,33 @@ test('verify names a column added to a table, a missing row and a file it cannot
 
 // ---- the real input files -------------------------------------------------------------------------------------------------------------------------
 
-test('the real inputs (13 taxonomy rows, 50 picked claims, the audit) build, read back and verify against the fake', { skip: !existsSync(REAL_TAXONOMY) || !existsSync(REAL_PICK) }, async () => {
-  const w = await built();
-  const args = ['all', '--taxonomy', REAL_TAXONOMY, '--claims', REAL_PICK, '--audit', AUDIT_FILE];
+// The committed Geo pick (setup/geo-claims-pick.json) is made by the live run of geo-pick.mjs (stage 7 of HUB-AND-GEO-CLAIMS.md), so this test runs once that file is in the repository.
+const REAL_GEO_PICK = join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'geo-claims-pick.json');
+const REAL_AUDIT = join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'audit-decisions.json');
+
+test('the real inputs (13 taxonomy rows, the committed Geo pick, the audit) build, read back and verify against the fake, and every tag of the pick is an option', { skip: !existsSync(REAL_TAXONOMY) || !existsSync(REAL_GEO_PICK) }, async () => {
+  const w = newWorld({ structure: 'fresh' });
+  assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
+  const options = await w.run(['structure', '--options-from', REAL_GEO_PICK]);
+  assert.equal(options.code, 0, options.text);
+  assert.equal((await w.run(['build'])).code, 0);
+  const pick = readJson(REAL_GEO_PICK);
+  const args = ['all', '--taxonomy', REAL_TAXONOMY, '--claims', REAL_GEO_PICK, '--audit', REAL_AUDIT];
   const r = await w.run(args);
   assert.equal(r.code, 0, r.text);
   assert.equal(rowsOf(w, 'rulebook').length, 13);
-  assert.equal(rowsOf(w, 'claims').length, 50);
-  assert.equal(rowsOf(w, 'tag_decisions').length, 10);
+  assert.equal(rowsOf(w, 'claims').length, pick.rows.length);
+  assert.equal(rowsOf(w, 'tag_decisions').length, pick.audit.included.length);
   assert.equal(rowsOf(w, 'agent_settings').length, 1);
   const canaries = readLines(join(w.root, 'evals', 'canaries.jsonl'));
   assert.deepEqual([canaries.filter((x) => x.expected === 'apply').length, canaries.filter((x) => x.expected === 'do_not_apply').length], [6, 5]);
   const rubric = readRubric(w.root);
   assert.deepEqual(rubric.tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent']);
   assert.equal(rubric.tags.length, 13);
-  const pick = readJson(REAL_PICK);
-  const linked = pick.rows.filter((x) => x.source_pieces.some((p) => p.href));
-  assert.ok(linked.length > 0);
-  const pages = w.fake.rows(tableEntries(w.root).claims.database_id);
-  for (const want of linked) {
-    const page = pages.find((p) => p.properties['Geo ID'].rich_text.map((t) => t.plain_text).join('') === want['Geo ID']);
-    assert.deepEqual([...new Set(page.properties['Geo Sources'].rich_text.map((t) => t.href).filter(Boolean))].sort(), [...new Set(want.source_pieces.map((p) => p.href).filter(Boolean))].sort(), want['Geo ID']);
-  }
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.deepEqual(verify.differences, []);
-  assert.deepEqual(verify.counts, { rulebook: 13, claims: 50, tag_decisions: 10, rule_changes: 0, agent_settings: 1 });
-  // the protected tables were never touched: the fake hides them, and a request for one would have been a 404
+  assert.deepEqual(verify.counts, { rulebook: 13, claims: pick.rows.length, tag_decisions: pick.audit.included.length, rule_changes: 0, agent_settings: 1 });
   assert.ok(w.fake.requests.every((x) => x.status !== 404));
-  const loaded = loadConfig(w.root);
-  assert.match(loaded.notion.rulebook.database_id, /^[0-9a-f]{32}$/);
 });
 
 // ---- the pieces ------------------------------------------------------------------------------------------------------------------------------------
@@ -1171,10 +1574,18 @@ test('the input readers say what is wrong with a file', () => {
   assert.throws(() => readAudit(write('a2.json', { decisions: [{ geo_id: 'g', claim: 'c', flag: 'Wrong tag', outcome: 'Maybe' }] })), /outcome must be one of/);
   assert.throws(() => readAudit(write('a3.json', { decisions: [] })), /has no decisions/);
   assert.equal(readAudit(AUDIT_FILE).decisions.length, 10);
-  assert.throws(() => readPick(write('p1.json', { rows: [{ 'Geo ID': 'g', 'Geo Name': 'n' }, { 'Geo ID': 'g', 'Geo Name': 'm' }] })), /appears twice/);
+  assert.throws(() => readPick(write('p1.json', { rows: [{ 'Geo ID': 'g', 'Geo Name': 'n' }, { 'Geo ID': 'g', 'Geo Name': 'm' }] })), /50-row pick of the first build/);
+  const geo = makePick({ audit: readAuditFile(), extra: 2 });
+  const read = readPick(write('p2.json', geo));
+  assert.equal(read.rows.length, 12);
+  assert.deepEqual(read.rows[0].source_pieces, [{ text: 'Source one of 0', href: geo.rows[0].source_pieces[0].url }, { text: '\n', href: null }, { text: 'Source two of 0', href: geo.rows[0].source_pieces[1].url }], 'the pieces of the Geo Sources cell: names, a line break, names');
+  assert.deepEqual(read.rows[1].source_pieces, []);
+  assert.equal(read.rows[0].source_pieces.map((p) => p.text).join(''), geo.rows[0]['Geo Sources'], 'the pieces read as the cell text');
+  assert.throws(() => readPick(write('p3.json', { ...geo, pick_version: 2 })), /is not a Geo pick/);
   assert.equal(rulebookOps(readTaxonomy(write('t6.json', smallTaxonomy())), ['Name', 'Category']).length, 2);
-  assert.deepEqual(claimOps({ rows: [{ 'Geo ID': 'g', 'Geo Name': 'n', 'Geo Is factual': false, 'Geo Score': null, 'Geo Tags': [], 'Geo Topics': '' }] }, ['Geo Name', 'Geo ID', 'Geo Is factual', 'Geo Score', 'Geo Tags', 'Geo Topics', 'Agent tags']),
-    [{ key: 'g', properties: { 'Geo Name': 'n', 'Geo ID': 'g', 'Geo Is factual': false } }].map((x) => ({ key: x.key, properties: x.properties })));
+  assert.deepEqual(claimOps({ rows: [{ 'Geo ID': 'g', 'Geo Name': 'n', 'Geo Is factual': null, 'Geo Space': 'AI', 'Geo Created': '2026-09-14', 'Geo Tags': ['Debate'], 'Geo Topics': '', month: '2026-09' }] }, ['Geo Name', 'Geo ID', 'Geo Space', 'Geo Created', 'Geo Is factual', 'Geo Tags', 'Geo Topics', 'Agent tags']),
+    [{ key: 'g', properties: { 'Geo Name': 'n', 'Geo ID': 'g', 'Geo Space': 'AI', 'Geo Created': '2026-09-14', 'Geo Tags': ['Debate'] } }], 'null and empty values are left unset, a box that is false stays written');
+  assert.deepEqual(claimOps({ rows: [{ 'Geo ID': 'g', 'Geo Name': 'n', 'Geo Is factual': false }] }, ['Geo Name', 'Geo ID', 'Geo Is factual'])[0].properties, { 'Geo Name': 'n', 'Geo ID': 'g', 'Geo Is factual': false });
   assert.throws(() => auditOps(readAudit(AUDIT_FILE), {}), (e) => e instanceof InputError && /10 audited claim\(s\) have no row/.test(e.message));
 });
 
