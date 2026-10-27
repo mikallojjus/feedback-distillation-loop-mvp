@@ -2,8 +2,8 @@
 
 | Item | Value |
 |---|---|
-| Phase | "The hub and the Geo claims" (decisions P5 to P16, specification `HUB-AND-GEO-CLAIMS.md`), on the branch `claims-hub-2026-10` off `main` at 9dc97e4. Stages 0 to 7 are done in code: one Claims table, the walkthrough for onboarding only, the archive step, the Geo pick (200 claims, committed in `setup/geo-claims-pick.json`), the fresh structure and the hub, the docs and skills. The pre-live gate said NO-GO (`evidence/24-pre-live-gate/gate.md`); the fix pass (ebb9e71, merged as 5f11c6d) answered it and applied P13 to P16 and the editor review's wording; 2,202 tests. Nothing has changed in Notion yet; Geo has been read only. Earlier phase: "Read the decisions" (P4) complete and merged into `main` on 22 October. |
-| Next | The Opus re-check of the fix pass (`evidence/24-pre-live-gate/recheck.md`) said NO-GO on two build items and one failure path; a second Sonnet fix pass runs, then a short Opus confirmation for a GO; then the live runbook in `HUB-AND-GEO-CLAIMS.md`, which starts with the product owner telling editors with their own checkouts to stop and pull; then the practice-page dry run, the status check, the tag run on the 200 claims, people's decisions, distill and promote, the artifact, the final verification, and the merge into `main` on the product owner's word. |
+| Phase | "The hub and the Geo claims" (decisions P5 to P16, specification `HUB-AND-GEO-CLAIMS.md`), on the branch `claims-hub-2026-10` off `main` at 9dc97e4. Stages 0 to 7 are done in code: one Claims table, the walkthrough for onboarding only, the archive step, the Geo pick (200 claims, committed in `setup/geo-claims-pick.json`), the fresh structure and the hub, the docs and skills. The pre-live gate said NO-GO (`evidence/24-pre-live-gate/gate.md`); two fix passes (merged as 5f11c6d and da08d57) answered it and its re-check, and applied P13 to P16 and the editor review's wording; the Opus confirmation says GO (`confirm.md`); 2,210 tests. Decision P17: nobody else has a checkout. Nothing has changed in Notion yet; Geo has been read only. Earlier phase: "Read the decisions" (P4) complete and merged into `main` on 22 October. |
+| Next | The live runbook in `HUB-AND-GEO-CLAIMS.md` from step 2 (step 1 skipped by P17): set the old setup files aside, open a builder session, `archive --plan-only`, then the archive itself on the product owner's go; then the practice-page dry run, the status check, the tag run on the 200 claims, people's decisions, distill and promote, the artifact, the final verification, and the merge into `main` on the product owner's word. |
 | Checkpoint 1 (structure proposal) | Approved as proposed on 2026-10-15 (decision P1); page https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 |
 | Checkpoint 2 (final demo) | message sent on 2026-10-15; the MVP is agreed when the product owner runs the seven steps and says so |
 | Branch | `claims-hub-2026-10`, off `main` at 9dc97e4; merged into `main` only on the product owner's word. Earlier: `read-decisions-2026-11`, merged on 22 October |
@@ -30,7 +30,7 @@
 
 | Agent | Model | Asked | Writes |
 |---|---|---|---|
-| Second fix pass | Sonnet 5.5 | the re-check's MF-1 (Your queue keeps an empty Review status: "is not" sent as "does not equal, or is empty"), MF-2 (each table's own view is its first tab; the duplicate Rulebook view dropped), SH-1 (the gate refuses a done archive.json whose config rewrite failed), the guide's ED-4 wording; no Notion or Geo calls | its worktree branch, one commit; DECISIONS rows from 106 |
+| none | | the stage 7 fix passes (Sonnet), the re-check and the confirmation (Opus) have reported and their work is merged | |
 
 ## Finished subagents
 

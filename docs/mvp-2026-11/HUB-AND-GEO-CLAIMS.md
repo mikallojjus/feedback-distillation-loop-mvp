@@ -160,7 +160,7 @@ The outcome is a fresh five-table set under the same root page, a 200-claim trai
   - every `archive.json` id is protected;
   - claims = 200 = pick;
   - the audit checks against `included`.
-- **Acceptance:** `setup.mjs preview` shows 5 tables, the lean Claims set, 7 views, Onboarding and the hub block; suite green.
+- **Acceptance:** `setup.mjs preview` shows 5 tables, the lean Claims set, 7 views, Onboarding and the hub block; suite green. *(Six views since decision 108: the Rulebook's own view took the place of the named view "Rulebook".)*
 
 ### Stage 6 — Docs and skills (after Stage 1, alongside 3–5; Opus drafts, Sonnet does mechanical renames)
 - **`CLAUDE.md`:**
@@ -191,7 +191,7 @@ The outcome is a fresh five-table set under the same root page, a 200-claim trai
 - **Sonnet commits** the pick and sets the Geo Tags options from `tag_names`, with a test that the committed pick passes `unknownOptions` (`evidence/23-geo-pick/`).
 
 ### Stages 8–10 — Live (runbook below), people-only loop, artifact, sign-off
-- **Opus:** rebuild the artifact (`node gen-parts.mjs && node build.mjs --strict` in `docs/mvp-2026-11/report/`, refresh `data/counts.json`), republish the same file path, then STATE, WORKLOG and the final verification (`evidence/29-verification/`).
+- **Opus:** rebuild the artifact (`node gen-parts.mjs && node build.mjs --strict` in `docs/mvp-2026-11/report/`, refresh `data/counts.json`), republish the same file path, then STATE, WORKLOG and the final verification (`evidence/30-verification/`).
 - **Merge into `main`** only on the product owner's word.
 
 ## Live runbook (in order; each step resumes by running the same command)
@@ -199,17 +199,18 @@ The outcome is a fresh five-table set under the same root page, a 200-claim trai
 1. **Before anything:** the product owner tells editors with their own checkouts (EDITOR-HANDOVER) to stop and pull. Old code would still write the archived tables. *Skipped by decision P17 (27 Oct): nobody else has a checkout; a checkout made before the merge into `main` waits for it.*
 2. **Geo pick:** done in Stage 7 and committed. `git mv` the old `setup/claims-pick.json`, `claims-pages.json` and `rulebook-pages.json` to `setup/archive-2026-10/`.
 3. **Open a builder session:** `setup.mjs builder open --reason "P9: archive the first build, fresh set under the hub"`.
-4. **Archive:** `setup.mjs archive --plan-only` → review the 8 moves and the leftovers → `setup.mjs archive` → commit `config.json` and `setup/archive.json` (`evidence/24-archive/`).
+4. **Archive:** `setup.mjs archive --plan-only` → review the 8 moves and the leftovers → `setup.mjs archive` → commit `config.json` and `setup/archive.json` (`evidence/25-archive/`; folder 24 holds the pre-live gate, so every evidence folder below is one higher than first planned).
 5. **A person** removes any leftover root blocks the report lists.
 6. **Build and seed:**
    - `setup.mjs preview`, then `setup.mjs build`;
    - `setup.mjs all --taxonomy agents/claim-tagger-mvp/setup/taxonomy-issue.json --claims agents/claim-tagger-mvp/setup/geo-claims-pick.json --audit agents/claim-tagger-mvp/setup/audit-decisions.json`.
-7. **Verify:** if verify names the Archive's position, a person drags it to the bottom. Repeat `setup.mjs verify` until there are 0 differences and 0 writes. Then `builder close` and commit (`evidence/25-fresh-setup/`).
-8. **Practice page and status:** the live `walkthrough.mjs start --parent <Onboarding> --dry-run` (1 GET, lint passes) and the headless check of `/claim-tagger status` (`evidence/26-…`).
-9. **Tag:** `/claim-tagger tag` on the 200 claims (`evidence/27-real-tag-200/`).
+   - If the build warns "the tab order may need a drag" (a view Notion would not place, decision 107), a person drags the named tab to the front of that table. No script can move a tab afterwards.
+7. **Verify:** if verify names the Archive's position, a person drags it to the bottom. Repeat `setup.mjs verify` until there are 0 differences and 0 writes. A person opens Claims from the hub once and checks that it opens on All claims; verify cannot read the tab order. Then `builder close` and commit (`evidence/26-fresh-setup/`).
+8. **Practice page and status:** the live `walkthrough.mjs start --parent <Onboarding> --dry-run` (1 GET, lint passes) and the headless check of `/claim-tagger status` (`evidence/27-…`).
+9. **Tag:** `/claim-tagger tag` on the 200 claims (`evidence/28-real-tag-200/`).
    - Judge: at most about 41 Sonnet calls (25 + 8 + 8 re-reads); about 30 expected; about 5 minutes.
    - Notion: about 400 writes plus read-backs at 3 requests per second.
-10. **A person decides** at least 10 claims in Your queue: one with a reason word, one disagreement without a note, one agreement. Then `distill --plan-only`, an Opus review, `distill --readings <run>`. A person approves or rejects in Lessons waiting. Then `promote` (PASS, FAIL or HOLD are all valid when read back) and the follow-up on PASS (`evidence/28-people-loop/`). Rollback runs only if the product owner asks.
+10. **A person decides** at least 10 claims in Your queue: one with a reason word, one disagreement without a note, one agreement. Then `distill --plan-only`, an Opus review, `distill --readings <run>`. A person approves or rejects in Lessons waiting. Then `promote` (PASS, FAIL or HOLD are all valid when read back) and the follow-up on PASS (`evidence/29-people-loop/`). Rollback runs only if the product owner asks.
 
 **The person's part:** approve each `setup`/`geo-pick` prompt, tell editors to pull, clear root leftovers and maybe drag the Archive, make every editor decision and approval, and say "merge".
 
