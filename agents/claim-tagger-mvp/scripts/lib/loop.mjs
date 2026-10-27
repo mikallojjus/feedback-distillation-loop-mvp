@@ -259,7 +259,7 @@ export async function withRun({ script, label, again = '/claim-tagger', opts = {
 
 // ---- reading Notion -----------------------------------------------------------------------------------------------------------------
 
-const TABLE_WORDS = { rulebook: 'Rulebook copy', claims: 'Claims copy', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings' };
+const TABLE_WORDS = { rulebook: 'Rulebook', claims: 'Claims', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings' };
 
 /** Pull every table of the agent (or load the pull named by --pull) and make it ctx.pull. A pull with duplicate keys or a missing key column ends the run. */
 export async function takePull(ctx, { pullId = ctx.opts.pull ?? null } = {}) {
@@ -459,7 +459,7 @@ export async function confirmUnchanged(ctx, { lesson, copy, tag, status }) {
   if (copy?.page_id) {
     const fresh = propsOf('rulebook', await client.retrievePage(copy.page_id));
     if (!sameValue('rich_text', fresh['When to use'] ?? '', copy['When to use'] ?? '')) {
-      throw new LoopExit(EXIT.DRIFT, `the Rulebook copy's When to use for ${tag} was edited in Notion while ${ctx.label} ran`, {
+      throw new LoopExit(EXIT.DRIFT, `the Rulebook's When to use for ${tag} was edited in Notion while ${ctx.label} ran`, {
         sentence: `${ctx.label}: nothing was changed, because the rulebook text in Notion was edited while it ran.`,
         next: `Next: put the rulebook text back on ${tag} (${viewLink(ctx.config, 'rulebook')}), or ask the engineer to restore an edition.`,
       });

@@ -116,7 +116,7 @@ export async function restore(opts = {}) {
       if (!row?.page_id) gone.push(t.name);
       else if (!sameText(row['When to use'], t.when_to_use)) diffs.push({ tag: t.name, page_id: row.page_id, now: row['When to use'] ?? '', to: t.when_to_use });
     }
-    if (gone.length) ctx.warnings.push(`${listNames(gone)} ${gone.length === 1 ? 'has' : 'have'} no row in the Rulebook copy, so ${gone.length === 1 ? 'its' : 'their'} text was not written`);
+    if (gone.length) ctx.warnings.push(`${listNames(gone)} ${gone.length === 1 ? 'has' : 'have'} no row in the Rulebook, so ${gone.length === 1 ? 'its' : 'their'} text was not written`);
     const rulesDiffer = target.rubric_hash !== current.rubric_hash;
     const records = rulesDiffer || diffs.length > 0; // a restore that writes anything is an edition of its own, so that the changelog shows it
     const newEdition = records ? nextEdition(current.edition, ctx.now()) : current.edition;
@@ -154,11 +154,11 @@ export async function restore(opts = {}) {
       const written = await applyStep(ctx, first);
       const ledger = readLedger(ctx.runDir);
       if (first.ops.some((_, i) => ledger.get(i)?.status === 'skipped')) {
-        throw new LoopExit(EXIT.DRIFT, 'the Rulebook copy changed while the restore ran', { sentence: 'Restore: nothing more was done, because the rulebook text in Notion was edited while it ran.', next: 'Next: run the same command again.' });
+        throw new LoopExit(EXIT.DRIFT, 'the Rulebook changed while the restore ran', { sentence: 'Restore: nothing more was done, because the rulebook text in Notion was edited while it ran.', next: 'Next: run the same command again.' });
       }
       assertApplied(ctx, written.result, 'the restore command');
       if (!first.ops.every((_, i) => ledger.get(i)?.status === 'done' && ledger.get(i)?.read_back === 'ok')) {
-        throw new LoopExit(EXIT.ERROR, 'a write to the Rulebook copy was not confirmed by the read-back', { sentence: 'Restore stopped before every tag was written to Notion.', next: 'Next: run the same command again; it continues where it stopped.' });
+        throw new LoopExit(EXIT.ERROR, 'a write to the Rulebook was not confirmed by the read-back', { sentence: 'Restore stopped before every tag was written to Notion.', next: 'Next: run the same command again; it continues where it stopped.' });
       }
     }
     if (records) {

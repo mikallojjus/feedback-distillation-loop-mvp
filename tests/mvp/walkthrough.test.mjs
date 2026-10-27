@@ -389,7 +389,7 @@ test('the config of a demo profile is valid, holds placeholders where the practi
   assert.ok(protectedIds.has(production.notion.parent_page_id), 'and so is the production page');
   assert.ok(cfg.notion.protected_database_ids.includes(production.notion.parent_page_id) && cfg.notion.protected_page_ids.includes(production.notion.parent_page_id), 'in both lists');
   assert.notEqual(production.demo, true, 'production is left as it was');
-  assert.ok(!Array.isArray(production.notion.claims) && production.notion.claims.label === 'Claims copy', 'production keeps its one claims entry');
+  assert.ok(!Array.isArray(production.notion.claims) && production.notion.claims.label === 'Claims', 'production keeps its one claims entry');
   // the ids of the practice page's tables go in as they are made
   dp.setTableIds(cfg, 'rulebook', { database_id: 'AAAAAAAA-0000-4000-8000-000000000001', data_source_id: 'bbbbbbbb000040008000000000000002' });
   assert.equal(cfg.notion.rulebook.database_id, 'aaaaaaaa000040008000000000000001');
@@ -416,11 +416,20 @@ test('the practice structure carries the practice titles and the production colu
   assert.equal(original.hub.title, 'Claim tagger', 'production has a hub block');
   assert.equal(practice.hub, undefined, 'a practice page is not a hub');
   assert.equal(practice.made_from, undefined);
-  // production's Claims views also show Geo Space; a practice page's views keep the columns its manifest froze
+  // production's Claims views are lean (P15: five to seven columns, Review status last); a practice page's views keep the review order its manifest froze (expect.claims_columns), but follow the
+  // real table in the filters: Your queue also asks for a Review status that is not Reviewed (P13)
   for (const name of ['Your queue', 'Needs your note', 'Agent disagreed']) {
-    assert.ok(original.views.find((v) => v.name === name).columns.includes('Geo Space'), name);
-    assert.ok(!practice.views.find((v) => v.name === name).columns.includes('Geo Space'), name);
+    assert.ok(original.views.find((v) => v.name === name).columns.length <= 7, `${name}: lean in production`);
+    assert.ok(!original.views.find((v) => v.name === name).columns.includes('Agent status'), `${name}: production's view leaves Agent status out`);
+    assert.deepEqual(practice.views.find((v) => v.name === name).columns, REVIEW_ORDER, `${name}: the review order of the manifest on a practice page`);
+    assert.equal(practice.views.find((v) => v.name === name).filter, original.views.find((v) => v.name === name).filter, `${name}: the filter of production`);
   }
+  assert.equal(practice.views.find((v) => v.name === 'Your queue').filter, 'Agent status is Waits for you and Review status is not Reviewed');
+  assert.deepEqual(dp.practiceViewColumns(original), REVIEW_ORDER, 'the columns the practice views show are the table\'s own, Geo Name and the agent\'s and the editor\'s, in the structure\'s order');
+  // the table's own views: Claims shows every live column in the structure's order (the manifest's explaining tables rest on it), no table has a description, and the lean default views of production are not copied
+  assert.ok(Object.values(original.tables).every((t) => t.default_view && t.description), 'production gives every table a default view and a description');
+  assert.ok(Object.values(practice.tables).every((t) => t.default_view === undefined && t.description === undefined), 'a practice page has neither');
+  assert.deepEqual(practice.tables.claims.arrange_default_view, true);
   assert.deepEqual(practice.tables.tag_decisions.columns, original.tables.tag_decisions.columns);
   assert.deepEqual(dp.writableColumns(practice, 'agent_settings'), ['Name', 'Paused', 'Rulebook edition', 'Last run summary']);
   // the Claims table: Geo Name, the agent's eight columns, the editor's three, then the other eight Geo columns (the lean set of P12); Agent tags, Tags waiting and Verified tags are relations to
@@ -567,7 +576,7 @@ test('the manifest describes the claims\' columns: five Reviewed claims with the
   // the shape the Claims table has after the build: the filters of the three views, the order of the columns, and what step 4 does
   assert.deepEqual(manifest.expect.claims_views, ['Your queue', 'Needs your note', 'Agent disagreed']);
   assert.deepEqual(manifest.expect.claims_view_filters, {
-    'Your queue': 'Agent status is Waits for you', 'Needs your note': 'Agent reading contains without your note', 'Agent disagreed': 'Agent status is Disagrees with your decision',
+    'Your queue': 'Agent status is Waits for you and Review status is not Reviewed', 'Needs your note': 'Agent reading contains without your note', 'Agent disagreed': 'Agent status is Disagrees with your decision',
   });
   assert.deepEqual(manifest.expect.claims_columns, REVIEW_ORDER);
   assert.deepEqual([manifest.expect.claims, manifest.expect.reviewed_claims, manifest.expect.open_claims, manifest.expect.ledger_rows], [9, 5, 4, 5]);
@@ -873,10 +882,10 @@ test('the page text and the manifest agree: the lint is clean with the manifest\
   }
   assert.ok(!step3.includes('Claim quality tags'), 'the column is called Verified tags');
   assert.match(step3, /Fill in three columns on each of your four claims, in the order of its list, in Your queue under the lists\./);
-  assert.match(step3, /Review status comes last only because it closes the claim: a claim you have decided stays in Your queue until the agent reads it again/);
+  assert.match(step3, /Review status comes last because it closes the claim. A claim leaves Your queue as soon as you set Review status to Reviewed. On the real Claims table the agent judges several tags: keep the Agent tags you agree with in Verified tags./);
   assert.match(step3, /stands on its own line between quotes: paste the words between the quotes, not the quotes\./);
   assert.ok(!/as it is/.test(step3), 'the page no longer says to paste the sentence as it is');
-  assert.match(step3, /so the order of the three columns does not matter for the view/);
+  assert.doesNotMatch(step3, /stays in Your queue until the agent reads it again|does not matter for the view/, 'the old explanation of a decided claim in the queue is gone (P13)');
   // one sentence under the lists on the reason word, and the view right under it (the editor never says why the agent was wrong, but may)
   // (decision 78: the next sentence says what an empty note means when the editor disagrees, so that "an empty note is a decision too" is not read for a disagreement)
   const reason = 'A note that starts with "Agent slip.", "Rule unclear." or "Rule should change." is taken as it stands and the agent does not read that tag; without one the agent reads your decision itself. '
@@ -932,14 +941,14 @@ test('the page text and the manifest agree: the lint is clean with the manifest\
   // step 7 shows Agent tags, Agent status and Agent edition, for the four claims, and says what happens to the two the rule change does not rest on
   const step7 = page.slice(page.indexOf('## Step 7'), page.indexOf('## The tables'));
   assert.match(step7, /\| Geo Name \| Agent tags \| Agent status \| Agent edition \|/);
-  assert.match(step7, /The USPS and Georgia claims were not part of the change, so the follow-up leaves them as they were: they keep Waits for you and stay in Your queue until the next tag run reads them again\./);
+  assert.match(step7, /The USPS and Georgia claims were not part of the change, so the follow-up leaves them as they were: they keep Waits for you in Agent status until the next tag run reads them again, and they are not in Your queue, because you set them Reviewed in step 3\./);
   // step 6 says what the safety check reads and how it counts (earlier decisions: the five of the audit and the two that were not part of the change)
   const step6 = page.slice(page.indexOf('## Step 6'), page.indexOf('## Step 7'));
   assert.match(step6, /\| Known groups count as identified, unknown names do not \| Live \| PASS: examples 10\/10, earlier 6\/6, yours 2\/2 \|/);
-  // Agent notes is nowhere on the page, and the real table's name for the verified tags is named once, in the words list
+  // Agent notes is nowhere on the page, and neither is the real table's old name for the verified tags (ED-12): the words list says what Verified tags is, in the editor's words
   assert.ok(!/Agent notes/.test(page), 'no Agent notes anywhere');
-  assert.equal(page.match(/Claim quality tags — verified/g).length, 1);
-  assert.match(page, /- \*\*Verified tags\*\*: .*Claim quality tags — verified/);
+  assert.equal(page.match(/Claim quality tags/g), null, 'the real claims table has no column of that name any more');
+  assert.match(page, /- \*\*Verified tags\*\*: the tags you confirm on a claim; it always wins over the agent's answer\.\n/);
   // the Help toggle: the Agent reading table with its four values and one sentence on the reason word, the words list at ten lines (Agent status in it) and the Views entry
   const help = page.slice(page.indexOf('**Words used on this page.**'), page.indexOf('**If something stops.**'));
   assert.equal(help.split('\n').filter((l) => l.startsWith('- ')).length, 10);
@@ -1046,7 +1055,7 @@ test('start builds the page: one page, five tables, the text in order, two linke
   const queue = linked.find((l) => l.name === 'Your queue');
   assert.equal(queue.source_database_id.replace(/-/g, ''), demo.databases.claims.database_id, 'Your queue is a view of the Claims table');
   assert.deepEqual(queue.body.filter, planned('Your queue').body.filter);
-  assert.deepEqual(queue.body.filter, { property: 'Agent status', select: { equals: 'Waits for you' } }, 'Your queue lists the claims whose Agent status is Waits for you, with no condition on Review status');
+  assert.deepEqual(queue.body.filter, { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { property: 'Review status', select: { does_not_equal: 'Reviewed' } }] }, 'Your queue lists the claims whose Agent status is Waits for you and whose Review status is not Reviewed (P13)');
   assert.deepEqual(queue.body.sorts, [{ property: 'Agent confidence', direction: 'ascending' }]);
   assert.equal(queue.body.configuration.wrap_cells, true);
   assert.deepEqual(shown(queue, 'claims'), REVIEW_ORDER);
@@ -2161,13 +2170,13 @@ test('where says which step the editor is at and the one thing to do, for every 
   for (const key of open) assert.equal(claimRow(key)['Agent status'], 'Waits for you', `${key}: nothing has read the decision again`);
   r = await where();
   assert.equal(r.sentence, 'Walkthrough: you have been through all seven steps of the practice page.');
-  assert.equal(r.next, 'Next: nothing to type; archive the page by hand when you no longer need it.');
+  assert.equal(r.next, 'Next: nothing to type; when you are done, leave this page under Onboarding, where it does no harm.');
   assert.equal(guideChecklistFor(r.sentence, r.next), null);
   // a rejected rule change also ends the walkthrough
   w.fake.editRow(lessonRow, { Status: 'Rejected', 'Safety check result': null });
   for (const key of open) w.fake.editRow(ledgerRow(key).page_id, { 'Follow-up': null });
   r = await where();
-  assert.equal(r.next, 'Next: nothing to type; archive the page by hand when you no longer need it.');
+  assert.equal(r.next, 'Next: nothing to type; when you are done, leave this page under Onboarding, where it does no harm.');
   assert.equal(w.fake.requests.filter((q) => q.method === 'PATCH' && /pages/.test(q.path)).length, 0, 'where only reads');
 });
 
@@ -2387,12 +2396,12 @@ test('list keeps every page and marks the one the commands reach; its Next line 
   assert.match(rows[1][0], /^Claim tagger practice · 15 Oct 14:22 \(/);
   assert.deepEqual(rows[1].slice(1), ['ready · used by the demo commands', 'step 1']);
   assert.equal(lastLine(r.out), `Next: type ${manifest.steps[0].command}.`, 'the line is for the page the commands reach');
-  assert.ok(!r.out.includes('archive'), 'the archive line belongs to a page that is complete, and only when that is the page the commands reach');
+  assert.ok(!r.out.includes('leave this page under Onboarding'), 'the closing line belongs to a page that is complete, and only when that is the page the commands reach');
   assert.ok(mine !== tests);
 
-  // when the page the commands reach is the one that is complete, the archive line is right
+  // when the page the commands reach is the one that is complete, the closing line is right
   reviewBoth(mine);
-  assert.match(lastLine((await w.run(['list'])).out), /^Next: nothing to type; archive the page by hand/);
+  assert.match(lastLine((await w.run(['list'])).out), /^Next: nothing to type; when you are done, leave this page under Onboarding/);
 
   // no page under Onboarding at all: nothing is marked, and the Next line says where a page has to go
   const only = newWorld();
@@ -3042,7 +3051,7 @@ test('a rule change the editor rejects (played through the fake) ends the walkth
   const r = await w.run(['where']);
   assert.equal(r.code, 0, r.err);
   assert.match(r.out, /all seven steps/);
-  assert.equal(lastLine(r.out), 'Next: nothing to type; archive the page by hand when you no longer need it.');
+  assert.equal(lastLine(r.out), 'Next: nothing to type; when you are done, leave this page under Onboarding, where it does no harm.');
   // a rule change that is Rejected is not Proposed or Approved any more: the helper that plays the editor finds none
   assert.throws(() => editorRejects(w), /exactly one rule change is Proposed or Approved/);
 });
@@ -3182,7 +3191,7 @@ test('the three Claims views on a fresh page: Your queue lists the claims whose 
   const tabs = w.fake.tabViews(demo.databases.claims.database_id);
   const queue = w.fake.linked().find((l) => l.name === 'Your queue');
   const view = { 'Your queue': queue.body, ...Object.fromEntries(tabs.map((t) => [t.name, t])) };
-  assert.deepEqual(view['Your queue'].filter, { property: 'Agent status', select: { equals: 'Waits for you' } }, 'no condition on Review status');
+  assert.deepEqual(view['Your queue'].filter, { and: [{ property: 'Agent status', select: { equals: 'Waits for you' } }, { property: 'Review status', select: { does_not_equal: 'Reviewed' } }] }, 'a Reviewed claim is not in it (P13)');
   assert.deepEqual(view['Agent disagreed'].filter, { property: 'Agent status', select: { equals: 'Disagrees with your decision' } });
   assert.deepEqual(view['Needs your note'].filter, planned('Needs your note').body.filter, 'the view is the structure\'s');
   assert.deepEqual(view['Needs your note'].filter, { property: 'Agent reading', rich_text: { contains: 'without your note' } }, 'Needs your note filters on the flag the agent sets in Agent reading');
@@ -3201,13 +3210,24 @@ test('the three Claims views on a fresh page: Your queue lists the claims whose 
   assert.deepEqual([await listed('Your queue'), await listed('Agent disagreed'), await listed('Needs your note')], [[], [], []], 'a fresh page: the agent has read nothing, and the five earlier decisions carry their seeded reading (which is not "without your note")');
   agentHasRead(w);
   assert.deepEqual(await listed('Your queue'), [nameOf('aiforce'), nameOf('presspool'), nameOf('usps'), nameOf('georgia')], 'after the tag step all four wait, the least sure first');
-  for (const o of manifest.open) editorDecides(w, o.claim);
-  assert.equal((await listed('Your queue')).length, 4, 'all four are Reviewed and stay in Your queue until the agent reads them again');
+  // a claim leaves Your queue as soon as its Review status is Reviewed (P13), although the agent has not read the decision and Agent status still says Waits for you
+  const pending = [];
+  for (const o of manifest.open) {
+    assert.equal((await listed('Your queue')).length, 4 - pending.length, 'every claim not yet Reviewed is still listed');
+    editorDecides(w, o.claim);
+    pending.push(o.claim);
+  }
+  assert.deepEqual(await listed('Your queue'), [], 'all four are Reviewed, so all four have left Your queue, and the agent has not read them again');
+  for (const o of manifest.open) assert.equal(claimRow(o.claim)['Agent status'], 'Waits for you', `${o.claim}: still Waits for you until the next tag run`);
+  // a claim half decided stays: the editor sets Review status last, so nothing disappears while it is being filled in
+  w.fake.editRow(claimRow('usps').page_id, { 'Review status': 'To review', 'Verified tags': [], 'Challenged tags notes': 'half written' });
+  assert.deepEqual(await listed('Your queue'), [nameOf('usps')], 'a claim still To review stays');
+  w.fake.editRow(claimRow('usps').page_id, { 'Review status': 'Reviewed' });
   for (const key of ['aiforce', 'presspool']) w.fake.editRow(claimRow(key).page_id, { 'Agent status': 'Done' }); // what the follow-up of step 7 writes for the claims the rule change rests on
-  assert.deepEqual(await listed('Your queue'), [nameOf('usps'), nameOf('georgia')], 'the two read again leave; USPS and Georgia stay until the next tag run');
+  assert.deepEqual(await listed('Your queue'), [], 'nothing comes back');
   w.fake.editRow(claimRow('aiforce').page_id, { 'Agent status': 'Disagrees with your decision' });
   assert.deepEqual(await listed('Agent disagreed'), [nameOf('aiforce')]);
-  assert.deepEqual(await listed('Your queue'), [nameOf('usps'), nameOf('georgia')]);
+  assert.deepEqual(await listed('Your queue'), []);
   // Needs your note: a claim whose Agent reading carries the flag; a claim read with a note, or one the agent agrees on, is not there
   w.fake.editRow(claimRow('usps').page_id, { 'Agent reading': 'Context-dependent: Agent slip, rule 5, without your note · USPS names which portal.' });
   w.fake.editRow(claimRow('presspool').page_id, { 'Agent reading': 'Context-dependent: Rule unclear, rule 3 · The rule leaves this open.' });
@@ -3262,7 +3282,7 @@ test('the page passes the page lint with the manifest, as the template, the text
   const step1 = page.slice(page.indexOf('## Step 1'), page.indexOf('## Step 2'));
   assert.match(step1, /an edition is a date plus a count/);
   const step7 = page.slice(page.indexOf('## Step 7'), page.indexOf('## The tables'));
-  assert.match(step7, /\*\*What the full version adds later:\*\*\n\n- .*\n- .*\n- .*\n\nArchive this page by hand when you no longer need it\.\n*$/);
+  assert.match(step7, /\*\*What the full version adds later:\*\*\n\n- .*\n- .*\n- .*\n\nWhen you are done, leave this page under Onboarding; it does no harm\.\n*$/);
   const help = page.slice(page.indexOf('## Help'));
   assert.equal(help.slice(help.indexOf('**Words used'), help.indexOf('**If something stops')).split('\n').filter((l) => l.startsWith('- ')).length, 10);
   const stops = help.slice(help.indexOf('**If something stops')).split('\n').filter((l) => l.startsWith('- '));
@@ -3440,8 +3460,13 @@ test('the checklists name the columns of the practice page in the page\'s order:
   // the Agent disagreed lists say that the agent's reading is in the Agent reading column
   for (const form of ['Real', 'Demo']) assert.ok(guide['Agent disagreed'][form].some((i) => /^Read Agent reasons and Agent reading next to your Verified tags and Challenged tags notes/.test(i.text)), form);
   assert.match(guide['Decide in Your queue'].Demo[2].text, /Review status to Reviewed last/);
-  assert.match(page, /Review status comes last only because it closes the claim/);
-  assert.match(guide['Decide in Your queue'].Demo[3].text, /stays in Your queue until the agent reads it again/);
+  assert.match(page, /Review status comes last because it closes the claim\. A claim leaves Your queue as soon as you set Review status to Reviewed\./);
+  assert.equal(guide['Decide in Your queue'].Demo[3].text, 'A claim leaves Your queue as soon as you set Review status to Reviewed.', 'the demo list says it in the words of the page (P13)');
+  assert.match(guide['Decide in Your queue'].Real[0].text, /A claim leaves it as soon as you set Review status to Reviewed\.$/, 'and the real list too');
+  // the words of the editor review (ED-1, ED-7)
+  assert.ok(guide['Decide in Your queue'].Real[2].text.includes('Verified tags: every tag that applies, the ones in Agent tags included; one left out counts as Does not apply.'), 'ED-1 in step 3 of the real list');
+  assert.equal(guide['Decide in Your queue'].Real[3].text, 'A note is optional when you agree. When you overrule the agent, add one line why: without it the agent drafts no rule change. If you know the reason, start it with Agent slip, Rule unclear or Rule should change and a full stop.');
+  assert.match(page, /On the real Claims table the agent judges several tags: keep the Agent tags you agree with in Verified tags\./, 'ED-1 on the practice page');
   // Lessons waiting: step 5 of the page says the same things in the same words
   const step5 = page.slice(page.indexOf('## Step 5'), page.indexOf('## Step 6'));
   for (const phrase of ['Current text', 'Proposed text', 'Editor wording', 'Status to Approved']) {
@@ -3593,7 +3618,7 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   // status: the four decisions wait for the agent's next run, three of them are still to read (Georgia agrees with the agent: nothing to read), and distill is the next thing to type
   const midway = await status(hooks());
   assert.equal(midway.exit, 0);
-  assert.deepEqual(midway.report.rows.find((r) => r[0] === 'Your queue').slice(0, 2), ['Your queue', "4 rows decided, waiting for the agent's next run"]);
+  assert.deepEqual(midway.report.rows.find((r) => r[0] === 'Your queue').slice(0, 2), ['Your queue', 'nothing waits']);
   assert.deepEqual(midway.report.rows.find((r) => r[0] === 'Your decisions')?.slice(0, 2), ['Your decisions', '3 to read'], 'the decisions to read, as status counts them');
   assert.match(midway.report.next, /^Next: type \/claim-tagger demo distill/);
 

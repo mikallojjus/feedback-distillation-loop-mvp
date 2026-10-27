@@ -26,8 +26,8 @@
 //   Agent edition     the rulebook edition the row was written under
 //   Agent remarks     "not checked: <counts by kind>" when a tag of the rulebook was not checked, else empty
 // A tag waits when its proposal is Can't tell, and every judged tag of a claim whose Review status is To review waits, whatever the confidence (none of them is written to Agent tags;
-// a claim that QA marks To review on the real table lands in Your queue on the next run); a Reviewed claim never waits. A claim that was decided keeps Waits for you until this
-// step reads the decision: the row stays in Your queue until the next tag run, by design (section 6.2). In the ledger a row per judged claim and tag is created when missing, and
+// a claim that QA marks To review on the real table lands in Your queue on the next run); a Reviewed claim never waits. A claim that was decided keeps the status Waits for you until this
+// step reads the decision, by design (section 6.2); it is no longer in the view Your queue, whose filter also asks for a Review status that is not Reviewed (P13). In the ledger a row per judged claim and tag is created when missing, and
 // updated when the proposal, the confidence, the reason or the edition changed. A claim an editor has Reviewed is decided (lib/decisions.mjs): there the ledger row also gets the copy of
 // the decision (Tag outcome, Why wrong (the reason word that opens the tag's note line), Your reasoning, Decided under), made with the names of every tag of the rulebook so that it is
 // the copy distill makes, and the proposal columns of a row that is decided are never rewritten (they are what the editor saw). The plan
@@ -183,7 +183,7 @@ const sameNames = (a, b) => JSON.stringify([...new Set(a)].sort(compareCodePoint
 export function claimProps({ claim, columns, writeColumns, tagPages, label = 'Tag' }) {
   const ids = (names) => names.map((name) => {
     const id = tagPages.get(name);
-    if (!id) throw new LoopExit(EXIT.INVALID, `the tag "${name}" has no row in the Rulebook copy, so it cannot be written to a relation column`, {
+    if (!id) throw new LoopExit(EXIT.INVALID, `the tag "${name}" has no row in the Rulebook, so it cannot be written to a relation column`, {
       sentence: `${label}: nothing was written, because the tag "${name}" has no row in the rulebook table.`,
       next: 'Next: ask the engineer to look at the message the script printed.',
     });

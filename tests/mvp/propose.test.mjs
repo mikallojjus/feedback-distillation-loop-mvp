@@ -184,7 +184,7 @@ test('claimProps: only the columns that differ from the pulled claim, the two re
   assert.deepEqual(claimProps({ claim: { ...same, tags_waiting: [] }, columns, writeColumns, tagPages }), { W: ['page-cd'] });
   assert.deepEqual(claimProps({ claim: { ...same, agent_tags: ['Wordy', CD] }, columns, writeColumns, tagPages }), { T: ['page-wordy'] });
   assert.deepEqual(claimProps({ claim: { ...same, agent_remarks: 'x' }, columns: claimColumns({ judgedNames: [CD], edition: 'e1', verdicts: new Map() }), writeColumns, tagPages }).M, '', 'an empty remark is written over an old one');
-  assert.throws(() => claimProps({ claim: fresh, columns, writeColumns, tagPages: new Map([[CD, 'page-cd']]) }), /the tag "Wordy" has no row in the Rulebook copy/);
+  assert.throws(() => claimProps({ claim: fresh, columns, writeColumns, tagPages: new Map([[CD, 'page-cd']]) }), /the tag "Wordy" has no row in the Rulebook/);
 });
 
 test('openClaimCount counts the claims whose Agent status is Waits for you and that are not Reviewed', () => {

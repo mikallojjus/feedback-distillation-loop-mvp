@@ -25,6 +25,8 @@
 //   stepArchive(ctx, { planOnly })        -> { code, lines, errors }  the whole step for setup.mjs: snapshot, plan, apply, walk, setup/archive.json, config.json, the
 //                                            builder registry set aside under runs/builder/before-archive/
 //   readArchiveState(root), archivedIds(root), setAsideBuilder(root), leftoversOf(children, ...), archivePath(root)
+//   archiveFirst(root, config)            -> true while the first build's tables are still on the hub and the archive has not run (setup.mjs refuses every other step then); ARCHIVE_FIRST_MESSAGE
+//   linksBack(block, hubId)               -> is this block the Archive page's first line, with "Claim tagger" linked to the hub page (matched by the page's id)
 //
 // Resuming. Nothing is remembered between runs except setup/archive.json (state "moving" while the step is under way, "done" at the end) and what Notion
 // shows: every run reads the parents first, skips what is under the Archive page already, and does only what is missing. A move that Notion refuses (400 or
@@ -140,11 +142,34 @@ export function archivedIds(root) {
   return ids;
 }
 
+// ---- the gate on the build -------------------------------------------------------------------------------------------------------------------
+
+/**
+ * Must the archive step run before this install builds or fills anything? (P9, M1 of the pre-live gate.) True when setup/archive.json is missing and config.json names a real id
+ * (database or data source) for any of the five old tables: the first build is still where it was, so a build would add columns and views to its tables and a row step would write
+ * the claims into them. A config that holds only placeholders for the tables (a fresh install) is not held back, and neither is an install whose builder state says its tables were
+ * recorded by a build that passed this gate (runs/builder/state.json `archive_checked`, written by runStructure): that install has no first build to archive, only the tables it made
+ * itself. The state file of the first build has no such mark, so the live install is held back until `setup.mjs archive` has written archive.json. The three old pages (Structure
+ * proposal, Demos, Demo tests) do not count: no step writes into a page, and the page of the proposal exists before any setup. A file that exists is judged by readArchiveState instead.
+ */
+export function archiveFirst(root, config) {
+  if (existsSync(archivePath(root))) return false;
+  if (!knownObjects(config).some((k) => k.kind === 'database' && (k.id || k.data_source_id))) return false;
+  try {
+    return readJson(join(builderPaths(root).dir, 'state.json'))?.archive_checked !== true;
+  } catch {
+    return true;
+  }
+}
+
+export const ARCHIVE_FIRST_MESSAGE = "the first build's tables are still on the hub page; run setup.mjs archive first (P9)";
+
 // ---- reading it back (verify) --------------------------------------------------------------------------------------------------------------
 
-// Does the block carry a link to the page (its address holds the page's id, with or without dashes)?
-const linksToPage = (block, pageId) => (block?.type === 'paragraph' ? block.paragraph?.rich_text ?? [] : [])
-  .some((r) => String(r?.href ?? r?.text?.link?.url ?? '').replace(/-/g, '').toLowerCase().includes(pageId));
+// Does the block carry a link to the page (its address holds the page's id, with or without dashes, in any form Notion may write it: absolute, relative, a /p/<slug>-<id> address)?
+const hrefOf = (r) => String(r?.href ?? r?.text?.link?.url ?? '');
+const holdsId = (address, pageId) => address.replace(/-/g, '').toLowerCase().includes(String(pageId).replace(/-/g, '').toLowerCase());
+const linksToPage = (block, pageId) => (block?.type === 'paragraph' ? block.paragraph?.rich_text ?? [] : []).some((r) => holdsId(hrefOf(r), pageId));
 
 /**
  * GET only. What `setup.mjs verify` reads back of the archive step once setup/archive.json exists (P9; a fresh install has no such file and nothing applies):
@@ -376,18 +401,21 @@ export function checkArchivePlan(plan, config) {
 const textPiece = (content, url = null) => ({ type: 'text', text: url ? { content, link: { url } } : { content } });
 const paragraph = (rich) => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: rich } });
 
-// The two blocks of the Archive page: the line that links back to the hub, and the list of what the page holds.
+// The blocks of the Archive page: the line that links back to the hub, the list of what the page holds, and a line that warns the tables here share names with the live ones (ED-9).
+export const ARCHIVE_WARNING = 'The tables here share names with the live ones and do nothing now; use the hub.';
 function archiveBlocks({ link_url: linkUrl, holds }) {
   return [
     paragraph([textPiece(`Archived on ${ARCHIVED_ON}. The live tables are on the hub: `), textPiece(HUB_TITLE, linkUrl), textPiece('.')]),
     paragraph([textPiece(`This page holds the first build, moved here from the hub: ${holds.join(', ')}. Nothing in it was removed, and the agent reads and writes none of it any more.`)]),
+    paragraph([textPiece(ARCHIVE_WARNING)]),
   ];
 }
 
 const noun = (op) => (op.kind === 'page' ? 'page' : 'table'); // the editor's word for a database
 
-const linksBack = (block, url) => block?.type === 'paragraph'
-  && (block.paragraph?.rich_text ?? []).some((r) => (r?.plain_text ?? r?.text?.content) === HUB_TITLE && (r?.href === url || r?.text?.link?.url === url))
+/** Is this block the Archive page's first line: "Archived on <date>. ... Claim tagger ..." with the words "Claim tagger" linked to the hub page (matched by the page's id, not by the address as written)? */
+export const linksBack = (block, hubId) => block?.type === 'paragraph'
+  && (block.paragraph?.rich_text ?? []).some((r) => (r?.plain_text ?? r?.text?.content) === HUB_TITLE && holdsId(hrefOf(r), hubId))
   && plain(block.paragraph?.rich_text).startsWith(`Archived on ${ARCHIVED_ON}.`);
 
 const dragWords = (op) => `drag the ${noun(op)} "${op.title || op.key}" into the page "${ARCHIVE_TITLE}" by hand in Notion (open the hub page, then drag it onto that page or use its Move to menu), then run setup.mjs archive again; the rerun reads where it is and finds it moved`;
@@ -448,7 +476,7 @@ export async function applyArchive({ plan, dir, client, config, now = () => new 
         onArchivePage(archiveId);
         const back = await client.retrievePage(archiveId);
         const first = (await client.retrieveBlockChildren(archiveId))[0];
-        if (parentIdOf(back.parent) !== rootId || pageTitle(back) !== op.title || !linksBack(first, op.link_url)) {
+        if (parentIdOf(back.parent) !== rootId || pageTitle(back) !== op.title || !linksBack(first, rootId)) {
           record(i, op, { status: 'done', read_back: 'mismatch', id: archiveId, error: 'read-back: the Archive page is not under the hub page, or its title or its first line (the link back to the hub) is not as written' });
           stop(i, op, 'mismatch', EXIT.INVALID, `the Archive page ${archiveId} was made, but reading it back shows a different parent, title or first line`, 'Look at it in Notion and fix it by hand; the next run adopts the page by its title.');
           continue;

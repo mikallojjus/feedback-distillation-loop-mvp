@@ -361,7 +361,7 @@ const countsIn = async (w) => {
 };
 const yourDecisions = (report) => report.rows.find((row) => row[0] === 'Your decisions') ?? null;
 
-test('status midway, every claim decided but still listed in Your queue: the row says how many are decided and waiting for the agent, Your decisions says two are to read, and Next points at distill', async () => {
+test('status midway, every claim decided: Your queue counts what the view lists, which is nothing (a Reviewed claim has left it, P13), Your decisions says two are to read, and Next points at distill', async () => {
   const w = await makeWorld({ claims: 4, claimRows: { ...decidedListed([1, 2]), ...read(3, 4) }, queue: ledgerOf([1, 2]), settings: { 'Last run summary': 'Tag · 15 Oct 11:20 · 4 claims' } });
   const h = w.hooks();
   const r = await status(h);
@@ -371,22 +371,26 @@ test('status midway, every claim decided but still listed in Your queue: the row
   assert.deepEqual(report.header, ['Where', 'Now', '']);
   assert.deepEqual(report.rows, [
     ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
-    ['Your queue', "2 rows decided, waiting for the agent's next run", ''],
+    ['Your queue', 'nothing waits', ''],
     ['Your decisions', '2 to read', ''],
     ['Lessons waiting', 'none', ''],
     ['Last run', 'Tag · 15 Oct 11:20 · 4 claims', ''],
   ]);
   assert.equal(report.next, DISTILL);
-  assert.ok(!/nothing waits/.test(report.rows[1][1]));
+  assert.ok(!/decided|waiting for the agent/.test(report.rows[1][1]), 'the Your queue row never claims that a decided claim is still in the queue');
+  assert.match(report.rows[2][1], /^2 to read/, 'the decisions that the agent has not read are told in Your decisions');
+  const asJson = w.hooks({ json: true });
+  assert.equal((await status(asJson)).exit, 0);
+  assert.equal(JSON.parse(asJson.io.outs[0]).queue.decided_listed, 2, 'the two claims still read Waits for you in Agent status until the next tag run, and --json says so');
   assert.equal(w.writes().length, 0, 'status writes nothing to Notion');
   assert.equal(readJson(join(r.runDir, 'report.json')).next, DISTILL);
 });
 
-test('status midway: one decision the agent has not read is enough for distill; once it is read, the row says what it points at and the minimum of claims applies', async () => {
+test('status midway: one decision the agent has not read is enough for distill; once it is read, Your decisions says what it points at and the minimum of claims applies', async () => {
   // one decided claim, not read: to read, and distill reads it even though a lesson needs two
   const one = await world({ claimRows: { ...decidedListed([1]), ...read(2, 3) }, queue: ledgerOf([1]) });
   const r1 = await status(one.hooks());
-  assert.deepEqual(r1.report.rows[1], ['Your queue', "1 row decided, waiting for the agent's next run", '']);
+  assert.deepEqual(r1.report.rows[1], ['Your queue', 'nothing waits', '']);
   assert.deepEqual(r1.report.rows[2], ['Your decisions', '1 to read', '']);
   assert.equal(r1.report.sentence, 'Status: nothing is paused; the agent has 1 of your decisions to read.');
   assert.equal(r1.report.next, DISTILL, 'something is to read, so the minimum of claims for a rule change does not matter yet');
@@ -408,7 +412,7 @@ test('status midway: one decision the agent has not read is enough for distill; 
   const slips = await world({ claimRows: { ...decidedListed([1, 2], { 'Why wrong': 'Agent slip' }), ...read(3) }, queue: ledgerOf([1, 2]), read: [1, 2], readOpts: { reading: 'Agent slip', reasonWord: 'Agent slip' } });
   const r4 = await status(slips.hooks());
   assert.deepEqual(r4.report.rows.map((row) => row[0]), ['Rulebook', 'Your queue', 'Lessons waiting', 'Last run']);
-  assert.deepEqual(r4.report.rows[1], ['Your queue', "2 rows decided, waiting for the agent's next run", '']);
+  assert.deepEqual(r4.report.rows[1], ['Your queue', 'nothing waits', '']);
   assert.equal(r4.report.next, NEXT_TAG);
 });
 
@@ -713,7 +717,7 @@ test('status midway on a practice page: the demo distill command, and reading th
   assert.equal(report.sentence, `Status of the practice page ${PRACTICE_TITLE}: nothing is paused; the agent has 2 of your decisions to read.`);
   assert.deepEqual(report.rows, [
     ['Rulebook', '1 tag, edition 2026-10-16.1', ''],
-    ['Your queue', "2 rows decided, waiting for the agent's next run", ''],
+    ['Your queue', 'nothing waits', ''],
     ['Your decisions', '2 to read', ''],
     ['Lessons waiting', 'none', ''],
     ['Last run', 'none yet', ''],

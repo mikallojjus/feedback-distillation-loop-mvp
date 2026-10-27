@@ -43,7 +43,7 @@
 //   f callout        the callout's first line is the sentence on who types the four commands, exactly
 //   g story-line     a line before Step 1 says the two rows were "picked for the demo"
 //   h edition-line   Step 1 holds "an edition is a date plus a count"
-//   i closing-lines  Step 7 ends with "What the full version adds later", three bullets, and "Archive this page by hand"
+//   i closing-lines  Step 7 ends with "What the full version adds later", three bullets, and "When you are done, leave this page under Onboarding"
 //   j help           the "## Help" section holds the two-column Agent reading table (a header and exactly four value rows: Agent slip, Rule
 //                    unclear, Rule should change and (nothing to read), the agreeing decision), a "Words used on this page" list of exactly ten
 //                    lines and an "If something stops" list of exactly four (paused, the Claude allowance, answers that could not be read, the
@@ -742,7 +742,7 @@ function checkEdition(lines, steps, add) {
   if (!found) add('h', step.line, 'Step 1 does not explain an edition ("an edition is a date plus a count")');
 }
 
-/** Rule i: Step 7 ends with the label, three bullets and the archive line. */
+/** Rule i: Step 7 ends with the label, three bullets and the closing line (leave this page under Onboarding). */
 function checkClosing(lines, steps, add) {
   const step = steps.find((s) => s.n === 7);
   if (!step) return;
@@ -750,18 +750,18 @@ function checkClosing(lines, steps, add) {
   for (let i = step.start + 1; i < step.end; i += 1) if (lines[i].trim() !== '') filled.push(i);
   const last = (rx) => filled.findLast((i) => rx.test(lines[i]));
   const labelAt = last(/what the full version adds later/i);
-  const archiveAt = last(/archive this page by hand/i);
+  const archiveAt = last(/leave this page under onboarding/i);
   if (labelAt === undefined) add('i', step.line, 'Step 7 has no "What the full version adds later" line');
-  if (archiveAt === undefined) add('i', step.line, 'Step 7 has no "Archive this page by hand" line');
+  if (archiveAt === undefined) add('i', step.line, 'Step 7 has no "leave this page under Onboarding" line');
   if (labelAt !== undefined) {
     const stop = archiveAt !== undefined && archiveAt > labelAt ? archiveAt : step.end;
     const bullets = filled.filter((i) => i > labelAt && i < stop && BULLET.test(lines[i]) && indentOf(lines[i]) < 2).length;
     if (bullets !== 3) add('i', labelAt + 1, `"What the full version adds later" has ${bullets} bullet lines; it needs exactly three`);
   }
   if (archiveAt !== undefined) {
-    if (labelAt !== undefined && archiveAt < labelAt) add('i', archiveAt + 1, 'the "Archive this page by hand" line comes before "What the full version adds later"');
+    if (labelAt !== undefined && archiveAt < labelAt) add('i', archiveAt + 1, 'the "leave this page under Onboarding" line comes before "What the full version adds later"');
     const after = filled.find((i) => i > archiveAt);
-    if (after !== undefined) add('i', after + 1, 'Step 7 has to end with the "Archive this page by hand" line');
+    if (after !== undefined) add('i', after + 1, 'Step 7 has to end with the "leave this page under Onboarding" line');
   }
 }
 

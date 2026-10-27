@@ -376,7 +376,7 @@ function claimsNorm(entry, table, decoded, pagesById, warnings, tagNames = new M
       last_edited: row.last_edited_time ?? null,
     };
   });
-  for (const [column, n] of Object.entries(unresolved)) warnings.push(`${table}: ${n} reference(s) in ${column} name no tag of the rulebook (their page ids are not among the Rulebook copy's rows), so they were left out`);
+  for (const [column, n] of Object.entries(unresolved)) warnings.push(`${table}: ${n} reference(s) in ${column} name no tag of the rulebook (their page ids are not among the Rulebook's rows), so they were left out`);
   return { out, duplicates };
 }
 

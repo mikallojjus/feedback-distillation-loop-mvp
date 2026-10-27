@@ -1566,7 +1566,7 @@ function whereParts(ctx, st) {
   const hasView = (key) => Boolean(ctx.demo.views?.[key]);
   const link = (key, table) => (hasView(key) ? { name: dp.VIEW_NAMES[key], href: viewLink(ctx.config, key) } : { name: dp.PRACTICE_TITLES[table], href: tableLink(ctx.config, table) });
   if (st.step === 'complete') {
-    return { sentence: 'Walkthrough: you have been through all seven steps of the practice page.', next: 'Next: nothing to type; archive the page by hand when you no longer need it.' };
+    return { sentence: 'Walkthrough: you have been through all seven steps of the practice page.', next: 'Next: nothing to type; when you are done, leave this page under Onboarding, where it does no harm.' };
   }
   const head = `Walkthrough: you are at step ${st.step}, ${steps[st.step - 1].title}`;
   switch (st.step) {
@@ -1745,7 +1745,7 @@ async function listCommand(args, io, env) {
     const state = found.demo.state ?? 'unknown';
     rows.push([cell, reached && found.id === reached.id ? `${state} · used by the demo commands` : state, step]);
   }
-  // the Next line is for the page the commands reach: its real next step (the archive line only for a page that is complete)
+  // the Next line is for the page the commands reach: its real next step (the closing line only for a page that is complete)
   let next;
   if (latest && latest.demo.state !== 'ready') next = 'Next: ask for the practice page again under the same link; it continues where it stopped.';
   else if (reachedAt && !reachedAt.st.problem) next = whereParts(reachedAt.ctx, reachedAt.st).next;

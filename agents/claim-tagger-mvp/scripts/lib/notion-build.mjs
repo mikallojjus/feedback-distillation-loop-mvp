@@ -4,7 +4,7 @@
 // PATCH only (lib/notion-rest.mjs), and every id the builder learns is recorded at once (runs/builder/*.json and config.json), so a run that
 // stops halfway is finished by running it again.
 //
-//   structureFromProposal(markdown)            -> { tables: { rulebook|claims|tag_decisions|rule_changes|agent_settings: { title, columns: [{ name, type, options, description, relation_to?, renamed_from?, retired? }], arrange_default_view? } },
+//   structureFromProposal(markdown)            -> { tables: { rulebook|claims|tag_decisions|rule_changes|agent_settings: { title, description?, columns: [{ name, type, options, description, relation_to?, renamed_from?, retired? }], arrange_default_view? | default_view? { name?, columns } } },
 //                                                   views: [{ name, table, filter, sort, columns, wrap, renamed_from? }], pages: ["Demos", "Demo tests"] }
 //                                                  Throws StructureError (exit 2) naming the table and column when a type word is unknown, a table
 //                                                  section or a "Values:" list is missing, or a view cannot be read. (The approved text of the proposal has no relation
@@ -12,13 +12,14 @@
 //                                                  A relation column names the table it points at in relation_to; a view that was another view of the same table under an
 //                                                  older name says so in renamed_from, and the builder renames that view instead of making a new one.
 //   validateStructure(structure), loadStructure(root), saveStructure(root, structure), structurePath(root), countStructure(structure)
-//   planStructure(structure, config, { inline }) -> { parent_page_id, pages: [{ key, title, text }], hub, databases: [{ table, title, body }], columns: [{ table, name, type, relation_to, renamed_from, retired, body }],
-//                                                   views: [{ table, name, columns, hidden, retired, wrap, renamed_from, body }], arrange: { <table>: { shown, hidden } } }
+//   planStructure(structure, config, { inline }) -> { parent_page_id, pages: [{ key, title, text }], hub, databases: [{ table, title, description?, body }], columns: [{ table, name, type, relation_to, renamed_from, retired, body }],
+//                                                   views: [{ table, name, columns, hidden, retired, wrap, renamed_from, body }], arrange: { <table>: { name, shown, hidden } } }
 //                                                  body of a database is the POST /databases body (relation columns left out: the table they point at may not exist yet);
 //                                                  columns lists every column but the title, so that what a table lacks can be added (PATCH data source); body of a view is the
 //                                                  POST /views body without the ids
 //   completeViewBody(viewPlan, dataSource, { databaseId }) -> the POST /views body, property ids filled from the created data source
-//   arrangeOwnViews({ client, plan, table, databaseId, dataSourceId, log }) -> the names of the table's own views (Notion's default view) whose column order was set to the structure's
+//   defaultViewPlan(structure, table), ownViewName(names, wanted)   how the table's own view (Notion's default view) is arranged: { name, shown, hidden } or null; which view is it
+//   arrangeOwnViews({ client, plan, table, databaseId, dataSourceId, log }) -> the names of the table's own views (Notion's default view) whose name or column order was set to the structure's
 //                                                  inline false (the default) makes full-page tables (the production tables, P10), true inline ones (the practice page of the walkthrough). hub is the plan of the hub
 //                                                  page's body (hubPlan) or null for a structure without a hub block; with a hub block the databases are planned in hub.table_order
 //   hubPlan(structure), hubDifferences({ hub, config, children }), readHub({ client, config, hub })   the hub page (P11): its plan; its body compared with the plan (pure); the same read from Notion (GET only)
@@ -31,9 +32,10 @@
 //   parseViewFilter(text, table, where), parseViewSort(text, table, where)
 //   viewKey(name), viewUrl(databaseId, viewId) -> 'your_queue'; 'https://www.notion.so/<database id>?v=<view id>' (ids without dashes)
 //
-// The hub (decisions P9 to P11). A structure with a "hub" block ({ title, view_links, table_order, pages_after }) is built in this order: the tables in table_order (full-page tables), their
-// columns, the pages (Onboarding), the views, and then the hub part, which appends the one-line links to some views at the start of the hub page (found by their text, so a run again adds none)
-// and reads the page's body back: [the link lines][the tables in table_order][the pages in pages_after, the archive page last]. What is out of place is a difference in plain words (the
+// The hub (decisions P9 to P11, P14). A structure with a "hub" block ({ title, note, view_links, table_order, pages_after }) is built in this order: the tables in table_order (full-page tables,
+// each with its description), their columns, the pages (Onboarding), the views (and the table's own views), and then the hub part, which appends the warning line (note) and the one-line links to
+// some views at the start of the hub page (found by their text, so a run again adds none) and reads the page's body back: [the warning line][the link lines][the tables in table_order][the pages
+// in pages_after, the archive page last]. What is out of place is a difference in plain words (the
 // archive page above the tables: drag it to the bottom of the page in Notion), a block that belongs to none of them is a leftover; the hub part only appends, and never moves, edits or removes.
 // A structure without a hub block (the fixtures of the earlier builds) is valid and builds as before.
 //
@@ -47,8 +49,10 @@
 //
 // Views. A view the table has already is not left as it was: its filter, its sorts, its shown columns and their order, and whether cells wrap are compared with the structure and
 // patched where they differ (updateView), so that a table built by an earlier revision gets the new filter of Your queue and the new column order. The views of a table that sets
-// `arrange_default_view` (the Claims copy) include the views the structure does not name, Notion's own default view: they get the column order of the structure, every column
-// visible and the retired ones hidden, and nothing else of theirs is changed.
+// `arrange_default_view` (the practice page's Claims) include the views the structure does not name, Notion's own default view: they get the column order of the structure, every column
+// visible and the retired ones hidden, and nothing else of theirs is changed. A table that sets `default_view` { name?, columns } (P15, every production table) has its own view (the one
+// called name, else "Table", else the first; a view somebody made is left alone) called name and shows exactly those columns in that order, every other column hidden; that holds for a table
+// that names no view of its own too (Agent settings). `verify` reads the name and the shown columns back, and the description the build writes only when it makes the table.
 //
 // Where the ids go. Pages: config.json notion.pages.<key> (demos, demo_tests) and runs/builder/pages.json. Tables: notion.rulebook, notion.claims,
 // notion.databases.<table> (database_id, data_source_id) and runs/builder/databases.json (the table's id and its data source's, under <table> and
@@ -101,6 +105,7 @@ export const COLUMN_TYPES = Object.freeze([...new Set(Object.values(TYPE_WORDS))
 /** Columns Notion fills by itself: compared by type only, never written. */
 export const AUTOMATIC_TYPES = Object.freeze(['created_time', 'created_by', 'last_edited_time', 'last_edited_by']);
 export const DESCRIPTION_MAX = 280;
+const DEFAULT_VIEW_KEYS = Object.freeze(['name', 'columns']);
 
 /** The one line of text on each sub-page the builder makes. */
 export const PAGE_TEXT = Object.freeze({
@@ -481,6 +486,27 @@ export function validateStructure(structure) {
     if (new Set(olds).size !== olds.length) bad(`table "${t.title}": two columns are renamed from the same name`);
     if (t.arrange_default_view !== undefined && typeof t.arrange_default_view !== 'boolean') bad(`table "${t.title}": arrange_default_view must be true or false`);
     if (t.columns.filter((c) => c.type === 'title').length !== 1) bad(`table "${t.title}" needs exactly one title column`);
+    // the one line Notion shows under the table's name (ED-8): optional, made with the table
+    if (t.description !== undefined && (typeof t.description !== 'string' || t.description.trim() === '' || [...t.description].length > DESCRIPTION_MAX)) {
+      bad(`table "${t.title}": the description must be one line of text of at most ${DESCRIPTION_MAX} characters`);
+    }
+    // the table's own first view (Notion's default view, P15): the columns it shows, in this order, and the name to give it (optional: without one it keeps Notion's)
+    if (t.default_view !== undefined) {
+      const dv = t.default_view;
+      if (!isPlain(dv)) bad(`table "${t.title}": default_view must be an object { name?, columns }`);
+      const stray = Object.keys(dv).filter((k) => !DEFAULT_VIEW_KEYS.includes(k));
+      if (stray.length) bad(`table "${t.title}": default_view has "${stray[0]}", which is not part of it (it has ${DEFAULT_VIEW_KEYS.join(', ')})`);
+      if (dv.name !== undefined && (typeof dv.name !== 'string' || dv.name.trim() === '')) bad(`table "${t.title}": default_view name must be text`);
+      if (!Array.isArray(dv.columns) || dv.columns.length === 0) bad(`table "${t.title}": default_view needs the list of columns it shows`);
+      if (new Set(dv.columns).size !== dv.columns.length) bad(`table "${t.title}": default_view lists a column twice`);
+      for (const name of dv.columns) {
+        const found = t.columns.find((c) => c.name === name);
+        if (!found) bad(`table "${t.title}": default_view shows "${name}", which is not a column of the table`);
+        if (found.retired === true) bad(`table "${t.title}": default_view shows "${name}", a retired column, which every view hides`);
+      }
+      if (t.arrange_default_view !== undefined) bad(`table "${t.title}": default_view says which columns the table's own view shows, so arrange_default_view is not given as well`);
+      if (Array.isArray(structure.views) && structure.views.some((v) => isPlain(v) && v.table === key && v.name === dv.name)) bad(`table "${t.title}": default_view is called "${dv.name}", the name of one of its other views`);
+    }
   }
   if (!Array.isArray(structure.views)) bad('views must be a list');
   const viewKeys = new Set();
@@ -507,16 +533,17 @@ export function validateStructure(structure) {
   return structure;
 }
 
-const HUB_KEYS = Object.freeze(['title', 'view_links', 'table_order', 'pages_after']);
+const HUB_KEYS = Object.freeze(['title', 'note', 'view_links', 'table_order', 'pages_after']);
 
-// The hub block (P11): what the hub page holds besides its title, in order: the link lines to some views, the five tables, then some pages. A structure without one (the earlier
-// builds) is valid and builds as before.
+// The hub block (P11, P14): what the hub page holds besides its title, in order: the one line of warning (the note), the link lines to some views, the five tables, then some pages. A
+// structure without one (the earlier builds) is valid and builds as before.
 function validateHub(structure, bad) {
   const hub = structure.hub;
   if (!isPlain(hub)) bad('hub must be an object');
   const extra = Object.keys(hub).filter((k) => !HUB_KEYS.includes(k));
   if (extra.length) bad(`hub: "${extra[0]}" is not part of the hub block (it has ${HUB_KEYS.join(', ')})`);
   if (typeof hub.title !== 'string' || hub.title.trim() === '') bad('hub: title must be the name of the hub page');
+  if (typeof hub.note !== 'string' || hub.note.trim() === '' || /[\r\n]/.test(hub.note) || [...hub.note].length > 300) bad('hub: note must be the one line of text above the link lines (at most 300 characters)');
   const list = (name, value) => {
     if (!Array.isArray(value) || value.length === 0 || value.some((x) => typeof x !== 'string' || x === '')) bad(`hub: ${name} must be a list of names`);
     if (new Set(value).size !== value.length) bad(`hub: ${name} names something twice`);
@@ -639,8 +666,8 @@ export function viewPlan(structure, view) {
 /** What each link line on the hub page says after the view's name ("Your queue: the claims that wait for your decision"). Any other view gets its name in quotes. */
 export const HUB_LINK_TEXT = Object.freeze({
   your_queue: 'the claims that wait for your decision',
-  needs_your_note: 'the decisions you made without telling the agent why',
-  lessons_waiting: 'the rule changes that wait for your approval',
+  needs_your_note: 'claims where you overruled the agent and left no note',
+  lessons_waiting: 'rule changes the agent drafted, for the rule owner to approve or reject',
 });
 
 /** The plan of the hub page's body (P11), or null for a structure without a hub block: the link lines with their text, the tables and pages in the order they stand. Pure. */
@@ -649,6 +676,7 @@ export function hubPlan(structure) {
   if (!hub) return null;
   return {
     title: hub.title,
+    note: hub.note,
     table_order: [...hub.table_order],
     pages_after: [...hub.pages_after],
     tables: Object.fromEntries(TABLES.map((t) => [t, structure.tables[t].title])),
@@ -684,9 +712,11 @@ export function planStructure(structure, config, { inline = false } = {}) {
       return {
         table,
         title: t.title,
+        ...(t.description ? { description: t.description } : {}),
         body: {
           parent: { type: 'page_id', page_id: parent },
           title: [{ type: 'text', text: { content: t.title } }],
+          ...(t.description ? { description: [{ type: 'text', text: { content: t.description } }] } : {}),
           is_inline: inline === true,
           initial_data_source: { properties },
         },
@@ -698,11 +728,30 @@ export function planStructure(structure, config, { inline = false } = {}) {
         table, name: c.name, type: c.type, relation_to: c.relation_to ?? null, renamed_from: c.renamed_from ?? null, retired: c.retired === true, body: propertyConfig(table, c),
       }))),
     views: structure.views.map((v) => viewPlan(structure, v)),
-    // the tables whose views the structure does not name (Notion's own default view) get the column order too: the live columns shown in order, the retired ones hidden
-    arrange: Object.fromEntries(TABLES.filter((table) => structure.tables[table].arrange_default_view === true).map((table) => [table, {
-      shown: liveColumns(structure, table).map((c) => c.name), hidden: structure.tables[table].columns.filter((c) => c.retired === true).map((c) => c.name),
-    }])),
+    // the table's own view (Notion's default view, which the structure does not name) is arranged too: see defaultViewPlan
+    arrange: Object.fromEntries(TABLES.map((table) => [table, defaultViewPlan(structure, table)]).filter(([, arranged]) => arranged !== null)),
   };
+}
+
+/**
+ * How the table's own view (Notion's default view, the one the structure's views do not name) is arranged, or null when the structure leaves it alone. { name, shown, hidden }:
+ *   default_view { name?, columns }   it shows exactly those columns in that order, every other column hidden, and is called name (null: it keeps Notion's name)  (P15)
+ *   arrange_default_view: true        it shows every live column in the structure's order and the retired ones are hidden; the name is left (the practice page's Claims)
+ */
+export function defaultViewPlan(structure, table) {
+  const t = structure.tables[table];
+  if (t.default_view) {
+    return { name: t.default_view.name ?? null, shown: [...t.default_view.columns], hidden: t.columns.map((c) => c.name).filter((n) => !t.default_view.columns.includes(n)) };
+  }
+  if (t.arrange_default_view === true) return { name: null, shown: liveColumns(structure, table).map((c) => c.name), hidden: t.columns.filter((c) => c.retired === true).map((c) => c.name) };
+  return null;
+}
+
+/** Which of the views the structure does not name is the table's own: the one called `wanted` (it was renamed already), else Notion's "Table", else the first. null without views. */
+export function ownViewName(names, wanted = null) {
+  if (wanted !== null && names.includes(wanted)) return wanted;
+  if (names.includes('Table')) return 'Table';
+  return names[0] ?? null;
 }
 
 /**
@@ -907,7 +956,7 @@ async function buildDatabases(ctx) {
     } else {
       let created;
       try {
-        created = await client.createDatabase({ parentPageId: plan.parent_page_id, title: db.title, isInline: db.body.is_inline === true, properties: db.body.initial_data_source.properties });
+        created = await client.createDatabase({ parentPageId: plan.parent_page_id, title: db.title, description: db.description, isInline: db.body.is_inline === true, properties: db.body.initial_data_source.properties });
         dataSourceId = created.data_sources?.[0]?.id ?? null;
         if (!dataSourceId) dataSourceId = (await client.retrieveDatabase(created.id)).data_sources?.[0]?.id ?? null;
       } catch (e) {
@@ -1081,22 +1130,41 @@ async function reconcileView(ctx, table, plan, found, dataSource) {
   return done;
 }
 
-// The views of a table that the structure does not name (Notion's own default view): the column order of the structure, every column visible, the retired ones hidden. Nothing else of
-// such a view is touched. Returns the names of the views that were changed.
+// The table's own view (Notion's default view, the one the structure does not name), arranged as defaultViewPlan says: with a default_view it is called as the structure says and shows
+// exactly the columns listed in their order (every other column hidden); with arrange_default_view it shows every live column in the structure's order, the retired ones hidden and
+// the name left. Nothing else of the view is touched. A table that gives no name arranges every view the structure does not name; one that does arranges only its own view (the one
+// already called that, else Notion's "Table", else the first), so a view somebody made by hand is left alone. A second run finds it arranged and sends nothing. Returns the names of the
+// views that were changed (the name they had when the run began).
 async function arrangeDefaultViews(ctx, table, have, dataSource) {
   const { plan, client, log, result } = ctx;
   const named = new Set(plan.views.filter((v) => v.table === table).flatMap((v) => [v.name, v.renamed_from].filter(Boolean)));
   const nameOf = nameLookup(dataSource);
-  const { shown, hidden } = plan.arrange[table];
+  const { name: wanted, shown, hidden } = plan.arrange[table];
   const present = new Set(Object.keys(dataSource.properties ?? {}));
+  const unnamed = [...have.keys()].filter((n) => !named.has(n));
+  const targets = wanted === null ? unnamed : [ownViewName(unnamed, wanted)].filter(Boolean);
   const changed = [];
-  for (const [name, found] of have) {
-    if (named.has(name)) continue;
-    if (!columnsDiffer(shown, hidden, configured(found, nameOf), present)) continue;
-    await client.updateView(found.id, { configuration: buildConfiguration(dataSource, { shown, hidden, found }) });
+  for (const name of targets) {
+    const found = have.get(name);
+    const body = {};
+    const said = [];
+    if (wanted !== null && name !== wanted) {
+      body.name = wanted;
+      said.push(`called "${wanted}"`);
+    }
+    if (columnsDiffer(shown.filter((n) => present.has(n)), hidden, configured(found, nameOf), present)) {
+      body.configuration = buildConfiguration(dataSource, { shown, hidden, found });
+      said.push('column order and visibility set');
+    }
+    if (Object.keys(body).length === 0) continue;
+    await client.updateView(found.id, body);
+    if (body.name) {
+      have.delete(name);
+      have.set(wanted, { ...found, name: wanted });
+    }
     changed.push(name);
     result.created.views_updated += 1;
-    log(`view "${name}" (the table's own): column order and visibility set`);
+    log(`view "${name}" (the table's own): ${said.join(', ')}`);
   }
   if (changed.length) result.arranged[table] = changed;
   return changed;
@@ -1119,14 +1187,14 @@ async function buildViews(ctx) {
   const { plan, client, config, log, result } = ctx;
   for (const table of TABLES) {
     const wanted = plan.views.filter((v) => v.table === table);
-    if (wanted.length === 0) continue;
+    if (wanted.length === 0 && !plan.arrange?.[table]) continue; // no view to make and the table's own view is left as it is
     const entry = tableEntry(config, table);
     if (!realId(entry.database_id) || !realId(entry.data_source_id)) {
       stopWith(ctx, `the views of "${table}"`, new Error(`the table "${table}" is not created yet; run "setup.mjs databases" first`));
       result.code = EXIT.INVALID;
       return;
     }
-    const mine = (result.views[table] = {});
+    const mine = wanted.length ? (result.views[table] = {}) : {}; // a table with only its own view to arrange has no entry among the views made
     let dataSource;
     let have;
     try {
@@ -1248,6 +1316,9 @@ const blockWords = (b) => {
   return plainText(b?.[b?.type]?.rich_text);
 };
 
+// The warning above the link lines (P14): one plain paragraph.
+const noteBlock = (text) => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: text } }] } });
+
 // One link line: the view's name linked to the view, then the words that say what is in it.
 function linkBlock(line, url) {
   return {
@@ -1262,6 +1333,7 @@ function linkBlock(line, url) {
 function hubExpected(hub, config) {
   const items = [];
   const notBuilt = [];
+  if (hub.note) items.push({ id: 'note', label: 'the warning line at the top', short: 'the warning line', match: (b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === hub.note });
   for (const l of hub.view_links) {
     items.push({ id: `link:${l.key}`, label: `the link line "${l.name}"`, short: `link "${l.name}"`, match: (b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === l.text });
   }
@@ -1309,7 +1381,7 @@ export function hubDifferences({ hub, config, children }) {
       found.set(item.id, b);
       actual.push(item.id);
     } else {
-      leftovers.push({ id: normId(b.id), type: b.type ?? 'unknown', text: blockWords(b), duplicate: Boolean(item) });
+      leftovers.push({ id: normId(b.id), type: b.type ?? 'unknown', text: blockWords(b), duplicate: Boolean(item), of: item?.id === 'note' ? 'the warning line' : 'a link line' });
     }
   }
   for (const item of items) if (!found.has(item.id)) differences.push({ kind: 'missing', detail: `${item.label} is not on the hub page` });
@@ -1331,7 +1403,7 @@ export function hubDifferences({ hub, config, children }) {
   for (const l of leftovers) {
     differences.push({
       kind: 'leftover',
-      detail: `${l.duplicate ? 'a second copy of a link line' : 'a block that is none of these'} is on the hub page and was left as it is: ${l.type}${l.text ? ` "${short(l.text)}"` : ''} (${l.id}); remove it by hand if it should not be there`,
+      detail: `${l.duplicate ? `a second copy of ${l.of}` : 'a block that is none of these'} is on the hub page and was left as it is: ${l.type}${l.text ? ` "${short(l.text)}"` : ''} (${l.id}); remove it by hand if it should not be there`,
     });
   }
   return { differences, leftovers };
@@ -1368,6 +1440,7 @@ async function buildHub(ctx) {
   const hub = plan.hub;
   const rootId = plan.parent_page_id;
   result.created.hub_links = 0;
+  result.created.hub_note = 0;
   const added = [];
   const missing = [];
   let children;
@@ -1384,11 +1457,18 @@ async function buildHub(ctx) {
       }
       blocks.push({ line, block: linkBlock(line, url) });
     }
-    if (blocks.length) {
-      await client.appendBlocks(rootId, blocks.map((b) => b.block), { position: { type: 'start' } });
-      added.push(...blocks.map((b) => b.line.text));
+    // the warning line (P14) goes first, in the same request as the link lines when both are missing; with the warning there already, the link lines go right after it
+    const noteAt = hub.note ? children.find((b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === hub.note) : null;
+    const fresh = [
+      ...(hub.note && !noteAt ? [{ text: hub.note, name: 'the warning line', block: noteBlock(hub.note) }] : []),
+      ...blocks.map((b) => ({ text: b.line.text, name: b.line.name, block: b.block })),
+    ];
+    if (fresh.length) {
+      await client.appendBlocks(rootId, fresh.map((b) => b.block), { position: noteAt ? { type: 'after_block', after_block: { id: noteAt.id } } : { type: 'start' } });
+      added.push(...fresh.map((b) => b.text));
       result.created.hub_links += blocks.length;
-      log(`hub page: ${blocks.length} link line(s) added at the top (${blocks.map((b) => b.line.name).join(', ')})`);
+      result.created.hub_note = fresh.length - blocks.length;
+      log(`hub page: ${fresh.length} line(s) added at the top (${fresh.map((b) => b.name).join(', ')})`);
     }
   } catch (e) {
     stopWith(ctx, 'the link lines on the hub page', e);
@@ -1408,6 +1488,7 @@ function writeState(ctx) {
   const state = readJsonOr(file, { pages: {}, tables: {} });
   state.updated_at = new Date().toISOString();
   state.parent_page_id = plan.parent_page_id;
+  state.archive_checked = true; // a build ran, so the gate on the archive was passed: the tables recorded here are this install's own, not a first build waiting to be archived (archive.mjs archiveFirst)
   const keep = (before, now) => (before === 'created' && now === 'exists' ? 'created' : now); // the file says how it came to be, not that a later run found it
   for (const [key, p] of Object.entries(result.pages)) state.pages[key] = { id: p.id, status: keep(state.pages[key]?.status, p.status) };
   for (const [table, d] of Object.entries(result.databases)) state.tables[table] = { ...(state.tables[table] ?? {}), database_id: d.database_id, data_source_id: d.data_source_id };
@@ -1579,14 +1660,22 @@ async function compareViews(add, key, structure, wanted, entry, client, dataSour
     const haveWrap = found.configuration?.wrap_cells === true;
     if (haveWrap !== plan.wrap) add(key, 'view wrap', `"${v.name}": cells ${plan.wrap ? 'should' : 'should not'} wrap, and they ${haveWrap ? 'do' : 'do not'}`);
   }
-  // the table's own view (a view the structure does not name) of a table that arranges it: the columns of the structure in its order, the retired ones hidden
-  if (structure.tables[key].arrange_default_view === true) {
+  // the table's own view (a view the structure does not name) of a table that arranges it (defaultViewPlan): its name when the structure gives one, and exactly the columns it shows, in order
+  const arranged = defaultViewPlan(structure, key);
+  if (arranged) {
     const named = new Set(structure.views.filter((v) => v.table === key).flatMap((v) => [v.name, v.renamed_from].filter(Boolean)));
-    const shown = liveColumns(structure, key).map((c) => c.name);
     const present = new Set(Object.keys(dataSource?.properties ?? {}));
-    for (const found of views.filter((x) => x && !named.has(x.name))) {
+    const unnamed = views.filter((x) => x && !named.has(x.name));
+    let targets = unnamed;
+    if (arranged.name !== null) {
+      // Notion makes one such view for every table; a table that has none (somebody removed it) has nothing to arrange or to compare
+      const own = ownViewName(unnamed.map((x) => x.name), arranged.name);
+      targets = unnamed.filter((x) => x.name === own);
+      if (targets.length && own !== arranged.name) add(key, 'view name', `the table's own view is called "${own}" and the structure calls it "${arranged.name}"`);
+    }
+    for (const found of targets) {
       const haveShown = (found.configuration?.properties ?? []).filter((p) => p.visible !== false).map((p) => nameOf(p.property_id));
-      const wantShown = shown.filter((n) => present.has(n));
+      const wantShown = arranged.shown.filter((n) => present.has(n));
       const known = haveShown.filter((n) => structure.tables[key].columns.some((c) => c.name === n)); // a column the structure does not know is not compared
       if (stable(wantShown) !== stable(known)) add(key, 'view columns', `"${found.name}" (the table's own view): expected ${wantShown.join(', ')}; found ${known.join(', ') || 'none'}`);
     }
@@ -1624,8 +1713,8 @@ export async function verifyStructure({ client, config, structure } = {}) {
     }
     compareColumns(add, key, t, dataSource, config);
     const wanted = structure.views.filter((v) => v.table === key);
-    if (wanted.length) await compareViews(add, key, structure, wanted, entry, client, dataSource, seen);
-    if (structure.hub) await compareFullPage(add, key, t, entry, client);
+    if (wanted.length || defaultViewPlan(structure, key)) await compareViews(add, key, structure, wanted, entry, client, dataSource, seen);
+    if (structure.hub || t.description !== undefined) await compareDatabase(add, key, t, entry, client, { fullPage: Boolean(structure.hub) });
   }
   if (structure.hub) {
     // the hub page: its title, the order of its body and its leftovers, as the hub part of the build reports them (an order difference is a difference here, so verify is ok only when the page is in order)
@@ -1635,13 +1724,18 @@ export async function verifyStructure({ client, config, structure } = {}) {
   return { ok: differences.length === 0, differences, views: seen };
 }
 
-// A production table is a full-page table (P10): is_inline is false. An inline table would sit inside the hub page's body instead of being a page of its own.
-async function compareFullPage(add, key, t, entry, client) {
+// The table itself, read once: a production table is a full-page table (P10, is_inline false; an inline table would sit inside the hub page's body instead of being a page of its own), and
+// the one line under its name is the structure's description (ED-8).
+async function compareDatabase(add, key, t, entry, client, { fullPage }) {
   try {
     const db = await client.retrieveDatabase(entry.database_id);
-    if (db?.is_inline !== false) add(key, 'inline', `"${t.title}" ${db?.is_inline === true ? 'is an inline table' : `reads is_inline ${JSON.stringify(db?.is_inline ?? null)}`}, but the structure builds full-page tables; turn it into a full-page table in Notion`);
+    if (t.description !== undefined) {
+      const has = (Array.isArray(db?.description) ? db.description : []).map((x) => x?.plain_text ?? x?.text?.content ?? '').join('');
+      if (has !== t.description) add(key, 'description', `"${t.title}" has the description ${JSON.stringify(has)}, the structure says ${JSON.stringify(t.description)}; write it in Notion under the table's name (the build writes it only when it makes the table)`);
+    }
+    if (fullPage && db?.is_inline !== false) add(key, 'inline', `"${t.title}" ${db?.is_inline === true ? 'is an inline table' : `reads is_inline ${JSON.stringify(db?.is_inline ?? null)}`}, but the structure builds full-page tables; turn it into a full-page table in Notion`);
   } catch (e) {
-    add(key, 'inline', `"${t.title}" cannot be read to see whether it is a full-page table (${e.message})`);
+    add(key, 'inline', `"${t.title}" cannot be read to see whether it is a full-page table and what its description is (${e.message})`);
   }
 }
 
@@ -1662,14 +1756,16 @@ export function renderPreview(structure) {
   if (hub) {
     lines.push(`## Hub page "${hub.title}"`, '');
     lines.push('The hub page holds only links, in this order (nothing on it is moved, edited or removed by a later run; what is out of place is reported):', '');
-    lines.push(`1. ${hub.view_links.length} link lines at the top: ${hub.view_links.map((l) => l.text).join('; ')}`);
-    lines.push(`2. the ${hub.table_order.length} tables as full-page tables, in this order: ${hub.table_order.map((t) => hub.tables[t]).join(', ')}`);
-    lines.push(`3. then: ${hub.pages_after.map((k) => (k === 'archive' ? `the archive page "${ARCHIVE_TITLE}" (made by setup.mjs archive; it sits above the tables until a person drags it down)` : hub.pages[k])).join(', ')}`);
+    lines.push(`1. the warning line at the very top: ${hub.note}`);
+    lines.push(`2. ${hub.view_links.length} link lines at the top: ${hub.view_links.map((l) => l.text).join('; ')}`);
+    lines.push(`3. the ${hub.table_order.length} tables as full-page tables, in this order: ${hub.table_order.map((t) => hub.tables[t]).join(', ')}`);
+    lines.push(`4. then: ${hub.pages_after.map((k) => (k === 'archive' ? `the archive page "${ARCHIVE_TITLE}" (made by setup.mjs archive; it sits above the tables until a person drags it down)` : hub.pages[k])).join(', ')}`);
     lines.push('');
   }
   for (const key of structure.hub ? structure.hub.table_order : TABLES) {
     const t = structure.tables[key];
     lines.push(`## ${t.title} (${t.columns.length} columns)`, '');
+    if (t.description) lines.push(`Description under the table's name: ${t.description}`, '');
     lines.push('| Column | Type | Options | Meaning |', '|---|---|---|---|');
     for (const c of t.columns) {
       const options = c.relation_to ? `points at the ${structure.tables[c.relation_to].title}` : c.options.join(', ');
@@ -1677,11 +1773,13 @@ export function renderPreview(structure) {
       lines.push(`| ${cell(c.name)} | ${c.type} | ${cell(options)} | ${cell(c.description)}${note ? ` (${cell(note)})` : ''} |`);
     }
     const views = structure.views.filter((v) => v.table === key);
-    if (views.length) {
+    const own = defaultViewPlan(structure, key);
+    if (views.length || own) {
       lines.push('', 'Views:', '');
       for (const v of views) {
         lines.push(`- **${v.name}**${v.renamed_from ? ` (the view "${v.renamed_from}" of an earlier build is renamed to this)` : ''}: rows shown: ${v.filter}; sorted by: ${v.sort}; columns: ${v.columns.join(', ')}${v.wrap ? '; cells wrap' : ''}`);
       }
+      if (own) lines.push(`- The table's own view (Notion's default)${own.name ? `, called ${own.name}` : ''}: shows ${own.shown.join(', ')}${own.hidden.length ? `; the other ${own.hidden.length} column${own.hidden.length === 1 ? ' is' : 's are'} hidden` : ''}`);
     }
     lines.push('');
   }

@@ -31,7 +31,7 @@ export const REPO_ROOT = fileURLToPath(new URL('../../../', import.meta.url));
 export const STRUCTURE_MD = join(REPO_ROOT, 'docs', 'mvp-2026-11', 'STRUCTURE.md');
 export const AUDIT_FILE = join(REPO_ROOT, 'docs', 'mvp-2026-11', 'evidence', '03-audit-context-dependent-decisions.json');
 export const REAL_TAXONOMY = join(REPO_ROOT, 'agents', 'claim-tagger-mvp', 'setup', 'taxonomy-issue.json');
-export const REAL_PICK = join(REPO_ROOT, 'agents', 'claim-tagger-mvp', 'setup', 'claims-pick.json');
+export const REAL_PICK = join(REPO_ROOT, 'tests', 'mvp', 'fixtures', 'claims-pick.50.json'); // the 50-claim pick of the first build (a fixture; the original is archived)
 const RULEBOOK_FIXTURE = join(REPO_ROOT, 'tests', 'mvp', 'fixtures', 'rulebook-rows.json');
 
 export const LIVE_GEO = JSON.parse(readFileSync(join(REPO_ROOT, 'agents', 'claim-tagger-mvp', 'config.json'), 'utf8')).geo;

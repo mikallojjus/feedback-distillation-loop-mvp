@@ -1082,7 +1082,7 @@
       "Agent disagreed"
     ],
     "claims_view_filters": {
-      "Your queue": "Agent status is Waits for you",
+      "Your queue": "Agent status is Waits for you and Review status is not Reviewed",
       "Needs your note": "Agent reading contains without your note",
       "Agent disagreed": "Agent status is Disagrees with your decision"
     },

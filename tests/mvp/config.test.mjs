@@ -523,3 +523,27 @@ test('the claims\' editor columns are never writable, with setup or without; the
     for (const column of ['Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under', 'Agent reading', 'Rule', 'Reading note', 'Read under']) assert.ok(ledger.has(column), `${column} (setup ${setup})`);
   }
 });
+
+test('the first build\'s table names ("Claims copy", "Rulebook copy") are in no text the scripts print and not in config.json: the tables are called Claims and Rulebook (S2)', async () => {
+  const { readdirSync } = await import('node:fs');
+  const scripts = join(codeRoot(), 'scripts');
+  const files = [];
+  const walk = (dir) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.name.endsWith('.mjs')) files.push(full);
+    }
+  };
+  walk(scripts);
+  const found = [];
+  for (const file of files) {
+    // comments are history and may name the first build; strings are what an editor or the engineer reads
+    const code = readFileSync(file, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').split('\n').map((line) => line.replace(/(^|\s)\/\/.*$/, '$1')).join('\n');
+    for (const m of code.matchAll(/.*(?:Rulebook copy|Claims copy).*/g)) found.push(`${file.slice(scripts.length + 1).replace(/\\/g, '/')}: ${m[0].trim().slice(0, 100)}`);
+  }
+  // the one place that keeps them: lib/notion-build.mjs reads the historical sections of STRUCTURE.md by their titles
+  assert.deepEqual(found.filter((f) => !f.startsWith('lib/notion-build.mjs:')), [], 'a script prints a name the tables no longer have');
+  assert.ok(found.length > 0 && found.every((f) => f.startsWith('lib/notion-build.mjs:')), 'the historical SECTION_TITLES and the reading of STRUCTURE.md are still there, nothing else');
+  assert.equal(JSON.parse(readFileSync(join(codeRoot(), 'config.json'), 'utf8')).notion.claims.label, 'Claims', 'the label of the Claims table in config.json');
+});

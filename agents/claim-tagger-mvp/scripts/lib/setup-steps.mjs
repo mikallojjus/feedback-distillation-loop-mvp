@@ -510,11 +510,13 @@ export async function stepStructure(ctx, parts) {
     // what a view was brought to, in words: the filter, the sorts, the shown columns and their order ("column order"), whether the cells wrap
     const inWords = (what) => what.map((x) => (x === 'columns' ? 'column order' : x)).join(', ');
     const brought = Object.entries(result.updated).flatMap(([t, views]) => Object.entries(views).map(([name, what]) => `${t}: ${name} (${inWords(what)})`));
-    const arranged = Object.entries(result.arranged).flatMap(([t, names]) => names.map((name) => `${t}: ${name} (column order)`));
+    const arranged = Object.entries(result.arranged).flatMap(([t, names]) => names.map((name) => `${t}: ${name} (the table's own view)`));
     if (brought.length || arranged.length) lines.push(`views brought to the structure: ${[...brought, ...arranged].join('; ')}`);
   }
   if (result.hub) {
-    lines.push(`hub page: ${result.created.hub_links ? `${result.created.hub_links} link line(s) added at the top` : 'the link lines are there already'}${result.hub.ok ? '; the body is in order' : ''}`);
+    const note = result.created.hub_note ?? 0;
+    const links = result.created.hub_links ?? 0;
+    lines.push(`hub page: ${note + links ? `${note ? 'the warning line' : ''}${note && links ? ' and ' : ''}${links ? `${links} link line(s)` : ''} added at the top` : 'the warning line and the link lines are there already'}${result.hub.ok ? '; the body is in order' : ''}`);
     for (const d of result.hub.differences) lines.push(`hub page: ${d.detail}`);
   }
   for (const w of result.warnings) ctx.warn(w);
@@ -911,7 +913,7 @@ function loadChecked(add, table, what, fn) {
 }
 
 /**
- * Read everything back and compare: the structure, the row counts, the Rulebook against the taxonomy file field by field, the claims
+ * Read everything back and compare: the structure, the row counts, the Rulebook against the taxonomy file field by field and against rubric/rubric.json by page id (one per tag), the claims
  * against the pick (Geo IDs, Geo columns, the links of Geo Sources), the seeded decisions, the Agent settings row. Writes runs/builder/verify.json.
  */
 export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFile, audit: auditFile } = {}) {
@@ -975,6 +977,27 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
       }
     }
     for (const name of byName.keys()) if (!taxonomy.rows.some((r) => r.Name === name)) add('rulebook', 'extra row', `"${name}" is in the Rulebook but not in the taxonomy file`);
+  }
+
+  // the edition in force names the Rulebook's rows by page id (rubric/rubric.json, one id per tag): after the fresh tables of the hub (P9) they must be the live rows' ids, else a relation
+  // written from the rubric would point at a row of an archived table
+  if (data.rulebook) {
+    const rubric = loadChecked(add, 'rulebook', 'rubric/rubric.json', () => {
+      const found = readRubric(root);
+      if (!found) throw new Error('there is no rulebook edition yet (run "setup.mjs rubric"), so its page ids cannot be compared with the Rulebook');
+      return found;
+    });
+    if (rubric) {
+      const keyColumn = tableEntry(config, 'rulebook').key;
+      const live = new Map(data.rulebook.rows.map((r) => [text(r.props[keyColumn]).trim(), normId(r.page_id)]));
+      for (const tag of rubric.tags) {
+        const have = tag.page_id ? normId(tag.page_id) : null;
+        const row = live.get(tag.name);
+        if (!row) add('rulebook', 'rubric page id', `"${tag.name}" is in rubric/rubric.json (edition ${rubric.edition}) but has no row in the Rulebook`);
+        else if (have !== row) add('rulebook', 'rubric page id', `"${tag.name}": rubric/rubric.json (edition ${rubric.edition}) holds the page id ${have ?? 'none'}, the Rulebook row is ${row}; run "setup.mjs rubric" to write the edition that names the live rows`);
+      }
+      for (const name of live.keys()) if (!rubric.tags.some((t) => t.name === name)) add('rulebook', 'rubric page id', `"${name}" is a row of the Rulebook but not a tag of rubric/rubric.json (edition ${rubric.edition})`);
+    }
   }
 
   const pick = loadChecked(add, 'claims', 'the claims pick', () => readPick(claimsFile ?? defaultPath(root, PICK_FILE)));
