@@ -223,5 +223,35 @@
       "flip_rejudge_runs": 2
     }
   },
-  "demo": false
+  "demo": false,
+  "geo": {
+    "endpoint": "https://api-testnet.geobrowser.io/graphql",
+    "allowed_hosts": [
+      "api-testnet.geobrowser.io"
+    ],
+    "browser_url": "https://www.geobrowser.io",
+    "ids": {
+      "debate": "55c95b2626f8482cb9739ea99dfde438",
+      "claim_type": "96f859efa1ca4b229372c86ad58b694b",
+      "tags": "257090341ba5406f94e4d4af90042fba",
+      "sources": "49c5d5e1679a4dbdbfd33f618f227c94",
+      "topics": [
+        "806d52bc27e94c9193c057978b093351",
+        "3b7759e55a714a8084d489258fd4bdd5"
+      ],
+      "web_url": "412ff593e9154012a43d4c27ec5c68b6",
+      "name_property": "a126ca530c8e48d5b88882c734c38935"
+    },
+    "spaces": [
+      { "name": "U.S. Politics", "id": "4582fbbee28a16589154f7e36f1ee3c5", "quota": 50 },
+      { "name": "World affairs", "id": "89bd89bf28ff8a0963faf92a8c905e20", "quota": 50 },
+      { "name": "AI", "id": "41e851610e13a19441c4d980f2f2ce6b", "quota": 40 },
+      { "name": "Health", "id": "52c7ae149838b6d47ce0f3b2a5974546", "quota": 30 },
+      { "name": "Crypto", "id": "c9f267dcb0d270718c2a3c45a64afd32", "quota": 20 },
+      { "name": "Technology", "id": "870e3b3068661e6280fad2ab456829bc", "quota": 10 }
+    ],
+    "total": 200,
+    "page_size": 500,
+    "detail_batch": 25
+  }
 }
