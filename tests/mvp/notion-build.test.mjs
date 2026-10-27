@@ -207,7 +207,7 @@ test('parseViewFilter and parseViewSort turn the plain words into data-source qu
 
 // ---- the plan ----------------------------------------------------------------------------------------------------------------------------------
 
-test('planStructure: a createDatabase body per table in the shape of POST /databases, inline, under the parent page', () => {
+test('planStructure: a createDatabase body per table in the shape of POST /databases, full-page (is_inline false), under the parent page; inline only when asked', () => {
   const w = build();
   const { plan, structure, config } = w;
   assert.equal(plan.parent_page_id, config.notion.parent_page_id);
@@ -220,7 +220,8 @@ test('planStructure: a createDatabase body per table in the shape of POST /datab
     assert.deepEqual(Object.keys(db.body).sort(), ['initial_data_source', 'is_inline', 'parent', 'title']);
     assert.deepEqual(db.body.parent, { type: 'page_id', page_id: config.notion.parent_page_id });
     assert.deepEqual(db.body.title, [{ type: 'text', text: { content: t.title } }]);
-    assert.equal(db.body.is_inline, true);
+    assert.equal(db.body.is_inline, false, 'a production table is a full-page table (P10)');
+    assert.equal(planStructure(structure, config, { inline: true }).databases.find((d) => d.table === db.table).body.is_inline, true, 'the practice page asks for inline tables');
     // a relation column is left out of the create: the table it points at may not exist yet (it is added after the tables are made); a retired column is never made
     assert.deepEqual(Object.keys(db.body.initial_data_source.properties), t.columns.filter((c) => c.type !== 'relation' && !c.retired).map((c) => c.name));
     for (const c of t.columns.filter((x) => x.type !== 'relation' && !x.retired)) {
@@ -307,7 +308,8 @@ test('planStructure: the Rulebook copy keeps the taxonomy\'s colours, the queue 
   assert.equal(plan.databases.find((d) => d.table === 'claims').body.initial_data_source.properties['Why wrong (old)'], undefined, 'the retired select is never made on a new table');
   assert.deepEqual(colors('rule_changes', 'Status'), { Proposed: 'yellow', Approved: 'blue', Rejected: 'red', Live: 'green', 'Rolled back': 'gray' });
   assert.ok(Object.values(colors('rule_changes', 'Kind')).every((c) => c !== 'default'));
-  assert.ok(Object.values(multi('claims', 'Geo Tags')).every((c) => c === 'default'), 'Geo Tags keep the default colour');
+  assert.ok(Object.values(multi('claims', 'Geo Tags')).every((c) => c !== 'default'), 'Geo Tags take a colour from a hash of the name, the same on every run');
+  assert.deepEqual(multi('claims', 'Geo Tags'), multi('claims', 'Geo Tags'));
   assert.ok(Object.values(colors('tag_decisions', 'Tag')).every((c) => c === 'default'));
   const valid = new Set(['default', 'gray', 'brown', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'red']);
   for (const table of Object.values(OPTION_COLORS)) for (const column of Object.values(table)) for (const c of Object.values(column)) assert.ok(valid.has(c), c);
@@ -439,7 +441,7 @@ test('runStructure: the fake holds the tables as planned, and every view body is
     const entry = result0(w, db.table);
     const stored = w.fake.database(entry.database_id);
     assert.equal(stored.title[0].plain_text, db.title);
-    assert.equal(stored.is_inline, true);
+    assert.equal(stored.is_inline, false, 'the table is a full-page table');
     assert.equal(normId(stored.parent.page_id), normId(w.parent));
     const columns = Object.values(stored.properties);
     const later = w.plan.columns.filter((c) => c.table === db.table && c.relation_to).map((c) => c.name); // the relation comes after the tables

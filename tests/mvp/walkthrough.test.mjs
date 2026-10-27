@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { RUN_SCRIPTS, main } from '../../agents/claim-tagger-mvp/scripts/walkthrough.mjs';
-import { CLAIMS_COPY_COLUMNS, editorColumns, loadConfig, validateConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
+import { CLAIMS_GEO_COLUMNS, editorColumns, loadConfig, validateConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import * as dp from '../../agents/claim-tagger-mvp/scripts/lib/demo-profile.mjs';
 import { blockText, lintPage, toBlocks } from '../../agents/claim-tagger-mvp/scripts/lib/notion-blocks.mjs';
 import { PAGE_TEXT, viewPlan } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
@@ -406,16 +406,29 @@ test('the practice structure carries the practice titles and the production colu
   const practice = dp.practiceStructure(original);
   assert.deepEqual(Object.values(practice.tables).map((t) => t.title), Object.values(dp.PRACTICE_TITLES));
   assert.deepEqual(practice.pages, []);
-  assert.equal(original.tables.rulebook.title, 'Rulebook copy', 'the original is not changed');
+  practice.tables.rulebook.title = 'Changed on the copy';
+  practice.views[0].columns.push('Geo Topics');
+  assert.equal(original.tables.rulebook.title, 'Rulebook', 'the original is not changed');
+  assert.ok(!original.views[0].columns.includes('Geo Topics'), 'and nor are its views');
+  practice.tables.rulebook.title = 'Rulebook';
+  practice.views[0].columns.pop();
   assert.equal(practice.views.length, original.views.length);
+  assert.equal(original.hub.title, 'Claim tagger', 'production has a hub block');
+  assert.equal(practice.hub, undefined, 'a practice page is not a hub');
+  assert.equal(practice.made_from, undefined);
+  // production's Claims views also show Geo Space; a practice page's views keep the columns its manifest froze
+  for (const name of ['Your queue', 'Needs your note', 'Agent disagreed']) {
+    assert.ok(original.views.find((v) => v.name === name).columns.includes('Geo Space'), name);
+    assert.ok(!practice.views.find((v) => v.name === name).columns.includes('Geo Space'), name);
+  }
   assert.deepEqual(practice.tables.tag_decisions.columns, original.tables.tag_decisions.columns);
   assert.deepEqual(dp.writableColumns(practice, 'agent_settings'), ['Name', 'Paused', 'Rulebook edition', 'Last run summary']);
-  // the Claims table: Geo Name, the agent's eight columns, the editor's three, then the other twelve Geo columns; Agent tags, Tags waiting and Verified tags are relations to
-  // the Rulebook, and the "(old)" columns of the earlier builds (Agent tags, Agent notes, Why wrong) are in the structure as retired (a rename makes them on the live table, a new table never does)
+  // the Claims table: Geo Name, the agent's eight columns, the editor's three, then the other eight Geo columns (the lean set of P12); Agent tags, Tags waiting and Verified tags are relations to
+  // the Rulebook, and the fresh structure has no retired "(old)" column at all
   const claims = practice.tables.claims.columns;
   const live = claims.filter((c) => !c.retired);
-  assert.deepEqual(live.map((c) => c.name), [...REVIEW_ORDER, ...CLAIMS_COPY_COLUMNS.slice(1)]);
-  assert.deepEqual(claims.filter((c) => c.retired).map((c) => c.name).sort(), [...RETIRED_COLUMNS].sort());
+  assert.deepEqual(live.map((c) => c.name), [...REVIEW_ORDER, ...CLAIMS_GEO_COLUMNS.slice(1)]);
+  assert.deepEqual(claims.filter((c) => c.retired || c.renamed_from).map((c) => c.name), []);
   assert.ok(!live.some((c) => c.name === 'Why wrong'), 'the editor has no Why wrong on the Claims any more');
   assert.equal(claims.find((c) => c.name === 'Agent reading').type, 'rich_text', 'the agent\'s reading of the decisions, one line per read tag');
   assert.equal(claims.findIndex((c) => c.name === 'Agent reading'), claims.findIndex((c) => c.name === 'Agent remarks') + 1, 'right after Agent remarks');
@@ -746,7 +759,7 @@ test('start --dry-run sends one GET and nothing else; it writes preview.md and s
   const created = plan.requests.filter((q) => q.path === '/databases').map((q) => Object.keys(q.body.initial_data_source.properties));
   assert.ok(created.every((names) => RELATIONS.every((name) => !names.includes(name))), 'a relation is not part of a table create');
   assert.ok(created.every((names) => RETIRED_COLUMNS.every((name) => !names.includes(name))), 'a retired column is never made');
-  assert.deepEqual([...created[1]].sort(), [...REVIEW_ORDER.filter((n) => !RELATIONS.includes(n)), ...CLAIMS_COPY_COLUMNS.slice(1)].sort(), 'the Claims is made with its other columns');
+  assert.deepEqual([...created[1]].sort(), [...REVIEW_ORDER.filter((n) => !RELATIONS.includes(n)), ...CLAIMS_GEO_COLUMNS.slice(1)].sort(), 'the Claims is made with its other columns');
   assert.deepEqual(plan.requests.filter((q) => q.path === '/views').map((q) => q.body.name), ['Rulebook', 'Needs your note', 'Agent disagreed', 'Your queue', 'Lessons waiting']);
   assert.deepEqual(Object.keys(plan.rows), ['rulebook', 'claims', 'tag_decisions', 'agent_settings']);
   assert.deepEqual(Object.values(plan.rows).map((list) => list.length), [1, 9, 5, 1], 'the ledger has a row for each decided claim and none for the four that wait');
@@ -3102,7 +3115,7 @@ test('the Claims table of a built page shows the agent\'s columns first, then th
   assert.equal(r.code, 0, `${r.err}\n${r.out}`);
   assert.match(r.err, /the column order of the Claims view "Table" was set to the review order/);
   const v = claimsViews(w);
-  const geo = CLAIMS_COPY_COLUMNS.slice(1);
+  const geo = CLAIMS_GEO_COLUMNS.slice(1);
   // the table's own view: every column shown, in the order of the structure (the relations were added last and would otherwise come last)
   assert.deepEqual(v.shown(v.own.configuration), [...REVIEW_ORDER, ...geo]);
   assert.deepEqual(v.hidden(v.own.configuration), []);

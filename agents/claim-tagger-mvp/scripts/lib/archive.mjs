@@ -140,6 +140,70 @@ export function archivedIds(root) {
   return ids;
 }
 
+// ---- reading it back (verify) --------------------------------------------------------------------------------------------------------------
+
+// Does the block carry a link to the page (its address holds the page's id, with or without dashes)?
+const linksToPage = (block, pageId) => (block?.type === 'paragraph' ? block.paragraph?.rich_text ?? [] : [])
+  .some((r) => String(r?.href ?? r?.text?.link?.url ?? '').replace(/-/g, '').toLowerCase().includes(pageId));
+
+/**
+ * GET only. What `setup.mjs verify` reads back of the archive step once setup/archive.json exists (P9; a fresh install has no such file and nothing applies):
+ *   the file says "done"; the Archive page is a child of the hub page and its first block links to the hub page; every object that was moved (the eight old pages and tables) has
+ *   the Archive page as its parent; every id that archive.json lists (the Archive page, the moved objects and their data sources, the practice pages and their tables) is on
+ *   the protected lists of config.json.
+ * Returns { applies, differences: [{ kind, detail }] }. A page or table that cannot be read is a difference, not an exception: a check that cannot run is reported, never skipped.
+ */
+export async function verifyArchive({ client, config, root }) {
+  const differences = [];
+  const add = (kind, detail) => differences.push({ kind, detail });
+  const state = readArchiveState(root);
+  if (state.error) {
+    add('archive file', state.error);
+    return { applies: true, differences };
+  }
+  if (!state.exists) return { applies: false, differences };
+  if (state.state !== 'done') {
+    add('archive file', `setup/archive.json says state "${state.state}": the archive step has not finished; run setup.mjs archive again`);
+    return { applies: true, differences };
+  }
+  const data = state.data;
+  const rootId = realId(config?.notion?.parent_page_id);
+  const archiveId = realId(data.archive_page);
+  if (!archiveId) {
+    add('archive page', 'setup/archive.json names no Archive page');
+  } else {
+    try {
+      const parent = parentIdOf((await client.retrievePage(archiveId)).parent);
+      if (parent !== rootId) add('archive page', `the Archive page sits under ${parent ?? 'an unknown parent'}, not under the hub page`);
+    } catch (e) {
+      add('archive page', `the Archive page cannot be read (${short(e?.message ?? e)})`);
+    }
+    try {
+      const first = (await client.retrieveBlockChildren(archiveId))[0];
+      if (!linksToPage(first, rootId)) add('archive page', 'the first line of the Archive page does not link back to the hub page');
+    } catch (e) {
+      add('archive page', `the blocks of the Archive page cannot be read (${short(e?.message ?? e)})`);
+    }
+    for (const m of data.moved ?? []) {
+      const id = realId(m?.id);
+      if (!id) continue;
+      const what = `the ${m.kind === 'page' ? 'page' : 'table'} "${m.title || m.key}"`;
+      try {
+        const object = m.kind === 'page' ? await client.retrievePage(id) : await client.retrieveDatabase(id);
+        const parent = parentIdOf(object.parent);
+        if (parent !== archiveId) add('moved object', `${what} sits under ${parent ?? 'an unknown parent'}, not under the Archive page`);
+      } catch (e) {
+        add('moved object', `${what} cannot be read (${short(e?.message ?? e)})`);
+      }
+    }
+  }
+  const unprotected = [...archivedIds(root)].filter((id) => !isProtected(config, id));
+  if (unprotected.length) {
+    add('protected', `${unprotected.length} id(s) in setup/archive.json are not on the protected lists of config.json (${unprotected.slice(0, 3).join(', ')}${unprotected.length > 3 ? ', ...' : ''}); setup.mjs archive adds them`);
+  }
+  return { applies: true, differences };
+}
+
 // ---- reading -----------------------------------------------------------------------------------------------------------------------------
 
 const blockText = (b) => {

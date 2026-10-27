@@ -57,7 +57,7 @@ import { spawn } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { CLAIMS_COPY_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, isProtected, loadConfig, tableEntry } from './lib/config.mjs';
+import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, isProtected, loadConfig, tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { notionUrl, plural, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
@@ -354,7 +354,7 @@ const viewByKey = (structure, key) => structure.views.find((v) => dp.VIEW_NAMES[
 export function buildSetupPlan(ctx) {
   const { demo, manifest, structure, model } = ctx;
   const parentId = demo.parent.id;
-  const dbPlan = planStructure(structure, { notion: { parent_page_id: parentId } });
+  const dbPlan = planStructure(structure, { notion: { parent_page_id: parentId } }, { inline: true });
   const requests = [];
   const add = (r) => requests.push({ n: requests.length + 1, ...r });
   add({ method: 'GET', path: `/pages/${parentId}`, note: 'read the parent page (the only request of a dry run)' });
@@ -598,7 +598,7 @@ async function ensureContent(ctx) {
 async function ensureDatabases(ctx) {
   const { demo, structure } = ctx;
   const { builder } = ctx.clients;
-  const dbPlan = planStructure(structure, { notion: { parent_page_id: demo.page.id } });
+  const dbPlan = planStructure(structure, { notion: { parent_page_id: demo.page.id } }, { inline: true });
   demo.databases ??= {};
   for (const db of dbPlan.databases) {
     if (recordedDatabase(demo, db.table)) continue;
@@ -637,7 +637,7 @@ async function ensureDatabases(ctx) {
 async function ensureRelations(ctx) {
   const { demo, structure } = ctx;
   const { builder } = ctx.clients;
-  const dbPlan = planStructure(structure, { notion: { parent_page_id: demo.page.id } });
+  const dbPlan = planStructure(structure, { notion: { parent_page_id: demo.page.id } }, { inline: true });
   for (const table of TABLES) {
     const wanted = dbPlan.columns.filter((c) => c.table === table && c.relation_to);
     if (wanted.length === 0) continue;
@@ -807,7 +807,7 @@ async function arrangeClaimsView(ctx) {
   const { demo, structure } = ctx;
   const { builder } = ctx.clients;
   const database = demo.databases.claims;
-  const plan = planStructure(structure, { notion: { parent_page_id: demo.page.id } });
+  const plan = planStructure(structure, { notion: { parent_page_id: demo.page.id } }, { inline: true });
   try {
     const changed = await arrangeOwnViews({ client: builder, plan, table: 'claims', databaseId: database.database_id, dataSourceId: database.data_source_id });
     if (changed.length) ctx.io.err(`walkthrough: the column order of the Claims view${changed.length === 1 ? '' : 's'} ${changed.map((n) => `"${n}"`).join(', ')} was set to the review order`);
@@ -1128,7 +1128,7 @@ export async function verifyDemo(ctx, { loaded, fresh }) {
   const C = claimsEntry.columns; // verified, review_status, notes: the editor's three columns
   const editorCols = [C.verified, C.review_status, C.notes];
   const readingColumn = claimsEntry.write_columns.reading; // the agent's own column on the claims: its reading of the editor's decisions
-  const absentClaims = missingColumns('claims', [...CLAIMS_COPY_COLUMNS, ...Object.values(claimsEntry.write_columns), ...editorCols]);
+  const absentClaims = missingColumns('claims', [...CLAIMS_GEO_COLUMNS, ...Object.values(claimsEntry.write_columns), ...editorCols]);
   if (absentClaims.length) add(`Claims has no column ${absentClaims.join(', ')}`);
   const claimByGeo = new Map(claims.map((r) => [text(r[claimsEntry.key]), r]));
   const rawClaims = new Map(loaded.pages('claims').map((p) => [normId(p.id), p]));
@@ -1144,7 +1144,7 @@ export async function verifyDemo(ctx, { loaded, fresh }) {
       add(`Claims has no row for ${oneLine(c['Geo Name'], 50)}`);
       continue;
     }
-    for (const column of CLAIMS_COPY_COLUMNS) {
+    for (const column of CLAIMS_GEO_COLUMNS) {
       if (!Object.hasOwn(c, column) || !schemaClaims?.properties?.[column]) continue;
       const wantValue = c[column] === '' || (Array.isArray(c[column]) && c[column].length === 0) ? null : c[column];
       if (!sameCell(schemaClaims, column, wantValue, r[column])) add(`the claim ${oneLine(c['Geo Name'], 40)} differs from the manifest in ${column}`);

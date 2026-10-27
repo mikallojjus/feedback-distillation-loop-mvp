@@ -1,36 +1,48 @@
-// The steps of the one-time setup that are not the structure itself: the rows (Rulebook copy, Claims copy, the seeded audit decisions,
+// The steps of the one-time setup that are not the structure itself: the rows (Rulebook, Claims, the seeded audit decisions,
 // the Agent settings row), the first rulebook edition, the canaries and the read-back of everything. scripts/setup.mjs runs them behind
 // the builder session; each one is safe to run again, because it pulls the table first and sends only what is not there.
 //
-//   readTaxonomy(file), readPick(file), readAudit(file)     -> the input files, checked (InputError names what is wrong)
-//   rulebookOps(taxonomy, columns), claimOps(pick, columns), auditOps(audit, claimPages), settingsProperties({ edition, now })
+//   readTaxonomy(file), readPick(file), readAudit(file)     -> the input files, checked (InputError names what is wrong). readPick reads the Geo pick (setup/geo-claims-pick.json,
+//                                                            scripts/geo-pick.mjs, schemas/geo-pick.schema.json, pick_version 1) and refuses the 50-row pick of the first build; each
+//                                                            row's source_pieces ({ name, url } in the file) come back as { text, href } pieces whose text is the Geo Sources cell
+//   rulebookOps(taxonomy, columns), claimOps(pick, columns), auditOps(audit, claimPages, { only }), settingsProperties({ edition, now })
 //                                                            -> [{ key, properties }] / one properties object: what the plans create
 //   buildCanaries(taxonomy)                                  -> the rows of evals/canaries.jsonl
 //   richTextFromPieces(pieces), withLinkedSources(client, byGeoId)   -> Geo Sources with its links (plans carry plain text only)
-//   stepStructure(ctx, parts), stepApiCheck(ctx), stepRulebook(ctx, { from }), stepClaims(ctx, { from }), stepSeedAudit(ctx, { from }),
-//   stepMigrateDecisions(ctx), stepSettings(ctx), stepRubric(ctx, { from }), stepCanaries(ctx, { from }), stepVerify(ctx, { taxonomy, claims, audit })
+//   stepStructure(ctx, parts), stepApiCheck(ctx), stepRulebook(ctx, { from }), stepClaims(ctx, { from }), stepSeedAudit(ctx, { from, claims }),
+//   stepMigrateDecisions(ctx, { claims }), stepSettings(ctx), stepRubric(ctx, { from }), stepCanaries(ctx, { from }), stepVerify(ctx, { taxonomy, claims, audit })
 //                                                            -> { code, lines, errors?, ... }; the caller prints and records the run
-//   migrationOps(claims, ledger, tagPages, columns)           -> the plan of migrate-decisions, pure: { claimOps, ledgerOps, summary }
+//   migrationOps(claims, ledger, tagPages, columns, { only })  -> the plan of migrate-decisions, pure: { claimOps, ledgerOps, summary }
+//
+// The claims come from the Geo pick (decision P6): 200 rows with the lean Geo columns (Geo Name, Geo ID, Geo URL, Geo Space, Geo Created, Geo Sources, Geo Is factual, Geo Tags,
+// Geo Topics). Only the audit claims the pick names in audit.included are seeded and migrated; the pick records the sha256 of the audit file it was made with, and the seed refuses
+// another file. A page-id file (setup/claims-pages.json, setup/rulebook-pages.json) of an earlier build is never merged: a key that is not in the input stops the step.
 //
 // ctx = { root, config, now, run: { id, dir, update(fields) }, log(line), warn(line), restClient(), builderClient({ logFile }) }. Every Notion write is
 // a plan applied by lib/plan.mjs (hard rule 1): checked before the first request, sent in order with a ledger, read back page by page.
-// The three editor columns of the Claims copy (Verified tags, Review status, Challenged tags notes) are written only by migrate-decisions, through a setup plan whose
+// The three editor columns of the Claims table (Verified tags, Review status, Challenged tags notes) are written only by migrate-decisions, through a setup plan whose
 // "Challenged tags notes" starts with the audit prefix (the one-time seeding exception of hard rule 1: the audit's decisions of 9 October move from the ledger to the
 // claims they are about). Neither step writes a reading (Agent reading, Rule, Reading note, Read under) or a claim's Why wrong (the column is retired): on the live copy
 // distill reads the audit's disagreements later (READ-DECISIONS.md, decision 73).
 // seed-audit writes the audit's decisions into the ledger (Tag decisions), whose columns are the agent's; Paused is never written (an unticked box is
 // what a new row has). The ledger's Why wrong of a seeded disagreement is the audit's Agent slip (the reason word; the ledger keeps the column, decision 64).
 
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { CLAIMS_COPY_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, tableEntry } from './config.mjs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
+import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
+import { fileSha256 } from './hash.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './jsonl.mjs';
-import { StructureError, AUTOMATIC_TYPES, loadStructure, planStructure, runStructure, verifyStructure, viewKey, viewUrl } from './notion-build.mjs';
+import {
+  StructureError, AUTOMATIC_TYPES, loadStructure, optionColor, planStructure, runStructure, saveStructure, verifyStructure, viewKey, viewUrl, withGeoOptions,
+} from './notion-build.mjs';
 import { splitRichText, countRequests } from './notion-rest.mjs';
 import { decodePage, normId, sameValue } from './notion-values.mjs';
+import { codeRoot } from './paths.mjs';
 import { AUDIT_PREFIX, PlanError, applyPlan, checkPlan, newPlan } from './plan.mjs';
 import { buildRubric, nextEdition, parseExamples, readRubric, writeEdition } from './rubric.mjs';
+import { validate } from './validate.mjs';
+import { verifyArchive } from './archive.mjs';
 import { builderPaths, readJsonOr, writeJsonPretty } from './builder-registry.mjs';
 import { notionUrl, stampOf } from './editor-words.mjs';
 import { loadPull, pull, richTextPieces } from '../pull.mjs';
@@ -52,7 +64,7 @@ export const NO_REASONING = 'the editor agreed with the auditor; no reasoning wa
 /** "15 Oct 14:22" in local time: the way the reports and Last run summary write a moment (the same function the loop scripts use). */
 export const formatWhen = stampOf;
 
-/** The link to a row of the Claims copy, the way Notion writes a page address: https://www.notion.so/<page id without dashes>. */
+/** The link to a row of the Claims table, the way Notion writes a page address: https://www.notion.so/<page id without dashes>. */
 export const claimLink = notionUrl;
 
 const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -96,18 +108,46 @@ export function readTaxonomy(file) {
   return { ...t, counterparts: t.counterparts ?? [], read_at: iso(t.read_at, 'the taxonomy file\'s read_at') };
 }
 
-/** setup/claims-pick.json: { seed, rows: [claims with every real column, page_id, url, source_pieces ...] }, checked. */
+/** A Geo id the way two of them are compared: dashes and case do not matter. */
+const geoKey = (v) => normId(String(v ?? ''));
+
+/** The file setup reads the claims from when it is not given another: the pick that scripts/geo-pick.mjs writes. */
+export const PICK_FILE = 'geo-claims-pick.json';
+const PICK_HINT = 'the claims are picked from Geo now: node agents/claim-tagger-mvp/scripts/geo-pick.mjs --seed <s> --audit <file>';
+
+let pickSchemaCache = null;
+const pickSchema = () => (pickSchemaCache ??= readJson(join(codeRoot(), 'schemas', 'geo-pick.schema.json')));
+
+/** The pieces of a Geo Sources cell for a row of the pick: each source's name linked to its address, one source to a line. The text of the pieces is the row's Geo Sources. */
+function sourcePieces(row) {
+  const pieces = [];
+  for (const [i, s] of (row.source_pieces ?? []).entries()) {
+    if (i > 0) pieces.push({ text: '\n', href: null });
+    pieces.push({ text: s.name, href: s.url });
+  }
+  return pieces;
+}
+
+/**
+ * setup/geo-claims-pick.json (scripts/geo-pick.mjs, schemas/geo-pick.schema.json, pick_version 1), checked: the schema, one row for each Geo ID, and every audit claim it says it
+ * includes is one of its rows. The 50-row pick of the first build (no pick_version) is refused with a pointer to geo-pick.mjs. Each row's source_pieces ({ name, url } in the file)
+ * come back as { text, href } pieces, the form the Geo Sources cell and its links are made from; the rest of the pick is as it was read.
+ */
 export function readPick(file) {
   const p = readInput(file, 'the claims pick');
-  if (!isPlain(p) || !Array.isArray(p.rows) || p.rows.length === 0) throw new InputError(`the claims pick ${file} has no rows`);
+  if (isPlain(p) && p.pick_version === undefined && Array.isArray(p.rows)) {
+    throw new InputError(`the claims pick ${file} is the 50-row pick of the first build (it has no pick_version), which setup no longer reads; ${PICK_HINT}`);
+  }
+  const verdict = validate(pickSchema(), p);
+  if (!verdict.ok) throw new InputError(`the claims pick ${file} is not a Geo pick (schemas/geo-pick.schema.json):\n  - ${verdict.errors.slice(0, 8).join('\n  - ')}\n${PICK_HINT}`);
   const ids = new Set();
-  for (const [i, row] of p.rows.entries()) {
-    if (!isPlain(row) || typeof row['Geo ID'] !== 'string' || row['Geo ID'].trim() === '') throw new InputError(`the claims pick: row ${i + 1} has no Geo ID`);
-    if (typeof row['Geo Name'] !== 'string' || row['Geo Name'].trim() === '') throw new InputError(`the claims pick: "${row['Geo ID']}" has no Geo Name`);
+  for (const row of p.rows) {
     if (ids.has(row['Geo ID'])) throw new InputError(`the claims pick: the Geo ID ${row['Geo ID']} appears twice`);
     ids.add(row['Geo ID']);
   }
-  return p;
+  const stray = p.audit.included.filter((id) => !ids.has(geoKey(id)));
+  if (stray.length) throw new InputError(`the claims pick says it includes ${stray.length} audit claim(s) that are not among its rows (${stray.slice(0, 3).join(', ')}${stray.length > 3 ? ', ...' : ''})`);
+  return { ...p, rows: p.rows.map((row) => ({ ...row, source_pieces: sourcePieces(row) })) };
 }
 
 const OUTCOMES = ['Applies', 'Does not apply'];
@@ -140,11 +180,11 @@ export function columnsOf(root, table) {
     return structure.tables[table].columns.filter((c) => !AUTOMATIC_TYPES.includes(c.type) && c.retired !== true).map((c) => c.name);
   } catch (e) {
     if (!(e instanceof StructureError)) throw e;
-    return table === 'rulebook' ? [...RULEBOOK_COLUMNS] : [...CLAIMS_COPY_COLUMNS];
+    return table === 'rulebook' ? [...RULEBOOK_COLUMNS] : [...CLAIMS_GEO_COLUMNS];
   }
 }
 
-/** One create per taxonomy row: every column of the Rulebook copy that the file fills (null, '' and [] are left unset; page_id is never written). */
+/** One create per taxonomy row: every column of the Rulebook that the file fills (null, '' and [] are left unset; page_id is never written). */
 export function rulebookOps(taxonomy, columns) {
   return taxonomy.rows.map((row) => {
     const properties = {};
@@ -157,7 +197,11 @@ export function rulebookOps(taxonomy, columns) {
   });
 }
 
-/** One create per picked claim: the Geo columns of the structure that the row carries (a retired column is not one of them), the agent's columns left empty. */
+/**
+ * One create per picked claim: the Geo columns of the structure that the row carries (a retired column is not one of them), the agent's columns left empty. A value is written the way
+ * the column takes it: Geo Space a select name, Geo Created a day (the date's start), Geo Tags a list of option names, Geo Is factual a box (null leaves it unticked), Geo Sources and
+ * Geo Topics text. Only a value that is there is written; the plan holds plain values, and the links of Geo Sources go in beside it (withLinkedSources).
+ */
 export function claimOps(pick, columns, { keyColumn = 'Geo ID', skip = [] } = {}) {
   return pick.rows.map((row) => {
     const properties = {};
@@ -193,12 +237,36 @@ export function auditProperties(decision, claimPageId) {
   return properties;
 }
 
-export function auditOps(audit, claimPages) {
-  const missing = audit.decisions.filter((d) => !claimPages[d.geo_id]).map((d) => d.geo_id);
+/** The ops that seed the audit's decisions. `only` is a Set of Geo IDs (the pick's audit.included): the other decisions are not seeded (without it, all of them are). */
+export function auditOps(audit, claimPages, { only = null } = {}) {
+  const decisions = only ? audit.decisions.filter((d) => only.has(geoKey(d.geo_id))) : audit.decisions;
+  const missing = decisions.filter((d) => !claimPages[d.geo_id]).map((d) => d.geo_id);
   if (missing.length) {
-    throw new InputError(`${missing.length} audited claim(s) have no row in the Claims copy yet (${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ', ...' : ''}); run "setup.mjs claims" first`);
+    throw new InputError(`${missing.length} audited claim(s) have no row in the Claims table yet (${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ', ...' : ''}); run "setup.mjs claims" first`);
   }
-  return audit.decisions.map((d) => ({ key: `${d.geo_id}::${TAG}`, properties: auditProperties(d, claimPages[d.geo_id]) }));
+  return decisions.map((d) => ({ key: `${d.geo_id}::${TAG}`, properties: auditProperties(d, claimPages[d.geo_id]) }));
+}
+
+/**
+ * Which decisions of the audit file the pick seeds: { decisions, left, included } (the pick's audit.included, in the file's order; `left` the others, each with the reason the pick
+ * gives for leaving it out). Throws InputError when `file` is not the audit file the pick was made with (its sha256 is another), or when the pick includes a claim the file does not have.
+ * Without `file` the bytes are not compared.
+ */
+export function auditForPick(audit, pick, file = null) {
+  if (file) {
+    const have = fileSha256(file);
+    if (have !== pick.audit.sha256) {
+      throw new InputError(`the audit file ${file} is not the one the pick was made with (its sha256 is ${have.slice(0, 12)}…, the pick recorded ${pick.audit.sha256.slice(0, 12)}…); give the file that geo-pick.mjs was run with (${pick.audit.file})`);
+    }
+  }
+  const included = new Set(pick.audit.included.map(geoKey));
+  const known = new Set(audit.decisions.map((d) => geoKey(d.geo_id)));
+  const unknown = [...included].filter((id) => !known.has(id));
+  if (unknown.length) throw new InputError(`the pick includes ${unknown.length} audit claim(s) that the audit file does not hold (${unknown.slice(0, 3).join(', ')}${unknown.length > 3 ? ', ...' : ''})`);
+  const reasons = new Map(pick.audit.left_out.map((l) => [geoKey(l.geo_id), l.reason]));
+  const decisions = audit.decisions.filter((d) => included.has(geoKey(d.geo_id)));
+  const left = audit.decisions.filter((d) => !included.has(geoKey(d.geo_id))).map((d) => ({ geo_id: d.geo_id, claim: d.claim, reason: reasons.get(geoKey(d.geo_id)) ?? 'the pick lists it neither as included nor as left out' }));
+  return { decisions, left, included };
 }
 
 // Decision 26: the row is created with these three columns only. Paused is an editor's column, and a new row has it unticked, so it is never written.
@@ -313,6 +381,9 @@ async function readyPull(ctx, tables) {
   return { pullId: r.pullId, loaded, pulled: loaded.pulled(tables), schemas: Object.fromEntries(tables.map((t) => [t, loaded.schema(t)])) };
 }
 
+/** The columns of the Claims whose options are taken from the Geo pick (setup.mjs structure --options-from). */
+const OPTIONS_FROM_PICK = Object.freeze(['Geo Tags', 'Geo Space']);
+
 // Select values in the ops that are not options of the column in the structure: Notion would make them up, and an option cannot be taken away again.
 export function unknownOptions(root, table, ops) {
   let structure;
@@ -329,7 +400,10 @@ export function unknownOptions(root, table, ops) {
       const column = columns.get(name);
       if (!column || (column.type !== 'select' && column.type !== 'multi_select')) continue;
       for (const v of Array.isArray(value) ? value : [value]) {
-        if (typeof v === 'string' && v !== '' && !column.options.includes(v)) out.push(`"${op.key}": ${name} is "${v}", which is not one of ${column.options.join(', ')}`);
+        if (typeof v === 'string' && v !== '' && !column.options.includes(v)) {
+          const hint = OPTIONS_FROM_PICK.includes(name) ? ` (the options of ${name} come from the Geo pick: run "setup.mjs structure --options-from <pick file>" and then build again, or take the claim out of the pick)` : '';
+          out.push(`"${op.key}": ${name} is "${v}", which is not one of ${column.options.join(', ')}${hint}`);
+        }
       }
     }
   }
@@ -358,7 +432,9 @@ async function createRows(ctx, { table, label, ops, wrap = (c) => c, rubricEditi
   const { root, config } = ctx;
   const unknown = unknownOptions(root, table, ops);
   if (unknown.length) {
-    return { code: EXIT.INVALID, lines: [], errors: [`${label}: nothing was written, because Notion would add options that the approved structure does not have:`, ...unknown.map((u) => `  ${u}`)], pages: {}, created: 0, existing: 0 };
+    const shown = unknown.slice(0, 10).map((u) => `  ${u}`);
+    if (unknown.length > shown.length) shown.push(`  ... and ${unknown.length - shown.length} more`);
+    return { code: EXIT.INVALID, lines: [], errors: [`${label}: nothing was written, because Notion would add options that the approved structure does not have:`, ...shown], pages: {}, created: 0, existing: 0 };
   }
   const ready = await readyPull(ctx, [table]);
   if (ready.stop) return { code: ready.stop.code, lines: [], errors: ready.stop.lines, pages: {}, created: 0, existing: 0 };
@@ -401,12 +477,19 @@ async function createRows(ctx, { table, label, ops, wrap = (c) => c, rubricEditi
 
 const defaultPath = (root, name) => join(root, 'setup', name);
 
-/** pages, databases, views (or all three): the structure through the builder client. */
+/**
+ * pages, databases, views, hub (or all four): the structure through the builder client. With a hub block in the structure the tables are made as full-page tables, the pages after
+ * them, and the hub part puts the link lines at the top of the hub page and says in plain lines ("hub page: ...") what else on it is out of place. Those lines do not fail the step:
+ * the page is put in order by a person (a drag in Notion), and verify is clean only when it is.
+ */
 export async function stepStructure(ctx, parts) {
   const { root, config } = ctx;
   const structure = loadStructure(root);
   const plan = planStructure(structure, config);
   writeJsonPretty(join(ctx.run.dir, 'structure-plan.json'), plan);
+  if (structure.hub && parts.length === 1 && parts[0] === 'pages') {
+    ctx.warn('the pages are made before the tables here, so they will stand above them on the hub page; "setup.mjs build" (or databases first) puts them in order');
+  }
   const client = ctx.builderClient({ logFile: join(builderPaths(root).dir, 'requests.jsonl') });
   const result = await runStructure({ plan, client, root, config, log: ctx.log, parts });
   const lines = [];
@@ -430,6 +513,10 @@ export async function stepStructure(ctx, parts) {
     const arranged = Object.entries(result.arranged).flatMap(([t, names]) => names.map((name) => `${t}: ${name} (column order)`));
     if (brought.length || arranged.length) lines.push(`views brought to the structure: ${[...brought, ...arranged].join('; ')}`);
   }
+  if (result.hub) {
+    lines.push(`hub page: ${result.created.hub_links ? `${result.created.hub_links} link line(s) added at the top` : 'the link lines are there already'}${result.hub.ok ? '; the body is in order' : ''}`);
+    for (const d of result.hub.differences) lines.push(`hub page: ${d.detail}`);
+  }
   for (const w of result.warnings) ctx.warn(w);
   let code = result.code;
   const failed = Object.entries(result.views).flatMap(([table, views]) => Object.entries(views).filter(([, v]) => v.status === 'failed').map(([name, v]) => ({ table, name, message: v.message })));
@@ -447,6 +534,46 @@ export async function stepStructure(ctx, parts) {
   }
   return { code, lines, errors, result, viewsFailed: failed, fatal: Boolean(result.stopped) };
 }
+
+/**
+ * setup.mjs structure --options-from <pick file>: the options of the Claims' two Geo select columns, from files only (no session, no Notion). Geo Tags gets the pick's tag_names
+ * (sorted), Geo Space the names of config.geo.spaces in their order; the colours follow from the names alone (notion-build optionColor), so they are the same on every run. Writes
+ * setup/structure.json when an option changed and says what; run again it says "nothing changed" and does not touch the file. `config` must hold the geo block.
+ */
+export function stepOptionsFrom(ctx, { pickFile } = {}) {
+  const { root, config } = ctx;
+  const pick = readPick(pickFile);
+  const spaces = config?.geo?.spaces;
+  if (!Array.isArray(spaces) || spaces.length === 0 || spaces.some((s) => typeof s?.name !== 'string' || s.name === '')) {
+    throw new InputError('config.json has no geo.spaces (the six spaces of the pick), so the options of Geo Space cannot be set');
+  }
+  const spaceNames = spaces.map((s) => s.name);
+  const known = new Set(spaceNames);
+  const strayRows = pick.rows.filter((r) => !known.has(r['Geo Space']));
+  if (strayRows.length) throw new InputError(`${strayRows.length} claim(s) of the pick have a Geo Space that is not one of config.json's geo.spaces (${[...new Set(strayRows.map((r) => r['Geo Space']))].slice(0, 3).join(', ')}); the pick and the config disagree`);
+  const listed = new Set(pick.tag_names);
+  const unlisted = [...new Set(pick.rows.flatMap((r) => r['Geo Tags']))].filter((t) => !listed.has(t));
+  if (unlisted.length) throw new InputError(`the pick's tag_names does not list ${unlisted.length} tag(s) that its rows carry (${unlisted.slice(0, 3).join(', ')}); the pick file is not consistent`);
+  const structure = loadStructure(root);
+  const { structure: next, changes, changed } = withGeoOptions(structure, { tagNames: pick.tag_names, spaceNames });
+  const colours = (column, names) => `${column} colours: ${names.map((n) => `${n} ${optionColor('claims', column, n)}`).join(', ')}`;
+  const lines = [];
+  for (const c of changes) {
+    const was = [c.added.length ? `added ${c.added.join(', ')}` : null, c.removed.length ? `removed ${c.removed.join(', ')}` : null, c.reordered ? 'put in order' : null].filter(Boolean);
+    const options = next.tables.claims.columns.find((x) => x.name === c.column).options;
+    lines.push(was.length ? `structure: ${c.column}: ${was.join('; ')} (${options.length} in all)` : `structure: ${c.column}: its ${options.length} options are the pick's already`);
+  }
+  if (changed) {
+    const file = saveStructure(root, next);
+    lines.push(`structure: ${relativePath(root, file)} written`);
+    lines.push('structure: a table that is built already keeps the options it has (the build adds no option to a column that is there); verify names the options it lacks. Run this before the first build');
+  } else lines.push('structure: nothing changed');
+  lines.push(colours('Geo Space', next.tables.claims.columns.find((x) => x.name === 'Geo Space').options));
+  lines.push(colours('Geo Tags', next.tables.claims.columns.find((x) => x.name === 'Geo Tags').options));
+  return { code: EXIT.OK, lines, changed, changes };
+}
+
+const relativePath = (root, file) => file.startsWith(root) ? file.slice(root.length).replace(/^[\\/]+/, '').replace(/\\/g, '/') : file;
 
 /** One GET of the parent page under the builder version: proof that the token and the version work. Reads only. */
 export async function stepApiCheck(ctx) {
@@ -474,21 +601,37 @@ function writePagesFile(file, map) {
   writeJsonAtomic(file, sorted);
 }
 
-/** The 13 rows of the Rulebook copy from the taxonomy file; setup/rulebook-pages.json keeps { Name: page_id } for the rubric. */
+/**
+ * The page-id file of an earlier build is never merged into a new one: a file that holds a key the current input does not have (a claim of the old 50-row pick, a tag the taxonomy
+ * no longer lists) belongs to another set of tables, and its ids point there. The step stops (exit 2) and says to set the file aside; every key the input does have is written again from
+ * the table, so none of the old ids can stay.
+ */
+function refuseStaleIds(file, keys, what) {
+  if (!existsSync(file)) return;
+  const current = new Set(keys);
+  const stale = Object.keys(readJsonOr(file, {})).filter((k) => !current.has(k));
+  if (stale.length === 0) return;
+  throw new InputError(`${file} holds ${stale.length} ${what} that the current input does not have (${stale.slice(0, 3).join(', ')}${stale.length > 3 ? ', ...' : ''}): it is the file of an earlier build, and its ids point at tables that are archived. Set it aside (git mv it to setup/archive-2026-10/) and run the step again; ids of an old build are never merged`);
+}
+
+/** The 13 rows of the Rulebook from the taxonomy file; setup/rulebook-pages.json keeps { Name: page_id } for the rubric. */
 export async function stepRulebook(ctx, { from } = {}) {
   const { root } = ctx;
   const taxonomy = readTaxonomy(from ?? defaultPath(root, 'taxonomy-issue.json'));
+  const file = defaultPath(root, 'rulebook-pages.json');
+  refuseStaleIds(file, taxonomy.rows.map((r) => r.Name), 'tag(s)');
   const ops = rulebookOps(taxonomy, columnsOf(root, 'rulebook'));
   const done = await createRows(ctx, { table: 'rulebook', label: 'rulebook', ops });
-  const file = defaultPath(root, 'rulebook-pages.json');
-  if (Object.keys(done.pages).length) writePagesFile(file, { ...readJsonOr(file, {}), ...done.pages });
+  if (Object.keys(done.pages).length) writePagesFile(file, done.pages); // the whole table as it is now (the rows read plus the rows made): ids of an earlier file are not kept
   return done;
 }
 
-/** The picked claims in the Claims copy, Geo Sources with its links; setup/claims-pages.json keeps { geo_id: page_id } for the seeded decisions. */
+/** The picked claims in the Claims table, Geo Sources with its links; setup/claims-pages.json keeps { geo_id: page_id } for the seeded decisions. */
 export async function stepClaims(ctx, { from } = {}) {
   const { root, config } = ctx;
-  const pick = readPick(from ?? defaultPath(root, 'claims-pick.json'));
+  const pick = readPick(from ?? defaultPath(root, PICK_FILE));
+  const file = defaultPath(root, 'claims-pages.json');
+  refuseStaleIds(file, pick.rows.map((r) => r['Geo ID']), 'claim(s)');
   const entry = tableEntry(config, 'claims');
   // the agent's columns (Agent reading among them) and the editor's three stay empty: a picked row carries the real table's own Review status, notes and relation to the taxonomy, none of which is copied
   const ops = claimOps(pick, columnsOf(root, 'claims'), { keyColumn: entry.key, skip: [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims')] });
@@ -500,29 +643,47 @@ export async function stepClaims(ctx, { from } = {}) {
   writeJsonPretty(join(ctx.run.dir, 'rich-text.json'), Object.fromEntries([...byGeoId].map(([id, pieces]) => [id, pieces])));
   const wrap = (client) => withLinkedSources(client, byGeoId, { column: sourcesColumn, keyColumn: entry.key, onWarning: ctx.warn });
   const done = await createRows(ctx, { table: 'claims', label: 'claims', ops, wrap });
-  const file = defaultPath(root, 'claims-pages.json');
-  if (Object.keys(done.pages).length) writePagesFile(file, { ...readJsonOr(file, {}), ...done.pages });
+  if (Object.keys(done.pages).length) writePagesFile(file, done.pages); // the whole table as it is now (the rows read plus the rows made): ids of an earlier file are not kept
   return done;
 }
 
-/** The audit's decisions as decided rows of Tag decisions: the one place a script writes the editor's three columns. */
-export async function stepSeedAudit(ctx, { from } = {}) {
+/**
+ * The audit's decisions as decided rows of Tag decisions: the one place a script writes the editor's three columns. Only the claims the pick includes (audit.included) are seeded; the
+ * audit file must be the one the pick was made with (the sha256 the pick recorded), and every claim of the file that the pick left out is named with its reason. A pick that includes
+ * none seeds nothing and says so. `claims` is the pick (setup/geo-claims-pick.json when not given).
+ */
+export async function stepSeedAudit(ctx, { from, claims } = {}) {
   const { root } = ctx;
+  const pick = readPick(claims ?? defaultPath(root, PICK_FILE));
   const audit = readAudit(from);
+  const { decisions, left } = auditForPick(audit, pick, from);
+  const leftLines = left.map((l) => `seed-audit: left out of the pick, so not seeded: ${l.geo_id} (${l.reason})`);
+  // the file the later checks read: the audit file as it is, byte for byte (the sha256 the pick recorded is of these bytes)
+  const copy = () => {
+    const target = defaultPath(root, 'audit-decisions.json');
+    if (resolve(from) !== resolve(target)) {
+      mkdirSync(dirname(target), { recursive: true });
+      copyFileSync(from, target);
+    }
+  };
+  if (decisions.length === 0) {
+    copy();
+    return { code: EXIT.OK, lines: [`seed-audit: the pick includes none of the ${audit.decisions.length} audit claims, so no decision was seeded`, ...leftLines], created: 0, existing: 0, pages: {} };
+  }
   const claimPages = readJsonOr(defaultPath(root, 'claims-pages.json'), null);
   if (!claimPages) throw new InputError('setup/claims-pages.json does not exist: run "setup.mjs claims" first');
-  const ops = auditOps(audit, claimPages);
+  const ops = auditOps(audit, claimPages, { only: new Set(decisions.map((d) => geoKey(d.geo_id))) });
   ctx.run.update({ note: AUDIT_NOTE });
   const done = await createRows(ctx, { table: 'tag_decisions', label: 'seed-audit', ops });
-  // the file the later checks read: the decisions that were seeded
-  writeJsonAtomic(defaultPath(root, 'audit-decisions.json'), audit);
+  copy();
   if (done.code === EXIT.OK && done.created > 0) done.lines.push(`seed-audit: ${AUDIT_NOTE}`);
+  if (done.code === EXIT.OK) done.lines.push(`seed-audit: ${decisions.length} of the ${audit.decisions.length} audit claims are in the pick${left.length ? '; the others:' : ''}`, ...leftLines);
   return done;
 }
 
 /**
  * What migrate-decisions writes (CLAIMS-REVIEW.md, section 3), worked out from the pull. `claims` are the rows of norm/claims.jsonl, `ledger` the rows of norm/queue.jsonl,
- * `tagPages` maps a tag name to the page id of its Rulebook copy row, `columns` is the claims entry's `columns` and `write_columns`.
+ * `tagPages` maps a tag name to the page id of its Rulebook row, `columns` is the claims entry's `columns` and `write_columns`.
  *   a claim with ledger rows that hold a decision from the audit (Your reasoning starts with the audit prefix) and no decision of its own yet gets, on the claim:
  *   Verified tags (the tags with outcome Applies), Review status Reviewed and Challenged tags notes (the rows' Your reasoning, which carries "From the audit of 9 October");
  *   and on each of those ledger rows Decided under, the edition the row's proposal was made under (when it records one). The editor fills three claim columns since the reading
@@ -532,7 +693,7 @@ export async function stepSeedAudit(ctx, { from } = {}) {
  *   audit (an editor decides on the claim, never a script).
  * Returns { claimOps: [{ key, page_id, properties, expect }], ledgerOps: [{ key, page_id, properties }], summary }.
  */
-export function migrationOps(claims, ledger, tagPages, columns) {
+export function migrationOps(claims, ledger, tagPages, columns, { only = null } = {}) {
   const byGeo = new Map();
   for (const row of ledger) {
     const at = text(row.Key).lastIndexOf('::');
@@ -541,10 +702,14 @@ export function migrationOps(claims, ledger, tagPages, columns) {
     if (!byGeo.has(geo)) byGeo.set(geo, []);
     byGeo.get(geo).push(row);
   }
-  const summary = { carried: 0, alreadyCarried: 0, notFromAudit: 0, noClaim: 0, decidedUnder: 0, confidence: 0 };
+  const summary = { carried: 0, alreadyCarried: 0, notFromAudit: 0, noClaim: 0, decidedUnder: 0, confidence: 0, notIncluded: 0 };
   const claimOps = [];
   const ledgerOps = [];
   for (const [geo, rows] of [...byGeo].sort(([a], [b]) => (a < b ? -1 : 1))) {
+    if (only && !only.has(geoKey(geo))) {
+      summary.notIncluded += rows.length; // `only`: the audit claims the pick includes; a ledger row for any other claim is left alone
+      continue;
+    }
     const claim = claims.find((c) => c.geo_id === geo);
     if (!claim) {
       summary.noClaim += rows.length;
@@ -559,7 +724,7 @@ export function migrationOps(claims, ledger, tagPages, columns) {
     if (audit.length && !hasEditorWork) {
       const applies = audit.filter((r) => r['Tag outcome'] === 'Applies').map((r) => r.Tag);
       const missing = applies.filter((t) => !tagPages[t]);
-      if (missing.length) throw new InputError(`the claim ${geo} was decided Applies for ${missing.join(', ')}, which has no row in the Rulebook copy`);
+      if (missing.length) throw new InputError(`the claim ${geo} was decided Applies for ${missing.join(', ')}, which has no row in the Rulebook`);
       properties[columns.verified] = applies.map((t) => tagPages[t]);
       properties[columns.review_status] = 'Reviewed';
       properties[columns.notes] = audit.map((r) => text(r['Your reasoning'])).join('\n');
@@ -590,9 +755,11 @@ export function migrationOps(claims, ledger, tagPages, columns) {
  * (the editor columns are accepted only on a claim whose Challenged tags notes start with the audit prefix), applied with the ledger, read back page by page. A second run finds
  * everything done and writes nothing.
  */
-export async function stepMigrateDecisions(ctx) {
+export async function stepMigrateDecisions(ctx, { claims: pickFile } = {}) {
   const { root, config } = ctx;
   const entry = tableEntry(config, 'claims');
+  // only the audit claims the pick includes are carried over (the other decisions of the audit were never seeded)
+  const only = new Set(readPick(pickFile ?? defaultPath(root, PICK_FILE)).audit.included.map(geoKey));
   const ready = await readyPull(ctx, ['claims', 'tag_decisions', 'rulebook']);
   if (ready.stop) return { code: ready.stop.code, lines: [], errors: ready.stop.lines };
   const tagPages = {};
@@ -601,7 +768,7 @@ export async function stepMigrateDecisions(ctx) {
   const columns = {
     verified: entry.columns.verified, review_status: entry.columns.review_status, notes: entry.columns.notes, confidence: entry.write_columns.confidence,
   };
-  const { claimOps, ledgerOps, summary } = migrationOps(ready.loaded.claims() ?? [], ready.loaded.queue() ?? [], tagPages, columns);
+  const { claimOps, ledgerOps, summary } = migrationOps(ready.loaded.claims() ?? [], ready.loaded.queue() ?? [], tagPages, columns, { only });
   if (summary.carried > 0) ctx.run.update({ note: AUDIT_NOTE });
   const unknown = unknownOptions(root, 'claims', claimOps);
   if (unknown.length) {
@@ -611,7 +778,8 @@ export async function stepMigrateDecisions(ctx) {
   const left = [
     summary.alreadyCarried ? `${summary.alreadyCarried} were carried over already` : null,
     summary.notFromAudit ? `${summary.notFromAudit} decided ledger row(s) are not from the audit and were left (an editor decides on the claim)` : null,
-    summary.noClaim ? `${summary.noClaim} ledger row(s) have no claim in the Claims copy` : null,
+    summary.noClaim ? `${summary.noClaim} ledger row(s) have no claim in the Claims table` : null,
+    summary.notIncluded ? `${summary.notIncluded} ledger row(s) are for claims the pick does not include and were left` : null,
   ].filter(Boolean);
   if (claimOps.length + ledgerOps.length === 0) {
     return { code: EXIT.OK, lines: [`migrate-decisions: nothing to carry over${left.length ? `; ${left.join('; ')}` : ''}`], summary };
@@ -653,14 +821,29 @@ export async function stepSettings(ctx) {
   return createRows(ctx, { table: 'agent_settings', label: 'settings', ops, rubricEdition: rubric.edition });
 }
 
-/** The first rulebook edition, built from the taxonomy file with the page ids of the Rulebook copy's rows. Local files only. */
+export const FIRST_EDITION_REASON = 'setup: copied from the taxonomy';
+export const FRESH_EDITION_REASON = 'setup: fresh tables under the hub (P9), copied from the taxonomy';
+
+/**
+ * The rulebook edition, built from the taxonomy file with the page ids of the Rulebook's rows. Local files only. Three cases:
+ *   no edition yet             the first one, edition <today>.1 ("setup: copied from the taxonomy")
+ *   an edition in force with the same rules and the same Rulebook page ids as the rows now
+ *                              "in force already": its files are checked and nothing changes (a run again says so)
+ *   an edition in force with the same rules (the same rubric_hash) but other page ids
+ *                              the tables are new (the hub rebuild, P9): the next edition, same rules, the new page ids ("setup: fresh tables under the hub (P9), copied from the
+ *                              taxonomy"); the history keeps the old edition
+ *   an edition in force with other rules
+ *                              refused: a rule changes only through a gate PASS and the promote step
+ */
 export function stepRubric(ctx, { from } = {}) {
   const { root, config } = ctx;
   const taxonomy = readTaxonomy(from ?? defaultPath(root, 'taxonomy-issue.json'));
-  const pages = readJsonOr(defaultPath(root, 'rulebook-pages.json'), null);
+  const file = defaultPath(root, 'rulebook-pages.json');
+  const pages = readJsonOr(file, null);
   if (!pages) throw new InputError('setup/rulebook-pages.json does not exist: run "setup.mjs rulebook" first');
+  refuseStaleIds(file, taxonomy.rows.map((r) => r.Name), 'tag(s)');
   const missing = taxonomy.rows.filter((r) => !pages[r.Name]).map((r) => r.Name);
-  if (missing.length) throw new InputError(`${missing.length} tag(s) have no row in the Rulebook copy yet (${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ', ...' : ''}); run "setup.mjs rulebook" first`);
+  if (missing.length) throw new InputError(`${missing.length} tag(s) have no row in the Rulebook yet (${missing.slice(0, 3).join(', ')}${missing.length > 3 ? ', ...' : ''}); run "setup.mjs rulebook" first`);
   const rows = taxonomy.rows.map((row) => ({ ...row, page_id: pages[row.Name] }));
   const source = {
     database_id: taxonomy.database_id ?? config.notion.sources.taxonomy.database_id,
@@ -670,14 +853,24 @@ export function stepRubric(ctx, { from } = {}) {
   };
   const existing = readRubric(root);
   const now = ctx.now();
-  const rubric = buildRubric(rows, { config, edition: existing ? existing.edition : nextEdition(null, now), source, now: existing ? existing.built_at : now });
-  if (existing && existing.rubric_hash !== rubric.rubric_hash) {
-    throw new InputError(`edition ${existing.edition} is in force already with other rules; the rubric step only makes the first edition`);
+  let rubric = buildRubric(rows, { config, edition: existing ? existing.edition : nextEdition(null, now), source, now: existing ? existing.built_at : now });
+  let reason = FIRST_EDITION_REASON;
+  let verb = 'written';
+  if (existing) {
+    if (existing.rubric_hash !== rubric.rubric_hash) {
+      throw new InputError(`edition ${existing.edition} is in force already with other rules; the rubric step makes the first edition, or the next one when only the Rulebook's page ids are new, and never changes a rule (a rule changes through the safety check and promote)`);
+    }
+    const theirs = new Map(existing.tags.map((t) => [t.name, t.page_id ? normId(t.page_id) : null]));
+    const fresh = rubric.tags.some((t) => (t.page_id ? normId(t.page_id) : null) !== (theirs.get(t.name) ?? null));
+    if (fresh) {
+      rubric = buildRubric(rows, { config, edition: nextEdition(existing.edition, now), source, now });
+      reason = FRESH_EDITION_REASON;
+      verb = `written (the Rulebook is a fresh table, so its page ids are new; the rules are those of edition ${existing.edition})`;
+    } else verb = 'is in force already (files checked)';
   }
-  const written = writeEdition(root, rubric, { reason: 'setup: copied from the taxonomy' });
+  const written = writeEdition(root, rubric, { reason });
   ctx.run.update({ rubric_edition: written.edition });
   const judged = rubric.tags.filter((t) => t.judged).map((t) => t.name);
-  const verb = existing ? 'is in force already (files checked)' : 'written';
   return { code: EXIT.OK, lines: [`rubric: edition ${written.edition} ${verb}; ${rubric.tags.length} tags, ${judged.length} with rules (${judged.join(', ') || 'none'})`], edition: written.edition };
 }
 
@@ -718,7 +911,7 @@ function loadChecked(add, table, what, fn) {
 }
 
 /**
- * Read everything back and compare: the structure, the row counts, the Rulebook copy against the taxonomy file field by field, the claims
+ * Read everything back and compare: the structure, the row counts, the Rulebook against the taxonomy file field by field, the claims
  * against the pick (Geo IDs, Geo columns, the links of Geo Sources), the seeded decisions, the Agent settings row. Writes runs/builder/verify.json.
  */
 export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFile, audit: auditFile } = {}) {
@@ -731,6 +924,11 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
 
   const checked = await verifyStructure({ client, config, structure });
   differences.push(...checked.differences);
+  // with a hub block (P9 to P11) the archive is read back too: the Archive page under the hub with its link back, what was moved under it, every archived id protected
+  if (structure.hub) {
+    const archived = await verifyArchive({ client, config, root });
+    for (const d of archived.differences) add('archive', d.kind, d.detail);
+  }
   // config.json notion.views: the address of every view that exists (the scripts fall back to the table's address for a view that is not there)
   const linked = config.notion?.views ?? {};
   for (const v of structure.views) {
@@ -762,11 +960,11 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
     const { ds, rows } = data.rulebook;
     const keyColumn = tableEntry(config, 'rulebook').key;
     const byName = new Map(rows.map((r) => [text(r.props[keyColumn]).trim(), r]));
-    if (rows.length !== taxonomy.rows.length) add('rulebook', 'row count', `${rows.length} rows in the Rulebook copy, ${taxonomy.rows.length} in the taxonomy file`);
+    if (rows.length !== taxonomy.rows.length) add('rulebook', 'row count', `${rows.length} rows in the Rulebook, ${taxonomy.rows.length} in the taxonomy file`);
     for (const want of taxonomy.rows) {
       const got = byName.get(want.Name);
       if (!got) {
-        add('rulebook', 'missing row', `"${want.Name}" is not in the Rulebook copy`);
+        add('rulebook', 'missing row', `"${want.Name}" is not in the Rulebook`);
         continue;
       }
       for (const column of columnsOf(root, 'rulebook')) {
@@ -776,18 +974,18 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
         }
       }
     }
-    for (const name of byName.keys()) if (!taxonomy.rows.some((r) => r.Name === name)) add('rulebook', 'extra row', `"${name}" is in the Rulebook copy but not in the taxonomy file`);
+    for (const name of byName.keys()) if (!taxonomy.rows.some((r) => r.Name === name)) add('rulebook', 'extra row', `"${name}" is in the Rulebook but not in the taxonomy file`);
   }
 
-  const pick = loadChecked(add, 'claims', 'the claims pick', () => readPick(claimsFile ?? defaultPath(root, 'claims-pick.json')));
+  const pick = loadChecked(add, 'claims', 'the claims pick', () => readPick(claimsFile ?? defaultPath(root, PICK_FILE)));
   if (pick && data.claims) {
     const { ds, rows } = data.claims;
     const entry = tableEntry(config, 'claims');
     const byId = new Map(rows.map((r) => [text(r.props[entry.key]).trim(), r]));
     const wantIds = pick.rows.map((r) => r[entry.key]);
-    if (rows.length !== pick.rows.length) add('claims', 'row count', `${rows.length} rows in the Claims copy, ${pick.rows.length} in the pick`);
-    for (const id of wantIds) if (!byId.has(id)) add('claims', 'missing row', `the claim ${id} is not in the Claims copy`);
-    for (const id of byId.keys()) if (!wantIds.includes(id)) add('claims', 'extra row', `the claim ${id} is in the Claims copy but not in the pick`);
+    if (rows.length !== pick.rows.length) add('claims', 'row count', `${rows.length} rows in the Claims table, ${pick.rows.length} in the pick`);
+    for (const id of wantIds) if (!byId.has(id)) add('claims', 'missing row', `the claim ${id} is not in the Claims table`);
+    for (const id of byId.keys()) if (!wantIds.includes(id)) add('claims', 'extra row', `the claim ${id} is in the Claims table but not in the pick`);
     const notGeo = [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims')];
     const geoColumns = columnsOf(root, 'claims').filter((c) => !notGeo.includes(c) && c !== entry.key);
     for (const want of pick.rows) {
@@ -804,13 +1002,18 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
     }
   }
 
+  // The audit's decisions that were seeded are the pick's audit.included, from the audit file the pick was made with (its sha256). The others are named by the seed step and are not checked.
   const auditPath = auditFile ?? (existsSync(defaultPath(root, 'audit-decisions.json')) ? defaultPath(root, 'audit-decisions.json') : null);
   const audit = loadChecked(add, 'tag_decisions', 'the audit file', () => readAudit(auditPath));
-  if (audit && data.tag_decisions) {
+  let seeded = null;
+  if (audit && pick) seeded = loadChecked(add, 'tag_decisions', 'the audit file against the pick', () => auditForPick(audit, pick, auditPath));
+  else if (audit) add('tag_decisions', 'input', 'the seeded decisions are not checked: they follow the pick (audit.included), and the pick could not be read');
+  const decisions = seeded?.decisions ?? [];
+  if (seeded && data.tag_decisions) {
     const { ds, rows } = data.tag_decisions;
     const claimPages = readJsonOr(defaultPath(root, 'claims-pages.json'), null);
     const byKey = new Map(rows.map((r) => [text(r.props.Key).trim(), r]));
-    for (const d of audit.decisions) {
+    for (const d of decisions) {
       const key = `${d.geo_id}::${TAG}`;
       const got = byKey.get(key);
       if (!got) {
@@ -824,16 +1027,16 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
       }
       if (!text(got.props['Your reasoning']).startsWith(AUDIT_PREFIX)) add('tag_decisions', 'seeded row', `${key}: Your reasoning does not start with "${AUDIT_PREFIX}"`);
     }
-    if (rows.length < audit.decisions.length) add('tag_decisions', 'row count', `${rows.length} rows in Tag decisions, at least ${audit.decisions.length} seeded decisions expected`);
+    if (rows.length < decisions.length) add('tag_decisions', 'row count', `${rows.length} rows in Tag decisions, at least ${decisions.length} seeded decisions expected`);
   }
 
   // the audit's decisions on the claims themselves (migrate-decisions): Reviewed, the Applies tags in the relation, the audit prefix in the notes
-  if (audit && data.claims) {
+  if (seeded && data.claims) {
     const entry = tableEntry(config, 'claims');
     const rulebookKey = tableEntry(config, 'rulebook').key;
     const names = new Map((data.rulebook?.rows ?? []).map((r) => [normId(r.page_id), text(r.props[rulebookKey]).trim()]));
     const byId = new Map(data.claims.rows.map((r) => [text(r.props[entry.key]).trim(), r]));
-    for (const d of audit.decisions) {
+    for (const d of decisions) {
       const got = byId.get(d.geo_id);
       if (!got) continue; // the missing claim is reported above
       const p = got.props;

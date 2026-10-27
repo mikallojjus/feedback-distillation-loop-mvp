@@ -21,9 +21,9 @@ export const TABLE_SPECS = Object.freeze({
     'Geo Status': 'select', 'Geo Tag ID': 'rich_text', Polarity: 'select', Status: 'select', 'Verified on': 'date', 'When to use': 'rich_text', 'Work tags': 'multi_select',
   },
   claims: {
-    'Geo Name': 'title', 'Geo ID': 'rich_text', 'Geo URL': 'url', 'Geo Sources': 'rich_text', 'Geo Tags': 'multi_select', 'Geo Topics': 'rich_text', 'Geo Score': 'number',
-    'Geo Supporting arguments': 'rich_text', 'Geo Opposing arguments': 'rich_text', 'Geo Related people': 'rich_text', 'Geo Related projects': 'rich_text',
-    'Geo Is factual': 'checkbox', 'Geo Name source': 'select', 'Agent tags': { type: 'relation' }, 'Agent confidence': 'number', 'Agent reasons': 'rich_text',
+    'Geo Name': 'title', 'Geo ID': 'rich_text', 'Geo URL': 'url', 'Geo Sources': 'rich_text', 'Geo Tags': 'multi_select', 'Geo Topics': 'rich_text',
+    'Geo Space': { type: 'select', options: ['U.S. Politics', 'World affairs', 'AI', 'Health', 'Crypto', 'Technology'] }, 'Geo Created': 'date',
+    'Geo Is factual': 'checkbox', 'Agent tags': { type: 'relation' }, 'Agent confidence': 'number', 'Agent reasons': 'rich_text',
     'Agent status': { type: 'select', options: ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read'] }, 'Tags waiting': { type: 'relation' },
     'Agent edition': 'rich_text', 'Agent remarks': 'rich_text', 'Agent reading': 'rich_text',
     'Verified tags': { type: 'relation' }, 'Review status': { type: 'select', options: ['To review', 'Reviewed'] }, 'Challenged tags notes': 'rich_text',

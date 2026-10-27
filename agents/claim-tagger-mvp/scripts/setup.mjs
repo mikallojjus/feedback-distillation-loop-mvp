@@ -9,24 +9,30 @@
 //   node agents/claim-tagger-mvp/scripts/setup.mjs register database --id <id> --name <role>  register a table the session created
 //
 //   The structure (needs no session: files and reads only)
-//   setup.mjs structure --from-proposal <STRUCTURE.md>   write setup/structure.json from the approved proposal; print the counts
+//   setup.mjs structure --from-proposal <STRUCTURE.md> [--replace]   write setup/structure.json from the approved proposal of the first build; print the counts. A structure that says where it was
+//                                                         made from (made_from: the hub structure of P10 to P12) is not written over unless --replace is given
+//   setup.mjs structure --options-from <pick file>        set the options of Geo Tags (the pick's tag_names) and Geo Space (config.geo.spaces) in setup/structure.json; colours follow from the
+//                                                         names, so running it again changes nothing. Files only, no session
 //   setup.mjs preview                                     print what the structure would build
 //   setup.mjs api-check                                   one GET of the parent page under the builder API version -> runs/builder/api-check.json
 //   setup.mjs verify [--taxonomy f] [--claims f] [--audit f]   read everything back and list the differences -> runs/builder/verify.json
 //
 //   The build (needs the session: runs/SETUP)
-//   setup.mjs pages | databases | views | build           the sub-pages, the five tables and the columns a table lacks, the views (build = all three), resumable and safe to run again
+//   setup.mjs pages | databases | views | build           the sub-page (Onboarding), the five tables (full-page tables) and the columns a table lacks, the views, and the hub page's link lines and a
+//                                                         report of its body (build = all four; with a hub block in the structure the tables come first), resumable and safe to run again
 //                                                         on a table that exists: it renames the columns the structure renames (Agent tags and Agent notes to "(old)", Claim quality
 //                                                         tags — verified to Verified tags), adds the columns the table lacks (the revision of 21 October: Agent tags as a relation,
 //                                                         Agent status, Tags waiting, Agent edition, Agent remarks), renames a view of an older build that the structure renames
 //                                                         (not made again), and brings every view of a table to the structure: its filter, sorts, shown columns in order, wrap; the
 //                                                         Claims copy's own default view gets the column order too. It says what it did, and a second run does nothing
 //   setup.mjs rulebook [--from setup/taxonomy-issue.json] the 13 rows of the Rulebook copy (a setup plan, applied and read back)
-//   setup.mjs claims [--from setup/claims-pick.json]      the 50 rows of the Claims copy, Geo Sources with its links
-//   setup.mjs seed-audit [--from <audit json>]            the audit's ten decisions as decided rows of Tag decisions (the agent's ledger)
-//   setup.mjs migrate-decisions                           the decisions in Tag decisions carried over, once, to the claims they are about (Reviewed, Verified tags, the
+//   setup.mjs claims [--from setup/geo-claims-pick.json]  the rows of the Geo pick (200) in the Claims table, Geo Sources with its links; the pick comes from geo-pick.mjs
+//   setup.mjs seed-audit [--from <audit json>] [--claims <pick>]  the audit decisions the pick includes (audit.included; the file must be the one the pick was made with) as decided rows of
+//                                                         Tag decisions (the agent's ledger); the audit claims the pick left out are named with their reasons
+//   setup.mjs migrate-decisions [--claims <pick>]         the decisions in Tag decisions carried over, once, to the claims they are about (Reviewed, Verified tags, the
 //                                                         audit's words); Decided under on the ledger rows; Agent confidence on the claims that wait
-//   setup.mjs rubric [--from setup/taxonomy-issue.json]   rubric/ edition <today>.1 from the taxonomy file (local files only)
+//   setup.mjs rubric [--from setup/taxonomy-issue.json]   rubric/ edition <today>.1 from the taxonomy file (local files only); with an edition in force that has the same rules but other
+//                                                         Rulebook page ids (the fresh tables, P9) it writes the next edition; other rules are refused
 //   setup.mjs canaries [--from setup/taxonomy-issue.json] evals/canaries.jsonl (local file only)
 //   setup.mjs settings                                    the one Agent settings row (run rubric first)
 //   setup.mjs all --taxonomy <f> --claims <f> --audit <f> every step above in order, ending with verify; run it again after a stop
@@ -64,7 +70,7 @@ import { builderPaths, logLine, readJsonOr, register } from './lib/builder-regis
 import { loadConfig } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { writeJsonAtomic } from './lib/jsonl.mjs';
-import { StructureError, countStructure, loadStructure, renderPreview, saveStructure, structureFromProposal } from './lib/notion-build.mjs';
+import { StructureError, countStructure, loadStructure, renderPreview, saveStructure, structureFromProposal, structurePath } from './lib/notion-build.mjs';
 import { BUILDER_API_VERSION, clientFromConfig, requestLogger } from './lib/notion-rest.mjs';
 import { agentRoot, isMain, repoRoot, runId } from './lib/paths.mjs';
 import { PlanError } from './lib/plan.mjs';
@@ -76,9 +82,9 @@ export { builderPaths, register };
 export const USAGE = [
   'usage: setup.mjs builder open --reason "<why>" | builder close | builder status',
   '       setup.mjs register page|database --id <id> --name <role>',
-  '       setup.mjs structure --from-proposal <STRUCTURE.md> | preview | api-check | verify [--taxonomy f] [--claims f] [--audit f]',
-  '       setup.mjs pages | databases | views | build            (needs a builder session)',
-  '       setup.mjs rulebook [--from f] | claims [--from f] | seed-audit [--from f] | migrate-decisions | rubric [--from f] | canaries [--from f] | settings',
+  '       setup.mjs structure --from-proposal <STRUCTURE.md> [--replace] | structure --options-from <pick file> | preview | api-check | verify [--taxonomy f] [--claims f] [--audit f]',
+  '       setup.mjs pages | databases | views | hub | build      (needs a builder session)',
+  '       setup.mjs rulebook [--from f] | claims [--from f] | seed-audit [--from f] [--claims pick] | migrate-decisions [--claims pick] | rubric [--from f] | canaries [--from f] | settings',
   '       setup.mjs all --taxonomy <f> --claims <f> --audit <f>',
   '       setup.mjs archive [--plan-only]                        (needs a builder session; not part of "all"; run it before build)',
 ].join('\n');
@@ -122,18 +128,19 @@ const INPUTS = { taxonomy: { type: 'string' }, claims: { type: 'string' }, audit
 
 // setup: the command needs an open builder session (and stops when the agent is paused)
 const COMMANDS = {
-  structure: { setup: false, options: { 'from-proposal': { type: 'string' } } },
+  structure: { setup: false, options: { 'from-proposal': { type: 'string' }, replace: { type: 'boolean' }, 'options-from': { type: 'string' } } },
   preview: { setup: false },
   'api-check': { setup: false },
   verify: { setup: false, options: INPUTS },
   pages: { setup: true },
   databases: { setup: true },
   views: { setup: true },
+  hub: { setup: true },
   build: { setup: true },
   rulebook: { setup: true, options: FROM },
   claims: { setup: true, options: FROM },
-  'seed-audit': { setup: true, options: FROM },
-  'migrate-decisions': { setup: true },
+  'seed-audit': { setup: true, options: { ...FROM, claims: { type: 'string' } } },
+  'migrate-decisions': { setup: true, options: { claims: { type: 'string' } } },
   rubric: { setup: true, options: FROM },
   canaries: { setup: true, options: FROM },
   settings: { setup: true },
@@ -142,9 +149,19 @@ const COMMANDS = {
 };
 
 // These commands build in the hub page, so they wait until the archive step has finished (or was never run: a fresh install has no setup/archive.json).
-const ARCHIVE_GATED = new Set(['pages', 'databases', 'views', 'build', 'all']);
+const ARCHIVE_GATED = new Set(['pages', 'databases', 'views', 'hub', 'build', 'all']);
 
 const ALL_STEPS = ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'];
+// With a hub block in the structure (P10, P11) the tables come before the pages, so that Onboarding stands below them, and the hub part follows the views.
+const ALL_STEPS_HUB = ['api-check', 'databases', 'pages', 'views', 'hub', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'];
+
+function stepsOfAll(root) {
+  try {
+    return loadStructure(root).hub ? ALL_STEPS_HUB : ALL_STEPS;
+  } catch {
+    return ALL_STEPS; // no structure file: the first step that needs it says so
+  }
+}
 
 const quote = (s) => (/[\s"']/.test(s) ? `"${s.replace(/"/g, '\\"')}"` : s);
 const resumeCommand = (argv) => `node agents/claim-tagger-mvp/scripts/setup.mjs ${argv.map(quote).join(' ')}`.trim();
@@ -226,8 +243,17 @@ async function dispatch(name, values, ctx) {
   const { root } = ctx;
   switch (name) {
     case 'structure': {
+      if (values['options-from'] !== undefined) {
+        if (values['from-proposal'] !== undefined || values.replace === true) throw new steps.InputError('structure --options-from takes no other option: it changes the options of the structure that is there');
+        return steps.stepOptionsFrom(ctx, { pickFile: path(values['options-from']) });
+      }
       const from = path(values['from-proposal']) ?? join(repoRoot(), 'docs', 'mvp-2026-11', 'STRUCTURE.md');
       if (!existsSync(from)) throw new steps.InputError(`the proposal does not exist (${from})`);
+      // setup/structure.json made for the hub (it says where from, made_from) is not written over by the old approved proposal, which has none of the hub, the lean Geo columns or the Geo options
+      const there = readJsonOr(structurePath(root), null);
+      if (typeof there?.made_from === 'string' && values.replace !== true) {
+        throw new steps.InputError(`setup/structure.json was made from ${there.made_from} and --from-proposal would replace it with the first build's structure; give --replace if that is what you mean`);
+      }
       const structure = structureFromProposal(readFileSync(from, 'utf8'));
       const file = saveStructure(root, structure);
       const c = countStructure(structure);
@@ -243,16 +269,18 @@ async function dispatch(name, values, ctx) {
       return steps.stepStructure(ctx, ['databases']);
     case 'views':
       return steps.stepStructure(ctx, ['views']);
+    case 'hub':
+      return steps.stepStructure(ctx, ['hub']);
     case 'build':
-      return steps.stepStructure(ctx, ['pages', 'databases', 'views']);
+      return steps.stepStructure(ctx, ['pages', 'databases', 'views', 'hub']);
     case 'rulebook':
       return steps.stepRulebook(ctx, { from: path(values.from) });
     case 'claims':
       return steps.stepClaims(ctx, { from: path(values.from) });
     case 'seed-audit':
-      return steps.stepSeedAudit(ctx, { from: path(values.from) ?? defaultAudit(root) });
+      return steps.stepSeedAudit(ctx, { from: path(values.from) ?? defaultAudit(root), claims: path(values.claims) });
     case 'migrate-decisions':
-      return steps.stepMigrateDecisions(ctx);
+      return steps.stepMigrateDecisions(ctx, { claims: path(values.claims) });
     case 'rubric':
       return steps.stepRubric(ctx, { from: path(values.from) });
     case 'canaries':
@@ -304,7 +332,7 @@ async function runAll(argv, values, { root, config, env, io }) {
   const overall = beginRun({ root, kind: 'setup-all', argv, now });
   const results = [];
   let code = EXIT.OK;
-  for (const name of ALL_STEPS) {
+  for (const name of stepsOfAll(root)) {
     const { out, run } = await runOne(name, childArgv(name, values), stepValues(name, values), { root, config, env, io });
     results.push({ step: name, run_id: run.id, exit_code: out.code });
     show(io, out);
@@ -328,7 +356,8 @@ function stepValues(name, values) {
   switch (name) {
     case 'rulebook': case 'rubric': case 'canaries': return { from: values.taxonomy };
     case 'claims': return { from: values.claims };
-    case 'seed-audit': return { from: values.audit };
+    case 'seed-audit': return { from: values.audit, claims: values.claims };
+    case 'migrate-decisions': return { claims: values.claims };
     case 'verify': return { taxonomy: values.taxonomy, claims: values.claims, audit: values.audit };
     default: return {};
   }
@@ -376,7 +405,7 @@ async function runCommand(name, args, io, env) {
     }
   }
   let config = null;
-  if (name !== 'structure' && name !== 'preview') {
+  if ((name !== 'structure' && name !== 'preview') || (name === 'structure' && values['options-from'] !== undefined)) {
     try {
       config = env.config ?? loadConfig(root);
     } catch (e) {
