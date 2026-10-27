@@ -16,9 +16,13 @@
 //   reads    retrievePage, retrieveDatabase, retrievePropertyItem, retrieveBlockChildren (new), retrieveDataSource (new), retrieveView (new),
 //            listViews (new), queryDatabase / queryAll, queryDataSource / queryDataSourceAll (new; all pages of a query, following the cursor)
 //   writes   createPage (a row), createPageUnderPage (new), createDatabase (new), createView (new), updatePage, updateDataSource (new), updateView (new:
-//            rename a view, or change its filter, sorts or configuration), appendBlocks
-// There is deliberately no call that takes anything away: nothing removes, hides or moves a page, a database, a view or a block out of
-// sight (hard rule 8: rows are superseded, never removed), and a test reads this file's source to keep it so.
+//            rename a view, or change its filter, sorts or configuration), appendBlocks (new: with a position), movePage (new), moveDatabase (new)
+//
+// Moves. movePage (POST /pages/{id}/move) and moveDatabase (PATCH /databases/{id}) change the parent page of a page or a table that exists; each sends
+// the new parent and nothing else, and both need the builder API version. They exist for one job only: the archive step of setup (setup.mjs archive,
+// lib/archive.mjs), by hard rule 8 as amended by decision P9. Nothing is ever removed; only setup, in a builder session, may move the agent's own pages
+// and tables within the hub, and every move is read back. There is still no call or field in this file that deletes, trashes or archives anything: no
+// method but GET, POST and PATCH can be sent, and a test reads this file's source to keep it so.
 //
 // API versions. DEFAULT_API_VERSION is what every old call runs on. The data source calls need 2025-09-03 or later, and the database
 // and view calls need BUILDER_API_VERSION (the reference allows only that value for them): build a second client for those,
@@ -27,7 +31,8 @@
 //
 // Pacing is a token bucket (default 3 requests per second, Notion's average limit). A 429 sleeps for Retry-After seconds and
 // retries (at most 5 times); a 5xx, a 409 or a network failure retries with 0.5, 1 and 2 s of backoff (at most 3 times);
-// any other 4xx throws a NotionError carrying status, code and Notion's message.
+// any other 4xx throws a NotionError carrying status, code and Notion's message. A move names a fixed new parent, so asking twice does what asking once
+// does: it is retried like a read, on a 5xx, a 409, a network failure and a 429 (the setup also reads the parent before and after every move).
 //
 // One exception: a create (POST /pages, POST /databases or POST /views: createPage, createPageUnderPage, createDatabase, createView) is
 // never sent twice. When its answer is lost (a network failure, a 5xx, a 409, or a 2xx whose body cannot be read) the page, database or
@@ -176,7 +181,14 @@ export function createClient({
   const rate = Number(requestsPerSecond);
   if (!(rate > 0)) throw new RangeError(`createClient: requestsPerSecond must be positive, got ${requestsPerSecond}`);
   const bucket = tokenBucket({ rate, sleep, now });
-  const headers = { Authorization: `Bearer ${token}`, 'Notion-Version': apiVersion, 'Content-Type': 'application/json' };
+  // API versions are dates, so they compare as strings. From the builder version on, blocks are placed with `position`; before it, with the flat `after`.
+  const usesPosition = typeof apiVersion === 'string' && apiVersion >= BUILDER_API_VERSION;
+  const needsBuilder = (call) => {
+    if (!usesPosition) {
+      throw new Error(`${call} needs Notion-Version ${BUILDER_API_VERSION} or later and this client sends ${apiVersion}; build the client with clientFromConfig(config, { apiVersion: BUILDER_API_VERSION })`);
+    }
+  };
+  const headers ={ Authorization: `Bearer ${token}`, 'Notion-Version': apiVersion, 'Content-Type': 'application/json' };
   const needles = [...new Set([token, enc(token)])];
   const scrub = (text) => needles.reduce((s, needle) => s.split(needle).join('[token]'), String(text ?? ''));
 
@@ -326,12 +338,49 @@ export function createClient({
    */
   const listViews = async (databaseId) => listAll('/views', { database_id: requireId('listViews: databaseId', databaseId) });
 
-  /** Append blocks in requests of at most 100; returns the created blocks. */
-  async function appendBlocks(blockId, children) {
+  // A position for appendBlocks, checked and written out in full: { type: 'start' }, { type: 'end' } or { type: 'after_block', after_block: { id } }.
+  function checkedPosition(position) {
+    const bad = (why) => new TypeError(`appendBlocks: position ${why} (expected { type: 'start' }, { type: 'end' } or { type: 'after_block', after_block: { id } })`);
+    if (position === null || typeof position !== 'object' || Array.isArray(position)) throw bad('is not an object');
+    const extra = Object.keys(position).filter((k) => k !== 'type' && k !== 'after_block');
+    if (extra.length) throw bad(`has an unknown key "${extra[0]}"`);
+    if (position.type === 'start' || position.type === 'end') {
+      if (position.after_block !== undefined) throw bad(`${position.type} takes no after_block`);
+      return { type: position.type };
+    }
+    if (position.type === 'after_block') {
+      const id = position.after_block?.id;
+      if (typeof id !== 'string' || id.trim() === '') throw bad('after_block needs after_block.id, the block to go after');
+      return { type: 'after_block', after_block: { id } };
+    }
+    throw bad(`has the type ${JSON.stringify(position.type)}`);
+  }
+
+  /**
+   * Append blocks in requests of at most 100; returns the created blocks. `position` says where they go (the end when it is left out):
+   *   { type: 'start' } | { type: 'end' } | { type: 'after_block', after_block: { id } }
+   * On the builder client (2026-03-11 or later) it is sent as the `position` object. On an older client (2022-06-28) an after_block is sent as the old
+   * flat `after`, an end sends nothing, and a start is refused: the old API cannot put blocks first. A list of more than 100 blocks goes in several
+   * requests; every request after the first continues right after the last block made, so the order holds.
+   */
+  async function appendBlocks(blockId, children, { position } = {}) {
+    let place = position === undefined || position === null ? null : checkedPosition(position);
+    if (place?.type === 'start' && !usesPosition) {
+      throw new TypeError(`appendBlocks: a position of type "start" needs Notion-Version ${BUILDER_API_VERSION} or later and this client sends ${apiVersion}; the old API cannot put blocks first`);
+    }
     const results = [];
     for (let i = 0; i < children.length; i += MAX_CHILDREN) {
-      const res = await request('PATCH', `/blocks/${enc(blockId)}/children`, { children: children.slice(i, i + MAX_CHILDREN) });
-      results.push(...(res.results ?? []));
+      const body = { children: children.slice(i, i + MAX_CHILDREN) };
+      if (place && usesPosition) body.position = place;
+      else if (place?.type === 'after_block') body.after = place.after_block.id;
+      const res = await request('PATCH', `/blocks/${enc(blockId)}/children`, body);
+      const made = res.results ?? [];
+      results.push(...made);
+      if (place && place.type !== 'end' && i + MAX_CHILDREN < children.length) {
+        const last = made.at(-1)?.id;
+        if (!last) throw new Error(`appendBlocks: Notion answered without the blocks it made, so the next ${MAX_CHILDREN} cannot be placed after them`);
+        place = { type: 'after_block', after_block: { id: last } };
+      }
     }
     return results;
   }
@@ -444,10 +493,33 @@ export function createClient({
     return request('PATCH', `/views/${enc(requireId('updateView: viewId', viewId))}`, body);
   }
 
+  /**
+   * New. Move a page under another page: POST /pages/{id}/move with exactly { parent: { type: 'page_id', page_id } } (the page's sub-pages and tables go with
+   * it). Used by the archive step of setup only (hard rule 8 as amended by P9). A move names a fixed parent, so it is safe to send again: it is retried
+   * like a read. Needs BUILDER_API_VERSION; on another client it throws before anything is sent.
+   */
+  async function movePage(pageId, { parentPageId } = {}) {
+    needsBuilder('movePage');
+    requireId('movePage: pageId', pageId);
+    requireId('movePage: parentPageId', parentPageId);
+    return request('POST', `/pages/${enc(pageId)}/move`, { parent: { type: 'page_id', page_id: parentPageId } });
+  }
+
+  /**
+   * New. Move a table under another page: PATCH /databases/{id} with exactly { parent: { type: 'page_id', page_id } } and no other field (no is_inline, no
+   * flag that would hide it). Used by the archive step of setup only. Retried like a read; needs BUILDER_API_VERSION.
+   */
+  async function moveDatabase(databaseId, { parentPageId } = {}) {
+    needsBuilder('moveDatabase');
+    requireId('moveDatabase: databaseId', databaseId);
+    requireId('moveDatabase: parentPageId', parentPageId);
+    return request('PATCH', `/databases/${enc(databaseId)}`, { parent: { type: 'page_id', page_id: parentPageId } });
+  }
+
   return {
     queryDatabase, queryAll, retrieveDatabase, retrievePage, retrievePropertyItem, createPage, updatePage, appendBlocks,
     createDatabase, createPageUnderPage, createView, retrieveView, listViews, retrieveDataSource, queryDataSource, queryDataSourceAll,
-    updateDataSource, updateView, retrieveBlockChildren,
+    updateDataSource, updateView, retrieveBlockChildren, movePage, moveDatabase,
   };
 }
 

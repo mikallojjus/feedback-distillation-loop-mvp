@@ -51,6 +51,7 @@
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { archivedIds } from './archive.mjs';
 import { TABLES, isProtected, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { readJson, writeJsonAtomic } from './jsonl.mjs';
@@ -689,6 +690,7 @@ function stopWith(ctx, what, e) {
 }
 
 // The child pages or databases of the parent page (listed once per run): a thing made by an earlier run that stopped before it was recorded is found here.
+// A child whose id is protected, or that setup/archive.json lists (the first build, set aside by `setup.mjs archive`, decision P9), is never adopted: it counts as not found.
 async function findChild(ctx, type, title) {
   if (ctx.children === null) {
     try {
@@ -698,7 +700,8 @@ async function findChild(ctx, type, title) {
       ctx.result.warnings.push(`the blocks under the parent page could not be listed (${e.message}); a page or table made by an earlier stopped run would not be noticed`);
     }
   }
-  const hits = ctx.children.filter((b) => b?.type === type && (b[type]?.title ?? '') === title);
+  ctx.archived ??= archivedIds(ctx.root);
+  const hits = ctx.children.filter((b) => b?.type === type && (b[type]?.title ?? '') === title && !isProtected(ctx.config, b.id) && !ctx.archived.has(normId(b.id)));
   if (hits.length > 1) return 'many';
   return hits.length === 1 ? { id: hits[0].id } : null;
 }
