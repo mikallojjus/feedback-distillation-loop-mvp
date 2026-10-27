@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 43): "The hub and the Geo claims" (P5 to P17, `HUB-AND-GEO-CLAIMS.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9. The root page is "Claim tagger", the hub. The first build sits in its archive sub-page. A fresh set of five full-page tables holds 200 Geo claims, and verify is clean. The tag run read all 200 (398 writes, all read back): 6 claims wait in Your queue and 194 are Done. Production status counts unread claims (decision 112). 2,220 tests pass. Next: step 10, people's decisions, of which only 6 are in Your queue (entry 43).
+- Phase (entry 45): "The hub and the Geo claims" (P5 to P20, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. Since 28 October an editor's Claude may decide claims on the editor's instruction through the Notion connector (P18 to P20, `/claim-tagger decide`); it is built, reviewed and merged, but not run live yet. Next: step 10, the 6 claims decided by a person or by Claude on their word, then distill.
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -432,3 +432,52 @@ The design is in `CLAUDE-DECIDES.md`, engineering decisions 113 to 116:
 Before deciding, the product owner connected the Notion connector in this session.
 
 Next: a Sonnet coder builds it in a worktree off this branch (2,220 tests expected at the start), then an Opus review; no live decision until the merge and the product owner's word.
+
+### 45. The decide step built, reviewed twice and merged (2026-10-28)
+
+Done: a Sonnet coder built the decide step on `claude-decides`, checking the base first (31a4f0c, 2,220 tests). The commit 2123b82 holds:
+- `decide.mjs` (`list`, `open`, `check`);
+- the guard hook's allowance (decision 114) and the transcript check's decide mode (decision 115);
+- the runner's `run decide`;
+- both skills, CLAUDE.md hard rule 1 in the product owner's wording, AGENT.md, CONTRACTS section 19, EDITOR-HANDOVER, README, the backlog row of decision 116;
+- `decide.mjs` among the allowed scripts in `.claude/settings.json`. The connector's write entries stay under "ask", so the editor sees each write.
+
+The Opus review said NO-GO. It fed the hook 131 inputs, found nothing outside the spec allowed, and caught 59 of 66 mutants. Findings:
+- **M1:** a check that could not read Notion said "nothing was done" after the writes had gone, with the marker gone, so a second "decide the first 6" would decide six other claims.
+- **S1:** `open` trusted a pull of any age and could overwrite a person's tags or note.
+- **S2:** paths after `open` that never reached `check`.
+- **S3:** a mismatch Next line that led nowhere.
+- **S4:** peek-style URLs the hook and the connector read differently.
+- **S5:** `--run-id SETUP` or `--run-id DECIDING` made the marker folders.
+- **S6:** the hook ignored a pause.
+- **S7:** the apostrophe form broke the transcript check.
+- **S8:** test gaps.
+
+A fix pass (dcb6a6d) addressed every finding:
+- **M1:** check gets its own "sent, but could not be read back" sentence, and a `decide check` re-reads the newest run without a write window.
+- **S1:** `open` pulls itself and refuses Reviewed claims or a decision that removes tags or note words.
+- **S2:** every path ends in `check`, which names the claims "not written".
+- **S3:** two Next lines.
+- **S4:** every id in `page_id` must be the listed one.
+- **S5:** reserved run ids (`lib/reserved-run-ids.mjs`, also for judge), and markers must be regular files, SETUP included.
+- **S6:** the hook honours `runs/PAUSED`.
+- **S7:** apostrophes go into the JSON as the escape backslash-u0027.
+
+The Opus re-check confirmed each fix:
+- 165 hook cases; the 3 that changed verdict are the peek URLs S4 meant to close;
+- 86 of 90 mutants caught, the 4 survivors equivalent or minor;
+- 2,288 tests.
+
+It left one text MUST: the skill's and CONTRACTS' apostrophe instruction had lost its escape and told Claude to write a plain apostrophe, which would close the quoted argument.
+
+Merged as 040ae6f, then fixed in this session:
+- the escape is back in SKILL.md and CONTRACTS.md, written by a node script. The tool-call layer decodes a backslash-u sequence in Edit arguments, which is how it was lost twice. A test now pins it.
+- the S1 refusal's Next line is the editor's: "type /claim-tagger decide again; Claude keeps the tags and words already there".
+- "correct it" for one claim;
+- two stray formatting edits in `lib/paths.mjs` and `transcript-check.mjs` reverted.
+
+Verified: after these fixes 2,289 tests pass, 0 fail (`evidence/01-tests/node-test-claims-hub-decide.txt`; 2,288 plus the test that pins the apostrophe escape). No Notion write in this entry; nothing was decided live.
+
+Not verified live: whether the connector treats markdown characters in a note as formatting; whether `[]` clears a relation the way `null` does; the connector's async answer. CONTRACTS section 19 lists these. The guard trusts a marker file on disk, as it trusts `runs/SETUP`: it stops mistakes, not a session set on getting around it.
+
+Next: the first live decide, on the product owner's word. "decide the first 6" on Claims writes through the connector, with one permission prompt per claim. Then distill for runbook step 10.

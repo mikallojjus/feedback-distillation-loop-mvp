@@ -50,7 +50,7 @@ export function safeName(s) {
   return /^\.*$/.test(out) ? out.replace(/\./g, '-') || '-' : out;
 }
 
-const two =(n) => String(n).padStart(2, '0');
+const two = (n) => String(n).padStart(2, '0');
 
 /** YYYYMMDDTHHMMSSZ-<kind> in UTC, built from parts because an ISO string has colons. */
 export function runId(kind, date = new Date()) {

@@ -217,7 +217,7 @@ export function loadReviewColumn(root = agentRoot()) {
   }
 }
 
-const columnPattern =(name) => new RegExp(`(?<![A-Za-z0-9])${String(name).trim().split(/[\s_-]+/).map(escapeRe).join('[\\s_-]+')}(?![A-Za-z0-9])`, 'i');
+const columnPattern = (name) => new RegExp(`(?<![A-Za-z0-9])${String(name).trim().split(/[\s_-]+/).map(escapeRe).join('[\\s_-]+')}(?![A-Za-z0-9])`, 'i');
 
 // ---- one Bash call -----------------------------------------------------------------------------------------------------------
 

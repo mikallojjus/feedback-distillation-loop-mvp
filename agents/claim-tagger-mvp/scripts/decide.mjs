@@ -421,7 +421,7 @@ export async function openDecisions(opts = {}) {
       const sentence = removing.length === 1
         ? `nothing was done, because ${quoted(removing[0].claim.claim)} already has ${what(removing[0])} that the decision would remove.`
         : `nothing was done, because ${named(removing.map((x) => x.claim))} already have Verified tags or note words that the decision would remove.`;
-      throw stop(EXIT.INVALID, removing.map((x) => `${x.claim.geo_id} already has ${what(x)}`).join('; '), sentence, 'Next: keep them, or ask the editor.');
+      throw stop(EXIT.INVALID, removing.map((x) => `${x.claim.geo_id} already has ${what(x)}`).join('; '), sentence, 'Next: type /claim-tagger decide again; Claude keeps the tags and words already there.');
     }
     const openedAt = ctx.now().toISOString();
     const record = {
@@ -617,7 +617,7 @@ export async function checkDecisions(opts = {}) {
         // every claim that differs is still open to decide (not Reviewed): decide again; otherwise a person's hand is needed on a claim that is Reviewed or gone
         const next = bad.every((r) => r.redo)
           ? `Next: type /claim-tagger decide again and name ${list}.`
-          : `Next: open All claims (${tableLink(ctx.config, 'claims')}), check ${list} and correct them by hand.`;
+          : `Next: open All claims (${tableLink(ctx.config, 'claims')}), check ${list} and correct ${bad.length === 1 ? 'it' : 'them'} by hand.`;
         return {
           exit: EXIT.ERROR,
           message: `${bad.length} of ${n} claims do not read back as decided: ${bad.map((r) => `${r.claim.geo_id} (${r.differs.join(', ')})`).join('; ')}`,

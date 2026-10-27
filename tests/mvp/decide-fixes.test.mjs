@@ -136,7 +136,7 @@ test('S1: open refuses a decision that drops a Verified tag the claim has, or le
     const r = await openDecisions({ ...h, decisions: json(decisions) });
     assert.equal(r.exit, 2, name);
     assert.equal(r.report.sentence, sentence, name);
-    assert.equal(r.report.next, 'Next: keep them, or ask the editor.', name);
+    assert.equal(r.report.next, 'Next: type /claim-tagger decide again; Claude keeps the tags and words already there.', name);
     assert.deepEqual(lintReport(r.markdown), [], name);
     assert.ok(!existsSync(markerPath(w.root)), name);
     assert.ok(!existsSync(join(r.runDir, 'decisions.json')), name);
@@ -255,7 +255,7 @@ test('S3: when every claim that differs is Reviewed or gone the Next line sends 
   assert.equal(r.exit, 1);
   assert.equal(r.report.sentence, 'Decide: 1 of 1 claim did not read back as decided.');
   assert.deepEqual(r.report.rows, [[quoted(claimText(1), 40), 'not found', '']]);
-  assert.equal(r.report.next, `Next: open All claims (${tableLink(w.config, 'claims')}), check ${q(1)} and correct them by hand.`);
+  assert.equal(r.report.next, `Next: open All claims (${tableLink(w.config, 'claims')}), check ${q(1)} and correct it by hand.`);
 });
 
 // ---- the survivors of the mutation run (S8) ------------------------------------------------------------------------------------------------
@@ -367,4 +367,13 @@ test('the printed call and the record of a decision carry the Rulebook ids and t
   const r = await openDecisions({ ...h, decisions: raw });
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assert.equal(callsIn(openedOutput(h))[0].properties['Challenged tags notes'], "It's fine; really");
+});
+
+test('S7: the skill and the contracts tell Claude to write an apostrophe as the JSON escape \\u0027, never as a plain apostrophe', () => {
+  // the escape was lost once when the files were written (a plain apostrophe would close the quoted --decisions argument)
+  const skill = readFileSync(new URL('../../.claude/skills/claim-tagger/SKILL.md', import.meta.url), 'utf8');
+  const contracts = readFileSync(new URL('../../docs/mvp-2026-11/CONTRACTS.md', import.meta.url), 'utf8');
+  assert.ok(skill.includes('Write an apostrophe inside the JSON as `\\u0027`'), 'SKILL.md names \\u0027');
+  assert.ok(contracts.includes('An apostrophe in a note is written `\\u0027` in the JSON.'), 'CONTRACTS.md names \\u0027');
+  assert.ok(!/apostrophe inside the JSON as `'`/.test(skill), 'SKILL.md does not tell Claude to write a plain apostrophe');
 });
