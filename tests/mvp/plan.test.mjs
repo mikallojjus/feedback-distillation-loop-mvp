@@ -323,28 +323,47 @@ test('checkPlan: a demo profile may fill the claims\' editor columns on a create
   assert.ok(mentions(checkPlan(plan, production, { root: w.root, setup: true }).problems, /only an editor writes/), 'a production config ignores the marker');
 });
 
-test('checkPlan: demoEditor lets an agent act as the editor on a practice page: an update of the claims\' four columns, and of Editor wording and Approved or Rejected', async () => {
+test('checkPlan: an editor column on an update is refused on a practice page too (decision P7: no agent acts as the editor): the claims\' columns, Editor wording, Approved and Rejected, Paused', async () => {
   const w = await world();
   const practiceRoot = join(tmp(), 'runs', 'demos', 'practice-1');
   mkdirSync(practiceRoot, { recursive: true });
   w.config.demo = true;
   w.config.demo_id = 'practice-1';
-  const plan = newP(w);
-  plan.update('claims', 'geo-a', w.ids.claimA, { ...CLAIM_EDITOR });
-  plan.update('rule_changes', 'A lesson', 'p1', { 'Editor wording': 'my words', Status: 'Approved' });
-  plan.update('rule_changes', 'Another lesson', 'p2', { Status: 'Rejected' });
-  assert.deepEqual(problemsOf(plan, w, { root: practiceRoot, demoEditor: true }), []);
-  assert.ok(mentions(problemsOf(plan, w, { root: practiceRoot }), /only an editor writes/), 'without the option: refused');
-  assert.ok(mentions(problemsOf(plan, w, { root: w.root, demoEditor: true }), /only an editor writes/), 'a folder that is not a practice page: refused');
+  const refusedIn = (plan, config, opts, pattern) => assert.ok(mentions(checkPlan(plan, config, opts).problems, pattern), JSON.stringify(opts));
+  // a practice page's config in a practice page's folder, the SETUP marker present or not: every one of these is refused as an update
+  for (const marker of [false, true]) {
+    if (marker) {
+      mkdirSync(join(practiceRoot, 'runs'), { recursive: true });
+      writeFileSync(join(practiceRoot, 'runs', 'SETUP'), '{}\n');
+    }
+    const claims = newP(w);
+    claims.update('claims', 'geo-a', w.ids.claimA, { ...CLAIM_EDITOR });
+    refusedIn(claims, w.config, { root: practiceRoot }, /"Verified tags" is a column only an editor writes/);
+    const wording = newP(w);
+    wording.update('rule_changes', 'A lesson', 'p1', { 'Editor wording': 'my words' });
+    refusedIn(wording, w.config, { root: practiceRoot }, /"Editor wording" is a column only an editor writes/);
+    for (const status of ['Approved', 'Rejected']) {
+      const lesson = newP(w);
+      lesson.update('rule_changes', 'A lesson', 'p1', { Status: status });
+      refusedIn(lesson, w.config, { root: practiceRoot }, /is not one a script may write \(only Proposed, Live, Rolled back; Approved and Rejected are the editor's\)/);
+    }
+    const ledger = newP(w);
+    ledger.update('agent_settings', 'claim-tagger-mvp', 'p', { Paused: true });
+    refusedIn(ledger, w.config, { root: practiceRoot }, /"Paused" is a column only an editor writes/);
+    // an option that an older caller might still pass changes nothing: there is no switch left to open
+    refusedIn(claims, w.config, { root: practiceRoot, editor: true }, /only an editor writes/);
+  }
+  // the same plans on a production config and on a folder that is not a practice page
   const production = structuredClone(w.config);
   production.demo = false;
-  assert.ok(mentions(checkPlan(plan, production, { root: practiceRoot, demoEditor: true }).problems, /only an editor writes/), 'a production config: refused');
-  const create = newP(w);
-  create.create('claims', 'geo-9', { 'Geo Name': 'A claim', 'Review status': 'Reviewed' });
-  assert.ok(mentions(problemsOf(create, w, { root: practiceRoot, demoEditor: true }), /only an editor writes/), 'never on a create');
-  const ledger = newP(w);
-  ledger.update('agent_settings', 'claim-tagger-mvp', 'p', { Paused: true });
-  assert.ok(mentions(problemsOf(ledger, w, { root: practiceRoot, demoEditor: true }), /"Paused" is a column only an editor writes/), 'Paused stays a person\'s');
+  const claims = newP(w);
+  claims.update('claims', 'geo-a', w.ids.claimA, { ...CLAIM_EDITOR });
+  refusedIn(claims, production, { root: practiceRoot }, /only an editor writes/);
+  refusedIn(claims, w.config, { root: w.root }, /only an editor writes/);
+  // what a script may always write on an update is still fine in a practice page
+  const lesson = newP(w);
+  lesson.update('rule_changes', 'A lesson', 'p1', { Status: 'Live', 'Safety check result': 'PASS: examples 11/11' });
+  assert.deepEqual(problemsOf(lesson, w, { root: practiceRoot }), []);
 });
 
 test('checkPlan: Status on rule_changes is Proposed, Live or Rolled back and nothing else', async () => {

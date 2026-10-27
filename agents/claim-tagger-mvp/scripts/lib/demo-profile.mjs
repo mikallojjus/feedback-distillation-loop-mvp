@@ -24,7 +24,7 @@
 //   placementFetch(inner)                      -> a fetch that spells two placements the Notion client cannot (see the function)
 //   bufferedLog()                              -> a request log that starts in memory and moves to its file when the folder exists
 //   demosDir / demoDir / listDemos / pickDemo  -> the demos under <root>/runs/demos; pickDemo is the page a command acts on (the one named, else the
-//                                                 newest finished page under the Demos sub-page whose profile the loader can read)
+//                                                 newest finished page under the Onboarding sub-page whose profile the loader can read)
 //   profileProblem(found)                      -> why the current loader cannot read a demo's profile (an older manifest shape, a missing or changed copy), else null
 //   olderShapeProblem(dir, id)                 -> the one plain line for a practice page made before there was one claims table (P5: notion.claims was a list), else null
 //   constants: PRACTICE_TITLES, VIEW_NAMES, LINKED_VIEWS, TAB_VIEWS, FALLBACK_TEXT, CONTENT_TYPES
@@ -302,7 +302,7 @@ export function buildDemoConfig(production, { demoId, title, parentId, tag }) {
   // the production page is listed as a page and, since a reader may look in either list, as a protected id there too
   n.protected_database_ids = [...new Set([...(n.protected_database_ids ?? []), ...own, production.notion.parent_page_id])].filter(Boolean);
   n.protected_page_ids = [...new Set([...(n.protected_page_ids ?? []), production.notion.parent_page_id])].filter(Boolean);
-  n.pages = { proposal: '<none>', demos: '<none>', demo_tests: '<none>' };
+  n.pages = { proposal: '<none>', demos: '<none>', demo_tests: '<none>', onboarding: '<none>', archive: '<none>' };
   n.rulebook = { database_id: PLACEHOLDER, data_source_id: PLACEHOLDER, key: production.notion.rulebook.key, work_tag: production.notion.rulebook.work_tag };
   n.claims = {
     label: 'Claims', database_id: PLACEHOLDER, data_source_id: PLACEHOLDER, key: productionClaims.key,
@@ -725,10 +725,10 @@ export function profileProblem({ id, dir, demo }) {
 export const isUnder = (found, under) => isRealId(under) && hex32(found?.demo?.parent?.id) === hex32(under);
 
 /**
- * The practice page a command acts on. With an id: that page, wherever it is (any state, any folder). Without one: the newest page that was made under the Demos
- * sub-page (`under`, the id in config.notion.pages.demos), whose profile the current loader can read, and, when `ready` is set, whose build is finished. A page under
- * Demo tests (the evals and verification runs) or any other parent is never picked by default, and neither is a page of an older shape; they are reached with the id.
- * Throws ManifestError when there is none, and when the default is asked for with no Demos page to look under.
+ * The practice page a command acts on. With an id: that page, wherever it is (any state, any folder). Without one: the newest page that was made under the Onboarding
+ * sub-page (`under`, the id in config.notion.pages.onboarding), whose profile the current loader can read, and, when `ready` is set, whose build is finished. A page under
+ * any other parent (an old Demos or Demo tests page, say) is never picked by default, and neither is a page of an older shape; they are reached with the id.
+ * Throws ManifestError when there is none, and when the default is asked for with no Onboarding page to look under.
  */
 export function pickDemo(root, id, { ready = false, under = null } = {}) {
   if (id !== undefined && id !== null) {
@@ -737,9 +737,9 @@ export function pickDemo(root, id, { ready = false, under = null } = {}) {
     if (!demo) throw new ManifestError(`there is no practice page "${id}" (no demo.json in its folder)`);
     return { id, dir, demo };
   }
-  if (!isRealId(under)) throw new ManifestError('the Demos page is not set in config.json (notion.pages.demos), so the newest practice page under it cannot be told; name a page with --demo <id>');
+  if (!isRealId(under)) throw new ManifestError('the Onboarding page is not set in config.json (notion.pages.onboarding), so the newest practice page under it cannot be told; name a page with --demo <id>');
   const found = listDemos(root).find((d) => isUnder(d, under) && (!ready || d.demo.state === 'ready') && profileProblem(d) === null);
-  if (!found) throw new ManifestError(ready ? 'there is no finished practice page under Demos yet; ask for one first' : 'there is no practice page under Demos yet; ask for one first');
+  if (!found) throw new ManifestError(ready ? 'there is no finished practice page under Onboarding yet; ask for one first' : 'there is no practice page under Onboarding yet; ask for one first');
   return found;
 }
 

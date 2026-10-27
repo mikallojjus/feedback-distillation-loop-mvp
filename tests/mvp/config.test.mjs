@@ -48,7 +48,7 @@ test('the config.json in the agent folder is valid, before and after setup has f
     assert.match(entry.database_id, PLACEHOLDER_OR_ID, `${table}: database_id`);
     assert.match(entry.data_source_id, PLACEHOLDER_OR_ID, `${table}: data_source_id`);
   }
-  for (const page of ['demos', 'demo_tests']) assert.match(config.notion.pages[page], PLACEHOLDER_OR_ID, `pages.${page}`);
+  for (const page of ['demos', 'demo_tests', 'onboarding', 'archive']) assert.match(config.notion.pages[page], PLACEHOLDER_OR_ID, `pages.${page}`);
   for (const [name, view] of Object.entries(config.notion.views ?? {})) {
     assert.match(String(view?.id ?? view), PLACEHOLDER_OR_ID, `views.${name}: the id of a view that setup made`);
   }

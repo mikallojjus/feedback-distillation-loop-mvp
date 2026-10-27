@@ -2,9 +2,9 @@
 //
 //   newPlan({ runId, script, rubricEdition, config?, now? })    -> a builder: create(), update(), ops, header(), write(dir), readPlan
 //   readPlan(dir)                                                -> { header, ops, dir, file } read from <dir>/plan.jsonl, every line validated
-//   checkPlan(plan, config, { setup, root, demoEditor })         -> { ok, problems, counts } before any request is made
+//   checkPlan(plan, config, { setup, root })                     -> { ok, problems, counts } before any request is made
 //   applyPlan({ plan, dir, client, config, schemas, pulled,      -> { code, done, failed, skipped, mismatches, uncertain, unchecked,
-//              log, setup, root, now, demoEditor })                  created, created_by_table, already_done, stopped, ledger, lists }
+//              log, setup, root, now })                              created, created_by_table, already_done, stopped, ledger, lists }
 //   isDemoRoot(root)                                             -> true for a state folder directly under .../runs/demos/ (a practice page)
 //   readLedger(dir)                                              -> Map of op_index -> the last ledger line of that op
 //   compareWritten(planned, props, schema)                       -> the columns whose value read back differs from what was written
@@ -43,9 +43,6 @@ export const MAX_CONSECUTIVE_FAILURES = 3;
 const DEFAULT_KEYS = Object.freeze({
   rulebook: 'Name', claims: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name',
 });
-
-/** The tables whose rows an agent acting as the editor on a practice page may update (decision D31): the claims (the four editor columns) and the rule changes. */
-export const DEMO_EDITOR_TABLES = Object.freeze(['claims', 'rule_changes']);
 
 /** True when `root` is the state folder of a practice page: a folder directly under .../runs/demos/ (letter case is ignored, as on Windows). */
 export function isDemoRoot(root) {
@@ -244,13 +241,10 @@ const SCHEMA_WORDS = new Map([
  *   ignored) and no op targets a protected table; an update has a page_id and a create has none; a create carries its key column; a key
  *   appears once per table; the header counts match the ops.
  *
- * `demoEditor: true` is decision D31, the demo-only exception to hard rule 1: an agent may act as the editor on a practice page. It allows,
- * and only when config.demo is true and `root` is a folder directly under runs/demos/ (isDemoRoot), an UPDATE on claims to write the
- * editor's four columns (Verified tags, Review status, Why wrong, Challenged tags notes) and an UPDATE on rule_changes to write Editor wording and a Status that is one of
- * config.editor_columns.rule_changes_status_editor_values (Approved, Rejected). Without the option, on a production config, outside
- * runs/demos/, on a create, and on any other table or column, every editor column and those two Status values stay refused.
+ * No plan ever writes an editor column on an UPDATE, on a practice page or anywhere else (decision P7: no agent acts as the editor); a practice
+ * page's decided rows are written only by a create, under its runs/SETUP marker.
  */
-export function checkPlan(plan, config, { setup = false, root = agentRoot(), demoEditor = false } = {}) {
+export function checkPlan(plan, config, { setup = false, root = agentRoot() } = {}) {
   const problems = [];
   let header;
   let ops;
@@ -260,7 +254,6 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot(), dem
     return { ok: false, problems: [e.message], counts: { creates: 0, updates: 0 } };
   }
   const demoOpen = config?.demo === true && existsSync(join(root, 'runs', 'SETUP'));
-  const editorMayUpdate = demoEditor === true && config?.demo === true && isDemoRoot(root); // D31: an agent acting as the editor on a practice page
   const needles = protectedNeedles(config);
   const seen = new Set();
   const named = (i, op) => `op ${i + 1} (${typeof op?.table === 'string' ? op.table : 'no table'}${nonEmpty(op?.key) ? ` "${short(op.key, 40)}"` : ''})`;
@@ -313,7 +306,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot(), dem
     const notesColumn = tableEntryOrNull(config, 'claims')?.columns?.notes ?? 'Challenged tags notes';
     const challenged = op.properties[notesColumn];
     const seeded = setup && op.table === 'claims' && typeof challenged === 'string' && challenged.startsWith(AUDIT_PREFIX);
-    const mayWriteEditor = seeded || (demoOpen && op.op === 'create') || (editorMayUpdate && op.op === 'update' && DEMO_EDITOR_TABLES.includes(op.table));
+    const mayWriteEditor = seeded || (demoOpen && op.op === 'create');
     for (const name of Object.keys(op.properties)) {
       const base = name.endsWith(':end') ? name.slice(0, -4) : name; // the end of a date goes with its start
       if (editor.has(base)) {
@@ -323,9 +316,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot(), dem
       if (!writable.has(base)) add(`"${name}" is not a column this plan may write to ${op.table}`);
     }
     if (op.table === 'rule_changes' && Object.hasOwn(op.properties, 'Status') && !RULE_CHANGES_AGENT_STATUS.includes(op.properties.Status)) {
-      const editorStatus = config?.editor_columns?.rule_changes_status_editor_values ?? [];
-      const asEditor = editorMayUpdate && op.op === 'update' && editorStatus.includes(op.properties.Status);
-      if (!asEditor) add(`Status ${JSON.stringify(op.properties.Status)} is not one a script may write (only ${RULE_CHANGES_AGENT_STATUS.join(', ')}; Approved and Rejected are the editor's)`);
+      add(`Status ${JSON.stringify(op.properties.Status)} is not one a script may write (only ${RULE_CHANGES_AGENT_STATUS.join(', ')}; Approved and Rejected are the editor's)`);
     }
     const kc = keyColumn(config, op.table);
     if (op.op === 'create' && op.properties[kc] !== op.key) add(`a create must carry its key column "${kc}" with the value of the key`);
@@ -444,12 +435,12 @@ function settlePlanFile(plan, dir) {
 
 /**
  * Send a plan. See the header of this file. `schemas[table]` is the retrieveDatabase answer of the table; `pulled[table]` maps a key
- * to the pulled plain row (columns by their Notion names, plus page_id), freshly pulled by the caller before a resumed run. `setup` and
- * `demoEditor` are passed to checkPlan. The result's `code` is 0 (every op done or skipped and every read-back equal), 1 (an op failed,
+ * to the pulled plain row (columns by their Notion names, plus page_id), freshly pulled by the caller before a resumed run. `setup`
+ * is passed to checkPlan. The result's `code` is 0 (every op done or skipped and every read-back equal), 1 (an op failed,
  * was left uncertain, could not be read back, or was never reached: run the same command again) or 2 (a read-back differed).
  */
 export async function applyPlan({
-  plan, dir, client, config, schemas, pulled = {}, log = null, setup = false, root = agentRoot(), now = () => new Date(), demoEditor = false,
+  plan, dir, client, config, schemas, pulled = {}, log = null, setup = false, root = agentRoot(), now = () => new Date(),
 } = {}) {
   if (!client || typeof client.createPage !== 'function' || typeof client.updatePage !== 'function' || typeof client.retrievePage !== 'function') {
     throw new TypeError('applyPlan: a Notion client is required (a script without a token must stop before this)');
@@ -458,7 +449,7 @@ export async function applyPlan({
   const { ops } = planParts(plan);
 
   // 1. the plan is checked again here: nothing the check refuses is ever sent
-  const checked = checkPlan(plan, config, { setup, root, demoEditor });
+  const checked = checkPlan(plan, config, { setup, root });
   if (!checked.ok) throw new PlanError('the plan was refused and nothing was sent', checked.problems);
 
   // 2. everything that can be known without a request is known before the first one

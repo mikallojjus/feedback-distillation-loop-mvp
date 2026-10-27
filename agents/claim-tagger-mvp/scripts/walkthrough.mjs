@@ -8,9 +8,10 @@
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs where [--demo <id>]
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs verify [--demo <id>] [--json]
 //   node agents/claim-tagger-mvp/scripts/walkthrough.mjs list
-//   node agents/claim-tagger-mvp/scripts/walkthrough.mjs decide [--demo <id>] --claim <key> [--outcome "Applies|Does not apply" [--reasoning "<text>"]]
-//   node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve [--demo <id>] [--lesson "<title>"] [--wording "<text>" | --clear-wording]
-//   node agents/claim-tagger-mvp/scripts/walkthrough.mjs reject [--demo <id>] [--lesson "<title>"]
+//
+// The walkthrough is for onboarding only (decision P7). It checks itself with the fake seven-step test and a dry run of `start`; no agent ever acts as the editor on a
+// practice page, so there is no command that fills an editor column or a rule change's Status. Practice pages go under the Onboarding sub-page of the hub
+// (config.json notion.pages.onboarding); one that has been moved into the archive is read only.
 //
 // start. --parent is required and has no default. Steps: (a) one GET of the parent page (unreachable, or protected: exit 2); (b) the profile under
 // runs/demos/<id>/ (config.json, rubric/, evals/, demo.json, copies of the manifest and the page template); (c) setup-plan.json, which lists every
@@ -31,8 +32,8 @@
 // table's own view; once the views are made that view is set to the review order, as the three views of the Claims already show it (arrangeOwnViews): the agent's
 // columns first, then the review columns, then the Geo columns.
 //
-// run. `node <script>.mjs <args>` as a child process with CLAIM_TAGGER_MVP_ROOT set to the demo's folder (by default the newest finished demo under the Demos sub-page
-// whose profile this build reads; a page under Demo tests, or of an older shape, is reached only with --demo <id>). It
+// run. `node <script>.mjs <args>` as a child process with CLAIM_TAGGER_MVP_ROOT set to the demo's folder (by default the newest finished demo under the Onboarding sub-page
+// whose profile this build reads; a page under Demos or Demo tests, or of an older shape, is reached only with --demo <id>). It
 // refuses a script that is not on the list, a folder outside runs/demos, and --confirm, --bare, --fallback-model, --unpause. For promote and followup
 // without --lesson it passes the title of the demo's only Approved (promote) or Live (followup) rule change from the newest pull. The exit code is
 // the child's.
@@ -46,14 +47,8 @@
 // three views of the Claims, and their filters).
 // list. The practice pages, newest first, with their state and step, and a mark on the one the commands reach when no page is named.
 //
-// decide, approve, reject (decision D31, the demo-only exception to hard rule 1: on a practice page the agent may act as the editor, so the
-// calibration runs and the evals of the skill can go through all seven steps). decide enters the editor's three columns of one of the four claims that
-// wait (Verified tags, Challenged tags notes, Review status: the values of the manifest's open[].enter when only --claim is
-// given; --outcome Applies puts the tag among the verified tags, Does not apply leaves it out, the claim is Reviewed either way, and the note is empty unless --reasoning gives one);
-// approve sets a rule change to Approved and may write Editor wording
-// (the only Proposed rule change, or with --wording the only Approved one whose safety check did not pass); reject sets Rejected. Each is a plan with
-// one update, checked by checkPlan with demoEditor (which allows nothing outside a practice page under runs/demos and nothing but these columns),
-// applied and read back, and logged in runs/demos/<id>/editor-actions.jsonl before and after. They are not scripts that `run` starts.
+// A practice page whose page or parent is in the archive (production's protected_page_ids) is read only: run, where and verify refuse it with exit 2, and list
+// marks it "archived".
 //
 // Exit codes: 0 ok, 1 stopped (start --resume continues; or an unexpected error), 2 invalid (a missing or wrong input, a protected or unreachable
 // parent, a lint or plan problem, a read-back that differs, a verify that finds problems), 3 paused.
@@ -64,14 +59,14 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { CLAIMS_COPY_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, isProtected, loadConfig, tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
-import { listNames, notionUrl, plural, quoted, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
-import { appendJsonl, readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
+import { notionUrl, plural, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
+import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { blockText, countBlocks, lintPage } from './lib/notion-blocks.mjs';
 import { StructureError, arrangeOwnViews, completeViewBody, planStructure, verifyStructure, viewPlan } from './lib/notion-build.mjs';
 import { BUILDER_API_VERSION, NotionError, clientFromConfig, countRequests } from './lib/notion-rest.mjs';
 import { normId, sameValue } from './lib/notion-values.mjs';
 import { ROOT_ENV, codeFile, codeRoot, isMain, runId as makeRunId } from './lib/paths.mjs';
-import { PlanError, applyPlan, checkPlan, isDemoRoot, newPlan } from './lib/plan.mjs';
+import { PlanError, applyPlan, checkPlan, newPlan } from './lib/plan.mjs';
 import { READING_COLUMNS } from './lib/readings.mjs';
 import { buildReport, lintReport, renderReport, writeReport } from './lib/report.mjs';
 import { buildRubric, compareEditions, nextEdition, readEdition, readRubric, verifyRubric, writeEdition } from './lib/rubric.mjs';
@@ -85,9 +80,6 @@ export const USAGE = [
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs where [--demo <id>]',
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs verify [--demo <id>] [--json]',
   '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs list',
-  '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs decide [--demo <id>] --claim <key> [--outcome "Applies|Does not apply" [--reasoning "<text>"]]',
-  '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs approve [--demo <id>] [--lesson "<title>"] [--wording "<text>" | --clear-wording]',
-  '       node agents/claim-tagger-mvp/scripts/walkthrough.mjs reject [--demo <id>] [--lesson "<title>"]',
 ].join('\n');
 
 export const RUN_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status']);
@@ -243,12 +235,25 @@ function loadProduction(root, env) {
 }
 
 /**
- * The practice page a command acts on: the one named with --demo (any page), else the newest finished page under the Demos sub-page of config.json whose profile
- * this build reads (dp.pickDemo). Pages under Demo tests are reached only by naming them. Throws a ManifestError (a message for the person) when there is none.
+ * The practice page a command acts on: the one named with --demo (any page), else the newest finished page under the Onboarding sub-page of config.json
+ * (notion.pages.onboarding) whose profile this build reads (dp.pickDemo). A page anywhere else (an old Demos or Demo tests page, say) is reached only by naming it.
+ * Throws a ManifestError (a message for the person) when there is none.
  */
 function pickPage(root, env, id, opts = {}) {
-  const under = id === undefined || id === null ? loadProduction(root, env).notion.pages?.demos : null;
+  const under = id === undefined || id === null ? loadProduction(root, env).notion.pages?.onboarding : null;
   return dp.pickDemo(root, id, { ...opts, under });
+}
+
+/** True when the practice page, or the page it was made under, is one of production's protected pages: it has been moved into the archive. */
+function isArchived(production, found) {
+  const protectedPages = new Set((production.notion.protected_page_ids ?? []).map((x) => normId(String(x ?? ''))).filter(Boolean));
+  return [found.demo?.parent?.id, found.demo?.page?.id].some((x) => x && protectedPages.has(normId(String(x))));
+}
+
+/** A practice page in the archive is read only (decision P7): run, where and verify say so (exit 2) and send nothing. */
+function refuseArchived(root, env, found) {
+  if (!isArchived(loadProduction(root, env), found)) return;
+  throw stop(EXIT.INVALID, `the practice page ${text(found.demo.title) || found.id} is in the archive (moved there on 27 Oct 2026) and is read only; ask for a new practice page under Onboarding`);
 }
 
 function loadStructureFile(root) {
@@ -970,19 +975,11 @@ async function seedRows(ctx) {
 const sameCell = (schema, column, want, got) => sameValue(schema?.properties?.[column]?.type ?? null, want ?? null, got ?? null);
 
 /**
- * True while nothing has changed the page since it was built: Last run summary is still empty (the build leaves it empty and every command that writes fills it), and nobody has acted as the editor on it
- * (decision D31: a line in editor-actions.jsonl that is not an unchanged one means a row may differ from its first state). Then verify can hold the
- * rows the steps change to their first state.
+ * True while nothing has changed the page since it was built: Last run summary is still empty (the build leaves it empty and every command that writes fills it; an editor
+ * works in Notion only after the tag step, which fills it). Then verify can hold the rows the steps change to their first state.
  */
-function untouched(ctx, loaded) {
-  if (text(loaded.settings()?.last_run_summary) !== '') return false;
-  const file = join(ctx.demoRoot, 'editor-actions.jsonl');
-  if (!existsSync(file)) return true;
-  try {
-    return readJsonl(file).rows.every((r) => r?.status === 'unchanged');
-  } catch {
-    return false;
-  }
+function untouched(loaded) {
+  return text(loaded.settings()?.last_run_summary) === '';
 }
 
 /**
@@ -1390,7 +1387,7 @@ async function runBuild(ctx, { argv, resumeCommandLine }) {
     const run = beginRun({ root: ctx.demoRoot, kind: 'walkthrough-start', argv, now: ctx.now, resume: resumeCommandLine });
     openClients(ctx);
     const { loaded } = await pullTables(ctx, 'all');
-    const result = await verifyDemo(ctx, { loaded, fresh: untouched(ctx, loaded) });
+    const result = await verifyDemo(ctx, { loaded, fresh: untouched(loaded) });
     run.finish(result.ok ? EXIT.OK : EXIT.INVALID);
     if (!result.ok) throw stop(EXIT.INVALID, `the practice page has problems:\n- ${result.problems.slice(0, 8).join('\n- ')}`);
     emit(io, {
@@ -1617,6 +1614,7 @@ async function whereCommand(args, io, env) {
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
+  refuseArchived(root, env, found);
   const ctx = loadDemoContext({ root, found, env, io, now });
   if (found.demo.state !== 'ready' && found.demo.state !== 'seeded') {
     throw stop(EXIT.ERROR, `the practice page ${found.id} is not finished (its state is "${found.demo.state}")`, {
@@ -1654,6 +1652,7 @@ async function verifyCommand(args, io, env) {
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
+  refuseArchived(root, env, found);
   const ctx = loadDemoContext({ root, found, env, io, now });
   const run = beginRun({ root: ctx.demoRoot, kind: 'walkthrough-verify', argv: ['verify', ...args], now });
   try {
@@ -1667,7 +1666,7 @@ async function verifyCommand(args, io, env) {
     openClients(ctx);
     const { loaded, result: pulled } = await pullTables(ctx, 'all');
     run.update({ pull_id: pulled.pullId });
-    const result = await verifyDemo(ctx, { loaded, fresh: untouched(ctx, loaded) });
+    const result = await verifyDemo(ctx, { loaded, fresh: untouched(loaded) });
     run.finish(result.ok ? EXIT.OK : EXIT.INVALID);
     if (v.json) {
       io.out(JSON.stringify({ ok: result.ok, problems: result.problems, counts: result.counts }));
@@ -1708,7 +1707,9 @@ async function listCommand(args, io, env) {
     emit(io, { sentence: 'Walkthrough: there is no practice page yet.', rows: [], next: 'Next: ask for a practice page under a Notion page of your choice.' });
     return EXIT.OK;
   }
-  // the page the demo commands reach when none is named, and the newest page under Demos in any state (an unfinished one is what `where` reports on)
+  // a practice page in the archive is read only: listed as "archived", with no step, and never read
+  const production = loadProduction(root, env);
+  // the page the demo commands reach when none is named, and the newest page under Onboarding in any state (an unfinished one is what `where` reports on)
   const reach = (opts) => {
     try {
       return pickPage(root, env, undefined, opts);
@@ -1725,6 +1726,10 @@ async function listCommand(args, io, env) {
   let reachedAt = null;
   for (const found of shown) {
     let step = '-';
+    if (isArchived(production, found)) {
+      rows.push([`${sayable(found.demo.title)} (${found.demo.page?.url ?? 'not made yet'})`, 'archived', step]);
+      continue;
+    }
     if (found.demo.state === 'ready') {
       try {
         const ctx = loadDemoContext({ root, found, env, io, now });
@@ -1745,7 +1750,7 @@ async function listCommand(args, io, env) {
   if (latest && latest.demo.state !== 'ready') next = 'Next: ask for the practice page again under the same link; it continues where it stopped.';
   else if (reachedAt && !reachedAt.st.problem) next = whereParts(reachedAt.ctx, reachedAt.st).next;
   else if (reached) next = `Next: open ${sayable(reached.demo.title)} (${reached.demo.page.url}).`;
-  else next = 'Next: ask for a practice page under the Demos page; the demo commands reach only the pages under it.';
+  else next = 'Next: ask for a practice page under the Onboarding page; the demo commands reach only the pages under it.';
   const cut = all.length <= shown.length ? '' : (shown === newest ? `, the newest ${shown.length} below` : `, the newest ${shown.length - 1} and the one the demo commands use below`);
   emit(io, {
     sentence: `Walkthrough: ${plural(all.length, 'practice page')}${cut}.`,
@@ -1786,6 +1791,7 @@ async function runCommand(args, io, env) {
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
+  refuseArchived(root, env, found);
   if (found.demo.state !== 'ready') throw stop(EXIT.INVALID, `the practice page ${found.id} is not finished (its state is "${found.demo.state}"); ask for it again under the same link`);
   const older = dp.olderShapeProblem(found.dir, found.id);
   if (older) throw stop(EXIT.INVALID, older);
@@ -1832,240 +1838,6 @@ async function runCommand(args, io, env) {
   });
 }
 
-// ---- acting as the editor (decision D31) --------------------------------------------------------------------------------------------------------
-//
-// On a practice page the agent may do what the editor does in Notion, so that the calibration runs and the evals of the skill can go through all
-// seven steps: decide one of the four open claims, approve or reject a rule change (with the editor's own wording). It is the demo-only exception to
-// hard rule 1, and it is kept narrow: only a practice page under runs/demos/, only an update of a claim (the editor's three columns, the four claims
-// that wait) or of a rule change (Status Approved or Rejected, Editor wording), only through a plan that checkPlan allows with demoEditor: true and
-// applyPlan reads back. Every action is a line in runs/demos/<id>/editor-actions.jsonl before it is sent and another when it is done.
-
-const DECISION_OUTCOMES = Object.freeze(['Applies', 'Does not apply']);
-const editorSentence = (id) => `acting as the editor on practice page ${id} (decision D31)`;
-
-function logEditorAction(ctx, entry) {
-  appendJsonl(join(ctx.demoRoot, 'editor-actions.jsonl'), { at: ctx.now().toISOString(), demo_id: ctx.id, sentence: editorSentence(ctx.id), ...entry });
-}
-
-// The practice page an editor action is for: the one named, else the newest finished one; the clients are open and the run is recorded.
-async function withEditing(command, v, args, io, env, body) {
-  const root = env.root ?? codeRoot();
-  const now = env.now ?? (() => new Date());
-  let found;
-  try {
-    found = pickPage(root, env, v.demo, { ready: true });
-  } catch (e) {
-    throw stop(EXIT.INVALID, e.message);
-  }
-  if (found.demo.state !== 'ready') throw stop(EXIT.INVALID, `the practice page ${found.id} is not finished (its state is "${found.demo.state}"); ask for it again under the same link`);
-  const ctx = loadDemoContext({ root, found, env, io, now });
-  if (ctx.config.demo !== true || !isDemoRoot(ctx.demoRoot)) throw stop(EXIT.INVALID, `${command} works only on a practice page, in a folder under runs/demos`);
-  if (existsSync(join(ctx.demoRoot, 'runs', 'PAUSED'))) throw stop(EXIT.PAUSED, 'the practice page is paused (its pause file exists), so nothing was written; a person has to remove the pause first');
-  openClients(ctx);
-  const run = beginRun({ root: ctx.demoRoot, kind: `walkthrough-${command}`, argv: [command, ...args], now });
-  try {
-    const code = await body(ctx, run);
-    run.finish(code);
-    return code;
-  } catch (e) {
-    run.finish(e instanceof Exit ? e.exit : EXIT.ERROR);
-    throw e;
-  }
-}
-
-// a pull of the table to change, or of the tables to read (the Rulebook, for the page ids of the relation), and of Agent settings, for Paused: the rows as they are now
-async function pullForEditing(ctx, tables) {
-  const { result, loaded } = await pullTables(ctx, [...[].concat(tables), 'agent_settings']);
-  if (result.paused) throw stop(EXIT.PAUSED, 'Paused is ticked in Agent settings of the practice page, so nothing was written; a person has to untick it');
-  return loaded;
-}
-
-/**
- * One update as the editor: a plan with one op (the values it expects to find now, so a row that changed meanwhile is not overwritten), checked with
- * demoEditor, logged, applied and read back, logged again. `wrote` are the new values, `before` the ones found.
- */
-async function updateAsEditor(ctx, { action, table, key, pageId, wrote, before, loaded, note = {} }) {
-  const dir = freshDir(ctx.demoRoot, `editor-${action}`, ctx.now);
-  const planRun = dir.split(/[\\/]/).pop();
-  const entry = { action, table, key, page_id: pageId, wrote, before, plan_run: planRun, ...note };
-  const plan = newPlan({ runId: planRun, script: 'walkthrough.mjs', rubricEdition: ctx.demo.edition, config: ctx.config, now: ctx.now });
-  plan.update(table, key, pageId, wrote, { expect: before });
-  const checked = checkPlan(plan, ctx.config, { root: ctx.demoRoot, demoEditor: true });
-  if (!checked.ok) throw stop(EXIT.INVALID, `the plan was refused and nothing was sent: ${checked.problems.slice(0, 3).join('; ')}`);
-  logEditorAction(ctx, { ...entry, status: 'planned' });
-  ctx.io.err(`walkthrough: ${editorSentence(ctx.id)}: ${dp.PRACTICE_TITLES[table]} ${oneLine(key, 60)}: ${Object.keys(wrote).join(', ')}`);
-  let result;
-  try {
-    result = await applyPlan({
-      plan, dir, client: ctx.clients.rest, config: ctx.config, schemas: { [table]: loaded.schema(table) }, pulled: loaded.pulled([table]), root: ctx.demoRoot, now: ctx.now, demoEditor: true,
-    });
-  } catch (e) {
-    logEditorAction(ctx, { ...entry, status: 'failed', error: oneLine(e?.message ?? String(e), 300) });
-    if (e instanceof PlanError) throw stop(EXIT.INVALID, `${e.message}: ${e.problems.slice(0, 3).join('; ')}`);
-    throw e;
-  }
-  if (result.code === EXIT.OK && (result.done !== 1 || result.skipped > 0)) {
-    // the row was no longer what the plan expected when it was to be written: the ledger says skipped and nothing was sent
-    const why = result.lists.skipped.map((s) => s.detail).filter(Boolean).join('; ') || 'the row is no longer as it was when it was read';
-    logEditorAction(ctx, { ...entry, status: 'failed', error: oneLine(why, 300) });
-    throw stop(EXIT.ERROR, `nothing was written to ${dp.PRACTICE_TITLES[table]}, because ${oneLine(why, 200)}; run the command again`);
-  }
-  if (result.code !== EXIT.OK) {
-    const why = describeFailures(result).join('; ') || 'see the ledger';
-    logEditorAction(ctx, { ...entry, status: 'failed', error: oneLine(why, 300) });
-    const what = result.mismatches > 0 || result.unchecked > 0 ? 'was not confirmed by the read-back' : 'was not made';
-    throw stop(result.code === EXIT.INVALID ? EXIT.INVALID : EXIT.ERROR, `the change to ${dp.PRACTICE_TITLES[table]} ${what}: ${why}`);
-  }
-  logEditorAction(ctx, { ...entry, status: 'done', read_back: 'ok' });
-}
-
-// What the editor is to do next, from a fresh pull: the Next line of `where`.
-async function nextAfterEditing(ctx) {
-  try {
-    const { loaded } = await pullTables(ctx, 'all');
-    const st = stepFor(ctx, loaded);
-    return st.problem ? 'Next: ask the engineer to look at the practice page.' : whereParts(ctx, st).next;
-  } catch {
-    return 'Next: ask where the practice page stands.';
-  }
-}
-
-const sameColumns = (schema, wrote, before) => Object.entries(wrote).every(([column, value]) => sameCell(schema, column, value, before[column]));
-
-async function decideCommand(args, io, env) {
-  const v = parse(args, { demo: { type: 'string' }, claim: { type: 'string' }, outcome: { type: 'string' }, reasoning: { type: 'string' } });
-  if (v.help) {
-    io.out(USAGE);
-    return EXIT.OK;
-  }
-  return withEditing('decide', v, args, io, env, async (ctx, run) => {
-    const { manifest } = ctx;
-    const tag = manifest.tag.Name;
-    const claimsEntry = tableEntry(ctx.config, 'claims');
-    const C = claimsEntry.columns; // verified, review_status, notes
-    const editorCols = [C.verified, C.review_status, C.notes];
-    const waiting = manifest.open.map((o) => o.claim);
-    if (v.claim === undefined || text(v.claim) === '') throw stop(EXIT.INVALID, `decide needs --claim <key>; the claims to decide are: ${waiting.join(', ')}`);
-    const claim = manifest.claims.find((c) => c.key === v.claim);
-    if (!claim) throw stop(EXIT.INVALID, `decide: "${v.claim}" is not a claim of this practice page (the claims to decide are: ${waiting.join(', ')})`);
-    const open = manifest.open.find((o) => o.claim === claim.key);
-    if (!open) throw stop(EXIT.INVALID, `decide: "${claim.key}" is one of the earlier decisions, which are not changed (the claims to decide are: ${waiting.join(', ')})`);
-    // what the editor types, by column; the tags of the relation are names until the page ids of the Rulebook are known
-    let wrote;
-    if ([v.outcome, v.reasoning].every((x) => x === undefined)) wrote = { ...open.enter }; // the values the page tells the editor to enter
-    else {
-      if (v.outcome === undefined) throw stop(EXIT.INVALID, 'decide: --reasoning goes with --outcome (Applies or Does not apply)');
-      if (!DECISION_OUTCOMES.includes(v.outcome)) throw stop(EXIT.INVALID, `decide: --outcome must be ${DECISION_OUTCOMES.join(' or ')}`);
-      if (v.reasoning !== undefined && text(v.reasoning) === '') throw stop(EXIT.INVALID, 'decide: --reasoning is empty (leave it out to decide with an empty note)');
-      // the columns in the order the page gives them; a decision with no --reasoning has an empty note: an empty note is a decision too
-      wrote = { [C.verified]: v.outcome === 'Applies' ? [tag] : [], [C.notes]: v.reasoning ?? '', [C.review_status]: 'Reviewed' };
-    }
-    for (const column of Object.keys(wrote)) if (!editorCols.includes(column)) throw stop(EXIT.INVALID, `decide: "${column}" is not one of the editor's columns (${editorCols.join(', ')})`);
-    if (Object.hasOwn(wrote, C.review_status) && wrote[C.review_status] !== 'Reviewed') throw stop(EXIT.INVALID, `decide: ${C.review_status} is Reviewed once the claim is decided`);
-    if (Object.hasOwn(wrote, C.verified) && (!Array.isArray(wrote[C.verified]) || wrote[C.verified].some((t) => t !== tag))) throw stop(EXIT.INVALID, `decide: ${C.verified} holds the tag ${tag} or nothing`);
-
-    const loaded = await pullForEditing(ctx, ['claims', 'rulebook']);
-    const row = loaded.pulled(['claims']).claims[claim[claimsEntry.key]];
-    if (!row) throw stop(EXIT.INVALID, `Claims has no row for "${claim.key}" (${claim[claimsEntry.key]})`);
-    const tagPages = Object.fromEntries(Object.entries(loaded.pulled(['rulebook']).rulebook ?? {}).map(([name, r]) => [name, r.page_id]));
-    const planned = { ...wrote };
-    if (Object.hasOwn(wrote, C.verified)) {
-      planned[C.verified] = wrote[C.verified].map((name) => {
-        if (!tagPages[name]) throw stop(EXIT.INVALID, `decide: the Rulebook of the practice page has no row for ${name}`);
-        return tagPages[name];
-      });
-    }
-    const before = Object.fromEntries(Object.keys(planned).map((column) => [column, row[column] ?? null]));
-    const schema = loaded.schema('claims');
-    const unchanged = sameColumns(schema, planned, before);
-    const key = claim[claimsEntry.key];
-    const note = { claim: claim.key, tags: Object.hasOwn(wrote, C.verified) ? wrote[C.verified] : undefined };
-    if (unchanged) logEditorAction(ctx, { action: 'decide', status: 'unchanged', table: 'claims', key, page_id: row.page_id, wrote: planned, before, ...note });
-    else await updateAsEditor(ctx, { action: 'decide', table: 'claims', key, pageId: row.page_id, wrote: planned, before, loaded, note });
-
-    const tagsNow = Object.hasOwn(wrote, C.verified) ? wrote[C.verified] : null;
-    const rows = Object.keys(planned).map((column) => {
-      if (column === C.verified) return [column, tagsNow.length ? listNames(tagsNow) : 'none', ''];
-      return [column, column === C.notes ? (text(planned[column]) === '' ? '(empty)' : quoted(planned[column], 100)) : planned[column], ''];
-    });
-    const reads = `Reviewed${tagsNow ? ` with ${tagsNow.length ? listNames(tagsNow) : 'no tag'} verified` : ''}`;
-    emit(io, {
-      sentence: unchanged ? `Walkthrough: acting as the editor, the claim ${quoted(claim['Geo Name'])} already reads ${reads}; nothing was changed.` : `Walkthrough: acting as the editor, the claim ${quoted(claim['Geo Name'])} now reads ${reads}.`,
-      header: ['Column', 'Now', ''],
-      rows,
-      next: await nextAfterEditing(ctx),
-    }, run.dir);
-    return EXIT.OK;
-  });
-}
-
-// The rule change an editor action is for: the one named (its Status has to be one of `allowed`), else the only one in the first group of `tiers`
-// that holds one (a group with two is ambiguous and refused).
-function chooseLesson(lessons, title, { allowed, tiers }, command) {
-  if (title !== undefined && text(title) !== '') {
-    const t = text(title);
-    const found = lessons.find((l) => l.Lesson === t) ?? lessons.find((l) => text(l.Lesson).toLowerCase() === t.toLowerCase());
-    if (!found) throw stop(EXIT.INVALID, `${command}: no rule change is called "${t}"`);
-    if (!allowed.includes(found.Status)) throw stop(EXIT.INVALID, `${command}: "${found.Lesson}" is ${found.Status}; only a rule change that is ${allowed.join(' or ')} can be changed here`);
-    return found;
-  }
-  for (const tier of tiers) {
-    const open = lessons.filter((l) => tier.includes(l.Status));
-    if (open.length > 1) throw stop(EXIT.INVALID, `${command}: ${open.length} rule changes are ${tier.join(' or ')}: ${open.map((l) => `"${l.Lesson}"`).join('; ')}. Add --lesson "<title>" to say which one.`);
-    if (open.length === 1) return open[0];
-  }
-  throw stop(EXIT.INVALID, `${command}: no rule change is ${tiers.flat().join(' or ')}`);
-}
-
-async function decideLesson(args, io, env, { command, status, tiers, withWording }) {
-  const options = { demo: { type: 'string' }, lesson: { type: 'string' }, ...(withWording ? { wording: { type: 'string' }, 'clear-wording': { type: 'boolean' } } : {}) };
-  const v = parse(args, options);
-  if (v.help) {
-    io.out(USAGE);
-    return EXIT.OK;
-  }
-  return withEditing(command, v, args, io, env, async (ctx, run) => {
-    if (v.wording !== undefined && text(v.wording) === '') throw stop(EXIT.INVALID, `${command}: --wording is empty (use --clear-wording to empty Editor wording so that the draft is tested)`);
-    const clearing = withWording && v['clear-wording'] === true;
-    if (clearing && v.wording !== undefined) throw stop(EXIT.INVALID, `${command}: --wording and --clear-wording cannot be combined`);
-    const loaded = await pullForEditing(ctx, 'rule_changes');
-    const lessons = loaded.lessons() ?? [];
-    // approve with wording and no Proposed rule change left means the Approved one whose safety check did not pass
-    const chosen = chooseLesson(lessons, v.lesson, { allowed: tiers.flat(), tiers: withWording && (v.wording !== undefined || clearing) ? tiers : tiers.slice(0, 1) }, command);
-    const row = loaded.pulled(['rule_changes']).rule_changes[chosen.Lesson];
-    if (!row) throw stop(EXIT.INVALID, `Rule changes has no row called "${chosen.Lesson}"`);
-    const wrote = {};
-    if (row.Status !== status) wrote.Status = status;
-    if (v.wording !== undefined) wrote['Editor wording'] = v.wording;
-    if (clearing) wrote['Editor wording'] = '';
-    const before = Object.fromEntries(Object.keys(wrote).map((column) => [column, row[column] ?? null]));
-    const unchanged = Object.keys(wrote).length === 0 || sameColumns(loaded.schema('rule_changes'), wrote, before);
-    if (unchanged) logEditorAction(ctx, { action: command, status: 'unchanged', table: 'rule_changes', key: chosen.Lesson, page_id: row.page_id, wrote, before });
-    else await updateAsEditor(ctx, { action: command, table: 'rule_changes', key: chosen.Lesson, pageId: row.page_id, wrote, before, loaded });
-
-    const rows = [['Status', status, '']];
-    if (v.wording !== undefined) rows.push(['Editor wording', quoted(v.wording, 100), '']);
-    if (clearing) rows.push(['Editor wording', 'cleared: the draft is tested', '']);
-    const title = quoted(chosen.Lesson, 60);
-    let sentence;
-    if (unchanged) sentence = `Walkthrough: acting as the editor, the rule change ${title} is already ${status}${v.wording !== undefined ? ' with that wording' : ''}; nothing was changed.`;
-    else if (clearing && Object.hasOwn(wrote, 'Editor wording')) sentence = `Walkthrough: acting as the editor, the rule change ${title} is now ${status}, with its Editor wording cleared so that the draft is tested.`;
-    else if (Object.hasOwn(wrote, 'Status') && Object.hasOwn(wrote, 'Editor wording')) sentence = `Walkthrough: acting as the editor, the rule change ${title} is now ${status}, with its Editor wording filled in.`;
-    else if (Object.hasOwn(wrote, 'Editor wording')) sentence = `Walkthrough: acting as the editor, the Editor wording of the rule change ${title} is now filled in.`;
-    else sentence = `Walkthrough: acting as the editor, the rule change ${title} is now ${status}.`;
-    emit(io, {
-      sentence,
-      header: ['Column', 'Now', ''],
-      rows,
-      next: await nextAfterEditing(ctx),
-    }, run.dir);
-    return EXIT.OK;
-  });
-}
-
-const approveCommand = (args, io, env) => decideLesson(args, io, env, { command: 'approve', status: 'Approved', tiers: [['Proposed'], ['Approved']], withWording: true });
-const rejectCommand = (args, io, env) => decideLesson(args, io, env, { command: 'reject', status: 'Rejected', tiers: [['Proposed', 'Approved']], withWording: false });
-
 // ---- main -----------------------------------------------------------------------------------------------------------------------------------------
 
 function classify(e, io) {
@@ -2102,9 +1874,6 @@ export async function main(argv = process.argv.slice(2), io = defaultIo, env = {
       case 'where': return await whereCommand(rest, io, env);
       case 'verify': return await verifyCommand(rest, io, env);
       case 'list': return await listCommand(rest, io, env);
-      case 'decide': return await decideCommand(rest, io, env);
-      case 'approve': return await approveCommand(rest, io, env);
-      case 'reject': return await rejectCommand(rest, io, env);
       case '--help': case '-h': case 'help':
         io.out(USAGE);
         return EXIT.OK;
