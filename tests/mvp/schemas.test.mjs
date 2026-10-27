@@ -17,9 +17,9 @@ const hash = 'sha256:0123456789abcdef';
 
 // ---- all of them ---------------------------------------------------------------------------------------------------------------------
 
-test('the folder holds the ten schemas the contracts name, each in the subset the validator supports', () => {
+test('the folder holds the eleven schemas the contracts name, each in the subset the validator supports', () => {
   const files = readdirSync(dir).filter((f) => f.endsWith('.schema.json')).sort();
-  assert.deepEqual(files, ['card', 'cell', 'claim-row', 'judge-reply', 'ledger-row', 'lesson', 'plan', 'reading-reply', 'report', 'rubric'].map((n) => `${n}.schema.json`));
+  assert.deepEqual(files, ['card', 'cell', 'claim-row', 'geo-pick', 'judge-reply', 'ledger-row', 'lesson', 'plan', 'reading-reply', 'report', 'rubric'].map((n) => `${n}.schema.json`));
   for (const file of files) {
     const schema = JSON.parse(readFileSync(new URL(file, dir), 'utf8'));
     assertSchema(schema); // throws on a keyword the validator does not know: a typo would switch a check off

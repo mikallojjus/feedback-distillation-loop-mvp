@@ -1,0 +1,158 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Geo claims pick (setup/geo-claims-pick.json)",
+  "description": "The 200 Geo claims tagged Debate that setup seeds into the Claims table, as scripts/geo-pick.mjs writes them (decision P6): the seed, the spec it followed, the populations it drew from, the allocation per space and month, the duplicates it set aside, the audit claims it forced in or left out (each left-out one with its reason), the Geo Tags options, and one row per claim with the lean Geo columns. Rows are sorted by space order, then month, then Geo ID. Nothing in it is a decision of an editor.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["pick_version", "seed", "endpoint", "fetched_at", "spec", "populations", "duplicates", "allocation", "audit", "tag_names", "rows"],
+  "properties": {
+    "pick_version": { "const": 1 },
+    "seed": { "type": "string", "minLength": 1, "description": "The same seed and the same Geo data give the same pick." },
+    "endpoint": { "type": "string", "pattern": "^https://", "description": "The Geo GraphQL endpoint the claims were read from." },
+    "fetched_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$" },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "spaces"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 1 },
+        "spaces": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/space" }, "description": "The spaces in canonical order, each with its quota." }
+      }
+    },
+    "populations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["total", "months"],
+        "properties": {
+          "total": { "type": "integer", "minimum": 0, "description": "Claims in the space after the checks: Claim type, a name, one entry per claim, and the first canonical space for a claim that is in more than one." },
+          "months": { "$ref": "#/definitions/counts" }
+        }
+      }
+    },
+    "duplicates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cross_space", "text"],
+      "properties": {
+        "cross_space": {
+          "type": "array",
+          "description": "Claims that are tagged Debate in more than one space; each stays in the first space in canonical order.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["geo_id", "name", "kept_in", "also_in"],
+            "properties": {
+              "geo_id": { "$ref": "#/definitions/geoId" },
+              "name": { "type": "string" },
+              "kept_in": { "type": "string", "minLength": 1 },
+              "also_in": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }
+            }
+          }
+        },
+        "text": {
+          "type": "array",
+          "description": "Claims set aside in the sample because another claim with the same normalised text was already picked.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["geo_id", "name", "space", "month", "same_as", "same_as_space"],
+            "properties": {
+              "geo_id": { "$ref": "#/definitions/geoId" },
+              "name": { "type": "string" },
+              "space": { "type": "string", "minLength": 1 },
+              "month": { "$ref": "#/definitions/month" },
+              "same_as": { "$ref": "#/definitions/geoId" },
+              "same_as_space": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "allocation": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["quota", "picked", "months", "moved_in", "moved_out"],
+        "properties": {
+          "quota": { "type": "integer", "minimum": 0 },
+          "picked": { "type": "integer", "minimum": 0 },
+          "months": { "$ref": "#/definitions/counts" },
+          "moved_in": { "type": "integer", "minimum": 0, "description": "Claims this space picked on top of its quota because other spaces had too few." },
+          "moved_out": { "type": "integer", "minimum": 0, "description": "Claims of this space's quota that other spaces picked instead because this space had too few." }
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file", "sha256", "included", "left_out"],
+      "properties": {
+        "file": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "SHA-256 of the audit file's bytes; setup checks it before it seeds the decisions." },
+        "included": { "type": "array", "items": { "$ref": "#/definitions/geoId" }, "description": "The audit claims that are in the pick, in the audit file's order." },
+        "left_out": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["geo_id", "reason"],
+            "properties": {
+              "geo_id": { "$ref": "#/definitions/geoId" },
+              "reason": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      }
+    },
+    "tag_names": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "The sorted union of every row's Geo Tags: the options of the Geo Tags column." },
+    "rows": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/row" } }
+  },
+  "definitions": {
+    "geoId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "month": { "type": "string", "pattern": "^\\d{4}-\\d{2}$" },
+    "counts": { "type": "object", "additionalProperties": { "type": "integer", "minimum": 0 }, "description": "A count per UTC month (YYYY-MM)." },
+    "space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "id", "quota"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "id": { "$ref": "#/definitions/geoId" },
+        "quota": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["Geo Name", "Geo ID", "Geo URL", "Geo Space", "Geo Created", "Geo Sources", "source_pieces", "Geo Is factual", "Geo Tags", "Geo Topics", "month"],
+      "properties": {
+        "Geo Name": { "type": "string", "minLength": 1, "description": "The claim's Name value in its space, falling back to the entity's name." },
+        "Geo ID": { "$ref": "#/definitions/geoId" },
+        "Geo URL": { "type": "string", "pattern": "^https://\\S+$", "description": "{browser_url}/space/{space id}/{Geo ID}." },
+        "Geo Space": { "type": "string", "minLength": 1 },
+        "Geo Created": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "The UTC date of the entity's createdAt." },
+        "Geo Sources": { "type": "string", "description": "The names of the claim's sources, one per line." },
+        "source_pieces": {
+          "type": "array",
+          "description": "One piece per source, for the links of the Geo Sources cell: the source's Web URL when it has one, else its Geo URL.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "url"],
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "url": { "type": "string", "pattern": "^https?://\\S+$" }
+            }
+          }
+        },
+        "Geo Is factual": { "type": ["boolean", "null"] },
+        "Geo Tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "Geo Topics": { "type": "string", "description": "The names of the claim's topics, one per line." },
+        "month": { "$ref": "#/definitions/month" }
+      }
+    }
+  }
+}
