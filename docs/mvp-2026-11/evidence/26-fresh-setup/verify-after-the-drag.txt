@@ -1,0 +1,5 @@
+verify: rows rulebook 13, claims 200, tag_decisions 3, rule_changes 0, agent_settings 1; 49 request(s), 0 write(s)
+verify: 2 difference(s)
+  hub: missing - the warning line at the top is not on the hub page
+  hub: leftover - a block that is none of these is on the hub page and was left as it is: paragraph (406273e214eb80bbb331cda3590360a2); remove it by hand if it should not be there
+exit 2

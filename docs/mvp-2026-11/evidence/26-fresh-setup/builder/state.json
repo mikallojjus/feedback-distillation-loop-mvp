@@ -1,0 +1,60 @@
+{
+  "pages": {
+    "onboarding": {
+      "id": "406273e214eb81a881dcd1480c5d015e",
+      "status": "created"
+    }
+  },
+  "tables": {
+    "claims": {
+      "database_id": "c838378afca148d498a1fdec96e9d7cb",
+      "data_source_id": "4eca85dd551d48ed863b4da13f01d4e9",
+      "views": "ok",
+      "view_ids": {
+        "Your queue": "406273e2-14eb-81a3-993c-000c78850705",
+        "Needs your note": "406273e2-14eb-8141-8b6e-000c49a0b3c6",
+        "Agent disagreed": "406273e2-14eb-819e-8d97-000c49b71f37"
+      },
+      "view_status": {
+        "Your queue": "created",
+        "Needs your note": "created",
+        "Agent disagreed": "created"
+      }
+    },
+    "rulebook": {
+      "database_id": "dba96ff240e64832b48798386abaff01",
+      "data_source_id": "9b8cef6c20934d44829ea3417858754a"
+    },
+    "rule_changes": {
+      "database_id": "9be13cb2f6f74546910462acb3420500",
+      "data_source_id": "ad5b86516555496cbd9c6b81e11300d0",
+      "views": "ok",
+      "view_ids": {
+        "Lessons waiting": "406273e2-14eb-81fa-8c8d-000c20b953ba"
+      },
+      "view_status": {
+        "Lessons waiting": "created"
+      }
+    },
+    "tag_decisions": {
+      "database_id": "379870f3d8b1423f900a02e6be165b9d",
+      "data_source_id": "795d3f6651fb41c681d6b360b65f5df8",
+      "views": "ok",
+      "view_ids": {
+        "Your queue (ledger)": "406273e2-14eb-81ef-befa-000cc8b646d1",
+        "Needs your note (ledger)": "406273e2-14eb-81a3-a8bc-000c7cea3533"
+      },
+      "view_status": {
+        "Your queue (ledger)": "created",
+        "Needs your note (ledger)": "created"
+      }
+    },
+    "agent_settings": {
+      "database_id": "e15d27cefc774e20956d48170c662b5c",
+      "data_source_id": "d0512451f0024f48a675b6c3ac5aa47e"
+    }
+  },
+  "updated_at": "2026-10-27T18:45:35.412Z",
+  "parent_page_id": "3fa273e214eb805199f3d12ef01db453",
+  "archive_checked": true
+}

@@ -1,0 +1,86 @@
+{
+  "run_id": "20261027T164033Z-setup-all",
+  "script": "setup.mjs",
+  "args": [
+    "all",
+    "--taxonomy",
+    "agents/claim-tagger-mvp/setup/taxonomy-issue.json",
+    "--claims",
+    "agents/claim-tagger-mvp/setup/geo-claims-pick.json",
+    "--audit",
+    "agents/claim-tagger-mvp/setup/audit-decisions.json"
+  ],
+  "started_at": "2026-10-27T16:40:33.584Z",
+  "finished_at": "2026-10-27T16:43:51.045Z",
+  "exit_code": 2,
+  "rubric_edition": "2026-10-27.1",
+  "pull_id": null,
+  "resume": "node agents/claim-tagger-mvp/scripts/setup.mjs all --taxonomy agents/claim-tagger-mvp/setup/taxonomy-issue.json --claims agents/claim-tagger-mvp/setup/geo-claims-pick.json --audit agents/claim-tagger-mvp/setup/audit-decisions.json",
+  "steps": [
+    {
+      "step": "api-check",
+      "run_id": "20261027T164033Z-setup-api-check",
+      "exit_code": 0
+    },
+    {
+      "step": "databases",
+      "run_id": "20261027T164033Z-setup-databases",
+      "exit_code": 0
+    },
+    {
+      "step": "pages",
+      "run_id": "20261027T164036Z-setup-pages",
+      "exit_code": 0
+    },
+    {
+      "step": "views",
+      "run_id": "20261027T164036Z-setup-views",
+      "exit_code": 0
+    },
+    {
+      "step": "hub",
+      "run_id": "20261027T164042Z-setup-hub",
+      "exit_code": 0
+    },
+    {
+      "step": "rulebook",
+      "run_id": "20261027T164043Z-setup-rulebook",
+      "exit_code": 0
+    },
+    {
+      "step": "claims",
+      "run_id": "20261027T164054Z-setup-claims",
+      "exit_code": 0
+    },
+    {
+      "step": "seed-audit",
+      "run_id": "20261027T164321Z-setup-seed-audit",
+      "exit_code": 0
+    },
+    {
+      "step": "migrate-decisions",
+      "run_id": "20261027T164325Z-setup-migrate-decisions",
+      "exit_code": 0
+    },
+    {
+      "step": "rubric",
+      "run_id": "20261027T164333Z-setup-rubric",
+      "exit_code": 0
+    },
+    {
+      "step": "canaries",
+      "run_id": "20261027T164333Z-setup-canaries",
+      "exit_code": 0
+    },
+    {
+      "step": "settings",
+      "run_id": "20261027T164333Z-setup-settings",
+      "exit_code": 0
+    },
+    {
+      "step": "verify",
+      "run_id": "20261027T164334Z-setup-verify",
+      "exit_code": 2
+    }
+  ]
+}

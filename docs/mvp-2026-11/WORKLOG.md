@@ -4,10 +4,11 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase: "Read the decisions" (decision P4, `READ-DECISIONS.md`) is complete on the branch `read-decisions-2026-11`: stages 0 to 5 done, the verification loop closed at its third run with no must or should finding, 2,084 tests pass, the artifact republished, the product owner's page built. Waiting: the product owner runs the seven steps on "Claim tagger practice · product owner, 22 Oct" and says whether the MVP is agreed and whether the branch may be merged into `mvp-2026-11`.
+- Phase (entry 40): "The hub and the Geo claims" (P5 to P17, `HUB-AND-GEO-CLAIMS.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 7. The root page is "Claim tagger", the hub. The first build sits in its archive sub-page. A fresh set of five full-page tables holds 200 Geo claims, and verify is clean. 2,211 tests pass. Next: step 8 (the practice-page dry run and status), then step 9 (the tag run) on the product owner's go.
+- Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
-- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The live copy is in the 22 October shape (`evidence/17-readings-live/`) and holds no rule change. Practice pages: calibration 6, 7 and 8 and the product owner's page under Demos (the owner's is the newest, so the demo commands reach it); verification 4, 5 and 6 under Demo tests. The owner's page of 21 October is of the older shape and shows as "unknown" in `list`.
+- Notion: ids in `agents/claim-tagger-mvp/config.json` and STATE.md. The hub holds the warning line, three link lines, Claims, Rulebook, Rule changes, Tag decisions, Agent settings, Onboarding (empty so far) and the archive page. The archive holds the first build: its five tables, Structure proposal, Demos and Demo tests with every practice page made until 27 October. All of it is protected.
 - Artifact: https://claude.ai/artifact/EHcW9M6Y8TMCHbeDu3pVtr, republished on 22 October.
 - Still to do after the merge: the backlog rows added on the branch (twelve, size S); the unpaused practice-page eval; a second independent verification of the acceptance checks.
 
@@ -324,3 +325,27 @@ Done: the Opus re-check of the stage 7 fixes (`evidence/24-pre-live-gate/recheck
 Verified: after the merge 2,210 tests pass, 0 fail, 0 skipped (`evidence/01-tests/node-test-claims-hub-fix2.txt`). The Opus confirmation (`evidence/24-pre-live-gate/confirm.md`) says GO with no must-fix. It proved SH-1 and M1 again on a copy (0 network attempts): a "done" record with the old config, a placeholder or another archive page exits 2, and archive run again finishes locally and opens the gate. The practice structure is deep-equal before and after. Not verified live: a view filter of an `and` holding an `or` (the reference allows two levels; a refusal stops the build with exit 1), a view created `after_view`, a table description on create.
 
 Next: the live runbook from step 2 (set the old setup files aside, tests, commit), then the builder session and `archive --plan-only`; the archive itself waits for the product owner's go.
+
+### 40. Live runbook steps 2 to 7: the archive, the fresh set under the hub, 200 claims, verify clean (2026-10-27)
+
+Done: step 2 set the first build's pick and page-id files aside under `setup/archive-2026-10/` (322c890; 2,210 tests pass with them moved). A builder session was opened. `archive --plan-only` listed the rename, the archive page and the 8 moves (3 pages, 5 tables). On the product owner's go, `archive` ran (30fac28, `evidence/25-archive/`). It renamed the root "Claim tagger", made "Feedback Distillation MVP (archive, to 27 Oct 2026)" with its line back to the hub, moved Structure proposal, Demos, Demo tests and the five old tables into it and read every new parent back: 10 writes, no DELETE. It rewrote `config.json`, with 29 page ids and 296 database ids now protected. Step 6 ran `preview`, `build` and `all` (fc07323, `evidence/26-fresh-setup/`):
+- the structure: 5 full-page tables, 6 views (each table opens on its own view), Onboarding, and the hub's warning line and three link lines;
+- the rows: 13 Rulebook rows, the 200 Geo claims of the pick, 3 audit decisions seeded and migrated ("From the audit of 9 October"; the other 7 audit claims are not tagged Debate in a canonical space and are named in the run), and the settings row;
+- the rubric: edition 2026-10-27.1, the rules of 2026-10-15.2 with the fresh Rulebook's page ids;
+- 11 canaries.
+
+Notion named every table's own view "Default view"; the build found it, renamed or arranged it and placed every named view after it, so no tab warning came. The first verify named 4 differences:
+- the archive page above the tables;
+- two empty paragraphs left from the first build;
+- a false link difference on one claim. Notion adds a trailing slash to a bare origin; decision 111 fixes the comparison (4529266; 2,211 tests).
+
+The product owner dragged the archive page to the bottom, removed the two paragraphs and checked that Claims opens on All claims. In doing so the warning line went too, and a new empty paragraph appeared below the archive page. The `hub` step put the warning line back at the top (1 append, read back). The product owner removed the new paragraph. The builder session is closed.
+
+Verified: the last `setup.mjs verify` reports no differences, 49 requests and 0 writes (`evidence/26-fresh-setup/verify-final.txt`, `builder/verify.json`). The day's request logs (`requests-audit.json`) hold:
+- 928 requests and 250 writes: 10 for the archive, 20 for the structure, 220 rows;
+- POST queries counted as reads;
+- 0 DELETE, 0 trash or archived fields, 0 failed requests.
+
+Every plan op that touches an editor-owned field (3, all migrate-decisions on Claims) carries the audit prefix. The Claims tab order was checked by a person, since verify cannot read it. Also seen live: a view filter of an `and` holding an `or` is accepted (the build made Your queue), a view is accepted when created `after_view`, and a table description is accepted on create and stored (a GET of each of the five tables reads its description back, with `is_inline` false). Not verified yet: that "is not Reviewed, or is empty" keeps the claims whose Review status is empty. Your queue lists claims only once the tag run has set Agent status, so step 8's status and step 9's tag run show it.
+
+Next: runbook step 8, the walkthrough's `start --parent <Onboarding> --dry-run` and the headless `/claim-tagger status` (`evidence/27-…`). Then step 9, the tag run on the 200 claims, which writes about 400 rows and waits for the product owner's go.

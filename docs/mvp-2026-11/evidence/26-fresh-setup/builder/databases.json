@@ -1,0 +1,26 @@
+{
+  "ids": [
+    "c838378afca148d498a1fdec96e9d7cb",
+    "4eca85dd551d48ed863b4da13f01d4e9",
+    "dba96ff240e64832b48798386abaff01",
+    "9b8cef6c20934d44829ea3417858754a",
+    "9be13cb2f6f74546910462acb3420500",
+    "ad5b86516555496cbd9c6b81e11300d0",
+    "379870f3d8b1423f900a02e6be165b9d",
+    "795d3f6651fb41c681d6b360b65f5df8",
+    "e15d27cefc774e20956d48170c662b5c",
+    "d0512451f0024f48a675b6c3ac5aa47e"
+  ],
+  "names": {
+    "claims": "c838378afca148d498a1fdec96e9d7cb",
+    "claims_data_source": "4eca85dd551d48ed863b4da13f01d4e9",
+    "rulebook": "dba96ff240e64832b48798386abaff01",
+    "rulebook_data_source": "9b8cef6c20934d44829ea3417858754a",
+    "rule_changes": "9be13cb2f6f74546910462acb3420500",
+    "rule_changes_data_source": "ad5b86516555496cbd9c6b81e11300d0",
+    "tag_decisions": "379870f3d8b1423f900a02e6be165b9d",
+    "tag_decisions_data_source": "795d3f6651fb41c681d6b360b65f5df8",
+    "agent_settings": "e15d27cefc774e20956d48170c662b5c",
+    "agent_settings_data_source": "d0512451f0024f48a675b6c3ac5aa47e"
+  }
+}

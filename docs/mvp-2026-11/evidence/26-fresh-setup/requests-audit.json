@@ -1,0 +1,144 @@
+{
+  "day": "20261027",
+  "runs": [
+    {
+      "run": "20261027T163438Z-setup-archive",
+      "requests": 10,
+      "writes": 0,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T163610Z-setup-archive",
+      "requests": 230,
+      "writes": 10,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T164033Z-setup-api-check",
+      "requests": 1,
+      "writes": 0,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T164043Z-setup-rulebook",
+      "requests": 30,
+      "writes": 13,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T164054Z-setup-claims",
+      "requests": 404,
+      "writes": 200,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T164321Z-setup-seed-audit",
+      "requests": 10,
+      "writes": 3,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T164325Z-setup-migrate-decisions",
+      "requests": 16,
+      "writes": 3,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T164333Z-setup-settings",
+      "requests": 4,
+      "writes": 1,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T164334Z-setup-verify",
+      "requests": 49,
+      "writes": 0,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T184356Z-setup-verify",
+      "requests": 49,
+      "writes": 0,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "20261027T184907Z-setup-verify",
+      "requests": 49,
+      "writes": 0,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    },
+    {
+      "run": "builder log (20261027)",
+      "requests": 76,
+      "writes": 20,
+      "deletes": 0,
+      "trash_fields": 0,
+      "failed": 0
+    }
+  ],
+  "totals": {
+    "requests": 928,
+    "writes": 250,
+    "deletes": 0,
+    "trash_fields": 0,
+    "failed": 0
+  },
+  "editor_ops": [
+    {
+      "run": "20261027T164325Z-setup-migrate-decisions",
+      "table": "claims",
+      "key": "1bff859247ecdb618af41a397d2eb6ba",
+      "fields": [
+        "Verified tags",
+        "Review status",
+        "Challenged tags notes"
+      ],
+      "from_audit": true
+    },
+    {
+      "run": "20261027T164325Z-setup-migrate-decisions",
+      "table": "claims",
+      "key": "3e0d601de961dbf8ae38154e3f3a02e5",
+      "fields": [
+        "Verified tags",
+        "Review status",
+        "Challenged tags notes"
+      ],
+      "from_audit": true
+    },
+    {
+      "run": "20261027T164325Z-setup-migrate-decisions",
+      "table": "claims",
+      "key": "c8b676c3cce79edaec871afd1633ac2f",
+      "fields": [
+        "Verified tags",
+        "Review status",
+        "Challenged tags notes"
+      ],
+      "from_audit": true
+    }
+  ],
+  "editor_ops_not_audit": 0
+}
