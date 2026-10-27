@@ -1,0 +1,145 @@
+# Structure preview
+
+5 tables, 68 columns, 6 views and 1 sub-pages, built under the parent page.
+
+## Sub-pages
+
+- Onboarding: Practice pages for new editors live here. Type /claim-tagger-walkthrough in Claude Code and give this page's link; nothing on a practice page touches the real Claims table.
+
+## Hub page "Claim tagger"
+
+The hub page holds only links, in this order (nothing on it is moved, edited or removed by a later run; what is out of place is reported):
+
+1. the warning line at the very top: Claims is the real table: every decision you make there trains the rulebook. To practise, open Onboarding.
+2. 3 link lines at the top: Your queue: the claims that wait for your decision; Needs your note: claims where you overruled the agent and left no note; Lessons waiting: rule changes the agent drafted, for the rule owner to approve or reject
+3. the 5 tables as full-page tables, in this order: Claims, Rulebook, Rule changes, Tag decisions, Agent settings
+4. then: Onboarding, the archive page "Feedback Distillation MVP (archive, to 27 Oct 2026)" (made by setup.mjs archive; it sits above the tables until a person drags it down)
+
+## Claims (20 columns)
+
+Description under the table's name: 200 Geo claims tagged Debate. Decide them through Your queue; every decision trains the rulebook.
+
+| Column | Type | Options | Meaning |
+|---|---|---|---|
+| Geo Name | title |  | The claim text. |
+| Agent tags | relation | points at the Rulebook | The tags that apply, from the Rulebook. The agent writes it; on a claim you have Reviewed it holds your Verified tags. Tags that wait for you are in Tags waiting instead. |
+| Agent confidence | number |  | How sure the agent is: the lowest confidence among the tags it judged on the claim, from 0.5 (a coin flip) to 1 (certain). Your queue is sorted by it, lowest first. |
+| Agent reasons | rich_text |  | Why the agent proposed what it did: one line per judged tag, "<Tag>: <reason> · <rule cited> · <k> of <n> runs agree", so you can decide without opening the agent's record. |
+| Agent status | select | Waits for you, Done, Disagrees with your decision, Could not read | What the agent says about the claim: Waits for you (a tag needs your decision), Done, Disagrees with your decision, or Could not read. Your queue lists Waits for you until you set Review status to Reviewed. |
+| Tags waiting | relation | points at the Rulebook | The tags that wait for your decision on this claim, from the Rulebook. Empty when nothing waits. |
+| Agent edition | rich_text |  | The rulebook edition the agent wrote this row under. |
+| Agent remarks | rich_text |  | What the agent could not check, such as "not checked: 6 tags without rules"; empty when it checked everything. |
+| Agent reading | rich_text |  | What the agent made of your decision, one line per tag where you differed from it: Agent slip, Rule unclear or Rule should change, the rule, and why. Empty until the agent has read your decision. |
+| Verified tags | relation | points at the Rulebook | Every tag that applies, Agent tags included. A judged tag you leave out counts as Does not apply. |
+| Review status | select | To review, Reviewed | To review or Reviewed. A claim is decided once it is Reviewed; anything else leaves it open. Set it last: the claim leaves Your queue as soon as it is Reviewed. |
+| Challenged tags notes | rich_text |  | Your words. A line that starts with a tag name and a colon belongs to that tag. Open it with Agent slip, Rule unclear or Rule should change and a full stop to say what you think went wrong; otherwise the agent reads it. "rule 4" names the rule. |
+| Geo ID | rich_text |  | The claim's identity in Geo; the queue's Key starts with it. |
+| Geo URL | url |  | The claim's page in Geo. |
+| Geo Space | select | U.S. Politics, World affairs, AI, Health, Crypto, Technology | The Geo space the claim was read from. |
+| Geo Created | date |  | The day the claim was made in Geo. |
+| Geo Sources | rich_text |  | The claim's sources, as Geo lists them. |
+| Geo Is factual | checkbox |  | Ticked when Geo marks the claim as factual. |
+| Geo Tags | multi_select | Debate, Featured, Main claim, Top Debate | The claim's tags in Geo. |
+| Geo Topics | rich_text |  | The claim's topics in Geo. |
+
+Views, in the order of the tabs:
+
+- The table's own view (Notion's default), the first tab, called All claims: shows Geo Name, Geo Space, Agent tags, Agent status, Verified tags, Review status, Geo URL; the other 13 columns are hidden
+- **Your queue**: rows shown: Agent status is Waits for you and Review status is not Reviewed; sorted by: Agent confidence, lowest first; columns: Geo Name, Tags waiting, Agent reasons, Agent tags, Verified tags, Challenged tags notes, Review status; cells wrap
+- **Needs your note**: rows shown: Agent reading contains without your note; sorted by: Agent confidence, lowest first; columns: Geo Name, Verified tags, Agent reading, Challenged tags notes, Review status; cells wrap
+- **Agent disagreed**: rows shown: Agent status is Disagrees with your decision; sorted by: Agent confidence, lowest first; columns: Geo Name, Agent reasons, Agent reading, Verified tags, Challenged tags notes, Review status; cells wrap
+
+## Rulebook (17 columns)
+
+Description under the table's name: One row per tag; When to use holds the rules. Change rules through Lessons waiting.
+
+| Column | Type | Options | Meaning |
+|---|---|---|---|
+| Name | title |  | The tag's name; one row per tag. |
+| Category | select | Nature, Form, Quality, Style, Tone, Format, Meaning, Usage, Check | The tag's group. |
+| Counterpart | rich_text |  | The opposite tag it pairs with (Self-contained for Context-dependent). |
+| Description | rich_text |  | One or two sentences describing a claim that carries the tag. |
+| Evidence | url |  | The report the tag's verification rests on. |
+| Example Claims | rich_text |  | Claims that show the tag, one per line. |
+| Geo Status | select | Existing in Geo, To be created, Implemented differently | Whether the tag exists in Geo. |
+| Geo Tag ID | rich_text |  | The tag's id in Geo. |
+| Polarity | select | Classification, Positive, Issue | Kept as in the taxonomy; the agent does not use it. |
+| Status | select | Verified, Proposed | Whether the tag is verified. |
+| Verified on | date |  | When the tag was verified. |
+| When to use | rich_text |  | The numbered rules the agent applies; a tag is judged only when this holds rules. |
+| Work tags | multi_select | Pipeline benchmark check, Issue | The work the tag belongs to; every row here has Issue. |
+| Created | created_time |  | When the row was made. |
+| Created by | created_by |  | Who made the row. |
+| Last edited | last_edited_time |  | When the row last changed. |
+| Last edited by | last_edited_by |  | Who last changed the row. |
+
+Views, in the order of the tabs:
+
+- The table's own view (Notion's default), the first tab, called Rulebook: shows Name, Category, Status, When to use, Example Claims; the other 12 columns are hidden
+
+## Rule changes (10 columns)
+
+Description under the table's name: Rule changes the agent drafted. The rule owner sets Approved or Rejected.
+
+| Column | Type | Options | Meaning |
+|---|---|---|---|
+| Lesson | title |  | A short name for the change. |
+| Tag | select | Context-dependent, Exact duplicate, Factually challenged, Improper capitalization, Improperly sourced, Incorrect grammar, Multi-sentence, Poor wording, Semantically duplicated, Source inaccessible, Trailing period, Unsourced, Wordy | The tag the change is about. |
+| Rule | rich_text |  | Which rule, for example "Context-dependent rule 3". |
+| Kind | select | Clarify wording, Change the rule, Initial rules | What kind of change. |
+| Current text | rich_text |  | The rule's text now. |
+| Proposed text | rich_text |  | The text the agent proposes. |
+| Safety check result | rich_text |  | For example "PASS: examples 11/11, earlier 10/10, yours 2/2" or "FAIL: 'Excluding CNN from Air Force One violates the federal court order' now Does not apply". |
+| Supporting rows | rich_text |  | One line per decided row the change rests on: the claim shortened, " · ", the row's Key. |
+| Editor wording | rich_text |  | The rule as the editor words it; when filled, the safety check tests it instead of the Proposed text. Never written by the agent. |
+| Status | select | Proposed, Approved, Rejected, Live, Rolled back | The editor sets Approved and Rejected; the agent sets Proposed, Live and Rolled back. |
+
+Views, in the order of the tabs:
+
+- The table's own view (Notion's default), the first tab: shows Lesson, Tag, Status, Current text, Proposed text, Safety check result; the other 4 columns are hidden
+- **Lessons waiting**: rows shown: Status is Proposed or Approved; sorted by: none; columns: Lesson, Current text, Proposed text, Status; cells wrap
+
+## Tag decisions (17 columns)
+
+Description under the table's name: The agent's record, copied from Claims. Read only; never edit here.
+
+| Column | Type | Options | Meaning |
+|---|---|---|---|
+| Claim | title |  | The claim text. |
+| Key | rich_text |  | The claim's Geo ID, two colons, the tag; one row per claim and tag. |
+| Tag | select | Context-dependent, Exact duplicate, Factually challenged, Improper capitalization, Improperly sourced, Incorrect grammar, Multi-sentence, Poor wording, Semantically duplicated, Source inaccessible, Trailing period, Unsourced, Wordy | The tag the row is about. |
+| Agent proposal | select | Applies, Does not apply, Can't tell | The agent's answer. |
+| Agent confidence | number |  | How sure the agent is of its answer, from 0.5 (a coin flip) to 1 (certain); the queue is sorted by it, lowest first. |
+| Agent reason | rich_text |  | At most 40 words, then the rule cited and how many runs agreed. |
+| Claim link | url |  | Link to the claim's row in the Claims table. |
+| Rulebook edition | rich_text |  | The edition the proposal was made under. |
+| Follow-up | select | Fixed, Still wrong | Set after a safety check PASS, on the rows the change rests on. |
+| Tag outcome | select | Applies, Does not apply | Copied by the agent from the claim once an editor has Reviewed it: Applies when the tag is in Verified tags, else Does not apply. |
+| Why wrong | select | Agent slip, Rule unclear, Rule should change | Copied by the agent from your note on the claim: the reason word that opens the tag's line (Agent slip, Rule unclear or Rule should change), for a tag whose outcome differs from the proposal. |
+| Your reasoning | rich_text |  | Copied by the agent from Challenged tags notes: the tag's own line, else the whole text. |
+| Decided under | rich_text |  | The edition the proposal you saw was made under, recorded when the agent copies your decision from the claim. |
+| Agent reading | select | Agent slip, Rule unclear, Rule should change | What the agent made of your decision where you differed from it: Agent slip (the rule settles it your way), Rule unclear (it reads both ways) or Rule should change (it decides against you). Written by the agent. |
+| Rule | rich_text |  | The rule the reading points at, for example "Context-dependent rule 3". |
+| Reading note | rich_text |  | One line of why. It opens with "without your note" when you wrote nothing for the tag. |
+| Read under | rich_text |  | The edition and a short mark of what the reading rests on: your decision, your note and the proposal the agent made. The agent reads a row again only when one of those changes. |
+
+Views, in the order of the tabs:
+
+- The table's own view (Notion's default), the first tab: shows Claim, Tag, Agent proposal, Tag outcome, Agent reading; the other 12 columns are hidden
+- **Your queue (ledger)**: rows shown: Tag outcome is empty; sorted by: Agent confidence, lowest first; columns: Claim, Agent proposal, Agent reason, Tag outcome, Why wrong, Your reasoning, Agent reading, Rule, Reading note, Read under
+- **Needs your note (ledger)**: rows shown: Reading note contains without your note; sorted by: Agent confidence, lowest first; columns: Claim, Tag outcome, Why wrong, Your reasoning, Agent reading, Rule, Reading note, Read under
+
+## Agent settings (4 columns)
+
+Description under the table's name: Tick Paused to stop every command; untick to resume.
+
+| Column | Type | Options | Meaning |
+|---|---|---|---|
+| Name | title |  | The row's name, Claim tagger. |
+| Paused | checkbox |  | Ticked by a person, every command then refuses; cleared by a person. |
+| Rulebook edition | rich_text |  | The edition in force: a date plus a count, such as 2026-10-16.1; it goes up when a rule changes. |
+| Last run summary | rich_text |  | One short line, such as "Promote · 16 Oct 11:20 · PASS". |
+
+Views, in the order of the tabs:
+
+- The table's own view (Notion's default), the first tab: shows Name, Paused, Rulebook edition, Last run summary

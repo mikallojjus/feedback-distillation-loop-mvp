@@ -1,0 +1,49 @@
+exit 2
+api-check: the parent page reads under Notion-Version 2026-03-11 (1 GET, no writes)
+table "Claims": already recorded (c838378afca148d498a1fdec96e9d7cb)
+table "Rulebook": already recorded (dba96ff240e64832b48798386abaff01)
+table "Rule changes": already recorded (9be13cb2f6f74546910462acb3420500)
+table "Tag decisions": already recorded (379870f3d8b1423f900a02e6be165b9d)
+table "Agent settings": already recorded (e15d27cefc774e20956d48170c662b5c)
+tables: 0 made, 5 there already
+columns: 0 added
+setup: warning: the pages are made before the tables here, so they will stand above them on the hub page; "setup.mjs build" (or databases first) puts them in order
+page "Onboarding": already recorded (406273e214eb81a881dcd1480c5d015e)
+pages: 0 made, 1 there already
+view "Your queue": already there
+view "Needs your note": already there
+view "Agent disagreed": already there
+view "Your queue (ledger)": already there
+view "Needs your note (ledger)": already there
+view "Lessons waiting": already there
+views: 0 made, 6 there already
+hub page: the warning line and the link lines are there already
+hub page: the archive page sits above the tables: drag it to the bottom of the page in Notion
+hub page: a block that is none of these is on the hub page and was left as it is: paragraph (3fa273e214eb8008adc7ee7e464e0dd5); remove it by hand if it should not be there
+hub page: a block that is none of these is on the hub page and was left as it is: paragraph (3fa273e214eb80809072e25447100966); remove it by hand if it should not be there
+rulebook: 13 row(s) written and read back ok
+claims: 200 row(s) written and read back ok
+seed-audit: 3 row(s) written and read back ok
+seed-audit: seeded from the audit of 9 October
+seed-audit: 3 of the 10 audit claims are in the pick; the others:
+seed-audit: left out of the pick, so not seeded: 6dc1222aeb364918821167370d8fbc40 (not tagged Debate in a canonical space)
+seed-audit: left out of the pick, so not seeded: fc0cb0da0a1a4375b0fae6b5c9a67c69 (not tagged Debate in a canonical space)
+seed-audit: left out of the pick, so not seeded: e3c28f62526e4880b9edb5c16817b27b (not tagged Debate in a canonical space)
+seed-audit: left out of the pick, so not seeded: 89fcfb7fc6684b63af7d829ed90106cd (not tagged Debate in a canonical space)
+seed-audit: left out of the pick, so not seeded: 9a0e240456694696afdfbe7b7ac7021d (not tagged Debate in a canonical space)
+seed-audit: left out of the pick, so not seeded: 8f9c833b41e54eee9ca78e9c2f4ffb58 (not tagged Debate in a canonical space)
+seed-audit: left out of the pick, so not seeded: 78dd775028795b65bb5c4945eda1c3bb (not tagged Debate in a canonical space)
+migrate-decisions: 3 claim(s) carried over, 0 ledger row(s) got Decided under, 0 claim(s) got Agent confidence; read back ok
+migrate-decisions: seeded from the audit of 9 October
+rubric: edition 2026-10-27.1 written (the Rulebook is a fresh table, so its page ids are new; the rules are those of edition 2026-10-15.2); 13 tags, 1 with rules (Context-dependent)
+canaries: 11 rows (6 expected to apply, 5 not) in evals/canaries.jsonl
+settings: 1 row(s) written and read back ok
+verify: rows rulebook 13, claims 200, tag_decisions 3, rule_changes 0, agent_settings 1; 49 request(s), 0 write(s)
+verify: 4 difference(s)
+  hub: order - the archive page sits above the tables: drag it to the bottom of the page in Notion
+  hub: leftover - a block that is none of these is on the hub page and was left as it is: paragraph (3fa273e214eb8008adc7ee7e464e0dd5); remove it by hand if it should not be there
+  hub: leftover - a block that is none of these is on the hub page and was left as it is: paragraph (3fa273e214eb80809072e25447100966); remove it by hand if it should not be there
+  claims: links - 792770cec92b7946b453aef413acc1ce: Geo Sources has 2 link(s) in Notion and 2 in the pick
+setup all: every step ran, but verify found differences (exit 2); fix what is named above and run the same command again: every step does only what is missing
+
+[exited with code 0]

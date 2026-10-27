@@ -1,2 +1,3 @@
 - 2026-10-15 · edition 2026-10-15.1 · setup: copied from the taxonomy
 - 2026-10-15 · edition 2026-10-15.2 · restored from 2026-10-15.1
+- 2026-10-27 · edition 2026-10-27.1 · setup: fresh tables under the hub (P9), copied from the taxonomy

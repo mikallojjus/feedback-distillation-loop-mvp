@@ -8,22 +8,22 @@
       "3fa273e214eb805199f3d12ef01db453"
     ],
     "pages": {
-      "onboarding": "<setup>",
+      "onboarding": "406273e214eb81a881dcd1480c5d015e",
       "archive": "406273e214eb81a78c2def55287e4b67",
       "proposal": "<archived>",
       "demos": "<archived>",
       "demo_tests": "<archived>"
     },
     "rulebook": {
-      "database_id": "<setup>",
-      "data_source_id": "<setup>",
+      "database_id": "dba96ff240e64832b48798386abaff01",
+      "data_source_id": "9b8cef6c20934d44829ea3417858754a",
       "key": "Name",
       "work_tag": "Issue"
     },
     "claims": {
       "label": "Claims",
-      "database_id": "<setup>",
-      "data_source_id": "<setup>",
+      "database_id": "c838378afca148d498a1fdec96e9d7cb",
+      "data_source_id": "4eca85dd551d48ed863b4da13f01d4e9",
       "key": "Geo ID",
       "columns": {
         "claim": "Geo Name",
@@ -47,18 +47,18 @@
     },
     "databases": {
       "tag_decisions": {
-        "database_id": "<setup>",
-        "data_source_id": "<setup>",
+        "database_id": "379870f3d8b1423f900a02e6be165b9d",
+        "data_source_id": "795d3f6651fb41c681d6b360b65f5df8",
         "key": "Key"
       },
       "rule_changes": {
-        "database_id": "<setup>",
-        "data_source_id": "<setup>",
+        "database_id": "9be13cb2f6f74546910462acb3420500",
+        "data_source_id": "ad5b86516555496cbd9c6b81e11300d0",
         "key": "Lesson"
       },
       "agent_settings": {
-        "database_id": "<setup>",
-        "data_source_id": "<setup>",
+        "database_id": "e15d27cefc774e20956d48170c662b5c",
+        "data_source_id": "d0512451f0024f48a675b6c3ac5aa47e",
         "key": "Name"
       }
     },
@@ -408,7 +408,32 @@
     "requests_per_second": 3,
     "page_size": 100,
     "max_text": 1900,
-    "views": {}
+    "views": {
+      "your_queue": {
+        "id": "406273e214eb81a3993c000c78850705",
+        "url": "https://www.notion.so/c838378afca148d498a1fdec96e9d7cb?v=406273e214eb81a3993c000c78850705"
+      },
+      "needs_your_note": {
+        "id": "406273e214eb81418b6e000c49a0b3c6",
+        "url": "https://www.notion.so/c838378afca148d498a1fdec96e9d7cb?v=406273e214eb81418b6e000c49a0b3c6"
+      },
+      "agent_disagreed": {
+        "id": "406273e214eb819e8d97000c49b71f37",
+        "url": "https://www.notion.so/c838378afca148d498a1fdec96e9d7cb?v=406273e214eb819e8d97000c49b71f37"
+      },
+      "your_queue_ledger": {
+        "id": "406273e214eb81efbefa000cc8b646d1",
+        "url": "https://www.notion.so/379870f3d8b1423f900a02e6be165b9d?v=406273e214eb81efbefa000cc8b646d1"
+      },
+      "needs_your_note_ledger": {
+        "id": "406273e214eb81a3a8bc000c7cea3533",
+        "url": "https://www.notion.so/379870f3d8b1423f900a02e6be165b9d?v=406273e214eb81a3a8bc000c7cea3533"
+      },
+      "lessons_waiting": {
+        "id": "406273e214eb81fa8c8d000c20b953ba",
+        "url": "https://www.notion.so/9be13cb2f6f74546910462acb3420500?v=406273e214eb81fa8c8d000c20b953ba"
+      }
+    }
   },
   "editor_columns": {
     "claims": [

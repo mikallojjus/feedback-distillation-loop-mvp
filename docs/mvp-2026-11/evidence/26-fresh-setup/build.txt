@@ -1,0 +1,28 @@
+table "Claims": created (c838378afca148d498a1fdec96e9d7cb)
+table "Rulebook": created (dba96ff240e64832b48798386abaff01)
+table "Rule changes": created (9be13cb2f6f74546910462acb3420500)
+table "Tag decisions": created (379870f3d8b1423f900a02e6be165b9d)
+table "Agent settings": created (e15d27cefc774e20956d48170c662b5c)
+table "claims": 3 column(s) added (Agent tags, Tags waiting, Verified tags)
+page "Onboarding": created (406273e214eb81a881dcd1480c5d015e)
+view "Default view" (the table's own): called "Rulebook", column order and visibility set
+view "Your queue": created (406273e2-14eb-81a3-993c-000c78850705)
+view "Needs your note": created (406273e2-14eb-8141-8b6e-000c49a0b3c6)
+view "Agent disagreed": created (406273e2-14eb-819e-8d97-000c49b71f37)
+view "Default view" (the table's own): called "All claims", column order and visibility set
+view "Your queue (ledger)": created (406273e2-14eb-81ef-befa-000cc8b646d1)
+view "Needs your note (ledger)": created (406273e2-14eb-81a3-a8bc-000c7cea3533)
+view "Default view" (the table's own): column order and visibility set
+view "Lessons waiting": created (406273e2-14eb-81fa-8c8d-000c20b953ba)
+view "Default view" (the table's own): column order and visibility set
+view "Default view" (the table's own): column order and visibility set
+hub page: 4 line(s) added at the top (the warning line, Your queue, Needs your note, Lessons waiting)
+pages: 1 made
+tables: 5 made
+columns: 3 added (claims: Agent tags, Tags waiting, Verified tags)
+views: 6 made
+views brought to the structure: rulebook: Default view (the table's own view); claims: Default view (the table's own view); tag_decisions: Default view (the table's own view); rule_changes: Default view (the table's own view); agent_settings: Default view (the table's own view)
+hub page: the warning line and 3 link line(s) added at the top
+hub page: the archive page sits above the tables: drag it to the bottom of the page in Notion
+hub page: a block that is none of these is on the hub page and was left as it is: paragraph (3fa273e214eb8008adc7ee7e464e0dd5); remove it by hand if it should not be there
+hub page: a block that is none of these is on the hub page and was left as it is: paragraph (3fa273e214eb80809072e25447100966); remove it by hand if it should not be there
