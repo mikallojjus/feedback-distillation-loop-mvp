@@ -196,7 +196,7 @@ The outcome is a fresh five-table set under the same root page, a 200-claim trai
 
 ## Live runbook (in order; each step resumes by running the same command)
 
-1. **Before anything:** the product owner tells editors with their own checkouts (EDITOR-HANDOVER) to stop and pull. Old code would still write the archived tables.
+1. **Before anything:** the product owner tells editors with their own checkouts (EDITOR-HANDOVER) to stop and pull. Old code would still write the archived tables. *Skipped by decision P17 (27 Oct): nobody else has a checkout; a checkout made before the merge into `main` waits for it.*
 2. **Geo pick:** done in Stage 7 and committed. `git mv` the old `setup/claims-pick.json`, `claims-pages.json` and `rulebook-pages.json` to `setup/archive-2026-10/`.
 3. **Open a builder session:** `setup.mjs builder open --reason "P9: archive the first build, fresh set under the hub"`.
 4. **Archive:** `setup.mjs archive --plan-only` → review the 8 moves and the leftovers → `setup.mjs archive` → commit `config.json` and `setup/archive.json` (`evidence/24-archive/`).
