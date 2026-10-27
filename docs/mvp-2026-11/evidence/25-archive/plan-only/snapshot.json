@@ -1,0 +1,150 @@
+{
+  "root": {
+    "id": "3fa273e214eb805199f3d12ef01db453",
+    "title": "Feedback Distillation MVP",
+    "url": "https://app.notion.com/p/Feedback-Distillation-MVP-3fa273e214eb805199f3d12ef01db453",
+    "parent": {
+      "type": "workspace",
+      "workspace": true
+    }
+  },
+  "children": [
+    {
+      "id": "3fa273e214eb8008adc7ee7e464e0dd5",
+      "type": "paragraph",
+      "text": ""
+    },
+    {
+      "id": "3fa273e214eb81ef8504cb40e3bd7052",
+      "type": "child_page",
+      "text": "Structure proposal"
+    },
+    {
+      "id": "3fa273e214eb80809072e25447100966",
+      "type": "paragraph",
+      "text": ""
+    },
+    {
+      "id": "3fa273e214eb81ada268f4b511182378",
+      "type": "child_page",
+      "text": "Demos"
+    },
+    {
+      "id": "3fa273e214eb81c2b223dcc2331b7051",
+      "type": "child_page",
+      "text": "Demo tests"
+    },
+    {
+      "id": "17b99d1873384a1bb688c0075de45f78",
+      "type": "child_database",
+      "text": "Rulebook copy"
+    },
+    {
+      "id": "a0e77c4711044d87bc3e38296d2ea5d5",
+      "type": "child_database",
+      "text": "Claims copy"
+    },
+    {
+      "id": "b77d1b758c414293b14837fdd1af4754",
+      "type": "child_database",
+      "text": "Tag decisions"
+    },
+    {
+      "id": "ce293cfbd61a4cc680ab3567bac6da38",
+      "type": "child_database",
+      "text": "Rule changes"
+    },
+    {
+      "id": "d941cf5880bb4b4ea5de378191ab8202",
+      "type": "child_database",
+      "text": "Agent settings"
+    }
+  ],
+  "objects": [
+    {
+      "key": "proposal",
+      "kind": "page",
+      "id": "3fa273e214eb81ef8504cb40e3bd7052",
+      "data_source_id": null,
+      "state": "read",
+      "title": "Structure proposal",
+      "parent_id": "3fa273e214eb805199f3d12ef01db453",
+      "parent_type": "page_id"
+    },
+    {
+      "key": "demos",
+      "kind": "page",
+      "id": "3fa273e214eb81ada268f4b511182378",
+      "data_source_id": null,
+      "state": "read",
+      "title": "Demos",
+      "parent_id": "3fa273e214eb805199f3d12ef01db453",
+      "parent_type": "page_id"
+    },
+    {
+      "key": "demo_tests",
+      "kind": "page",
+      "id": "3fa273e214eb81c2b223dcc2331b7051",
+      "data_source_id": null,
+      "state": "read",
+      "title": "Demo tests",
+      "parent_id": "3fa273e214eb805199f3d12ef01db453",
+      "parent_type": "page_id"
+    },
+    {
+      "key": "rulebook",
+      "kind": "database",
+      "id": "17b99d1873384a1bb688c0075de45f78",
+      "data_source_id": "2b06fc1239c540da976da76a8e935e57",
+      "state": "read",
+      "title": "Rulebook copy",
+      "parent_id": "3fa273e214eb805199f3d12ef01db453",
+      "parent_type": "page_id"
+    },
+    {
+      "key": "claims",
+      "kind": "database",
+      "id": "a0e77c4711044d87bc3e38296d2ea5d5",
+      "data_source_id": "d91ec6a806d243dea9795083184e64d8",
+      "state": "read",
+      "title": "Claims copy",
+      "parent_id": "3fa273e214eb805199f3d12ef01db453",
+      "parent_type": "page_id"
+    },
+    {
+      "key": "tag_decisions",
+      "kind": "database",
+      "id": "b77d1b758c414293b14837fdd1af4754",
+      "data_source_id": "05c35b80e4154ba583c24694d30f80a4",
+      "state": "read",
+      "title": "Tag decisions",
+      "parent_id": "3fa273e214eb805199f3d12ef01db453",
+      "parent_type": "page_id"
+    },
+    {
+      "key": "rule_changes",
+      "kind": "database",
+      "id": "ce293cfbd61a4cc680ab3567bac6da38",
+      "data_source_id": "9b5af949b47941169cb5794f9b7bafc2",
+      "state": "read",
+      "title": "Rule changes",
+      "parent_id": "3fa273e214eb805199f3d12ef01db453",
+      "parent_type": "page_id"
+    },
+    {
+      "key": "agent_settings",
+      "kind": "database",
+      "id": "d941cf5880bb4b4ea5de378191ab8202",
+      "data_source_id": "8d500555731f40919c44427a8907fb48",
+      "state": "read",
+      "title": "Agent settings",
+      "parent_id": "3fa273e214eb805199f3d12ef01db453",
+      "parent_type": "page_id"
+    }
+  ],
+  "archive": {
+    "id": null,
+    "via": null,
+    "matches": []
+  }
+}
