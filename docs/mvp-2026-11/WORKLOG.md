@@ -292,3 +292,11 @@ Done: the Claude app crashed while the stage 5 coder and the stage 6 drafter wer
 Verified: `git worktree list` shows both worktrees at adec9a8 with their changes; the patches hold 6 and 19 files; nothing was written to Notion or Geo.
 
 Next: the two hand-backs, merged one at a time with the full suite after each; then stage 7.
+
+### 36. Stage 6: the docs, the hard rules and the skills (2026-10-27)
+
+Done: the Opus drafter, resumed after the crash, found all nineteen files still edited, added one dated history line at the head of CONTRACTS sections 14 to 17 and committed (6846597). CLAUDE.md: hard rule 1 keeps one exception only (setup seeds the audit decisions of 9 October once, on Claims and on each new practice page when it is made) and says no agent or script ever acts as the editor (P7, P8); rule 2 adds that Geo is read only through `geo-read.mjs`, queries only; rule 8 reads "Never delete or trash a Notion page, table, row or block. Only setup.mjs, in a builder session, may move the agent's own pages and tables, and only within the hub (the archive step, P9)"; rule 10 names the hub "Claim tagger" and protects its archive sub-page and everything in it; rules 4 and 5 say "the Rulebook". AGENT.md, both READMEs, EDITOR-HANDOVER.md (practice pages under Onboarding; the commands without demo act on the real training table; pull first), both skills and their references (the demo commands kept as the practice page's commands, for onboarding; the walkthrough skill offers the Onboarding page), evals.json (the live practice-page eval retired, the dry-run, real-tag and paused evals kept), CONTRACTS (the config shape, the Geo pick, archive.json, the hub block), a pointer at the top of STRUCTURE.md, BACKLOG rows, and decisions 81 to 97. Twenty-three `<!-- stage 5 -->` markers wait for stage 5's code (AGENT.md 11, CONTRACTS 4, DECISIONS 7, EDITOR-HANDOVER 1). The drafter noted that `pull.mjs --pick` still ran (stage 5 retires it) and that `walkthrough.mjs` still says it has no default page, which is consistent because the skill passes `--parent`.
+
+Verified: merged into the branch (bb79dfd); 2,156 tests pass, 0 fail; the skills' new descriptions are what the app now lists.
+
+Next: stage 5's hand-back and merge; then the stage 5 markers checked against its code and removed; then stage 7.
