@@ -40,7 +40,7 @@ export const noSleep = async () => {};
 export const FAKE_SCRIPT = fileURLToPath(new URL('../fixtures/fake-claude-loop.mjs', import.meta.url));
 const TAXONOMY = JSON.parse(readFileSync(join(codeRoot(), 'setup', 'taxonomy-issue.json'), 'utf8'));
 export const AUDIT = JSON.parse(readFileSync(fileURLToPath(new URL('../../../docs/mvp-2026-11/evidence/03-audit-context-dependent-decisions.json', import.meta.url)), 'utf8'));
-export const PICK = JSON.parse(readFileSync(join(codeRoot(), 'setup', 'claims-pick.json'), 'utf8'));
+export const PICK = JSON.parse(readFileSync(fileURLToPath(new URL('../fixtures/claims-pick.50.json', import.meta.url)), 'utf8')); // the 50-claim pick of the first build, kept as a fixture (the original moves to setup/archive-2026-10/)
 
 export const DB = {
   rulebook: 'c3000000000000000000000000000001',
@@ -125,7 +125,7 @@ const jsonl = (rows) => `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`;
 
 /**
  * Build a world. Options:
- *   claims      a number n (claims c01.. with claimText), a list of { id, text }, or 'pick' (the 50 claims of setup/claims-pick.json)
+ *   claims      a number n (claims c01.. with claimText), a list of { id, text }, or 'pick' (the 50 claims of fixtures/claims-pick.50.json)
  *   rulebook    rows of the Rulebook copy (default: the 13 Issue rows of setup/taxonomy-issue.json); false: no rows and no edition
  *   queue       rows of Tag decisions (the ledger) as plain values;  audit: true seeds the 10 audit decisions the way the setup leaves them: as decided
  *               ledger rows (Why wrong "Agent slip") and on their claims (Reviewed, the Applies tags verified, Agent slip, the audit's words in Challenged tags notes)

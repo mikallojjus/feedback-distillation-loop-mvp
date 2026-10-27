@@ -7,9 +7,9 @@
 //   --json        print the counts as JSON (for the engineer) instead of the report; the report files are written all the same
 //
 // The report. "Status: nothing is paused; N rows and M rule changes wait for you." (", more than fit one sitting" when N is above queue.sitting_rows), a table with
-// the Rulebook ("<n> tags, edition <e>"; "1 tag, edition <e>" on a practice page), Your queue ("<n> rows, lowest confidence first"; when no undecided claim waits but
-// decided ones are still listed there, "<n> rows decided, waiting for the agent's next run"; else "nothing waits"), Your decisions (what the agent still has to do with the
-// decisions made: "3 to read, 1 without a note", see below; no row when all three counts are zero), Lessons waiting and the last run (the Last run summary, else "none yet"), at
+// the Rulebook ("<n> tags, edition <e>"; "1 tag, edition <e>" on a practice page), Your queue ("<n> rows, lowest confidence first", else "nothing waits": exactly what the view lists,
+// and a claim leaves the view the moment its Review status is Reviewed, P13, so a decided claim is never counted here), Your decisions (what the agent still has to do with the
+// decisions made: "3 to read, 1 without a note", see below, which is where a decided claim that the agent has not read yet is told; no row when all three counts are zero), Lessons waiting and the last run (the Last run summary, else "none yet"), at
 // most five rows, and one Next line, the first that applies: read the claims (practice page only) / start at the top of Your queue or decide the rows / type distill (something
 // is to read, or at least distill.min_claims claims point at a rule, and no rule change is Proposed or Approved: distill has something to read or draft) / approve or reject the
 // rule change / check the approved one / read new claims. The Rulebook row does not say that Notion agrees: a drift of the rulebook text on a judged tag is checked before the
@@ -19,8 +19,9 @@
 // (step 1 of the page) the Next line is "type /claim-tagger demo tag" (step 2) instead of "decide the rows": there is nothing to decide before the agent has read the
 // claims. In production that line is never used.
 //
-// The rows that wait are claims of the Claims copy (CLAIMS-REVIEW.md, section 6.2): a claim whose Agent status is "Waits for you" and whose Review status is not Reviewed (what is
-// still to decide: Your queue may list a few more, the claims that were decided since the last tag run: queue.decided_listed counts them). Your queue is the view of the Claims copy.
+// The rows that wait are claims of Claims (CLAIMS-REVIEW.md, section 6.2): a claim whose Agent status is "Waits for you" and whose Review status is not Reviewed, which is what the view
+// Your queue lists (its filter is "Agent status is Waits for you and Review status is not Reviewed", P13). queue.decided_listed counts the claims decided since the last tag run: Reviewed, with
+// an Agent status that still says Waits for you until the next tag run. They are no longer in the view and no longer in "Your queue" here; what is left of them to do is in "Your decisions".
 //
 // The decisions made (READ-DECISIONS.md, decision 74). The agent reads each disagreement between an editor's decision and its own proposal itself (distill, lib/readings.mjs), and
 // only distill makes or writes a reading, so status counts, from the ledger as distill would bring it up to date (syncDecisions) and sorted the way distill sorts it (classifyRows),
@@ -91,7 +92,8 @@ export function decisionsCell({ to_read: toRead = 0, pending_rule_decisions: pen
 /** The counts the report and --json are made of, from the pull's claims, lessons, ledger rows (queue), settings, and the rulebook and config the readings are counted under. */
 export function countsOf({ claims = [], lessons = [], queue = [], settings = null, sitting = 20, rubric = null, config = null }) {
   const open = claims.filter((c) => claimWaits(c)).length;
-  // decided since the last tag run: Reviewed, and the agent's status still says "Waits for you", so Your queue still lists the claim (CLAIMS-REVIEW.md, section 6.2)
+  // decided since the last tag run: Reviewed, and the agent's status still says "Waits for you" until the next tag run reads the decision (CLAIMS-REVIEW.md, section 6.2); the view
+  // Your queue does not list them (P13), so they are counted for --json and for the engineer, not in the row "Your queue"
   const decidedListed = claims.filter((c) => isReviewed(c) && String(c.agent_status ?? '').trim() === AGENT_STATUS.waits).length;
   const byStatus = { Proposed: 0, Approved: 0, Rejected: 0, Live: 0, 'Rolled back': 0 };
   for (const l of lessons) byStatus[l.Status] = (byStatus[l.Status] ?? 0) + 1;
@@ -198,11 +200,9 @@ export async function status(opts = {}) {
       toReject > 0 ? rejectCell : null,
       ready > 0 ? `${ready} approved, ready to check` : null,
     ].filter(Boolean).join(', ');
-    // Your queue still lists a decided claim until the agent's next tag run reads the decision, so "nothing waits" would contradict the view when only such claims are left
-    const decidedListed = counts.queue.decided_listed;
-    const queueCell = n > 0
-      ? `${plural(n, 'row')}, lowest confidence first`
-      : decidedListed > 0 ? `${plural(decidedListed, 'row')} decided, waiting for the agent's next run` : 'nothing waits';
+    // Your queue lists what is still to decide and nothing else: a claim leaves it as soon as its Review status is Reviewed (P13). A decided claim that the agent has not read yet is told in
+    // the row "Your decisions" ("<n> to read"), not here.
+    const queueCell = n > 0 ? `${plural(n, 'row')}, lowest confidence first` : 'nothing waits';
     const rows = [
       ['Rulebook', rulebook, ''],
       ['Your queue', queueCell, ''],

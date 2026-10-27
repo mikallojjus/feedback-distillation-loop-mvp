@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ARCHIVE_TITLE, verifyArchive } from '../../agents/claim-tagger-mvp/scripts/lib/archive.mjs';
-import { TABLES } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
+import { TABLES, tableEntry } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import {
-  HUB_LINK_TEXT, StructureError, hubDifferences, hubPlan, planStructure, readHub, runStructure, validateStructure, verifyStructure, withGeoOptions,
+  HUB_LINK_TEXT, StructureError, defaultViewPlan, hubDifferences, hubPlan, ownViewName, parseViewFilter, planStructure, readHub, runStructure, validateStructure, verifyStructure, withGeoOptions,
 } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
@@ -18,6 +18,9 @@ after(cleanTmp);
 
 const paragraph = (content) => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content } }] } });
 const LINKS = ['Your queue', 'Needs your note', 'Lessons waiting'].map((name) => `${name}: ${HUB_LINK_TEXT[name.toLowerCase().replace(/ /g, '_')]}`);
+// the one warning line above the link lines (P14): the structure file's own words
+const NOTE = 'Claims is the real table: every decision you make there trains the rulebook. To practise, open Onboarding.';
+const TOP = [NOTE, ...LINKS].map((l) => `paragraph|${l}`); // the first four blocks of a built hub page
 const TABLE_TITLES = ['Claims', 'Rulebook', 'Rule changes', 'Tag decisions', 'Agent settings'];
 
 /** A fresh world (the hub page called Claim tagger), the plan from the fresh structure, a builder client. */
@@ -46,7 +49,7 @@ test('the fresh structure file is valid: made from the specification, Onboarding
   assert.equal(validateStructure(s), s);
   assert.equal(s.made_from, 'docs/mvp-2026-11/HUB-AND-GEO-CLAIMS.md (P10-P12)');
   assert.deepEqual(s.pages, ['Onboarding']);
-  assert.deepEqual(s.hub, { title: 'Claim tagger', view_links: ['your_queue', 'needs_your_note', 'lessons_waiting'], table_order: ['claims', 'rulebook', 'rule_changes', 'tag_decisions', 'agent_settings'], pages_after: ['onboarding', 'archive'] });
+  assert.deepEqual(s.hub, { title: 'Claim tagger', note: NOTE, view_links: ['your_queue', 'needs_your_note', 'lessons_waiting'], table_order: ['claims', 'rulebook', 'rule_changes', 'tag_decisions', 'agent_settings'], pages_after: ['onboarding', 'archive'] });
   assert.deepEqual(Object.values(s.tables).map((t) => t.title), ['Rulebook', 'Claims', 'Tag decisions', 'Rule changes', 'Agent settings']);
   for (const t of Object.values(s.tables)) for (const c of t.columns) assert.ok(c.retired === undefined && c.renamed_from === undefined && !/\(old\)/.test(c.name), `${t.title}.${c.name}`);
   for (const v of s.views) assert.ok(v.renamed_from === undefined && !v.columns.some((c) => /\(old\)/.test(c)), v.name);
@@ -64,8 +67,32 @@ test('the fresh structure file is valid: made from the specification, Onboarding
   const pickFile = join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'geo-claims-pick.json');
   const tagNames = existsSync(pickFile) ? readJson(pickFile).tag_names : ['Debate'];
   assert.deepEqual([column('Geo Tags').type, column('Geo Tags').options], ['multi_select', tagNames], 'the structure and the committed pick agree on the Geo Tags options');
-  for (const v of s.views.filter((x) => x.table === 'claims')) assert.equal(v.columns[1], 'Geo Space', `${v.name} shows Geo Space after Geo Name`);
-  assert.ok(!s.views.filter((x) => x.table !== 'claims').some((v) => v.columns.includes('Geo Space')));
+  // the lean views (P15, ED-3): the columns of the decision, in the order the editor fills them, Review status last; Agent confidence stays the sort
+  const view = (name) => s.views.find((v) => v.name === name);
+  assert.deepEqual(view('Your queue').columns, ['Geo Name', 'Tags waiting', 'Agent reasons', 'Agent tags', 'Verified tags', 'Challenged tags notes', 'Review status']);
+  assert.deepEqual(view('Needs your note').columns, ['Geo Name', 'Verified tags', 'Agent reading', 'Challenged tags notes', 'Review status']);
+  assert.deepEqual(view('Agent disagreed').columns, ['Geo Name', 'Agent reasons', 'Agent reading', 'Verified tags', 'Challenged tags notes', 'Review status']);
+  for (const name of ['Your queue', 'Needs your note', 'Agent disagreed']) assert.equal(view(name).sort, 'Agent confidence, lowest first', name);
+  assert.equal(view('Your queue').filter, 'Agent status is Waits for you and Review status is not Reviewed', 'a claim leaves Your queue as soon as it is Reviewed (P13)');
+  assert.ok(!s.views.some((v) => v.columns.includes('Geo Space')), 'no view shows a Geo column but Geo Name');
+  // the table's own view, called and arranged by the structure (P15)
+  assert.deepEqual(s.tables.claims.default_view, { name: 'All claims', columns: ['Geo Name', 'Geo Space', 'Agent tags', 'Agent status', 'Verified tags', 'Review status', 'Geo URL'] });
+  assert.deepEqual(s.tables.rulebook.default_view, { columns: ['Name', 'Category', 'Status', 'When to use', 'Example Claims'] });
+  assert.deepEqual(s.tables.rule_changes.default_view, { columns: ['Lesson', 'Tag', 'Status', 'Current text', 'Proposed text', 'Safety check result'] });
+  assert.deepEqual(s.tables.tag_decisions.default_view, { columns: ['Claim', 'Tag', 'Agent proposal', 'Tag outcome', 'Agent reading'] });
+  assert.deepEqual(s.tables.agent_settings.default_view, { columns: s.tables.agent_settings.columns.map((c) => c.name) }, 'Agent settings shows all its columns');
+  assert.ok(Object.values(s.tables).every((t) => t.arrange_default_view === undefined), 'default_view takes the place of arrange_default_view');
+  // one line under each table's name (ED-8)
+  assert.deepEqual(Object.fromEntries(Object.entries(s.tables).map(([k, t]) => [k, t.description])), {
+    claims: '200 Geo claims tagged Debate. Decide them through Your queue; every decision trains the rulebook.',
+    rulebook: 'One row per tag; When to use holds the rules. Change rules through Lessons waiting.',
+    rule_changes: 'Rule changes the agent drafted. The rule owner sets Approved or Rejected.',
+    tag_decisions: "The agent's record, copied from Claims. Read only; never edit here.",
+    agent_settings: 'Tick Paused to stop every command; untick to resume.',
+  });
+  // the words of the editor review (ED-1, P13)
+  assert.equal(column('Verified tags').description, 'Every tag that applies, Agent tags included. A judged tag you leave out counts as Does not apply.');
+  assert.match(column('Agent status').description, /Your queue lists Waits for you until you set Review status to Reviewed\.$/);
 });
 
 test('a structure without a hub block stays valid and builds as it did: the fixtures of the earlier builds', () => {
@@ -96,11 +123,58 @@ test('validateStructure checks the hub block and made_from', () => {
   bad((s) => { s.hub.pages_after = ['onboarding', 'ghost', 'archive']; }, /hub: pages_after names "ghost", which is neither "archive" nor one of the pages \(onboarding\)/);
   bad((s) => { s.made_from = ''; }, /made_from must be text/);
   bad((s) => { s.made_from = 3; }, /made_from must be text/);
+  // the warning line above the links (P14)
+  bad((s) => { delete s.hub.note; }, /hub: note must be the one line of text above the link lines/);
+  bad((s) => { s.hub.note = '  '; }, /hub: note must be the one line of text above the link lines/);
+  bad((s) => { s.hub.note = 'two\nlines'; }, /hub: note must be the one line of text above the link lines/);
+  bad((s) => { s.hub.note = 7; }, /hub: note must be the one line of text above the link lines/);
+  // the table's own view and its description (P15, ED-8)
+  bad((s) => { s.tables.claims.default_view = 'all'; }, /table "Claims": default_view must be an object/);
+  bad((s) => { s.tables.claims.default_view = { columns: [] }; }, /table "Claims": default_view needs the list of columns it shows/);
+  bad((s) => { s.tables.claims.default_view.columns.push('Geo Name'); }, /table "Claims": default_view lists a column twice/);
+  bad((s) => { s.tables.claims.default_view.columns.push('Nope'); }, /table "Claims": default_view shows "Nope", which is not a column of the table/);
+  bad((s) => { s.tables.claims.default_view.name = ''; }, /table "Claims": default_view name must be text/);
+  bad((s) => { s.tables.claims.default_view.name = 'Your queue'; }, /table "Claims": default_view is called "Your queue", the name of one of its other views/);
+  bad((s) => { s.tables.claims.default_view.colour = 'red'; }, /table "Claims": default_view has "colour", which is not part of it/);
+  bad((s) => { s.tables.claims.arrange_default_view = true; }, /table "Claims": default_view says which columns the table's own view shows, so arrange_default_view is not given as well/);
+  bad((s) => { s.tables.claims.description = ''; }, /table "Claims": the description must be one line of text of at most 280 characters/);
+  bad((s) => { s.tables.claims.description = 'x'.repeat(281); }, /the description must be one line of text of at most 280 characters/);
+  const retired = revisedStructure();
+  retired.tables.claims.default_view = { columns: ['Geo Name', 'Agent tags (old)'] };
+  delete retired.tables.claims.arrange_default_view;
+  assert.throws(() => validateStructure(retired), /default_view shows "Agent tags \(old\)", a retired column, which every view hides/);
 });
 
-test('hubPlan: the three link lines with their words, the tables and pages by their titles; Archive is not a page of the structure', () => {
+test('defaultViewPlan: default_view shows exactly its columns and hides the rest; arrange_default_view shows every live column; neither leaves the view alone; ownViewName picks its view', () => {
+  const s = freshStructure();
+  const claims = defaultViewPlan(s, 'claims');
+  assert.equal(claims.name, 'All claims');
+  assert.deepEqual(claims.shown, ['Geo Name', 'Geo Space', 'Agent tags', 'Agent status', 'Verified tags', 'Review status', 'Geo URL']);
+  assert.deepEqual(claims.hidden, s.tables.claims.columns.map((c) => c.name).filter((n) => !claims.shown.includes(n)));
+  assert.equal(claims.shown.length + claims.hidden.length, s.tables.claims.columns.length);
+  assert.equal(defaultViewPlan(s, 'rulebook').name, null, 'a table that gives no name keeps Notion\'s');
+  const old = revisedStructure();
+  const arranged = defaultViewPlan(old, 'claims');
+  assert.equal(arranged.name, null);
+  assert.deepEqual(arranged.shown, old.tables.claims.columns.filter((c) => !c.retired).map((c) => c.name));
+  assert.deepEqual(arranged.hidden, old.tables.claims.columns.filter((c) => c.retired).map((c) => c.name));
+  assert.equal(defaultViewPlan(old, 'rulebook'), null);
+  assert.equal(planStructure(forFake(freshStructure()), newWorld().config).arrange.agent_settings.shown.length, 4);
+  assert.equal(ownViewName(['Table', 'My filter'], 'All claims'), 'Table');
+  assert.equal(ownViewName(['My filter', 'All claims'], 'All claims'), 'All claims', 'the view that was renamed already');
+  assert.equal(ownViewName(['Default'], null), 'Default', 'without a Table, the first');
+  assert.equal(ownViewName([], 'x'), null);
+});
+
+test('hubPlan: the warning line, the three link lines with their words, the tables and pages by their titles; Archive is not a page of the structure', () => {
   const plan = hubPlan(freshStructure());
+  assert.equal(plan.note, NOTE);
   assert.deepEqual(plan.view_links.map((l) => l.text), LINKS);
+  assert.deepEqual(LINKS, [
+    'Your queue: the claims that wait for your decision',
+    'Needs your note: claims where you overruled the agent and left no note',
+    'Lessons waiting: rule changes the agent drafted, for the rule owner to approve or reject',
+  ], 'the words of the editor review (ED-5, ED-7)');
   assert.deepEqual(plan.view_links.map((l) => l.name), ['Your queue', 'Needs your note', 'Lessons waiting']);
   assert.deepEqual(plan.table_order, ['claims', 'rulebook', 'rule_changes', 'tag_decisions', 'agent_settings']);
   assert.deepEqual(plan.pages, { onboarding: 'Onboarding' });
@@ -137,16 +211,24 @@ test('runStructure with a hub block: the tables in the hub\'s order, their colum
   assert.ok(first('page Onboarding') < first('view'), 'then the views');
   assert.equal(seq.filter((x) => x === 'view').length, 7);
   assert.ok(last('view') < first('blocks'), 'then the hub part');
-  assert.equal(seq.filter((x) => x === 'blocks').length, 1, 'the link lines go in one request');
+  assert.equal(seq.filter((x) => x === 'blocks').length, 1, 'the warning line and the link lines go in one request');
   assert.equal(seq.filter((x) => x === 'blocks').length + seq.filter((x) => x === 'view').length + seq.filter((x) => x?.startsWith('table ')).length + 1 + 1, seq.length, 'nothing else was sent');
   assert.ok(w.fake.requests.every((q) => q.method === 'GET' || q.method === 'POST' || q.method === 'PATCH'), 'no delete');
   const cfg = readJson(join(w.root, 'config.json')).notion;
   const databaseIds = { rulebook: cfg.rulebook.database_id, claims: cfg.claims.database_id, ...Object.fromEntries(Object.entries(cfg.databases).map(([k, v]) => [k, v.database_id])) };
   for (const t of TABLES) assert.equal(w.fake.database(databaseIds[t]).is_inline, false, `${t} is a full-page table`);
-  assert.deepEqual(outline(w), [...LINKS.map((l) => `paragraph|${l}`), ...TABLE_TITLES.map((t) => `database|${t}`), 'child_page|Onboarding']);
+  assert.deepEqual(outline(w), [...TOP, ...TABLE_TITLES.map((t) => `database|${t}`), 'child_page|Onboarding']);
   assert.equal(result.hub.ok, true);
   assert.deepEqual(result.hub.differences, []);
   assert.equal(result.created.hub_links, 3);
+  assert.equal(result.created.hub_note, 1);
+  // each table has the one line under its name that the structure gives it (ED-8)
+  for (const t of TABLES) {
+    const stored = w.fake.database(databaseIds[t]).description.map((x) => x.plain_text ?? x.text.content).join('');
+    assert.equal(stored, w.structure.tables[t].description, `${t}: its description`);
+  }
+  const bodies = w.fake.requests.filter((q) => q.method === 'POST' && q.path === '/databases').map((q) => [q.body.title[0].text.content, q.body.description?.[0]?.text?.content]);
+  assert.deepEqual(bodies.map(([, d]) => typeof d), Array(5).fill('string'), 'sent with the create');
 });
 
 test('the build without a hub block is the build of before: the pages first, then the tables and the views, and nothing is added to the hub page', async () => {
@@ -163,10 +245,13 @@ test('the build without a hub block is the build of before: the pages first, the
 
 // ---- the hub part --------------------------------------------------------------------------------------------------------------------------------------
 
-test('the hub part puts the three link lines at the start of the hub page once, each linked to its view; a run again adds nothing and sends no write', async () => {
+test('the hub part puts the warning line and the three link lines at the start of the hub page once, each link linked to its view; a run again adds nothing and sends no write', async () => {
   const w = world();
   await run(w);
-  const blocks = w.fake.children(w.parent).slice(0, 3);
+  const [first, ...blocks] = w.fake.children(w.parent).slice(0, 4);
+  assert.equal(first.paragraph.rich_text.length, 1, 'the warning is plain text');
+  assert.equal(first.paragraph.rich_text[0].plain_text, NOTE);
+  assert.equal(first.paragraph.rich_text[0].href ?? null, null, 'and no link');
   const views = readJson(join(w.root, 'config.json')).notion.views;
   for (const [i, key] of ['your_queue', 'needs_your_note', 'lessons_waiting'].entries()) {
     const rich = blocks[i].paragraph.rich_text;
@@ -189,20 +274,49 @@ test('the hub part puts the three link lines at the start of the hub page once, 
   assert.equal(w.fake.writes().length, writes, 'not one write');
   assert.deepEqual(outline(w), before);
   assert.equal(again.created.hub_links, 0);
+  assert.equal(again.created.hub_note, 0, 'the warning is not added twice');
   assert.deepEqual(again.hub.added, []);
+  assert.equal(outline(w).filter((l) => l === `paragraph|${NOTE}`).length, 1);
 });
 
-test('the hub part adds only the lines that are missing, at the start, and reports where the other blocks stand', async () => {
+test('the hub part adds only the lines that are missing, at the start, the warning first, and reports where the other blocks stand', async () => {
   const w = world();
   // the page already has the second line (typed by hand) and a table-less start
   await w.client.appendBlocks(w.parent, [paragraph(LINKS[1])]);
   const result = await run(w);
   assert.equal(result.created.hub_links, 2);
-  assert.deepEqual(result.hub.added, [LINKS[0], LINKS[2]]);
+  assert.equal(result.created.hub_note, 1);
+  assert.deepEqual(result.hub.added, [NOTE, LINKS[0], LINKS[2]]);
   assert.equal(outline(w).filter((l) => l === `paragraph|${LINKS[1]}`).length, 1, 'the line that was there is not added again');
   // the added lines are first; the line that was there stays where it was, after the tables' predecessors
-  assert.deepEqual(outline(w).slice(0, 2), [`paragraph|${LINKS[0]}`, `paragraph|${LINKS[2]}`]);
+  assert.deepEqual(outline(w).slice(0, 3), [`paragraph|${NOTE}`, `paragraph|${LINKS[0]}`, `paragraph|${LINKS[2]}`]);
   assert.ok(result.hub.differences.some((d) => d.kind === 'order'), 'the hand-typed line stands out of order and is reported, not moved');
+});
+
+test('the warning line (P14): a page that has it but lacks the link lines gets them right after it; a page that has the links but not the warning gets it at the very top; a second copy is a leftover', async () => {
+  const withNote = world();
+  await withNote.client.appendBlocks(withNote.parent, [paragraph(NOTE)]);
+  await run(withNote);
+  assert.deepEqual(outline(withNote).slice(0, 4), TOP, 'the note stays first and the links follow it');
+  const put = withNote.fake.requests.filter((q) => q.method === 'PATCH' && /^\/blocks\/[^/]+\/children$/.test(q.path));
+  assert.equal(put.length, 2, 'the note typed by hand, then the one append of the hub part');
+  assert.equal(put[1].body.position.type, 'after_block', 'the links go after the note, not above it');
+
+  const withLinks = world();
+  await run(withLinks, { parts: ['pages', 'databases', 'views'] });
+  const cfg = readJson(join(withLinks.root, 'config.json')).notion.views;
+  await withLinks.client.appendBlocks(withLinks.parent, LINKS.map((l, i) => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: l.split(': ')[0], link: { url: cfg[['your_queue', 'needs_your_note', 'lessons_waiting'][i]].url } } }, { type: 'text', text: { content: `: ${l.split(': ').slice(1).join(': ')}` } }] } })), { position: { type: 'start' } });
+  const result = await run(withLinks, { parts: ['hub'] });
+  assert.deepEqual(result.hub.added, [NOTE]);
+  assert.equal(result.created.hub_links, 0);
+  assert.deepEqual(outline(withLinks).slice(0, 4), TOP);
+  assert.equal(result.hub.ok, true, JSON.stringify(result.hub.differences));
+
+  await withLinks.client.appendBlocks(withLinks.parent, [paragraph(NOTE)]);
+  const twice = await run(withLinks, { parts: ['hub'] });
+  assert.ok(twice.hub.differences.some((d) => /^a second copy of the warning line is on the hub page and was left as it is/.test(d.detail)));
+  assert.equal(outline(withLinks).filter((l) => l === `paragraph|${NOTE}`).length, 2, 'nothing was removed');
+  assert.equal(twice.created.hub_note, 0);
 });
 
 test('the hub part reports an archive page above the tables in plain words and moves nothing: drag it to the bottom of the page in Notion', async () => {
@@ -214,7 +328,7 @@ test('the hub part reports an archive page above the tables in plain words and m
   assert.equal(result.ok, true);
   assert.equal(result.hub.ok, false);
   assert.deepEqual(result.hub.differences.map((d) => d.detail), ['the archive page sits above the tables: drag it to the bottom of the page in Notion']);
-  assert.deepEqual(outline(w), [...LINKS.map((l) => `paragraph|${l}`), `child_page|${ARCHIVE_TITLE}`, ...TABLE_TITLES.map((t) => `database|${t}`), 'child_page|Onboarding'], 'the page is as it was made: nothing was moved');
+  assert.deepEqual(outline(w), [...TOP, `child_page|${ARCHIVE_TITLE}`, ...TABLE_TITLES.map((t) => `database|${t}`), 'child_page|Onboarding'], 'the page is as it was made: nothing was moved');
   assert.equal(w.fake.moves().length, 0, 'not one move request');
   assert.ok(w.fake.requests.every((q) => !/\/move$/.test(q.path)));
 
@@ -303,6 +417,7 @@ test('hubDifferences, pure: a missing table, a page not built yet, a block in th
   const children = [block('paragraph', '1'.repeat(32), LINKS[0]), block('child_database', 'b'.repeat(32), 'Rulebook'), block('child_database', 'c'.repeat(32), 'Claims')];
   const { differences } = hubDifferences({ hub: structureHub, config, children });
   const text = differences.map((d) => d.detail);
+  assert.ok(text.includes('the warning line at the top is not on the hub page'));
   assert.ok(text.includes('the link line "Needs your note" is not on the hub page'));
   assert.ok(text.includes('the link line "Lessons waiting" is not on the hub page'));
   assert.ok(text.some((t) => /^the page "Onboarding" is not built yet \(config\.json has no id for it\); run setup\.mjs pages$/.test(t)));
@@ -453,4 +568,145 @@ test('options set after the build: the table keeps the options it has, and verif
   assert.equal((await w.run(['structure', '--options-from', inputs.claims])).code, 0);
   const after = await w.run(['verify', '--taxonomy', 'x', '--claims', inputs.claims, '--audit', inputs.audit]);
   assert.match(after.text, /claims: options - "Geo Tags": missing "Economy"/, 'the table lacks the option: the build adds no option to a column that is there');
+});
+
+// ---- Your queue empties as you decide (P13) --------------------------------------------------------------------------------------------------------
+
+test('parseViewFilter reads an AND of two conditions on selects, the second with "is not": the filter of Your queue (P13)', () => {
+  const claims = freshStructure().tables.claims;
+  const waits = { property: 'Agent status', select: { equals: 'Waits for you' } };
+  const open = { property: 'Review status', select: { does_not_equal: 'Reviewed' } };
+  assert.deepEqual(parseViewFilter('Agent status is Waits for you and Review status is not Reviewed', claims), { and: [waits, open] });
+  assert.deepEqual(parseViewFilter('Review status is not Reviewed and Agent status is Waits for you', claims), { and: [open, waits] }, 'in the other order too');
+  assert.throws(() => parseViewFilter('Agent status is Waits for you and Review status is not Done', claims), (e) => e instanceof StructureError && /"Done" is not a value of "Review status"/.test(e.message));
+  const plan = planStructure(forFake(freshStructure()), newWorld().config);
+  assert.deepEqual(plan.views.find((v) => v.name === 'Your queue').body.filter, { and: [waits, open] }, 'the plan sends it as one AND');
+  assert.deepEqual(plan.views.find((v) => v.name === 'Needs your note').body.filter, { property: 'Agent reading', rich_text: { contains: 'without your note' } }, 'the other two views are as they were');
+});
+
+test('the filter of Your queue at work on the rows of the built table: a claim waits until it is Reviewed, whatever its Agent status says; an empty Review status waits too', async () => {
+  const w = world();
+  assert.equal((await run(w)).ok, true);
+  const entry = tableEntry(w.config, 'claims');
+  const add = (name, status, review) => w.fake.addRow(entry.database_id, { 'Geo Name': name, ...(status ? { 'Agent status': status } : {}), ...(review ? { 'Review status': review } : {}) });
+  add('waits, to review', 'Waits for you', 'To review');
+  add('waits, no review status', 'Waits for you', null);
+  add('waits, decided', 'Waits for you', 'Reviewed');
+  add('done, no review status', 'Done', null);
+  add('done, decided', 'Done', 'Reviewed');
+  add('disagrees, decided', 'Disagrees with your decision', 'Reviewed');
+  const filter = w.plan.views.find((v) => v.name === 'Your queue').body.filter;
+  const rows = await w.client.queryDataSourceAll(entry.data_source_id, { filter });
+  assert.deepEqual(rows.map((p) => p.properties['Geo Name'].title.map((t) => t.plain_text).join('')).sort(), ['waits, no review status', 'waits, to review']);
+});
+
+// ---- the table's own view and the description under each table (P15, ED-8) --------------------------------------------------------------------------------------
+
+const TABLE_KEYS = ['claims', 'rulebook', 'rule_changes', 'tag_decisions', 'agent_settings'];
+
+/** What Notion does for every table and the shared fake does not: a view called Table that shows every column in the order they were made. */
+async function giveOwnViews(w) {
+  const made = {};
+  for (const table of TABLE_KEYS) {
+    const entry = tableEntry(w.config, table);
+    const props = Object.values(w.fake.dataSource(entry.data_source_id).properties);
+    made[table] = await w.client.createView({
+      databaseId: entry.database_id, dataSourceId: entry.data_source_id, name: 'Table',
+      configuration: { type: 'table', wrap_cells: false, properties: props.map((p) => ({ property_id: p.id, visible: true, width: 150 })) }, position: { type: 'end' },
+    });
+  }
+  return made;
+}
+
+/** The views of a table as { name -> { shown: [column names], hidden: [column names] } }, read from the fake. */
+function viewsOf(w, table) {
+  const entry = tableEntry(w.config, table);
+  const names = new Map(Object.values(w.fake.dataSource(entry.data_source_id).properties).map((p) => [p.id, p.name]));
+  return Object.fromEntries(w.fake.views(entry.database_id).map((v) => [v.name, {
+    id: v.id,
+    shown: v.configuration.properties.filter((p) => p.visible !== false).map((p) => names.get(p.property_id)),
+    hidden: v.configuration.properties.filter((p) => p.visible === false).map((p) => names.get(p.property_id)),
+  }]));
+}
+
+test('the table\'s own view of every table shows exactly the columns of its default_view in order and hides the rest; the Claims one is called All claims; a second run writes nothing; a view somebody made is left alone', async () => {
+  const w = world();
+  assert.equal((await run(w, { parts: ['databases'] })).ok, true);
+  await giveOwnViews(w);
+  const entry = tableEntry(w.config, 'claims');
+  await w.client.createView({
+    databaseId: entry.database_id, dataSourceId: entry.data_source_id, name: 'My filter',
+    configuration: { type: 'table', properties: Object.values(w.fake.dataSource(entry.data_source_id).properties).map((p) => ({ property_id: p.id, visible: true })) },
+  });
+  const mine = viewsOf(w, 'claims')['My filter'];
+  const result = await run(w);
+  assert.equal(result.ok, true, JSON.stringify(result.stopped));
+  assert.deepEqual(result.arranged, { claims: ['Table'], rulebook: ['Table'], rule_changes: ['Table'], tag_decisions: ['Table'] }, 'by the name they had; Agent settings shows all its columns in the order it was made, so there was nothing to change');
+  for (const table of TABLE_KEYS) {
+    const want = w.structure.tables[table].default_view;
+    const own = viewsOf(w, table)[want.name ?? 'Table'];
+    assert.ok(own, `${table}: the own view${want.name ? ` is called ${want.name}` : ' keeps Notion\'s name'}`);
+    assert.deepEqual(own.shown, want.columns, `${table}: shows the columns of default_view, in order`);
+    assert.deepEqual([...own.shown, ...own.hidden].sort(), w.structure.tables[table].columns.map((c) => c.name).sort(), `${table}: every other column is hidden, none is gone`);
+  }
+  assert.deepEqual(Object.keys(viewsOf(w, 'claims')).sort(), ['Agent disagreed', 'All claims', 'My filter', 'Needs your note', 'Your queue'], 'the view named Table is now All claims');
+  assert.deepEqual(viewsOf(w, 'claims')['My filter'], mine, 'a view somebody made is not touched');
+  assert.equal(viewsOf(w, 'claims')['All claims'].shown.length, 7);
+  assert.equal(viewsOf(w, 'agent_settings').Table.shown.length, 4, 'Agent settings has no named view and its own view is still arranged');
+  assert.deepEqual(Object.keys(result.views).sort(), ['claims', 'rule_changes', 'rulebook', 'tag_decisions'], 'a table with no named view has no entry among the views made');
+  // verify is clean, and a second run changes nothing
+  const clean = await structureVerify({ ...w, root: w.root });
+  assert.deepEqual(clean.differences, []);
+  const writes = w.fake.writes().length;
+  const again = await run(w);
+  assert.deepEqual([again.arranged, again.updated, again.created.views, again.created.views_updated], [{}, {}, 0, 0]);
+  assert.equal(w.fake.writes().length, writes, 'not one write');
+});
+
+test('verify names a table\'s own view with a column shown that the structure hides, and a Claims own view that is not called All claims', async () => {
+  const w = world();
+  assert.equal((await run(w, { parts: ['databases'] })).ok, true);
+  await giveOwnViews(w);
+  assert.equal((await run(w)).ok, true);
+  const config = w.config;
+  const check = () => verifyStructure({ client: w.client, config, structure: w.structure });
+  assert.deepEqual((await check()).differences, []);
+
+  const rulebook = viewsOf(w, 'rulebook');
+  const entry = tableEntry(config, 'rulebook');
+  const ds = w.fake.dataSource(entry.data_source_id);
+  const evidence = Object.values(ds.properties).find((p) => p.name === 'Evidence');
+  const view = w.fake.views(entry.database_id).find((v) => v.name === 'Table');
+  await w.client.updateView(view.id, { configuration: { type: 'table', properties: view.configuration.properties.map((p) => (p.property_id === evidence.id ? { ...p, visible: true } : p)) } });
+  const extra = await check();
+  assert.deepEqual(extra.differences.map((d) => [d.table, d.kind]), [['rulebook', 'view columns']]);
+  assert.match(extra.differences[0].detail, /^"Table" \(the table's own view\): expected Name, Category, Status, When to use, Example Claims; found .*Evidence/);
+  assert.ok(rulebook.Table);
+
+  const all = viewsOf(w, 'claims')['All claims'];
+  await w.client.updateView(all.id, { name: 'Table' });
+  const renamed = (await check()).differences.filter((d) => d.table === 'claims');
+  assert.deepEqual(renamed.map((d) => d.kind), ['view name']);
+  assert.match(renamed[0].detail, /^the table's own view is called "Table" and the structure calls it "All claims"$/);
+});
+
+test('without the table\'s own view (Notion makes one; a person may have removed it) there is nothing to arrange and verify says nothing about it', async () => {
+  const w = world();
+  const result = await run(w);
+  assert.equal(result.ok, true, JSON.stringify(result.stopped));
+  assert.deepEqual(result.arranged, {});
+  assert.deepEqual((await structureVerify({ ...w })).differences, []);
+});
+
+
+test('a table that was adopted without its description is named by verify, the description being written only when the build makes the table', async () => {
+  const w = world();
+  // a full-page table called Claims, made by an earlier try without the one line under its name, is adopted by its title
+  await w.client.createDatabase({ parentPageId: w.parent, title: 'Claims', isInline: false, properties: { 'Geo Name': { type: 'title', title: {} } } });
+  const result = await run(w);
+  assert.equal(result.ok, true, JSON.stringify(result.stopped));
+  assert.equal(result.databases.claims.status, 'adopted');
+  const missing = (await verifyStructure({ client: w.client, config: w.config, structure: w.structure })).differences.filter((d) => d.kind === 'description');
+  assert.deepEqual(missing.map((d) => d.table), ['claims'], 'the four tables the build made have theirs');
+  assert.match(missing[0].detail, /^"Claims" has the description "", the structure says "200 Geo claims tagged Debate\. Decide them through Your queue; every decision trains the rulebook\."; write it in Notion under the table's name/);
 });

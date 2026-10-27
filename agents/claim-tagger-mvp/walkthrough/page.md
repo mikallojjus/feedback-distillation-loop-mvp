@@ -74,7 +74,7 @@ A claim the agent is sure of is read once, so its line ends with a count of one;
 
 **Existing status.** All four of your claims are To review and wait in Your queue (step 2): Agent status reads Waits for you on all four, Tags waiting holds Context-dependent, Agent tags is empty and Agent reading is empty.
 
-**Doing the work.** Fill in three columns on each of your four claims, in the order of its list, in Your queue under the lists. The sentence for Challenged tags notes stands on its own line between quotes: paste the words between the quotes, not the quotes. Review status comes last only because it closes the claim: a claim you have decided stays in Your queue until the agent reads it again (the next tag run does that, and in this practice the follow-up in step 7 does it for the claims the rule change rests on), so the order of the three columns does not matter for the view.
+**Doing the work.** Fill in three columns on each of your four claims, in the order of its list, in Your queue under the lists. The sentence for Challenged tags notes stands on its own line between quotes: paste the words between the quotes, not the quotes. Review status comes last because it closes the claim. A claim leaves Your queue as soon as you set Review status to Reviewed. On the real Claims table the agent judges several tags: keep the Agent tags you agree with in Verified tags.
 
 **The AI Force claim**
 
@@ -118,7 +118,7 @@ A note that starts with "Agent slip.", "Rule unclear." or "Rule should change." 
 | The USPS ballot portal should not launch before the 2026… | (empty) | Reviewed | Agent slip. USPS names which portal, so rule 5 already settles it. |
 | Georgia's gubernatorial debate should be moderated by… | (empty) | Reviewed | (empty) |
 
-Challenged tags notes holds your sentence on three of the claims and nothing on the Georgia claim. The agent is not involved and no other table changes: its columns still show what it wrote in step 2, so all four claims stay in Your queue, with Agent status Waits for you, until the agent reads them again. All four claims are earlier decisions now.
+Challenged tags notes holds your sentence on three of the claims and nothing on the Georgia claim. The agent is not involved and no other table changes: its columns still show what it wrote in step 2, so all four claims still read Waits for you in Agent status until the next tag run, but each has left Your queue because you set it Reviewed. All four claims are earlier decisions now.
 
 ## Step 4 · The agent reads your decisions and drafts a clearer rule 3
 
@@ -217,7 +217,7 @@ The same three steps apply when the check names one of your own claims instead o
 
 **Existing status.** You decided all four claims in step 3 and the new rule 3 went live in step 6; in step 2 all four claims waited for you, so the agent had written no tag on any of them, and all four still read Waits for you in Agent status.
 
-**Doing the work.** Nothing to type: the follow-up ran by itself at the end of the safety check. It takes the answers the check already gave for the claims the draft rests on, under the new rule 3, so there was nothing more to wait for. Open the Claims table in The tables just below.
+**Doing the work.** Nothing to type: the follow-up ran by itself at the end of the safety check. It takes the answers the check already gave for the claims the draft rests on, under the new rule 3, so there was nothing more to wait for. Open the Claims table among the tables just below.
 
 **Explaining the outputs.**
 
@@ -230,7 +230,7 @@ The same three steps apply when the check names one of your own claims instead o
 | The USPS ballot portal should not launch before the 2026… | (empty) | Waits for you | {{edition}} |
 | Georgia's gubernatorial debate should be moderated by… | (empty) | Waits for you | {{edition}} |
 
-Agent tags now holds the tags you decided on the press pool and the AI Force claim: the AI Force claim carries the tag and the press pool claim does not. Agent status reads Done on both, so both have left Your queue; neither claim says Disagrees with your decision, and a claim that did would show up in Agent disagreed and would need a clearer rule. Agent edition names the next edition, the one the safety check put in force, and Agent confidence follows the new reading. The USPS and Georgia claims were not part of the change, so the follow-up leaves them as they were: they keep Waits for you and stay in Your queue until the next tag run reads them again. Only the claims the change rests on name the new edition: the other two and the 5 earlier decisions keep theirs until the next tag run. That is one full cycle: the agent read your decisions, the notes that blamed rule 3 became a clearer rule 3, it was tested against every earlier decision before it went live, and the press pool and AI Force claims are earlier decisions now, checked by every future safety check.
+Agent tags now holds the tags you decided on the press pool and the AI Force claim: the AI Force claim carries the tag and the press pool claim does not. Agent status reads Done on both; neither claim says Disagrees with your decision, and a claim that did would show up in Agent disagreed and would need a clearer rule. Agent edition names the next edition, the one the safety check put in force, and Agent confidence follows the new reading. The USPS and Georgia claims were not part of the change, so the follow-up leaves them as they were: they keep Waits for you in Agent status until the next tag run reads them again, and they are not in Your queue, because you set them Reviewed in step 3. Only the claims the change rests on name the new edition: the other two and the 5 earlier decisions keep theirs until the next tag run. That is one full cycle: the agent read your decisions, the notes that blamed rule 3 became a clearer rule 3, it was tested against every earlier decision before it went live, and the press pool and AI Force claims are earlier decisions now, checked by every future safety check.
 
 **What the full version adds later:**
 
@@ -238,7 +238,7 @@ Agent tags now holds the tags you decided on the press pool and the AI Force cla
 - Duplicates are found by searching all claims.
 - Each editor gets a queue of their own when more editors join.
 
-Archive this page by hand when you no longer need it.
+When you are done, leave this page under Onboarding; it does no harm.
 
 ## The tables
 
@@ -274,10 +274,10 @@ If you already know the reason, start your note with "Agent slip.", "Rule unclea
 - **Earlier decision**: a claim an editor already decided (here the 5 from the audit of 9 October, when editors checked the agent's tags on real claims); the agent must keep getting it right.
 - **Example claim**: one of the tag's 6 examples in the Rulebook, or one of 4 examples of its opposite tag, Self-contained, which the agent keeps in its own files (they are not on this page); it must always come out right.
 - **Agent confidence**: how sure the agent is of its answers on a claim, from 0.5 (a coin flip) to 1 (certain); Your queue shows the least sure claims first.
-- **Agent status**: what the agent says about a claim: Waits for you, Done, Disagrees with your decision or Could not read; a claim you have decided leaves Your queue once the agent reads it again.
-- **Verified tags**: the tags you confirm on a claim (the real claims table calls this column Claim quality tags — verified); it always wins over the agent's answer.
-- **Review status**: To review until you decide a claim, then Reviewed; a Reviewed claim is an earlier decision.
-- **Views**: the Claims table has Your queue (the claims whose Agent status is Waits for you), Needs your note (the claims the agent read without a note from you) and Agent disagreed (the agent disagrees with your decision); Lessons waiting shows the Rule changes not yet decided.
+- **Agent status**: what the agent says about a claim: Waits for you, Done, Disagrees with your decision or Could not read; Your queue lists Waits for you until you set Review status to Reviewed.
+- **Verified tags**: the tags you confirm on a claim; it always wins over the agent's answer.
+- **Review status**: To review until you decide a claim, then Reviewed; a Reviewed claim is an earlier decision and leaves Your queue.
+- **Views**: the Claims table has Your queue (the claims whose Agent status is Waits for you and whose Review status is not Reviewed), Needs your note (the claims the agent read without a note from you) and Agent disagreed (the agent disagrees with your decision); Lessons waiting shows the Rule changes not yet decided.
 
 **If something stops.**
 

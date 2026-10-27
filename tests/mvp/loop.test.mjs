@@ -17,7 +17,7 @@ import { resumeFor } from '../../agents/claim-tagger-mvp/scripts/lib/resume.mjs'
 import { AUDIT, PICK, makeWorld, taxonomyCanaries } from './helpers/loop-world.mjs';
 import { TABLE_SPECS } from './helpers/tables.mjs';
 
-// The whole loop on the fakes, as production has it: thirteen rulebook rows, the fifty claims of setup/claims-pick.json, the ten audit decisions as decided
+// The whole loop on the fakes, as production has it: thirteen rulebook rows, the fifty claims of fixtures/claims-pick.50.json, the ten audit decisions as decided
 // rows, one settings row, the eleven examples. The fake CLI is sure about almost everything and unsure about four claims. judge and propose fill the queue,
 // an editor (fake.editRow) decides two rows, distill drafts a lesson, the editor approves it, promote checks it and makes it live, follow-up marks the rows.
 

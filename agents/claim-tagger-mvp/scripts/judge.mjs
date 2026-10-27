@@ -858,7 +858,7 @@ function checkDrift(ctx, rubric) {
   const what = stops.slice(0, 3).map((e) => [e.tag, e.column].filter(Boolean).join(': ')).filter(Boolean).join('; ');
   throw new ExitError(EXIT.DRIFT, `the rulebook in Notion no longer matches the locked edition${what ? ` (${what})` : ''}; undo the edit in Notion, or restore the rulebook`, {
     sentence: `Judge: nothing was read, because the rulebook in Notion no longer matches the locked edition${what ? ` (${what})` : ''}.`,
-    next: 'Next: undo that edit in the Rulebook copy in Notion, then type /claim-tagger tag again.',
+    next: 'Next: undo that edit in the Rulebook in Notion, then type /claim-tagger tag again.',
   });
 }
 

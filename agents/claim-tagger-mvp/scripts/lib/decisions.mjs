@@ -50,7 +50,7 @@ export const isReviewed = (claim) => text(claim?.review_status).trim() === REVIE
 /** A claim marked To review (by the editor, or by QA on the real table): every judged tag of it waits for an editor, whatever the confidence. */
 export const isToReview = (claim) => text(claim?.review_status).trim() === TO_REVIEW;
 
-/** A claim the agent says waits in Your queue: Agent status is "Waits for you" and an editor has not Reviewed it (a Reviewed claim keeps the status until the next tag run). */
+/** A claim the agent says waits in Your queue: Agent status is "Waits for you" and an editor has not Reviewed it (a Reviewed claim keeps the status until the next tag run, but the view Your queue leaves it out, P13). */
 export const claimWaits = (claim) => !isReviewed(claim) && text(claim?.agent_status).trim() === AGENT_STATUS.waits;
 
 /** The readings that say the rule is the problem: distill drafts rule changes from the decided rows that carry one of them. */

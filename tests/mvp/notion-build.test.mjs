@@ -353,7 +353,7 @@ test('planStructure: a createView body per view with the query filter, the sorts
   assert.deepEqual(byName['Your queue (ledger)'].columns, LEDGER, 'the two ledger views show the four reading columns');
   assert.deepEqual(byName['Needs your note (ledger)'].columns, ['Claim', 'Tag outcome', 'Why wrong', 'Your reasoning', 'Agent reading', 'Rule', 'Reading note', 'Read under']);
   assert.deepEqual(plan.arrange, {
-    claims: { shown: [...REVIEW, ...structure.tables.claims.columns.filter((c) => !c.retired).map((c) => c.name).filter((n) => !REVIEW.includes(n))], hidden: ['Agent tags (old)', 'Agent notes (old)', 'Why wrong (old)'] },
+    claims: { name: null, shown: [...REVIEW, ...structure.tables.claims.columns.filter((c) => !c.retired).map((c) => c.name).filter((n) => !REVIEW.includes(n))], hidden: ['Agent tags (old)', 'Agent notes (old)', 'Why wrong (old)'] },
   }, 'the table\'s own view gets the same order, every column shown but the retired ones');
 });
 

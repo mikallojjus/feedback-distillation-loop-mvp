@@ -3,6 +3,7 @@
   "tables": {
     "rulebook": {
       "title": "Rulebook",
+      "description": "One row per tag; When to use holds the rules. Change rules through Lessons waiting.",
       "columns": [
         {
           "name": "Name",
@@ -130,10 +131,20 @@
           "options": [],
           "description": "Who last changed the row."
         }
-      ]
+      ],
+      "default_view": {
+        "columns": [
+          "Name",
+          "Category",
+          "Status",
+          "When to use",
+          "Example Claims"
+        ]
+      }
     },
     "claims": {
       "title": "Claims",
+      "description": "200 Geo claims tagged Debate. Decide them through Your queue; every decision trains the rulebook.",
       "columns": [
         {
           "name": "Geo Name",
@@ -169,7 +180,7 @@
             "Disagrees with your decision",
             "Could not read"
           ],
-          "description": "What the agent says about the claim: Waits for you (a tag needs your decision), Done, Disagrees with your decision, or Could not read. Your queue lists Waits for you; a claim you have decided leaves it at the agent's next tag run."
+          "description": "What the agent says about the claim: Waits for you (a tag needs your decision), Done, Disagrees with your decision, or Could not read. Your queue lists Waits for you until you set Review status to Reviewed."
         },
         {
           "name": "Tags waiting",
@@ -200,7 +211,7 @@
           "name": "Verified tags",
           "type": "relation",
           "options": [],
-          "description": "The tags you confirm on the claim, from the Rulebook. Applies for a tag that is in it, Does not apply for a judged tag that is not, once Review status is Reviewed.",
+          "description": "Every tag that applies, Agent tags included. A judged tag you leave out counts as Does not apply.",
           "relation_to": "rulebook"
         },
         {
@@ -210,7 +221,7 @@
             "To review",
             "Reviewed"
           ],
-          "description": "To review or Reviewed. A claim is decided once it is Reviewed; anything else leaves it open."
+          "description": "To review or Reviewed. A claim is decided once it is Reviewed; anything else leaves it open. Set it last: the claim leaves Your queue as soon as it is Reviewed."
         },
         {
           "name": "Challenged tags notes",
@@ -279,10 +290,22 @@
           "description": "The claim's topics in Geo."
         }
       ],
-      "arrange_default_view": true
+      "default_view": {
+        "name": "All claims",
+        "columns": [
+          "Geo Name",
+          "Geo Space",
+          "Agent tags",
+          "Agent status",
+          "Verified tags",
+          "Review status",
+          "Geo URL"
+        ]
+      }
     },
     "tag_decisions": {
       "title": "Tag decisions",
+      "description": "The agent's record, copied from Claims. Read only; never edit here.",
       "columns": [
         {
           "name": "Claim",
@@ -418,10 +441,20 @@
           "options": [],
           "description": "The edition and a short mark of what the reading rests on: your decision, your note and the proposal the agent made. The agent reads a row again only when one of those changes."
         }
-      ]
+      ],
+      "default_view": {
+        "columns": [
+          "Claim",
+          "Tag",
+          "Agent proposal",
+          "Tag outcome",
+          "Agent reading"
+        ]
+      }
     },
     "rule_changes": {
       "title": "Rule changes",
+      "description": "Rule changes the agent drafted. The rule owner sets Approved or Rejected.",
       "columns": [
         {
           "name": "Lesson",
@@ -507,10 +540,21 @@
           ],
           "description": "The editor sets Approved and Rejected; the agent sets Proposed, Live and Rolled back."
         }
-      ]
+      ],
+      "default_view": {
+        "columns": [
+          "Lesson",
+          "Tag",
+          "Status",
+          "Current text",
+          "Proposed text",
+          "Safety check result"
+        ]
+      }
     },
     "agent_settings": {
       "title": "Agent settings",
+      "description": "Tick Paused to stop every command; untick to resume.",
       "columns": [
         {
           "name": "Name",
@@ -536,29 +580,31 @@
           "options": [],
           "description": "One short line, such as \"Promote · 16 Oct 11:20 · PASS\"."
         }
-      ]
+      ],
+      "default_view": {
+        "columns": [
+          "Name",
+          "Paused",
+          "Rulebook edition",
+          "Last run summary"
+        ]
+      }
     }
   },
   "views": [
     {
       "name": "Your queue",
       "table": "claims",
-      "filter": "Agent status is Waits for you",
+      "filter": "Agent status is Waits for you and Review status is not Reviewed",
       "sort": "Agent confidence, lowest first",
       "columns": [
         "Geo Name",
-        "Geo Space",
-        "Agent tags",
-        "Agent confidence",
-        "Agent reasons",
-        "Agent status",
         "Tags waiting",
-        "Agent edition",
-        "Agent remarks",
-        "Agent reading",
+        "Agent reasons",
+        "Agent tags",
         "Verified tags",
-        "Review status",
-        "Challenged tags notes"
+        "Challenged tags notes",
+        "Review status"
       ],
       "wrap": true
     },
@@ -569,18 +615,10 @@
       "sort": "Agent confidence, lowest first",
       "columns": [
         "Geo Name",
-        "Geo Space",
-        "Agent tags",
-        "Agent confidence",
-        "Agent reasons",
-        "Agent status",
-        "Tags waiting",
-        "Agent edition",
-        "Agent remarks",
-        "Agent reading",
         "Verified tags",
-        "Review status",
-        "Challenged tags notes"
+        "Agent reading",
+        "Challenged tags notes",
+        "Review status"
       ],
       "wrap": true
     },
@@ -591,18 +629,11 @@
       "sort": "Agent confidence, lowest first",
       "columns": [
         "Geo Name",
-        "Geo Space",
-        "Agent tags",
-        "Agent confidence",
         "Agent reasons",
-        "Agent status",
-        "Tags waiting",
-        "Agent edition",
-        "Agent remarks",
         "Agent reading",
         "Verified tags",
-        "Review status",
-        "Challenged tags notes"
+        "Challenged tags notes",
+        "Review status"
       ],
       "wrap": true
     },
@@ -675,6 +706,7 @@
   ],
   "hub": {
     "title": "Claim tagger",
+    "note": "Claims is the real table: every decision you make there trains the rulebook. To practise, open Onboarding.",
     "view_links": [
       "your_queue",
       "needs_your_note",

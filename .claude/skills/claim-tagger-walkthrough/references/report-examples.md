@@ -53,14 +53,14 @@ Next: decide your four claims in Your queue (link).
 
 ### status (demo, midway: all four claims decided)
 
-The editor has decided all four claims, but Your queue still lists them until the agent's next run reads the decisions, so the row says that and not "nothing waits". Nothing is left to decide, and the agent has not read the decisions yet, so the sentence says what the agent has to do (it does not say that nothing waits for you), and a Your decisions row counts the decisions, in up to three parts that are left out while they are zero: the decisions still to read ("3 to read"), the decisions that point at a rule, once read and with a note ("2 point at a rule"), and the decisions without a note ("1 without a note"); here the USPS claim was decided without a note. When only decisions without a note are left, the sentence reads "...; 1 of your decisions has no note." The reading is made by distill, so the Next line is the distill step, which reads the decisions and turns the ones that blame the rule into a draft rule. After the follow-up of step 7 has marked the rows the draft rests on Fixed, those claims no longer ask for distill. After a promote nothing is to read (the key of a reading holds the edition the proposal was made under), so the status of step 7 has no Your decisions row.
+The editor has decided all four claims. A claim leaves Your queue as soon as its Review status is Reviewed, so the row Your queue counts only what the view lists and says "nothing waits"; the claims still read Waits for you in Agent status until the next tag run, but the view does not show them. Nothing is left to decide, and the agent has not read the decisions yet, so the sentence says what the agent has to do (it does not say that nothing waits for you), and a Your decisions row counts the decisions, in up to three parts that are left out while they are zero: the decisions still to read ("3 to read"), the decisions that point at a rule, once read and with a note ("2 point at a rule"), and the decisions without a note ("1 without a note"); here the USPS claim was decided without a note. When only decisions without a note are left, the sentence reads "...; 1 of your decisions has no note." The reading is made by distill, so the Next line is the distill step, which reads the decisions and turns the ones that blame the rule into a draft rule. After the follow-up of step 7 has marked the rows the draft rests on Fixed, those claims no longer ask for distill. After a promote nothing is to read (the key of a reading holds the edition the proposal was made under), so the status of step 7 has no Your decisions row.
 
 Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; the agent has 3 of your decisions to read.
 
 | Where | Now |
 |---|---|
 | Rulebook | 1 tag, edition 2026-10-15.1 |
-| Your queue | 4 rows decided, waiting for the agent's next run |
+| Your queue | nothing waits |
 | Your decisions | 3 to read, 1 without a note |
 | Lessons waiting | none |
 | Last run | Tag · 15 Oct 10:50 · 9 claims |
@@ -84,7 +84,7 @@ Next: decide your four claims in Your queue (link).
 1. Open Your queue (the link in the Next line): your four claims wait there.
 2. On each of your four claims fill in, in this order: Verified tags, Challenged tags notes, Review status; step 3 of the practice page gives the values.
 3. Paste the words between the quotes that the page gives for Challenged tags notes (the Georgia claim's note stays empty: an empty note is a decision too), and set Review status to Reviewed last.
-4. A decided claim stays in Your queue until the agent reads it again, which the follow-up of step 7 does for the claims the rule change rests on.
+4. A claim leaves Your queue as soon as you set Review status to Reviewed.
 5. When all four claims are Reviewed, type /claim-tagger demo distill.
 
 ### tag (Claims, the first run: Context-dependent only)

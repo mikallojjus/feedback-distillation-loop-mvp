@@ -888,10 +888,10 @@ test('rule h (edition line): Step 1 explains an edition as a date plus a count',
   assert.deepEqual(lint(swap(OK, 'an edition is a date', 'An Edition is a date')).problems, []);
 });
 
-test('rule i (closing lines): Step 7 ends with the three "adds later" lines and the Archive line', () => {
+test('rule i (closing lines): Step 7 ends with the three "adds later" lines and the closing line (leave the page under Onboarding)', () => {
   const label = 'What the full version adds later:\n';
   const third = '- Each editor gets a queue of their own if a second editor joins.\n';
-  const archive = 'Archive this page by hand when you no longer need it.\n';
+  const archive = 'When you are done, leave this page under Onboarding; it does no harm.\n';
   let page = swap(OK, third, '');
   assert.deepEqual(summary(lint(page)), [`i@${lineNo(page, 'What the full version adds later')}`]);
   assert.match(lint(page).problems[0].detail, /has 2 bullet lines; it needs exactly three/);
@@ -900,14 +900,14 @@ test('rule i (closing lines): Step 7 ends with the three "adds later" lines and 
   assert.match(lint(page).problems[0].detail, /has 4 bullet lines/);
   page = swap(OK, `${archive}\n`, '');
   assert.deepEqual(summary(lint(page)), [`i@${lineNo(page, '## Step 7')}`]);
-  assert.match(lint(page).problems[0].detail, /no "Archive this page by hand" line/);
+  assert.match(lint(page).problems[0].detail, /no "leave this page under Onboarding" line/);
   page = swap(OK, label, '');
   assert.deepEqual(summary(lint(page)), [`i@${lineNo(page, '## Step 7')}`]);
   assert.match(lint(page).problems[0].detail, /no "What the full version adds later" line/);
   // text after the Archive line
   page = swap(OK, archive, `${archive}\nThanks for reading.\n`);
   assert.deepEqual(summary(lint(page)), [`i@${lineNo(page, 'Thanks for reading')}`]);
-  assert.match(lint(page).problems[0].detail, /has to end with the "Archive this page by hand" line/);
+  assert.match(lint(page).problems[0].detail, /has to end with the "leave this page under Onboarding" line/);
   // the label as a bold line is fine, as on the real page
   assert.deepEqual(lint(swap(OK, label, '**What the full version adds later:**\n')).problems, []);
   // both missing: two problems

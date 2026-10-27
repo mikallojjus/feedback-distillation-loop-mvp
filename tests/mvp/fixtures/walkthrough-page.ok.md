@@ -162,7 +162,7 @@ What the full version adds later:
 - Duplicates are found by searching all claims, not only by matching exact text.
 - Each editor gets a queue of their own if a second editor joins.
 
-Archive this page by hand when you no longer need it.
+When you are done, leave this page under Onboarding; it does no harm.
 
 ## The tables
 

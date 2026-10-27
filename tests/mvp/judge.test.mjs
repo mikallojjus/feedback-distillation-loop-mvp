@@ -1367,7 +1367,7 @@ test('on a practice page every report of the judge speaks the demo commands and 
   const edited = await go(drifted.root);
   assert.equal(edited.exit, 4);
   assert.equal(reportJson(edited).sentence, `Judge: nothing was read, because the rulebook in Notion no longer matches the locked edition (Context-dependent: When to use) (practice page ${PRACTICE_TITLE}).`);
-  assert.equal(reportJson(edited).next, 'Next: undo that edit in the Rulebook copy in Notion, then type /claim-tagger demo tag again.');
+  assert.equal(reportJson(edited).next, 'Next: undo that edit in the Rulebook in Notion, then type /claim-tagger demo tag again.');
 
   // a configuration that cannot be read is no practice page: the plain words, as before
   const broken = practiceRoot({}, { pausedFile: true });
@@ -1464,7 +1464,7 @@ test('a judged tag that drifted in Notion means exit 4 and names the tag and the
   assert.ok(!existsSync(join(root, 'runs', 'judgments')));
   assert.match(r.io.errs.join('\n'), /Context-dependent: When to use/);
   assert.equal(assertReport(r).sentence, 'Judge: nothing was read, because the rulebook in Notion no longer matches the locked edition (Context-dependent: When to use).');
-  assert.match(reportJson(r).next, /^Next: undo that edit in the Rulebook copy in Notion/);
+  assert.match(reportJson(r).next, /^Next: undo that edit in the Rulebook in Notion/);
   assert.equal(runJson(r).exit_code, 4);
   const two = makeRoot({ drift: { ...NO_DRIFT, judged: [{ tag: 'Context-dependent', column: 'Description' }, { tag: 'Context-dependent', column: 'Counterpart' }] } });
   assert.match(assertReport(await go(two.root)).sentence, /\(Context-dependent: Description; Context-dependent: Counterpart\)/);

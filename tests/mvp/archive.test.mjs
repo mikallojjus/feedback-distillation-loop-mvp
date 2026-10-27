@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
-  ARCHIVE_TITLE, ArchiveError, HUB_TITLE, applyArchive, archiveConfigChange, archivedIds, checkArchivePlan, knownObjects, planArchive, snapshotRoot, walkArchiveTree,
+  ARCHIVE_TITLE, ARCHIVE_WARNING, ArchiveError, HUB_TITLE, applyArchive, archiveConfigChange, archiveFirst, archivedIds, checkArchivePlan, knownObjects, linksBack, planArchive, snapshotRoot, walkArchiveTree,
 } from '../../agents/claim-tagger-mvp/scripts/lib/archive.mjs';
 import { isProtected, loadConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { planStructure, runStructure } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
@@ -12,7 +12,7 @@ import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.
 import { USAGE, main, openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
 import { createPagesFake } from './fixtures/fake-notion-pages.mjs';
 import { placeholderConfig } from './helpers/config-fixture.mjs';
-import { NOW, builderClient, cleanTmp, forFake, newWorld, noSleep, readJson, readLines, restClient, revisedStructure, testConfig, tmp } from './helpers/setup-world.mjs';
+import { NOW, builderClient, cleanTmp, forFake, newWorld, noSleep, readJson, readLines, restClient, revisedStructure, testConfig, tmp, writeInputs } from './helpers/setup-world.mjs';
 
 // The archive step (decision P9): the first build is moved into a page under the hub, the hub is renamed, and everything archived is protected. Every test runs
 // against the pages fake (child pages and tables are blocks of their page, a move takes the block to the new parent). The world is the hub page "Feedback
@@ -158,7 +158,8 @@ test('archive: one rename, one create, eight moves, every new parent read back; 
   const held = w.fake.outline(archiveId);
   assert.match(held[0], /^paragraph\|Archived on 27 Oct 2026\. The live tables are on the hub: Claim tagger\.$/);
   assert.match(held[1], /^paragraph\|This page holds the first build/);
-  assert.deepEqual(held.slice(2), [
+  assert.equal(held[2], `paragraph|${ARCHIVE_WARNING}`);
+  assert.deepEqual(held.slice(3), [
     'child_page|Structure proposal', 'child_page|Demos', 'child_page|Demo tests',
     'database|Rulebook copy', 'database|Claims copy', 'database|Tag decisions', 'database|Rule changes', 'database|Agent settings',
   ], 'the eight, in the order they were moved');
@@ -470,28 +471,132 @@ test('planArchive refuses two Archive pages and an empty config; a plan over pla
 
 // ---- the gate on the build --------------------------------------------------------------------------------------------------------------------
 
-test('pages, databases, views, build and all refuse with exit 2 while setup/archive.json is not "done"; without the file, with "done" and for the other steps nothing changes', async () => {
+// every step of setup that builds or writes, but archive itself (the commands with `setup: true`)
+const GATED_STEPS = ['pages', 'databases', 'views', 'hub', 'build', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'all'];
+const FIRST_BUILD_WORDS = "the first build's tables are still on the hub page; run setup.mjs archive first (P9)";
+
+test('every step but archive refuses with exit 2 while setup/archive.json is not "done" or cannot be read; "done" lets them through to their own work', async () => {
   const w = await world();
   mkdirSync(join(w.root, 'setup'), { recursive: true });
   const file = join(w.root, 'setup', 'archive.json');
   writeFileSync(file, `${JSON.stringify({ state: 'moving' })}\n`);
   const before = w.fake.requests.length;
-  for (const name of ['pages', 'databases', 'views', 'build', 'all']) {
+  for (const name of GATED_STEPS) {
     const r = await w.run([name]);
     assert.equal(r.code, 2, name);
     assert.match(r.err[0], new RegExp(`setup ${name}: the archive stopped halfway \\(setup/archive\\.json says state "moving"\\); run setup\\.mjs archive again`), name);
   }
   assert.equal(w.fake.requests.length, before, 'no request');
-  const rulebook = await w.run(['rulebook']);
-  assert.doesNotMatch(rulebook.text, /archive stopped halfway/, 'the row steps are not gated');
   writeFileSync(file, '{ not json');
-  const unreadable = await w.run(['build']);
-  assert.equal(unreadable.code, 2);
-  assert.match(unreadable.err[0], /cannot be read/);
+  for (const name of ['build', 'claims', 'rubric']) {
+    const unreadable = await w.run([name]);
+    assert.equal(unreadable.code, 2, name);
+    assert.match(unreadable.err[0], /cannot be read/, name);
+  }
   writeFileSync(file, `${JSON.stringify({ state: 'done' })}\n`);
-  assert.doesNotMatch((await w.run(['build'])).text, /archive stopped halfway/, 'done lets build through to its own work');
-  rmSync(file);
-  assert.doesNotMatch((await w.run(['build'])).text, /archive stopped halfway/, 'no file, no gate: a fresh install builds as before');
+  for (const name of ['build', 'rulebook', 'claims']) {
+    const through = await w.run([name]);
+    assert.doesNotMatch(through.text, /archive stopped halfway|run setup\.mjs archive first/, `${name}: done lets the step through to its own work`);
+  }
+});
+
+test('with no setup/archive.json and the first build named in config.json, every step but archive refuses with exit 2 and sends nothing; archive itself still plans; a rerun of the real archive opens the gate', async () => {
+  const w = await world();
+  assert.equal(existsSync(join(w.root, 'setup', 'archive.json')), false);
+  const before = w.fake.requests.length;
+  for (const name of GATED_STEPS) {
+    const r = await w.run([name]);
+    assert.equal(r.code, 2, name);
+    assert.equal(r.err[0], `setup ${name}: ${FIRST_BUILD_WORDS}`, name);
+  }
+  assert.equal(w.fake.requests.length, before, 'no request, not even a read');
+  // the same with the state file of the first build, which has no mark that a build passed the gate (the live state)
+  mkdirSync(join(w.root, 'runs', 'builder'), { recursive: true });
+  writeFileSync(join(w.root, 'runs', 'builder', 'state.json'), `${JSON.stringify({ pages: {}, tables: {}, updated_at: '2026-10-15T00:00:00Z' })}\n`);
+  for (const name of ['build', 'all', 'claims', 'rubric']) assert.equal((await w.run([name])).err[0], `setup ${name}: ${FIRST_BUILD_WORDS}`, name);
+  // the archive step is not held back by it
+  const plan = await w.run(['archive', '--plan-only']);
+  assert.equal(plan.code, 0, plan.text);
+  const done = await w.run(['archive']);
+  assert.equal(done.code, 0, done.text);
+  assert.doesNotMatch((await w.run(['build'])).text, /run setup\.mjs archive first/, 'once archive.json is "done" the gate is open');
+});
+
+test('archiveFirst: true only without archive.json, with a real id among the eight old objects and no build mark in runs/builder/state.json', async () => {
+  const w = await world();
+  const config = loadConfig(w.root);
+  assert.equal(archiveFirst(w.root, config), true, 'the first build is still on the hub');
+  const placeholders = placeholderConfig();
+  assert.equal(archiveFirst(w.root, placeholders), false, 'a config of placeholders has nothing to archive (the page of the proposal exists before any setup and does not count)');
+  const justTables = structuredClone(placeholders);
+  justTables.notion.pages.proposal = '<setup>';
+  justTables.notion.claims.database_id = normId(w.id.claims);
+  assert.equal(archiveFirst(w.root, justTables), true, 'one old table is enough');
+  const justPages = structuredClone(config);
+  justPages.notion.rulebook.database_id = justPages.notion.rulebook.data_source_id = justPages.notion.claims.database_id = justPages.notion.claims.data_source_id = '<setup>';
+  for (const k of ['tag_decisions', 'rule_changes', 'agent_settings']) justPages.notion.databases[k].database_id = justPages.notion.databases[k].data_source_id = '<setup>';
+  assert.equal(archiveFirst(w.root, justPages), false, 'old pages without old tables hold nothing a build would write into');
+  mkdirSync(join(w.root, 'runs', 'builder'), { recursive: true });
+  writeFileSync(join(w.root, 'runs', 'builder', 'state.json'), `${JSON.stringify({ archive_checked: true })}\n`);
+  assert.equal(archiveFirst(w.root, config), false, 'tables recorded by a build that passed the gate are this install\'s own');
+  writeFileSync(join(w.root, 'runs', 'builder', 'state.json'), '{ not json');
+  assert.equal(archiveFirst(w.root, config), true, 'a state file that cannot be read gives no such proof');
+  writeFileSync(join(w.root, 'runs', 'builder', 'state.json'), `${JSON.stringify({ archive_checked: true })}\n`);
+  mkdirSync(join(w.root, 'setup'), { recursive: true });
+  writeFileSync(join(w.root, 'setup', 'archive.json'), `${JSON.stringify({ state: 'moving' })}\n`);
+  assert.equal(archiveFirst(w.root, config), false, 'with a file the state it holds decides, not this check');
+});
+
+test('a fresh install (a config of placeholders, no archive.json) builds, and its own tables do not hold back the steps after the build', async () => {
+  const w = newWorld({ structure: 'fresh' });
+  assert.equal(openBuilder({ root: w.root, reason: SESSION_REASON }).ok, true);
+  assert.equal(archiveFirst(w.root, loadConfig(w.root)), false);
+  const built = await w.run(['build']);
+  assert.equal(built.code, 0, built.text);
+  assert.equal(existsSync(join(w.root, 'setup', 'archive.json')), false, 'no archive was ever made');
+  assert.equal(readJson(join(w.root, 'runs', 'builder', 'state.json')).archive_checked, true, 'the build records that it passed the gate');
+  const inputs = writeInputs(join(w.root, 'inputs'));
+  const rows = await w.run(['rulebook', '--from', inputs.taxonomy]);
+  assert.equal(rows.code, 0, rows.text);
+  assert.doesNotMatch(rows.text, /run setup\.mjs archive first/);
+});
+
+test('linksBack: the first line of the Archive page links to the hub by the hub page\'s id, whatever form Notion writes the address in', () => {
+  const hub = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+  const dashed = 'A1B2C3D4-E5F6-0718-293A-4B5C6D7E8F90';
+  const line = (href, content = HUB_TITLE) => ({
+    type: 'paragraph',
+    paragraph: { rich_text: [{ type: 'text', text: { content: 'Archived on 27 Oct 2026. The live tables are on the hub: ' }, plain_text: 'Archived on 27 Oct 2026. The live tables are on the hub: ' }, { type: 'text', text: { content, link: href ? { url: href } : null }, plain_text: content, href }, { type: 'text', text: { content: '.' }, plain_text: '.' }] },
+  });
+  assert.equal(linksBack(line(`https://www.notion.so/${hub}`), hub), true, 'the address as written');
+  assert.equal(linksBack(line(`/${hub}`), hub), true, 'a relative address');
+  assert.equal(linksBack(line(`https://app.notion.com/p/claim-tagger-${hub}`), hub), true, 'an app.notion.com/p/<slug>-<id> address');
+  assert.equal(linksBack(line(`https://www.notion.so/Claim-tagger-${dashed}`), hub), true, 'dashes and capitals do not matter');
+  assert.equal(linksBack(line(`https://www.notion.so/${hub}?pvs=4`), hub), true, 'a query after the id');
+  assert.equal(linksBack(line(`/${'f'.repeat(32)}`), hub), false, 'another page');
+  assert.equal(linksBack(line(null), hub), false, 'no link at all');
+  assert.equal(linksBack(line(`/${hub}`, 'the hub'), hub), false, 'the link is on other words than the hub\'s title');
+  assert.equal(linksBack({ type: 'heading_1' }, hub), false);
+  // a link written only in text.link.url (the request shape) counts too
+  const requestShape = line(null);
+  requestShape.paragraph.rich_text[1].text.link = { url: `/${hub}` };
+  assert.equal(linksBack(requestShape, hub), true);
+  const notFirst = line(`/${hub}`);
+  notFirst.paragraph.rich_text[0].plain_text = 'Something else. ';
+  notFirst.paragraph.rich_text[0].text.content = 'Something else. ';
+  assert.equal(linksBack(notFirst, hub), false, 'the line must be the archive page\'s own first line');
+});
+
+test('the Archive page holds the link back, what it holds, and the warning that its tables share names with the live ones (ED-9)', async () => {
+  const w = await world();
+  const r = await w.run(['archive']);
+  assert.equal(r.code, 0, r.text);
+  const blocks = await w.client.retrieveBlockChildren(w.archiveRecord().archive_page);
+  const text = (b) => (b[b.type]?.rich_text ?? []).map((x) => x.plain_text).join('');
+  assert.match(text(blocks[0]), /^Archived on 27 Oct 2026\. The live tables are on the hub: Claim tagger\.$/);
+  assert.match(text(blocks[1]), /^This page holds the first build/);
+  assert.equal(text(blocks[2]), 'The tables here share names with the live ones and do nothing now; use the hub.');
+  assert.equal(ARCHIVE_WARNING, text(blocks[2]));
 });
 
 // ---- build does not adopt what was archived ----------------------------------------------------------------------------------------------

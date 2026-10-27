@@ -26,10 +26,10 @@ Some reports end with a Next line that sends the editor to Notion. Under such a 
 
 Real:
 
-1. Open Your queue (the link in the Next line): the claims that wait for you, lowest Agent confidence first.
+1. Open Your queue (the link in the Next line): the claims that wait for you, lowest Agent confidence first. A claim leaves it as soon as you set Review status to Reviewed.
 2. Read Agent reasons and Tags waiting: they say which tag waits and why.
-3. On each claim fill in, in this order: Verified tags, Challenged tags notes (start a line with the tag name and a colon when the agent judged several tags), Review status last.
-4. You need not say why the agent was wrong: it reads your decision itself. If you know the reason, start the note with Agent slip, Rule unclear or Rule should change and a full stop; the agent then takes your word as it stands.
+3. On each claim fill in three columns. Verified tags: every tag that applies, the ones in Agent tags included; one left out counts as Does not apply. Challenged tags notes: start a line with the tag name and a colon. Review status last.
+4. A note is optional when you agree. When you overrule the agent, add one line why: without it the agent drafts no rule change. If you know the reason, start it with Agent slip, Rule unclear or Rule should change and a full stop.
 5. When your claims are decided, type /claim-tagger distill.
 
 Demo:
@@ -37,7 +37,7 @@ Demo:
 1. Open Your queue (the link in the Next line): your four claims wait there.
 2. On each of your four claims fill in, in this order: Verified tags, Challenged tags notes, Review status; step 3 of the practice page gives the values.
 3. Paste the words between the quotes that the page gives for Challenged tags notes (the Georgia claim's note stays empty: an empty note is a decision too), and set Review status to Reviewed last.
-4. A decided claim stays in Your queue until the agent reads it again, which the follow-up of step 7 does for the claims the rule change rests on.
+4. A claim leaves Your queue as soon as you set Review status to Reviewed.
 5. When all four claims are Reviewed, type /claim-tagger demo distill.
 
 ## Needs your note

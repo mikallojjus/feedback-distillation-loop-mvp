@@ -90,7 +90,7 @@ export async function rollback(opts = {}) {
 
     const copy = (ctx.pull.rulebook() ?? []).find((r) => r.Name === tag);
     if (!alreadyBack && !copy?.page_id) {
-      throw new LoopExit(EXIT.INVALID, `the Rulebook copy has no row for ${tag}`, { sentence: `Rollback: nothing was written, because the Rulebook copy has no row for ${tag}.`, next: ENGINEER });
+      throw new LoopExit(EXIT.INVALID, `the Rulebook has no row for ${tag}`, { sentence: `Rollback: nothing was written, because the Rulebook has no row for ${tag}.`, next: ENGINEER });
     }
     await confirmUnchanged(ctx, { lesson, copy: alreadyBack ? null : copy, tag, status: 'Live' });
 
@@ -101,13 +101,13 @@ export async function rollback(opts = {}) {
       const written = await applyStep(ctx, first);
       const line = readLedger(ctx.runDir).get(0);
       if (line?.status === 'skipped') {
-        throw new LoopExit(EXIT.DRIFT, `the Rulebook copy's When to use for ${tag} no longer reads as it did when the run started`, {
+        throw new LoopExit(EXIT.DRIFT, `the Rulebook's When to use for ${tag} no longer reads as it did when the run started`, {
           sentence: 'Rollback: nothing was changed, because the rulebook text in Notion was edited while it ran.', next: 'Next: put the rulebook text back, or ask the engineer to restore an edition.',
         });
       }
       assertApplied(ctx, written.result);
       if (!(line?.status === 'done' && line.read_back === 'ok')) {
-        throw new LoopExit(EXIT.ERROR, `the write to the Rulebook copy for ${tag} was not confirmed by the read-back`, { sentence: 'Rollback stopped before the rulebook text was written to Notion.', next: 'Next: type /claim-tagger rollback again with the title; it continues where it stopped.' });
+        throw new LoopExit(EXIT.ERROR, `the write to the Rulebook for ${tag} was not confirmed by the read-back`, { sentence: 'Rollback stopped before the rulebook text was written to Notion.', next: 'Next: type /claim-tagger rollback again with the title; it continues where it stopped.' });
       }
       writeEdition(ctx.root, built.rubric, { reason: `rolled back ${title}` });
       ctx.record.rubric_edition = edition;

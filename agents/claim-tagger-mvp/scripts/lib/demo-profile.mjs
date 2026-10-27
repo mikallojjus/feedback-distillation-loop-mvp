@@ -6,7 +6,7 @@
 //   parseNotionLink(text)                      -> the 32 hex digits of the page a pasted link or id names, or null
 //   newDemoId(now, random)  demoTitle(now)  dateWord(now)  -> "20261015-1422-a1b2c3"; "Claim tagger practice · 15 Oct 14:22"; "15 Oct"
 //   loadManifest(file) / loadTemplate(file)    -> { manifest, sha256 } / { text, sha256 }, checked (ManifestError names the problem)
-//   practiceStructure(structure)               -> the production structure with the practice page's table titles (Rulebook, Claims, ...)
+//   practiceStructure(structure)               -> the production structure with the practice page's table titles (Rulebook, Claims, ...), the filters of its views and the review columns its manifest froze
 //   buildDemoConfig(production, { ... })       -> the config.json of a demo profile (protected list = production's plus its own tables and page)
 //   pageModel(template, values)                -> what the page is made of: blocks before the tables, the two view slots, the Help toggle
 //   expectedContent(model, fallbackKeys)       -> the top-level content blocks the page must hold, in order
@@ -271,26 +271,38 @@ export function templateFileFor(manifestFile, fallback) {
 
 // ---- the structure and the config ----------------------------------------------------------------------------------------------------
 
-/** The Claims columns that production's views show and a practice page's views do not (its manifest has no value for them). */
-export const PRODUCTION_ONLY_VIEW_COLUMNS = Object.freeze(['Geo Space']);
+/**
+ * The columns the three Claims views of a practice page show, in this order: Geo Name and the agent's and the editor's columns of the structure, none of the other Geo columns (the
+ * manifest's claims carry no space, no link, no sources). They are the columns its manifest froze (2026-10-22.1, expect.claims_columns), not the lean views of the real table (P15):
+ * a practice page keeps the review order it was calibrated and checked with, and only the filter of Your queue follows the real table (P13).
+ */
+export const practiceViewColumns = (structure) => structure.tables.claims.columns.filter((c) => c.retired !== true && (c.name === 'Geo Name' || !c.name.startsWith('Geo '))).map((c) => c.name);
 
 /**
  * The structure of the five tables with the practice page's titles (a copy; validated). The sub-pages of production and its hub block are left out: a practice page is
  * not a hub (its tables are inline, in the order of TABLES, and its page text has its own links), and it does not say where the structure was made from.
+ *
+ * What a practice page keeps of production's structure, and what it does not:
+ *   the three Claims views     the filters of production (Your queue: Agent status is Waits for you and Review status is not Reviewed, P13) and the columns its manifest froze (practiceViewColumns)
+ *   the table's own view       the Claims table's own view shows every live column in the structure's order (arrange_default_view), as the manifest's checks and the page's explaining tables
+ *                              expect; production's lean "All claims" (default_view, P15) is left out, and so are the other four tables' arranged own views and every table description
+ *                              (the description of Claims says it holds 200 claims; a practice page's table is not that table)
  */
 export function practiceStructure(structure) {
   const copy = structuredClone(structure);
   for (const [key, title] of Object.entries(PRACTICE_TITLES)) {
     if (!copy.tables?.[key]) throw new ManifestError(`the structure has no table "${key}"`);
     copy.tables[key].title = title;
+    delete copy.tables[key].description;
+    delete copy.tables[key].default_view;
   }
+  copy.tables.claims.arrange_default_view = true;
   copy.pages = [];
   delete copy.hub;
   delete copy.made_from;
-  // The views of a practice page show the columns its manifest froze (2026-10-22.1). Production's Claims views also show Geo Space (P12), and the manifest's claims carry no space: the
-  // column is on the practice table (empty) but its views leave it out, as they did before the column existed.
+  const reviewColumns = practiceViewColumns(copy);
   for (const view of copy.views) {
-    if (view.table === 'claims') view.columns = view.columns.filter((c) => !PRODUCTION_ONLY_VIEW_COLUMNS.includes(c));
+    if (view.table === 'claims') view.columns = [...reviewColumns];
   }
   return validateStructure(copy);
 }

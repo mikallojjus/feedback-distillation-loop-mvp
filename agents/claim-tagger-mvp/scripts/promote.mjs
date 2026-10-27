@@ -476,21 +476,21 @@ export async function promote(opts = {}) {
       //    after a failed write, and a rule change marked Live over an old rulebook text would have no way back. Then the new edition is saved, and committed.
       if (!inForce) {
         if (!copy?.page_id) {
-          throw new LoopExit(EXIT.INVALID, `the Rulebook copy has no row for ${tag}`, { sentence: `Promote: nothing was written, because the Rulebook copy has no row for ${tag}.`, next: ENGINEER });
+          throw new LoopExit(EXIT.INVALID, `the Rulebook has no row for ${tag}`, { sentence: `Promote: nothing was written, because the Rulebook has no row for ${tag}.`, next: ENGINEER });
         }
         const first = newPlan({ runId: ctx.runId, script: 'promote', rubricEdition: live.edition, config: ctx.config, now: ctx.now });
         first.update('rulebook', tag, copy.page_id, { 'When to use': built.whenToUse }, { expect: { 'When to use': copy['When to use'] ?? '' } });
         const written = await applyStep(ctx, first);
         const line = readLedger(ctx.runDir).get(0);
         if (line?.status === 'skipped') {
-          throw new LoopExit(EXIT.DRIFT, `the Rulebook copy's When to use for ${tag} no longer reads as it did when the check started`, {
+          throw new LoopExit(EXIT.DRIFT, `the Rulebook's When to use for ${tag} no longer reads as it did when the check started`, {
             sentence: 'Promote: nothing was changed, because the rulebook text in Notion was edited while the check ran.',
             next: `Next: put the rulebook text back on ${tag} (${viewLink(ctx.config, 'rulebook')}), or ask the engineer to restore an edition.`,
           });
         }
         assertApplied(ctx, written.result);
         if (!(line?.status === 'done' && line.read_back === 'ok')) {
-          throw new LoopExit(EXIT.ERROR, `the write to the Rulebook copy for ${tag} was not confirmed by the read-back`, { sentence: 'Promote stopped before the rulebook text was written to Notion.', next: 'Next: type /claim-tagger promote again; it continues where it stopped.' });
+          throw new LoopExit(EXIT.ERROR, `the write to the Rulebook for ${tag} was not confirmed by the read-back`, { sentence: 'Promote stopped before the rulebook text was written to Notion.', next: 'Next: type /claim-tagger promote again; it continues where it stopped.' });
         }
         writeEdition(ctx.root, candidate, { reason: `lesson ${title} PASS` });
         ctx.record.rubric_edition = newEdition;

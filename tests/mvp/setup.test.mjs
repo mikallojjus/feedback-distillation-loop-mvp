@@ -204,6 +204,16 @@ test('preview of the fresh structure shows the five tables in the hub\'s order, 
   assert.match(md, /\| Geo Tags \| multi_select \| Debate(, [^|]+)? \|/, 'Debate first, then the tag names the committed pick added, if it has run');
   assert.doesNotMatch(md, /\(old\)|Geo Score|Geo Name source|renamed|retired|Claims copy|Rulebook copy/);
   assert.equal((md.match(/^- \*\*/gm) ?? []).length, 7);
+  // the warning line first (P14), then the links
+  assert.match(md, /1\. the warning line at the very top: Claims is the real table: every decision you make there trains the rulebook\. To practise, open Onboarding\.\n2\. 3 link lines at the top: /);
+  // the lean views and the table's own views (P13, P15), the description under each table (ED-8)
+  assert.match(md, /- \*\*Your queue\*\*: rows shown: Agent status is Waits for you and Review status is not Reviewed; sorted by: Agent confidence, lowest first; columns: Geo Name, Tags waiting, Agent reasons, Agent tags, Verified tags, Challenged tags notes, Review status; cells wrap\n/);
+  assert.match(md, /- \*\*Needs your note\*\*: rows shown: Agent reading contains without your note; sorted by: Agent confidence, lowest first; columns: Geo Name, Verified tags, Agent reading, Challenged tags notes, Review status; cells wrap\n/);
+  assert.match(md, /- \*\*Agent disagreed\*\*: rows shown: Agent status is Disagrees with your decision; sorted by: Agent confidence, lowest first; columns: Geo Name, Agent reasons, Agent reading, Verified tags, Challenged tags notes, Review status; cells wrap\n/);
+  assert.match(md, /- The table's own view \(Notion's default\), called All claims: shows Geo Name, Geo Space, Agent tags, Agent status, Verified tags, Review status, Geo URL; the other 13 columns are hidden\n/);
+  assert.equal((md.match(/^- The table's own view/gm) ?? []).length, 5, 'every table arranges its own view');
+  assert.equal((md.match(/^Description under the table's name: /gm) ?? []).length, 5);
+  assert.match(md, /^Description under the table's name: Tick Paused to stop every command; untick to resume\.$/m);
   assert.equal(w.fake.requests.length, 0, 'local files only');
 });
 
@@ -1461,6 +1471,45 @@ test('verify finds an edited Rulebook row, an edited claim, an edited seeded row
   assert.ok(verify.differences.length >= 8);
   assert.equal(verify.requests.writes, 0);
   assert.ok(r.err.length <= 22, 'a short list');
+});
+
+test('verify compares the page ids in rubric/rubric.json with the live Rulebook rows, one per tag; a rubric of other tables, a tag without a row and a row without a tag are named', async () => {
+  const w = await filled();
+  assert.equal((await w.run(verifyArgs(w))).code, 0, 'the edition names the live rows');
+
+  // the edition names the rows of another table (the archived Rulebook): the next edition with the old ids
+  const pagesFile = join(w.root, 'setup', 'rulebook-pages.json');
+  const live = readJson(pagesFile);
+  const archived = Object.fromEntries(Object.keys(live).map((name, i) => [name, `3f2273e2-14eb-81aa-8000-00000000000${i + 1}`]));
+  writeFileSync(pagesFile, JSON.stringify(archived));
+  assert.equal((await w.run(['rubric', '--from', w.inputs.taxonomy])).code, 0);
+  const stale = await w.run(verifyArgs(w));
+  assert.equal(stale.code, 2);
+  const text = stale.err.join('\n');
+  const first = Object.keys(live).sort()[0];
+  assert.match(text, new RegExp(`rulebook: rubric page id - "${first}": rubric/rubric\\.json \\(edition [^)]+\\) holds the page id ${normId(archived[first])}, the Rulebook row is ${normId(live[first])}; run "setup\\.mjs rubric"`));
+  assert.equal(stale.err.filter((l) => /rubric page id/.test(l)).length, Object.keys(live).length, 'one difference per tag');
+
+  // a tag of the edition that has no row, and a row that is no tag of the edition
+  writeFileSync(pagesFile, JSON.stringify(live));
+  assert.equal((await w.run(['rubric', '--from', w.inputs.taxonomy])).code, 0);
+  const rubricFile = join(w.root, 'rubric', 'rubric.json');
+  const rows = rowsOf(w, 'rulebook');
+  const gone = rows.find((x) => x.Name !== 'Context-dependent');
+  w.fake.editRow(gone.page_id, { Name: 'A row nobody put in the edition' });
+  const odd = await w.run(verifyArgs(w));
+  const oddText = odd.err.join('\n');
+  assert.match(oddText, new RegExp(`rulebook: rubric page id - "${gone.Name}" is in rubric/rubric\\.json \\(edition [^)]+\\) but has no row in the Rulebook`));
+  assert.match(oddText, /rulebook: rubric page id - "A row nobody put in the edition" is a row of the Rulebook but not a tag of rubric\/rubric\.json/);
+  assert.ok(existsSync(rubricFile));
+});
+
+test('verify says it cannot compare the Rulebook with the edition before there is one (a check that cannot run is reported, never skipped)', async () => {
+  const w = await built();
+  assert.equal((await w.run(['rulebook', '--from', w.inputs.taxonomy])).code, 0);
+  const r = await w.run(verifyArgs(w));
+  assert.equal(r.code, 2);
+  assert.match(r.err.join('\n'), /rulebook: input - rubric\/rubric\.json: there is no rulebook edition yet \(run "setup\.mjs rubric"\), so its page ids cannot be compared with the Rulebook/);
 });
 
 test('verify names a column added to a table, a missing row and a file it cannot read', async () => {

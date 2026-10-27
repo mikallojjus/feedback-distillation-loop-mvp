@@ -18,14 +18,16 @@
 //   setup.mjs verify [--taxonomy f] [--claims f] [--audit f]   read everything back and list the differences -> runs/builder/verify.json
 //
 //   The build (needs the session: runs/SETUP)
-//   setup.mjs pages | databases | views | build           the sub-page (Onboarding), the five tables (full-page tables) and the columns a table lacks, the views, and the hub page's link lines and a
+//   setup.mjs pages | databases | views | hub | build     the sub-page (Onboarding), the five tables (full-page tables) and the columns a table lacks, the views, and the hub page's note, link lines and a
 //                                                         report of its body (build = all four; with a hub block in the structure the tables come first), resumable and safe to run again
 //                                                         on a table that exists: it renames the columns the structure renames (Agent tags and Agent notes to "(old)", Claim quality
 //                                                         tags — verified to Verified tags), adds the columns the table lacks (the revision of 21 October: Agent tags as a relation,
 //                                                         Agent status, Tags waiting, Agent edition, Agent remarks), renames a view of an older build that the structure renames
 //                                                         (not made again), and brings every view of a table to the structure: its filter, sorts, shown columns in order, wrap; the
-//                                                         Claims copy's own default view gets the column order too. It says what it did, and a second run does nothing
-//   setup.mjs rulebook [--from setup/taxonomy-issue.json] the 13 rows of the Rulebook copy (a setup plan, applied and read back)
+//                                                         table's own view (Notion's default view) is arranged as the structure's default_view says: Claims calls it "All claims", and every table
+//                                                         shows only the columns listed there (the description under each table's name is written when the table is made). It says what it did,
+//                                                         and a second run does nothing
+//   setup.mjs rulebook [--from setup/taxonomy-issue.json] the 13 rows of the Rulebook (a setup plan, applied and read back)
 //   setup.mjs claims [--from setup/geo-claims-pick.json]  the rows of the Geo pick (200) in the Claims table, Geo Sources with its links; the pick comes from geo-pick.mjs
 //   setup.mjs seed-audit [--from <audit json>] [--claims <pick>]  the audit decisions the pick includes (audit.included; the file must be the one the pick was made with) as decided rows of
 //                                                         Tag decisions (the agent's ledger); the audit claims the pick left out are named with their reasons
@@ -47,7 +49,9 @@
 //                                                         none of the eight are listed as leftovers for a person and never touched. --plan-only sends GETs only and writes the plan and
 //                                                         the snapshot to the run folder. A move that Notion refuses stops it with exit 2: drag that object into the Archive page by
 //                                                         hand, then run it again. Run it again after any stop: it reads first and does only what is missing. After it says done, a
-//                                                         run says "done already" and sends nothing. Until it is done, pages, databases, views, build and all refuse with exit 2.
+//                                                         run says "done already" and sends nothing. Until it is done, every other step that builds or writes (pages, databases, views, hub, build,
+//                                                         rulebook, claims, seed-audit, migrate-decisions, rubric, canaries, settings, all) refuses with exit 2, also while setup/archive.json is missing
+//                                                         and config.json still names the first build's tables ("run setup.mjs archive first (P9)"); a fresh install, whose config holds placeholders, builds
 //
 // Why a builder session: the connector guard (scripts/hooks/guard.mjs) denies every Notion write unless runs/SETUP exists and the
 // target is registered in runs/builder/pages.json or runs/builder/databases.json. Opening a session is a deliberate, logged act; the
@@ -65,7 +69,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { ArchiveError, readArchiveState, stepArchive } from './lib/archive.mjs';
+import { ARCHIVE_FIRST_MESSAGE, ArchiveError, archiveFirst, readArchiveState, stepArchive } from './lib/archive.mjs';
 import { builderPaths, logLine, readJsonOr, register } from './lib/builder-registry.mjs';
 import { loadConfig } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
@@ -147,9 +151,6 @@ const COMMANDS = {
   all: { setup: true, options: INPUTS },
   archive: { setup: true, options: { 'plan-only': { type: 'boolean' } } },
 };
-
-// These commands build in the hub page, so they wait until the archive step has finished (or was never run: a fresh install has no setup/archive.json).
-const ARCHIVE_GATED = new Set(['pages', 'databases', 'views', 'hub', 'build', 'all']);
 
 const ALL_STEPS = ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'];
 // With a hub block in the structure (P10, P11) the tables come before the pages, so that Onboarding stands below them, and the hub part follows the views.
@@ -393,7 +394,9 @@ async function runCommand(name, args, io, env) {
     io.err(`setup ${name}: runs/PAUSED exists, so the agent is paused and nothing was done; a person has to remove it`);
     return EXIT.PAUSED;
   }
-  if (ARCHIVE_GATED.has(name)) {
+  // Every step that builds or fills the hub, all of them but archive itself, waits for the archive (P9, M1 of the pre-live gate): until setup/archive.json says "done", and, with no archive
+  // file, while the first build's tables are still named in config.json (archiveFirst). A fresh install (a config of placeholders) has no file and nothing to archive.
+  if (spec.setup && name !== 'archive') {
     const archive = readArchiveState(root);
     if (archive.error) {
       io.err(`setup ${name}: ${archive.error}; setup.mjs archive has to be finished (or its file put right) first`);
@@ -402,6 +405,18 @@ async function runCommand(name, args, io, env) {
     if (archive.exists && archive.state !== 'done') {
       io.err(`setup ${name}: the archive stopped halfway (setup/archive.json says state "${archive.state}"); run setup.mjs archive again`);
       return EXIT.INVALID;
+    }
+    if (!archive.exists) {
+      let held = false;
+      try {
+        held = archiveFirst(root, env.config ?? loadConfig(root));
+      } catch {
+        held = false; // a config that cannot be read is reported just below, with its own message
+      }
+      if (held) {
+        io.err(`setup ${name}: ${ARCHIVE_FIRST_MESSAGE}`);
+        return EXIT.INVALID;
+      }
     }
   }
   let config = null;

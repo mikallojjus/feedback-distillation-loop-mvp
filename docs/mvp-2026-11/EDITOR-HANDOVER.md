@@ -1,4 +1,6 @@
-# Handover: testing the claim tagger's feedback loop on your own machine
+# Handover: learn the claim tagger on a practice page, then decide on Claims
+
+A practice page under Onboarding is for learning; nothing you do there counts. Claims, on the hub, is the real table; every decision there trains the rulebook, so decide only when you mean it.
 
 The claim tagger is an agent that reads Geo claims against a written rulebook and tags them; you, the editor, decide the tags on the claims table itself, the agent reads each of your decisions and drafts a rule change from the ones that point at the rule, and a safety check tests the draft against every earlier decision before the rulebook changes. Everything lives under the Notion page "Claim tagger" (the hub). You learn the loop on a practice page: your own small copy of the tables with nine real claims, four of which wait for your decision, and seven numbered steps written on the page. Nothing you do there touches real claims or the real rulebook. You need Node 22 or later, Claude Code on a subscription, access to the hub "Claim tagger", and the Notion integration token, which the product owner gives you privately.
 
@@ -19,11 +21,11 @@ The claim tagger is an agent that reads Geo claims against a written rulebook an
 
 4. **Open Claude Code in the folder** (the desktop app: open the folder; the terminal: `claude` inside it) and trust the folder when asked. The two skills, `/claim-tagger-walkthrough` and `/claim-tagger`, come from the repository and are ready at once. Optional check that everything runs: `npm test` passes without touching Notion.
 
-5. **Build your practice page.** In Claude Code type `/claim-tagger-walkthrough`. When asked for the page, say "Onboarding" and Claude uses the hub's Onboarding page, or paste its link: <!-- stage 5: link -->. About a minute later Claude gives you the link of your new page, "Claim tagger practice · <date and time>". Other people's practice pages sit under the same Onboarding page, and the demo commands act on the newest one there; if a colleague builds a page after yours, ask Claude which practice page the commands reach.
+5. **Build your practice page.** In Claude Code type /claim-tagger-walkthrough. When it asks for a page, say Onboarding. About a minute later Claude gives you the link of your new page.
 
 6. **Follow the seven steps written on the page.** In short: step 1 `/claim-tagger demo status`; step 2 `/claim-tagger demo tag`; step 3 decide your four claims in Your queue in Notion (Verified tags, a note, Review status Reviewed); step 4 `/claim-tagger demo distill`; step 5 approve the draft in Lessons waiting; step 6 `/claim-tagger demo promote`; step 7 read what the follow-up did. At any point ask Claude "where am I in the claim tagger demo".
 
-7. **Three rules of the road.** The commands with `demo` act on your practice page, and the page guides you through them. The commands without `demo` act on Claims, the real training table under the hub: 200 Geo claims, and every decision you make there is training data the rulebook learns from, so decide there only when you mean the decision. Do not edit the rulebook's "When to use" by hand, on the page or on the hub: rule changes go through Lessons waiting, and a hand edit stops every command until it is put back. If a command stops, type it again as its report says; if it stops the same way twice, send the whole report to the engineer.
+7. **Three rules of the road.** The commands with `demo` act on your practice page, and the page guides you through them. The commands without `demo` act on Claims, the real training table under the hub: 200 Geo claims, and every decision you make there is training data the rulebook learns from, so decide there only when you mean the decision. Editors decide claims; the rule owner approves or rejects rule changes in Lessons waiting. Do not change rules a tag already has: rule changes go through Lessons waiting, and a hand edit stops every command. To give a tag with no rules its first rules, the rule owner writes them in its When to use. If a command stops, type it again as its report says; if it stops the same way twice, send the whole report to the engineer.
 
 ## Resources
 
@@ -40,7 +42,7 @@ For you, and for an AI agent you want to brief before running the skills (point 
 | `docs/mvp-2026-11/READ-DECISIONS.md` | How the agent reads your decisions (Agent slip, Rule unclear, Rule should change), the reason word, decisions without a note |
 | `docs/mvp-2026-11/CLAIMS-REVIEW.md` | How a decision on the claims table is read, one note line per tag |
 | `docs/mvp-2026-11/STRUCTURE.md` | The first proposal of the tables, columns and views (15 October), with sample rows; kept as history |
-| `docs/mvp-2026-11/DECISIONS.md` | Every design decision with its reason, P1 to P12 and 1 to 97 |
+| `docs/mvp-2026-11/DECISIONS.md` | Every design decision with its reason, P1 to P16 and 1 to 105 |
 | `docs/mvp-2026-11/BACKLOG.md` | What is left out, why, and what would trigger it |
 | `agents/claim-tagger-mvp/AGENT.md` | The engineer's runbook: commands, run folders, models, safety |
 | `docs/mvp-2026-11/WORKLOG.md` | The build's log, entry by entry, with the verification runs |
