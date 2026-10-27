@@ -160,7 +160,7 @@ export function validateConfig(config) {
     version('notion.api_version', n.api_version);
     version('notion.builder_api_version', n.builder_api_version);
     id('notion.parent_page_id', n.parent_page_id);
-    if (obj('notion.pages', n.pages)) for (const k of ['proposal', 'demos', 'demo_tests']) id(`notion.pages.${k}`, n.pages[k], true);
+    if (obj('notion.pages', n.pages)) for (const k of ['proposal', 'demos', 'demo_tests', 'onboarding', 'archive']) id(`notion.pages.${k}`, n.pages[k], true);
     if (obj('notion.rulebook', n.rulebook)) {
       table('notion.rulebook', n.rulebook);
       text('notion.rulebook.work_tag', n.rulebook.work_tag);

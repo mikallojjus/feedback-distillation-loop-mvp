@@ -13,7 +13,7 @@ import { RUN_SCRIPTS, main } from '../../agents/claim-tagger-mvp/scripts/walkthr
 import { CLAIMS_COPY_COLUMNS, editorColumns, loadConfig, validateConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import * as dp from '../../agents/claim-tagger-mvp/scripts/lib/demo-profile.mjs';
 import { blockText, lintPage, toBlocks } from '../../agents/claim-tagger-mvp/scripts/lib/notion-blocks.mjs';
-import { viewPlan } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
+import { PAGE_TEXT, viewPlan } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
 import { claimColumns, propose } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
 import { distill } from '../../agents/claim-tagger-mvp/scripts/distill.mjs';
 import { judge, normalizeClaim } from '../../agents/claim-tagger-mvp/scripts/judge.mjs';
@@ -101,8 +101,9 @@ function withRealIds(config) {
 
 /**
  * A production state folder (config.json with the table ids of production, which no request may ever name; the structure file), a fake Notion with
- * a page called "Demos" to put the practice page under (config.notion.pages.demos, the sub-page the demo commands look under by default) and a page
- * called "Demo tests" (config.notion.pages.demo_tests, where the verification runs go and the commands do not look by default), and ways to run
+ * a page called "Onboarding" to put the practice page under (config.notion.pages.onboarding, the sub-page the demo commands look under by default), a page
+ * called "Demo tests" (config.notion.pages.demo_tests: a page elsewhere, where the commands do not look by default and a page is reached only by naming it),
+ * a page called "Demos" (config.notion.pages.demos, the old parent of the practice pages, which the commands no longer look under), and ways to run
  * walkthrough commands against them.
  */
 function newWorld({ configure } = {}) {
@@ -111,10 +112,12 @@ function newWorld({ configure } = {}) {
   const production = config;
   const protectedIds = [...production.notion.protected_database_ids, ...production.notion.protected_page_ids];
   const fake = createPagesFake({ protected: protectedIds });
-  const parent = fake.addPage({ title: 'Demos' });
+  const parent = fake.addPage({ title: 'Onboarding' });
   const testsParent = fake.addPage({ title: 'Demo tests' });
-  config.notion.pages.demos = parent.replace(/-/g, '');
+  const demosParent = fake.addPage({ title: 'Demos' });
+  config.notion.pages.onboarding = parent.replace(/-/g, '');
   config.notion.pages.demo_tests = testsParent.replace(/-/g, '');
+  config.notion.pages.demos = demosParent.replace(/-/g, '');
   config.notion.requests_per_second = 1000;
   configure?.(config, fake);
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
@@ -122,7 +125,7 @@ function newWorld({ configure } = {}) {
   writeFileSync(join(root, 'setup', 'structure.json'), `${JSON.stringify(structureForFake(), null, 2)}\n`);
   let n = 0;
   const w = {
-    root, fake, parent, testsParent, config, production, protectedIds, clock: NOW, link: `https://www.notion.so/Demos-${parent.replace(/-/g, '')}`, testsLink: `https://www.notion.so/Demo-tests-${testsParent.replace(/-/g, '')}`,
+    root, fake, parent, testsParent, demosParent, config, production, protectedIds, clock: NOW, link: `https://www.notion.so/Onboarding-${parent.replace(/-/g, '')}`, demosLink: `https://www.notion.so/Demos-${demosParent.replace(/-/g, '')}`, testsLink: `https://www.notion.so/Demo-tests-${testsParent.replace(/-/g, '')}`,
   };
   w.env = (extra = {}) => ({ root, fetchImpl: fake.fetchImpl, token: fake.token, sleep: noSleep, now: () => w.clock, random: () => `r${(n += 1)}`, repoRoot: root, ...extra });
   w.run = async (argv, extra = {}) => {
@@ -360,7 +363,7 @@ test('the config of a demo profile is valid, holds placeholders where the practi
   assert.equal(cfg.demo_title, 'Claim tagger practice · 15 Oct 14:22');
   assert.equal(cfg.notion.parent_page_id, '0123456789abcdef0123456789abcdef');
   assert.equal(cfg.notion.demo_parent_page_id, '0123456789abcdef0123456789abcdef');
-  assert.deepEqual(cfg.notion.pages, { proposal: '<none>', demos: '<none>', demo_tests: '<none>' });
+  assert.deepEqual(cfg.notion.pages, { proposal: '<none>', demos: '<none>', demo_tests: '<none>', onboarding: '<none>', archive: '<none>' });
   for (const entry of [cfg.notion.rulebook, cfg.notion.claims, ...Object.values(cfg.notion.databases)]) {
     assert.equal(entry.database_id, '<setup>');
     assert.equal(entry.data_source_id, '<setup>');
@@ -467,7 +470,7 @@ test('the demos on disk: newest first, only folders with a demo.json, a ready on
   };
   assert.deepEqual(dp.listDemos(root), []);
   const UNDER = '3fa273e214eb81ada268f4b511182378';
-  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER }), /there is no practice page under Demos yet/);
+  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER }), /there is no practice page under Onboarding yet/);
   make('a-old', { created_at: '2026-10-14T10:00:00Z', state: 'ready' });
   make('b-new', { created_at: '2026-10-15T10:00:00Z', state: 'planned' });
   make('c-dry-run');
@@ -477,11 +480,11 @@ test('the demos on disk: newest first, only folders with a demo.json, a ready on
   assert.deepEqual(dp.listDemos(root).map((d) => d.id), ['b-new', 'a-old']);
   assert.equal(dp.pickDemo(root, 'a-old').id, 'a-old');
   assert.equal(dp.pickDemo(root, 'b-new').id, 'b-new', 'a page that is named is reached whatever its state');
-  // without a name the page is looked for under the Demos sub-page, and only a page whose profile this build reads counts (these have no profile at all)
-  assert.throws(() => dp.pickDemo(root), /the Demos page is not set in config/, 'no Demos page to look under is an error, not a guess');
-  assert.throws(() => dp.pickDemo(root, undefined, { under: '<none>' }), /the Demos page is not set/);
-  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER }), /there is no practice page under Demos yet/);
-  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER, ready: true }), /there is no finished practice page under Demos yet/);
+  // without a name the page is looked for under the Onboarding sub-page, and only a page whose profile this build reads counts (these have no profile at all)
+  assert.throws(() => dp.pickDemo(root), /the Onboarding page is not set in config\.json \(notion\.pages\.onboarding\)/, 'no Onboarding page to look under is an error, not a guess');
+  assert.throws(() => dp.pickDemo(root, undefined, { under: '<none>' }), /the Onboarding page is not set/);
+  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER }), /there is no practice page under Onboarding yet/);
+  assert.throws(() => dp.pickDemo(root, undefined, { under: UNDER, ready: true }), /there is no finished practice page under Onboarding yet/);
   assert.equal(typeof dp.profileProblem(dp.pickDemo(root, 'a-old')), 'string', 'a folder without a profile has a problem, not a crash');
   assert.throws(() => dp.pickDemo(root, 'c-dry-run'), /no demo\.json/);
   assert.throws(() => dp.pickDemo(root, 'nope'), dp.ManifestError);
@@ -948,14 +951,14 @@ test('start builds the page: one page, five tables, the text in order, two linke
   assert.equal(r.outs.filter((l) => l === 'Building the page.').length, 1);
   const report = r.outs.slice(1).join('\n');
   assert.deepEqual(lintReport(`${report}\n`), []);
-  assert.match(report, /^Walkthrough: your practice page is ready under Demos\.\n\n\| Table \| Now \|\n\|---\|---\|\n\| Rulebook \| 1 tag \|\n\| Claims \| 9: 5 reviewed earlier, 4 for you \|\n\| Rule changes \| empty \|\n\nNext: open Claim tagger practice · 15 Oct 14:22 \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\) and follow step 1\.$/);
+  assert.match(report, /^Walkthrough: your practice page is ready under Onboarding\.\n\n\| Table \| Now \|\n\|---\|---\|\n\| Rulebook \| 1 tag \|\n\| Claims \| 9: 5 reviewed earlier, 4 for you \|\n\| Rule changes \| empty \|\n\nNext: open Claim tagger practice · 15 Oct 14:22 \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\) and follow step 1\.$/);
 
   const [id] = w.demos();
   assert.equal(id, '20261015-1422-r1');
   const demo = w.demo();
   assert.equal(demo.state, 'ready');
   assert.equal(demo.title, 'Claim tagger practice · 15 Oct 14:22');
-  assert.equal(demo.parent.title, 'Demos');
+  assert.equal(demo.parent.title, 'Onboarding');
   assert.equal(demo.manifest_version, manifest.manifest_version);
   assert.match(demo.manifest_sha256, /^[0-9a-f]{64}$/);
   assert.equal(demo.api_version, '2026-03-11');
@@ -1627,7 +1630,7 @@ test('--resume on a finished page only reads: it verifies and reports, and write
   const again = await w.run(['start', '--resume', id]);
   assert.equal(again.code, 0, again.err);
   assert.equal(w.fake.writes().length, writes);
-  assert.match(again.out, /Walkthrough: your practice page is ready under Demos\./);
+  assert.match(again.out, /Walkthrough: your practice page is ready under Onboarding\./);
   assert.ok(!again.outs.includes('Building the page.'));
 });
 
@@ -2302,7 +2305,7 @@ test('where names the demo it was asked about; an unknown one is exit 2; with no
   const w = newWorld();
   const none = await w.run(['where']);
   assert.equal(none.code, 2);
-  assert.match(none.err, /there is no practice page under Demos yet/);
+  assert.match(none.err, /there is no practice page under Onboarding yet/);
   assert.equal((await w.start()).code, 0);
   w.clock = new Date(NOW.getTime() + 3600e3);
   assert.equal((await w.start()).code, 0);
@@ -2340,7 +2343,7 @@ test('list shows every practice page, newest first, with its link, state and ste
   assert.match(rows[0][0], /^Third practice page \(/);
   assert.deepEqual(rows[0].slice(1), ['planned', '-']);
   assert.match(rows[1][0], new RegExp(`^Training copy \\(${w.demo(b).page.url}\\)`));
-  assert.deepEqual(rows[1].slice(1), ['ready · used by the demo commands', 'step 3'], 'the newest finished page under Demos is the one the commands reach, and it is marked');
+  assert.deepEqual(rows[1].slice(1), ['ready · used by the demo commands', 'step 3'], 'the newest finished page under Onboarding is the one the commands reach, and it is marked');
   assert.match(rows[2][0], new RegExp(`^Claim tagger practice · 15 Oct 14:22 \\(${w.demo(a).page.url}\\)`));
   assert.deepEqual(rows[2].slice(1), ['ready', 'step 1']);
   assert.match(r.out, /^Walkthrough: 3 practice pages\./);
@@ -2378,13 +2381,13 @@ test('list keeps every page and marks the one the commands reach; its Next line 
   reviewBoth(mine);
   assert.match(lastLine((await w.run(['list'])).out), /^Next: nothing to type; archive the page by hand/);
 
-  // no page under Demos at all: nothing is marked, and the Next line says where a page has to go
+  // no page under Onboarding at all: nothing is marked, and the Next line says where a page has to go
   const only = newWorld();
   assert.equal((await only.run(['start', '--parent', only.testsLink])).code, 0);
   const none = await only.run(['list']);
   assert.equal(none.code, 0, none.err);
   assert.ok(!none.out.includes('used by the demo commands'));
-  assert.match(lastLine(none.out), /^Next: ask for a practice page under the Demos page;/);
+  assert.match(lastLine(none.out), /^Next: ask for a practice page under the Onboarding page;/);
 });
 
 test('list shows the page the commands reach even when five newer pages sit above it', async () => {
@@ -2405,7 +2408,7 @@ test('list shows the page the commands reach even when five newer pages sit abov
   assert.match(r.out, /^Walkthrough: 6 practice pages, the newest 4 and the one the demo commands use below\./);
 });
 
-test('without --demo the commands act on the newest finished page under Demos: a newer page under Demo tests is never picked, a page of an older shape is skipped, and --demo reaches any page', async () => {
+test('without --demo the commands act on the newest finished page under Onboarding (config notion.pages.onboarding): a newer page under Demo tests or the old Demos page is never picked, a page of an older shape is skipped, and --demo reaches any page', async () => {
   const w = newWorld();
   const scriptsDir = standIns();
   assert.equal((await w.start()).code, 0);
@@ -2413,14 +2416,18 @@ test('without --demo the commands act on the newest finished page under Demos: a
   assert.equal((await w.start(['--title', 'Older shape'])).code, 0);
   w.clock = new Date(NOW.getTime() + 7200e3);
   assert.equal((await w.run(['start', '--parent', w.testsLink, '--title', 'Verification run'])).code, 0);
-  const [mine, shaped, tests] = w.demos();
+  w.clock = new Date(NOW.getTime() + 10800e3);
+  assert.equal((await w.run(['start', '--parent', w.demosLink, '--title', 'Made under the old Demos page'])).code, 0);
+  const [mine, shaped, tests, old] = w.demos();
   assert.equal(w.demo(mine).parent.id, w.parent.replace(/-/g, ''));
+  assert.equal(w.demo(mine).parent.title, 'Onboarding');
   assert.equal(w.demo(tests).parent.id, w.testsParent.replace(/-/g, ''));
+  assert.equal(w.demo(old).parent.id, w.demosParent.replace(/-/g, ''));
   const rootOf = async (...argv) => childReport(await w.run(['run', ...argv, 'pull'], { scriptsDir })).root;
   const asked = (id, kind) => readdirSync(join(w.dir(id), 'runs')).filter((n) => n.endsWith(kind)).length;
 
-  // the page under Demo tests is the newest, and still the commands do not go there
-  assert.equal(await rootOf(), w.dir(shaped), 'the newest page under Demos');
+  // the pages under Demo tests and the old Demos page are the newest, and still the commands do not go there
+  assert.equal(await rootOf(), w.dir(shaped), 'the newest page under Onboarding');
   // the second page has the manifest of an earlier shape (a list of tags written as a text): the loader cannot read it, so it is skipped
   const file = join(w.dir(shaped), 'walkthrough', 'manifest.json');
   const manifest = read(file);
@@ -2433,28 +2440,113 @@ test('without --demo the commands act on the newest finished page under Demos: a
   // every command without a page named acts on that page
   assert.equal((await w.run(['where'])).code, 0);
   assert.equal((await w.run(['verify', '--json'])).code, 0);
-  assert.equal((await w.run(['decide', '--claim', 'presspool'])).code, 0);
-  assert.deepEqual([asked(mine, 'walkthrough-where'), asked(shaped, 'walkthrough-where'), asked(tests, 'walkthrough-where')], [1, 0, 0]);
-  assert.deepEqual([asked(mine, 'walkthrough-verify'), asked(shaped, 'walkthrough-verify'), asked(tests, 'walkthrough-verify')], [1, 0, 0]);
-  assert.deepEqual([existsSync(join(w.dir(mine), 'editor-actions.jsonl')), existsSync(join(w.dir(shaped), 'editor-actions.jsonl')), existsSync(join(w.dir(tests), 'editor-actions.jsonl'))], [true, false, false]);
+  assert.deepEqual([asked(mine, 'walkthrough-where'), asked(shaped, 'walkthrough-where'), asked(tests, 'walkthrough-where'), asked(old, 'walkthrough-where')], [1, 0, 0, 0]);
+  assert.deepEqual([asked(mine, 'walkthrough-verify'), asked(shaped, 'walkthrough-verify'), asked(tests, 'walkthrough-verify'), asked(old, 'walkthrough-verify')], [1, 0, 0, 0]);
 
   // --demo reaches a page under Demo tests, and the page of the older shape is only refused for what is wrong with it
   assert.equal(await rootOf('--demo', tests), w.dir(tests));
   assert.equal((await w.run(['where', '--demo', tests])).code, 0);
   assert.equal(asked(tests, 'walkthrough-where'), 1);
+  assert.equal(await rootOf('--demo', old), w.dir(old), 'and a page under the old Demos page');
   assert.equal((await w.run(['where', '--demo', shaped])).code, 2, 'a named page of the older shape is refused by the loader, with its reason');
 
-  // nothing left under Demos that can be read: the commands say so, they do not fall back to the page under Demo tests
+  // nothing left under Onboarding that can be read: the commands say so, they do not fall back to the pages under Demo tests or Demos
   const mineFile = join(w.dir(mine), 'walkthrough', 'manifest.json');
   const mineManifest = read(mineFile);
   mineManifest.decided[0]['Verified tags'] = 'Context-dependent';
   writeFileSync(mineFile, JSON.stringify(mineManifest));
-  for (const argv of [['where'], ['verify'], ['run', 'pull'], ['decide', '--claim', 'presspool'], ['approve']]) {
+  for (const argv of [['where'], ['verify'], ['run', 'pull']]) {
     const r = await w.run(argv, { scriptsDir });
     assert.equal(r.code, 2, argv.join(' '));
-    assert.match(r.err, /there is no (finished )?practice page under Demos yet/, argv.join(' '));
+    assert.match(r.err, /there is no (finished )?practice page under Onboarding yet/, argv.join(' '));
   }
   assert.equal(asked(tests, 'walkthrough-where'), 1, 'the page under Demo tests was not used');
+  assert.equal(asked(old, 'walkthrough-where'), 0, 'and neither was the page under the old Demos page');
+});
+
+test('the default page is the newest finished page under Onboarding (config notion.pages.onboarding); the old pages.demos is not looked under any more', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  w.clock = new Date(NOW.getTime() + 3600e3);
+  assert.equal((await w.start(['--title', 'The newer one'])).code, 0);
+  const second = w.demos()[1];
+  const scriptsDir = standIns();
+  assert.equal(childReport(await w.run(['run', 'pull'], { scriptsDir })).root, w.dir(second), 'the newest under Onboarding');
+  assert.equal(dp.pickDemo(w.root, undefined, { under: w.config.notion.pages.onboarding, ready: true }).id, second);
+  assert.equal(dp.pickDemo(w.root, undefined, { under: w.config.notion.pages.onboarding }).id, second);
+  assert.throws(() => dp.pickDemo(w.root, undefined, { under: w.config.notion.pages.demos, ready: true }), /there is no finished practice page under Onboarding yet/, 'nothing was made under the old Demos page');
+  // a page made only under the old Demos page is not reached by default: the commands name the Onboarding page
+  const old = newWorld();
+  assert.equal((await old.run(['start', '--parent', old.demosLink])).code, 0);
+  for (const argv of [['where'], ['verify'], ['run', 'pull']]) {
+    const r = await old.run(argv, { scriptsDir });
+    assert.equal(r.code, 2, argv.join(' '));
+    assert.match(r.err, /there is no (finished )?practice page under Onboarding yet/, argv.join(' '));
+  }
+  // the one-line text that setup puts on the Onboarding page
+  assert.equal(PAGE_TEXT.onboarding, 'Practice pages for new editors live here. Type /claim-tagger-walkthrough in Claude Code and give this page\'s link; nothing on a practice page touches the real Claims table.');
+});
+
+test('a practice page whose parent or page is in the archive (a protected page id of production) is read only: run, where and verify say so with exit 2 and send nothing, and list marks it archived', async () => {
+  const w = newWorld();
+  const scriptsDir = standIns();
+  // the first page was made under the old Demos page, which the archive step moves (and protects); the second is under Onboarding; the third is under another page, and is itself moved
+  assert.equal((await w.run(['start', '--parent', w.demosLink])).code, 0);
+  w.clock = new Date(NOW.getTime() + 3600e3);
+  assert.equal((await w.start(['--title', 'Training copy'])).code, 0);
+  w.clock = new Date(NOW.getTime() + 7200e3);
+  assert.equal((await w.run(['start', '--parent', w.testsLink, '--title', 'Third practice page'])).code, 0);
+  const [first, second, third] = w.demos();
+  const archive = (...ids) => {
+    const file = join(w.root, 'config.json');
+    const config = read(file);
+    config.notion.protected_page_ids = [...config.notion.protected_page_ids, ...ids];
+    writeFileSync(file, `${JSON.stringify(config, null, 2)}\n`);
+  };
+  const lineFor = (id) => `the practice page ${w.demo(id).title} is in the archive (moved there on 27 Oct 2026) and is read only; ask for a new practice page under Onboarding`;
+  const refused = async (id) => {
+    const requests = w.fake.requests.length;
+    const runs = readdirSync(join(w.dir(id), 'runs')).length;
+    for (const argv of [['where', '--demo', id], ['verify', '--demo', id], ['verify', '--json', '--demo', id], ['run', '--demo', id, 'pull'], ['run', '--demo', id, 'status']]) {
+      const r = await w.run(argv, { scriptsDir });
+      assert.equal(r.code, 2, argv.join(' '));
+      assert.equal(r.err, lineFor(id), `${argv.join(' ')}: the one line`);
+      assert.equal(r.out, '', `${argv.join(' ')}: no report, and no script was started`);
+    }
+    assert.equal(w.fake.requests.length, requests, 'no request was sent');
+    assert.equal(readdirSync(join(w.dir(id), 'runs')).length, runs, 'and no run was recorded on the archived page');
+  };
+  // nothing is archived yet: all three work
+  for (const id of [first, second, third]) assert.equal((await w.run(['where', '--demo', id])).code, 0, id);
+
+  // the parent of the first page is protected: the page is read only
+  archive(w.demo(first).parent.id);
+  await refused(first);
+  assert.equal((await w.run(['where', '--demo', second])).code, 0, 'a page that is not in the archive works as before');
+  assert.equal((await w.run(['where'])).code, 0, 'and so does the default page, under Onboarding');
+  assert.equal(childReport(await w.run(['run', 'status'], { scriptsDir })).root, w.dir(second));
+
+  // the page itself is protected (the third): the same line
+  archive(w.demo(third).page.id);
+  await refused(third);
+
+  // list marks both as archived, with no step; the page the commands reach is still the second
+  const listed = await w.run(['list']);
+  assert.equal(listed.code, 0, listed.err);
+  assert.deepEqual(lintReport(`${listed.out}\n`), []);
+  const rows = listed.out.split('\n').filter((l) => l.startsWith('|')).slice(2).map((l) => l.split('|').slice(1, -1).map((s) => s.trim()));
+  assert.equal(rows.length, 3);
+  assert.match(rows[0][0], /^Third practice page \(/);
+  assert.deepEqual(rows[0].slice(1), ['archived', '-']);
+  assert.match(rows[1][0], /^Training copy \(/);
+  assert.deepEqual(rows[1].slice(1), ['ready · used by the demo commands', 'step 1']);
+  assert.deepEqual(rows[2].slice(1), ['archived', '-']);
+  assert.equal(lastLine(listed.out), `Next: type ${real().manifest.steps[0].command}.`, 'the Next line is for the page that is not archived');
+
+  // an archived page is not one that start --resume or a new start can make: the parent that is protected is refused as ever
+  const again = await w.run(['start', '--parent', `https://www.notion.so/Demos-${w.demo(first).parent.id}`]);
+  assert.equal(again.code, 2);
+  assert.match(again.err, /that page is protected; pick another/);
 });
 
 test('a practice page of the older shape (claims as a list of tables, demo_claims) lists as unknown, is never picked, and run on it is exit 2 with one plain line (P5)', async () => {
@@ -2500,16 +2592,16 @@ test('a practice page of the older shape (claims as a list of tables, demo_claim
   }
   const unnamed = await w.run(['run', 'status'], { scriptsDir });
   assert.equal(unnamed.code, 2);
-  assert.match(unnamed.err, /there is no finished practice page under Demos yet/);
+  assert.match(unnamed.err, /there is no finished practice page under Onboarding yet/);
 });
 
-test('the commands without --demo refuse to guess when config.json names no Demos page', async () => {
-  const w = newWorld({ configure: (config) => { config.notion.pages.demos = '<none>'; } });
+test('the commands without --demo refuse to guess when config.json names no Onboarding page: the message names notion.pages.onboarding', async () => {
+  const w = newWorld({ configure: (config) => { config.notion.pages.onboarding = '<none>'; } });
   assert.equal((await w.start()).code, 0);
-  for (const argv of [['where'], ['verify'], ['run', 'pull'], ['decide', '--claim', 'presspool']]) {
+  for (const argv of [['where'], ['verify'], ['run', 'pull']]) {
     const r = await w.run(argv, { scriptsDir: standIns() });
     assert.equal(r.code, 2, argv.join(' '));
-    assert.match(r.err, /the Demos page is not set in config\.json/, argv.join(' '));
+    assert.match(r.err, /the Onboarding page is not set in config\.json \(notion\.pages\.onboarding\)/, argv.join(' '));
   }
   assert.equal((await w.run(['where', '--demo', w.demos()[0]])).code, 0, 'a named page is reached all the same');
 });
@@ -2672,11 +2764,11 @@ test('no command of the walkthrough reads .env: with a token given and the repo 
   assert.equal(readdirSync(empty).length, 0, 'nothing was written there either');
 });
 
-// ---- acting as the editor (decision D31) -----------------------------------------------------------------------------------------------------------------
+// ---- nobody acts as the editor (decision P7) -------------------------------------------------------------------------------------------------------------
 //
-// decide, approve and reject are the demo-only exception to hard rule 1: on a practice page the agent may do what the editor does. What is tested: the check
-// that lets it (allowed in a practice page, refused on the production folder and without the option), the three commands against the fake Notion, the log,
-// the read-back, and the stops (a pause, a page that is not finished, a folder that is not a practice page).
+// The walkthrough is for onboarding only, and no agent acts as the editor on a practice page: decide, approve and reject are gone, and the plan check refuses an editor column on every
+// update. What is tested: the plan check and applyPlan on updates, the creation-time seeding of the decided rows (the audit-seeding exception of hard rule 1), the usage, and, below, the
+// editor played by the test itself through the fake Notion (editorDecides, editorApproves, editorRejects: fake.editRow, which is a person's edit and no script's write).
 
 const ROW_PAGE = '0a9e0000-0000-4000-8000-0000000000aa';
 // the editor's three columns of a claim (READ-DECISIONS.md): the relation (no tag), Review status, Challenged tags notes
@@ -2701,7 +2793,6 @@ const lessonUpdate = (config, properties) => planOf(config, (p) => p.update('rul
 const lastLine = (out) => out.trimEnd().split('\n').at(-1);
 const patchCount = (w) => w.fake.requests.filter((q) => q.method === 'PATCH' && q.path.startsWith('/pages/')).length;
 const dashless = (id) => String(id).replace(/-/g, '');
-const actionsOf = (w, id) => lines(join(w.dir(id), 'editor-actions.jsonl'));
 
 /** A rule change as the propose step leaves it. */
 function addProposed(w, over = {}) {
@@ -2747,10 +2838,54 @@ function agentHasRead(w, id) {
   w.fake.editRow(w.rows('agent_settings', id)[0].page_id, { 'Last run summary': 'Tag · 15 Oct 14:40 · 9 claims' });
 }
 
-/** The four claims that wait are decided the way the page tells the editor to: the state in which a rule change is drafted. */
-async function decideBoth(w) {
+/**
+ * The editor decides one of the four claims that wait, played through the fake Notion: a person's edit of the three editor columns, which no script and no agent writes. With only the key, the values
+ * the page tells the editor to enter (the manifest's); with `outcome` ("Applies" puts the tag among the verified tags, "Does not apply" leaves it out) and `reasoning` the outcome and the note given
+ * (an empty note when there is no reasoning: an empty note is a decision too). The relation holds the page id of the tag's row in the Rulebook.
+ */
+function editorDecides(w, key, { outcome, reasoning, id } = {}) {
+  const { manifest } = real();
+  const V = dp.CLAIM_COLUMNS.verified;
+  const N = dp.CLAIM_COLUMNS.notes;
+  const open = manifest.open.find((o) => o.claim === key);
+  assert.ok(open, `${key} is one of the four claims the editor decides`);
+  const claim = manifest.claims.find((c) => c.key === key);
+  const book = w.rows('rulebook', id)[0];
+  const enter = outcome === undefined ? { ...open.enter } : { [V]: outcome === 'Applies' ? [TAG] : [], [N]: reasoning ?? '', 'Review status': 'Reviewed' };
+  w.fake.editRow(w.rowBy('claims', 'Geo ID', claim['Geo ID'], id).page_id, { ...enter, [V]: enter[V].map(() => book.page_id) });
+}
+
+/** The rule change the editor acts on in Lessons waiting: the one called `title` (any letter case), else the only one whose Status is one of `statuses`. */
+function lessonRowOf(w, title, statuses, id) {
+  const rows = w.rows('rule_changes', id);
+  if (title !== undefined) {
+    const row = rows.find((r) => r.Lesson.toLowerCase() === title.toLowerCase());
+    assert.ok(row, `a rule change is called "${title}"`);
+    return row;
+  }
+  const open = rows.filter((r) => statuses.includes(r.Status));
+  assert.equal(open.length, 1, `exactly one rule change is ${statuses.join(' or ')}`);
+  return open[0];
+}
+
+/** The editor sets the Status of a Proposed rule change to Approved, and may write the Editor wording (a person's edit through the fake). Returns the title. */
+function editorApproves(w, { lesson, wording, id } = {}) {
+  const row = lessonRowOf(w, lesson, ['Proposed'], id);
+  w.fake.editRow(row.page_id, { Status: 'Approved', ...(wording === undefined ? {} : { 'Editor wording': wording }) });
+  return row.Lesson;
+}
+
+/** The editor sets the Status of the only Proposed or Approved rule change (or the one named) to Rejected. */
+function editorRejects(w, { lesson, id } = {}) {
+  const row = lessonRowOf(w, lesson, ['Proposed', 'Approved'], id);
+  w.fake.editRow(row.page_id, { Status: 'Rejected' });
+  return row.Lesson;
+}
+
+/** The agent has read the claims (the tag step), and the editor decides the four claims that wait the way the page tells them to: the state in which a rule change is drafted. */
+function decideBoth(w) {
   agentHasRead(w);
-  for (const o of real().manifest.open) assert.equal((await w.run(['decide', '--claim', o.claim])).code, 0);
+  for (const o of real().manifest.open) editorDecides(w, o.claim);
 }
 
 test('isDemoRoot: a folder directly under runs/demos, in any letter case and with either slash; nothing else', () => {
@@ -2763,26 +2898,7 @@ test('isDemoRoot: a folder directly under runs/demos, in any letter case and wit
   }
 });
 
-test('checkPlan with demoEditor allows, in a practice page, the editor columns on an update of a claim and Status Approved or Rejected and Editor wording on an update of a rule change', () => {
-  const w = demoPlanWorld();
-  const opts = { root: w.root, demoEditor: true };
-  const ok = (plan) => assert.deepEqual(checkPlan(plan, w.demo, opts).problems, []);
-  ok(queueUpdate(w.demo));
-  ok(queueUpdate(w.demo, { 'Review status': 'Reviewed' }));
-  ok(queueUpdate(w.demo, { 'Verified tags': ['0a9e0000-0000-4000-8000-0000000000bb'], 'Review status': 'Reviewed', 'Challenged tags notes': 'The claim names its subject.' }));
-  // Why wrong is not an editor's column any more: the plan check refuses it on the Claims, with or without the option
-  const gone = checkPlan(queueUpdate(w.demo, { 'Review status': 'Reviewed', 'Why wrong': 'Agent slip' }), w.demo, opts);
-  assert.equal(gone.ok, false);
-  assert.ok(gone.problems.some((p) => /"Why wrong" is not a column this plan may write to claims/.test(p)), gone.problems.join('\n'));
-  ok(lessonUpdate(w.demo, { Status: 'Approved' }));
-  ok(lessonUpdate(w.demo, { Status: 'Rejected' }));
-  ok(lessonUpdate(w.demo, { Status: 'Approved', 'Editor wording': 'Test: the whole rule, as the editor wants it.' }));
-  ok(lessonUpdate(w.demo, { 'Editor wording': 'Test: the whole rule, as the editor wants it.' }));
-  ok(lessonUpdate(w.demo, { Status: 'Live', 'Safety check result': 'PASS: examples 11/11' })); // what a script may always write is still fine
-  assert.equal(checkPlan(queueUpdate(w.demo), w.demo, opts).ok, true);
-});
-
-test('checkPlan refuses those same plans without the option, on a production config, and on a folder that is not a practice page', () => {
+test('an editor column on an update is refused in a practice page, with the marker or without it; a create under the marker is the one way in, and applyPlan sends nothing for the update', async () => {
   const w = demoPlanWorld();
   const refuses = (plan, config, opts, pattern) => {
     const r = checkPlan(plan, config, opts);
@@ -2791,442 +2907,75 @@ test('checkPlan refuses those same plans without the option, on a production con
   };
   const editorColumn = /is a column only an editor writes/;
   const status = /Status "(Approved|Rejected)" is not one a script may write/;
-  // the option is not given, or is not exactly true: hard rule 1 holds in a practice page too
-  for (const opts of [{ root: w.root }, { root: w.root, demoEditor: false }, { root: w.root, demoEditor: 'yes' }, { root: w.root, demoEditor: 1 }]) {
-    refuses(queueUpdate(w.demo), w.demo, opts, editorColumn);
-    refuses(lessonUpdate(w.demo, { Status: 'Approved' }), w.demo, opts, status);
-    refuses(lessonUpdate(w.demo, { Status: 'Rejected' }), w.demo, opts, status);
-    refuses(lessonUpdate(w.demo, { 'Editor wording': 'x' }), w.demo, opts, editorColumn);
+  mkdirSync(join(w.root, 'runs'), { recursive: true });
+  for (const marker of [false, true]) {
+    if (marker) writeFileSync(join(w.root, 'runs', 'SETUP'), '{}\n');
+    refuses(queueUpdate(w.demo), w.demo, { root: w.root }, editorColumn);
+    refuses(queueUpdate(w.demo, { 'Review status': 'Reviewed' }), w.demo, { root: w.root }, editorColumn);
+    refuses(lessonUpdate(w.demo, { Status: 'Approved' }), w.demo, { root: w.root }, status);
+    refuses(lessonUpdate(w.demo, { Status: 'Rejected' }), w.demo, { root: w.root }, status);
+    refuses(lessonUpdate(w.demo, { 'Editor wording': 'Test: the whole rule, as the editor wants it.' }), w.demo, { root: w.root }, editorColumn);
+    refuses(planOf(w.demo, (p) => p.update('agent_settings', 'Claim tagger', ROW_PAGE, { Paused: true })), w.demo, { root: w.root }, /"Paused" is a column only an editor writes/);
   }
-  // the production config is never a practice page, whatever the folder says
-  refuses(queueUpdate(w.production), w.production, { root: w.root, demoEditor: true }, editorColumn);
-  refuses(lessonUpdate(w.production, { Status: 'Approved' }), w.production, { root: w.root, demoEditor: true }, status);
-  refuses(lessonUpdate(w.production, { 'Editor wording': 'x' }), w.production, { root: w.root, demoEditor: true }, editorColumn);
-  // a practice page's config on a folder that is not a practice page under runs/demos: the production folder, runs/demos itself, a folder inside a practice page
-  for (const root of [w.base, join(w.base, 'runs'), join(w.base, 'runs', 'demos'), join(w.root, 'sub'), join(w.base, 'runs', 'other', 'x'), join(w.base, 'demos', 'x'), codeRoot()]) {
-    refuses(queueUpdate(w.demo), w.demo, { root, demoEditor: true }, editorColumn);
-    refuses(lessonUpdate(w.demo, { Status: 'Approved' }), w.demo, { root, demoEditor: true }, status);
-  }
-  // no root given: the state folder the scripts run in, which here is the agent folder
-  const saved = process.env.CLAIM_TAGGER_MVP_ROOT;
-  delete process.env.CLAIM_TAGGER_MVP_ROOT;
-  try {
-    refuses(queueUpdate(w.demo), w.demo, { demoEditor: true }, editorColumn);
-  } finally {
-    if (saved !== undefined) process.env.CLAIM_TAGGER_MVP_ROOT = saved;
-  }
-});
-
-test('checkPlan with demoEditor allows nothing else: no create, no other table, no other column, no other Status, no protected id', () => {
-  const w = demoPlanWorld();
-  const opts = { root: w.root, demoEditor: true };
-  const refuses = (plan, pattern) => {
-    const r = checkPlan(plan, w.demo, opts);
-    assert.equal(r.ok, false);
-    assert.ok(r.problems.some((p) => pattern.test(p)), r.problems.join('\n'));
-  };
-  // a create is not an update: the editor columns of a create belong to the setup of a practice page, with its marker
-  refuses(planOf(w.demo, (p) => p.create('claims', 'abc', { 'Geo Name': 'A claim', ...EDITOR_QUEUE })), /is a column only an editor writes/);
-  refuses(planOf(w.demo, (p) => p.create('rule_changes', 'A rule change', { Status: 'Approved' })), /Status "Approved" is not one a script may write/);
-  // other tables: Paused is the editor's and stays refused; the other tables have no editor column that this opens
-  refuses(planOf(w.demo, (p) => p.update('agent_settings', 'Claim tagger', ROW_PAGE, { Paused: true })), /"Paused" is a column only an editor writes/);
-  refuses(planOf(w.demo, (p) => p.update('agent_settings', 'Claim tagger', ROW_PAGE, { Paused: false })), /"Paused" is a column only an editor writes/);
-  refuses(planOf(w.demo, (p) => p.update('rulebook', TAG, ROW_PAGE, { Status: 'Verified' })), /"Status" is not a column this plan may write to rulebook/);
-  refuses(planOf(w.demo, (p) => p.update('claims', 'abc', ROW_PAGE, { 'Geo Name': 'Another name' })), /"Geo Name" is not a column this plan may write to claims/);
-  // other columns of the two tables, and other values of Status
-  refuses(queueUpdate(w.demo, { 'Review status': 'Reviewed', Nonsense: 'x' }), /"Nonsense" is not a column this plan may write to claims/);
-  // the ledger has no editor column: its copies of a decision are an agent's to write, with or without the option, but a person's Status on a rule change is not
+  // the production config and a folder that is not a practice page refuse them all the same
+  refuses(queueUpdate(w.production), w.production, { root: w.root }, editorColumn);
+  refuses(queueUpdate(w.demo), w.demo, { root: w.base }, editorColumn);
+  // a create is the practice page's build: allowed under its runs/SETUP marker (the seeding of the decided rows, hard rule 1) and only there
+  const create = planOf(w.demo, (p) => p.create('claims', 'abc', { 'Geo Name': 'A claim', ...EDITOR_QUEUE }));
+  assert.deepEqual(checkPlan(create, w.demo, { root: w.root, setup: true }).problems, [], 'with the marker');
+  refuses(create, w.demo, { root: w.root }, /is not a column this plan may write to claims/); // not a setup plan: the Geo columns are not writable either
+  rmSync(join(w.root, 'runs', 'SETUP'));
+  refuses(create, w.demo, { root: w.root, setup: true }, editorColumn);
+  // what a script writes on an update is still fine, and the ledger has no editor column
+  assert.deepEqual(checkPlan(lessonUpdate(w.demo, { Status: 'Live', 'Safety check result': 'PASS: examples 11/11' }), w.demo, { root: w.root }).problems, []);
   assert.deepEqual(checkPlan(planOf(w.demo, (p) => p.update('tag_decisions', `abc::${TAG}`, ROW_PAGE, { 'Tag outcome': 'Applies' })), w.demo, { root: w.root }).problems, []);
-  refuses(lessonUpdate(w.demo, { Status: 'Bogus' }), /Status "Bogus" is not one a script may write/);
-  refuses(lessonUpdate(w.demo, { Status: 'Approved', Nonsense: 'x' }), /"Nonsense" is not a column this plan may write to rule_changes/);
-  // a protected id is refused as ever, and one op per row
-  const protectedId = dashless(w.demo.notion.protected_database_ids[0]);
-  refuses(queueUpdate(w.demo, { 'Review status': 'Reviewed', 'Challenged tags notes': `see https://www.notion.so/${protectedId}` }), /mentions a protected id/);
-  refuses(planOf(w.demo, (p) => { p.update('claims', 'k', ROW_PAGE, EDITOR_QUEUE); p.update('claims', 'k', ROW_PAGE, EDITOR_QUEUE); }), /the key appears twice/);
-});
-
-test('applyPlan passes demoEditor on to the check: the plan that writes an editor column is refused before any request without it, and in a folder that is not a practice page with it', async () => {
-  const w = demoPlanWorld();
+  // applyPlan checks again: the update that writes an editor column never reaches the client
   const calls = [];
   const never = (name) => async () => {
     calls.push(name);
     throw new Error(`${name} must not be called`);
   };
   const client = { createPage: never('createPage'), updatePage: never('updatePage'), retrievePage: never('retrievePage') };
-  const apply = (extra) => applyPlan({ plan: queueUpdate(w.demo), dir: tmp('apply'), client, config: w.demo, schemas: {}, root: w.root, now: () => NOW, ...extra });
-  const refused = (e) => e instanceof PlanError && /refused and nothing was sent/.test(e.message);
-  await assert.rejects(() => apply({}), (e) => refused(e) && e.problems.some((p) => /only an editor writes/.test(p)));
-  await assert.rejects(() => apply({ demoEditor: true, root: w.base }), refused);
-  await assert.rejects(() => apply({ demoEditor: true, config: w.production }), refused);
-  // in a practice page the check lets it by; what stops it here is that this config holds no table ids yet, which is also known before any request
-  await assert.rejects(() => apply({ demoEditor: true }), (e) => e instanceof PlanError && /cannot be sent as it stands/.test(e.message) && e.problems.some((p) => /no database id/.test(p)));
+  await assert.rejects(
+    () => applyPlan({ plan: queueUpdate(w.demo), dir: tmp('apply'), client, config: w.demo, schemas: {}, root: w.root, now: () => NOW }),
+    (e) => e instanceof PlanError && /refused and nothing was sent/.test(e.message) && e.problems.some((p) => editorColumn.test(p)),
+  );
   assert.deepEqual(calls, [], 'no request was made');
 });
 
-test('decide enters the manifest values for one of the four claims, writes the three editor columns and nothing else in one request, logs the action before and after, and says what to do next', async () => {
+test('the decided rows of a practice page are written by a create, the audit-seeding exception of hard rule 1, and no update ever writes an editor column', async () => {
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
   const { manifest } = real();
-  const [id] = w.demos();
-  const V = dp.CLAIM_COLUMNS.verified;
-  const N = dp.CLAIM_COLUMNS.notes;
-  const EDITOR = [V, N, 'Review status'];
-  const claims = manifest.open.map((o) => manifest.claims.find((c) => c.key === o.claim));
-  const enter = manifest.open[0].enter; // the press pool: the tag does not apply
-  const rowOf = (claim) => w.rowBy('claims', 'Geo ID', claim['Geo ID']);
-  const book = w.rows('rulebook')[0];
-  agentHasRead(w);
-  const writesBefore = w.fake.writes().length;
-  const agentColumns = (claim) => [...AGENT_COLUMNS, 'Geo Name'].map((c) => rowOf(claim)[c]);
-  const agentBefore = agentColumns(claims[0]);
-
-  // only --claim: the values the page tells the editor to enter
-  const first = await w.run(['decide', '--claim', manifest.open[0].claim]);
-  assert.equal(first.code, 0, first.err);
-  const row = rowOf(claims[0]);
-  assert.deepEqual(row[V], [], 'the tag does not apply to the press pool: nothing is verified');
-  for (const column of EDITOR.slice(1)) assert.equal(row[column], enter[column], column);
-  for (const other of claims.slice(1)) assert.equal(rowOf(other)['Review status'], 'To review', 'the other claims are untouched');
-  assert.deepEqual(agentColumns(claims[0]), agentBefore, 'the agent\'s columns are not the editor\'s to write');
-  const sent = w.fake.writes().slice(writesBefore);
-  assert.equal(sent.length, 1, 'one write');
-  assert.equal(sent[0].method, 'PATCH');
-  assert.equal(dashless(sent[0].path), `/pages/${dashless(row.page_id)}`);
-  assert.deepEqual(Object.keys(sent[0].body.properties).sort(), [...EDITOR].sort(), 'the three editor columns of the claim, and nothing else');
-  assert.deepEqual(sent[0].body.properties[V], { relation: [] });
-
-  // the report: a sentence, the values, the next step; nothing of the code
-  assert.deepEqual(lintReport(`${first.out}\n`), []);
-  assert.equal(first.out.split('\n')[0], `Walkthrough: acting as the editor, the claim ${quoted(claims[0]['Geo Name'])} now reads Reviewed with no tag verified.`);
-  assert.ok(first.out.includes(`| ${V} | none |`));
-  assert.ok(first.out.includes('| Review status | Reviewed |'));
-  assert.ok(!first.out.includes('Why wrong'));
-  assert.ok(first.out.includes(`| Challenged tags notes | ${quoted(enter['Challenged tags notes'], 100)} |`));
-  assert.match(lastLine(first.out), /^Next: open Your queue \(https:\/\/www\.notion\.so\/\S+\) and decide your remaining claims\.$/, 'one of the four is decided: the other three are what is left');
-  assert.equal(lastLine(first.out), lastLine((await w.run(['where'])).out), 'the Next line is the one where gives');
-  assert.ok(!first.out.includes('D31'), 'the report holds no code');
-  assert.ok(first.err.includes(`acting as the editor on practice page ${id} (decision D31): Claims `), 'the engineer is told whose hand it is');
-
-  // the log: the sentence, what was planned and what was done, the values written and the values that were there
-  const log = actionsOf(w);
-  assert.deepEqual(log.map((l) => l.status), ['planned', 'done']);
-  for (const l of log) {
-    assert.equal(l.sentence, `acting as the editor on practice page ${id} (decision D31)`);
-    assert.equal(l.demo_id, id);
-    assert.match(l.at, /^\d{4}-\d{2}-\d{2}T/);
-    assert.deepEqual([l.action, l.table, l.key, dashless(l.page_id), l.claim], ['decide', 'claims', claims[0]['Geo ID'], dashless(row.page_id), 'presspool']);
-    assert.deepEqual(l.wrote, { ...enter, [V]: [] });
-    assert.deepEqual(Object.keys(l.before).sort(), [...EDITOR].sort());
-    assert.deepEqual(l.before[V], [], 'no tag was verified');
-    assert.equal(l.before['Review status'], 'To review');
-    assert.ok(!l.before[N], 'the cell was empty');
-  }
-  assert.equal(log[1].read_back, 'ok');
-  const planRun = join(w.dir(), 'runs', log[0].plan_run);
-  assert.equal(lines(join(planRun, 'plan.jsonl')).length, 2, 'the plan on disk: a header and one op');
-  assert.equal(lines(join(planRun, 'plan.jsonl'))[0].plan.script, 'walkthrough.mjs');
-  assert.equal(lines(join(planRun, 'plan.jsonl'))[1].table, 'claims');
-  assert.equal(lines(join(planRun, 'ledger.jsonl')).at(-1).read_back, 'ok', 'the ledger says the row was read back');
-
-  // the second claim, with the values given: the tag applies, so the relation holds the page id of the tag's row, and the sentence is the one given
-  const second = await w.run(['decide', '--demo', id, '--claim', manifest.open[1].claim, '--outcome', 'Applies', '--reasoning', 'Rule 4 should say that a named debate is enough.']);
-  assert.equal(second.code, 0, second.err);
-  const row2 = rowOf(claims[1]);
-  assert.deepEqual(row2[V].map(dashless), [dashless(book.page_id)]);
-  assert.deepEqual([row2['Review status'], row2[N]], ['Reviewed', 'Rule 4 should say that a named debate is enough.']);
-  assert.equal(second.out.split('\n')[0], `Walkthrough: acting as the editor, the claim ${quoted(claims[1]['Geo Name'])} now reads Reviewed with Context-dependent verified.`);
-  assert.ok(second.out.includes(`| ${V} | Context-dependent |`));
-  assert.match(lastLine(second.out), /decide your remaining claims\.$/);
-  assert.equal(actionsOf(w).length, 4);
-  assert.deepEqual(actionsOf(w).at(-1).tags, [TAG]);
-
-  // --outcome alone writes an empty note (an empty note is a decision too); the other two claims, by their own values, bring the page to step 4
-  const third = await w.run(['decide', '--claim', manifest.open[2].claim, '--outcome', 'Does not apply']);
-  assert.equal(third.code, 0, third.err);
-  assert.deepEqual([rowOf(claims[2])[V], rowOf(claims[2])['Review status'], rowOf(claims[2])[N] ?? ''], [[], 'Reviewed', ''], 'a decision with only an outcome has an empty note');
-  assert.ok(third.out.includes(`| ${N} | (empty) |`));
-  assert.match(lastLine(third.out), /decide your remaining claim\.$/);
-  const fourth = await w.run(['decide', '--claim', manifest.open[3].claim]);
-  assert.equal(fourth.code, 0, fourth.err);
-  assert.deepEqual([rowOf(claims[3])[V], rowOf(claims[3])['Review status'], rowOf(claims[3])[N] ?? ''], [[], 'Reviewed', ''], 'Georgia: the manifest\'s values, an empty note');
-  assert.equal(fourth.out.split('\n')[0], `Walkthrough: acting as the editor, the claim ${quoted(claims[3]['Geo Name'])} now reads Reviewed with no tag verified.`);
-  assert.ok(fourth.out.includes(`| ${N} | (empty) |`));
-  assert.equal(lastLine(fourth.out), `Next: type ${manifest.steps[3].command}.`);
-  assert.match((await w.run(['where'])).out, /you are at step 4, /);
-
-  // the same values again change nothing and send nothing, and the log says so
-  const writes = w.fake.writes().length;
-  const again = await w.run(['decide', '--claim', manifest.open[0].claim]);
-  assert.equal(again.code, 0, again.err);
-  assert.equal(again.out.split('\n')[0], `Walkthrough: acting as the editor, the claim ${quoted(claims[0]['Geo Name'])} already reads Reviewed with no tag verified; nothing was changed.`);
-  assert.equal(w.fake.writes().length, writes, 'nothing was sent');
-  assert.equal(actionsOf(w).at(-1).status, 'unchanged');
-
-  // a changed mind is a write again: the outcome alone writes the tag, an empty note and the status, and the log keeps what was there before
-  const changed = await w.run(['decide', '--claim', manifest.open[0].claim, '--outcome', 'Applies']);
-  assert.equal(changed.code, 0, changed.err);
-  assert.deepEqual(rowOf(claims[0])[V].map(dashless), [dashless(book.page_id)]);
-  assert.equal(rowOf(claims[0])[N] ?? '', '', 'the note is empty now: --outcome alone writes an empty note');
-  const done = actionsOf(w).filter((l) => l.status === 'done');
-  assert.deepEqual(Object.keys(done.at(-1).wrote).sort(), [V, N, 'Review status'].sort());
-  assert.deepEqual(done.at(-1).wrote[V].map(dashless), [dashless(book.page_id)]);
-  assert.deepEqual(done.at(-1).before, { [V]: [], [N]: enter[N], 'Review status': 'Reviewed' });
-  assert.equal(Object.keys(w.fake.writes().at(-1).body.properties).length, 3);
-  // and back: Does not apply empties the relation
-  assert.equal((await w.run(['decide', '--claim', manifest.open[0].claim, '--outcome', 'Does not apply'])).code, 0);
-  assert.deepEqual(rowOf(claims[0])[V], []);
+  const EDITOR = ['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
+  const sent = w.fake.requests.filter((r) => ['POST', 'PATCH'].includes(r.method) && r.status === 200 && r.path.startsWith('/pages') && r.body?.properties && EDITOR.some((c) => Object.hasOwn(r.body.properties, c)));
+  assert.ok(sent.length >= manifest.decided.length, 'the decided rows carry their editor columns');
+  for (const r of sent) assert.deepEqual([r.method, r.path], ['POST', '/pages'], `an editor column is written by a create only (${r.method} ${r.path})`);
+  const decided = manifest.decided.map((d) => w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === d.claim)['Geo ID']));
+  assert.ok(decided.every((row) => row['Review status'] === 'Reviewed'), 'and the five decided claims are Reviewed, as the page says');
+  for (const o of manifest.open) assert.equal(w.rowBy('claims', 'Geo ID', manifest.claims.find((c) => c.key === o.claim)['Geo ID'])['Review status'], 'To review', `${o.claim}: waits for a person`);
+  assert.equal(JSON.parse((await w.run(['verify', '--json'])).out).ok, true);
+  assert.ok(!existsSync(join(w.dir(), 'editor-actions.jsonl')), 'and no agent acted as the editor');
 });
 
-test('decide changes the four claims that wait and nothing else, and says why when it refuses', async () => {
+test('decide, approve and reject are gone (decision P7): the usage does not list them, each answers it with exit 2, run starts none of them, and nothing is sent', async () => {
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
-  const rows = () => JSON.stringify([w.rows('claims'), w.rows('tag_decisions')]);
-  const before = rows();
-  const writes = w.fake.writes().length;
-  const refused = async (argv, pattern) => {
-    const r = await w.run(['decide', ...argv]);
-    assert.equal(r.code, 2, `${argv.join(' ')}: ${r.err}`);
-    assert.match(r.err, pattern);
-    assert.equal(r.out, '', 'no report of a change');
-  };
-  await refused([], /decide needs --claim <key>; the claims to decide are: presspool, aiforce, usps, georgia/);
-  await refused(['--claim', ''], /decide needs --claim <key>/);
-  await refused(['--claim', 'nobody'], /"nobody" is not a claim of this practice page \(the claims to decide are: presspool, aiforce, usps, georgia\)/);
-  await refused(['--claim', 'cnn'], /"cnn" is one of the earlier decisions, which are not changed/);
-  await refused(['--claim', 'presspool', '--outcome', 'Maybe'], /--outcome must be Applies or Does not apply/);
-  await refused(['--claim', 'presspool', '--why', 'Rule unclear', '--outcome', 'Applies'], /Unknown option '--why'/); // --why is gone: the agent reads the reason itself
-  await refused(['--claim', 'presspool', '--reasoning', 'Because.'], /--reasoning goes with --outcome/);
-  await refused(['--claim', 'presspool', '--outcome', 'Applies', '--reasoning', '  '], /--reasoning is empty \(leave it out to decide with an empty note\)/);
-  await refused(['--claim', 'presspool', '--frobnicate'], /frobnicate/);
-  await refused(['--demo', 'nope', '--claim', 'presspool'], /there is no practice page "nope"/);
-  await refused(['--demo', '../x', '--claim', 'presspool'], /is not a practice page id/);
-  assert.equal(rows(), before, 'no row was changed');
-  assert.equal(w.fake.writes().length, writes, 'no request was sent');
-  assert.ok(!existsSync(join(w.dir(), 'editor-actions.jsonl')), 'a refusal is not an action');
-  // the copy of the manifest cannot be changed behind the page's back, so the columns and the tags a decision names are the ones the page was planned with
-  const file = join(w.dir(), 'walkthrough', 'manifest.json');
-  const text = readFileSync(file, 'utf8');
-  const hand = (change) => {
-    const m = JSON.parse(text);
-    change(m);
-    writeFileSync(file, JSON.stringify(m));
-  };
-  hand((m) => { m.open[0].enter['Challenged tags notes'] = 'Another sentence than the one the page was planned with.'; });
-  const planted = await w.run(['decide', '--claim', 'presspool']);
-  assert.equal(planted.code, 2);
-  assert.match(planted.err, /manifest copy .* is not the one it was planned from/, 'the copy of the manifest cannot be changed behind the page\'s back');
-  writeFileSync(file, text);
-  assert.equal(w.fake.writes().length, writes);
-});
-
-
-test('the editor actions stop where everything stops: a pause file, Paused in Agent settings, a page that is not finished, no page at all', async () => {
-  const none = newWorld();
-  const noPage = await none.run(['decide', '--claim', 'presspool']);
-  assert.equal(noPage.code, 2);
-  assert.match(noPage.err, /there is no finished practice page under Demos yet/);
-
-  const w = newWorld();
-  assert.equal((await w.start()).code, 0);
-  const base = patchCount(w);
-  writeFileSync(join(w.dir(), 'runs', 'PAUSED'), 'a person paused it\n');
-  for (const argv of [['decide', '--claim', 'presspool'], ['approve'], ['reject']]) {
+  const sent = w.fake.requests.length;
+  const help = await w.run(['--help']);
+  assert.equal(help.code, 0);
+  for (const name of ['decide', 'approve', 'reject']) assert.ok(!help.out.includes(`walkthrough.mjs ${name}`), `${name} is not in the usage`);
+  assert.ok(!/--outcome|--reasoning|--wording|--lesson/.test(help.out), 'and neither are their options');
+  assert.equal(help.out.split('\n').filter((l) => l.includes('walkthrough.mjs ')).length, 5, 'start, run, where, verify and list');
+  for (const argv of [['decide', '--claim', 'presspool'], ['approve'], ['reject'], ['decide', '--help'], ['approve', '--wording', 'x'], ['reject', '--lesson', 'x']]) {
     const r = await w.run(argv);
-    assert.equal(r.code, 3, argv.join(' '));
-    assert.match(r.err, /paused \(its pause file exists\)/);
+    assert.equal(r.code, 2, argv.join(' '));
+    assert.equal(r.out, '', 'no report');
+    assert.ok(r.err.startsWith('usage: node agents/claim-tagger-mvp/scripts/walkthrough.mjs start'), `${argv.join(' ')}: the usage`);
+    assert.ok(!/decide|approve|reject/.test(r.err), `${argv.join(' ')}: the usage names none of them`);
   }
-  rmSync(join(w.dir(), 'runs', 'PAUSED'));
-  w.fake.editRow(w.rows('agent_settings')[0].page_id, { Paused: true });
-  for (const argv of [['decide', '--claim', 'presspool'], ['approve'], ['reject']]) {
-    const r = await w.run(argv);
-    assert.equal(r.code, 3, argv.join(' '));
-    assert.match(r.err, /Paused is ticked in Agent settings/);
-  }
-  assert.equal(patchCount(w), base, 'nothing was written');
-  assert.ok(!existsSync(join(w.dir(), 'editor-actions.jsonl')), 'a stop is not an action');
-  w.fake.editRow(w.rows('agent_settings')[0].page_id, { Paused: false });
-  assert.equal((await w.run(['decide', '--claim', 'presspool'])).code, 0, 'a person clears it, then it works');
-
-  // a page that stopped halfway is not a practice page to act on
-  const unfinished = newWorld();
-  assert.equal((await unfinished.start([], crashAtDatabase(2))).code, 1);
-  const r = await unfinished.run(['decide', '--demo', unfinished.demos()[0], '--claim', 'presspool']);
-  assert.equal(r.code, 2);
-  assert.match(r.err, /is not finished/);
-});
-
-test('a write that fails, or that the read-back does not confirm, is not reported as done: the log says failed, the exit code is 1 or 2, and no success is claimed', async () => {
-  const { manifest } = real();
-  const claim = manifest.claims.find((c) => c.key === manifest.open[0].claim);
-  const rowOf = (w) => w.rowBy('claims', 'Geo ID', claim['Geo ID']);
-
-  // Notion refuses the write
-  const refusing = newWorld();
-  assert.equal((await refusing.start()).code, 0);
-  const refused = await refusing.run(['decide', '--claim', claim.key], { wrapClients: ({ builder, rest }) => ({ builder, rest: { ...rest, async updatePage() { throw new Error('Notion said no'); } } }) });
-  assert.equal(refused.code, 1, refused.err);
-  assert.match(refused.err, /the change to Claims was not made: .*Notion said no/);
-  assert.equal(refused.out, '', 'no report that says it was done');
-  assert.equal(rowOf(refusing)['Review status'], 'To review', 'the row is as it was');
-  assert.ok(!rowOf(refusing)['Challenged tags notes']);
-  const log = actionsOf(refusing);
-  assert.deepEqual(log.map((l) => l.status), ['planned', 'failed']);
-  assert.match(log[1].error, /Notion said no/);
-
-  // Notion takes the write but the row reads differently afterwards
-  const altering = newWorld();
-  assert.equal((await altering.start()).code, 0);
-  const altered = await altering.run(['decide', '--claim', claim.key], {
-    wrapClients: ({ builder, rest }) => ({
-      builder,
-      rest: { ...rest, async updatePage(id, body) { return rest.updatePage(id, { ...body, properties: { ...body.properties, 'Challenged tags notes': { rich_text: [{ type: 'text', text: { content: 'Altered on the way.' } }] } } }); } },
-    }),
-  });
-  assert.equal(altered.code, 2, altered.err);
-  assert.match(altered.err, /the change to Claims was not confirmed by the read-back: /);
-  assert.equal(altered.out, '', 'no report that says it was done');
-  const failed = actionsOf(altering);
-  assert.deepEqual(failed.map((l) => l.status), ['planned', 'failed']);
-  assert.ok(!failed.some((l) => l.read_back === 'ok'));
-
-
-});
-
-test('approve sets the only Proposed rule change to Approved, with the editor\'s own wording when it is given; reject sets Rejected; every action is logged', async () => {
-  const w = newWorld();
-  assert.equal((await w.start()).code, 0);
-  const { manifest } = real();
-  const [id] = w.demos();
-  await decideBoth(w);
-  addProposed(w);
-  assert.match((await w.run(['where'])).out, /you are at step 5, /);
-
-  const first = await w.run(['approve']);
-  assert.equal(first.code, 0, first.err);
-  assert.equal(lessonByTitle(w, LESSON).Status, 'Approved');
-  assert.deepEqual(lintReport(`${first.out}\n`), []);
-  assert.equal(first.out.split('\n')[0], `Walkthrough: acting as the editor, the rule change ${quoted(LESSON)} is now Approved.`);
-  assert.ok(first.out.includes('| Status | Approved |'));
-  assert.equal(lastLine(first.out), `Next: type ${manifest.steps[5].command}.`);
-  assert.match((await w.run(['where'])).out, /you are at step 6, /);
-  let log = actionsOf(w).filter((l) => l.action === 'approve');
-  assert.deepEqual(log.map((l) => l.status), ['planned', 'done']);
-  assert.equal(log[1].sentence, `acting as the editor on practice page ${id} (decision D31)`);
-  assert.deepEqual([log[1].table, log[1].key, log[1].wrote, log[1].before, log[1].read_back], ['rule_changes', LESSON, { Status: 'Approved' }, { Status: 'Proposed' }, 'ok']);
-
-  // a second rule change, found by its title in any letter case, approved with the editor's own text
-  addProposed(w, { Lesson: 'A second change' });
-  const wording = 'Test: could a reader who sees only this sentence say which specific thing each definite reference points at? A general reference passes.';
-  const second = await w.run(['approve', '--lesson', 'a second change', '--wording', wording]);
-  assert.equal(second.code, 0, second.err);
-  const row = lessonByTitle(w, 'A second change');
-  assert.equal(row.Status, 'Approved');
-  assert.equal(row['Editor wording'], wording);
-  assert.ok(second.out.includes(`| Editor wording | ${quoted(wording, 100)} |`));
-  assert.equal(second.out.split('\n')[0], `Walkthrough: acting as the editor, the rule change ${quoted('A second change')} is now Approved, with its Editor wording filled in.`);
-  assert.deepEqual(lintReport(`${second.out}\n`), []);
-  log = actionsOf(w).filter((l) => l.action === 'approve' && l.status === 'done');
-  assert.deepEqual(log.at(-1).wrote, { Status: 'Approved', 'Editor wording': wording });
-  assert.equal(log.at(-1).key, 'A second change');
-  assert.equal(log.at(-1).before.Status, 'Proposed');
-  assert.ok(!log.at(-1).before['Editor wording'], 'there was no wording before');
-
-  // approved already, and no wording to add: nothing to write
-  const writes = w.fake.writes().length;
-  const nothing = await w.run(['approve', '--lesson', 'A second change']);
-  assert.equal(nothing.code, 0, nothing.err);
-  assert.equal(nothing.out.split('\n')[0], `Walkthrough: acting as the editor, the rule change ${quoted('A second change')} is already Approved; nothing was changed.`);
-  assert.equal(w.fake.writes().length, writes);
-  assert.equal(actionsOf(w).at(-1).status, 'unchanged');
-  const sameWording = await w.run(['approve', '--lesson', 'A second change', '--wording', wording]);
-  assert.equal(sameWording.code, 0, sameWording.err);
-  assert.equal(sameWording.out.split('\n')[0], `Walkthrough: acting as the editor, the rule change ${quoted('A second change')} is already Approved with that wording; nothing was changed.`);
-  assert.equal(w.fake.writes().length, writes, 'the same wording is not written twice');
-
-  // reject: the Approved one by its title; the wording stays as it was
-  const rejected = await w.run(['reject', '--lesson', 'A second change']);
-  assert.equal(rejected.code, 0, rejected.err);
-  assert.equal(lessonByTitle(w, 'A second change').Status, 'Rejected');
-  assert.equal(lessonByTitle(w, 'A second change')['Editor wording'], wording, 'rejecting leaves the wording as it was');
-  assert.equal(rejected.out.split('\n')[0], `Walkthrough: acting as the editor, the rule change ${quoted('A second change')} is now Rejected.`);
-  const last = actionsOf(w).filter((l) => l.status === 'done').at(-1);
-  assert.deepEqual([last.action, last.wrote, last.before], ['reject', { Status: 'Rejected' }, { Status: 'Approved' }]);
-});
-
-test('approve and reject name the rule change they act on or refuse: none waiting, two waiting, one that is not waiting, an empty wording', async () => {
-  const w = newWorld();
-  assert.equal((await w.start()).code, 0);
-  const snapshot = () => JSON.stringify(w.rows('rule_changes'));
-  const none = await w.run(['approve']);
-  assert.equal(none.code, 2);
-  assert.match(none.err, /approve: no rule change is Proposed$/);
-  const noneToReject = await w.run(['reject']);
-  assert.equal(noneToReject.code, 2);
-  assert.match(noneToReject.err, /reject: no rule change is Proposed or Approved$/);
-
-  addProposed(w, { Lesson: 'First' });
-  addProposed(w, { Lesson: 'Second' });
-  addProposed(w, { Lesson: 'Third', Status: 'Live' });
-  const before = snapshot();
-  const two = await w.run(['approve']);
-  assert.equal(two.code, 2);
-  assert.match(two.err, /approve: 2 rule changes are Proposed: "(First|Second)"; "(First|Second)"\. Add --lesson "<title>" to say which one\./);
-  assert.ok(two.err.includes('"First"') && two.err.includes('"Second"') && !two.err.includes('"Third"'), 'the two that wait are named, the Live one is not');
-  const twoToReject = await w.run(['reject']);
-  assert.equal(twoToReject.code, 2);
-  assert.match(twoToReject.err, /reject: 2 rule changes are Proposed or Approved: /);
-  const unknown = await w.run(['approve', '--lesson', 'Nonesuch']);
-  assert.equal(unknown.code, 2);
-  assert.match(unknown.err, /approve: no rule change is called "Nonesuch"/);
-  const emptyWording = await w.run(['approve', '--lesson', 'First', '--wording', '   ']);
-  assert.equal(emptyWording.code, 2);
-  assert.match(emptyWording.err, /approve: --wording is empty/);
-  for (const command of ['approve', 'reject']) {
-    const live = await w.run([command, '--lesson', 'Third']);
-    assert.equal(live.code, 2, command);
-    assert.match(live.err, /"Third" is Live; only a rule change that is Proposed or Approved can be changed here/);
-  }
-  assert.equal((await w.run(['reject', '--wording', 'x'])).code, 2, 'reject has no --wording');
-  assert.equal(snapshot(), before, 'nothing was written');
-  assert.ok(!existsSync(join(w.dir(), 'editor-actions.jsonl')), 'a refusal is not an action');
-  // naming one settles it
-  assert.equal((await w.run(['approve', '--lesson', 'Second'])).code, 0);
-  assert.equal(lessonByTitle(w, 'Second').Status, 'Approved');
-  assert.equal(lessonByTitle(w, 'First').Status, 'Proposed');
-
-  // a rule change that is Approved but did not pass its safety check gets the editor's wording; approve with --wording finds it when none is Proposed
-  const failed = newWorld();
-  assert.equal((await failed.start()).code, 0);
-  addProposed(failed, { Status: 'Approved', 'Safety check result': "FAIL: 'Melania Trump' now Does not apply" });
-  assert.match((await failed.run(['approve'])).err, /approve: no rule change is Proposed$/);
-  const fix = await failed.run(['approve', '--wording', 'The whole rule, with one added sentence.']);
-  assert.equal(fix.code, 0, fix.err);
-  assert.equal(fix.out.split('\n')[0], `Walkthrough: acting as the editor, the Editor wording of the rule change ${quoted(LESSON)} is now filled in.`);
-  const row = lessonByTitle(failed, LESSON);
-  assert.equal(row.Status, 'Approved');
-  assert.equal(row['Editor wording'], 'The whole rule, with one added sentence.');
-  assert.deepEqual(actionsOf(failed).filter((l) => l.status === 'done').at(-1).wrote, { 'Editor wording': 'The whole rule, with one added sentence.' }, 'the Status was Approved already, so only the wording is written');
-});
-
-test('reject ends the walkthrough: the Next line says there is nothing left to type, and where agrees', async () => {
-  const w = newWorld();
-  assert.equal((await w.start()).code, 0);
-  await decideBoth(w);
-  addProposed(w, { Status: 'Approved', 'Safety check result': "FAIL: 'Melania Trump' now Does not apply" });
-  assert.match((await w.run(['where'])).out, /it did not pass/);
-  const r = await w.run(['reject']);
-  assert.equal(r.code, 0, r.err);
-  assert.equal(lessonByTitle(w, LESSON).Status, 'Rejected');
-  assert.equal(lastLine(r.out), 'Next: nothing to type; archive the page by hand when you no longer need it.');
-  assert.match((await w.run(['where'])).out, /all seven steps/);
-  const again = await w.run(['reject']);
-  assert.equal(again.code, 2, 'a rejected rule change is not rejected twice');
-  assert.match(again.err, /reject: no rule change is Proposed or Approved$/);
-});
-
-test('decide, approve and reject are the walkthrough\'s own commands: run does not start them as scripts, even when a file of that name exists', async () => {
-  const w = newWorld();
-  assert.equal((await w.start()).code, 0);
+  assert.equal(w.fake.requests.length, sent, 'no request was sent');
+  // run does not start them as scripts, even when a file of that name exists
   const scriptsDir = standIns();
   const marker = join(tmp('markers'), 'started');
   for (const name of ['decide', 'approve', 'reject']) {
@@ -3239,63 +2988,26 @@ test('decide, approve and reject are the walkthrough\'s own commands: run does n
   assert.ok(!existsSync(marker), 'nothing was started');
 });
 
-test('the editor actions work on a practice page only: an id that leaves the folder, a folder with no profile, a profile that is not a demo', async () => {
-  const w = newWorld();
-  assert.equal((await w.start()).code, 0);
-  const base = patchCount(w);
-  const writes = w.fake.writes().length;
-  const commands = [['decide', '--claim', 'presspool'], ['approve'], ['reject']];
-  for (const bad of ['..', '.', '../demos', '/etc', 'a/b']) {
-    for (const [command, ...rest] of commands) {
-      const r = await w.run([command, '--demo', bad, ...rest]);
-      assert.equal(r.code, 2, `${command} --demo ${bad}`);
-    }
-  }
-  // a folder under runs/demos that holds no profile, and one whose config is the production one
-  mkdirSync(join(w.root, 'runs', 'demos', 'plain'), { recursive: true });
-  writeFileSync(join(w.root, 'runs', 'demos', 'plain', 'demo.json'), JSON.stringify({ state: 'ready', created_at: '2026-10-16T00:00:00Z' }));
-  mkdirSync(join(w.root, 'runs', 'demos', 'imposter'), { recursive: true });
-  writeFileSync(join(w.root, 'runs', 'demos', 'imposter', 'demo.json'), JSON.stringify({ state: 'ready', created_at: '2026-10-16T01:00:00Z' }));
-  writeFileSync(join(w.root, 'runs', 'demos', 'imposter', 'config.json'), readFileSync(join(w.root, 'config.json'), 'utf8'));
-  for (const folder of ['plain', 'imposter']) {
-    for (const [command, ...rest] of commands) {
-      const r = await w.run([command, '--demo', folder, ...rest]);
-      assert.equal(r.code, 2, `${command} --demo ${folder}: ${r.err}`);
-    }
-  }
-  assert.match((await w.run(['decide', '--demo', 'imposter', '--claim', 'presspool'])).err, /does not hold a demo profile of that name/);
-  assert.equal(patchCount(w), base, 'no row was changed');
-  assert.equal(w.fake.writes().length, writes, 'no write was sent');
-});
-
-test('the usage lists the three editor commands, and each answers --help without touching Notion', async () => {
-  const w = newWorld();
-  const help = await w.run(['--help']);
-  for (const name of ['decide', 'approve', 'reject']) {
-    assert.ok(help.out.includes(`walkthrough.mjs ${name} `), name);
-    const r = await w.run([name, '--help']);
-    assert.equal(r.code, 0, name);
-    assert.ok(r.out.includes(`walkthrough.mjs ${name} `));
-  }
-  assert.equal(w.fake.requests.length, 0, 'no request');
-});
-
-test('verify does not call a page damaged because the editor acted on it, and still finds a change nobody was meant to make', async () => {
+test('the editor played through the fake: verify does not call a page damaged because a person filled in the editor columns, and still finds a change nobody was meant to make', async () => {
   const w = newWorld();
   assert.equal((await w.start()).code, 0);
   const { manifest } = real();
   const V = dp.CLAIM_COLUMNS.verified;
+  const writes = w.fake.writes().length;
   assert.equal((await w.run(['verify'])).code, 0, 'a page nobody touched is as it was built');
-  assert.equal((await w.run(['decide', '--claim', manifest.open[0].claim])).code, 0);
+  agentHasRead(w); // the tag step has run, so a person is working on the page
+  assert.equal((await w.run(['verify'])).code, 0);
+  editorDecides(w, manifest.open[0].claim);
   const afterDecide = await w.run(['verify']);
   assert.equal(afterDecide.code, 0, afterDecide.err);
   assert.match(afterDecide.out, /is as it was built/);
   assert.match(afterDecide.out, /\| Claims \| 9: 6 reviewed, 3 waiting for you \|/);
   assert.match((await w.run(['verify', '--json'])).out, /"ok":true/);
   addProposed(w);
-  assert.equal((await w.run(['approve'])).code, 0);
+  editorApproves(w);
   const afterApprove = await w.run(['verify']);
   assert.equal(afterApprove.code, 0, afterApprove.err);
+  assert.equal(w.fake.writes().length, writes, 'the person\'s edits are no script\'s write, and verify wrote nothing');
   // an earlier decision that was changed by hand is still a difference
   const decided = manifest.decided[0];
   const earlier = manifest.claims.find((c) => c.key === decided.claim);
@@ -3304,6 +3016,41 @@ test('verify does not call a page damaged because the editor acted on it, and st
   const changed = await w.run(['verify']);
   assert.equal(changed.code, 2);
   assert.match(changed.err, /the earlier decision .* differs from the manifest in Verified tags/);
+});
+
+test('a rule change the editor rejects (played through the fake) ends the walkthrough: where says all seven steps and the Next line says there is nothing left to type', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  decideBoth(w);
+  addProposed(w, { Status: 'Approved', 'Safety check result': "FAIL: 'Melania Trump' now Does not apply" });
+  assert.match((await w.run(['where'])).out, /it did not pass/);
+  editorRejects(w);
+  assert.equal(lessonByTitle(w, LESSON).Status, 'Rejected');
+  const r = await w.run(['where']);
+  assert.equal(r.code, 0, r.err);
+  assert.match(r.out, /all seven steps/);
+  assert.equal(lastLine(r.out), 'Next: nothing to type; archive the page by hand when you no longer need it.');
+  // a rule change that is Rejected is not Proposed or Approved any more: the helper that plays the editor finds none
+  assert.throws(() => editorRejects(w), /exactly one rule change is Proposed or Approved/);
+});
+
+test('a person fills the three editor columns of the Claims under their new names, and the old names are nowhere', async () => {
+  const w = newWorld();
+  assert.equal((await w.start()).code, 0);
+  const { manifest } = real();
+  agentHasRead(w);
+  const claim = manifest.claims.find((c) => c.key === 'aiforce');
+  const book = w.rows('rulebook')[0];
+  const writes = w.fake.writes().length;
+  editorDecides(w, 'aiforce');
+  assert.equal(w.fake.writes().length, writes, 'a person\'s edit is no script\'s write');
+  const row = w.rowBy('claims', 'Geo ID', claim['Geo ID']);
+  assert.deepEqual([row['Verified tags'].map(dashless), row['Review status'], row['Challenged tags notes']], [[dashless(book.page_id)], 'Reviewed', manifest.open[1].enter['Challenged tags notes']]);
+  assert.ok(!('Claim quality tags — verified' in row) && !('Why wrong' in row), 'the real table\'s name and the retired reason are not on a practice page');
+  // the ledger copy the tag step makes from this claim is under the same words
+  assert.deepEqual(loadConfig(w.dir()).editor_columns.claims, ['Verified tags', 'Review status', 'Challenged tags notes']);
+  assert.ok(!loadConfig(w.dir()).editor_columns.claims.includes('Claim quality tags — verified'));
+  assert.deepEqual(Object.values(dp.CLAIM_COLUMNS).sort(), ['Challenged tags notes', 'Review status', 'Verified tags']);
 });
 
 // ---- the Claims table and its views after the feedback round of 21 October (CLAIMS-REVIEW.md section 6) --------------------------------------------------------------
@@ -3441,7 +3188,7 @@ test('the three Claims views on a fresh page: Your queue lists the claims whose 
   assert.deepEqual([await listed('Your queue'), await listed('Agent disagreed'), await listed('Needs your note')], [[], [], []], 'a fresh page: the agent has read nothing, and the five earlier decisions carry their seeded reading (which is not "without your note")');
   agentHasRead(w);
   assert.deepEqual(await listed('Your queue'), [nameOf('aiforce'), nameOf('presspool'), nameOf('usps'), nameOf('georgia')], 'after the tag step all four wait, the least sure first');
-  for (const o of manifest.open) assert.equal((await w.run(['decide', '--claim', o.claim])).code, 0);
+  for (const o of manifest.open) editorDecides(w, o.claim);
   assert.equal((await listed('Your queue')).length, 4, 'all four are Reviewed and stay in Your queue until the agent reads them again');
   for (const key of ['aiforce', 'presspool']) w.fake.editRow(claimRow(key).page_id, { 'Agent status': 'Done' }); // what the follow-up of step 7 writes for the claims the rule change rests on
   assert.deepEqual(await listed('Your queue'), [nameOf('usps'), nameOf('georgia')], 'the two read again leave; USPS and Georgia stay until the next tag run');
@@ -3453,33 +3200,6 @@ test('the three Claims views on a fresh page: Your queue lists the claims whose 
   w.fake.editRow(claimRow('presspool').page_id, { 'Agent reading': 'Context-dependent: Rule unclear, rule 3 · The rule leaves this open.' });
   w.fake.editRow(claimRow('georgia').page_id, { 'Agent reading': 'Nothing to read: the agent agreed with you.' });
   assert.deepEqual(await listed('Needs your note'), [nameOf('usps')]);
-});
-
-test('decide writes the three editor columns under their new names, in the order the page gives them, and the old names are nowhere', async () => {
-  const w = newWorld();
-  assert.equal((await w.start()).code, 0);
-  const { manifest } = real();
-  agentHasRead(w);
-  const claim = manifest.claims.find((c) => c.key === 'aiforce');
-  const book = w.rows('rulebook')[0];
-  const before = w.fake.writes().length;
-  const r = await w.run(['decide', '--claim', 'aiforce']);
-  assert.equal(r.code, 0, r.err);
-  const sent = w.fake.writes().slice(before);
-  assert.equal(sent.length, 1);
-  assert.deepEqual(Object.keys(sent[0].body.properties), ['Verified tags', 'Challenged tags notes', 'Review status'], 'the three columns, Review status last');
-  assert.deepEqual(sent[0].body.properties['Verified tags'].relation.map((x) => dashless(x.id)), [dashless(book.page_id)]);
-  assert.ok(!JSON.stringify(sent[0].body).includes('Claim quality tags'), 'the real table\'s name is not used on a practice page');
-  assert.ok(!JSON.stringify(sent[0].body).includes('Why wrong'), 'and no reason is written: the agent reads it');
-  assert.ok(r.out.includes('| Verified tags | Context-dependent |'));
-  assert.ok(!r.out.includes('Claim quality tags') && !r.out.includes('Why wrong'));
-  const row = w.rowBy('claims', 'Geo ID', claim['Geo ID']);
-  assert.deepEqual([row['Verified tags'].map(dashless), row['Review status'], row['Challenged tags notes']], [[dashless(book.page_id)], 'Reviewed', manifest.open[1].enter['Challenged tags notes']]);
-  const log = actionsOf(w).filter((l) => l.status === 'done');
-  assert.deepEqual(Object.keys(log[0].wrote), ['Verified tags', 'Challenged tags notes', 'Review status']);
-  // the ledger copy the tag step makes from this claim is under the same words
-  assert.deepEqual(loadConfig(w.dir()).editor_columns.claims, ['Verified tags', 'Review status', 'Challenged tags notes']);
-  assert.ok(!loadConfig(w.dir()).editor_columns.claims.includes('Claim quality tags — verified'));
 });
 
 test('where reads Agent status: no status is a claim the agent has not read, whatever else is written, and each of the four values is a claim it has read', async () => {
@@ -3754,10 +3474,10 @@ test('the skills relay the report first and add the checklist under it: the rule
   assert.ok(!examples.includes('Agent notes'));
 });
 
-// ---- the seven steps on the fakes (READ-DECISIONS.md, decisions 73 to 76) ----------------------------------------------------------------------------------------
+// ---- the seven steps on the fakes (READ-DECISIONS.md, decisions 73 to 76; the walkthrough's main check, decision P7) ----------------------------------------------------------------------------------------
 //
 // A practice page is built on the fake Notion, and the loop scripts run in-process against it with the fake CLI: the tag step (pull, judge, propose), the editor deciding the four claims
-// (decide), distill (the reading of the decisions, then one rule change), the editor approving it (approve), promote (the safety check, then the follow-up) and where. The fake CLI
+// (played through the fake, editorDecides: no agent acts as the editor), distill (the reading of the decisions, then one rule change), the editor approving it (editorApproves), promote (the safety check, then the follow-up) and where. The fake CLI
 // reads the press pool and the AI Force row as Rule unclear on rule 3 (FAKE_CLAUDE_READINGS) and answers every claim as the story expects.
 
 const STORY_NOTES = {
@@ -3854,7 +3574,7 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   assert.equal(guideChecklistFor(sentence3, next3)?.checklist, 'Decide in Your queue');
 
   // step 3: the editor decides the four claims, with the values of the page (USPS with the reason word in the note, Georgia with an empty note)
-  for (const key of open) assert.equal((await w.run(['decide', '--claim', key])).code, 0, key);
+  for (const key of open) editorDecides(w, key);
   assert.deepEqual(['usps', 'georgia'].map((k) => claimRow(k)['Challenged tags notes'] ?? ''), ['Agent slip. USPS names which portal, so rule 5 already settles it.', '']);
   assert.match(await whereLine(), /step 4,/);
   // status: the four decisions wait for the agent's next run, three of them are still to read (Georgia agrees with the agent: nothing to read), and distill is the next thing to type
@@ -3935,7 +3655,7 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
   assert.match(second.report.sentence, /^Distill: nothing new to read; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you/);
 
   // step 5 and 6: the editor approves the draft, promote runs the safety check
-  assert.equal((await w.run(['approve'])).code, 0);
+  editorApproves(w);
   assert.match(await whereLine(), /step 6,/);
   const passed = await promote(hooks({ lesson: STORY_LESSON }));
   assert.equal(passed.exit, 0, passed.markdown);
@@ -3976,8 +3696,8 @@ test('the seven steps on the fakes: the four claims are decided, distill reads t
 const plainReport = (markdown) => lintReport(markdown).length === 0 && !/token|duration|\$|\.mjs|--[a-z]|runs\//i.test(markdown) && !/\bcalls\b/i.test(markdown) && !/\bcall\b(?! (?:the agent's|a) slip)/i.test(markdown);
 
 /**
- * A practice page on the fakes, taken through the tag step, with the editor's decisions on the four claims of the story made by the walkthrough's own `decide`: the press pool, the AI Force
- * claim and Georgia as the page says, USPS with no note at all (`--outcome` alone writes an empty note). The fake model reads USPS Rule unclear on rule 3, as verification run 4 saw it.
+ * A practice page on the fakes, taken through the tag step, with the editor's decisions on the four claims of the story played through the fake (editorDecides, a person's edit): the press pool, the AI Force
+ * claim and Georgia as the page says, USPS with no note at all (an outcome with no reasoning writes an empty note). The fake model reads USPS Rule unclear on rule 3, as verification run 4 saw it.
  * Returns the handles the tests use.
  */
 async function pageWithoutUspsNote() {
@@ -3997,8 +3717,8 @@ async function pageWithoutUspsNote() {
   const readingsFile = JSON.parse(readFileSync(env.FAKE_CLAUDE_READINGS, 'utf8'));
   readingsFile[keyOf('usps')] = { reading: 'Rule unclear', rule: 'Context-dependent rule 3', note: 'The portal is named in the claim.' };
   writeFileSync(env.FAKE_CLAUDE_READINGS, JSON.stringify(readingsFile));
-  for (const key of ['presspool', 'aiforce', 'georgia']) assert.equal((await w.run(['decide', '--claim', key])).code, 0, key);
-  assert.equal((await w.run(['decide', '--claim', 'usps', '--outcome', 'Does not apply'])).code, 0);
+  for (const key of ['presspool', 'aiforce', 'georgia']) editorDecides(w, key);
+  editorDecides(w, 'usps', { outcome: 'Does not apply' });
   const uspsNote = manifest.open.find((o) => o.claim === 'usps').enter['Challenged tags notes'];
   const supporting = (row) => (row['Supporting rows'] ?? '').split('\n').map((l) => l.split(' · ').at(-1)).sort();
   return { w, manifest, state, hooks, keyOf, claimRow, ledgerRow, uspsNote, supporting };
@@ -4051,7 +3771,7 @@ test('a decision without a note is read all the same and flagged "without your n
   assert.equal(settled.report.rows.find((r) => r[0] === 'Lessons waiting')[1], '1 rule change to approve');
 
   // approve and promote: the safety check counts the two rows of the draft, and the follow-up marks those two, neither USPS nor Georgia
-  assert.equal((await w.run(['approve'])).code, 0);
+  editorApproves(w);
   const passed = await promote(hooks({ lesson: lesson.Lesson }));
   assert.equal(passed.exit, 0, passed.markdown);
   assert.deepEqual(passed.report.rows.at(-1), ['Your 2 rows', '2 of 2 now right, marked Fixed', '']);
@@ -4094,7 +3814,7 @@ test('a draft that rests on a noted row the editor later calls the agent\'s slip
   assert.deepEqual([ledgerRow('usps')['Agent reading'], ledgerRow('usps')['Reading note']], ['Agent slip', 'Your note says so.']);
 
   // the editor approves the draft all the same: promote holds before the safety check, and nothing is written
-  assert.equal((await w.run(['approve'])).code, 0);
+  editorApproves(w);
   const rulebookBefore = w.rows('rulebook').map((r) => r['When to use']);
   const written = w.fake.writes().length;
   const callsBefore = (state.log ?? []).length;
@@ -4109,8 +3829,8 @@ test('a draft that rests on a noted row the editor later calls the agent\'s slip
   assert.deepEqual(w.rows('rulebook').map((r) => r['When to use']), rulebookBefore);
   assert.deepEqual([w.rows('rule_changes')[0].Status, w.rows('rule_changes')[0]['Safety check result'] ?? ''], ['Approved', '']);
 
-  // the editor rejects it (in the practice, with W reject) and types distill again: a new draft from the two rows that still point at the rule
-  assert.equal((await w.run(['reject'])).code, 0);
+  // the editor rejects it (played through the fake, editorRejects) and types distill again: a new draft from the two rows that still point at the rule
+  editorRejects(w);
   assert.equal(w.rows('rule_changes')[0].Status, 'Rejected');
   const three = hooks();
   const third = await distill(three);
@@ -4123,7 +3843,7 @@ test('a draft that rests on a noted row the editor later calls the agent\'s slip
   assert.equal((await status(hooks())).report.rows.find((r) => r[0] === 'Lessons waiting')[1], '1 rule change to approve');
 
   // approve and promote: the safety check counts the two rows, the follow-up marks those two and not USPS
-  assert.equal((await w.run(['approve'])).code, 0);
+  editorApproves(w);
   const passed = await promote(hooks({ lesson: fresh.Lesson }));
   assert.equal(passed.exit, 0, passed.markdown);
   assert.deepEqual(passed.report.rows.at(-1), ['Your 2 rows', '2 of 2 now right, marked Fixed', '']);

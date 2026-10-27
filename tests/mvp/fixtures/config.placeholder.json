@@ -10,7 +10,9 @@
     "pages": {
       "proposal": "3fa273e214eb81ef8504cb40e3bd7052",
       "demos": "<set by setup>",
-      "demo_tests": "<set by setup>"
+      "demo_tests": "<set by setup>",
+      "onboarding": "<set by setup>",
+      "archive": "<set by setup>"
     },
     "rulebook": {
       "database_id": "<setup>",

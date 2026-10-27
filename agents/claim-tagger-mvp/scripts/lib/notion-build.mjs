@@ -95,6 +95,7 @@ export const DESCRIPTION_MAX = 280;
 export const PAGE_TEXT = Object.freeze({
   demos: 'Practice pages made by the walkthrough; never deleted.',
   demo_tests: 'Test runs of the walkthrough skill.',
+  onboarding: 'Practice pages for new editors live here. Type /claim-tagger-walkthrough in Claude Code and give this page\'s link; nothing on a practice page touches the real Claims table.',
 });
 
 /** Select colours: the taxonomy's own on the Rulebook copy (docs/mvp-2026-11/sweeps/live-schemas.md), Geo's on the claims, sensible ones on the queue. Anything not listed is default. */
