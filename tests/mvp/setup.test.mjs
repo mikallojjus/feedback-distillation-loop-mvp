@@ -15,7 +15,7 @@ import {
   migrationOps, protectedInLinks, rulebookOps, settingsProperties, unknownOptions, withLinkedSources,
 } from '../../agents/claim-tagger-mvp/scripts/lib/setup-steps.mjs';
 import {
-  AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, SPACE_NAMES, builderClient, cleanTmp, forFake, freshStructure, fullTaxonomy, makePick, newWorld, readAuditFile,
+  AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, SPACE_NAMES, builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, fullTaxonomy, makePick, newWorld, readAuditFile,
   readJson, readLines, restClient, revisedStructure, smallTaxonomy, tmp, writeInputs,
 } from './helpers/setup-world.mjs';
 
@@ -201,7 +201,7 @@ test('preview of the fresh structure shows the five tables in the hub\'s order, 
   assert.match(md, /## Claims \(20 columns\)/, 'the lean Claims set: nine Geo columns, eight agent columns, three editor columns');
   assert.match(md, /\| Geo Space \| select \| U\.S\. Politics, World affairs, AI, Health, Crypto, Technology \|/);
   assert.match(md, /\| Geo Created \| date \|/);
-  assert.match(md, /\| Geo Tags \| multi_select \| Debate \|/);
+  assert.match(md, /\| Geo Tags \| multi_select \| Debate(, [^|]+)? \|/, 'Debate first, then the tag names the committed pick added, if it has run');
   assert.doesNotMatch(md, /\(old\)|Geo Score|Geo Name source|renamed|retired|Claims copy|Rulebook copy/);
   assert.equal((md.match(/^- \*\*/gm) ?? []).length, 7);
   assert.equal(w.fake.requests.length, 0, 'local files only');
@@ -209,6 +209,7 @@ test('preview of the fresh structure shows the five tables in the hub\'s order, 
 
 test('structure --options-from sets Geo Tags (the pick\'s tag names, sorted) and Geo Space (the six spaces), writes setup/structure.json, says what changed, and run again changes nothing', async () => {
   const w = newWorld({ structure: 'fresh' });
+  writeFileSync(join(w.root, 'setup', 'structure.json'), `${JSON.stringify(forFake(freshStructureBeforeOptions()), null, 2)}\n`);
   const dir = join(w.root, 'inputs');
   const pick = makePick({ audit: readAuditFile(), extra: 3 });
   pick.rows[3]['Geo Tags'] = ['Debate', 'Immigration', 'Economy'];

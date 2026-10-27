@@ -1,6 +1,6 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { ARCHIVE_TITLE, verifyArchive } from '../../agents/claim-tagger-mvp/scripts/lib/archive.mjs';
 import { TABLES } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
@@ -9,7 +9,7 @@ import {
 } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
-import { builderClient, cleanTmp, forFake, freshStructure, newWorld, readAuditFile, readJson, revisedStructure, makePick, writeInputs, SPACE_NAMES, tmp } from './helpers/setup-world.mjs';
+import { builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, newWorld, readAuditFile, readJson, revisedStructure, makePick, writeInputs, SPACE_NAMES, tmp } from './helpers/setup-world.mjs';
 
 // The hub (decisions P9 to P11): the structure's hub block, the tables built as full-page tables in the order of the hub, the pages after them, the link lines at the top of the hub page, and
 // the report of what else is on the page. Everything runs against the fake that keeps child pages and tables among a page's blocks.
@@ -60,7 +60,10 @@ test('the fresh structure file is valid: made from the specification, Onboarding
   assert.deepEqual([column('Geo Space').type, column('Geo Space').options], ['select', SPACE_NAMES]);
   assert.equal(column('Geo Created').type, 'date');
   assert.equal(column('Geo Is factual').type, 'checkbox');
-  assert.deepEqual([column('Geo Tags').type, column('Geo Tags').options], ['multi_select', ['Debate']], 'until structure --options-from runs, Geo Tags has the option Debate only');
+  // Geo Tags holds the committed pick's tag names once structure --options-from has run on it, and the option Debate only before there is a pick
+  const pickFile = join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'geo-claims-pick.json');
+  const tagNames = existsSync(pickFile) ? readJson(pickFile).tag_names : ['Debate'];
+  assert.deepEqual([column('Geo Tags').type, column('Geo Tags').options], ['multi_select', tagNames], 'the structure and the committed pick agree on the Geo Tags options');
   for (const v of s.views.filter((x) => x.table === 'claims')) assert.equal(v.columns[1], 'Geo Space', `${v.name} shows Geo Space after Geo Name`);
   assert.ok(!s.views.filter((x) => x.table !== 'claims').some((v) => v.columns.includes('Geo Space')));
 });
@@ -424,7 +427,7 @@ test('verifyArchive: nothing applies without setup/archive.json; with it done, t
 // ---- the options of the Geo columns ----------------------------------------------------------------------------------------------------------------
 
 test('withGeoOptions: Geo Tags from the pick (sorted), Geo Space from the spaces; the structure is not changed; applying it twice changes nothing; empty or repeated lists are refused', () => {
-  const s = freshStructure();
+  const s = freshStructureBeforeOptions();
   const r = withGeoOptions(s, { tagNames: ['Politics', 'Debate', 'Economy'], spaceNames: SPACE_NAMES });
   assert.equal(r.changed, true);
   assert.deepEqual(s.tables.claims.columns.find((c) => c.name === 'Geo Tags').options, ['Debate'], 'the original is not changed');

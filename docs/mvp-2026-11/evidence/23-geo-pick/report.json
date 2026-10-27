@@ -1,0 +1,583 @@
+{
+  "report_version": 1,
+  "state": "ok",
+  "run_id": "20261027T135417Z-geo-pick",
+  "seed": "claims-2026-10-27",
+  "endpoint": "https://api-testnet.geobrowser.io/graphql",
+  "fetched_at": "2026-10-27T13:54:17.194Z",
+  "spec": {
+    "total": 200,
+    "spaces": [
+      {
+        "name": "U.S. Politics",
+        "id": "4582fbbee28a16589154f7e36f1ee3c5",
+        "quota": 50
+      },
+      {
+        "name": "World affairs",
+        "id": "89bd89bf28ff8a0963faf92a8c905e20",
+        "quota": 50
+      },
+      {
+        "name": "AI",
+        "id": "41e851610e13a19441c4d980f2f2ce6b",
+        "quota": 40
+      },
+      {
+        "name": "Health",
+        "id": "52c7ae149838b6d47ce0f3b2a5974546",
+        "quota": 30
+      },
+      {
+        "name": "Crypto",
+        "id": "c9f267dcb0d270718c2a3c45a64afd32",
+        "quota": 20
+      },
+      {
+        "name": "Technology",
+        "id": "870e3b3068661e6280fad2ab456829bc",
+        "quota": 10
+      }
+    ]
+  },
+  "warnings": [],
+  "fetch": {
+    "U.S. Politics": {
+      "edges": 2132,
+      "dropped": {
+        "not_claim": 1,
+        "empty_name": 0,
+        "bad_id": 0,
+        "no_created_at": 0,
+        "repeat_edges": 0,
+        "other_space": 0
+      },
+      "cross_space_removed": 0
+    },
+    "World affairs": {
+      "edges": 1857,
+      "dropped": {
+        "not_claim": 2,
+        "empty_name": 0,
+        "bad_id": 0,
+        "no_created_at": 0,
+        "repeat_edges": 0,
+        "other_space": 0
+      },
+      "cross_space_removed": 20
+    },
+    "AI": {
+      "edges": 855,
+      "dropped": {
+        "not_claim": 1,
+        "empty_name": 0,
+        "bad_id": 0,
+        "no_created_at": 0,
+        "repeat_edges": 0,
+        "other_space": 0
+      },
+      "cross_space_removed": 1
+    },
+    "Health": {
+      "edges": 406,
+      "dropped": {
+        "not_claim": 0,
+        "empty_name": 0,
+        "bad_id": 0,
+        "no_created_at": 0,
+        "repeat_edges": 0,
+        "other_space": 0
+      },
+      "cross_space_removed": 2
+    },
+    "Crypto": {
+      "edges": 180,
+      "dropped": {
+        "not_claim": 0,
+        "empty_name": 0,
+        "bad_id": 0,
+        "no_created_at": 0,
+        "repeat_edges": 0,
+        "other_space": 0
+      },
+      "cross_space_removed": 0
+    },
+    "Technology": {
+      "edges": 74,
+      "dropped": {
+        "not_claim": 0,
+        "empty_name": 0,
+        "bad_id": 0,
+        "no_created_at": 0,
+        "repeat_edges": 0,
+        "other_space": 0
+      },
+      "cross_space_removed": 8
+    }
+  },
+  "populations": {
+    "U.S. Politics": {
+      "total": 2131,
+      "months": {
+        "2026-07": 2,
+        "2026-08": 126,
+        "2026-09": 760,
+        "2026-10": 1243
+      }
+    },
+    "World affairs": {
+      "total": 1835,
+      "months": {
+        "2026-03": 1,
+        "2026-04": 2,
+        "2026-07": 2,
+        "2026-08": 91,
+        "2026-09": 436,
+        "2026-10": 1303
+      }
+    },
+    "AI": {
+      "total": 853,
+      "months": {
+        "2026-03": 1,
+        "2026-05": 1,
+        "2026-06": 1,
+        "2026-07": 18,
+        "2026-08": 95,
+        "2026-09": 305,
+        "2026-10": 432
+      }
+    },
+    "Health": {
+      "total": 404,
+      "months": {
+        "2026-08": 31,
+        "2026-09": 137,
+        "2026-10": 236
+      }
+    },
+    "Crypto": {
+      "total": 180,
+      "months": {
+        "2026-04": 2,
+        "2026-07": 6,
+        "2026-08": 45,
+        "2026-09": 83,
+        "2026-10": 44
+      }
+    },
+    "Technology": {
+      "total": 66,
+      "months": {
+        "2026-10": 66
+      }
+    }
+  },
+  "month_totals": {
+    "2026-03": 2,
+    "2026-04": 4,
+    "2026-05": 1,
+    "2026-06": 1,
+    "2026-07": 28,
+    "2026-08": 388,
+    "2026-09": 1721,
+    "2026-10": 3324
+  },
+  "dominant_month": {
+    "month": "2026-10",
+    "count": 3324,
+    "of": 5469,
+    "share": 0.607789358200768
+  },
+  "allocation": {
+    "U.S. Politics": {
+      "quota": 50,
+      "picked": 50,
+      "months": {
+        "2026-07": 2,
+        "2026-08": 16,
+        "2026-09": 16,
+        "2026-10": 16
+      },
+      "moved_in": 0,
+      "moved_out": 0
+    },
+    "World affairs": {
+      "quota": 50,
+      "picked": 50,
+      "months": {
+        "2026-03": 1,
+        "2026-04": 2,
+        "2026-07": 2,
+        "2026-08": 15,
+        "2026-09": 15,
+        "2026-10": 15
+      },
+      "moved_in": 0,
+      "moved_out": 0
+    },
+    "AI": {
+      "quota": 40,
+      "picked": 40,
+      "months": {
+        "2026-03": 1,
+        "2026-05": 1,
+        "2026-06": 1,
+        "2026-07": 10,
+        "2026-08": 9,
+        "2026-09": 9,
+        "2026-10": 9
+      },
+      "moved_in": 0,
+      "moved_out": 0
+    },
+    "Health": {
+      "quota": 30,
+      "picked": 30,
+      "months": {
+        "2026-08": 10,
+        "2026-09": 10,
+        "2026-10": 10
+      },
+      "moved_in": 0,
+      "moved_out": 0
+    },
+    "Crypto": {
+      "quota": 20,
+      "picked": 20,
+      "months": {
+        "2026-04": 2,
+        "2026-07": 5,
+        "2026-08": 5,
+        "2026-09": 4,
+        "2026-10": 4
+      },
+      "moved_in": 0,
+      "moved_out": 0
+    },
+    "Technology": {
+      "quota": 10,
+      "picked": 10,
+      "months": {
+        "2026-10": 10
+      },
+      "moved_in": 0,
+      "moved_out": 0
+    }
+  },
+  "shortfall_moves": [],
+  "duplicate_moves": [],
+  "duplicates": {
+    "cross_space": [
+      {
+        "geo_id": "00e49c82ba4e4443a471180095d4a4a0",
+        "name": "Christians should openly try to convert their friends",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "1878ff3c148d4291adec0ed6a4f72eb5",
+        "name": "Jesus is the only path to God",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "20630e999fac43efa99ad7160d91b676",
+        "name": "Developers should bear legal responsibility when their autonomous AI agents access external systems without authorisation",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "2a5fdc205949419aa7fa667f2be8a30b",
+        "name": "Demons are real and can influence people's lives",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "3705b6226d77476cada50c1ad1861b8b",
+        "name": "Russia and Ukraine should accept a mutual moratorium on attacks against energy infrastructure",
+        "kept_in": "World affairs",
+        "also_in": [
+          "AI"
+        ]
+      },
+      {
+        "geo_id": "389bf10852b84d16a67765dc79adb88b",
+        "name": "Atheism ultimately provides no objective meaning to life",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "3aa59beae5b9419da454ea8554998e02",
+        "name": "The European Union should create an associate-membership status for Canada",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "44e813295df24ed2a065c8077afc27c9",
+        "name": "Mocking Christianity is more socially acceptable than mocking other religions",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "4ee725c130ce4b88a0fcff1bb4f61e5f",
+        "name": "Hell is compatible with a loving God",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "53bb3b2fb8c14bcda0a83bab3de9045b",
+        "name": "Modern culture is becoming hostile to Christianity",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "5594594aca153411a18ec982d5fbd649",
+        "name": "Future generations' inability to consent is not enough, by itself, to rule out heritable interventions",
+        "kept_in": "Health",
+        "also_in": [
+          "Technology"
+        ]
+      },
+      {
+        "geo_id": "708285108b9bc55b1800e8658f2834cb",
+        "name": "Public funding should prioritize access to established fertility treatment over enhancement",
+        "kept_in": "Health",
+        "also_in": [
+          "Technology"
+        ]
+      },
+      {
+        "geo_id": "74dde29c78374109a355eae294069a6b",
+        "name": "You cannot have objective morality without God",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "79253ff311304f4aa78fa2b67e0cc64b",
+        "name": "Astrology is spiritually dangerous, not harmless entertainment",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "7a8fd889c3140f6fad846858b567e38c",
+        "name": "Patients should have as much say as technical experts in how reproductive technologies are governed",
+        "kept_in": "Health",
+        "also_in": [
+          "Technology"
+        ]
+      },
+      {
+        "geo_id": "83bddc216ccaa181ea3b5ed4b1496d62",
+        "name": "Unequal access is a stronger objection to genetic enhancement than its being unnatural",
+        "kept_in": "Health",
+        "also_in": [
+          "Technology"
+        ]
+      },
+      {
+        "geo_id": "86cfa0a8424942b8ac6d73b38d1fbb3c",
+        "name": "Christians should treat astrology, psychics and witchcraft as spiritually dangerous",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "935b4f14b51a4c10ac15e14470bf7306",
+        "name": "Evolution is compatible with Christianity",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "979592579780ddd5378e1114f604f2e4",
+        "name": "Parents should not be allowed to select embryos for predicted intelligence",
+        "kept_in": "Health",
+        "also_in": [
+          "Technology"
+        ]
+      },
+      {
+        "geo_id": "9b0745df5a6f4276a4866ba6aa0f58b5",
+        "name": "Not all religions are equally true",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "a42de20e2d063160e0019a55db4c0aaf",
+        "name": "Patients should always know when AI contributed to a medical decision",
+        "kept_in": "AI",
+        "also_in": [
+          "Health"
+        ]
+      },
+      {
+        "geo_id": "a6d838f8d9e9420faa5be5aa66c508e6",
+        "name": "Christians have a duty to try to convert non-Christians",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "b2a8cf72b02f4baaab817fb7a5cc7b67",
+        "name": "The Bible should take precedence over modern social values",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "b711b2cf6a714815abf9359ef73770a0",
+        "name": "Christianity is fundamentally incompatible with Islam",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "bdeae87f20f84877ae3ea13d3662322c",
+        "name": "Being a good person is not enough to get into heaven",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "c50c061608775126e5ffb8876843e492",
+        "name": "Preventing a serious inherited disease can justify changing an embryo's genes if safety can be established",
+        "kept_in": "Health",
+        "also_in": [
+          "Technology"
+        ]
+      },
+      {
+        "geo_id": "d1e5714279ba4988a5cc46b343a707fe",
+        "name": "The United States should end military aid to Israel",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "Health"
+        ]
+      },
+      {
+        "geo_id": "d620c33306594c0ba3010e99abaf0117",
+        "name": "Evolution does not undermine the biblical account of creation",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      },
+      {
+        "geo_id": "da64e2ac4fdfc12f0050d3533e7bfc11",
+        "name": "A reproductive technology can be safe and still be wrong to offer",
+        "kept_in": "Health",
+        "also_in": [
+          "Technology"
+        ]
+      },
+      {
+        "geo_id": "ea69239040195ec1d3dd53349d60efca",
+        "name": "Parents do not have a duty to give their child every genetic advantage available",
+        "kept_in": "Health",
+        "also_in": [
+          "Technology"
+        ]
+      },
+      {
+        "geo_id": "eabe39fd147f46a2a123723515b39ecd",
+        "name": "Christianity is more rational than atheism",
+        "kept_in": "U.S. Politics",
+        "also_in": [
+          "World affairs"
+        ]
+      }
+    ],
+    "text": []
+  },
+  "audit": {
+    "file": "agents/claim-tagger-mvp/setup/audit-decisions.json",
+    "sha256": "0eb3e49b21a7da323b2fee1d88a8b59f6329d2026e7a88cb67c71f8085ead305",
+    "included": [
+      "3e0d601de961dbf8ae38154e3f3a02e5",
+      "c8b676c3cce79edaec871afd1633ac2f",
+      "1bff859247ecdb618af41a397d2eb6ba"
+    ],
+    "left_out": [
+      {
+        "geo_id": "6dc1222aeb364918821167370d8fbc40",
+        "reason": "not tagged Debate in a canonical space"
+      },
+      {
+        "geo_id": "fc0cb0da0a1a4375b0fae6b5c9a67c69",
+        "reason": "not tagged Debate in a canonical space"
+      },
+      {
+        "geo_id": "e3c28f62526e4880b9edb5c16817b27b",
+        "reason": "not tagged Debate in a canonical space"
+      },
+      {
+        "geo_id": "89fcfb7fc6684b63af7d829ed90106cd",
+        "reason": "not tagged Debate in a canonical space"
+      },
+      {
+        "geo_id": "9a0e240456694696afdfbe7b7ac7021d",
+        "reason": "not tagged Debate in a canonical space"
+      },
+      {
+        "geo_id": "8f9c833b41e54eee9ca78e9c2f4ffb58",
+        "reason": "not tagged Debate in a canonical space"
+      },
+      {
+        "geo_id": "78dd775028795b65bb5c4945eda1c3bb",
+        "reason": "not tagged Debate in a canonical space"
+      }
+    ]
+  },
+  "details": {
+    "name_own": 190,
+    "name_fallback": 10,
+    "sources": 136,
+    "sources_without_web_url": 27,
+    "month_matches": 200
+  },
+  "rows": 200,
+  "result": "200 claims (3 from the audit, 7 audit claims left out, seed \"claims-2026-10-27\") -> X:\\work\\geo-agents\\agents\\claim-tagger-mvp\\setup\\geo-claims-pick.json",
+  "requests": {
+    "total": 23,
+    "nonQuery": 0
+  },
+  "geo_stats": {
+    "attempts": 23,
+    "retries": 0,
+    "pages": 14,
+    "halvings": 0,
+    "detail_batches": 9
+  },
+  "resume": null
+}

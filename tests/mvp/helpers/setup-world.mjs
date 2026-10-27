@@ -86,6 +86,13 @@ export const realStructure = () => structureFromProposal(readFileSync(STRUCTURE_
 export const revisedStructure = () => JSON.parse(readFileSync(join(REPO_ROOT, 'tests', 'mvp', 'fixtures', 'structure.22-oct.json'), 'utf8'));
 // The structure the build uses now: agents/claim-tagger-mvp/setup/structure.json (Claims and Rulebook as full-page tables, the lean Geo columns, Onboarding, the hub block).
 export const freshStructure = () => JSON.parse(readFileSync(join(REPO_ROOT, 'agents', 'claim-tagger-mvp', 'setup', 'structure.json'), 'utf8'));
+// The fresh structure as it is before `setup.mjs structure --options-from` has run: Geo Tags holds the option Debate only. The committed file holds the
+// tag names of the committed Geo pick, so a test of what --options-from does starts from this one, not from the file as it stands.
+export const freshStructureBeforeOptions = () => {
+  const s = freshStructure();
+  s.tables.claims.columns.find((c) => c.name === 'Geo Tags').options = ['Debate'];
+  return s;
+};
 
 /** A config for the tests: the one from before setup (fixtures/config.placeholder.json), tables still placeholders, no waiting between requests, a parent page that exists in the fake. */
 export function testConfig({ parent }) {

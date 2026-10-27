@@ -265,7 +265,10 @@
           "name": "Geo Tags",
           "type": "multi_select",
           "options": [
-            "Debate"
+            "Debate",
+            "Featured",
+            "Main claim",
+            "Top Debate"
           ],
           "description": "The claim's tags in Geo."
         },
