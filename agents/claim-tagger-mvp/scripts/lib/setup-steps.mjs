@@ -324,7 +324,9 @@ export function withLinkedSources(client, byGeoId, { column = 'Geo Sources', key
   };
 }
 
-const hrefsOf = (pieces) => [...new Set((pieces ?? []).map((p) => p?.href).filter(Boolean))].sort();
+// Notion adds the trailing slash that a bare origin's path gets (https://ai-2027.com comes back as https://ai-2027.com/), so addresses are compared as new URL() writes them; an address it cannot parse is kept as it is.
+const normalHref = (href) => { try { return new URL(href).href; } catch { return href; } };
+const hrefsOf = (pieces) => [...new Set((pieces ?? []).map((p) => p?.href).filter(Boolean).map(normalHref))].sort();
 
 /** The Geo IDs whose links mention a protected id (dashes ignored). The links go in beside the plan, so checkPlan's scan of the plan cannot see them. */
 export function protectedInLinks(config, byGeoId) {

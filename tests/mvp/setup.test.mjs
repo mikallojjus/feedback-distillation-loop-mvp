@@ -730,6 +730,28 @@ test('claims from a 200-row Geo pick: every row has its date, space, tags and so
   assert.match(bigger.err.join('\n'), /claims: row count - 200 rows in the Claims table, 201 in the pick/);
 });
 
+test('verify compares the links of Geo Sources as addresses: a bare origin that Notion hands back with its trailing slash is no difference, a really different link is', async () => {
+  const pick = makePick({ audit: readAuditFile() });
+  pick.rows[0].source_pieces[1].url = 'https://example.com'; // Notion stores a bare origin with the slash its path gets
+  const w = await filled({ pick });
+  const client = builderClient(w.fake);
+  const row = rowsOf(w, 'claims').find((x) => x['Geo ID'] === pick.rows[0]['Geo ID']);
+  const pieces = w.fake.rows(tableEntries(w.root).claims.database_id).find((p) => p.id === row.page_id).properties['Geo Sources'].rich_text;
+  assert.ok(pieces.some((t) => t.href === 'https://example.com'), 'the link was written as the pick has it');
+  // the same cell with only the address of one link changed
+  const relink = (change) => client.updatePage(row.page_id, { properties: { 'Geo Sources': { rich_text: pieces.map((t) => ({ type: 'text', text: { content: t.plain_text, link: t.href ? { url: change(t.href) } : null } })) } } });
+
+  await relink((href) => (href === 'https://example.com' ? 'https://example.com/' : href));
+  const slashed = await w.run(verifyArgs(w));
+  assert.equal(slashed.code, 0, slashed.text);
+  assert.doesNotMatch(slashed.text, /claims: links/);
+
+  await relink((href) => (href === 'https://example.com' ? 'https://example.org/' : href));
+  const different = await w.run(verifyArgs(w));
+  assert.equal(different.code, 2);
+  assert.match(different.err.join('\n'), new RegExp(`claims: links - ${pick.rows[0]['Geo ID']}: Geo Sources has 2 link\\(s\\) in Notion and 2 in the pick`));
+});
+
 test('setup verify with a hub block reads the hub title, the order of its body, the archive record and the protected ids back; it is clean only when the page is in order', async () => {
   const w = await filled();
   const ok = await w.run(verifyArgs(w));
