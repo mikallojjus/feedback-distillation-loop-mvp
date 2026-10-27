@@ -93,7 +93,7 @@ export function decide(input, root = AGENT_ROOT) {
   const toolInput = isObject(input?.tool_input) ? input.tool_input : {};
   const config = readJsonSafe(join(root, 'config.json')) ?? {};
   const protectedIds = new Set([...(config.notion?.protected_database_ids ?? []), ...(config.notion?.protected_page_ids ?? [])].map(normId));
-  // every list of config.editor_columns (claims_copy, rule_changes, agent_settings, whatever the config names) except the Status values
+  // every list of config.editor_columns (claims, rule_changes, agent_settings, whatever the config names) except the Status values
   const editorNames = Object.entries(isObject(config.editor_columns) ? config.editor_columns : {})
     .filter(([key, list]) => !key.endsWith('_status_editor_values') && Array.isArray(list))
     .flatMap(([, list]) => list.filter((n) => typeof n === 'string'));

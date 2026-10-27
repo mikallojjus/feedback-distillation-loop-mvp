@@ -102,9 +102,9 @@ function everyReportIsClean(w) {
 test('the whole loop: judge and propose fill the queue, an editor decides two rows, distill drafts a lesson, the editor approves it, promote makes it live and marks both rows Fixed', async () => {
   const w = await productionWorld();
   assert.equal(w.rows('rulebook').length, 13);
-  assert.equal(w.rows('claims_copy').length, 50);
+  assert.equal(w.rows('claims').length, 50);
   assert.equal(w.rows('tag_decisions').length, 10, 'the audit decisions are seeded as decided ledger rows');
-  assert.equal(w.rows('claims_copy').filter((c) => c['Review status'] === 'Reviewed').length, 10, 'and carried over to their claims');
+  assert.equal(w.rows('claims').filter((c) => c['Review status'] === 'Reviewed').length, 10, 'and carried over to their claims');
   assert.equal(w.rows('agent_settings').length, 1);
   const auditBefore = w.rows('tag_decisions').map((r) => JSON.stringify(r)).sort();
 
@@ -121,12 +121,12 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.deepEqual(w.claim(idOf(A1))['Agent tags'], ['Context-dependent']);
   assert.deepEqual([w.claim(idOf(U1))['Agent tags'], w.claim(idOf(U1))['Tags waiting'], w.claim(idOf(U1))['Agent status']], [[], ['Context-dependent'], 'Waits for you']);
   assert.match(w.claim(idOf(U1))['Agent remarks'], /^not checked: /);
-  for (const c of w.rows('claims_copy')) assert.ok(!('Agent notes' in c), 'the table has no Agent notes');
+  for (const c of w.rows('claims')) assert.ok(!('Agent notes' in c), 'the table has no Agent notes');
   const queueBefore = w.rows('tag_decisions').filter((r) => r['Tag outcome']).map((r) => JSON.stringify(r));
-  assert.equal(w.row('claims_copy', idOf(U1))['Agent confidence'], 0.5);
-  assert.equal(w.row('claims_copy', idOf(U1))['Agent reasons'], `Context-dependent: ${w.row('tag_decisions', keyOf(U1))['Agent reason']}`, 'the claim shows the reason the ledger holds');
-  assert.match(w.row('claims_copy', idOf(U1))['Agent reasons'], /^Context-dependent: Two readings\. · 2 of 2 runs agree$/);
-  assert.equal(w.row('claims_copy', idOf(A1))['Agent confidence'], 0.9);
+  assert.equal(w.row('claims', idOf(U1))['Agent confidence'], 0.5);
+  assert.equal(w.row('claims', idOf(U1))['Agent reasons'], `Context-dependent: ${w.row('tag_decisions', keyOf(U1))['Agent reason']}`, 'the claim shows the reason the ledger holds');
+  assert.match(w.row('claims', idOf(U1))['Agent reasons'], /^Context-dependent: Two readings\. · 2 of 2 runs agree$/);
+  assert.equal(w.row('claims', idOf(A1))['Agent confidence'], 0.9);
   assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'].startsWith('Tag · '), true);
 
   // the editor decides two claims in Your queue: Rule unclear, naming rule 4
@@ -161,7 +161,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
     ['Earlier decisions', '9 of 9 still right', ''],
     ['Your 2 rows', '2 of 2 now right, marked Fixed', ''],
   ]);
-  assert.equal(passed.report.next, `Next: decide your two claims in Your queue (https://www.notion.so/${w.DB.claims_copy}?v=e3000000000000000000000000000001).`);
+  assert.equal(passed.report.next, `Next: decide your two claims in Your queue (https://www.notion.so/${w.DB.claims}?v=e3000000000000000000000000000001).`);
   assert.equal(w.row('rule_changes', TITLE).Status, 'Live');
   assert.equal(w.row('rule_changes', TITLE)['Safety check result'], 'PASS: examples 11/11, earlier 9/9, yours 2/2');
   assert.equal(w.row('rulebook', 'Context-dependent')['When to use'].split('\n')[3], `4. ${NEW_TEXT}`);
@@ -188,7 +188,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(again.exit, 0, again.markdown);
   assert.equal(again.report.sentence, 'Tag: the agent read 50 claims for Context-dependent; 2 wait for you.');
   assert.equal(w.row('tag_decisions', keyOf(U3))['Rulebook edition'], '2026-10-16.2');
-  assert.equal(w.row('claims_copy', idOf(U3))['Agent edition'], '2026-10-16.2');
+  assert.equal(w.row('claims', idOf(U3))['Agent edition'], '2026-10-16.2');
 
   // status
   const h5 = w.hooks();
@@ -260,11 +260,11 @@ test('the FAIL branch: a candidate that turns an example claim the wrong way lea
 });
 
 test('the column guard: tables that the setup build has not given the columns of the reading of 22 October stop every writing script with exit 2, a report that asks for the build, and no write; with the columns they run', async () => {
-  const claimsWithout = (...names) => Object.fromEntries(Object.entries(TABLE_SPECS.claims_copy).filter(([name]) => !names.includes(name)));
+  const claimsWithout = (...names) => Object.fromEntries(Object.entries(TABLE_SPECS.claims).filter(([name]) => !names.includes(name)));
   const ledgerWithout = (...names) => Object.fromEntries(Object.entries(TABLE_SPECS.tag_decisions).filter(([name]) => !names.includes(name)));
   const labels = { propose: 'Tag', distill: 'Distill', promote: 'Promote', followup: 'Follow-up', status: 'Status' };
   const cases = [
-    ['the Claims table lacks Agent reading', { claims_copy: claimsWithout('Agent reading') }, /Agent reading \(missing\)/],
+    ['the Claims table lacks Agent reading', { claims: claimsWithout('Agent reading') }, /Agent reading \(missing\)/],
     ['Tag decisions lacks the four columns', { tag_decisions: ledgerWithout('Agent reading', 'Rule', 'Reading note', 'Read under') }, /Tag decisions: Agent reading \(missing\), Tag decisions: Rule \(missing\), Tag decisions: Reading note \(missing\), Tag decisions: Read under \(missing\)/],
     ['Tag decisions lacks Read under only', { tag_decisions: ledgerWithout('Read under') }, /Tag decisions: Read under \(missing\)/],
     ['Agent reading is a select on the ledger and text on the claims, as it should be: a wrong type is named', { tag_decisions: { ...TABLE_SPECS.tag_decisions, 'Agent reading': 'rich_text' } }, /Tag decisions: Agent reading \(rich_text, not select\)/],
@@ -286,7 +286,7 @@ test('the column guard: tables that the setup build has not given the columns of
   }
 
   // the columns of the revision of 21 October and of the reading missing together: one stop, both named
-  const both = await makeWorld({ claims: 3, tableSpecs: { claims_copy: { ...claimsWithout('Agent reading'), 'Agent tags': 'rich_text' } } });
+  const both = await makeWorld({ claims: 3, tableSpecs: { claims: { ...claimsWithout('Agent reading'), 'Agent tags': 'rich_text' } } });
   const hb = both.hooks();
   const rb = await distill(hb);
   assert.equal(rb.exit, 2);

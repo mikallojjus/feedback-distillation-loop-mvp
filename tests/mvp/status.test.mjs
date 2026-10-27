@@ -77,7 +77,7 @@ test('status, rows and a rule change wait: both counted in the sentence, Next po
   assert.deepEqual(report.rows[2], ['Lessons waiting', '1 rule change to approve', '']);
   assert.deepEqual(report.rows[3], ['Last run', 'none yet', '']);
   assert.match(report.next, /^Next: decide your three claims in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/);
-  assert.ok(report.next.includes(w.DB.claims_copy), 'Your queue is a view of the Claims copy');
+  assert.ok(report.next.includes(w.DB.claims), 'Your queue is a view of the Claims copy');
 });
 
 test('status counts a claim by its Agent status: Done and a Reviewed claim do not wait, Waits for you does', async () => {
@@ -194,7 +194,7 @@ test('status --json prints the counts as JSON instead of the report, after the r
   assert.equal(h.io.outs.length, 1);
   const json = JSON.parse(h.io.outs[0]);
   assert.deepEqual(json.queue, { open: 2, decided: 1, decided_listed: 0, to_read: 1, pending_rule_decisions: 0, needs_note: 1, sitting_rows: 20, more_than_a_sitting: false }, 'the three counts of the decisions made are under queue');
-  assert.match(json.table, new RegExp(w.DB.claims_copy), 'the table the counts are about is the Claims copy');
+  assert.match(json.table, new RegExp(w.DB.claims), 'the table the counts are about is the Claims copy');
   assert.deepEqual(json.lessons, { Proposed: 1, Approved: 0, Rejected: 0, Live: 1, 'Rolled back': 0 });
   assert.deepEqual([json.edition, json.tags, json.same_as_notion, json.paused], ['2026-10-16.1', 13, true, false]);
   assert.ok(readJson(join(r.runDir, 'report.json')).sentence.startsWith('Status: nothing is paused; 2 rows and 1 rule change wait'));

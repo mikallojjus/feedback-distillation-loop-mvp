@@ -267,7 +267,7 @@ export async function promote(opts = {}) {
     resume: resumeLine('promote', [...(opts.lesson ? ['--lesson', opts.lesson] : []), ...(opts.driver === 'fake' ? ['--driver', 'fake'] : [])]),
   }, async (ctx) => {
     await takePull(ctx);
-    needTables(ctx, 'rulebook', 'rule_changes', 'tag_decisions', 'claims_copy');
+    needTables(ctx, 'rulebook', 'rule_changes', 'tag_decisions', 'claims');
     runPreflight(ctx);
     needClaimColumns(ctx);
     const live = liveRubric(ctx);

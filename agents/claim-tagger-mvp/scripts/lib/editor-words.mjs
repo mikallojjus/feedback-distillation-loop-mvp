@@ -13,7 +13,7 @@
 //   stampOf(date)                     -> "15 Oct 11:20" (local time): the date part of a Last run summary
 //   answerWord(decision)              -> Applies / Does not apply / Can't tell for apply / do_not_apply / ask_editor
 //   notionUrl(id, title?)             -> https://www.notion.so/<the 32 hex digits>; with a title the form Notion itself gives a page: https://app.notion.com/p/<the title's words joined by dashes>-<the 32 hex digits>
-//   tableLink(config, table)          -> the link to a table of the agent (rulebook, claims_copy, tag_decisions, rule_changes, agent_settings)
+//   tableLink(config, table)          -> the link to a table of the agent (rulebook, claims, tag_decisions, rule_changes, agent_settings)
 //   viewLink(config, name)            -> the link to a view: your_queue, needs_your_note, agent_disagreed (all three on the Claims copy), your_queue_ledger,
 //                                        needs_your_note_ledger (the two old views of Tag decisions), lessons_waiting or rulebook. config.notion.views.<name>
 //                                        may hold a view id, a link, or { id, url }; without it the link is the table's own
@@ -104,7 +104,7 @@ export function notionUrl(id, title = null) {
 }
 
 const VIEW_TABLE = Object.freeze({
-  your_queue: 'claims_copy', needs_your_note: 'claims_copy', agent_disagreed: 'claims_copy',
+  your_queue: 'claims', needs_your_note: 'claims', agent_disagreed: 'claims',
   your_queue_ledger: 'tag_decisions', needs_your_note_ledger: 'tag_decisions', lessons_waiting: 'rule_changes', rulebook: 'rulebook',
 });
 

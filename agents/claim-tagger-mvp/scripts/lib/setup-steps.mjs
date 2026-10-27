@@ -489,9 +489,9 @@ export async function stepRulebook(ctx, { from } = {}) {
 export async function stepClaims(ctx, { from } = {}) {
   const { root, config } = ctx;
   const pick = readPick(from ?? defaultPath(root, 'claims-pick.json'));
-  const entry = tableEntry(config, 'claims_copy');
+  const entry = tableEntry(config, 'claims');
   // the agent's columns (Agent reading among them) and the editor's three stay empty: a picked row carries the real table's own Review status, notes and relation to the taxonomy, none of which is copied
-  const ops = claimOps(pick, columnsOf(root, 'claims_copy'), { keyColumn: entry.key, skip: [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims_copy')] });
+  const ops = claimOps(pick, columnsOf(root, 'claims'), { keyColumn: entry.key, skip: [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims')] });
   const sourcesColumn = entry.columns?.sources ?? 'Geo Sources';
   const byGeoId = new Map();
   for (const row of pick.rows) if (hrefsOf(row.source_pieces).length) byGeoId.set(row[entry.key], row.source_pieces);
@@ -499,7 +499,7 @@ export async function stepClaims(ctx, { from } = {}) {
   if (inLinks.length) throw new InputError(`the links of Geo Sources of ${inLinks.length} claim(s) (${inLinks.slice(0, 3).join(', ')}) point at a protected table or page; protected ids are never written`);
   writeJsonPretty(join(ctx.run.dir, 'rich-text.json'), Object.fromEntries([...byGeoId].map(([id, pieces]) => [id, pieces])));
   const wrap = (client) => withLinkedSources(client, byGeoId, { column: sourcesColumn, keyColumn: entry.key, onWarning: ctx.warn });
-  const done = await createRows(ctx, { table: 'claims_copy', label: 'claims', ops, wrap });
+  const done = await createRows(ctx, { table: 'claims', label: 'claims', ops, wrap });
   const file = defaultPath(root, 'claims-pages.json');
   if (Object.keys(done.pages).length) writePagesFile(file, { ...readJsonOr(file, {}), ...done.pages });
   return done;
@@ -592,8 +592,8 @@ export function migrationOps(claims, ledger, tagPages, columns) {
  */
 export async function stepMigrateDecisions(ctx) {
   const { root, config } = ctx;
-  const entry = tableEntry(config, 'claims_copy');
-  const ready = await readyPull(ctx, ['claims_copy', 'tag_decisions', 'rulebook']);
+  const entry = tableEntry(config, 'claims');
+  const ready = await readyPull(ctx, ['claims', 'tag_decisions', 'rulebook']);
   if (ready.stop) return { code: ready.stop.code, lines: [], errors: ready.stop.lines };
   const tagPages = {};
   const rulebookKey = tableEntry(config, 'rulebook').key;
@@ -603,7 +603,7 @@ export async function stepMigrateDecisions(ctx) {
   };
   const { claimOps, ledgerOps, summary } = migrationOps(ready.loaded.claims() ?? [], ready.loaded.queue() ?? [], tagPages, columns);
   if (summary.carried > 0) ctx.run.update({ note: AUDIT_NOTE });
-  const unknown = unknownOptions(root, 'claims_copy', claimOps);
+  const unknown = unknownOptions(root, 'claims', claimOps);
   if (unknown.length) {
     return { code: EXIT.INVALID, lines: [], errors: ['migrate-decisions: nothing was written, because Notion would add options that the approved structure does not have:', ...unknown.map((u) => `  ${u}`)] };
   }
@@ -618,7 +618,7 @@ export async function stepMigrateDecisions(ctx) {
   }
 
   const plan = newPlan({ runId: ctx.run.id, script: 'setup.mjs', rubricEdition: readRubric(root)?.edition ?? null, config, now: ctx.now });
-  for (const op of claimOps) plan.update('claims_copy', op.key, op.page_id, op.properties, op.expect ? { expect: op.expect } : {});
+  for (const op of claimOps) plan.update('claims', op.key, op.page_id, op.properties, op.expect ? { expect: op.expect } : {});
   for (const op of ledgerOps) plan.update('tag_decisions', op.key, op.page_id, op.properties);
   const checked = checkPlan(plan, config, { setup: true, root });
   if (!checked.ok) return { code: EXIT.INVALID, lines: [], errors: ['the plan was refused and nothing was sent:', ...checked.problems.map((p) => `  ${p}`)] };
@@ -779,28 +779,28 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
     for (const name of byName.keys()) if (!taxonomy.rows.some((r) => r.Name === name)) add('rulebook', 'extra row', `"${name}" is in the Rulebook copy but not in the taxonomy file`);
   }
 
-  const pick = loadChecked(add, 'claims_copy', 'the claims pick', () => readPick(claimsFile ?? defaultPath(root, 'claims-pick.json')));
-  if (pick && data.claims_copy) {
-    const { ds, rows } = data.claims_copy;
-    const entry = tableEntry(config, 'claims_copy');
+  const pick = loadChecked(add, 'claims', 'the claims pick', () => readPick(claimsFile ?? defaultPath(root, 'claims-pick.json')));
+  if (pick && data.claims) {
+    const { ds, rows } = data.claims;
+    const entry = tableEntry(config, 'claims');
     const byId = new Map(rows.map((r) => [text(r.props[entry.key]).trim(), r]));
     const wantIds = pick.rows.map((r) => r[entry.key]);
-    if (rows.length !== pick.rows.length) add('claims_copy', 'row count', `${rows.length} rows in the Claims copy, ${pick.rows.length} in the pick`);
-    for (const id of wantIds) if (!byId.has(id)) add('claims_copy', 'missing row', `the claim ${id} is not in the Claims copy`);
-    for (const id of byId.keys()) if (!wantIds.includes(id)) add('claims_copy', 'extra row', `the claim ${id} is in the Claims copy but not in the pick`);
-    const notGeo = [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims_copy')];
-    const geoColumns = columnsOf(root, 'claims_copy').filter((c) => !notGeo.includes(c) && c !== entry.key);
+    if (rows.length !== pick.rows.length) add('claims', 'row count', `${rows.length} rows in the Claims copy, ${pick.rows.length} in the pick`);
+    for (const id of wantIds) if (!byId.has(id)) add('claims', 'missing row', `the claim ${id} is not in the Claims copy`);
+    for (const id of byId.keys()) if (!wantIds.includes(id)) add('claims', 'extra row', `the claim ${id} is in the Claims copy but not in the pick`);
+    const notGeo = [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims')];
+    const geoColumns = columnsOf(root, 'claims').filter((c) => !notGeo.includes(c) && c !== entry.key);
     for (const want of pick.rows) {
       const got = byId.get(want[entry.key]);
       if (!got) continue;
       for (const column of geoColumns) {
         if (!Object.hasOwn(want, column) || !ds.properties?.[column]) continue;
         const expected = typeof want[column] === 'boolean' || typeof want[column] === 'number' ? want[column] : filled(want[column]);
-        if (!sameField(ds, column, expected, got.props[column])) add('claims_copy', 'field', `${want[entry.key]}: ${column} differs (pick ${short(want[column] ?? null)}, Notion ${short(got.props[column] ?? null)})`);
+        if (!sameField(ds, column, expected, got.props[column])) add('claims', 'field', `${want[entry.key]}: ${column} differs (pick ${short(want[column] ?? null)}, Notion ${short(got.props[column] ?? null)})`);
       }
       const wantLinks = hrefsOf(want.source_pieces);
       const gotLinks = hrefsOf(richTextPieces(got.page.properties?.[entry.columns?.sources ?? 'Geo Sources']?.rich_text));
-      if (JSON.stringify(wantLinks) !== JSON.stringify(gotLinks)) add('claims_copy', 'links', `${want[entry.key]}: Geo Sources has ${gotLinks.length} link(s) in Notion and ${wantLinks.length} in the pick`);
+      if (JSON.stringify(wantLinks) !== JSON.stringify(gotLinks)) add('claims', 'links', `${want[entry.key]}: Geo Sources has ${gotLinks.length} link(s) in Notion and ${wantLinks.length} in the pick`);
     }
   }
 
@@ -828,24 +828,24 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
   }
 
   // the audit's decisions on the claims themselves (migrate-decisions): Reviewed, the Applies tags in the relation, the audit prefix in the notes
-  if (audit && data.claims_copy) {
-    const entry = tableEntry(config, 'claims_copy');
+  if (audit && data.claims) {
+    const entry = tableEntry(config, 'claims');
     const rulebookKey = tableEntry(config, 'rulebook').key;
     const names = new Map((data.rulebook?.rows ?? []).map((r) => [normId(r.page_id), text(r.props[rulebookKey]).trim()]));
-    const byId = new Map(data.claims_copy.rows.map((r) => [text(r.props[entry.key]).trim(), r]));
+    const byId = new Map(data.claims.rows.map((r) => [text(r.props[entry.key]).trim(), r]));
     for (const d of audit.decisions) {
       const got = byId.get(d.geo_id);
       if (!got) continue; // the missing claim is reported above
       const p = got.props;
       const here = `${d.geo_id}`;
       if (text(p[entry.columns.review_status]) !== 'Reviewed') {
-        add('claims_copy', 'migrated decision', `${here}: Review status is ${short(p[entry.columns.review_status] ?? null)}, not "Reviewed"; run "setup.mjs migrate-decisions"`);
+        add('claims', 'migrated decision', `${here}: Review status is ${short(p[entry.columns.review_status] ?? null)}, not "Reviewed"; run "setup.mjs migrate-decisions"`);
         continue;
       }
       const tags = (p[entry.columns.verified] ?? []).map((id) => names.get(normId(id)) ?? id).sort();
       const wantTags = d.outcome === 'Applies' ? [TAG] : [];
-      if (JSON.stringify(tags) !== JSON.stringify(wantTags)) add('claims_copy', 'migrated decision', `${here}: ${entry.columns.verified} holds ${short(tags)}, the audit decided ${short(wantTags)}`);
-      if (!text(p[entry.columns.notes]).startsWith(AUDIT_PREFIX)) add('claims_copy', 'migrated decision', `${here}: ${entry.columns.notes} does not start with "${AUDIT_PREFIX}"`);
+      if (JSON.stringify(tags) !== JSON.stringify(wantTags)) add('claims', 'migrated decision', `${here}: ${entry.columns.verified} holds ${short(tags)}, the audit decided ${short(wantTags)}`);
+      if (!text(p[entry.columns.notes]).startsWith(AUDIT_PREFIX)) add('claims', 'migrated decision', `${here}: ${entry.columns.notes} does not start with "${AUDIT_PREFIX}"`);
     }
   }
 

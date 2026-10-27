@@ -44,7 +44,7 @@ export const PICK = JSON.parse(readFileSync(join(codeRoot(), 'setup', 'claims-pi
 
 export const DB = {
   rulebook: 'c3000000000000000000000000000001',
-  claims_copy: 'c3000000000000000000000000000002',
+  claims: 'c3000000000000000000000000000002',
   tag_decisions: 'c3000000000000000000000000000003',
   rule_changes: 'c3000000000000000000000000000004',
   agent_settings: 'c3000000000000000000000000000005',
@@ -150,7 +150,7 @@ export async function makeWorld({
   }
   const config = builtConfig(); // the config of fixtures/config.placeholder.json with ids filled in, never the live config.json
   config.notion.requests_per_second = 1000;
-  const entries = { rulebook: config.notion.rulebook, claims_copy: config.notion.claims[0], ...config.notion.databases };
+  const entries = { rulebook: config.notion.rulebook, claims: config.notion.claims, ...config.notion.databases };
   Object.keys(DB).forEach((table, i) => {
     entries[table].database_id = DB[table];
     entries[table].data_source_id = `c400000000000000000000000000000${i + 1}`;
@@ -179,7 +179,7 @@ export async function makeWorld({
     ? PICK.rows.map((r) => ({ id: r['Geo ID'], text: r['Geo Name'], url: r['Geo URL'], sources: r['Geo Sources'], factual: r['Geo Is factual'] === true }))
     : (Array.isArray(claims) ? claims : Array.from({ length: claims }, (_, i) => ({ id: claimId(i + 1), text: claimText(i + 1) })));
   for (const c of claimList) {
-    ids.claim[c.id] = fake.addRow(DB.claims_copy, {
+    ids.claim[c.id] = fake.addRow(DB.claims, {
       'Geo Name': c.text, 'Geo ID': c.id, 'Geo URL': c.url ?? `https://www.geobrowser.io/space/s/${c.id}`, 'Geo Sources': c.sources ?? '', 'Geo Is factual': c.factual ?? false,
     });
   }
@@ -273,14 +273,14 @@ export async function makeWorld({
     }),
     rows: (table) => fake.plainRows(DB[table]),
     claim(geoId) {
-      const row = fake.plainRows(DB.claims_copy).find((r) => r['Geo ID'] === geoId);
+      const row = fake.plainRows(DB.claims).find((r) => r['Geo ID'] === geoId);
       if (!row) return null;
       const byPage = new Map(Object.entries(ids.tag).map(([name, id]) => [String(id).replace(/-/g, '').toLowerCase(), name]));
       const named = (list) => (list ?? []).map((id) => byPage.get(String(id).replace(/-/g, '').toLowerCase()) ?? id).sort();
       return { ...row, 'Agent tags': named(row['Agent tags']), 'Tags waiting': named(row['Tags waiting']), 'Verified tags': named(row['Verified tags']) };
     },
     row(table, key) {
-      const keyColumn = { rulebook: 'Name', claims_copy: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name' }[table];
+      const keyColumn = { rulebook: 'Name', claims: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name' }[table];
       return fake.plainRows(DB[table]).find((r) => r[keyColumn] === key) ?? null;
     },
     rubric: () => readRubric(root),

@@ -4,7 +4,7 @@
 // PATCH only (lib/notion-rest.mjs), and every id the builder learns is recorded at once (runs/builder/*.json and config.json), so a run that
 // stops halfway is finished by running it again.
 //
-//   structureFromProposal(markdown)            -> { tables: { rulebook|claims_copy|tag_decisions|rule_changes|agent_settings: { title, columns: [{ name, type, options, description, relation_to?, renamed_from?, retired? }], arrange_default_view? } },
+//   structureFromProposal(markdown)            -> { tables: { rulebook|claims|tag_decisions|rule_changes|agent_settings: { title, columns: [{ name, type, options, description, relation_to?, renamed_from?, retired? }], arrange_default_view? } },
 //                                                   views: [{ name, table, filter, sort, columns, wrap, renamed_from? }], pages: ["Demos", "Demo tests"] }
 //                                                  Throws StructureError (exit 2) naming the table and column when a type word is unknown, a table
 //                                                  section or a "Values:" list is missing, or a view cannot be read. (The approved text of the proposal has no relation
@@ -40,7 +40,7 @@
 // `arrange_default_view` (the Claims copy) include the views the structure does not name, Notion's own default view: they get the column order of the structure, every column
 // visible and the retired ones hidden, and nothing else of theirs is changed.
 //
-// Where the ids go. Pages: config.json notion.pages.<key> (demos, demo_tests) and runs/builder/pages.json. Tables: notion.rulebook, notion.claims[0],
+// Where the ids go. Pages: config.json notion.pages.<key> (demos, demo_tests) and runs/builder/pages.json. Tables: notion.rulebook, notion.claims,
 // notion.databases.<table> (database_id, data_source_id) and runs/builder/databases.json (the table's id and its data source's, under <table> and
 // <table>_data_source). Views: config.json notion.views.<key> = { id, url } for each view that exists (your_queue, needs_your_note, agent_disagreed, your_queue_ledger,
 // needs_your_note_ledger, lessons_waiting, rulebook); the key is left out for a view that could not be made, so the scripts fall back to the table's address. runs/builder/state.json keeps
@@ -68,7 +68,7 @@ export class StructureError extends Error {
 }
 
 export const SECTION_TITLES = Object.freeze({
-  rulebook: 'Rulebook copy', claims_copy: 'Claims copy', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings',
+  rulebook: 'Rulebook copy', claims: 'Claims copy', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings',
 });
 
 /** The type words of the proposal's column tables and the REST property types they stand for. */
@@ -106,7 +106,7 @@ export const OPTION_COLORS = Object.freeze({
     Status: { Verified: 'green', Proposed: 'yellow' },
     'Work tags': { 'Pipeline benchmark check': 'gray', Issue: 'orange' },
   },
-  claims_copy: {
+  claims: {
     'Geo Name source': { 'This space': 'green', 'Other space (fallback)': 'orange' },
     'Review status': { 'To review': 'yellow', Reviewed: 'green' },
     'Agent status': { 'Waits for you': 'yellow', Done: 'green', 'Disagrees with your decision': 'red', 'Could not read': 'gray' },

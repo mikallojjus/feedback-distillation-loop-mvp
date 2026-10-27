@@ -36,7 +36,7 @@ const header = definition(plan, 'headerLine');
 const op = definition(plan, 'op');
 const headerLine = () => ({ plan: { run_id: '20261016T090000Z-tag', script: 'propose', created_at: '2026-10-16T09:00:00.000Z', rubric_edition: '2026-10-16.1', counts: { creates: 2, updates: 1 } } });
 const create = (over = {}) => ({ op: 'create', table: 'tag_decisions', key: 'g1::Context-dependent', properties: { Claim: 'He said it.', Key: 'g1::Context-dependent', 'Agent confidence': 0.62, Tag: 'Context-dependent' }, ...over });
-const update = (over = {}) => ({ op: 'update', table: 'claims_copy', key: 'g1', page_id: '0a9e0000-0000-4000-8000-000000000001', properties: { 'Agent tags': 'Context-dependent' }, expect: { 'Agent tags': '' }, ...over });
+const update = (over = {}) => ({ op: 'update', table: 'claims', key: 'g1', page_id: '0a9e0000-0000-4000-8000-000000000001', properties: { 'Agent tags': 'Context-dependent' }, expect: { 'Agent tags': '' }, ...over });
 
 test('plan: the header line', () => {
   ok(header, headerLine());
@@ -56,7 +56,7 @@ test('plan: a create op and an update op', () => {
   ok(op, create({ expect: { Key: '' }, children: [{ type: 'paragraph', paragraph: { rich_text: [] } }] }));
   ok(op, update());
   ok(op, update({ expect: undefined, children: [] }));
-  for (const table of ['tag_decisions', 'rule_changes', 'agent_settings', 'rulebook', 'claims_copy']) ok(op, create({ table }), table);
+  for (const table of ['tag_decisions', 'rule_changes', 'agent_settings', 'rulebook', 'claims']) ok(op, create({ table }), table);
   bad(op, create({ table: 'runs' }), /does not match any of the 2 allowed schemas/);
   bad(op, update({ page_id: undefined }), /does not match any of the 2 allowed schemas/, 'an update needs the page');
   bad(op, create({ page_id: '0a9e0000-0000-4000-8000-000000000001' }), /does not match any of the 2 allowed schemas/, 'a create has no page yet');
@@ -250,7 +250,7 @@ test('report: the parts of report.json', () => {
 
 const claimRow = load('claim-row');
 const claimOf = (over = {}) => ({
-  table: 'claims_copy', geo_id: 'g1', page_id: '0a9e0000-0000-4000-8000-000000000001', notion_url: 'https://www.notion.so/x', claim: 'The AI Force should enforce binding safety standards',
+  table: 'claims', geo_id: 'g1', page_id: '0a9e0000-0000-4000-8000-000000000001', notion_url: 'https://www.notion.so/x', claim: 'The AI Force should enforce binding safety standards',
   geo_url: null, sources_text: '', source_links: [], is_factual: false, agent_tags: [], agent_status: 'Waits for you', tags_waiting: ['Context-dependent'], agent_confidence: 0.65,
   agent_reasons: "Context-dependent: Two rules pull apart. · 2 of 2 runs agree", agent_edition: '2026-10-16.1', agent_remarks: '', agent_reading: '', verified_tags: [], review_status: null,
   challenged_notes: '', last_edited: '2026-10-16T09:00:00.000Z', ...over,

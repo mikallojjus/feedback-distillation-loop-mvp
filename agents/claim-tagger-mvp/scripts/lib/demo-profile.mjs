@@ -26,6 +26,7 @@
 //   demosDir / demoDir / listDemos / pickDemo  -> the demos under <root>/runs/demos; pickDemo is the page a command acts on (the one named, else the
 //                                                 newest finished page under the Demos sub-page whose profile the loader can read)
 //   profileProblem(found)                      -> why the current loader cannot read a demo's profile (an older manifest shape, a missing or changed copy), else null
+//   olderShapeProblem(dir, id)                 -> the one plain line for a practice page made before there was one claims table (P5: notion.claims was a list), else null
 //   constants: PRACTICE_TITLES, VIEW_NAMES, LINKED_VIEWS, TAB_VIEWS, FALLBACK_TEXT, CONTENT_TYPES
 
 import { createHash, randomBytes } from 'node:crypto';
@@ -45,26 +46,26 @@ import { buildRubric } from './rubric.mjs';
 
 /** The titles of the five tables on a practice page (decision 28): no "copy" in the name. */
 export const PRACTICE_TITLES = Object.freeze({
-  rulebook: 'Rulebook', claims_copy: 'Claims', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings',
+  rulebook: 'Rulebook', claims: 'Claims', tag_decisions: 'Tag decisions', rule_changes: 'Rule changes', agent_settings: 'Agent settings',
 });
 /** The five view names of the page (production's), by their config key. The two views of the ledger (Tag decisions) are not on a practice page. */
 export const VIEW_NAMES = Object.freeze({
   your_queue: 'Your queue', needs_your_note: 'Needs your note', agent_disagreed: 'Agent disagreed', lessons_waiting: 'Lessons waiting', rulebook: 'Rulebook',
 });
 /** The two linked views: placed inside a step, a view of this table. */
-export const LINKED_VIEWS = Object.freeze({ your_queue: 'claims_copy', lessons_waiting: 'rule_changes' });
+export const LINKED_VIEWS = Object.freeze({ your_queue: 'claims', lessons_waiting: 'rule_changes' });
 /** The three views that are tabs of their table; `position` is where the tab goes (the table's own first view stays first for the Claims). */
 export const TAB_VIEWS = Object.freeze({
   rulebook: { table: 'rulebook', position: 'start' },
-  needs_your_note: { table: 'claims_copy', position: 'end' },
-  agent_disagreed: { table: 'claims_copy', position: 'end' },
+  needs_your_note: { table: 'claims', position: 'end' },
+  agent_disagreed: { table: 'claims', position: 'end' },
 });
 /** What stands in a step where its linked view could not be made. */
 export const FALLBACK_TEXT = Object.freeze({
   your_queue: 'Scroll to Claims in the tables further down this page; your four claims are the ones whose Review status is To review.',
   lessons_waiting: 'Scroll to Rule changes at the bottom of this page and open the row with Status Proposed.',
 });
-/** The editor's three columns of a claim (the names of the production Claims copy; config.json editor_columns.claims_copy lists the same three). Why wrong left the editor's work (decision P4). */
+/** The editor's three columns of a claim (the names of the production Claims copy; config.json editor_columns.claims lists the same three). Why wrong left the editor's work (decision P4). */
 export const CLAIM_COLUMNS = Object.freeze({
   verified: 'Verified tags', review_status: 'Review status', notes: 'Challenged tags notes',
 });
@@ -293,20 +294,20 @@ const PLACEHOLDER = '<setup>';
 export function buildDemoConfig(production, { demoId, title, parentId, tag }) {
   const cfg = structuredClone(production);
   const n = cfg.notion;
-  const own = [n.rulebook, ...(n.claims ?? []), ...Object.values(n.databases ?? {})].flatMap((t) => [t?.database_id, t?.data_source_id]).filter(isRealId);
+  const own = [n.rulebook, n.claims, ...Object.values(n.databases ?? {})].flatMap((t) => [t?.database_id, t?.data_source_id]).filter(isRealId);
   cfg.demo = true;
   cfg.demo_id = demoId;
   cfg.demo_title = title;
-  const productionClaims = (n.claims ?? []).find((c) => c.enabled === true) ?? n.claims[0];
+  const productionClaims = n.claims;
   // the production page is listed as a page and, since a reader may look in either list, as a protected id there too
   n.protected_database_ids = [...new Set([...(n.protected_database_ids ?? []), ...own, production.notion.parent_page_id])].filter(Boolean);
   n.protected_page_ids = [...new Set([...(n.protected_page_ids ?? []), production.notion.parent_page_id])].filter(Boolean);
   n.pages = { proposal: '<none>', demos: '<none>', demo_tests: '<none>' };
   n.rulebook = { database_id: PLACEHOLDER, data_source_id: PLACEHOLDER, key: production.notion.rulebook.key, work_tag: production.notion.rulebook.work_tag };
-  n.claims = [{
-    name: 'demo_claims', label: 'Claims', enabled: true, database_id: PLACEHOLDER, data_source_id: PLACEHOLDER, key: productionClaims.key,
+  n.claims = {
+    label: 'Claims', database_id: PLACEHOLDER, data_source_id: PLACEHOLDER, key: productionClaims.key,
     columns: { ...productionClaims.columns }, write_columns: { ...productionClaims.write_columns },
-  }];
+  };
   n.databases = Object.fromEntries(Object.entries(production.notion.databases).map(([k, v]) => [k, { database_id: PLACEHOLDER, data_source_id: PLACEHOLDER, key: v.key }]));
   n.views = {};
   n.parent_page_id = parentId;
@@ -319,7 +320,7 @@ export function buildDemoConfig(production, { demoId, title, parentId, tag }) {
 
 /** The ids of the five tables go into the demo's config (database and data source) as soon as they are known. */
 export function setTableIds(config, table, { database_id: databaseId, data_source_id: dataSourceId }) {
-  const entry = table === 'rulebook' ? config.notion.rulebook : table === 'claims_copy' ? config.notion.claims[0] : config.notion.databases[table];
+  const entry = table === 'rulebook' ? config.notion.rulebook : table === 'claims' ? config.notion.claims : config.notion.databases[table];
   entry.database_id = hex32(databaseId);
   entry.data_source_id = hex32(dataSourceId);
 }
@@ -679,6 +680,22 @@ export function listDemos(root) {
 }
 
 /**
+ * A practice page made before there was one claims table (decision P5) has `notion.claims` as a list of tables (and `editor_columns.claims_copy`) in its config.json, which
+ * this build does not read. Returns the one plain line that says so (the practice page is of an older shape), or null for any other config, a missing one included: the
+ * loader names that problem itself. It reads the file as it is, because loadConfig would refuse the old shape with a long list of every difference.
+ */
+export function olderShapeProblem(dir, id) {
+  let config;
+  try {
+    config = readJson(join(dir, 'config.json'));
+  } catch {
+    return null;
+  }
+  const older = Array.isArray(config?.notion?.claims) || (isPlain(config?.editor_columns) && Object.hasOwn(config.editor_columns, 'claims_copy'));
+  return older ? `the practice page ${id} is of an older shape (it was made when the claims were a list of tables), so this build cannot read it; ask for a new practice page` : null;
+}
+
+/**
  * Why the current loader cannot read a demo's profile, or null when it can: its config.json is not that of a demo profile of that name, the copy of the manifest
  * or the page template is missing, or has a shape this build does not read (the pages of 15 October have the older manifest), or its structure or page model does
  * not load. The same files and order as `loadDemoContext` in scripts/walkthrough.mjs, but returning the first problem instead of throwing. A copy that reads but is
@@ -687,6 +704,8 @@ export function listDemos(root) {
  */
 export function profileProblem({ id, dir, demo }) {
   try {
+    const older = olderShapeProblem(dir, id);
+    if (older) return older;
     const config = loadConfig(dir);
     if (config.demo !== true || config.demo_id !== id) return 'its config.json is not the profile of a practice page of that name';
     const manifestFile = join(dir, 'walkthrough', 'manifest.json');

@@ -20,7 +20,7 @@ export const TABLE_SPECS = Object.freeze({
     Name: 'title', Category: 'select', Counterpart: 'rich_text', Description: 'rich_text', Evidence: 'url', 'Example Claims': 'rich_text',
     'Geo Status': 'select', 'Geo Tag ID': 'rich_text', Polarity: 'select', Status: 'select', 'Verified on': 'date', 'When to use': 'rich_text', 'Work tags': 'multi_select',
   },
-  claims_copy: {
+  claims: {
     'Geo Name': 'title', 'Geo ID': 'rich_text', 'Geo URL': 'url', 'Geo Sources': 'rich_text', 'Geo Tags': 'multi_select', 'Geo Topics': 'rich_text', 'Geo Score': 'number',
     'Geo Supporting arguments': 'rich_text', 'Geo Opposing arguments': 'rich_text', 'Geo Related people': 'rich_text', 'Geo Related projects': 'rich_text',
     'Geo Is factual': 'checkbox', 'Geo Name source': 'select', 'Agent tags': { type: 'relation' }, 'Agent confidence': 'number', 'Agent reasons': 'rich_text',

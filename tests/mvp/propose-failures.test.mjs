@@ -138,7 +138,7 @@ test('two judged tags in two groups: each has its own cells, its own row for an 
   const r = await propose(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assert.deepEqual(w.rows('tag_decisions').map((x) => x.Key).sort(), [1, 2, 3, 4].flatMap((i) => [`c0${i}::Context-dependent`, `c0${i}::Wordy`]), 'a ledger row for every claim and every judged tag');
-  assert.deepEqual(w.rows('claims_copy').map((c) => [c['Geo ID'], c['Agent confidence']]).sort(), [['c01', 0.9], ['c02', 0.9], ['c03', 0.5], ['c04', 0.9]], 'the lowest confidence among the judged tags');
+  assert.deepEqual(w.rows('claims').map((c) => [c['Geo ID'], c['Agent confidence']]).sort(), [['c01', 0.9], ['c02', 0.9], ['c03', 0.5], ['c04', 0.9]], 'the lowest confidence among the judged tags');
   assert.deepEqual(w.claim('c01')['Agent tags'], ['Context-dependent', 'Wordy']);
   assert.deepEqual([w.claim('c01')['Tags waiting'], w.claim('c01')['Agent status'], w.claim('c01')['Agent edition']], [[], 'Done', '2026-10-16.1']);
   assert.equal(w.claim('c01')['Agent remarks'], 'not checked: 4 source tags, 2 duplicate tags, 5 tags without rules');
@@ -159,8 +159,8 @@ test('two judged tags: Agent reasons has one line per tag, in tag order, each th
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   const cd = w.row('tag_decisions', 'c01::Context-dependent')['Agent reason'];
   const wordy = w.row('tag_decisions', 'c01::Wordy')['Agent reason'];
-  assert.equal(w.row('claims_copy', 'c01')['Agent reasons'], `Context-dependent: ${cd}\nWordy: ${wordy}`);
-  assert.equal(w.row('claims_copy', 'c02')['Agent reasons'].split('\n').length, 2);
+  assert.equal(w.row('claims', 'c01')['Agent reasons'], `Context-dependent: ${cd}\nWordy: ${wordy}`);
+  assert.equal(w.row('claims', 'c02')['Agent reasons'].split('\n').length, 2);
   clean(h, r);
 });
 
@@ -190,16 +190,16 @@ test('two judged tags and one Reviewed claim: a line per tag in the notes, a rea
   assert.deepEqual(copy(row('c03', 'Context-dependent')), ['Applies', 'Rule should change', 'A new rule is needed.']);
   assert.deepEqual(copy(row('c03', 'Wordy')), ['Applies', 'Rule unclear', 'Rule 1.']);
   // the claim itself: the editor's columns are as they were left, and the agent says it differs on the tags it got wrong
-  assert.equal(w.row('claims_copy', 'c01')['Challenged tags notes'], 'Wordy: Rule unclear. It repeats itself, and rule 2 does not say so.', 'the editor\'s columns are never written by the agent');
+  assert.equal(w.row('claims', 'c01')['Challenged tags notes'], 'Wordy: Rule unclear. It repeats itself, and rule 2 does not say so.', 'the editor\'s columns are never written by the agent');
   assert.deepEqual([w.claim('c01')['Agent tags'], w.claim('c01')['Agent status']], [['Context-dependent'], 'Disagrees with your decision'], "the editor's set is written, and the status says the agent still differs on Wordy");
   assert.deepEqual(w.claim('c01')['Tags waiting'], []);
 });
 
 test('a Claims table that setup build has not rebuilt stops every script that would read a decision from it or write the agent\'s columns to it, and nothing is changed', async () => {
-  const { 'Verified tags': _verified, ...rest } = TABLE_SPECS.claims_copy;
+  const { 'Verified tags': _verified, ...rest } = TABLE_SPECS.claims;
   const old = { ...rest, 'Agent tags': 'rich_text', 'Claim quality tags — verified': { type: 'relation' } }; // the text column Agent tags, and the relation under its old name
   const decided = { Claim: claimText(1), Key: 'c01::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Tag outcome': 'Applies', 'Why wrong': 'Agent slip', 'Your reasoning': 'The reference is clear.', 'Rulebook edition': '2026-10-16.1' };
-  const w = await makeWorld({ claims: 3, tableSpecs: { claims_copy: old }, queue: [decided], claimRows: { c01: { 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'The reference is clear.' } } });
+  const w = await makeWorld({ claims: 3, tableSpecs: { claims: old }, queue: [decided], claimRows: { c01: { 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'The reference is clear.' } } });
   w.table(sure(3));
   assert.equal((await w.judge()).exit, 0);
   const before = w.writes().length;

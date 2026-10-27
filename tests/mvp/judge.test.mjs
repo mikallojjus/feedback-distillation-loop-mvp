@@ -83,7 +83,7 @@ function makeRoot({
   if (!lock) rmSync(join(root, 'rubric', 'rubric.lock'));
   if (judgeConfig || groups) write(join(root, 'config.json'), { judge: { ...(groups ? { groups } : {}), ...(judgeConfig ?? {}) } });
   if (pull) {
-    const rows = claims ?? Array.from({ length: n }, (_, i) => ({ table: 'claims_copy', geo_id: claimId(i + 1), claim: claimText(i + 1), geo_url: `https://example.org/${i + 1}` }));
+    const rows = claims ?? Array.from({ length: n }, (_, i) => ({ table: 'claims', geo_id: claimId(i + 1), claim: claimText(i + 1), geo_url: `https://example.org/${i + 1}` }));
     write(join(root, 'runs', 'pull', 'p1', 'norm', 'claims.jsonl'), jsonl(rows));
     write(join(root, 'runs', 'pull', 'p1', 'norm', 'settings.json'), { page_id: 'page-settings', paused, rulebook_edition: rubric.edition, last_run_summary: '' });
     if (drift !== null) write(join(root, 'runs', 'pull', 'p1', 'drift.json'), drift);

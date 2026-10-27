@@ -18,35 +18,31 @@
       "key": "Name",
       "work_tag": "Issue"
     },
-    "claims": [
-      {
-        "name": "claims_copy",
-        "label": "Claims copy",
-        "enabled": true,
-        "database_id": "a0e77c4711044d87bc3e38296d2ea5d5",
-        "data_source_id": "d91ec6a806d243dea9795083184e64d8",
-        "key": "Geo ID",
-        "columns": {
-          "claim": "Geo Name",
-          "link": "Geo URL",
-          "sources": "Geo Sources",
-          "is_factual": "Geo Is factual",
-          "verified": "Verified tags",
-          "review_status": "Review status",
-          "notes": "Challenged tags notes"
-        },
-        "write_columns": {
-          "tags": "Agent tags",
-          "confidence": "Agent confidence",
-          "reasons": "Agent reasons",
-          "status": "Agent status",
-          "waiting": "Tags waiting",
-          "edition": "Agent edition",
-          "remarks": "Agent remarks",
-          "reading": "Agent reading"
-        }
+    "claims": {
+      "label": "Claims copy",
+      "database_id": "a0e77c4711044d87bc3e38296d2ea5d5",
+      "data_source_id": "d91ec6a806d243dea9795083184e64d8",
+      "key": "Geo ID",
+      "columns": {
+        "claim": "Geo Name",
+        "link": "Geo URL",
+        "sources": "Geo Sources",
+        "is_factual": "Geo Is factual",
+        "verified": "Verified tags",
+        "review_status": "Review status",
+        "notes": "Challenged tags notes"
+      },
+      "write_columns": {
+        "tags": "Agent tags",
+        "confidence": "Agent confidence",
+        "reasons": "Agent reasons",
+        "status": "Agent status",
+        "waiting": "Tags waiting",
+        "edition": "Agent edition",
+        "remarks": "Agent remarks",
+        "reading": "Agent reading"
       }
-    ],
+    },
     "databases": {
       "tag_decisions": {
         "database_id": "b77d1b758c414293b14837fdd1af4754",
@@ -142,7 +138,7 @@
     }
   },
   "editor_columns": {
-    "claims_copy": [
+    "claims": [
       "Verified tags",
       "Review status",
       "Challenged tags notes"
