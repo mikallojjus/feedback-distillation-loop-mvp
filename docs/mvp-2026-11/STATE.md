@@ -2,7 +2,8 @@
 
 | Item | Value |
 |---|---|
-| Phase | "Read the decisions" (decision P4, specification `READ-DECISIONS.md`) is complete on the branch `read-decisions-2026-11`: stages 0 to 5 done, the verification loop closed at its third run with no must or should finding (`evidence/20-walkthrough-verification-6/`), 2,084 tests pass, the live copy in the 22 October shape, the artifact republished, the product owner's page "Claim tagger practice · product owner, 22 Oct" (400273e214eb8151af07da13419256ae) built under Demos and the page the demo commands reach. Waiting: the product owner runs the seven steps on that page, says whether the MVP is agreed, and whether the branch may be merged into `mvp-2026-11`. |
+| Phase | "The hub and the Geo claims" (decisions P5 to P12, specification `HUB-AND-GEO-CLAIMS.md`), opened 2026-10-27 on the branch `claims-hub-2026-10` off `main` at 9dc97e4: stage 0 (specification, decisions, sweeps, baseline). Nothing has changed in Notion or in the agent's code yet. Earlier phase: "Read the decisions" (P4) complete and merged into `main` on 22 October. |
+| Next | Stage 1, one claims table in code (a Sonnet coder, one commit); then stages 2 to 4 in parallel worktrees (walkthrough for onboarding only, the archive step, the Geo pick); stage 5 (fresh structure and hub); stage 6 (docs and skills); stage 7 (pre-live gate, live Geo pick); then the live runbook, which waits for the product owner to tell editors with their own checkouts to pull. |
 | Checkpoint 1 (structure proposal) | Approved as proposed on 2026-10-15 (decision P1); page https://app.notion.com/p/3fa273e214eb81ef8504cb40e3bd7052 |
 | Checkpoint 2 (final demo) | message sent on 2026-10-15; the MVP is agreed when the product owner runs the seven steps and says so |
 | Branch | `read-decisions-2026-11`, off `mvp-2026-11` at 8827ceb; merged into `mvp-2026-11` after stage 5, on the product owner's say-so |
