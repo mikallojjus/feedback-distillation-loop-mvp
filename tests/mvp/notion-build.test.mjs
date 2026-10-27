@@ -643,7 +643,7 @@ test('a table made just before a crash, before its id was recorded, is found by 
   assert.equal(readJson(join(w.root, 'config.json')).notion.claims.database_id, normId(made[1].id));
 });
 
-test('a page found under the parent page is adopted too, and a protected table is never adopted', async () => {
+test('a page found under the parent page is adopted too, and a protected table is never adopted: it counts as not found, so the table is made', async () => {
   const w = build();
   const children = [{ object: 'block', id: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', type: 'child_page', child_page: { title: 'Demos' } }];
   const listing = { ...w.client, async retrieveBlockChildren() { return children; } };
@@ -660,10 +660,13 @@ test('a page found under the parent page is adopted too, and a protected table i
     async retrieveBlockChildren() { return [{ object: 'block', id: protectedId, type: 'child_database', child_database: { title: 'Rulebook copy' } }]; },
     async retrieveDatabase() { return { id: protectedId, data_sources: [{ id: evil.config.notion.protected_database_ids[1] }] }; },
   };
-  const refused = await runStructure({ plan: evil.plan, client: trap, root: evil.root, config: evil.config, parts: ['databases'] });
-  assert.equal(refused.ok, false);
-  assert.match(refused.stopped.message, /protected list/);
-  assert.equal(posts(evil.fake, '/databases').length, 0);
+  // since the archive step (P9) a child whose id is protected is not adopted by its title: it counts as not found, and a table of its own is made
+  const made = await runStructure({ plan: evil.plan, client: trap, root: evil.root, config: evil.config, parts: ['databases'] });
+  assert.equal(made.ok, true, JSON.stringify(made.stopped));
+  assert.equal(made.databases.rulebook.status, 'created');
+  assert.notEqual(made.databases.rulebook.database_id, normId(protectedId), 'the protected table is not the one recorded');
+  assert.equal(posts(evil.fake, '/databases').length, 5);
+  assert.equal(evil.config.notion.protected_database_ids.map(normId).includes(made.databases.rulebook.database_id), false, 'and the new table is not on the protected list');
 });
 
 test('a create whose answer was lost stops the run, says what to check, and is not sent again', async () => {

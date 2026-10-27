@@ -84,7 +84,7 @@ test('clientFromConfig: opts.apiVersion beats the version in config.json, which 
 test('the client offers exactly the old calls and the new ones, and nothing that takes anything away', () => {
   const client = createClient({ token: TOKEN, fetchImpl: async () => json({}) });
   assert.deepEqual(Object.keys(client).sort(), [
-    'appendBlocks', 'createDatabase', 'createPage', 'createPageUnderPage', 'createView', 'listViews', 'queryAll', 'queryDataSource', 'queryDataSourceAll',
+    'appendBlocks', 'createDatabase', 'createPage', 'createPageUnderPage', 'createView', 'listViews', 'moveDatabase', 'movePage', 'queryAll', 'queryDataSource', 'queryDataSourceAll',
     'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'updateDataSource', 'updatePage', 'updateView',
   ]);
   for (const name of Object.keys(client)) assert.doesNotMatch(name, /delete|remove|archive|trash|restore/i, name);
@@ -660,16 +660,156 @@ test('countRequests: no file is no requests; a line cut short or a line that is 
   assert.equal(countRequests(empty).total, 0);
 });
 
+// ---- moves (the archive step, P9) and positions ------------------------------------------------------------------------------------------
+
+test('movePage: POST /pages/{id}/move with exactly { parent: { type: "page_id", page_id } } on the builder version, and nothing else in the body', async () => {
+  const r = rig([json({ object: 'page', id: 'page-1', parent: { type: 'page_id', page_id: 'new-parent' } })], { apiVersion: BUILDER_API_VERSION });
+  const answer = await r.client.movePage('page-1', { parentPageId: 'new-parent' });
+  assert.equal(answer.id, 'page-1');
+  assert.equal(r.calls.length, 1);
+  const c = r.calls[0];
+  assert.equal(c.method, 'POST');
+  assert.equal(c.url, `${API_BASE}/pages/page-1/move`);
+  assert.equal(c.headers['Notion-Version'], '2026-03-11');
+  assert.deepEqual(c.body, { parent: { type: 'page_id', page_id: 'new-parent' } });
+  assert.deepEqual(Object.keys(c.body), ['parent']);
+});
+
+test('moveDatabase: PATCH /databases/{id} with exactly { parent: { type: "page_id", page_id } }: no is_inline, no in_trash, no archived', async () => {
+  const r = rig([json({ object: 'database', id: 'db-1' })], { apiVersion: BUILDER_API_VERSION });
+  await r.client.moveDatabase('db-1', { parentPageId: 'new-parent' });
+  const c = r.calls[0];
+  assert.equal(c.method, 'PATCH');
+  assert.equal(c.url, `${API_BASE}/databases/db-1`);
+  assert.equal(c.headers['Notion-Version'], '2026-03-11');
+  assert.deepEqual(c.body, { parent: { type: 'page_id', page_id: 'new-parent' } });
+  assert.deepEqual(Object.keys(c.body), ['parent']);
+  assert.deepEqual(Object.keys(c.body.parent), ['type', 'page_id']);
+});
+
+test('movePage and moveDatabase need the builder version: another client throws a clear error before anything is sent; ids are required', async () => {
+  for (const apiVersion of [undefined, '2022-06-28', '2025-09-03']) {
+    const r = rig([json({})], { apiVersion });
+    await assert.rejects(() => r.client.movePage('p', { parentPageId: 'q' }), /movePage needs Notion-Version 2026-03-11 or later and this client sends (2022-06-28|2025-09-03)/);
+    await assert.rejects(() => r.client.moveDatabase('d', { parentPageId: 'q' }), /moveDatabase needs Notion-Version 2026-03-11 or later and this client sends/);
+    assert.equal(r.calls.length, 0, `nothing was sent by a client on ${apiVersion ?? 'the default version'}`);
+  }
+  const b = rig([json({})], { apiVersion: BUILDER_API_VERSION });
+  await assert.rejects(() => b.client.movePage('', { parentPageId: 'q' }), /movePage: pageId is required/);
+  await assert.rejects(() => b.client.movePage('p', {}), /movePage: parentPageId is required/);
+  await assert.rejects(() => b.client.moveDatabase('d'), /moveDatabase: parentPageId is required/);
+  await assert.rejects(() => b.client.moveDatabase(' ', { parentPageId: 'q' }), /moveDatabase: databaseId is required/);
+  assert.equal(b.calls.length, 0);
+});
+
+test('a move is retried like a read: a 503 twice, a 429 with Retry-After, a network failure; a 400 is thrown once', async () => {
+  const down = json({ code: 'service_unavailable', message: 'down' }, { status: 503 });
+  const r = rig([down, down, json({ object: 'page', id: 'p' })], { apiVersion: BUILDER_API_VERSION });
+  assert.equal((await r.client.movePage('p', { parentPageId: 'q' })).id, 'p');
+  assert.equal(r.calls.length, 3);
+  assert.deepEqual(r.sleeps, [500, 1000]);
+  assert.ok(r.calls.every((c) => c.url === `${API_BASE}/pages/p/move` && c.body.parent.page_id === 'q'), 'every attempt is the same move');
+
+  const limited = rig([json({ code: 'rate_limited', message: 'slow' }, { status: 429, headers: { 'Retry-After': '2' } }), json({ object: 'database', id: 'd' })], { apiVersion: BUILDER_API_VERSION });
+  assert.equal((await limited.client.moveDatabase('d', { parentPageId: 'q' })).id, 'd');
+  assert.deepEqual(limited.sleeps, [2000]);
+
+  const net = rig([new TypeError('fetch failed'), json({ object: 'page', id: 'p' })], { apiVersion: BUILDER_API_VERSION });
+  assert.equal((await net.client.movePage('p', { parentPageId: 'q' })).id, 'p');
+  assert.equal(net.calls.length, 2);
+
+  const dead = rig([down], { apiVersion: BUILDER_API_VERSION });
+  await assert.rejects(() => dead.client.moveDatabase('d', { parentPageId: 'q' }), (e) => e.status === 503 && e.retryable === true);
+  assert.equal(dead.calls.length, MAX_SERVER_RETRIES + 1);
+
+  const refused = rig([json({ object: 'error', status: 400, code: 'validation_error', message: 'cannot move this' }, { status: 400 })], { apiVersion: BUILDER_API_VERSION });
+  await assert.rejects(() => refused.client.movePage('p', { parentPageId: 'q' }), (e) => e.status === 400 && e.code === 'validation_error' && e.retryable === false && /POST \/pages\/p\/move/.test(e.message));
+  assert.equal(refused.calls.length, 1);
+});
+
+// a rig whose appends answer with blocks that have ids (b1, b2, ...), so a later request can name the last block of the one before
+function appendRig(options) {
+  let n = 0;
+  return rig([(call) => json({ results: call.body.children.map(() => ({ object: 'block', id: `b${++n}` })) })], options);
+}
+const blocks = (n) => Array.from({ length: n }, (_, i) => ({ type: 'paragraph', paragraph: { rich_text: text(`p${i}`) } }));
+
+test('appendBlocks without a position sends { children } and nothing else, on both versions (the old callers are unchanged)', async () => {
+  for (const apiVersion of [undefined, BUILDER_API_VERSION]) {
+    const r = appendRig({ apiVersion });
+    await r.client.appendBlocks('page-1', blocks(2));
+    await r.client.appendBlocks('page-1', blocks(2), {});
+    await r.client.appendBlocks('page-1', blocks(2), { position: null });
+    assert.deepEqual(r.calls.map((c) => Object.keys(c.body)), [['children'], ['children'], ['children']]);
+    assert.equal(r.calls[0].url, `${API_BASE}/blocks/page-1/children`);
+  }
+});
+
+test('appendBlocks on the builder client sends the 2026-03-11 position: start, end and after_block', async () => {
+  const r = appendRig({ apiVersion: BUILDER_API_VERSION });
+  await r.client.appendBlocks('page-1', blocks(1), { position: { type: 'start' } });
+  await r.client.appendBlocks('page-1', blocks(1), { position: { type: 'end' } });
+  await r.client.appendBlocks('page-1', blocks(1), { position: { type: 'after_block', after_block: { id: 'blk-9' } } });
+  assert.deepEqual(r.calls.map((c) => c.body.position), [{ type: 'start' }, { type: 'end' }, { type: 'after_block', after_block: { id: 'blk-9' } }]);
+  assert.ok(r.calls.every((c) => !('after' in c.body)), 'the flat after is never sent to the builder version');
+});
+
+test('appendBlocks on the 2022-06-28 client maps after_block to the flat after, sends nothing for end, and refuses start before sending anything', async () => {
+  const r = appendRig({});
+  await r.client.appendBlocks('page-1', blocks(1), { position: { type: 'after_block', after_block: { id: 'blk-9' } } });
+  await r.client.appendBlocks('page-1', blocks(1), { position: { type: 'end' } });
+  assert.deepEqual(r.calls.map((c) => Object.keys(c.body).sort()), [['after', 'children'], ['children']]);
+  assert.equal(r.calls[0].body.after, 'blk-9');
+  assert.equal(r.calls[0].headers['Notion-Version'], '2022-06-28');
+  await assert.rejects(() => r.client.appendBlocks('page-1', blocks(1), { position: { type: 'start' } }), /"start" needs Notion-Version 2026-03-11 or later and this client sends 2022-06-28/);
+  assert.equal(r.calls.length, 2, 'the refused start sent nothing');
+});
+
+test('appendBlocks refuses a position it cannot read, on either version', async () => {
+  for (const apiVersion of [undefined, BUILDER_API_VERSION]) {
+    const r = appendRig({ apiVersion });
+    for (const position of ['start', [], { type: 'middle' }, { type: 'after_block' }, { type: 'after_block', after_block: { id: '' } }, { type: 'start', after_block: { id: 'x' } }, { type: 'end', extra: 1 }]) {
+      await assert.rejects(() => r.client.appendBlocks('p', blocks(1), { position }), TypeError, JSON.stringify(position));
+    }
+    assert.equal(r.calls.length, 0);
+  }
+});
+
+test('appendBlocks with more than 100 blocks keeps the order: every request after the first goes right after the last block made (position, or the old after)', async () => {
+  const builder = appendRig({ apiVersion: BUILDER_API_VERSION });
+  const made = await builder.client.appendBlocks('p', blocks(230), { position: { type: 'start' } });
+  assert.equal(made.length, 230);
+  assert.deepEqual(builder.calls.map((c) => c.body.children.length), [100, 100, 30]);
+  assert.deepEqual(builder.calls.map((c) => c.body.position), [{ type: 'start' }, { type: 'after_block', after_block: { id: 'b100' } }, { type: 'after_block', after_block: { id: 'b200' } }]);
+
+  const old = appendRig({});
+  await old.client.appendBlocks('p', blocks(150), { position: { type: 'after_block', after_block: { id: 'anchor' } } });
+  assert.deepEqual(old.calls.map((c) => c.body.after), ['anchor', 'b100']);
+
+  const end = appendRig({ apiVersion: BUILDER_API_VERSION });
+  await end.client.appendBlocks('p', blocks(150), { position: { type: 'end' } });
+  assert.deepEqual(end.calls.map((c) => c.body.position), [{ type: 'end' }, { type: 'end' }], 'the end stays the end');
+
+  const plainOld = appendRig({});
+  await plainOld.client.appendBlocks('p', blocks(150));
+  assert.deepEqual(plainOld.calls.map((c) => Object.keys(c.body)), [['children'], ['children']]);
+
+  const empty = rig([json({ results: [] })], { apiVersion: BUILDER_API_VERSION });
+  await assert.rejects(() => empty.client.appendBlocks('p', blocks(150), { position: { type: 'start' } }), /without the blocks it made/);
+});
+
 // ---- nothing takes anything away ------------------------------------------------------------------------------------------------------
 
 test('the module source has no way to remove, hide or restore anything: no in_trash, no archived, no DELETE, only GET, POST and PATCH', () => {
   const source = readFileSync(MODULE, 'utf8');
+  // The header may say "archive step" (the only reason a move exists, P9) and "trashes" (there is none); what must never appear is a field or a method that does it.
   const forbidden = [
     ['in_trash', /in_trash/i],
     ['archived', /archived/i],
-    ['archive', /archive/i],
-    ['trash', /trash/i],
+    ['an archived: field', /archived\s*:/],
+    ['is_archived', /is_archived/i],
     ['the DELETE method', /DELETE/],
+    ['a quoted DELETE', /['"`]DELETE['"`]/],
     ['a quoted delete method', /['"`]delete['"`]/i],
     ['a PUT call', /request\(\s*['"`]PUT/],
   ];

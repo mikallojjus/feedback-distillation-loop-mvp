@@ -31,6 +31,18 @@
 //   setup.mjs settings                                    the one Agent settings row (run rubric first)
 //   setup.mjs all --taxonomy <f> --claims <f> --audit <f> every step above in order, ending with verify; run it again after a stop
 //
+//   The archive (needs the session; NOT part of "all"; decision P9, hard rule 8 as amended: nothing is deleted, only setup moves the agent's own pages and tables)
+//   setup.mjs archive [--plan-only]                       rename the root page to "Claim tagger", make the page "Feedback Distillation MVP (archive, to 27 Oct 2026)" under it with a
+//                                                         first line that links back to the hub, move the eight old objects into it (the pages Structure proposal, Demos and Demo
+//                                                         tests, and the five old tables), read every new parent back, then walk the old tree and write setup/archive.json (state
+//                                                         "done": the moved ids, the practice pages and their tables, the old views, the leftovers), rewrite config.json (pages
+//                                                         onboarding and archive, the five table ids back to <setup>, views cleared, every archived id protected) and set
+//                                                         runs/builder/{pages,databases,state,verify}.json aside under runs/builder/before-archive/. Blocks on the hub page that are
+//                                                         none of the eight are listed as leftovers for a person and never touched. --plan-only sends GETs only and writes the plan and
+//                                                         the snapshot to the run folder. A move that Notion refuses stops it with exit 2: drag that object into the Archive page by
+//                                                         hand, then run it again. Run it again after any stop: it reads first and does only what is missing. After it says done, a
+//                                                         run says "done already" and sends nothing. Until it is done, pages, databases, views, build and all refuse with exit 2.
+//
 // Why a builder session: the connector guard (scripts/hooks/guard.mjs) denies every Notion write unless runs/SETUP exists and the
 // target is registered in runs/builder/pages.json or runs/builder/databases.json. Opening a session is a deliberate, logged act; the
 // session is closed as soon as the structural work is done, so that no later connector write can slip through. Registered ids are
@@ -47,6 +59,7 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { ArchiveError, readArchiveState, stepArchive } from './lib/archive.mjs';
 import { builderPaths, logLine, readJsonOr, register } from './lib/builder-registry.mjs';
 import { loadConfig } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
@@ -67,6 +80,7 @@ export const USAGE = [
   '       setup.mjs pages | databases | views | build            (needs a builder session)',
   '       setup.mjs rulebook [--from f] | claims [--from f] | seed-audit [--from f] | migrate-decisions | rubric [--from f] | canaries [--from f] | settings',
   '       setup.mjs all --taxonomy <f> --claims <f> --audit <f>',
+  '       setup.mjs archive [--plan-only]                        (needs a builder session; not part of "all"; run it before build)',
 ].join('\n');
 
 export function openBuilder({ root = agentRoot(), reason, now = () => new Date() } = {}) {
@@ -124,7 +138,11 @@ const COMMANDS = {
   canaries: { setup: true, options: FROM },
   settings: { setup: true },
   all: { setup: true, options: INPUTS },
+  archive: { setup: true, options: { 'plan-only': { type: 'boolean' } } },
 };
+
+// These commands build in the hub page, so they wait until the archive step has finished (or was never run: a fresh install has no setup/archive.json).
+const ARCHIVE_GATED = new Set(['pages', 'databases', 'views', 'build', 'all']);
 
 const ALL_STEPS = ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'];
 
@@ -241,6 +259,8 @@ async function dispatch(name, values, ctx) {
       return steps.stepCanaries(ctx, { from: path(values.from) });
     case 'settings':
       return steps.stepSettings(ctx);
+    case 'archive':
+      return stepArchive(ctx, { planOnly: values['plan-only'] === true });
     case 'verify':
       return steps.stepVerify(ctx, { taxonomy: path(values.taxonomy), claims: path(values.claims), audit: path(values.audit) ?? defaultAudit(root) });
     default:
@@ -251,6 +271,7 @@ async function dispatch(name, values, ctx) {
 // What a thrown error means for the exit code, and what to tell the engineer.
 function failure(e) {
   if (e instanceof steps.InputError || e instanceof StructureError) return { code: EXIT.INVALID, errors: [e.message] };
+  if (e instanceof ArchiveError) return { code: e.code, errors: [e.message, ...e.problems.map((p) => `  ${p}`)] };
   if (e instanceof PlanError) return { code: EXIT.INVALID, errors: [e.message, ...e.problems.map((p) => `  ${p}`)] };
   if (e?.name === 'NotionError' && [401, 403, 404].includes(e.status)) {
     return { code: EXIT.INVALID, errors: [e.message, 'Notion refused the request; check the token and that the integration is connected to the parent page'] };
@@ -342,6 +363,17 @@ async function runCommand(name, args, io, env) {
   if (spec.setup && existsSync(join(root, 'runs', 'PAUSED'))) {
     io.err(`setup ${name}: runs/PAUSED exists, so the agent is paused and nothing was done; a person has to remove it`);
     return EXIT.PAUSED;
+  }
+  if (ARCHIVE_GATED.has(name)) {
+    const archive = readArchiveState(root);
+    if (archive.error) {
+      io.err(`setup ${name}: ${archive.error}; setup.mjs archive has to be finished (or its file put right) first`);
+      return EXIT.INVALID;
+    }
+    if (archive.exists && archive.state !== 'done') {
+      io.err(`setup ${name}: the archive stopped halfway (setup/archive.json says state "${archive.state}"); run setup.mjs archive again`);
+      return EXIT.INVALID;
+    }
   }
   let config = null;
   if (name !== 'structure' && name !== 'preview') {
