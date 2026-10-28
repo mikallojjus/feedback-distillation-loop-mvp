@@ -1,11 +1,11 @@
 {
-  "edition": "2026-10-27.1",
-  "built_at": "2026-10-27T16:43:33.027Z",
+  "edition": "2026-10-28.1",
+  "built_at": "2026-10-28T12:40:58.213Z",
   "source": {
-    "database_id": "f05273e214eb8353b0a981544507de32",
-    "data_source_id": "b65273e2-14eb-8362-86a6-870ea8d632f4",
-    "read_via": "connector",
-    "read_at": "2026-10-15T11:40:00.000Z"
+    "database_id": "dba96ff240e64832b48798386abaff01",
+    "data_source_id": "9b8cef6c20934d44829ea3417858754a",
+    "read_via": "rest",
+    "read_at": "2026-10-28T12:40:58.213Z"
   },
   "tags": [
     {
@@ -16,7 +16,7 @@
       "status": "Verified",
       "counterpart": "Self-contained",
       "description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
-      "when_to_use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+      "when_to_use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
       "rules": [
         {
           "n": 1,
@@ -28,7 +28,7 @@
         },
         {
           "n": 3,
-          "text": "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
+          "text": "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
         },
         {
           "n": 4,
@@ -57,7 +57,7 @@
       ],
       "capability": "text",
       "judged": true,
-      "tag_hash": "sha256:af49109ca891789f"
+      "tag_hash": "sha256:efabe2f2b6afbe05"
     },
     {
       "name": "Exact duplicate",
@@ -417,5 +417,5 @@
       "tag_hash": "sha256:b53ab3bd92a2dbaf"
     }
   ],
-  "rubric_hash": "sha256:704a01cc3190e98c"
+  "rubric_hash": "sha256:2d5fde15d1b02ba4"
 }
