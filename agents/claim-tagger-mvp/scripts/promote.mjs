@@ -11,20 +11,25 @@
 // The check (CONTRACTS section 14, decision 17). The candidate rulebook is the one in force with that one rule's text replaced by the Editor wording when
 // there is one, else the Proposed text. Its items are the examples (evals/canaries.jsonl, each with the answer it must get) and the earlier decisions
 // (evals/cases.jsonl, which include the rows the lesson rests on). Both rulebooks answer every item (judge() with items eval: the baseline is mostly cache
-// hits); each item whose answer differs between them is read gate.default.flip_rejudge_runs more times on each side and each side's answer is the majority of its
-// three reads. PASS when every example comes out as expected under the candidate, no earlier decision that was right under the rulebook in force is wrong
-// under the candidate, and every supporting row comes out as the editor decided. FAIL otherwise. HOLD when there is nothing to check against. The card
-// (runs/<run-id>/card.json and card.md) holds the figures.
+// hits); each item whose answer differs between them, and each example or earlier decision that comes out wrong under both (so that one unlucky read cannot hide a real
+// break or blame an old miss on the change; the rows the lesson rests on are not read this way), is read gate.default.flip_rejudge_runs more times on each side and each
+// side's answer is the majority of its three reads. Only new breaks block (decision P33): PASS when no example that was right under the rulebook in force is wrong under the
+// candidate, no earlier decision that was right under the rulebook in force is wrong under the candidate, and every supporting row comes out as the editor decided. The
+// examples are counted like the earlier decisions: the count is of the ones the rulebook in force gets right. An example it gets wrong under both is shown in its own row
+// ("Wrong before the change") and not counted against the change; one the candidate puts right is listed in card.md only. FAIL otherwise. HOLD when there is nothing to
+// check against. The card (runs/<run-id>/card.json and card.md) holds the figures.
 //
 // PASS, in two steps, because a failed write does not stop the ones after it: first the new text is written to the Rulebook copy (When to use, after a last look at
 // the row and the rule change in Notion) in the plan of this run, and read back; then the new edition is saved (rubric/, with a changelog line) and, in production,
-// committed; only then does a run of its own (runs/<run-id>-record) set the rule change Live with "PASS: examples a/a, earlier b/b, yours c/c" and give Agent settings
+// committed; only then does a run of its own (runs/<run-id>-record) set the rule change Live with "PASS: examples a/a, earlier b/b, yours c/c" ("examples a/a (n more wrong before, not counted)"
+// when n examples were wrong under both rulebooks) and give Agent settings
 // the new edition and "Promote · <date time> · PASS"; then follow-up runs by itself (runs/<run-id>-followup). If the second step fails the rule is live, the report
 // says so, and the same command finishes the job without a second edition.
 // FAIL: the rulebook does not change; the rule change gets "FAIL: '<claim>' now <answer>" and Agent settings the summary. Editor wording is the whole rule, so
-// the editor is handed the whole text: one sentence is asked from the distill model for the first claim that came out wrong (an example claim, an earlier
-// decision or one of the editor's own rows, whichever it is), and the report's Next line and card.md give the rule as it was tested, a space and that sentence.
-// Both go into the report and card.md only, never into Notion. HOLD writes the same two rows.
+// the editor is handed the whole text: one sentence, with the reason for it, is asked from the distill model for the first claim that came out wrong (an example claim,
+// an earlier decision or one of the editor's own rows, whichever it is; decision P34), and the report gives it as a part of its own between the table and the Next line:
+// the sentence, the Why line and the rule as it was tested with the sentence added, one sentence per line, in a block to copy; card.md has the rule, a space and that sentence.
+// All of it goes into the report and card.md only, never into Notion. HOLD writes the same two rows.
 //
 // A rule change that rests on a decision whose reading no longer points at a rule (the editor now calls it the agent's slip, or took the agent's side; recantedAmong over the ledger as distill would
 // leave it) is held before the lock, the evals and every write (decision 79): exit 10, "Promote: held: the rule change "<title>" rests on a decision you now call the agent's slip, so the safety
@@ -42,7 +47,7 @@ import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:f
 import { dirname, join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf } from './lib/config.mjs';
-import { answerWord, cutText, plural, practiceLink, quoted, quotedWhole, recantedNext, stampOf, viewLink, yourClaims } from './lib/editor-words.mjs';
+import { answerWord, cutText, plural, practiceLink, quoted, recantedNext, stampOf, suggestionPart, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { ledgerAsRead, recantedAmong, recantedPhrase } from './lib/readings.mjs';
 import { extractJson } from './lib/claude.mjs';
 import { forceRuns, readAnswers } from './lib/answers.mjs';
@@ -53,6 +58,7 @@ import {
 } from './lib/loop.mjs';
 import { codeFile, isMain } from './lib/paths.mjs';
 import { newPlan, readLedger } from './lib/plan.mjs';
+import { lintSuggestionText } from './lib/report.mjs';
 import { nextEdition, writeEdition } from './lib/rubric.mjs';
 import { RuleEditError, oneLineRule, ruleNumberOf, rubricWithRule } from './lib/rulebook-edit.mjs';
 import { validate } from './lib/validate.mjs';
@@ -65,6 +71,7 @@ export { LOCK_STALE_MS };
 
 const ENGINEER = 'Next: ask the engineer to look at the message the script printed.';
 const SENTENCE_MAX_WORDS = 30;
+const WHY_MAX_WORDS = 40;
 const CHECK_HEADER = ['Check', 'Result', ''];
 
 // ---- the lock ---------------------------------------------------------------------------------------------------------------------------
@@ -141,19 +148,27 @@ const verdictWords = (n, total) => (total === 0 ? 'none yet' : `${n} of ${total}
 /**
  * The verdict over the answers of the two rulebooks. canaries, earlier and yours are lists of { id, claim, expected (apply | do_not_apply) }; base and cand map an id to
  * { decision }. Returns { verdict (PASS | FAIL), checks (the card's shape), first (the first failing item with .got and .was, or null) }.
- *   canaries  every one must come out as expected under the candidate
+ * Only new breaks block (decision P33): the examples and the earlier decisions are both counted against the rulebook in force, the same way.
+ *   canaries  the examples that are right under the rulebook in force are the ones counted (`total`); one fails the change only when the candidate gets it wrong. An example that is
+ *             wrong under the rulebook in force is not counted: when the candidate gets it wrong too it is listed in checks.canaries.already_wrong, and when the candidate puts it
+ *             right in checks.canaries.fixed_by_change (both with the answer under the candidate); neither is ever in failures or `first`
  *   earlier   those that were right under the rulebook in force must still be right (the ones that were wrong before are not counted)
  *   yours     the rows the lesson rests on: every one must come out as the editor decided
  */
 export function evaluate({ canaries, earlier, yours, base, cand }) {
   const answer = (ans, m) => ans.get(m.id)?.decision ?? null;
   const miss = (m, extra = {}) => ({ id: m.key ?? m.id, claim: m.claim, expected: m.expected, got: answer(cand, m), was: answer(base, m), ...extra });
-  const canaryFailures = canaries.filter((m) => answer(cand, m) !== m.expected).map((m) => miss(m));
+  const before = (m) => ({ id: m.key ?? m.id, claim: m.claim, expected: m.expected, got: answer(cand, m) });
+  const canaryRight = canaries.filter((m) => answer(base, m) === m.expected);
+  const canaryFailures = canaryRight.filter((m) => answer(cand, m) !== m.expected).map((m) => miss(m));
+  const canaryWrong = canaries.filter((m) => answer(base, m) !== m.expected);
+  const alreadyWrong = canaryWrong.filter((m) => answer(cand, m) !== m.expected).map(before);
+  const fixedByChange = canaryWrong.filter((m) => answer(cand, m) === m.expected).map(before);
   const wasRight = earlier.filter((m) => answer(base, m) === m.expected);
   const newly = wasRight.filter((m) => answer(cand, m) !== m.expected).map((m) => miss(m));
   const yoursFailures = yours.filter((m) => answer(cand, m) !== m.expected).map((m) => miss(m));
   const checks = {
-    canaries: { passed: canaries.length - canaryFailures.length, total: canaries.length, failures: canaryFailures },
+    canaries: { passed: canaryRight.length - canaryFailures.length, total: canaryRight.length, failures: canaryFailures, already_wrong: alreadyWrong, fixed_by_change: fixedByChange },
     cases: { passed: wasRight.length - newly.length, total: wasRight.length, newly_failing: newly },
     supporting: { passed: yours.length - yoursFailures.length, total: yours.length, failures: yoursFailures },
   };
@@ -161,17 +176,20 @@ export function evaluate({ canaries, earlier, yours, base, cand }) {
   return { verdict: first ? 'FAIL' : 'PASS', checks, first };
 }
 
-const resultLine = (checks) => `examples ${checks.canaries.passed}/${checks.canaries.total}, earlier ${checks.cases.passed}/${checks.cases.total}, yours ${checks.supporting.passed}/${checks.supporting.total}`;
+const resultLine = (checks) => {
+  const wrongBefore = checks.canaries.already_wrong.length;
+  return `examples ${checks.canaries.passed}/${checks.canaries.total}${wrongBefore > 0 ? ` (${wrongBefore} more wrong before, not counted)` : ''}, earlier ${checks.cases.passed}/${checks.cases.total}, yours ${checks.supporting.passed}/${checks.supporting.total}`;
+};
 
 // ---- the card -----------------------------------------------------------------------------------------------------------------------------
 
 const cleanMiss = ({ id, claim, expected, got }) => ({ id, claim, expected, got });
 
 /**
- * card.md: the same figures as card.json for the engineer, in plain words. The sentence for Editor wording (FAIL only) and the whole text the report hands the
- * editor for Editor wording (`wholeText`: the rule as it was tested, a space, the sentence) are here and in the report, never in Notion.
+ * card.md: the same figures as card.json for the engineer, in plain words. The sentence for Editor wording and the reason for it (FAIL only) and the whole text the
+ * report hands the editor for Editor wording (`wholeText`: the rule as it was tested, a space, the sentence) are here and in the report, never in Notion.
  */
-export function cardMarkdown(card, { sentence = null, wholeText = null, ruleLabel = '', nowWording = false } = {}) {
+export function cardMarkdown(card, { sentence = null, why = null, wholeText = null, ruleLabel = '', nowWording = false } = {}) {
   const c = card.checks;
   const line = (name, passed, total, what) => `| ${name} | ${verdictWords(passed, total)} ${what} |`;
   const out = [
@@ -191,6 +209,16 @@ export function cardMarkdown(card, { sentence = null, wholeText = null, ruleLabe
     for (const m of items) out.push(`- "${cutText(m.claim, 80).replace(/"/g, "'")}": expected ${answerWord(m.expected)}, now ${answerWord(m.got)}`);
   };
   list('Example claims that came out wrong:', c.canaries.failures);
+  const before = c.canaries.already_wrong ?? [];
+  if (before.length) {
+    out.push('', 'Example claims that are wrong under both rulebooks (not counted; the engineer may recalibrate evals/canaries.jsonl):');
+    for (const m of before) out.push(`- "${cutText(m.claim, 80).replace(/"/g, "'")}": expected ${answerWord(m.expected)}, with the new text ${answerWord(m.got)}`);
+  }
+  const fixed = c.canaries.fixed_by_change ?? [];
+  if (fixed.length) {
+    out.push('', 'Example claims that were wrong under the rulebook in force and are fixed by the change (not counted):');
+    for (const m of fixed) out.push(`- "${cutText(m.claim, 80).replace(/"/g, "'")}": expected ${answerWord(m.expected)}, with the new text ${answerWord(m.got)}`);
+  }
   list('Earlier decisions that broke:', c.cases.newly_failing);
   list('Rows this rests on that are still wrong:', c.supporting.failures);
   if (card.flips.length) {
@@ -198,6 +226,7 @@ export function cardMarkdown(card, { sentence = null, wholeText = null, ruleLabe
     for (const f of card.flips) out.push(`- "${cutText(f.claim ?? f.id, 80).replace(/"/g, "'")}": ${answerWord(f.from)} to ${answerWord(f.to)}`);
   }
   if (sentence) out.push('', `Suggested sentence for Editor wording: "${sentence}"`);
+  if (sentence && why) out.push(`Why that sentence: ${why}`);
   if (sentence && wholeText) out.push(`Whole text for Editor wording (the rule as it was tested, a space, the sentence): "${wholeText}"`);
   return `${out.join('\n')}\n`;
 }
@@ -208,28 +237,43 @@ const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').
 const attr = (s) => esc(s).replace(/"/g, '&quot;');
 
 /**
- * One sentence of at most 30 words that could be added to the rule so that the failing claim keeps its answer, from the distill model (prompts/wording.md).
- * The claim goes in a <claim> block as data. Returns { sentence } or { sentence: null, why }; it never throws for a call that cannot run, because the verdict
- * stands without it and the report says the sentence could not be written.
+ * A sentence or a reason from the model on one line, double quotes made single, and a pair of quotes that wraps the whole text taken off: a pair of double quotes with no other
+ * double quote inside, or a pair of single quotes with no other single quote inside (a text that starts and ends with a quoted phrase of its own keeps both).
  */
-export async function askForWording(ctx, { tag, n, current, proposed, claim, expected }) {
+const tidy = (text) => {
+  let t = String(text ?? '').replace(/\s+/g, ' ').trim();
+  const wrapped = /^["“](.*)["”]$/.exec(t);
+  if (wrapped && !/["“”]/.test(wrapped[1])) t = wrapped[1].trim();
+  t = t.replace(/["“”]/g, "'");
+  return t.length > 1 && t.startsWith("'") && t.endsWith("'") && !t.slice(1, -1).includes("'") ? t.slice(1, -1).trim() : t;
+};
+
+/**
+ * One sentence of at most 30 words that could be added to the rule so that the failing claim gets the answer it should, and the reason for it in at most 40 words,
+ * from the distill model (prompts/wording.md). The claim goes in a <claim> block as data, and `situation` in a <case> block: "broke" (the claim got its answer under the
+ * rule in force and the new text changed it) or "still_wrong" (one of the editor's own rows, which the new text does not fix either). The reply is { sentence, why }; a
+ * reply without either, or with one that is too long, is asked for again. Returns { sentence, why } or { sentence: null, why: null, problem }; it never throws for a call
+ * that cannot run, because the verdict stands without it and the report says the sentence could not be written.
+ */
+export async function askForWording(ctx, { tag, n, current, proposed, claim, expected, situation = null }) {
   const cfg = ctx.config.distill;
   const prompt = [
     `<rule>${esc(tag)} rule ${n}</rule>`,
     `<current_text>${esc(current)}</current_text>`,
     `<proposed_text>${esc(proposed)}</proposed_text>`,
+    ...(situation ? [`<case>${esc(situation)}</case>`] : []),
     `<claim answer="${attr(answerWord(expected))}">${esc(claim)}</claim>`,
   ].join('\n');
-  let why = 'the model did not answer';
+  let problem = 'the model did not answer';
   for (let attempt = 1; attempt <= 2; attempt++) {
     let res;
     try {
       res = await callModel(ctx, { model: ctx.config.models.distill, systemPromptFile: codeFile(ctx.root, cfg.wording_prompt), prompt, effort: cfg.effort, timeoutMs: cfg.timeout_ms });
     } catch (e) {
-      return { sentence: null, why: e.message };
+      return { sentence: null, why: null, problem: e.message };
     }
     if (res.errorKind) {
-      why = `${res.errorKind}: ${res.message}`;
+      problem = `${res.errorKind}: ${res.message}`;
       if (['usage_window', 'spawn', 'model_mismatch'].includes(res.errorKind)) break;
       continue;
     }
@@ -237,22 +281,42 @@ export async function askForWording(ctx, { tag, n, current, proposed, claim, exp
     try {
       value = extractJson(res.text);
     } catch (e) {
-      why = `the reply is not valid JSON (${e.message})`;
+      problem = `the reply is not valid JSON (${e.message})`;
       continue;
     }
-    const sentence = String(value?.sentence ?? '').replace(/\s+/g, ' ').replace(/["“”]/g, "'").trim().replace(/^'+|'+$/g, '').trim();
+    const sentence = tidy(value?.sentence);
     const count = sentence.split(' ').filter(Boolean).length;
     if (sentence === '') {
-      why = 'the reply has no sentence';
+      problem = 'the reply has no sentence';
       continue;
     }
     if (count > SENTENCE_MAX_WORDS) {
-      why = `the sentence has ${count} words, more than ${SENTENCE_MAX_WORDS}`;
+      problem = `the sentence has ${count} words, more than ${SENTENCE_MAX_WORDS}`;
       continue;
     }
-    return { sentence };
+    const sentenceLint = lintSuggestionText(sentence); // the text goes into report.md as it is, so a word the report lint refuses is asked for again, not shown
+    if (sentenceLint.length) {
+      problem = `the sentence would not pass the report lint: ${sentenceLint.join('; ')}`;
+      continue;
+    }
+    const why = tidy(value?.why);
+    const whyCount = why.split(' ').filter(Boolean).length;
+    if (why === '') {
+      problem = 'the reply has no reason for the sentence';
+      continue;
+    }
+    if (whyCount > WHY_MAX_WORDS) {
+      problem = `the reason has ${whyCount} words, more than ${WHY_MAX_WORDS}`;
+      continue;
+    }
+    const whyLint = lintSuggestionText(why);
+    if (whyLint.length) {
+      problem = `the reason would not pass the report lint: ${whyLint.join('; ')}`;
+      continue;
+    }
+    return { sentence, why };
   }
-  return { sentence: null, why };
+  return { sentence: null, why: null, problem };
 }
 
 // ---- the run -----------------------------------------------------------------------------------------------------------------------------------
@@ -371,7 +435,7 @@ export async function promote(opts = {}) {
       let rejudged = 0;
       if (everyItem.length === 0) {
         verdict = 'HOLD';
-        checks = { canaries: { passed: 0, total: 0, failures: [] }, cases: { passed: 0, total: 0, newly_failing: [] }, supporting: { passed: 0, total: 0, failures: [] } };
+        checks = { canaries: { passed: 0, total: 0, failures: [], already_wrong: [], fixed_by_change: [] }, cases: { passed: 0, total: 0, newly_failing: [] }, supporting: { passed: 0, total: 0, failures: [] } };
       } else {
         const jc = ctx.opts.runsMax ? { runsMax: ctx.opts.runsMax } : {};
         const base = await runJudge(ctx, { items: 'eval', tags: [tag], runId: `${ctx.runId}-baseline`, ...jc });
@@ -382,17 +446,23 @@ export async function promote(opts = {}) {
         const items = selectItems({ root: ctx.root, items: 'eval' }).items.filter((it) => ids.has(it.id));
         let baseAns = readAnswers(ctx, live, tag, items);
         let candAns = readAnswers(ctx, candidate, tag, items);
+        const byId = new Map(everyItem.map((m) => [m.id, m]));
         const flipped = items.filter((it) => baseAns.get(it.id).decision !== candAns.get(it.id).decision);
+        // an example or an earlier decision that comes out wrong under both rulebooks is read again too (decision P33): both count against a change only when the rulebook in force gets
+        // them right, so one unlucky read on the base side must not hide a real break. A both-wrong item whose two answers differ is a flip already (the answers can be apply,
+        // do_not_apply or ask_editor) and is read once. The rows the change rests on are counted as they come out under the candidate and are not read this way.
+        const countedIds = new Set([...canaries, ...earlier].map((m) => m.id));
+        const bothWrong = items.filter((it) => countedIds.has(it.id) && baseAns.get(it.id).decision === candAns.get(it.id).decision && baseAns.get(it.id).decision !== byId.get(it.id).expected);
+        const reread = [...flipped, ...bothWrong];
         const extra = ctx.config.gate?.default?.flip_rejudge_runs ?? 2;
-        if (flipped.length && extra > 0) {
+        if (reread.length && extra > 0) {
           const upTo = Math.min(3, 1 + extra);
-          addUsage(usage, (await forceRuns(ctx, { rubric: live, tag, items: flipped, upTo })).usage);
-          addUsage(usage, (await forceRuns(ctx, { rubric: candidate, tag, items: flipped, upTo })).usage);
+          addUsage(usage, (await forceRuns(ctx, { rubric: live, tag, items: reread, upTo })).usage);
+          addUsage(usage, (await forceRuns(ctx, { rubric: candidate, tag, items: reread, upTo })).usage);
           baseAns = readAnswers(ctx, live, tag, items);
           candAns = readAnswers(ctx, candidate, tag, items);
-          rejudged = flipped.length;
+          rejudged = reread.length;
         }
-        const byId = new Map(everyItem.map((m) => [m.id, m]));
         flips = items.filter((it) => baseAns.get(it.id).decision !== candAns.get(it.id).decision).map((it) => ({
           id: byId.get(it.id).key ?? it.id, tag, claim: byId.get(it.id).claim, from: baseAns.get(it.id).decision ?? 'none', to: candAns.get(it.id).decision ?? 'none',
         }));
@@ -402,7 +472,7 @@ export async function promote(opts = {}) {
 
       const card = {
         mode: 'simple', verdict, lesson: title, tag, checks: {
-          canaries: { ...checks.canaries, failures: checks.canaries.failures.map(cleanMiss) },
+          canaries: { ...checks.canaries, failures: checks.canaries.failures.map(cleanMiss), already_wrong: checks.canaries.already_wrong.map(cleanMiss), fixed_by_change: checks.canaries.fixed_by_change.map(cleanMiss) },
           cases: { ...checks.cases, newly_failing: checks.cases.newly_failing.map(cleanMiss) },
           supporting: { ...checks.supporting, failures: checks.supporting.failures.map(cleanMiss) },
         },
@@ -416,8 +486,10 @@ export async function promote(opts = {}) {
 
       const several = live.tags.filter((t) => t.judged && groupOf(ctx.config, t.name) !== null).length > 1;
       const ruleLabel = several ? `${tag} rule ${n}` : `rule ${n}`; // one judged tag: "rule 4" is clear
+      const wrongBefore = checks.canaries.already_wrong.length; // examples that are wrong under both rulebooks: shown, not counted (decision P33); "Example claims" counts the ones the rulebook in force gets right
       const rowsFor = (yoursNote) => [
         ['Example claims', `${verdictWords(checks.canaries.passed, checks.canaries.total)} right`, ''],
+        ...(wrongBefore > 0 ? [['Wrong before the change', `${plural(wrongBefore, 'more example claim')}, not counted`, '']] : []),
         ['Earlier decisions', `${verdictWords(checks.cases.passed, checks.cases.total)} still right`, ''],
         [`Your ${plural(checks.supporting.total, 'row')}`, `${verdictWords(checks.supporting.passed, checks.supporting.total)} now right${yoursNote}`, ''],
       ];
@@ -442,10 +514,12 @@ export async function promote(opts = {}) {
       // ---- FAIL
       if (verdict === 'FAIL') {
         // for the first claim that came out wrong, whatever kind it is: an example claim, an earlier decision or one of the editor's own rows
-        const asked = await askForWording(ctx, { tag, n, current: liveText, proposed: candidateText, claim: first.claim, expected: first.expected });
+        // the case tells the model what happened to the claim: the change broke it (it was right under the rule in force), or it is still wrong (one of the editor's own rows that the new text does not fix)
+        const situation = first.was === first.expected ? 'broke' : 'still_wrong';
+        const asked = await askForWording(ctx, { tag, n, current: liveText, proposed: candidateText, claim: first.claim, expected: first.expected, situation });
         const wholeText = asked.sentence === null ? null : `${candidateText} ${asked.sentence}`; // Editor wording is the whole rule: the rule as tested, then the sentence
-        writeTextAtomic(join(ctx.runDir, 'card.md'), cardMarkdown(card, { sentence: asked.sentence, wholeText, ruleLabel, nowWording: fromEditor }));
-        if (asked.sentence === null) ctx.record.wording_failed = asked.why;
+        writeTextAtomic(join(ctx.runDir, 'card.md'), cardMarkdown(card, { sentence: asked.sentence, why: asked.why, wholeText, ruleLabel, nowWording: fromEditor }));
+        if (asked.sentence === null) ctx.record.wording_failed = asked.problem;
         const result = `FAIL: '${cutText(first.claim, 60)}' now ${answerWord(first.got)}`;
         const plan = newPlan({ runId: ctx.runId, script: 'promote', rubricEdition: live.edition, config: ctx.config, now: ctx.now });
         plan.update('rule_changes', title, lesson.page_id, { 'Safety check result': result });
@@ -454,15 +528,27 @@ export async function promote(opts = {}) {
         assertApplied(ctx, applied.result);
         const changed = first.was !== first.got;
         const what = changed ? `the new wording turns ${quoted(first.claim)} to ${answerWord(first.got)}` : `the new wording leaves ${quoted(first.claim)} at ${answerWord(first.got)}`;
+        const noSentence = {
+          sentence: `Promote: FAIL, ${ruleLabel} is unchanged: ${what}; the right answer is ${answerWord(first.expected)}; a suggested sentence could not be written.`,
+          next: `Next: in Lessons waiting (${link}), open the change and write all of ${ruleLabel} in Editor wording so that ${quoted(first.claim)} keeps its answer; then type /claim-tagger promote again.`,
+        };
+        // the form for a suggestion that was written (it is in card.md) but did not pass the report lint, so the report cannot show it: same Next line, a sentence that says "shown"
+        const notShown = { sentence: noSentence.sentence.replace('could not be written', 'could not be shown'), next: noSentence.next };
         return {
           exit: EXIT.FAIL,
-          sentence: `Promote: FAIL, ${ruleLabel} is unchanged: ${what}${asked.sentence === null ? '; a suggested sentence could not be written' : ''}.`,
           header: CHECK_HEADER,
           rows: rowsFor(''),
-          next: asked.sentence === null
-            ? `Next: in Lessons waiting (${link}), open the change and write all of ${ruleLabel} in Editor wording so that ${quoted(first.claim)} keeps its answer; then type /claim-tagger promote again.`
-            : `Next: in Lessons waiting (${link}), open the change and put this whole text into Editor wording: ${quotedWhole(wholeText)}; then type /claim-tagger promote again.`,
-          details: { verdict, card, sentence: asked.sentence, text: wholeText, first },
+          ...(asked.sentence === null
+            ? noSentence
+            : {
+              sentence: `Promote: FAIL, ${ruleLabel} is unchanged: ${what}; the right answer is ${answerWord(first.expected)}.`,
+              // the suggestion is a part of its own between the table and the Next line: the sentence, the reason, and the rule as tested with the sentence added, to copy. The report
+              // without it (`notShown`: the suggestion is in card.md, the report cannot show it) is what the run falls back to if the suggestion does not pass the report lint (lib/loop.mjs).
+              extra: suggestionPart({ ruleLabel, sentence: asked.sentence, why: asked.why, ruleText: candidateText }),
+              next: `Next: in Lessons waiting (${link}), paste the block above into Editor wording in place of what is there, or write all of ${ruleLabel} as you want it; then type /claim-tagger promote again.`,
+              withoutExtra: notShown,
+            }),
+          details: { verdict, card, sentence: asked.sentence, why: asked.why, text: wholeText, first },
         };
       }
 

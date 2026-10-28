@@ -11,6 +11,8 @@
 //   FAKE_LOOP_DISTILL     path of { "patterns": [{ "lesson", "rule"?, "kind"?, "proposed_text", "keys"?: "all" | [keys] | { "first": n } }] }; without it one pattern
 //                         that cites every row given. "rule" defaults to "<the tag> rule <the cited rule or 1>".
 //   FAKE_LOOP_WORDING     the sentence of the wording reply (default: the stock one); the word "invalid" makes the reply not JSON
+//   FAKE_LOOP_WHY         the reason of the wording reply (default: the stock one); the word "none" leaves the field out
+//   FAKE_LOOP_WHY_SEQ     a JSON list of reasons, one per wording call in order (the last one repeats; null leaves the field out): how a test makes a first reply bad and a second good
 //   FAKE_CLAUDE_READINGS  path of { "<row key>": { reading, rule, note } }, passed through to the stock fake, which answers a prompt that holds a line "# Reading" with one reading per
 //                         <row key="..." tag="..."> of the message (a key not in the file is read Rule unclear on the rule its agent reason cites); FAKE_CLAUDE_ONLY works the same way
 //
@@ -20,7 +22,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { parseClaims, runFake as stockRunFake } from './fake-claude.mjs';
+import { WORDING_REPLY, parseClaims, runFake as stockRunFake } from './fake-claude.mjs';
 
 const flagValue = (args, name) => {
   const i = args.indexOf(name);
@@ -89,7 +91,12 @@ export async function runFake({ args = [], stdin = '', env = process.env, state 
     if (/^# Distill/m.test(systemText)) return { ...out, stdout: withReply(out.stdout, JSON.stringify(distillReply(stdin, env))) };
     const sentence = env.FAKE_LOOP_WORDING;
     if (sentence === 'invalid') return { ...out, stdout: withReply(out.stdout, 'I could not write a sentence this time.') };
-    return sentence ? { ...out, stdout: withReply(out.stdout, JSON.stringify({ sentence })) } : out;
+    // the reason: FAKE_LOOP_WHY_SEQ (one value per wording call, the last repeats; null leaves the field out) or FAKE_LOOP_WHY ("none" leaves it out), else the stock one
+    const seq = env.FAKE_LOOP_WHY_SEQ ? JSON.parse(env.FAKE_LOOP_WHY_SEQ) : null;
+    state.wordingCalls = (state.wordingCalls ?? 0) + 1;
+    const why = seq ? seq[Math.min(state.wordingCalls - 1, seq.length - 1)] : (env.FAKE_LOOP_WHY ?? WORDING_REPLY.why);
+    const reply = { sentence: sentence || WORDING_REPLY.sentence, ...(why === null || why === 'none' ? {} : { why }) };
+    return { ...out, stdout: withReply(out.stdout, JSON.stringify(reply)) };
   }
 
   const claims = parseClaims(stdin);

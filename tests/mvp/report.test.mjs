@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  DEFAULT_HEADER, DEMO_PREFIX, MAX_ROWS, buildReport, lintReport, renderReport, writeReport,
+  DEFAULT_HEADER, DEMO_PREFIX, EXTRA_HEAD, MAX_ROWS, buildReport, lintReport, lintSuggestionText, renderReport, splitExtra, writeReport,
 } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 
 const roots = [];
@@ -405,4 +405,123 @@ test('writeReport replaces the files of an earlier report in the same folder', (
   assert.equal(readFileSync(join(dir, 'report.md'), 'utf8'), 'Later report.\n\nNext: done.\n');
   assert.deepEqual(JSON.parse(readFileSync(join(dir, 'report.json'), 'utf8')), { demo: false, sentence: 'Later report.', next: 'Next: done.' });
   assert.deepEqual(readdirSync(dir).sort(), ['report.json', 'report.md'], 'no temp files are left');
+});
+
+// ---- the suggestion of a FAIL report: the one optional fourth part ----------------------------------------------------------------------------
+
+const SUGGESTION = [
+  'Suggested sentence for rule 3:',
+  '> A description that names no particular program or law still needs context.',
+  '',
+  'Why: The claim names a kind of thing without saying which, so the sentence keeps it under the rule.',
+  '',
+  'Rule 3 with the sentence, to copy into Editor wording:',
+  '```',
+  'A descriptive definite that names a kind of thing but not which one makes the claim Context-dependent.',
+  'A description that names no particular program or law still needs context.',
+  '```',
+].join('\n');
+const failReport = () => ({ demo: false, sentence: 'Promote: FAIL, rule 3 is unchanged: the new wording turns "A claim." to Applies; the right answer is Does not apply.', header: ['Check', 'Result', ''], rows: [['Example claims', '10 of 11 right', '']], extra: SUGGESTION, next: 'Next: put rule 3 with the suggested sentence into Editor wording; then type /claim-tagger promote again.' });
+
+test('extra: the suggestion is rendered between the table and the Next line, is in report.json, and passes the lint', () => {
+  const md = renderReport(failReport());
+  assert.equal(md, `${failReport().sentence}\n\n| Check | Result |\n|---|---|\n| Example claims | 10 of 11 right |\n\n${SUGGESTION}\n\n${failReport().next}\n`);
+  assert.deepEqual(lintReport(md), []);
+  assert.deepEqual(buildReport(failReport()).extra, SUGGESTION);
+  const dir = tmp();
+  writeReport(dir, failReport());
+  assert.equal(readFileSync(join(dir, 'report.md'), 'utf8'), md);
+  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'report.json'), 'utf8')), { demo: false, sentence: failReport().sentence, header: ['Check', 'Result', ''], rows: [['Example claims', '10 of 11 right', '']], extra: SUGGESTION, next: failReport().next });
+  const noTable = renderReport({ ...failReport(), rows: [] });
+  assert.deepEqual(lintReport(noTable), [], 'with no table the suggestion follows the sentence');
+});
+
+test('extra: a report without it is what it always was, byte for byte, and report.json has no extra key', () => {
+  const plain = { ...failReport() };
+  delete plain.extra;
+  assert.equal(renderReport(plain), `${plain.sentence}\n\n| Check | Result |\n|---|---|\n| Example claims | 10 of 11 right |\n\n${plain.next}\n`);
+  assert.equal('extra' in buildReport(plain), false);
+  assert.equal('extra' in buildReport({ ...plain, extra: undefined }), false);
+  assert.equal('extra' in buildReport({ ...plain, extra: null }), false);
+  assert.throws(() => buildReport({ ...failReport(), extra: '' }), /extra/);
+  assert.throws(() => buildReport({ ...failReport(), extra: 7 }), /extra/);
+});
+
+test('extra: the lint accepts only that part with its own shape, right before the Next line; any other fourth part is still a problem', () => {
+  const good = renderReport(failReport());
+  // another fourth paragraph, or a suggestion whose shape is broken, is not allowed
+  const other = good.replace('\n\nNext:', '\n\nA word more.\n\nNext:');
+  assert.ok(has(lintReport(other), 'more than three parts'), lintReport(other).join('; '));
+  assert.ok(has(lintReport(good.replace('\n\nWhy: ', '\n\nBecause: ')), 'fixed shape'));
+  assert.ok(has(lintReport(good.replace('> A description', 'A description')), 'fixed shape'));
+  assert.ok(has(lintReport(good.replace('\n```\nA descriptive', '\n```\n\nA descriptive')), 'fixed shape'), 'a blank line inside the block');
+  // a suggestion after the Next line, one glued to the table, one glued to the Next line, one without its Next line
+  assert.ok(lintReport(`${good}\n${SUGGESTION}\n`).length > 0, 'a second suggestion after the Next line');
+  const afterNext = `${failReport().sentence}\n\n${failReport().next}\n\n${SUGGESTION}\n`;
+  assert.ok(has(lintReport(afterNext), 'between the table and the Next line'), lintReport(afterNext).join('; '));
+  assert.ok(has(lintReport(good.replace('|\n\nSuggested', '|\nSuggested')), 'its own part'));
+  assert.ok(has(lintReport(good.replace('```\n\nNext:', '```\nNext:')), 'its own part'));
+  assert.ok(lintReport(good.replace(/\n\nNext:.*\n$/, '\n')).length > 0, 'a report without its Next line');
+  // a head line whose block never closes is no suggestion: it is ordinary text, and too many parts
+  const open = good.replace(/\n```\n\nNext:/, '\n\nNext:');
+  assert.equal(splitExtra(open).extra, null);
+  assert.ok(lintReport(open).length > 0);
+});
+
+test('extra: its sentence and its Why line get the word rules (a phrase in single quotes is a quoted claim); the rule in its block is the editor\'s own text and is refused only a JSON brace, runs/, .mjs, a drive path and a run id; everything around it is checked as before', () => {
+  const lint = (extra) => lintReport(renderReport({ ...failReport(), extra }));
+  const SENTENCE_LINE = '> A description that names no particular program or law still needs context.';
+  const WHY_LINE = 'Why: The claim names a kind of thing without saying which, so the sentence keeps it under the rule.';
+  assert.deepEqual(lint(SUGGESTION), []);
+  // the sentence and the Why line: the rules of the report lint
+  assert.ok(has(lint(SUGGESTION.replace(SENTENCE_LINE, '> A database sentence that takes 3 days costs $2.')), 'the suggested sentence holds a duration word'), lint(SUGGESTION.replace(SENTENCE_LINE, '> A database sentence that takes 3 days costs $2.')).join('; '));
+  assert.ok(has(lint(SUGGESTION.replace(SENTENCE_LINE, '> A database sentence that takes 3 days costs $2.')), 'the suggested sentence says "database"'));
+  assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, 'Why: The rubric gate runs in runs/x and needs {x}.')), 'the Why line names a run folder'));
+  assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, 'Why: The rubric gate runs in runs/x and needs {x}.')), 'the Why line holds a JSON brace'));
+  // a duration in the sentence and the Why line is a number with a unit; a time word alone ("second", "day", "week") is not one, as it is in the sentence of a report
+  for (const [line, text] of [[WHY_LINE, 'Why: The second half is the point.'], [SENTENCE_LINE, '> A second program that fits the description still counts.'], [SENTENCE_LINE, '> Election Day names one day each year.'], [SENTENCE_LINE, '> A time expression such as last week does not say which week.']]) {
+    assert.deepEqual(lint(SUGGESTION.replace(line, text)), [], text);
+  }
+  for (const [line, text, what] of [[SENTENCE_LINE, '> It took 3 days.', '"3 days"'], [WHY_LINE, 'Why: It took 2.5 hours to read.', '"2.5 hours"'], [WHY_LINE, 'Why: A 250 ms wait is no reason.', '"250 ms"'], [SENTENCE_LINE, '> Within 4 weeks it counts.', '"4 weeks"']]) {
+    assert.ok(has(lint(SUGGESTION.replace(line, text)), `holds a duration word: ${what}`), `${text}: ${lint(SUGGESTION.replace(line, text)).join('; ')}`);
+  }
+  assert.ok(has(lintReport(renderReport({ ...failReport(), sentence: 'Promote: FAIL, a second program is unchanged.' })), 'duration word'), 'the sentence of the report itself keeps the full rule: "second" is refused there');
+  assert.ok(has(lintReport(renderReport({ ...failReport(), next: 'Next: wait a week, then type /claim-tagger promote again.' })), 'duration word'), 'and so does its Next line');
+  // a file, a run folder, a brace or a run id is refused wherever it stands, in single quotes too; a claim carries none of them
+  for (const [line, text, what] of [
+    [WHY_LINE, "Why: It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'.", 'the Why line holds a file path'],
+    [WHY_LINE, "Why: It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'.", 'the Why line names a run folder (runs/)'],
+    [WHY_LINE, "Why: It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'.", 'the Why line holds a run id: 20261028T095657Z'],
+    [WHY_LINE, "Why: It reads '{a: 1}'.", 'the Why line holds a JSON brace'],
+    [SENTENCE_LINE, "> A claim citing 'C:/secret/.env' still needs context.", 'the suggested sentence holds a file path'],
+    [SENTENCE_LINE, "> A claim citing 'check.mjs' still needs context.", 'the suggested sentence names a script file (.mjs)'],
+  ]) {
+    assert.ok(has(lint(SUGGESTION.replace(line, text)), what), `${text}: ${lint(SUGGESTION.replace(line, text)).join('; ')}`);
+  }
+  assert.deepEqual(lintSuggestionText("It reads 'the last 3 days' and '$2.87 million' and 'G20' as a quoted claim."), [], 'but the other word rules still leave a quoted claim alone');
+  assert.deepEqual(lintSuggestionText('It names a file {x} in runs/.').length, 2, 'unquoted, each hard refusal once: not again from the word rules');
+  assert.deepEqual(lint(SUGGESTION.replace(WHY_LINE, "Why: It reads 'the last 3 days' as a time, so the rule skips it.")), [], 'a phrase in single quotes is a quoted claim');
+  assert.deepEqual(lint(SUGGESTION.replace(WHY_LINE, "Why: The claim's reading is a thing the rule's text skips.")), [], 'apostrophes are not quotes');
+  assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, "Why: It's the rule's text, 3 days long.")), 'duration word'), 'and they do not hide a word: apostrophes make no quoted phrase');
+  // the block: only what must never reach an editor
+  const inBlock = (line) => SUGGESTION.replace('A descriptive definite that names a kind of thing but not which one makes the claim Context-dependent.', line);
+  for (const [line, what] of [['A rule with {x} in it, long enough.', 'JSON brace'], ['A rule that names runs/x/y, long enough.', 'run folder'], ['A rule that names a.mjs, long enough.', 'script file'], ['A rule that names C:/x/y, long enough.', 'file path'], ['A rule that names 20261028T095657Z, long enough.', 'run id']]) {
+    assert.ok(has(lint(inBlock(line)), 'the block to copy') && has(lint(inBlock(line)), what), `${what}: ${lint(inBlock(line)).join('; ')}`);
+  }
+  assert.deepEqual(lint(inBlock('A rule about the database and the rubric gate for 3 days and $2, long enough.')), [], 'a rule may say what it likes; it was tested as it is');
+  // everything around it
+  assert.ok(has(lintReport(renderReport({ ...failReport(), sentence: 'Promote: FAIL after 3 days.' })), 'duration word'), 'the sentence is still checked');
+  assert.ok(has(lintReport(renderReport({ ...failReport(), next: 'Next: ask for the database.' })), 'database'), 'so is the Next line');
+});
+
+test('splitExtra: the suggestion and the report without it; nothing to split in a three-part report', () => {
+  const md = renderReport(failReport());
+  const { rest, extra, before, after } = splitExtra(md);
+  assert.equal(extra, SUGGESTION);
+  assert.equal(rest, `${failReport().sentence}\n\n| Check | Result |\n|---|---|\n| Example claims | 10 of 11 right |\n\n${failReport().next}\n`);
+  assert.deepEqual([before, after], [`${failReport().sentence}\n\n| Check | Result |\n|---|---|\n| Example claims | 10 of 11 right |`, failReport().next]);
+  const plain = renderReport(base());
+  assert.deepEqual(splitExtra(plain), { rest: plain, extra: null, before: '', after: '' });
+  assert.equal(splitExtra(md.replace(/\n/g, '\r\n')).extra, SUGGESTION, 'Windows line breaks');
+  assert.equal(EXTRA_HEAD.test('Suggested sentence for rule 3:'), true);
 });

@@ -235,26 +235,28 @@ test('the FAIL branch: a candidate that turns an example claim the wrong way lea
   assert.equal(w.row('rule_changes', TITLE).Status, 'Approved');
   assert.match(w.row('rule_changes', TITLE)['Safety check result'], /^FAIL: '.*' now Does not apply$/);
   assert.equal(w.row('rule_changes', TITLE)['Editor wording'], '', 'the agent never writes Editor wording');
-  assert.match(failed.report.sentence, /^Promote: FAIL, rule 4 is unchanged: the new wording turns ".*" to Does not apply\.$/);
+  assert.match(failed.report.sentence, /^Promote: FAIL, rule 4 is unchanged: the new wording turns ".*" to Does not apply; the right answer is Applies\.$/);
   const SENTENCE = 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.';
-  assert.match(failed.report.next, /^Next: in Lessons waiting \(.*\), open the change and put this whole text into Editor wording: ".*"; then type \/claim-tagger promote again\.$/);
-  assert.ok(failed.report.next.includes(`"${NEW_TEXT} ${SENTENCE}"`), 'the rule as it was tested, a space, the sentence: Editor wording is the whole rule');
+  assert.match(failed.report.next, /^Next: in Lessons waiting \(.*\), paste the block above into Editor wording in place of what is there, or write all of rule 4 as you want it; then type \/claim-tagger promote again\.$/);
+  assert.ok(failed.report.extra.startsWith(`Suggested sentence for rule 4:\n> ${SENTENCE}\n\nWhy: `), 'the suggestion: the sentence, then the reason');
+  assert.ok(failed.report.extra.endsWith(`\`\`\`\n${NEW_TEXT}\n${SENTENCE}\n\`\`\``), 'the rule as it was tested, then the sentence on its own line: Editor wording is the whole rule');
   assert.ok(readFileSync(join(failed.runDir, 'card.md'), 'utf8').includes(`"${NEW_TEXT} ${SENTENCE}"`));
   for (const text of [U1, U2]) assert.equal(w.row('tag_decisions', keyOf(text))['Follow-up'], null);
   for (const req of w.writes()) assert.ok(!JSON.stringify(req.body ?? {}).includes('still fails the test'), 'the sentence is not sent to Notion');
   assert.equal(existsSync(join(w.root, 'runs', 'PROMOTING.json')), false);
 
-  // the editor puts the whole text of the report into Editor wording, the lesson is checked again and passes
-  const wording = /put this whole text into Editor wording: "(.*)"; then type/.exec(failed.report.next)[1];
-  assert.equal(wording, `${NEW_TEXT} ${SENTENCE}`);
-  w.fake.editRow(w.row('rule_changes', TITLE).page_id, { 'Editor wording': wording });
+  // the editor copies the block of the report into Editor wording as it stands (one sentence per line), the lesson is checked again as the one-line text and passes
+  const block = /```\n([\s\S]*)\n```$/.exec(failed.report.extra)[1];
+  const wording = `${NEW_TEXT} ${SENTENCE}`;
+  assert.equal(block, `${NEW_TEXT}\n${SENTENCE}`);
+  w.fake.editRow(w.row('rule_changes', TITLE).page_id, { 'Editor wording': block });
   w.overrides([{ when: 'still fails the test', table: { [U1]: no, [U2]: no } }]);
   const h2 = w.hooks();
   const passed = await promote(h2);
   assert.equal(passed.exit, 0, h2.io.errs.join('\n'));
   assert.equal(passed.report.sentence.startsWith('Promote: PASS, rule 4 now uses your approved wording (edition 2026-10-16.2)'), true);
   assert.equal(w.row('rulebook', 'Context-dependent')['When to use'].split('\n')[3], `4. ${wording}`);
-  assert.equal(w.row('rule_changes', TITLE)['Editor wording'], wording);
+  assert.equal(w.row('rule_changes', TITLE)['Editor wording'], block, 'the editor\'s field is as the editor left it');
   everyReportIsClean(w);
   await requestLogIsClean(w);
 });

@@ -239,7 +239,7 @@ test('a prompt with "# Distill" gets a fixed lesson and one with "# Wording" get
   assert.deepEqual(extractJson(viaMessage.text), lesson);
 
   const wording = extractJson((await call({ systemFile: join(dir, 'missing.md'), prompt: '# Wording\n\nThe claim was...' })).text);
-  assert.deepEqual(Object.keys(wording), ['sentence']);
+  assert.deepEqual(Object.keys(wording), ['sentence', 'why']);
   assert.equal(typeof wording.sentence, 'string');
   assert.ok(!/\n/.test(wording.sentence));
   const judge = extractJson((await call({ systemFile: files().systemFile, prompt: message(['a', 'x']) })).text);

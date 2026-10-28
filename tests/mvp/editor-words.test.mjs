@@ -1,9 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  answerWord, capWords, cutText, demoCommands, listNames, namePracticePage, notionUrl, plural, practiceLink, practiceTitle, quoted, quotedWhole, stampOf, tableLink, viewLink, yourClaims,
+  answerWord, capWords, cutText, demoCommands, listNames, namePracticePage, notionUrl, plural, practiceLink, practiceTitle, quoted, quotedWhole, splitSentences, stampOf, suggestionPart, tableLink, viewLink, yourClaims,
 } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.mjs';
-import { lintReport, renderReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
+import { lintReport, renderReport, splitExtra } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
+import { oneLineRule } from '../../agents/claim-tagger-mvp/scripts/lib/rulebook-edit.mjs';
 import { placeholderConfig } from './helpers/config-fixture.mjs';
 
 // A config for the link tests: the agent's own as it was before setup (fixtures/config.placeholder.json, not the live config.json that setup has filled in),
@@ -117,6 +118,105 @@ test('quotedWhole: the whole text in double quotes, never cut, inner double quot
   assert.equal(quotedWhole(null), '""');
   const md = renderReport({ sentence: 'Promote: FAIL.', next: `Next: put this whole text into Editor wording: ${quotedWhole('Two weeks, $2.87 million {x}, the database, G20 and the rubric gate.')}; then type /claim-tagger promote again.` });
   assert.deepEqual(lintReport(md), []);
+});
+
+// The text of rule 3 of Context-dependent as the safety check tested it on 28 October 2026.
+const RULE_3 = 'A descriptive definite that names a kind of thing but not which one (\'the Bitcoin ETF\', \'the major-bank stablecoin consortium\', \'the open-access version\', \'the infrastructure\', \'the new model\') makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts. Applies to countable things, not to abstract or mass nouns (\'the regulatory clearance\', \'the market\').';
+
+test('splitSentences: rule 3 splits into its three sentences, each whole; the text joined again is the text', () => {
+  const sentences = splitSentences(RULE_3);
+  assert.equal(sentences.length, 3);
+  assert.ok(sentences[0].startsWith('A descriptive definite that names a kind of thing') && sentences[0].endsWith('which ETF, consortium, version or product is meant.'));
+  assert.ok(sentences[1].startsWith('A description that works as the name of one specific program') && sentences[1].endsWith('(more than one campaign, more than one convention in the same city) still counts.'));
+  assert.ok(sentences[2].startsWith('Applies to countable things') && sentences[2].endsWith('(\'the regulatory clearance\', \'the market\').'));
+  assert.equal(sentences.join(' '), RULE_3);
+  assert.deepEqual(splitSentences('One sentence only, with no stop in the middle.'), ['One sentence only, with no stop in the middle.']);
+  assert.deepEqual(splitSentences('  Two sentences here.\n\n"Quoted" starts the second one.  '), ['Two sentences here.', '"Quoted" starts the second one.'], 'an opening quote starts a sentence too, and line breaks are spaces');
+  assert.deepEqual(splitSentences('Starts here today. But not after a lower case word. and not here'), ['Starts here today.', 'But not after a lower case word. and not here'], 'a stop followed by a lower case letter does not split');
+  assert.deepEqual(splitSentences(''), []);
+});
+
+test('splitSentences: a text with an abbreviation such as "e.g." or "U.S.", or a piece shorter than three words, is not split: one paragraph', () => {
+  const eg = 'Names a kind of thing, e.g. The Hague or the court. Applies to countable things only.';
+  assert.deepEqual(splitSentences(eg), ['Names a kind of thing, e.g. The Hague or the court.', 'Applies to countable things only.'], 'the abbreviation is not a boundary, the real stop is');
+  const us = 'A body of the U.S. Congress counts as identified. A body that is not known does not.';
+  assert.deepEqual(splitSentences(us), ['A body of the U.S. Congress counts as identified.', 'A body that is not known does not.']);
+  assert.deepEqual(splitSentences('Dr. Smith said it. Applies here too.'), ['Dr. Smith said it.', 'Applies here too.']);
+  const short = 'A name alone is not enough. Never. A place and a role are.';
+  assert.deepEqual(splitSentences(short), [short], 'a piece of one word ("Never.") means the text is shown as one paragraph');
+  const tiny = 'Counts as identified. Needs context.';
+  assert.deepEqual(splitSentences(tiny), [tiny], 'two words each is shorter than three');
+  const shortEg = 'Use e.g. Paris. Not it.';
+  assert.deepEqual(splitSentences(shortEg), [shortEg]);
+});
+
+test('splitSentences: titles, places, companies and months written with a full stop do not end a sentence ("St. Louis", "Sen. Warren" even in quotes, "Oct. 5"); a stop after a plain word still does', () => {
+  const split = (text) => splitSentences(text);
+  assert.deepEqual(split('A convention in St. Louis counts as one thing here. A convention in a big city needs context.'), ['A convention in St. Louis counts as one thing here.', 'A convention in a big city needs context.']);
+  assert.deepEqual(split('A claim naming \'Sen. Warren\' alone names one person. A claim naming a senator does not.'), ['A claim naming \'Sen. Warren\' alone names one person.', 'A claim naming a senator does not.']);
+  assert.deepEqual(split('A claim naming "Sen. Warren" alone names one person. A claim naming a senator does not.'), ['A claim naming "Sen. Warren" alone names one person.', 'A claim naming a senator does not.']);
+  for (const word of ['Rep.', 'Gov.', 'Gen.', 'Lt.', 'Col.', 'Mt.', 'Ft.', 'Inc.', 'Corp.', 'Ltd.', 'Co.', 'No.', 'Jan.', 'Feb.', 'Mar.', 'Apr.', 'Jun.', 'Jul.', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.']) {
+    assert.deepEqual(split(`A text with ${word} Smith in it is one sentence. A second sentence follows it.`), [`A text with ${word} Smith in it is one sentence.`, 'A second sentence follows it.'], word);
+  }
+  assert.deepEqual(split('The answer is yes. Another sentence follows it here.'), ['The answer is yes.', 'Another sentence follows it here.'], 'an ordinary word before the stop is a sentence end');
+});
+
+test('suggestionPart: the sentence as a quote, the Why line, and the tested rule in a fenced block one sentence per line with the new sentence last; a short piece keeps the rule as one paragraph', () => {
+  const sentence = 'A description that names no particular program or law still needs context.';
+  const part = suggestionPart({ ruleLabel: 'rule 3', sentence, why: 'The claim names a kind of thing without saying which, so the sentence keeps it under the rule.', ruleText: RULE_3 });
+  const rules = splitSentences(RULE_3);
+  assert.equal(part, [
+    'Suggested sentence for rule 3:',
+    `> ${sentence}`,
+    '',
+    'Why: The claim names a kind of thing without saying which, so the sentence keeps it under the rule.',
+    '',
+    'Rule 3 with the sentence, to copy into Editor wording:',
+    '```',
+    ...rules,
+    sentence,
+    '```',
+  ].join('\n'));
+  const block = /```\n([\s\S]*)\n```$/.exec(part)[1].split('\n');
+  assert.equal(block.length, 4, 'three sentences of the rule and the new one');
+  assert.ok(block.every((l) => !/^(\d+[.)]|[-*>#])\s/.test(l) && l === l.trim() && l !== ''), 'only the rule text: no numbers, markers or blank lines');
+  assert.equal(block.join(' '), `${RULE_3} ${sentence}`, 'copied back into one line it is the text that was tested and the sentence');
+  const label = suggestionPart({ ruleLabel: 'Context-dependent rule 3', sentence, why: 'Because.', ruleText: 'One piece. Never.' });
+  assert.ok(label.startsWith('Suggested sentence for Context-dependent rule 3:\n'));
+  assert.ok(label.includes('\n\nContext-dependent rule 3 with the sentence, to copy into Editor wording:\n```\nOne piece. Never.\nA description that'), 'the label is the rule\'s name; a short piece keeps the rule on one line');
+  // the text is on single lines whatever the model sent, and what stands in the block cannot close it
+  const messy = suggestionPart({ ruleLabel: 'rule 3', sentence: 'Two\nlines ``` here.', why: 'A\n\nreason.', ruleText: 'The rule ``` text\nis long enough here.' });
+  assert.equal(messy.split('\n').filter((l) => l.startsWith('```')).length, 2, 'only the two fences of the block');
+  assert.ok(messy.includes('> Two lines ``` here.\n\nWhy: A reason.\n\n'));
+  assert.ok(messy.endsWith('```\nThe rule ``` text is long enough here.\nTwo lines ``` here.\n```'), 'a rule that came in on two lines is one line in the block');
+});
+
+test('suggestionPart: the block read back as one line (oneLineRule, the way the safety check reads Editor wording) is the tested rule and the sentence; a rule whose cut would not read back the same stays one paragraph', () => {
+  const sentence = 'A plan named only by its subject still needs context.';
+  const part = (ruleText) => suggestionPart({ ruleLabel: 'rule 3', sentence, why: 'Because.', ruleText });
+  const blockOf = (text) => /\n```\n([\s\S]*)\n```$/.exec(text)[1];
+  const check = (rule) => {
+    const block = blockOf(part(rule));
+    assert.equal(oneLineRule(block), oneLineRule(`${rule} ${sentence}`), `round trip of ${JSON.stringify(rule)}`);
+    return block.split('\n');
+  };
+  const wrap = (text) => renderReport({ sentence: 'Promote: FAIL.', extra: text, next: 'Next: paste it.' });
+  // plain: cut at the sentences, the spacing inside each kept as it stands
+  assert.deepEqual(check('First sentence is here. Second sentence is here too.'), ['First sentence is here.', 'Second sentence is here too.', sentence]);
+  assert.deepEqual(check('First  sentence\tis here. Second sentence is here too.'), ['First  sentence\tis here.', 'Second sentence is here too.', sentence], 'a double space and a tab inside a sentence stay');
+  // a double space or a tab between two sentences would be one space once the lines are joined: the rule stays one paragraph, as it stands
+  assert.deepEqual(check('First sentence is here.  Second sentence is here too.'), ['First sentence is here.  Second sentence is here too.', sentence]);
+  assert.deepEqual(check('First sentence is here.\tSecond sentence is here too.'), ['First sentence is here.\tSecond sentence is here too.', sentence]);
+  // triple backticks in the rule are not changed: they cannot close the block unless a line is nothing but backticks, and then the cut is not used
+  const ticks = check('Mark it with ``` here. Second sentence is here too.');
+  assert.deepEqual(ticks, ['Mark it with ``` here.', 'Second sentence is here too.', sentence]);
+  assert.deepEqual(check('``` opens it. Second sentence is here too.'), ['``` opens it.', 'Second sentence is here too.', sentence]);
+  for (const rule of ['Mark it with ``` here. Second sentence is here too.', '``` opens it. Second sentence is here too.', 'First sentence is here.  Second sentence is here too.']) {
+    assert.deepEqual(lintReport(wrap(part(rule))), [], `still one suggestion, between the sentence and the Next line: ${rule}`);
+    assert.equal(splitExtra(wrap(part(rule))).extra, part(rule));
+  }
+  assert.deepEqual(check('First sentence is here. ``` Second sentence is here too.'), ['First sentence is here. ``` Second sentence is here too.', sentence], 'a cut at a backtick is no cut: this one has no capital letter after the stop');
+  assert.deepEqual(check('One sentence. ```\nTwo sentence is here too.'), ['One sentence. ``` Two sentence is here too.', sentence], 'a rule that came in on two lines');
 });
 
 test('practiceTitle: the title of the practice page, only for a demo profile that has one', () => {

@@ -48,6 +48,8 @@ Editors read these reports between other tasks. Every report, errors included, h
 2. **One table**, at most five rows and three columns, with the figures that matter for this subcommand (see the examples in `references/report-examples.md`). Leave it out when there is nothing to count.
 3. **One line starting "Next:"** with exactly one thing to do: a command to type, or a Notion link and the action to take there. When more rows wait than fit one sitting (a setting, default 20), the sentence gives the count and the line says "start at the top of Your queue (link)", not "decide your N claims".
 
+One report has a fourth part: a demo `promote` that ended in FAIL and could write a suggestion has it between the table and the Next line ("Suggested sentence for rule 3:", the sentence as a quote, a "Why:" line, and the rule to copy in a fenced block). Relay it verbatim like the rest; it is the only fenced block a report has.
+
 Leave out everything else: headings, how the scripts work, the commands you ran, retries and incidents (if one changed the result, say so in a few words inside the sentence), file paths, run ids, JSON, and any duration, dollar amount or model-call count (they stay in the run record). For a stopped run, "Next:" is the same request again; the script resumes the run itself. While a step takes a while, say once what is happening, with no duration ("Building the page."), then nothing until the report.
 
 Two examples:

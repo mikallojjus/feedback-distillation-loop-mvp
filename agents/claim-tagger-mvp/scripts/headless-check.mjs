@@ -3,6 +3,7 @@
 // (MVP-PROMPT section 8, item 7: the final message of each run has the three parts, and after the Next line at most one checklist of five numbered lines, no insight block, no JSON, no time words, no
 // dollars, and the transcript shows no write to an editor column). The grading is transcript-check.mjs; this script is the runner. A prompt that starts with "/claim-tagger decide"
 // or "/claim-tagger demo decide" is graded in decide mode (decision 115): its connector writes of the three Claims columns are not a problem, any other write of an editor column still is.
+// A prompt that starts with "/claim-tagger promote" or "/claim-tagger demo promote" may end in the FAIL report with its suggestion (a fenced block); no other final message may.
 //
 //   node agents/claim-tagger-mvp/scripts/headless-check.mjs --prompt "/claim-tagger status" --out <dir>
 //        [--settings .claude/settings.json] [--cwd <repo>] [--timeout-ms 1800000] [--claude-bin <name or path>] [--overwrite]
@@ -104,6 +105,14 @@ export function buildArgs({ prompt, settingsPath } = {}) {
  */
 export function isDecidePrompt(prompt) {
   return /^\/claim-tagger\s+(?:demo\s+)?decide(?:\s|$)/i.test(String(prompt ?? '').trim());
+}
+
+/**
+ * Is this the prompt of a promote step ("/claim-tagger promote ..." or "/claim-tagger demo promote ...")? Only then does the transcript check accept the suggestion of a FAIL report
+ * (a part with a fenced block) in the final message; the same part in the transcript of any other prompt is a problem.
+ */
+export function isPromotePrompt(prompt) {
+  return /^\/claim-tagger\s+(?:demo\s+)?promote\b/i.test(String(prompt ?? '').trim());
 }
 
 /** A name for a prompt's folder: lower case, letters and digits joined by single dashes, at most 40 characters ("/claim-tagger status" -> "claim-tagger-status"). */
@@ -230,7 +239,7 @@ export async function runPrompt(options) {
   const transcript = readText(transcriptPath);
   const stderr = readText(stderrPath, STDERR_CAP);
   const check = checkTranscript(transcript, {
-    editorColumns, allowedScripts, expectStyle: OUTPUT_STYLE, decide: isDecidePrompt(prompt), decideColumns, reviewColumn,
+    editorColumns, allowedScripts, expectStyle: OUTPUT_STYLE, decide: isDecidePrompt(prompt), promote: isPromotePrompt(prompt), decideColumns, reviewColumn,
   });
   const lastResult = parseStreamJson(transcript).events.findLast((e) => e?.type === 'result');
 
