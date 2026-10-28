@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 45): "The hub and the Geo claims" (P5 to P20, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. Since 28 October an editor's Claude may decide claims on the editor's instruction through the Notion connector (P18 to P20, `/claim-tagger decide`); it is built, reviewed and merged, but not run live yet. Next: step 10, the 6 claims decided by a person or by Claude on their word, then distill.
+- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, but not run live yet. Next: the guardrail research the product owner asked for overnight (an artifact), then step 10.
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -500,3 +500,36 @@ The plan (engineering decisions 117 to 120):
 The guard hook is unchanged: it already allows any subset of the three columns.
 
 Next: a Sonnet coder builds it off this branch (2,289 tests at the start), then an Opus review; no live decide until the merge and the product owner's word.
+
+### 47. The decide step as a conversation, built, reviewed and merged; decisions 121 and 122 (night of 28 October)
+
+Done: a Sonnet coder built P21 to P25 on `decide-conversation` (cc125b6; base checked, 2,289 tests):
+- `list --all` and `--claims` covering Reviewed claims, with a `seen` fingerprint and the agent's reading;
+- `open` with optional `verified_tags` and `note`, the Reviewed and removal refusals removed, and a refusal of a changed claim;
+- `check` comparing only what was written, with the row "Changed an earlier review";
+- the skill's Deciding section rewritten around the draft and the OK;
+- the docs and tests to match.
+
+The Opus review said NO-GO:
+- **M1:** with update-page under "allow", the guard was the only gate, and a guard that fails to start lets every page update through unprompted.
+- **SHOULD 1:** `seen` was not bound to its claim.
+- **SHOULD 2:** builder sessions lost their prompt.
+- **SHOULD 3 to 5:** when an OK counts, the Claims-table link, and proposals in the compact list.
+
+The Claude Code docs, checked by a guide agent, confirmed that a hook's "allow" skips the prompt only when no ask rule matches, and that a failed hook leaves the normal prompt.
+
+The fix pass (a33e07c):
+- update-page is in no permission list, and the guard answers "ask" in builder sessions and accepts only Reviewed (decision 121);
+- `seen` hashes the page id and must be 12 hex characters (decision 122);
+- the skill says when an OK counts, and that Claude compares `open`'s summary lines with the approved draft before sending;
+- the Next lines and the counting are corrected, and the mutation gaps have tests.
+
+The Opus re-check said GO: 187 hook cases, of which 12 changed as intended (builder calls allow → ask, "To review" allow → deny), and 2,307 tests. During the re-check the reviewer ran the coder's mutation script by mistake. It restores each file after mutating it; the worktree was checked clean afterwards, and the merge takes the commit, not the working tree.
+
+Merged as 518e2b7. Then the re-check's SHOULD was added: an unexpected update-page prompt means the guard did not run; answer No, never "Yes, and don't ask again", and tell the engineer (SKILL.md step 3, EDITOR-HANDOVER, and AGENT.md for builder sessions).
+
+Calls made overnight under the product owner's instruction to decide in P21 to P25's spirit: decision 121 (no permission rule rather than "allow", builder sessions "ask", only Reviewed), the "answer No" guidance, and leaving out `"onFailure": "block"`.
+
+Verified: the full suite after the merge (`evidence/01-tests/node-test-claims-hub-decide-conversation.txt`). No Notion write; nothing was decided live.
+
+Next: the guardrail research (Haiku sweeps, an Opus pro-editor review, an Opus check against the code, an artifact), then step 10 on the product owner's word.
