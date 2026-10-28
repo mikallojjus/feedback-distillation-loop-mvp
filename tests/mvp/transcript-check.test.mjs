@@ -377,6 +377,16 @@ test('the words of the suggestion in a relay are linted: its sentence and its Wh
   assert.ok(has(bad('> A description that names', '> A database that names'), 'the suggested sentence says "database"'));
   assert.ok(has(bad('Why: The claim', 'Why: In 3 days the claim'), 'the Why line holds a duration word'));
   assert.ok(has(bad('A descriptive definite', 'A runs/x.mjs {descriptive} definite'), 'the block to copy'));
+  // a file, a run folder, a run id or a brace is refused in the sentence and the Why line even inside single quotes; a duration there is a number with a unit
+  const SENT = '> A description that names no particular program or law still needs context.';
+  const WHYL = 'Why: The claim names a kind of thing without saying which, so the sentence keeps it under the rule.';
+  assert.ok(has(bad(WHYL, "Why: It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'."), 'the Why line holds a file path'));
+  assert.ok(has(bad(WHYL, "Why: It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'."), 'the Why line names a run folder'));
+  assert.ok(has(bad(WHYL, "Why: It reads '{a: 1}'."), 'the Why line holds a JSON brace'));
+  assert.ok(has(bad(SENT, "> A claim citing 'C:/secret/.env' still needs context."), 'the suggested sentence holds a file path'));
+  assert.deepEqual(bad(SENT, '> A second program that fits the description still counts.'), [], '"a second program" is no duration');
+  assert.deepEqual(bad(WHYL, "Why: It reads 'the last 3 days' as a quoted claim."), [], 'a quoted claim may say 3 days');
+  assert.ok(has(bad(WHYL, 'Why: It took 3 days.'), 'the Why line holds a duration word'));
   // a table of six rows in a FAIL relay is refused: the shape check looks at the report without its suggestion
   const six = [FAIL_SENTENCE, '', '| Check | Result |', '|---|---|', ...Array.from({ length: 6 }, (_, i) => `| Row ${i + 1} | ${i} of 9 right |`), '', SUGGESTION, '', FAIL_NEXT].join('\n');
   const problems = grade({ final: six }, PROMOTE).problems;
@@ -904,6 +914,25 @@ test('a failing check exits 1, prints one line per problem and still writes the 
   assert.equal(check.ok, false);
   assert.equal(check.status, 'fail');
   assert.equal(check.problems.length, 2);
+});
+
+test('the runner grades the relay of a promote FAIL by the prompt: it passes under /claim-tagger promote and /claim-tagger demo promote, and the same relay under any other command is a problem', async () => {
+  const dir = tmp();
+  const relay = join(dir, 'promote-fail.jsonl');
+  writeFileSync(relay, run({ final: failFinal(SUGGESTION, '', FAIL_NEXT) }));
+  for (const prompt of ['/claim-tagger promote', '/claim-tagger demo promote']) {
+    const out = join(dir, slugify(prompt));
+    const r = await headless(['--prompt', prompt, '--out', out, '--claude-bin', FAKE_CLI], { FAKE_TRANSCRIPT: relay });
+    assert.equal(r.code, 0, `${prompt}: ${r.out}${r.err}`);
+    assert.deepEqual([readJson(join(out, 'check.json')).status, readJson(join(out, 'check.json')).problems], ['pass', []], prompt);
+  }
+  for (const prompt of ['/claim-tagger status', '/claim-tagger demo decide', '/claim-tagger distill']) {
+    const out = join(dir, slugify(prompt));
+    const r = await headless(['--prompt', prompt, '--out', out, '--claude-bin', FAKE_CLI], { FAKE_TRANSCRIPT: relay });
+    assert.equal(r.code, 1, prompt);
+    assert.match(r.out, /only the relay of \/claim-tagger promote may/, prompt);
+    assert.equal(readJson(join(out, 'check.json')).status, 'fail', prompt);
+  }
 });
 
 test('the run is graded with the Explanatory style expected', async () => {

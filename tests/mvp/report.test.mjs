@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  DEFAULT_HEADER, DEMO_PREFIX, EXTRA_HEAD, MAX_ROWS, buildReport, lintReport, renderReport, splitExtra, writeReport,
+  DEFAULT_HEADER, DEMO_PREFIX, EXTRA_HEAD, MAX_ROWS, buildReport, lintReport, lintSuggestionText, renderReport, splitExtra, writeReport,
 } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 
 const roots = [];
@@ -478,7 +478,28 @@ test('extra: its sentence and its Why line get the word rules (a phrase in singl
   assert.ok(has(lint(SUGGESTION.replace(SENTENCE_LINE, '> A database sentence that takes 3 days costs $2.')), 'the suggested sentence says "database"'));
   assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, 'Why: The rubric gate runs in runs/x and needs {x}.')), 'the Why line names a run folder'));
   assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, 'Why: The rubric gate runs in runs/x and needs {x}.')), 'the Why line holds a JSON brace'));
-  assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, 'Why: The second half is the point.')), 'the Why line holds a duration word: "second"'), 'second is a time word, as everywhere in a report');
+  // a duration in the sentence and the Why line is a number with a unit; a time word alone ("second", "day", "week") is not one, as it is in the sentence of a report
+  for (const [line, text] of [[WHY_LINE, 'Why: The second half is the point.'], [SENTENCE_LINE, '> A second program that fits the description still counts.'], [SENTENCE_LINE, '> Election Day names one day each year.'], [SENTENCE_LINE, '> A time expression such as last week does not say which week.']]) {
+    assert.deepEqual(lint(SUGGESTION.replace(line, text)), [], text);
+  }
+  for (const [line, text, what] of [[SENTENCE_LINE, '> It took 3 days.', '"3 days"'], [WHY_LINE, 'Why: It took 2.5 hours to read.', '"2.5 hours"'], [WHY_LINE, 'Why: A 250 ms wait is no reason.', '"250 ms"'], [SENTENCE_LINE, '> Within 4 weeks it counts.', '"4 weeks"']]) {
+    assert.ok(has(lint(SUGGESTION.replace(line, text)), `holds a duration word: ${what}`), `${text}: ${lint(SUGGESTION.replace(line, text)).join('; ')}`);
+  }
+  assert.ok(has(lintReport(renderReport({ ...failReport(), sentence: 'Promote: FAIL, a second program is unchanged.' })), 'duration word'), 'the sentence of the report itself keeps the full rule: "second" is refused there');
+  assert.ok(has(lintReport(renderReport({ ...failReport(), next: 'Next: wait a week, then type /claim-tagger promote again.' })), 'duration word'), 'and so does its Next line');
+  // a file, a run folder, a brace or a run id is refused wherever it stands, in single quotes too; a claim carries none of them
+  for (const [line, text, what] of [
+    [WHY_LINE, "Why: It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'.", 'the Why line holds a file path'],
+    [WHY_LINE, "Why: It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'.", 'the Why line names a run folder (runs/)'],
+    [WHY_LINE, "Why: It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'.", 'the Why line holds a run id: 20261028T095657Z'],
+    [WHY_LINE, "Why: It reads '{a: 1}'.", 'the Why line holds a JSON brace'],
+    [SENTENCE_LINE, "> A claim citing 'C:/secret/.env' still needs context.", 'the suggested sentence holds a file path'],
+    [SENTENCE_LINE, "> A claim citing 'check.mjs' still needs context.", 'the suggested sentence names a script file (.mjs)'],
+  ]) {
+    assert.ok(has(lint(SUGGESTION.replace(line, text)), what), `${text}: ${lint(SUGGESTION.replace(line, text)).join('; ')}`);
+  }
+  assert.deepEqual(lintSuggestionText("It reads 'the last 3 days' and '$2.87 million' and 'G20' as a quoted claim."), [], 'but the other word rules still leave a quoted claim alone');
+  assert.deepEqual(lintSuggestionText('It names a file {x} in runs/.').length, 2, 'unquoted, each hard refusal once: not again from the word rules');
   assert.deepEqual(lint(SUGGESTION.replace(WHY_LINE, "Why: It reads 'the last 3 days' as a time, so the rule skips it.")), [], 'a phrase in single quotes is a quoted claim');
   assert.deepEqual(lint(SUGGESTION.replace(WHY_LINE, "Why: The claim's reading is a thing the rule's text skips.")), [], 'apostrophes are not quotes');
   assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, "Why: It's the rule's text, 3 days long.")), 'duration word'), 'and they do not hide a word: apostrophes make no quoted phrase');

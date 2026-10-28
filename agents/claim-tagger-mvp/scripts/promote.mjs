@@ -532,6 +532,8 @@ export async function promote(opts = {}) {
           sentence: `Promote: FAIL, ${ruleLabel} is unchanged: ${what}; the right answer is ${answerWord(first.expected)}; a suggested sentence could not be written.`,
           next: `Next: in Lessons waiting (${link}), open the change and write all of ${ruleLabel} in Editor wording so that ${quoted(first.claim)} keeps its answer; then type /claim-tagger promote again.`,
         };
+        // the form for a suggestion that was written (it is in card.md) but did not pass the report lint, so the report cannot show it: same Next line, a sentence that says "shown"
+        const notShown = { sentence: noSentence.sentence.replace('could not be written', 'could not be shown'), next: noSentence.next };
         return {
           exit: EXIT.FAIL,
           header: CHECK_HEADER,
@@ -541,10 +543,10 @@ export async function promote(opts = {}) {
             : {
               sentence: `Promote: FAIL, ${ruleLabel} is unchanged: ${what}; the right answer is ${answerWord(first.expected)}.`,
               // the suggestion is a part of its own between the table and the Next line: the sentence, the reason, and the rule as tested with the sentence added, to copy. The report
-              // without it (the form for a sentence that could not be written) is what the run falls back to if the suggestion does not pass the report lint (lib/loop.mjs).
+              // without it (`notShown`: the suggestion is in card.md, the report cannot show it) is what the run falls back to if the suggestion does not pass the report lint (lib/loop.mjs).
               extra: suggestionPart({ ruleLabel, sentence: asked.sentence, why: asked.why, ruleText: candidateText }),
               next: `Next: in Lessons waiting (${link}), paste the block above into Editor wording in place of what is there, or write all of ${ruleLabel} as you want it; then type /claim-tagger promote again.`,
-              withoutExtra: noSentence,
+              withoutExtra: notShown,
             }),
           details: { verdict, card, sentence: asked.sentence, why: asked.why, text: wholeText, first },
         };

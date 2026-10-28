@@ -684,7 +684,9 @@ test('promote FAIL (lint fallback): when the suggestion does not pass the report
   const r = await promote(h);
   assert.equal(r.exit, 11, h.io.errs.join('\n'));
   assert.equal('extra' in r.report, false, 'no suggestion part');
-  assert.match(r.report.sentence, /; the right answer is Applies; a suggested sentence could not be written\.$/, 'and the sentence says so, like the report for a sentence that could not be written');
+  assert.match(r.report.sentence, /; the right answer is Applies; a suggested sentence could not be shown\.$/, 'and the sentence says it could not be shown: it was written, it is in card.md');
+  assert.doesNotMatch(r.report.sentence, /could not be written/);
+  assert.match(readFileSync(join(r.runDir, 'card.md'), 'utf8'), /Suggested sentence for Editor wording: "A reference to one particular thing/, 'the suggestion that did not fit the report is in the card');
   assert.match(r.report.next, /^Next: in Lessons waiting \(.*\), open the change and write all of rule 4 in Editor wording so that ".*" keeps its answer; then type \/claim-tagger promote again\.$/, 'the Next line no longer points at a block that is not there');
   assert.notEqual(r.markdown.trim(), 'Promote finished.\n\nNext: ask the engineer to look at the message the script printed.', 'not the bare fallback report');
   assert.deepEqual(lintReport(r.markdown), []);
@@ -719,6 +721,39 @@ test('promote FAIL (report lint): a sentence or a reason with a word the report 
   const q = await promote(quoted.hooks());
   assert.equal(wordingCalls(quoted).length, 1, 'quoted claim text may say 3 days');
   assert.ok(q.report.extra.includes("Why: It reads 'the last 3 days' as a time"));
+});
+
+test('promote FAIL (report lint): a file, a run folder, a brace or a run id is refused in a sentence or a reason even inside single quotes, and asked for again; a duration is a number with a unit, so "a second program" and "Election Day" are taken', async () => {
+  const asksAgain = async (why) => {
+    const w = await promoteWorld({ overrides: flipExample });
+    w.setEnv('FAKE_LOOP_WHY_SEQ', JSON.stringify([why, 'A clean reason.']));
+    const h = w.hooks();
+    const r = await promote(h);
+    assert.equal(wordingCalls(w).length, 2, `asked again for: ${why}`);
+    assert.equal(assertReport(h, r).extra, suggestion('rule 4', SENTENCE, 'A clean reason.', [NEW_TEXT, SENTENCE]), why);
+  };
+  await asksAgain("It names 'X:/work/geo-agents/.env' and 'runs/20261028T095657Z-promote/card.json'.");
+  await asksAgain("It reads '{a: 1}'.");
+  await asksAgain('It took 3 days.');
+  // the same for the sentence, which the fake repeats on both attempts: no suggestion, and run.json says why
+  for (const [sentence, why] of [["A claim citing 'C:/secret/.env' still needs context.", /the sentence would not pass the report lint: .*file path/], ["A claim citing 'check.mjs' still needs context.", /the sentence would not pass the report lint: .*script file/]]) {
+    const w = await promoteWorld({ overrides: flipExample });
+    w.setEnv('FAKE_LOOP_WORDING', sentence);
+    const r = await promote(w.hooks());
+    assert.equal(wordingCalls(w).length, 2, sentence);
+    assert.equal('extra' in r.report, false, sentence);
+    assert.match(readJson(join(r.runDir, 'run.json')).wording_failed, why);
+  }
+  // taken at the first reply
+  for (const text of ['A second program that fits the description still counts.', 'Election Day names one day each year.', 'A time expression such as last week does not say which week.']) {
+    const w = await promoteWorld({ overrides: flipExample });
+    w.setEnv('FAKE_LOOP_WORDING', text);
+    w.setEnv('FAKE_LOOP_WHY', text);
+    const h = w.hooks();
+    const r = await promote(h);
+    assert.equal(wordingCalls(w).length, 1, text);
+    assert.equal(assertReport(h, r).extra, suggestion('rule 4', text, text, [NEW_TEXT, text]), text);
+  }
 });
 
 test('promote FAIL: the rule to copy is the Editor wording that was tested when there is one (numbering dropped), else the proposed text; it keeps its own double quotes, and so does the card', async () => {

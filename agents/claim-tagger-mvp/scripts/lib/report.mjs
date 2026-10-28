@@ -11,11 +11,12 @@
 //                  Left out, the report is the three parts it has always been, byte for byte
 //        next      one line that starts with "Next: "
 //   renderReport(report)  -> the Markdown of report.md: sentence, a blank line, the table, a blank line, the suggestion if there is one, a blank line, the Next line
-//   lintSuggestionText(text) -> string[] of the word problems of the sentence or the reason of a suggestion (lintWords on one line, phrases in single quotes exempt); [] means it may go in a report
-//   splitExtra(markdown)  -> { rest, extra }:the suggestion split off a report's Markdown (extra is null when the text has none, or one that is not whole) and the report without it
+//   lintSuggestionText(text) -> string[] of the word problems of the sentence or the reason of a suggestion; [] means it may go in a report. A JSON brace, "runs/", ".mjs", a drive path and
+//        a run id are refused wherever they stand, in single quotes too; the rest of the word rules of lintWords hold with two differences: a phrase in single quotes is a quoted claim and is
+//        exempt (a claim may say "$2.87 million"), and a duration is a number with a unit ("3 days"), so "a second program" and "Election Day" are fine
+//   splitExtra(markdown)  -> { rest, extra }: the suggestion split off a report's Markdown (extra is null when the text has none, or one that is not whole) and the report without it
 //   lintReport(markdown)  -> string[] of problems; [] means the report may be shown. The suggestion of a FAIL report is the one allowed fourth part: it is split off first
-//        (splitExtra), must have its own fixed shape and sit right before the Next line. Its "> " sentence and its "Why:" line get the word rules below (a phrase in single quotes is a
-//        quoted claim there); the rule in its fenced block is the editor's own text and is refused only a JSON brace, "runs/", ".mjs", a drive path and a run id; everything else is
+//        (splitExtra), must have its own fixed shape and sit right before the Next line. Its "> " sentence and its "Why:" line get the word rules of lintSuggestionText; the rule in its fenced block is the editor's own text and is refused only a JSON brace, "runs/", ".mjs", a drive path and a run id; everything else is
 //        checked as below. Flags: more than three parts, a heading line, a file path
 //        or script name, a run id, a duration word, a dollar sign, a JSON brace, a shorthand code, the words database, rubric and gate
 //        (editors say table, rulebook and safety check), an Insight block marker, and a missing, repeated or misplaced Next line.
@@ -89,6 +90,8 @@ export function renderReport(report) {
 
 // A unit counts as a duration word when it is not part of a longer word, so "16ms" and "3 days" are found and "today" and "weekly" are not.
 const DURATION = /(?<![A-Za-z])(?:minutes?|hours?|days?|weeks?|seconds?|ms)(?![A-Za-z])/gi;
+// In the sentence and the reason of a suggestion a duration is a number with its unit ("3 days", "250 ms"): words such as "a second program" or "Election Day" are not one.
+const DURATION_NUMBER = /\b\d+(?:[.,]\d+)?\s*(?:ms|milliseconds?|s|secs?|seconds?|mins?|minutes?|h|hrs?|hours?|days?|weeks?|months?|years?)\b/gi;
 const SHORTHAND = /\b(?:D|C|R|ED|O|G|LS|WT)-?\d+\b/g;
 const PLAIN_WORDS = /\b(?:databases?|rubrics?|gates?)\b/gi;
 const RUN_ID = /\d{8}T\d{6}Z/;
@@ -100,8 +103,12 @@ const QUOTED = /"[^"\n]*"|“[^”\n]*”/g; // quoted claim text: "like this" o
 const LINK = /https?:\/\/[^\s)\]]+/g; // a link is an address, not prose: its slug may repeat a page title word for word ("second-run"), which is not a duration
 const shown = (line) => (line.length > 60 ? `${line.slice(0, 57)}...` : line);
 
-/** The word rules of the lint, line by line (lines are the lines of a text, in order): [] when no line breaks one. Used by lintReport and by the transcript check for a checklist. */
-export function lintWords(lines) {
+/**
+ * The word rules of the lint, line by line (lines are the lines of a text, in order): [] when no line breaks one. Used by lintReport and by the transcript check for a checklist.
+ * `numberedDurations` (the sentence and the reason of a suggestion only): a duration is a number with a unit, not any time word.
+ */
+export function lintWords(lines, { numberedDurations = false } = {}) {
+  const duration = numberedDurations ? DURATION_NUMBER : DURATION;
   const problems = [];
   lines.forEach((whole, i) => {
     const at = `line ${i + 1}`;
@@ -112,7 +119,7 @@ export function lintWords(lines) {
     if (BACKSLASH.test(line) || DRIVE_PATH.test(line)) problems.push(`${at} holds a file path: "${shown(line)}"`);
     const runId = RUN_ID.exec(line);
     if (runId) problems.push(`${at} holds a run id: ${runId[0]}`);
-    for (const m of line.match(DURATION) ?? []) problems.push(`${at} holds a duration word: "${m}"`);
+    for (const m of line.match(duration) ?? []) problems.push(`${at} holds a duration word: "${m}"`);
     if (line.includes('$')) problems.push(`${at} holds a dollar sign`);
     if (/[{}]/.test(line)) problems.push(`${at} holds a JSON brace: "${shown(line)}"`);
     for (const m of line.match(SHORTHAND) ?? []) problems.push(`${at} holds the shorthand code ${m}`);
@@ -146,27 +153,38 @@ export function splitExtra(markdown) {
 
 const SINGLE_QUOTED = /(?<![A-Za-z0-9])'[^'\n]+'(?![A-Za-z0-9])/g; // a phrase in single quotes: how the sentence and the reason of a suggestion quote (their double quotes are made single)
 
-/**
- * The word problems of the sentence or the reason of a suggestion (the rules of lintWords, one line): a phrase in single quotes is a quoted claim and is exempt, as text in double
- * quotes is in a report. Each problem is a plain phrase such as `holds a duration word: "days"`; [] means the text may go in a report.
- */
-export function lintSuggestionText(text) {
-  return lintWords([String(text ?? '').replace(SINGLE_QUOTED, '""')]).map((p) => p.replace(/^line 1 /, ''));
+/** What must never reach an editor in a report, quoted or not: a JSON brace, a run folder, a script file, a drive path, a run id. Plain phrases for one line of text; [] when it has none. */
+function hardProblems(line) {
+  const out = [];
+  if (/[{}]/.test(line)) out.push('holds a JSON brace');
+  if (line.includes('runs/')) out.push('names a run folder (runs/)');
+  if (line.includes('.mjs')) out.push('names a script file (.mjs)');
+  if (DRIVE_PATH.test(line)) out.push('holds a file path');
+  const runId = RUN_ID.exec(line);
+  if (runId) out.push(`holds a run id: ${runId[0]}`);
+  return out;
 }
 
-/** What is wrong with the lines of the block to copy: the rule is the editor's own text, so only what must never reach an editor in a report (a JSON brace, a folder or script name, a path, a run id). */
+const HARD_KINDS = /^(?:holds a JSON brace|names a run folder|names a script file|holds a run id)/;
+
+/**
+ * The word problems of the sentence or the reason of a suggestion; [] means the text may go in a report. Each problem is a plain phrase such as `holds a duration word: "3 days"`.
+ * A JSON brace, "runs/", ".mjs", a drive path and a run id are refused wherever they stand: a phrase in single quotes is a quoted claim, and a claim does not carry those. The other
+ * word rules of lintWords hold with two differences: a phrase in single quotes is exempt, as text in double quotes is in a report (a claim may say "$2.87 million" or "G20"), and a
+ * duration is a number with a unit ("3 days"), so "a second program" and "Election Day" are fine.
+ */
+export function lintSuggestionText(text) {
+  const raw = String(text ?? '');
+  const hard = hardProblems(raw);
+  const soft = lintWords([raw.replace(SINGLE_QUOTED, '""')], { numberedDurations: true })
+    .map((p) => p.replace(/^line 1 /, ''))
+    .filter((p) => !HARD_KINDS.test(p) && !(hard.includes('holds a file path') && p.startsWith('holds a file path'))); // those were checked on the raw text above
+  return [...hard, ...soft];
+}
+
+/** What is wrong with the lines of the block to copy: the rule is the editor's own text, so only the hard refusals (a JSON brace, a folder or script name, a path, a run id). */
 function blockProblems(lines) {
-  const out = [];
-  for (const line of lines) {
-    const at = `the block to copy: "${shown(line)}"`;
-    if (/[{}]/.test(line)) out.push(`${at} holds a JSON brace`);
-    if (line.includes('runs/')) out.push(`${at} names a run folder (runs/)`);
-    if (line.includes('.mjs')) out.push(`${at} names a script file (.mjs)`);
-    if (DRIVE_PATH.test(line)) out.push(`${at} holds a file path`);
-    const runId = RUN_ID.exec(line);
-    if (runId) out.push(`${at} holds a run id: ${runId[0]}`);
-  }
-  return out;
+  return lines.flatMap((line) => hardProblems(line).map((p) => `the block to copy: "${shown(line)}" ${p}`));
 }
 
 /** What is wrong with a report's Markdown, as plain sentences; an empty array means it may be shown. */
