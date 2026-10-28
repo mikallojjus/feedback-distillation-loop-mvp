@@ -6,7 +6,7 @@ Geo content-team agents, one folder per agent under `agents/`. Everything an age
 
 | Agent | Folder | Entry point |
 |---|---|---|
-| claim-tagger-mvp (editor feedback loop, the live build) | `agents/claim-tagger-mvp/` | `/claim-tagger status | tag | decide | distill | promote | rollback | follow-up | setup`; `/claim-tagger-walkthrough` builds a practice page under Onboarding, for onboarding new editors |
+| claim-tagger-mvp (editor feedback loop, the live build) | `agents/claim-tagger-mvp/` | `/claim-tagger status | tag | add | decide | distill | promote | rollback | follow-up | setup`; `/claim-tagger-walkthrough` builds a practice page under Onboarding, for onboarding new editors |
 | claim-tagger (the previous build, read-only history) | `agents/claim-tagger/` | none; kept for orientation and never run against Notion again |
 
 ## Hard rules (every agent, every session)
@@ -20,7 +20,7 @@ Geo content-team agents, one folder per agent under `agents/`. Everything an age
 7. **`runs/PAUSED` on disk or Paused in Agent settings means stop.** A person clears it.
 8. **Never delete or trash a Notion page, table, row or block.** Only `setup.mjs`, in a builder session, may move the agent's own pages and tables, and only within the hub (the archive step, P9). Rows are superseded, not removed.
 9. **No API keys in the repo; `.env` is git-ignored and never read into a prompt, a log, a transcript or a report.** Never pass `--bare` or `--fallback-model` to the CLI.
-10. **Scripts write only the agent's own tables and the agent's own columns of the configured claims table** (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks, Agent reading); the Rulebook accepts When to use after a gate PASS or a confirmed restore. The taxonomy "Claim Tags — verified", "U.S. Politics debate claims", "Claims to review", the World affairs tables and every other real table stay protected: read at most, never written. The MVP lives on the Notion page "Claim tagger" (the hub). Its archive sub-page, "Feedback Distillation MVP (archive, to 27 Oct 2026)", and everything in it (the first build's tables and every practice page made until 27 Oct 2026) are protected: read at most, never written. The old trial under "Editorial feedback loop" stays read-only history.
+10. **Scripts write only the agent's own tables and the agent's own columns of the configured claims table** (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks, Agent reading); the Rulebook accepts When to use after a gate PASS or a confirmed restore; and `add.mjs` creates new rows of the claims table with the Geo columns only, from claims read from Geo (P35). The taxonomy "Claim Tags — verified", "U.S. Politics debate claims", "Claims to review", the World affairs tables and every other real table stay protected: read at most, never written. The MVP lives on the Notion page "Claim tagger" (the hub). Its archive sub-page, "Feedback Distillation MVP (archive, to 27 Oct 2026)", and everything in it (the first build's tables and every practice page made until 27 Oct 2026) are protected: read at most, never written. The old trial under "Editorial feedback loop" stays read-only history.
 
 ## Conventions
 

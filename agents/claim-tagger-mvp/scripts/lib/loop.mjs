@@ -1,4 +1,4 @@
-// The harness the loop scripts (propose, distill, promote, followup, rollback, restore, status) run inside, so that each of them is only its own
+// The harness the loop scripts (propose, distill, promote, followup, rollback, restore, status, add) run inside, so that each of them is only its own
 // decisions. One run is one folder, runs/<run-id>/, with run.json written first and last (CONTRACTS section 10), the plan and its ledger, the
 // request log of what was sent to Notion, and the report (report.json and report.md, the three parts of section 9). Nothing here decides what a
 // script means; it does the things every script does the same way.

@@ -310,6 +310,54 @@ Decide: 6 claims decided and read back; 2 differ from the agent.
 
 Next: type /claim-tagger distill to read the decisions.
 
+### add (Claims), all claims added
+
+The editor gave three Geo links. The script read the claims from Geo, created three new rows in Claims with the Geo columns only (name, address, space, date, sources, tags, topics) and read every row back. Nothing is marked and nothing is tagged: the Next line sends the editor to the tag command. The sentence names at most three of the claims (cut like the other reports); with one claim added the Next line says "the new claim". Over the three, the sentence ends the list with "and more". The Next line only names a command, so no checklist follows.
+
+Add: 3 claims added to Claims from Geo ("The mayor said the budget grew by half.", "Rents in the city rose faster than wa..." and "The bill was passed by a large majority.").
+
+| What | Result |
+|---|---|
+| Added | 3 |
+
+Next: type /claim-tagger tag to read the 3 new claims.
+
+### add (Claims), some claims refused
+
+Six items: one claim was added and five were not. The table has a row for each kind of reason that is present, in this order: Added, Already in Claims, Not found in Geo, Not a claim, Not in our spaces, Same text as a claim in Claims, Not a Geo link or ID (and No name in Geo, Source link refused); with more than five kinds, four keep their row (Added, Already in Claims, Same text as a claim in Claims and Not found in Geo, whichever of them are present) and the rest become one row, "Other reasons" (here the item that is not a claim and the one that is not a Geo link or ID). A claim with the same text as one in Claims is refused, and the row names the claim that is there already. The Geo IDs, the reason for each item and the existing claims are in the run record, not in the report.
+
+Add: 1 claim added to Claims from Geo ("The new tax will cost families about..."); 5 were not added.
+
+| What | Result |
+|---|---|
+| Added | 1 |
+| Already in Claims | 1 |
+| Not found in Geo | 1 |
+| Same text as a claim in Claims | 1 (the same text as "The senator voted against it twice.") |
+| Other reasons | 2 |
+
+Next: type /claim-tagger tag to read the new claim.
+
+### add (Claims), nothing added
+
+Every claim was in Claims already, so nothing was written and the run ends with exit 2. When some claims were refused instead, the sentence says why ("nothing was added to Claims: 1 not found in Geo and 2 already in Claims") and the Next line is "Next: check the links and type /claim-tagger add again." When Geo could not be read, the sentence says so and the Next line is "Next: type /claim-tagger add again in a while."
+
+Add: nothing was added, because all 2 claims are already in Claims.
+
+| What | Result |
+|---|---|
+| Already in Claims | 2 |
+
+Next: type /claim-tagger tag to read them.
+
+### add (Claims), too many
+
+One command takes at most 50 Geo links or IDs. Over that, the script refuses before it reads anything from Geo or Notion; there is no table.
+
+Add: nothing was read or added, because 62 links or IDs are more than the 50 that one command takes.
+
+Next: type /claim-tagger add again with at most 50 links.
+
 ### A stopped run
 
 Demo · Tag stopped: your Claude allowance ran out; nothing was written to Notion (practice page Claim tagger demo · 15 Oct 10:42).

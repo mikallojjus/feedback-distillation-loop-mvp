@@ -25,6 +25,7 @@ Agents of the Geo content team, one folder per agent.
 
 ```
 /claim-tagger status              what is open: is the agent paused, which edition of the rulebook is in force, what waits for whom
+/claim-tagger add <Geo links>     bring specific Geo claims into Claims (by Geo link or Geo ID, up to 50); they are not tagged until you type tag
 /claim-tagger tag                 read the claims, put the answers the agent is unsure about in Your queue
    ... editors decide the rows in "Your queue" on the Notion page, or tell Claude to: ...
 /claim-tagger decide <what to do>  Claude drafts the decisions with you (your words on the claims you name, or its own judgement of the first N of Your queue), writes them after your OK, then reads each one back
