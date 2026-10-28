@@ -13,7 +13,7 @@ import { LoopExit, applyStep, withRun } from '../../agents/claim-tagger-mvp/scri
 import { AUDIT_PREFIX, PlanError, applyPlan, checkPlan, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { RUN_SCRIPTS } from '../../agents/claim-tagger-mvp/scripts/walkthrough.mjs';
-import { DEFAULT_ALLOWED_SCRIPTS } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
+import { DEFAULT_ALLOWED_SCRIPTS, checkTranscript } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
 import { createFakeGeo, hexId } from './fixtures/fake-geo.mjs';
 import { builtConfig } from './helpers/config-fixture.mjs';
 import { claimText, makeWorld, quietIo } from './helpers/loop-world.mjs';
@@ -668,11 +668,16 @@ test('add: an item that is not a Geo link or ID is echoed only when it passes th
     assert.equal(r.exit, 2, h.io.errs.join('\n'));
     assertReport(h, r);
     assert.equal(w.writes().length, 0);
-    assert.equal(runRecord(r).add.not_added[0].item, item, 'the run record keeps what was typed');
+    assert.ok(item.startsWith(runRecord(r).add.not_added[0].item), 'the run record keeps what was typed');
     return report.rows.find((row) => row[0] === 'Not a Geo link or ID')[1];
   };
-  assert.equal(await cell('{}'), '1: an item that is not a link', 'a brace');
-  assert.equal(await cell('[true]'), '1: "[true]"', 'brackets are no braces');
+  const NOT_A_LINK = 'an item that is not a link';
+  assert.equal(await cell('{}'), `1: ${NOT_A_LINK}`, 'a brace');
+  // anything that looks like JSON, or holds a bracket, an angle bracket or a quote mark, is not echoed: the transcript check would flag the relayed report
+  assert.equal(await cell('[true]'), `1: ${NOT_A_LINK}`, 'a JSON array');
+  assert.equal(await cell('[1, 2]'), `2: ${NOT_A_LINK} and ${NOT_A_LINK}`, 'a JSON array, typed with a comma, is two items');
+  for (const odd of ['<b>', '"quoted"', "it's", '`code`', 'a]b']) assert.equal(await cell(odd), `1: ${NOT_A_LINK}`, odd);
+  assert.equal(await cell('a b c'), '3: "a", "b" and "c"', 'plain words, even with spaces between, are echoed');
   assert.equal(await cell('runs/20261028T095657Z-promote/card.json'), '1: an item that is not a link', 'a run folder and a run id');
   assert.equal(await cell('C:/x/.env'), '1: an item that is not a link', 'a drive path');
   assert.equal(await cell('script.mjs'), '1: an item that is not a link', 'a script file');
@@ -680,6 +685,30 @@ test('add: an item that is not a Geo link or ID is echoed only when it passes th
   assert.equal(await cell('a'.repeat(60)), `1: "${'a'.repeat(37)}..."`, 'cut at 40 characters');
   // the cut text is what is judged: a refusal that lies beyond the cut is not shown
   assert.equal(await cell(`${'b'.repeat(45)}{}`), `1: "${'b'.repeat(37)}..."`);
+});
+
+test('add: the relayed report with an echoed item passes the transcript check, and a report that echoed a JSON array would not', async () => {
+  const { run, claim } = await setup();
+  claim(11);
+  const items = `${gid(11)} nonsense [true] [1, 2] {} a`;
+  const { r, h, report } = await run(items);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assertReport(h, r);
+  assert.match(report.rows.find((row) => row[0] === 'Not a Geo link or ID')[1], /^6: "nonsense", an item that is not a link, an item that is not a link and 3 more$/);
+  const relay = (final) => [
+    { type: 'system', subtype: 'init', session_id: 's1', model: 'claude-sonnet-5-5', output_style: 'Explanatory', claude_code_version: '2.1.296' },
+    { type: 'assistant', message: { role: 'assistant', content: [{ type: 'tool_use', id: 'toolu_add', name: 'Bash', input: { command: `node agents/claim-tagger-mvp/scripts/add.mjs --claims "${items}"` } }] }, parent_tool_use_id: null, session_id: 's1' },
+    { type: 'assistant', message: { role: 'assistant', content: [{ type: 'text', text: final }] }, parent_tool_use_id: null, session_id: 's1' },
+    { type: 'result', subtype: 'success', is_error: false, num_turns: 2, result: final, session_id: 's1' },
+  ];
+  const relayed = checkTranscript(relay(r.markdown.trimEnd()), { expectStyle: 'Explanatory' });
+  assert.deepEqual(relayed.problems, []);
+  assert.equal(relayed.ok, true);
+  // the reason for the rule: the transcript check would flag the array the lint lets through
+  const echoed = r.markdown.trimEnd().replace('an item that is not a link, an item', '"[true]", an item');
+  assert.notEqual(echoed, r.markdown.trimEnd());
+  assert.deepEqual(lintReport(`${echoed}\n`), [], 'the report lint lets quoted text through');
+  assert.match(checkTranscript(relay(echoed), { expectStyle: 'Explanatory' }).problems.join('\n'), /JSON array/);
 });
 
 test('add: a bare Geo ID that Geo does not hold is named "ID ending ...", a link "link ending ..."', async () => {

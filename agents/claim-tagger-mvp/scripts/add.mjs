@@ -93,8 +93,16 @@ const bareHost = (host) => host.replace(/^www\./, '');
 const ending = (id, isLink) => `${isLink ? 'link' : 'ID'} ending ${String(id).slice(-8)}`;
 /** The text of a claim for a sentence or a cell, cut and quoted; the link ending when there is no text. */
 const nameOf = (text, id, isLink = false) => (typeof text === 'string' && text.trim() !== '' ? quoted(text, CUT) : ending(id, isLink));
-/** An item the editor typed that is not a Geo link or ID, echoed (cut, in quotes) only when the cut text passes the hard refusals of the report lint: no brace, no run folder, no script file, no drive path, no run id. */
-const typedItem = (raw) => (hardRefusals(cutText(raw, CUT)).length === 0 ? quoted(raw, CUT) : 'an item that is not a link');
+/**
+ * An item the editor typed that is not a Geo link or ID, echoed (cut at 40 characters, in quotes) only when the cut text passes the hard refusals of the report lint (no brace, no run folder,
+ * no script file, no drive path, no run id) and holds none of [ ] { } < > " ' and the backtick. The last rule is the conservative one: the transcript check reads the relayed report too and
+ * flags a JSON array or object in it, so a text that looks like one ("[true]", "[1, 2]") must not be echoed even though the report lint lets quoted text through.
+ */
+const ECHO_REFUSED = /[[\]{}<>"'`]/;
+const typedItem = (raw) => {
+  const shown = cutText(raw, CUT);
+  return hardRefusals(shown).length === 0 && !ECHO_REFUSED.test(shown) ? quoted(raw, CUT) : 'an item that is not a link';
+};
 /** At most three names, then "and n more". */
 const namesOf = (names) => (names.length > NAMED ? `${names.slice(0, NAMED).join(', ')} and ${names.length - NAMED} more` : listNames(names));
 
