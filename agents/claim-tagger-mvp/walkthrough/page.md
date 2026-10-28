@@ -205,11 +205,12 @@ The press pool and the AI Force claim are now earlier decisions too: every futur
 
 **If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Excluding CNN from Air Force One violates the federal court…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence, quotes that claim and says which answer is the right one. Between its table and its Next line it suggests a sentence written from that claim, says why in a Why line, and gives a block with rule 3 as it was tested, one sentence per line, and the suggested sentence last. For example, the suggested sentence reads: "A definite that names one particular order, case or document the claim does not identify still makes the claim Context-dependent."
 
-1. Open the change in Lessons waiting. Editor wording must hold all of rule 3: copy the block of the report into it (rule 3 as it was tested, with the suggested sentence at the end), or write all of rule 3 as you want it. Read the Why line first, and edit the suggested sentence if it does not say what you mean. You may also reject the change.
-2. Type `/claim-tagger demo promote` again.
-3. If it fails again, set Status to Rejected. The rule stays as it was, the demo ends here, and the safety check has done its job.
+1. Open the change in Lessons waiting and read the Why line of Claude's report.
+2. Paste the report's block into Editor wording in place of what is there, and edit the last sentence if it isn't what you mean; or write all of rule 3 as you want it.
+3. Type `/claim-tagger demo promote` again.
+4. If it fails again, set Status to Rejected. The rule stays as it was, the demo ends here, and the safety check has done its job.
 
-The same three steps apply when the check names one of your own claims instead of an example claim: the Safety check result then reads like "FAIL: 'The press pool was justified in suspending coverage…' now Applies", and the report suggests a sentence for that claim in the same way.
+The same steps apply when the check names one of your own claims instead of an example claim: the Safety check result then reads like "FAIL: 'The press pool was justified in suspending coverage…' now Applies", and the report suggests a sentence for that claim in the same way.
 
 ## Step 7 · The agent re-checks your claims
 
@@ -270,9 +271,9 @@ If you already know the reason, start your note with "Agent slip.", "Rule unclea
 
 - **Rulebook**: the numbered rules for each tag, kept in When to use; it changes only after a passed safety check.
 - **Edition**: the rulebook's version, a date plus a count ({{edition}}); it goes up when a rule changes.
-- **Safety check**: the test a rule change must pass before it is used: example claims, earlier decisions and your claims must all come out right; its result, PASS or FAIL, is written in Safety check result.
+- **Safety check**: the test a rule change must pass before it is used: example claims and earlier decisions the agent got right must stay right, and the claims the change rests on must now come out right; its result, PASS or FAIL, is written in Safety check result.
 - **Earlier decision**: a claim an editor already decided (here the 5 from the audit of 9 October, when editors checked the agent's tags on real claims); the agent must keep getting it right.
-- **Example claim**: one of the tag's 6 examples in the Rulebook, or one of 4 examples of its opposite tag, Self-contained, which the agent keeps in its own files (they are not on this page); it must always come out right.
+- **Example claim**: one of the tag's 6 examples in the Rulebook, or one of 4 examples of its opposite tag, Self-contained, which the agent keeps in its own files (they are not on this page); once the agent gets it right, it must stay right.
 - **Agent confidence**: how sure the agent is of its answers on a claim, from 0.5 (a coin flip) to 1 (certain); Your queue shows the least sure claims first.
 - **Agent status**: what the agent says about a claim: Waits for you, Done, Disagrees with your decision or Could not read; Your queue lists Waits for you until you set Review status to Reviewed.
 - **Verified tags**: the tags you confirm on a claim; it always wins over the agent's answer.

@@ -60,7 +60,7 @@ const DISTILL_REPLY = {
 const READING_NOTE = 'The rule leaves this kind of case open.';
 export const WORDING_REPLY = {
   sentence: 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.',
-  why: 'The claim points at one particular thing without saying which, so the added sentence keeps it under the rule.',
+  why: 'The claim points at one particular thing without saying which. The new wording let that go; the added sentence keeps it under the rule.',
 };
 
 const h32 = (...parts) => createHash('sha256').update(parts.join('|'), 'utf8').digest().readUInt32BE(0);

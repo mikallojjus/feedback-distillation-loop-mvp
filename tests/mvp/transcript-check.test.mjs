@@ -11,7 +11,7 @@ import {
   MAX_CHECKLIST_LINES, main as checkMain, parseStreamJson, splitChecklist,
 } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
 import {
-  OUTPUT_STYLE, buildArgs, main as headlessMain, mergeSettings, promptDirName, readPrompts, runPrompt, slugify,
+  OUTPUT_STYLE, buildArgs, isPromotePrompt, main as headlessMain, mergeSettings, promptDirName, readPrompts, runPrompt, slugify,
 } from '../../agents/claim-tagger-mvp/scripts/headless-check.mjs';
 
 // The checker is tested on transcripts written to tests/mvp/fixtures/transcripts/ (shaped like the stdout of
@@ -337,16 +337,50 @@ const FAIL_SENTENCE = 'Promote: FAIL, rule 3 is unchanged: the new wording turns
 const FAIL_NEXT = 'Next: in Lessons waiting (link), put rule 3 with the suggested sentence into Editor wording, or write it as you want it; then type /claim-tagger promote again.';
 const failFinal = (...parts) => [FAIL_SENTENCE, '', '| Check | Result |', '|---|---|', '| Example claims | 10 of 11 right |', '', ...parts].join('\n');
 
-test('the suggestion of a FAIL report is allowed in the final message: its fenced block is not refused, and the rest is checked as before', () => {
-  assert.deepEqual(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT) }).problems, []);
-  assert.deepEqual(grade({ final: `${FAIL_SENTENCE}\n\n${SUGGESTION}\n\n${FAIL_NEXT}` }).problems, [], 'with no table');
-  assert.deepEqual(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT, '', '1. Open the change in Lessons waiting.', '2. Put the block of the report into Editor wording.') }).problems, [], 'and a checklist may follow the Next line as for every report');
+const PROMOTE = { promote: true }; // the option the headless runner sets for the prompt "/claim-tagger promote" or "/claim-tagger demo promote"
+
+test('the suggestion of a FAIL report is allowed in the final message of a promote: its fenced block is not refused, and the rest is checked as before', () => {
+  assert.deepEqual(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT) }, PROMOTE).problems, []);
+  assert.deepEqual(grade({ final: `${FAIL_SENTENCE}\n\n${SUGGESTION}\n\n${FAIL_NEXT}` }, PROMOTE).problems, [], 'with no table');
+  assert.deepEqual(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT, '', '1. Open the change in Lessons waiting.', '2. Put the block of the report into Editor wording.') }, PROMOTE).problems, [], 'and a checklist may follow the Next line as for every report');
   // a fence of any other kind is still refused, in a FAIL report too; so is a fourth part that is not the suggestion, and one with a broken shape
-  assert.ok(has(grade({ final: failFinal('```\nplain text\n```', '', FAIL_NEXT) }).problems, 'fenced code block'));
-  assert.ok(has(grade({ final: failFinal(SUGGESTION, '', '```\nplain text\n```', '', FAIL_NEXT) }).problems, 'fenced code block'));
-  assert.ok(has(grade({ final: failFinal('A word more.', '', FAIL_NEXT) }).problems, 'more than three parts'));
-  assert.ok(has(grade({ final: failFinal(SUGGESTION.replace('Why: ', 'Because: '), '', FAIL_NEXT) }).problems, 'fixed shape'));
-  assert.ok(has(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT).replace('FAIL, rule 3', 'FAIL after 3 days, rule 3') }).problems, 'duration word'), 'the sentence is still linted');
+  assert.ok(has(grade({ final: failFinal('```\nplain text\n```', '', FAIL_NEXT) }, PROMOTE).problems, 'fenced code block'));
+  assert.ok(has(grade({ final: failFinal(SUGGESTION, '', '```\nplain text\n```', '', FAIL_NEXT) }, PROMOTE).problems, 'fenced code block'));
+  assert.ok(has(grade({ final: failFinal('A word more.', '', FAIL_NEXT) }, PROMOTE).problems, 'more than three parts'));
+  assert.ok(has(grade({ final: failFinal(SUGGESTION.replace('Why: ', 'Because: '), '', FAIL_NEXT) }, PROMOTE).problems, 'fixed shape'));
+  assert.ok(has(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT).replace('FAIL, rule 3', 'FAIL after 3 days, rule 3') }, PROMOTE).problems, 'duration word'), 'the sentence is still linted');
+});
+
+test('the suggestion is accepted only in a relay of promote: the same final message in the transcript of any other command is a problem', () => {
+  const final = failFinal(SUGGESTION, '', FAIL_NEXT);
+  assert.ok(has(grade({ final }).problems, 'only the relay of /claim-tagger promote may'), grade({ final }).problems.join('; '));
+  assert.ok(has(grade({ final }, { decide: true }).problems, 'only the relay of /claim-tagger promote may'), 'decide mode is not promote mode');
+  assert.deepEqual(grade({ final }, { promote: false }).problems.filter((p) => !p.includes('only the relay')), [], 'and that is the only thing wrong with it');
+  assert.equal(grade({ final: GOOD }, PROMOTE).ok, true, 'a promote relay without a suggestion is as it always was');
+  // the command line has the flag too
+  const dir = tmp();
+  const file = join(dir, 't.jsonl');
+  writeFileSync(file, run({ final }));
+  const refused = cap();
+  assert.equal(checkMain([file], refused.io, { editorColumns: DEFAULT_EDITOR_COLUMNS }), 1);
+  const accepted = cap();
+  assert.equal(checkMain([file, '--promote'], accepted.io, { editorColumns: DEFAULT_EDITOR_COLUMNS }), 0, accepted.out.join('\n'));
+});
+
+test('isPromotePrompt: the prompts of a promote step, real or on a practice page, and no other', () => {
+  for (const prompt of ['/claim-tagger promote', '/claim-tagger promote "General references need no answer"', ' /claim-tagger  demo promote ', '/CLAIM-TAGGER Promote']) assert.equal(isPromotePrompt(prompt), true, prompt);
+  for (const prompt of ['/claim-tagger status', '/claim-tagger demo decide', '/claim-tagger promotes', '/claim-tagger distill promote', 'promote', '', undefined]) assert.equal(isPromotePrompt(prompt), false, String(prompt));
+});
+
+test('the words of the suggestion in a relay are linted: its sentence and its Why line get the word rules, its block is refused braces, run folders, script files, paths and run ids, and the table before it is still held to five rows', () => {
+  const bad = (from, to) => grade({ final: failFinal(SUGGESTION.replace(from, to), '', FAIL_NEXT) }, PROMOTE).problems;
+  assert.ok(has(bad('> A description that names', '> A database that names'), 'the suggested sentence says "database"'));
+  assert.ok(has(bad('Why: The claim', 'Why: In 3 days the claim'), 'the Why line holds a duration word'));
+  assert.ok(has(bad('A descriptive definite', 'A runs/x.mjs {descriptive} definite'), 'the block to copy'));
+  // a table of six rows in a FAIL relay is refused: the shape check looks at the report without its suggestion
+  const six = [FAIL_SENTENCE, '', '| Check | Result |', '|---|---|', ...Array.from({ length: 6 }, (_, i) => `| Row ${i + 1} | ${i} of 9 right |`), '', SUGGESTION, '', FAIL_NEXT].join('\n');
+  const problems = grade({ final: six }, PROMOTE).problems;
+  assert.ok(has(problems, 'the table has 6 body rows; the limit is 5'), problems.join('; '));
 });
 
 // ---- (c) JSON ------------------------------------------------------------------------------------------------------------------------

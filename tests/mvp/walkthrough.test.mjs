@@ -3384,8 +3384,9 @@ test('guide.md has the four checklists, each in a real and a demo form of at mos
       const list = guide[name][form];
       assert.ok(list && list.length >= 3 && list.length <= 5, `${name} (${form}): three to five lines, not ${list?.length}`);
       assert.deepEqual(list.map((i) => i.n), list.map((_, k) => k + 1), `${name} (${form}): numbered from 1`);
-      const last = list.at(-1).text;
-      if (form === 'Real') assert.match(last, new RegExp(`^(?:When [^,]+, t|T)ype /claim-tagger ${command}(?: again)?\\.$`), `${name}: the last line names the command`);
+      // the last line names the command; in the Demo list of After a FAIL the last line is the branch that gives the demo up, so the command is the line before it
+      const last = name === 'After a FAIL' && form === 'Demo' ? list.at(-2).text : list.at(-1).text;
+      if (form === 'Real') assert.match(last, new RegExp(`^(?:When [^,]+, t|Otherwise t|T)ype /claim-tagger ${command}(?: again)?\\.$`), `${name}: the last line names the command`);
       else {
         assert.ok(last.includes(demoSteps[command]), `${name} (Demo): the last line types ${demoSteps[command]}, a command of the page's steps`);
         assert.match(last, /\/claim-tagger demo /);

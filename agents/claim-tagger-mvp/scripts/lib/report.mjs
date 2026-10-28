@@ -11,10 +11,12 @@
 //                  Left out, the report is the three parts it has always been, byte for byte
 //        next      one line that starts with "Next: "
 //   renderReport(report)  -> the Markdown of report.md: sentence, a blank line, the table, a blank line, the suggestion if there is one, a blank line, the Next line
-//   splitExtra(markdown)  -> { rest, extra }: the suggestion split off a report's Markdown (extra is null when the text has none, or one that is not whole) and the report without it
+//   lintSuggestionText(text) -> string[] of the word problems of the sentence or the reason of a suggestion (lintWords on one line, phrases in single quotes exempt); [] means it may go in a report
+//   splitExtra(markdown)  -> { rest, extra }:the suggestion split off a report's Markdown (extra is null when the text has none, or one that is not whole) and the report without it
 //   lintReport(markdown)  -> string[] of problems; [] means the report may be shown. The suggestion of a FAIL report is the one allowed fourth part: it is split off first
-//        (splitExtra), must have its own fixed shape and sit right before the Next line, and its words are not checked (it holds the rule's text and a model's sentence, like a quoted
-//        claim); everything else is checked as below. Flags: more than three parts, a heading line, a file path
+//        (splitExtra), must have its own fixed shape and sit right before the Next line. Its "> " sentence and its "Why:" line get the word rules below (a phrase in single quotes is a
+//        quoted claim there); the rule in its fenced block is the editor's own text and is refused only a JSON brace, "runs/", ".mjs", a drive path and a run id; everything else is
+//        checked as below. Flags: more than three parts, a heading line, a file path
 //        or script name, a run id, a duration word, a dollar sign, a JSON brace, a shorthand code, the words database, rubric and gate
 //        (editors say table, rulebook and safety check), an Insight block marker, and a missing, repeated or misplaced Next line.
 //        Text inside double quotes (straight or curly) is a quoted claim and is not checked for those words and characters, because a claim
@@ -121,7 +123,7 @@ export function lintWords(lines) {
 }
 
 // The fixed shape of the suggestion (editor-words.mjs suggestionPart builds it): its head line, the sentence as a quote, the reason, a line that introduces the rule to copy, the rule in a fenced block.
-const EXTRA_SHAPE = /^Suggested sentence for [^\n]+:\n> [^\n]+\n\nWhy: [^\n]+\n\n[^\n]+, to copy into Editor wording:\n```\n[^\n]+(?:\n[^\n]+)*\n```$/;
+const EXTRA_SHAPE = /^Suggested sentence for [^\n]+:\n> ([^\n]+)\n\nWhy: ([^\n]+)\n\n[^\n]+, to copy into Editor wording:\n```\n([^\n]+(?:\n[^\n]+)*)\n```$/;
 const FENCE_OPEN = /^`{3}[A-Za-z]*\s*$/;
 const FENCE_CLOSE = /^`{3}\s*$/;
 
@@ -142,6 +144,31 @@ export function splitExtra(markdown) {
   return { rest: `${[before, after].filter(Boolean).join('\n\n')}\n`, extra: lines.slice(start, close + 1).join('\n'), before, after };
 }
 
+const SINGLE_QUOTED = /(?<![A-Za-z0-9])'[^'\n]+'(?![A-Za-z0-9])/g; // a phrase in single quotes: how the sentence and the reason of a suggestion quote (their double quotes are made single)
+
+/**
+ * The word problems of the sentence or the reason of a suggestion (the rules of lintWords, one line): a phrase in single quotes is a quoted claim and is exempt, as text in double
+ * quotes is in a report. Each problem is a plain phrase such as `holds a duration word: "days"`; [] means the text may go in a report.
+ */
+export function lintSuggestionText(text) {
+  return lintWords([String(text ?? '').replace(SINGLE_QUOTED, '""')]).map((p) => p.replace(/^line 1 /, ''));
+}
+
+/** What is wrong with the lines of the block to copy: the rule is the editor's own text, so only what must never reach an editor in a report (a JSON brace, a folder or script name, a path, a run id). */
+function blockProblems(lines) {
+  const out = [];
+  for (const line of lines) {
+    const at = `the block to copy: "${shown(line)}"`;
+    if (/[{}]/.test(line)) out.push(`${at} holds a JSON brace`);
+    if (line.includes('runs/')) out.push(`${at} names a run folder (runs/)`);
+    if (line.includes('.mjs')) out.push(`${at} names a script file (.mjs)`);
+    if (DRIVE_PATH.test(line)) out.push(`${at} holds a file path`);
+    const runId = RUN_ID.exec(line);
+    if (runId) out.push(`${at} holds a run id: ${runId[0]}`);
+  }
+  return out;
+}
+
 /** What is wrong with a report's Markdown, as plain sentences; an empty array means it may be shown. */
 export function lintReport(markdown) {
   const whole = String(markdown ?? '').replace(/\r\n?/g, '\n');
@@ -151,7 +178,12 @@ export function lintReport(markdown) {
   const parts = text.split(/\n[ \t]*\n/).map((p) => p.trim()).filter(Boolean);
   const problems = [];
   if (split.extra !== null) {
-    if (!EXTRA_SHAPE.test(split.extra)) problems.push('the suggestion does not have its fixed shape: the head line, the sentence as a quote, the Why line, the line that introduces the rule, and the rule in a fenced block');
+    const shape = EXTRA_SHAPE.exec(split.extra);
+    if (!shape) problems.push('the suggestion does not have its fixed shape: the head line, the sentence as a quote, the Why line, the line that introduces the rule, and the rule in a fenced block');
+    else {
+      // its sentence and its Why line are prose like the sentence of a report; the rule in the block is the editor's own text, kept as it was tested
+      problems.push(...lintSuggestionText(shape[1]).map((p) => `the suggested sentence ${p}`), ...lintSuggestionText(shape[2]).map((p) => `the Why line ${p}`), ...blockProblems(shape[3].split('\n')));
+    }
     const [stood, followed = ''] = whole.split(split.extra);
     if (!stood.endsWith('\n\n') || !followed.startsWith('\n\n') || /(?:^|\n)Next:/.test(split.before) || !split.after.startsWith('Next:')) problems.push('the suggestion is not its own part between the table and the Next line');
   }

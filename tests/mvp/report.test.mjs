@@ -468,11 +468,29 @@ test('extra: the lint accepts only that part with its own shape, right before th
   assert.ok(lintReport(open).length > 0);
 });
 
-test('extra: the words and characters of the suggestion are not checked, as in a quoted claim, and everything around it still is', () => {
-  const words = { ...failReport(), extra: SUGGESTION.replace('names a kind of thing', 'names a database, a rubric gate, 3 days, $2 and {x} in C:/x/y.mjs') };
-  assert.deepEqual(lintReport(renderReport(words)), []);
-  assert.ok(has(lintReport(renderReport({ ...words, sentence: 'Promote: FAIL after 3 days.' })), 'duration word'), 'the sentence is still checked');
-  assert.ok(has(lintReport(renderReport({ ...words, next: 'Next: ask for the database.' })), 'database'), 'so is the Next line');
+test('extra: its sentence and its Why line get the word rules (a phrase in single quotes is a quoted claim); the rule in its block is the editor\'s own text and is refused only a JSON brace, runs/, .mjs, a drive path and a run id; everything around it is checked as before', () => {
+  const lint = (extra) => lintReport(renderReport({ ...failReport(), extra }));
+  const SENTENCE_LINE = '> A description that names no particular program or law still needs context.';
+  const WHY_LINE = 'Why: The claim names a kind of thing without saying which, so the sentence keeps it under the rule.';
+  assert.deepEqual(lint(SUGGESTION), []);
+  // the sentence and the Why line: the rules of the report lint
+  assert.ok(has(lint(SUGGESTION.replace(SENTENCE_LINE, '> A database sentence that takes 3 days costs $2.')), 'the suggested sentence holds a duration word'), lint(SUGGESTION.replace(SENTENCE_LINE, '> A database sentence that takes 3 days costs $2.')).join('; '));
+  assert.ok(has(lint(SUGGESTION.replace(SENTENCE_LINE, '> A database sentence that takes 3 days costs $2.')), 'the suggested sentence says "database"'));
+  assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, 'Why: The rubric gate runs in runs/x and needs {x}.')), 'the Why line names a run folder'));
+  assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, 'Why: The rubric gate runs in runs/x and needs {x}.')), 'the Why line holds a JSON brace'));
+  assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, 'Why: The second half is the point.')), 'the Why line holds a duration word: "second"'), 'second is a time word, as everywhere in a report');
+  assert.deepEqual(lint(SUGGESTION.replace(WHY_LINE, "Why: It reads 'the last 3 days' as a time, so the rule skips it.")), [], 'a phrase in single quotes is a quoted claim');
+  assert.deepEqual(lint(SUGGESTION.replace(WHY_LINE, "Why: The claim's reading is a thing the rule's text skips.")), [], 'apostrophes are not quotes');
+  assert.ok(has(lint(SUGGESTION.replace(WHY_LINE, "Why: It's the rule's text, 3 days long.")), 'duration word'), 'and they do not hide a word: apostrophes make no quoted phrase');
+  // the block: only what must never reach an editor
+  const inBlock = (line) => SUGGESTION.replace('A descriptive definite that names a kind of thing but not which one makes the claim Context-dependent.', line);
+  for (const [line, what] of [['A rule with {x} in it, long enough.', 'JSON brace'], ['A rule that names runs/x/y, long enough.', 'run folder'], ['A rule that names a.mjs, long enough.', 'script file'], ['A rule that names C:/x/y, long enough.', 'file path'], ['A rule that names 20261028T095657Z, long enough.', 'run id']]) {
+    assert.ok(has(lint(inBlock(line)), 'the block to copy') && has(lint(inBlock(line)), what), `${what}: ${lint(inBlock(line)).join('; ')}`);
+  }
+  assert.deepEqual(lint(inBlock('A rule about the database and the rubric gate for 3 days and $2, long enough.')), [], 'a rule may say what it likes; it was tested as it is');
+  // everything around it
+  assert.ok(has(lintReport(renderReport({ ...failReport(), sentence: 'Promote: FAIL after 3 days.' })), 'duration word'), 'the sentence is still checked');
+  assert.ok(has(lintReport(renderReport({ ...failReport(), next: 'Next: ask for the database.' })), 'database'), 'so is the Next line');
 });
 
 test('splitExtra: the suggestion and the report without it; nothing to split in a three-part report', () => {

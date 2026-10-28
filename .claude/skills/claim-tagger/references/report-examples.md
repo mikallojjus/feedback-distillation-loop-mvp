@@ -208,14 +208,14 @@ Next: look at step 7 on the practice page (link); the demo is then complete.
 
 ### promote, when it passes with an example that was wrong before (Claims)
 
-The safety check counts an example claim against a change only when the rulebook in force gets it right: an example that is already wrong under the rule in force is shown in its own row, "Wrong before the change", and not counted, whatever the new wording does with it. The row is in the table of a FAIL too. The result written in Rule changes then reads "PASS: examples 10/11 (1 wrong before), earlier 5/5, yours 2/2". An example that comes out wrong under both rulebooks is read again on both sides before it is called wrong, so one unlucky read cannot hide a real break. The engineer may recalibrate the example in the examples file; the editor needs to do nothing.
+The safety check counts example claims the way it counts earlier decisions: the ones the rulebook in force gets right, and a change fails only by turning one of those wrong. So "Example claims" reads like "Earlier decisions". An example that is wrong under both rulebooks is shown in its own row, "Wrong before the change", and not counted; the row is in the table of a FAIL too. The result written in Rule changes then reads "PASS: examples 10/10 (1 more wrong before, not counted), earlier 5/5, yours 2/2", and with no such example it reads as it always did. An old miss that the change puts right is not in the row; the engineer's card lists it as fixed by the change. An example or an earlier decision that comes out wrong under both rulebooks is read again on both sides before it is called an old miss, so one unlucky read cannot hide a real break. The engineer may recalibrate the example in the examples file; the editor needs to do nothing.
 
 Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-28.2), and the follow-up marked both of your rows Fixed.
 
 | Check | Result |
 |---|---|
-| Example claims | 10 of 11 right |
-| Wrong before the change | 1 example claim, not counted |
+| Example claims | 10 of 10 right |
+| Wrong before the change | 1 more example claim, not counted |
 | Earlier decisions | 5 of 5 still right |
 | Your 2 rows | 2 of 2 now right, marked Fixed |
 
@@ -231,35 +231,35 @@ Next: reject the rule change "Known groups count as identified, unknown names do
 
 ### promote, when it does not pass (Claims)
 
-Editor wording is the whole rule, so a FAIL report has a fourth part between the table and the Next line, the suggestion: one sentence written from the claim that came out wrong, the reason for it (the Why line), and the rule as it was tested with the sentence added, one sentence per line, in a block to copy. The sentence of the report says which answer the claim came out with and which one is right. The claim can be an example claim that was right under the rule in force (an example that was wrong before is shown in its own row and never named here), an earlier decision or one of the editor's own claims. The block holds only the rule, so what is copied into Editor wording is what was tested and the sentence; the editor may also write the whole rule as wanted. When no sentence could be written the report has its three parts and the Next line asks for the whole rule.
+Editor wording is the whole rule, so a FAIL report has a fourth part between the table and the Next line, the suggestion: one sentence written from the claim that came out wrong, the reason for it (the Why line), and the rule as it was tested with the sentence added, one sentence per line, in a block to copy. The sentence of the report says which answer the claim came out with and which one is right. The claim can be an example claim that was right under the rule in force (an example that is wrong under both rulebooks is shown in its own row and never named here), an earlier decision or one of the editor's own claims. The block holds only the rule, so what is pasted into Editor wording is what was tested and the sentence; the editor may also write the whole rule as wanted. The suggested sentence uses the rule's own words and does not repeat what the rule already says, and the Why line has two halves: what the claim needs to get its answer, and what in the tested wording let it go the other way. When no sentence could be written the report has its three parts and the Next line asks for the whole rule.
 
 Promote: FAIL, rule 3 is unchanged: the new wording turns "The infrastructure plan won approval from the council." to Does not apply; the right answer is Applies.
 
 | Check | Result |
 |---|---|
-| Example claims | 10 of 11 right |
-| Wrong before the change | 1 example claim, not counted |
+| Example claims | 9 of 10 right |
+| Wrong before the change | 1 more example claim, not counted |
 | Earlier decisions | 5 of 5 still right |
 | Your 2 rows | 2 of 2 now right |
 
 Suggested sentence for rule 3:
-> A description of a plan or program that fits more than one, such as a plan for infrastructure, still needs context.
+> A plan named only by its subject, such as 'the infrastructure plan', fits more than one plan and still makes the claim Context-dependent.
 
-Why: 'The infrastructure plan' could be any of several plans, so readers cannot tell which one is meant. The new wording treated it as the name of one program; the sentence puts it back.
+Why: Readers cannot tell which plan 'The infrastructure plan' means, so it needs context to be tagged. The new wording read it as the name of one specific program, which let it slip to Does not apply.
 
 Rule 3 with the sentence, to copy into Editor wording:
 ```
 A descriptive definite that names a kind of thing but not which one ('the Bitcoin ETF', 'the major-bank stablecoin consortium', 'the open-access version', 'the infrastructure', 'the new model') makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant.
 A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts.
 Applies to countable things, not to abstract or mass nouns ('the regulatory clearance', 'the market').
-A description of a plan or program that fits more than one, such as a plan for infrastructure, still needs context.
+A plan named only by its subject, such as 'the infrastructure plan', fits more than one plan and still makes the claim Context-dependent.
 ```
 
-Next: in Lessons waiting (link), put rule 3 with the suggested sentence into Editor wording, or write it as you want it; then type /claim-tagger promote again.
+Next: in Lessons waiting (link), paste the block above into Editor wording in place of what is there, or write all of rule 3 as you want it; then type /claim-tagger promote again.
 
 ### promote, when it does not pass (demo)
 
-The same shape on a practice page: the command is the demo one and the first sentence names the page. Here the claim is an earlier decision that the new wording broke. Double quotes in the sentence and the Why line are printed as single ones; the rule in the block keeps its own.
+The same shape on a practice page: the command is the demo one and the first sentence names the page. Here the claim is an earlier decision that the new wording broke. Double quotes in the sentence and the Why line are printed as single ones; the rule in the block keeps its own, so the practice rule's double quotes stay.
 
 Demo · Promote: FAIL, rule 3 is unchanged: the new wording turns "The Dallas convention is the unofficial launch of JD Vanc..." to Does not apply; the right answer is Applies (practice page Claim tagger demo · 15 Oct 10:42).
 
@@ -270,19 +270,19 @@ Demo · Promote: FAIL, rule 3 is unchanged: the new wording turns "The Dallas co
 | Your 2 rows | 2 of 2 now right |
 
 Suggested sentence for rule 3:
-> A one-off event named only by its place or kind, such as a convention, still needs context.
+> A one-off event named only by its place or kind, such as a convention, still makes the claim Context-dependent.
 
-Why: The claim names a one-off event only by its place and kind, so readers cannot tell which convention is meant. The sentence puts such events back under the rule that the new wording let slip.
+Why: The claim names a convention only by its city, so readers cannot tell which one is meant. The new wording lets a group readers know count as identified, and the convention was read as one.
 
 Rule 3 with the sentence, to copy into Editor wording:
 ```
-A descriptive definite that names a kind of thing but not which one ('the Bitcoin ETF', 'the major-bank stablecoin consortium', 'the open-access version', 'the infrastructure', 'the new model') makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant.
-Applies to countable things, not to abstract or mass nouns ('the regulatory clearance', 'the market').
+A descriptive definite that names a kind of thing but not which one ("the Bitcoin ETF", "the major-bank stablecoin consortium", "the open-access version", "the infrastructure", "the new model") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant.
+Applies to countable things, not to abstract or mass nouns ("the regulatory clearance", "the market").
 A group readers know by its standing role, such as a press corps, counts as identified; a capitalised phrase that names no body readers know does not.
-A one-off event named only by its place or kind, such as a convention, still needs context.
+A one-off event named only by its place or kind, such as a convention, still makes the claim Context-dependent.
 ```
 
-Next: in Lessons waiting (link), put rule 3 with the suggested sentence into Editor wording, or write it as you want it; then type /claim-tagger demo promote again.
+Next: in Lessons waiting (link), paste the block above into Editor wording in place of what is there, or write all of rule 3 as you want it; then type /claim-tagger demo promote again.
 
 ### follow-up, repeated by hand (demo, only after a promote that stopped before its last step)
 

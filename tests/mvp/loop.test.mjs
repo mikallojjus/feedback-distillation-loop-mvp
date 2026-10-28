@@ -237,7 +237,7 @@ test('the FAIL branch: a candidate that turns an example claim the wrong way lea
   assert.equal(w.row('rule_changes', TITLE)['Editor wording'], '', 'the agent never writes Editor wording');
   assert.match(failed.report.sentence, /^Promote: FAIL, rule 4 is unchanged: the new wording turns ".*" to Does not apply; the right answer is Applies\.$/);
   const SENTENCE = 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.';
-  assert.match(failed.report.next, /^Next: in Lessons waiting \(.*\), put rule 4 with the suggested sentence into Editor wording, or write it as you want it; then type \/claim-tagger promote again\.$/);
+  assert.match(failed.report.next, /^Next: in Lessons waiting \(.*\), paste the block above into Editor wording in place of what is there, or write all of rule 4 as you want it; then type \/claim-tagger promote again\.$/);
   assert.ok(failed.report.extra.startsWith(`Suggested sentence for rule 4:\n> ${SENTENCE}\n\nWhy: `), 'the suggestion: the sentence, then the reason');
   assert.ok(failed.report.extra.endsWith(`\`\`\`\n${NEW_TEXT}\n${SENTENCE}\n\`\`\``), 'the rule as it was tested, then the sentence on its own line: Editor wording is the whole rule');
   assert.ok(readFileSync(join(failed.runDir, 'card.md'), 'utf8').includes(`"${NEW_TEXT} ${SENTENCE}"`));

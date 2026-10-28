@@ -11,10 +11,11 @@
 //   quoted(text, max?)                -> "the text cut and in double quotes" (inner double quotes become single ones), exempt from the report lint
 //   quotedWhole(text)                 -> the same, never cut: for text an editor is to copy whole (the complete wording of a rule)
 //   splitSentences(text)              -> the sentences of a rule's text, one per entry: split at a full stop followed by a space and a capital letter or an opening quote (not after an abbreviation such as
-//                                        "e.g." or "U.S."); when any piece would have fewer than three words the text is not split and comes back as one entry
+//                                        "e.g.", "U.S.", "St." or "Sen."); when any piece would have fewer than three words the text is not split and comes back as one entry
 //   suggestionPart({ ruleLabel, sentence, why, ruleText })
 //                                     -> the suggestion of a FAIL report (the fourth part, between the table and the Next line): "Suggested sentence for rule 3:", the sentence as a quote, the Why line, and
-//                                        the tested rule with the sentence in a fenced block to copy, one sentence per line (lib/report.mjs keeps its shape)
+//                                        the tested rule with the sentence in a fenced block to copy, one sentence per line (lib/report.mjs keeps its shape). The rule is cut where it stands, with
+//                                        its own spacing, and the block is used only if its one-line text (oneLineRule) is the rule's and the sentence's; else the rule is one paragraph
 //   stampOf(date)                     -> "15 Oct 11:20" (local time): the date part of a Last run summary
 //   answerWord(decision)              -> Applies / Does not apply / Can't tell for apply / do_not_apply / ask_editor
 //   notionUrl(id, title?)             -> https://www.notion.so/<the 32 hex digits>; with a title the form Notion itself gives a page: https://app.notion.com/p/<the title's words joined by dashes>-<the 32 hex digits>
@@ -36,6 +37,7 @@
 
 import { tableEntry } from './config.mjs';
 import { normId } from './notion-values.mjs';
+import { oneLineRule } from './rulebook-edit.mjs';
 
 export const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
@@ -80,46 +82,68 @@ export function quotedWhole(text) {
 
 // ---- the suggestion of a FAIL report ---------------------------------------------------------------------------------------------------------
 
-const ABBREVIATIONS = new Set(['vs', 'cf', 'approx', 'mr', 'mrs', 'ms', 'dr', 'prof', 'jr', 'sr', 'fig']);
+// Titles, ranks, places, companies and months are written with a full stop and are followed by a capital letter without ending a sentence ("St. Louis", "Sen. Warren", "Oct. 5"). "may" is a word.
+const ABBREVIATIONS = new Set([
+  'vs', 'cf', 'approx', 'mr', 'mrs', 'ms', 'dr', 'prof', 'jr', 'sr', 'fig', 'st', 'sen', 'rep', 'gov', 'gen', 'lt', 'col', 'mt', 'ft', 'inc', 'corp', 'ltd', 'co', 'no',
+  'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec',
+]);
 
-/** True for the word before a full stop that does not end a sentence: "e.g", "U.S", a lone letter, "Dr". */
+/** True for the word before a full stop that does not end a sentence: "e.g", "U.S", a lone letter, "Dr", "St", "Sen", "Inc", "Oct". */
 const isAbbreviation = (word) => {
   const bare = word.replace(/^[("'“‘]+/, '');
   return bare.includes('.') || /^[A-Za-z]$/.test(bare) || ABBREVIATIONS.has(bare.toLowerCase());
 };
 
-/** The sentences of a text (see the header): [the text] when it cannot be split safely. */
-export function splitSentences(text) {
-  const t = squash(text);
-  if (t === '') return [];
+/** A text cut after each full stop that ends a sentence (see splitSentences), the cut pieces exactly as they stand in the text: the white space between two sentences is the only thing left out. */
+function cutAtStops(t) {
   const pieces = [];
   let from = 0;
-  const stop = /\.(?=\s+["'“‘A-Z])/g;
+  const stop = /\.(?=(\s+)["'“‘A-Z])/g;
   for (let m = stop.exec(t); m !== null; m = stop.exec(t)) {
     const word = /(\S+)$/.exec(t.slice(from, m.index))?.[1] ?? '';
     if (isAbbreviation(word)) continue;
-    pieces.push(t.slice(from, m.index + 1).trim());
-    from = m.index + 1;
+    pieces.push(t.slice(from, m.index + 1));
+    from = m.index + 1 + m[1].length;
   }
-  pieces.push(t.slice(from).trim());
-  const sentences = pieces.filter(Boolean);
-  return sentences.length > 1 && sentences.every((s) => s.split(' ').length >= 3) ? sentences : [t];
+  pieces.push(t.slice(from));
+  return pieces.filter((p) => p.trim() !== '');
+}
+
+const wordCount = (s) => s.trim().split(/\s+/).length;
+
+/** The cut pieces when there are at least two and each has three words or more, else null. */
+const safeCut = (t) => {
+  const pieces = cutAtStops(t);
+  return pieces.length > 1 && pieces.every((p) => wordCount(p) >= 3) ? pieces : null;
+};
+
+/** The sentences of a text (see the header), on single lines; [the text] when it cannot be split safely. */
+export function splitSentences(text) {
+  const t = squash(text);
+  if (t === '') return [];
+  return safeCut(t) ?? [t];
 }
 
 const capFirst = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
 /**
  * The suggestion of a FAIL report (see the header). The sentence and the reason are one line each; the rule is the text that was tested and the fenced block holds only that text, one
- * sentence per line, then the new sentence on its own line, with no marker, so that what is copied into Editor wording is the same text that was tested plus the sentence.
+ * sentence per line, then the new sentence on its own line, with no marker. What is copied into Editor wording has to be tested as the same text, so the rule is cut where it stands,
+ * with its own spacing, and the block is used only if the one-line text of the block (oneLineRule, the way the safety check reads Editor wording) is the one-line text of the rule and the
+ * sentence; when it is not (a double space or a tab between two sentences, say) the rule stays in one paragraph, which is the text itself.
  */
 export function suggestionPart({ ruleLabel, sentence, why, ruleText }) {
-  const noFence = (s) => squash(s).replace(/`{3,}/g, "'''");
-  const lines = [...splitSentences(noFence(ruleText)), noFence(sentence)];
+  const line = squash(sentence);
+  const tested = String(ruleText ?? '').trim();
+  const expected = oneLineRule(`${tested} ${line}`);
+  const sound = (lines) => lines.every((l) => l.trim() !== '' && !/[\r\n]/.test(l) && !/^\s*`{3,}\s*$/.test(l)) && oneLineRule(lines.join('\n')) === expected;
+  const candidates = [[...(safeCut(tested) ?? [tested]), line], [tested, line], [oneLineRule(tested), line]];
+  const lines = candidates.find(sound) ?? candidates[2];
   return [
     `Suggested sentence for ${ruleLabel}:`,
-    `> ${noFence(sentence)}`,
+    `> ${line}`,
     '',
-    `Why: ${noFence(why)}`,
+    `Why: ${squash(why)}`,
     '',
     `${capFirst(ruleLabel)} with the sentence, to copy into Editor wording:`,
     '```',
@@ -128,7 +152,7 @@ export function suggestionPart({ ruleLabel, sentence, why, ruleText }) {
   ].join('\n');
 }
 
-const MONTHS = ['Jan','Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const two = (n) => String(n).padStart(2, '0');
 
 export function stampOf(date = new Date()) {

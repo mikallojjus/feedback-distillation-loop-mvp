@@ -9,7 +9,8 @@
 //                                                          report, return { exit, runId, runDir, report, ...details }. body returns
 //                                                          { exit?, sentence, header?, rows?, extra?, next, details? } or throws a LoopExit. `extra` is
 //                                                          the suggestion of promote's FAIL report, rendered between the table and the Next line
-//                                                          (lib/report.mjs); no other report has it.
+//                                                          (lib/report.mjs); no other report has it. `withoutExtra` ({ sentence, next }) is the same report
+//                                                          without it, written instead (and run.json warns) if the suggestion does not pass the report lint.
 //                                                          On a practice page (a demo profile) the report says "/claim-tagger demo <command>" and
 //                                                          its first sentence names the practice page (reportWords, editor-words.mjs).
 //   class LoopExit(code, message, { sentence, header, rows, next })   end the run with an exit code and the words of its report
@@ -191,19 +192,31 @@ function reportWords(ctx, sentence, next) {
 
 function finishRun(ctx, out) {
   const exit = out.exit ?? EXIT.OK;
-  const words = reportWords(ctx, out.sentence ?? `${ctx.label} stopped on an unexpected error.`, out.next ?? ENGINEER);
-  const next = words.next;
+  // the report as the body made it; when it has a suggestion (`extra`, promote's FAIL) and the suggestion does not pass the report lint, the body's own form of the report without it
+  // (`withoutExtra`: its sentence and Next line, which no longer point at a block) is written instead of the bare "finished" report, and run.json says why
+  const forms = [{ sentence: out.sentence ?? `${ctx.label} stopped on an unexpected error.`, next: out.next ?? ENGINEER, extra: out.extra }];
+  if (out.extra && out.withoutExtra) forms.push({ sentence: out.withoutExtra.sentence, next: out.withoutExtra.next, extra: undefined });
   const why = (err) => oneLine(err.problems ? err.problems.join('; ') : err.message);
   let written = null;
   let problem = null;
-  for (const sentence of words.sentences) {
-    try {
-      written = writeReport(ctx.runDir, { demo: ctx.demo, sentence, header: out.header, rows: out.rows ?? [], extra: out.extra, next });
-      if (problem) ctx.warnings.push(`the sentence of report.md does not name the practice page, because that did not pass the report lint: ${why(problem)}`);
-      break;
-    } catch (err) {
-      problem ??= err;
+  let firstProblem = null;
+  for (const [i, form] of forms.entries()) {
+    const words = reportWords(ctx, form.sentence, form.next);
+    problem = null;
+    for (const sentence of words.sentences) {
+      try {
+        written = writeReport(ctx.runDir, { demo: ctx.demo, sentence, header: out.header, rows: out.rows ?? [], extra: form.extra, next: words.next });
+        if (problem) ctx.warnings.push(`the sentence of report.md does not name the practice page, because that did not pass the report lint: ${why(problem)}`);
+        break;
+      } catch (err) {
+        problem ??= err;
+      }
     }
+    if (written) {
+      if (i > 0) ctx.warnings.push(`the suggestion was left out of report.md, because it did not pass the report lint: ${why(firstProblem)}`);
+      break;
+    }
+    firstProblem ??= problem;
   }
   if (!written) {
     ctx.warnings.push(`report.md was not written as planned: ${why(problem)}`);

@@ -71,6 +71,13 @@ after(() => {
       const file = join(runs, name, 'report.md');
       if (!existsSync(file)) continue;
       for (const p of lintReport(readFileSync(file, 'utf8'))) problems.push(`${name}: ${p}`);
+      // the suggestion part (report.json "extra") belongs to the FAIL report of promote and to no other report of any run
+      const json = join(runs, name, 'report.json');
+      const record = join(runs, name, 'run.json');
+      if (existsSync(json) && 'extra' in JSON.parse(readFileSync(json, 'utf8'))) {
+        const run = existsSync(record) ? JSON.parse(readFileSync(record, 'utf8')) : {};
+        if (run.script !== 'promote' || run.exit_code !== 11) problems.push(`${name}: a report of ${run.script ?? 'a run without a record'} (exit ${run.exit_code ?? '?'}) has the suggestion part; only promote's FAIL may`);
+      }
     }
   }
   for (const d of dirs) rmSync(d, { recursive: true, force: true });
