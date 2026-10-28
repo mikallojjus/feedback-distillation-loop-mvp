@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. In step 10, distill drafted a change to rule 3; promote failed it on an example the rule in force already missed, and P33 and P34 fixed the check and its report (entry 50, merged as 61df7bb). Promote then passed: rule 3 is live in edition 2026-10-28.1 (entry 51). P35 to P37 (entry 52, `ADD-CLAIMS.md`): editors add Geo claims to Claims with `/claim-tagger add`; it is being built. Next: the build, then the product owner's live test, then a tag run at the new edition.
+- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. In step 10, distill drafted a change to rule 3; promote failed it on an example the rule in force already missed, and P33 and P34 fixed the check and its report (entry 50, merged as 61df7bb). Promote then passed: rule 3 is live in edition 2026-10-28.1 (entry 51). P35 to P37 (entry 52, `ADD-CLAIMS.md`): editors add Geo claims to Claims with `/claim-tagger add`, built, reviewed and merged as 057bdb9 (entry 53). Next: the product owner's live test of add, then a tag run at the new edition.
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -634,3 +634,23 @@ Decided by the product owner, in two question batches:
 The design and the plan are in `ADD-CLAIMS.md`. My calls there: a shared row builder for the pick and add; which space a claim takes; unknown Geo Tags left out; an allowance in `lib/plan.mjs` for the script `add` only; a re-read before sending; setup verify counting added rows as information.
 
 Next: the Sonnet build, an Opus code review and an editor-persona review, fix rounds until GO, then the merge. Then stop before any live add.
+
+### 53. `/claim-tagger add` built, reviewed and merged (P35 to P37; 2026-10-28)
+
+Done:
+- The Sonnet coder built `add.mjs` and `lib/geo-row.mjs`, with the narrow allowance in `lib/plan.mjs`, the change to setup verify, the skill, the handover and CONTRACTS section 20 (faedde2, 627b8ad). It ran 19 mutations; all were caught after two tests were strengthened. 2,370 tests.
+- Opus code review: GO, with one moderate (two editors adding the same claim at once could still make a duplicate, and the docs said it could not) and 9 minor.
+- The editor-persona review raised two musts: the report counted refused claims without naming them, and the handover promised that added claims wait in Your queue, which only the unsure ones do. It also raised ten smaller points.
+- Fix round 73466ec with my calls C1 to C5. They became decisions 129 and 132.
+- Opus re-check: GO, with one moderate (a stopped write under-counted rows that landed) and four minor. Last fixes fe00fc9.
+- My own probe found that a typed `[true]`, echoed back, passed the report lint but failed the transcript check. The echo rule went in as 2b63aab.
+- Merged as 057bdb9; 2,384 tests (`evidence/01-tests/node-test-claims-hub-add.txt`). Decisions 127 to 132.
+
+Not done or not verified:
+- The Notion `or` filter (the re-read and the check after writing) ran only against the fake.
+- A real Geo link from a browser address bar has not been tried.
+- Both wait for the product owner's live test.
+
+Open for the product owner: should added claims always wait for an editor? An added claim the agent is sure about lands in Done, not Your queue (the editor review's PQ-1). With "not marked" (P37) the agent cannot tell it apart, and a script may not set Review status.
+
+Next: stop. The product owner tests live: `/claim-tagger add <one or two Geo links>`, then `/claim-tagger tag`, with evidence in `evidence/31-add-claims/`.
