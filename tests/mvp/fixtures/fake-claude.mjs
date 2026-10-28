@@ -21,7 +21,7 @@
 //     as one read of the claim, so a list such as [ok, "drop", "drop", ok] makes the first two attempts of a batch fail and the third succeed.
 //   - without a table entry: p is spread over 0.05 to 0.95 (0.01 steps) by the hash, decision is apply when p >= 0.5.
 // A prompt that holds a line "# Distill" (in the system prompt or the message) is answered with a fixed lesson, one that holds "# Wording"
-// with one sentence; the shapes are { patterns: [{ lesson, rule, kind, proposed_text, keys }] } and { sentence }.
+// with one sentence and the reason for it; the shapes are { patterns: [{ lesson, rule, kind, proposed_text, keys }] } and { sentence, why }.
 // A prompt that holds a line "# Reading" is answered with {"readings": [{ key, reading, rule, note }]}: one reading per <row key="..." tag="..."> of the message.
 //   - FAKE_CLAUDE_READINGS: the path of a JSON file { "<row key>": { reading, rule, note } }. A row whose key is not in it is read Rule unclear, with the rule its <agent_reason> cites
 //     ("<Tag> rule <n>", the last one; null when it cites none) and the note "The rule leaves this kind of case open."
@@ -58,7 +58,10 @@ const DISTILL_REPLY = {
   }],
 };
 const READING_NOTE = 'The rule leaves this kind of case open.';
-const WORDING_REPLY = { sentence: 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.' };
+export const WORDING_REPLY = {
+  sentence: 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.',
+  why: 'The claim points at one particular thing without saying which, so the added sentence keeps it under the rule.',
+};
 
 const h32 = (...parts) => createHash('sha256').update(parts.join('|'), 'utf8').digest().readUInt32BE(0);
 const round2 = (x) => Math.round(x * 100) / 100;

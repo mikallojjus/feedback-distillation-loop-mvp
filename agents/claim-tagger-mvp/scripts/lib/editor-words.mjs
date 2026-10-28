@@ -10,6 +10,11 @@
 //   cutText(text, max = 60)           -> one line of at most `max` characters; a cut text ends in "..."
 //   quoted(text, max?)                -> "the text cut and in double quotes" (inner double quotes become single ones), exempt from the report lint
 //   quotedWhole(text)                 -> the same, never cut: for text an editor is to copy whole (the complete wording of a rule)
+//   splitSentences(text)              -> the sentences of a rule's text, one per entry: split at a full stop followed by a space and a capital letter or an opening quote (not after an abbreviation such as
+//                                        "e.g." or "U.S."); when any piece would have fewer than three words the text is not split and comes back as one entry
+//   suggestionPart({ ruleLabel, sentence, why, ruleText })
+//                                     -> the suggestion of a FAIL report (the fourth part, between the table and the Next line): "Suggested sentence for rule 3:", the sentence as a quote, the Why line, and
+//                                        the tested rule with the sentence in a fenced block to copy, one sentence per line (lib/report.mjs keeps its shape)
 //   stampOf(date)                     -> "15 Oct 11:20" (local time): the date part of a Last run summary
 //   answerWord(decision)              -> Applies / Does not apply / Can't tell for apply / do_not_apply / ask_editor
 //   notionUrl(id, title?)             -> https://www.notion.so/<the 32 hex digits>; with a title the form Notion itself gives a page: https://app.notion.com/p/<the title's words joined by dashes>-<the 32 hex digits>
@@ -73,7 +78,57 @@ export function quotedWhole(text) {
   return `"${squash(text).replace(/["“”]/g, "'")}"`;
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+// ---- the suggestion of a FAIL report ---------------------------------------------------------------------------------------------------------
+
+const ABBREVIATIONS = new Set(['vs', 'cf', 'approx', 'mr', 'mrs', 'ms', 'dr', 'prof', 'jr', 'sr', 'fig']);
+
+/** True for the word before a full stop that does not end a sentence: "e.g", "U.S", a lone letter, "Dr". */
+const isAbbreviation = (word) => {
+  const bare = word.replace(/^[("'“‘]+/, '');
+  return bare.includes('.') || /^[A-Za-z]$/.test(bare) || ABBREVIATIONS.has(bare.toLowerCase());
+};
+
+/** The sentences of a text (see the header): [the text] when it cannot be split safely. */
+export function splitSentences(text) {
+  const t = squash(text);
+  if (t === '') return [];
+  const pieces = [];
+  let from = 0;
+  const stop = /\.(?=\s+["'“‘A-Z])/g;
+  for (let m = stop.exec(t); m !== null; m = stop.exec(t)) {
+    const word = /(\S+)$/.exec(t.slice(from, m.index))?.[1] ?? '';
+    if (isAbbreviation(word)) continue;
+    pieces.push(t.slice(from, m.index + 1).trim());
+    from = m.index + 1;
+  }
+  pieces.push(t.slice(from).trim());
+  const sentences = pieces.filter(Boolean);
+  return sentences.length > 1 && sentences.every((s) => s.split(' ').length >= 3) ? sentences : [t];
+}
+
+const capFirst = (text) => text.charAt(0).toUpperCase() + text.slice(1);
+
+/**
+ * The suggestion of a FAIL report (see the header). The sentence and the reason are one line each; the rule is the text that was tested and the fenced block holds only that text, one
+ * sentence per line, then the new sentence on its own line, with no marker, so that what is copied into Editor wording is the same text that was tested plus the sentence.
+ */
+export function suggestionPart({ ruleLabel, sentence, why, ruleText }) {
+  const noFence = (s) => squash(s).replace(/`{3,}/g, "'''");
+  const lines = [...splitSentences(noFence(ruleText)), noFence(sentence)];
+  return [
+    `Suggested sentence for ${ruleLabel}:`,
+    `> ${noFence(sentence)}`,
+    '',
+    `Why: ${noFence(why)}`,
+    '',
+    `${capFirst(ruleLabel)} with the sentence, to copy into Editor wording:`,
+    '```',
+    ...lines,
+    '```',
+  ].join('\n');
+}
+
+const MONTHS = ['Jan','Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const two = (n) => String(n).padStart(2, '0');
 
 export function stampOf(date = new Date()) {

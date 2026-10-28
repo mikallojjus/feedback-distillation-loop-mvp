@@ -206,6 +206,21 @@ Demo · Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-15
 
 Next: look at step 7 on the practice page (link); the demo is then complete.
 
+### promote, when it passes with an example that was wrong before (Claims)
+
+The safety check counts an example claim against a change only when the rulebook in force gets it right: an example that is already wrong under the rule in force is shown in its own row, "Wrong before the change", and not counted, whatever the new wording does with it. The row is in the table of a FAIL too. The result written in Rule changes then reads "PASS: examples 10/11 (1 wrong before), earlier 5/5, yours 2/2". An example that comes out wrong under both rulebooks is read again on both sides before it is called wrong, so one unlucky read cannot hide a real break. The engineer may recalibrate the example in the examples file; the editor needs to do nothing.
+
+Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-28.2), and the follow-up marked both of your rows Fixed.
+
+| Check | Result |
+|---|---|
+| Example claims | 10 of 11 right |
+| Wrong before the change | 1 example claim, not counted |
+| Earlier decisions | 5 of 5 still right |
+| Your 2 rows | 2 of 2 now right, marked Fixed |
+
+Next: nothing waits; type /claim-tagger status to see what is open.
+
 ### promote, held because a decision was recanted (demo)
 
 The editor approved a draft that rests on a decision they have since called the agent's slip. Promote holds before the safety check and writes nothing; the rule change stays Approved until the editor rejects it.
@@ -214,11 +229,39 @@ Demo · Promote: held: the rule change "Known groups count as identified, unknow
 
 Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger demo distill again.
 
+### promote, when it does not pass (Claims)
+
+Editor wording is the whole rule, so a FAIL report has a fourth part between the table and the Next line, the suggestion: one sentence written from the claim that came out wrong, the reason for it (the Why line), and the rule as it was tested with the sentence added, one sentence per line, in a block to copy. The sentence of the report says which answer the claim came out with and which one is right. The claim can be an example claim that was right under the rule in force (an example that was wrong before is shown in its own row and never named here), an earlier decision or one of the editor's own claims. The block holds only the rule, so what is copied into Editor wording is what was tested and the sentence; the editor may also write the whole rule as wanted. When no sentence could be written the report has its three parts and the Next line asks for the whole rule.
+
+Promote: FAIL, rule 3 is unchanged: the new wording turns "The infrastructure plan won approval from the council." to Does not apply; the right answer is Applies.
+
+| Check | Result |
+|---|---|
+| Example claims | 10 of 11 right |
+| Wrong before the change | 1 example claim, not counted |
+| Earlier decisions | 5 of 5 still right |
+| Your 2 rows | 2 of 2 now right |
+
+Suggested sentence for rule 3:
+> A description of a plan or program that fits more than one, such as a plan for infrastructure, still needs context.
+
+Why: 'The infrastructure plan' could be any of several plans, so readers cannot tell which one is meant. The new wording treated it as the name of one program; the sentence puts it back.
+
+Rule 3 with the sentence, to copy into Editor wording:
+```
+A descriptive definite that names a kind of thing but not which one ('the Bitcoin ETF', 'the major-bank stablecoin consortium', 'the open-access version', 'the infrastructure', 'the new model') makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant.
+A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts.
+Applies to countable things, not to abstract or mass nouns ('the regulatory clearance', 'the market').
+A description of a plan or program that fits more than one, such as a plan for infrastructure, still needs context.
+```
+
+Next: in Lessons waiting (link), put rule 3 with the suggested sentence into Editor wording, or write it as you want it; then type /claim-tagger promote again.
+
 ### promote, when it does not pass (demo)
 
-Editor wording is the whole rule, so the Next line hands the editor the whole text: the rule as it was tested, then one sentence written from the claim that came out wrong. That claim can be an example claim, an earlier decision (as here) or one of the editor's own claims. Double quotes inside the text are printed as single ones.
+The same shape on a practice page: the command is the demo one and the first sentence names the page. Here the claim is an earlier decision that the new wording broke. Double quotes in the sentence and the Why line are printed as single ones; the rule in the block keeps its own.
 
-Demo · Promote: FAIL, rule 3 is unchanged: the new wording turns "The Dallas convention is the unofficial launch of JD Vanc..." to Does not apply (practice page Claim tagger demo · 15 Oct 10:42).
+Demo · Promote: FAIL, rule 3 is unchanged: the new wording turns "The Dallas convention is the unofficial launch of JD Vanc..." to Does not apply; the right answer is Applies (practice page Claim tagger demo · 15 Oct 10:42).
 
 | Check | Result |
 |---|---|
@@ -226,7 +269,20 @@ Demo · Promote: FAIL, rule 3 is unchanged: the new wording turns "The Dallas co
 | Earlier decisions | 5 of 6 still right |
 | Your 2 rows | 2 of 2 now right |
 
-Next: in Lessons waiting (link), open the change and put this whole text into Editor wording: "A descriptive definite that names a kind of thing but not which one ('the Bitcoin ETF', 'the major-bank stablecoin consortium', 'the open-access version', 'the infrastructure', 'the new model') makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. Applies to countable things, not to abstract or mass nouns ('the regulatory clearance', 'the market'). A group readers know by its standing role, such as a press corps, counts as identified; a capitalised phrase that names no body readers know does not. A one-off event named only by its place or kind, such as a convention, still needs context."; then type `/claim-tagger demo promote` again.
+Suggested sentence for rule 3:
+> A one-off event named only by its place or kind, such as a convention, still needs context.
+
+Why: The claim names a one-off event only by its place and kind, so readers cannot tell which convention is meant. The sentence puts such events back under the rule that the new wording let slip.
+
+Rule 3 with the sentence, to copy into Editor wording:
+```
+A descriptive definite that names a kind of thing but not which one ('the Bitcoin ETF', 'the major-bank stablecoin consortium', 'the open-access version', 'the infrastructure', 'the new model') makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant.
+Applies to countable things, not to abstract or mass nouns ('the regulatory clearance', 'the market').
+A group readers know by its standing role, such as a press corps, counts as identified; a capitalised phrase that names no body readers know does not.
+A one-off event named only by its place or kind, such as a convention, still needs context.
+```
+
+Next: in Lessons waiting (link), put rule 3 with the suggested sentence into Editor wording, or write it as you want it; then type /claim-tagger demo promote again.
 
 ### follow-up, repeated by hand (demo, only after a promote that stopped before its last step)
 

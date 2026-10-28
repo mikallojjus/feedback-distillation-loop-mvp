@@ -30,6 +30,13 @@ const storeDirs = (w) => {
 };
 const flipExample = { [EXAMPLE_1]: { decision: 'do_not_apply', p: 0.1 } };
 const SENTENCE = 'A reference to one particular thing that the claim does not name, such as a title alone, still fails the test.'; // the fake wording call's stock reply
+const WHY = 'The claim points at one particular thing without saying which, so the added sentence keeps it under the rule.'; // and its stock reason
+/** The suggestion of a FAIL report as it must read: the sentence, the reason, and the rule to copy (`lines`: the tested rule one sentence per line, then the sentence). */
+const suggestion = (label, sentence, why, lines) => [
+  `Suggested sentence for ${label}:`, `> ${sentence}`, '', `Why: ${why}`, '', `${label[0].toUpperCase()}${label.slice(1)} with the sentence, to copy into Editor wording:`, '```', ...lines, '```',
+].join('\n');
+const renderedTable = (rows) => ['| Check | Result |', '|---|---|', ...rows.map((row) => `| ${row[0]} | ${row[1]} |`)].join('\n');
+const nextAfterFail = (w, label = 'rule 4', command = '/claim-tagger promote') => `Next: in Lessons waiting (${lessonsLink(w)}), put ${label} with the suggested sentence into Editor wording, or write it as you want it; then type ${command} again.`;
 const wordingCalls = (w) => w.calls().filter((c) => /prompts[\\/]wording\.md$/.test(c.systemPromptFile));
 const lessonsLink = (w) => `https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003`;
 const young = (w, body) => {
@@ -71,6 +78,43 @@ test('evaluate: FAIL names the first failure: an example first, then an earlier 
   const onlyYours = evaluate({ canaries: [], earlier: [], yours, base, cand });
   assert.deepEqual([onlyYours.first.id, onlyYours.first.got, onlyYours.checks.supporting.passed], ['k2::T', 'ask_editor', 0]);
   assert.equal(evaluate({ canaries: [item('e', 'apply')], earlier: [], yours: [], base: ans({ e: 'apply' }), cand: new Map() }).verdict, 'FAIL', 'an answer that is missing is wrong');
+});
+
+test('evaluate (P33): an example that the rulebook in force already gets wrong is not a failure, whatever the candidate says; it is listed in already_wrong with the candidate\'s answer, and `passed` counts what is right under the candidate', () => {
+  const canaries = [item('e1', 'apply'), item('e2', 'do_not_apply'), item('e3', 'apply'), item('e4', 'apply')];
+  const base = ans({ e1: 'apply', e2: 'apply', e3: 'ask_editor', e4: 'do_not_apply' }); // e2, e3 and e4 are wrong before
+  const cand = ans({ e1: 'apply', e2: 'apply', e3: 'apply', e4: 'ask_editor' }); // e2 stays wrong, e3 is put right, e4 is wrong in another way
+  const r = evaluate({ canaries, earlier: [], yours: [], base, cand });
+  assert.equal(r.verdict, 'PASS');
+  assert.equal(r.first, null);
+  assert.deepEqual(r.checks.canaries.failures, [], 'nothing was right before and wrong after');
+  assert.deepEqual(r.checks.canaries.already_wrong, [
+    { id: 'e2', claim: 'claim e2', expected: 'do_not_apply', got: 'apply' },
+    { id: 'e3', claim: 'claim e3', expected: 'apply', got: 'apply' },
+    { id: 'e4', claim: 'claim e4', expected: 'apply', got: 'ask_editor' },
+  ], 'the record has exactly id, claim, expected and the candidate\'s answer');
+  assert.deepEqual([r.checks.canaries.passed, r.checks.canaries.total], [2, 4], 'passed stays "right under the candidate": e1 and e3');
+  assert.deepEqual(evaluate({ canaries: [item('e1', 'apply')], earlier: [], yours: [], base: ans({ e1: 'apply' }), cand: ans({ e1: 'apply' }) }).checks.canaries.already_wrong, [], 'an example that is right is not listed');
+  assert.deepEqual(evaluate({ canaries: [item('e1', 'apply')], earlier: [], yours: [], base: new Map(), cand: ans({ e1: 'apply' }) }).checks.canaries.already_wrong.map((m) => m.id), ['e1'], 'no answer under the rulebook in force is not right');
+});
+
+test('evaluate (P33): an example that is right under the rulebook in force and wrong under the candidate is a FAIL, and `first` is never an example that was wrong before, even when it comes first', () => {
+  const canaries = [item('old', 'apply'), item('new', 'do_not_apply')];
+  const r = evaluate({ canaries, earlier: [], yours: [], base: ans({ old: 'do_not_apply', new: 'do_not_apply' }), cand: ans({ old: 'do_not_apply', new: 'apply' }) });
+  assert.equal(r.verdict, 'FAIL');
+  assert.deepEqual([r.first.id, r.first.expected, r.first.got, r.first.was], ['new', 'do_not_apply', 'apply', 'do_not_apply']);
+  assert.deepEqual(r.checks.canaries.failures.map((m) => m.id), ['new']);
+  assert.deepEqual(r.checks.canaries.already_wrong.map((m) => m.id), ['old']);
+  assert.deepEqual([r.checks.canaries.passed, r.checks.canaries.total], [0, 2]);
+  // an old miss alone, with nothing broken, never blocks: the live case of 28 October (rule 3, an example that came out Applies under both rulebooks)
+  const alone = evaluate({ canaries, earlier: [], yours: [], base: ans({ old: 'do_not_apply', new: 'do_not_apply' }), cand: ans({ old: 'do_not_apply', new: 'do_not_apply' }) });
+  assert.equal(alone.verdict, 'PASS');
+  // the earlier decisions are counted as before: only those that were right before can break, and an old miss among them is not in any list
+  const earlier = [item('c1', 'apply', { key: 'k1::T' }), item('c2', 'apply', { key: 'k2::T' })];
+  const both = evaluate({ canaries: [], earlier, yours: [], base: ans({ c1: 'apply', c2: 'do_not_apply' }), cand: ans({ c1: 'do_not_apply', c2: 'do_not_apply' }) });
+  assert.equal(both.verdict, 'FAIL');
+  assert.deepEqual([both.first.id, both.checks.cases.passed, both.checks.cases.total, both.checks.cases.newly_failing.length], ['k1::T', 0, 1, 1]);
+  assert.deepEqual(both.checks.canaries.already_wrong, [], 'no examples, none listed');
 });
 
 test('candidateTextOf: the Editor wording wins when there is one, as one line without numbering', () => {
@@ -184,6 +228,116 @@ test('promote PASS: a real flip that the extra reads confirm FAILs', async () =>
   const r = await promote(w.hooks());
   assert.equal(r.exit, 11);
   assert.equal(readJson(join(r.runDir, 'card.json')).verdict, 'FAIL');
+});
+
+// ---- an example that the rulebook in force already gets wrong (P33) --------------------------------------------------------------------------
+
+const OLD_MISS = taxonomyCanaries().find((c) => c.expected === 'do_not_apply'); // an example that must not apply
+const wrongBefore = { [OLD_MISS.claim]: { decision: 'apply', p: 0.9 } }; // it comes out Applies, under the rulebook in force and under the candidate: the live case of 28 October
+
+test('promote PASS (P33): an example that comes out wrong under both rulebooks is shown in its own row and not counted: the live case of 28 October passes, with "(1 wrong before)" in the result', async () => {
+  const w = await promoteWorld({ base: wrongBefore, overrides: wrongBefore, open: 1 });
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const report = assertReport(h, r);
+  assert.deepEqual(report.rows, [
+    ['Example claims', '10 of 11 right', ''],
+    ['Wrong before the change', '1 example claim, not counted', ''],
+    ['Earlier decisions', '2 of 2 still right', ''],
+    ['Your 2 rows', '2 of 2 now right, marked Fixed', ''],
+  ], 'four rows, the most a table may have here');
+  assert.ok(report.rows.length <= 5);
+  assert.equal(report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed.');
+  assert.equal(w.row('rule_changes', TITLE).Status, 'Live');
+  assert.equal(w.row('rule_changes', TITLE)['Safety check result'], 'PASS: examples 10/11 (1 wrong before), earlier 2/2, yours 2/2');
+  assert.equal(w.row('agent_settings', 'Claim tagger')['Rulebook edition'], '2026-10-16.2');
+
+  const card = readJson(join(r.runDir, 'card.json'));
+  assert.deepEqual(validate(cardSchema, card).errors, []);
+  assert.equal(card.verdict, 'PASS');
+  assert.deepEqual(card.checks.canaries.failures, []);
+  assert.deepEqual(card.checks.canaries.already_wrong, [{ id: OLD_MISS.id, claim: OLD_MISS.claim, expected: 'do_not_apply', got: 'apply' }]);
+  assert.equal(card.rejudged, 3, 'the two supporting rows flipped and the example that was wrong under both was read again');
+  const md = readFileSync(join(r.runDir, 'card.md'), 'utf8');
+  assert.match(md, /Example claims that were already wrong under the rulebook in force \(not counted; the engineer may recalibrate evals\/canaries\.jsonl\):/);
+  assert.ok(md.includes(`- "${OLD_MISS.claim.slice(0, 40)}`) && md.includes('expected Does not apply, with the new text Applies'), md);
+  const linesOf = (n) => storeDirs(w).flatMap((dir) => readJsonl(join(dir, `run-${n}.jsonl`)).rows).filter((l) => l.id === OLD_MISS.id);
+  assert.deepEqual([linesOf(1).length, linesOf(2).length, linesOf(3).length], [2, 2, 2], 'read again on both sides, as a flipped item is');
+});
+
+test('promote (P33): the row counts the examples ("2 example claims"), and it is in the table of a FAIL as well, where a real break is still named first', async () => {
+  const second = taxonomyCanaries().filter((c) => c.expected === 'do_not_apply')[1];
+  const two = { ...wrongBefore, [second.claim]: { decision: 'apply', p: 0.9 } };
+  const pass = await promoteWorld({ base: two, overrides: two });
+  const ok = await promote(pass.hooks());
+  assert.equal(ok.exit, 0);
+  assert.deepEqual(ok.report.rows[1], ['Wrong before the change', '2 example claims, not counted', '']);
+  assert.equal(pass.row('rule_changes', TITLE)['Safety check result'], 'PASS: examples 9/11 (2 wrong before), earlier 2/2, yours 2/2');
+
+  const w = await promoteWorld({ base: wrongBefore, overrides: { ...wrongBefore, ...flipExample } }); // one old miss, and one example that the change breaks
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 11, h.io.errs.join('\n'));
+  const report = assertReport(h, r);
+  assert.deepEqual(report.rows, [
+    ['Example claims', '9 of 11 right', ''],
+    ['Wrong before the change', '1 example claim, not counted', ''],
+    ['Earlier decisions', '2 of 2 still right', ''],
+    ['Your 2 rows', '2 of 2 now right', ''],
+  ]);
+  const cut = EXAMPLE_1.length > 60 ? `${EXAMPLE_1.slice(0, 57)}...` : EXAMPLE_1;
+  assert.equal(report.sentence, `Promote: FAIL, rule 4 is unchanged: the new wording turns "${cut}" to Does not apply; the right answer is Applies.`, 'the claim named is the one the change broke, not the old miss');
+  assert.equal(w.row('rule_changes', TITLE)['Safety check result'], `FAIL: '${cut}' now Does not apply`);
+  assert.ok(wordingCalls(w)[0].stdin.includes(`<claim answer="Applies">${EXAMPLE_1}</claim>`), 'the suggestion is asked for the broken example');
+  assert.ok(!wordingCalls(w).some((c) => c.stdin.includes(OLD_MISS.claim)), 'never for an example that was wrong before');
+  const card = readJson(join(r.runDir, 'card.json'));
+  assert.deepEqual(validate(cardSchema, card).errors, []);
+  assert.deepEqual([card.checks.canaries.failures.map((m) => m.id), card.checks.canaries.already_wrong.map((m) => m.id)], [['canary-1'], [OLD_MISS.id]]);
+  assert.match(readFileSync(join(r.runDir, 'card.md'), 'utf8'), /already wrong under the rulebook in force/);
+});
+
+test('promote (P33): an example wrong under both rulebooks on the first read is read again on both sides, and the re-reading decides: right under the rulebook in force after all, it is a real break and FAILs', async () => {
+  const yes = { decision: 'apply', p: 0.9 };
+  const no = { decision: 'do_not_apply', p: 0.1 };
+  // the reads of the example in order (one counter for the claim, whichever rulebook asks): baseline run 1, candidate run 1, then the extra reads: baseline runs 2 and 3, candidate runs 2 and 3.
+  // It must apply. The first reads are both No (wrong under both); the extra reads say Yes under the rulebook in force and No under the candidate.
+  const w = await promoteWorld({ base: { [EXAMPLE_1]: [no, no, yes, yes, yes, yes] }, overrides: { [EXAMPLE_1]: [no, no, no, no, no, no] } });
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 11, h.io.errs.join('\n'));
+  const card = readJson(join(r.runDir, 'card.json'));
+  assert.equal(card.verdict, 'FAIL');
+  assert.deepEqual(card.checks.canaries.failures.map((m) => [m.id, m.expected, m.got]), [['canary-1', 'apply', 'do_not_apply']], 'a real break, found by the re-reading');
+  assert.deepEqual(card.checks.canaries.already_wrong, []);
+  assert.equal(card.rejudged, 3, 'the example that was wrong under both counts with the two rows that flipped');
+  assert.deepEqual(card.flips.filter((f) => f.claim === EXAMPLE_1).map((f) => [f.from, f.to]), [['apply', 'do_not_apply']]);
+  assert.equal(assertReport(h, r).rows[0][1], '10 of 11 right');
+});
+
+test('promote (P33): the other way, an example that was right under the rulebook in force on one read and wrong on the others is an old miss, and one that the re-reading puts right under the candidate is listed and counted right', async () => {
+  const yes = { decision: 'apply', p: 0.9 };
+  const no = { decision: 'do_not_apply', p: 0.1 };
+  // wrong under both on the first reads; the extra reads say No under the rulebook in force (an old miss) and Yes under the candidate (the change puts it right)
+  const w = await promoteWorld({ base: { [EXAMPLE_1]: [no, no, no, no, yes, yes] }, overrides: { [EXAMPLE_1]: [no, no, yes, yes, yes, yes] } });
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(w.row('rule_changes', TITLE)['Safety check result'], 'PASS: examples 11/11 (1 wrong before), earlier 2/2, yours 2/2');
+  assert.deepEqual(readJson(join(r.runDir, 'card.json')).checks.canaries.already_wrong, [{ id: 'canary-1', claim: EXAMPLE_1, expected: 'apply', got: 'apply' }]);
+  assert.deepEqual(r.report.rows.slice(0, 2), [['Example claims', '11 of 11 right', ''], ['Wrong before the change', '1 example claim, not counted', '']]);
+});
+
+test('promote (P33): an example that is wrong under both rulebooks but with different answers is a flip and is read again once, not twice', async () => {
+  // baseline says Can\'t tell and the candidate says Does not apply to an example that must apply: wrong under both, and the two answers differ
+  const w = await promoteWorld({ base: { [EXAMPLE_1]: { decision: 'ask_editor', p: 0.5, rule_ref: null } }, overrides: flipExample });
+  const r = await promote(w.hooks());
+  assert.equal(r.exit, 0);
+  const card = readJson(join(r.runDir, 'card.json'));
+  assert.equal(card.rejudged, 3, 'two rows and the example, each once');
+  assert.deepEqual(card.checks.canaries.already_wrong.map((m) => [m.id, m.got]), [['canary-1', 'do_not_apply']]);
+  const reads = (n) => storeDirs(w).flatMap((dir) => readJsonl(join(dir, `run-${n}.jsonl`)).rows).filter((l) => l.id === 'canary-1');
+  assert.deepEqual([reads(1).length, reads(2).length, reads(3).length], [2, 2, 2], 'two reads of each run, one per side: not read again for being both a flip and wrong under both');
 });
 
 // The extra reads that settle a flipped answer (lib/answers.mjs forceRuns) are the safety check's own. When the model leaves a claim out of the reply twice, the batch's items get error
@@ -369,10 +523,12 @@ test('promote FAIL: an example that flips leaves the rulebook alone, writes only
 
   // the report: the claim, the figures, the sentence
   const report = assertReport(h, r);
-  assert.equal(report.sentence, `Promote: FAIL, rule 4 is unchanged: the new wording turns "${cut}" to Does not apply.`);
+  assert.equal(report.sentence, `Promote: FAIL, rule 4 is unchanged: the new wording turns "${cut}" to Does not apply; the right answer is Applies.`, 'the sentence names the answer the claim should have');
   assert.deepEqual(report.rows, [['Example claims', '10 of 11 right', ''], ['Earlier decisions', '2 of 2 still right', ''], ['Your 2 rows', '2 of 2 now right', '']]);
-  assert.equal(report.next, `Next: in Lessons waiting (${lessonsLink(w)}), open the change and put this whole text into Editor wording: "${NEW_TEXT} ${SENTENCE}"; then type /claim-tagger promote again.`,
-    'Editor wording is the whole rule: the text that was tested (the lesson\'s proposed text), a space, the proposed sentence');
+  assert.equal(report.extra, suggestion('rule 4', SENTENCE, WHY, [NEW_TEXT, SENTENCE]),
+    'a part of its own: the sentence, the reason, and the rule as it was tested (the lesson\'s proposed text) with the sentence on its own line, in a block to copy');
+  assert.equal(report.next, nextAfterFail(w), 'the Next line is short: the rule is in the block above it');
+  assert.equal(r.markdown, `${report.sentence}\n\n${renderedTable(report.rows)}\n\n${report.extra}\n\n${report.next}\n`, 'sentence, table, suggestion, Next line, in that order');
 
   // the card and the wording call
   const card = readJson(join(r.runDir, 'card.json'));
@@ -381,11 +537,13 @@ test('promote FAIL: an example that flips leaves the rulebook alone, writes only
   assert.deepEqual(card.checks.canaries.failures.map((m) => [m.id, m.expected, m.got]), [['canary-1', 'apply', 'do_not_apply']]);
   const md = readFileSync(join(r.runDir, 'card.md'), 'utf8');
   assert.match(md, /Suggested sentence for Editor wording: "A reference to one particular thing/);
+  assert.ok(md.includes(`Why that sentence: ${WHY}`), md);
   assert.ok(md.includes(`Whole text for Editor wording (the rule as it was tested, a space, the sentence): "${NEW_TEXT} ${SENTENCE}"`), md);
   const wording = wordingCalls(w);
   assert.equal(wording.length, 1);
   assert.equal(wording[0].args[wording[0].args.indexOf('--model') + 1], 'claude-opus-5-5');
   assert.ok(wording[0].stdin.includes(`<claim answer="Applies">${EXAMPLE_1.replace(/&/g, '&amp;')}</claim>`), 'the failing claim goes in as data, with the answer it must keep');
+  assert.ok(wording[0].stdin.includes('<case>broke</case>'), 'the example was right under the rule in force, so the change broke it');
   assert.ok(wording[0].stdin.includes(`<current_text>${RULE4}</current_text>`));
   assert.ok(wording[0].stdin.includes(`<proposed_text>${NEW_TEXT}</proposed_text>`));
   assert.equal(existsSync(lockFile(w)), false, 'the lock is removed on a FAIL too');
@@ -398,8 +556,10 @@ test('promote FAIL: when the sentence cannot be written the report says so and g
   const r = await promote(h);
   assert.equal(r.exit, 11);
   const report = assertReport(h, r);
-  assert.match(report.sentence, /; a suggested sentence could not be written\.$/);
+  assert.match(report.sentence, /; the right answer is Applies; a suggested sentence could not be written\.$/);
   assert.match(report.next, new RegExp(`^Next: in Lessons waiting \\(.*\\), open the change and write all of rule 4 in Editor wording so that "${EXAMPLE_1.slice(0, 20)}.*" keeps its answer; then type /claim-tagger promote again\\.$`));
+  assert.equal('extra' in report, false, 'no sentence, no fourth part: the report has its three parts as before');
+  assert.equal(r.markdown.split(/\n\n/).length, 3);
   assert.equal(w.calls().filter((c) => /wording\.md$/.test(c.systemPromptFile)).length, 2, 'two attempts');
   assert.ok(!/Whole text for Editor wording/.test(readFileSync(join(r.runDir, 'card.md'), 'utf8')), 'no sentence, no whole text');
   assert.match(w.row('rule_changes', TITLE)['Safety check result'], /^FAIL: /);
@@ -421,11 +581,56 @@ test('promote FAIL: a sentence of more than 30 words is refused, one of exactly 
   const exact = await promoteWorld({ overrides: flipExample });
   exact.setEnv('FAKE_LOOP_WORDING', `"${Array.from({ length: 30 }, (_, i) => `word${i}`).join(' ')}"`);
   const ok = await promote(exact.hooks());
-  assert.ok(ok.report.next.includes(`Editor wording: "${NEW_TEXT} word0 word1 `), ok.report.next);
-  assert.match(ok.report.next, /word28 word29"; then type \/claim-tagger promote again\.$/, 'quotes the model put around the sentence are taken off');
+  assert.ok(ok.report.extra.startsWith('Suggested sentence for rule 4:\n> word0 word1 '), ok.report.extra);
+  assert.match(ok.report.extra, /word28 word29\n\nWhy: /, 'quotes the model put around the sentence are taken off');
+  assert.ok(ok.report.extra.endsWith(`\`\`\`\n${NEW_TEXT}\nword0 word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 word16 word17 word18 word19 word20 word21 word22 word23 word24 word25 word26 word27 word28 word29\n\`\`\``));
 });
 
-test('promote FAIL: the whole text is the Editor wording that was tested when there is one (numbering dropped), else the proposed text; double quotes inside it become single ones in the report, and stay as they are in the card', async () => {
+// The reason for the sentence (decision P34): the model replies { sentence, why }; why is required, at most 40 words, and a reply without it or with a longer one is asked for again like a bad sentence.
+const words = (n, prefix = 'why') => Array.from({ length: n }, (_, i) => `${prefix}${i}`).join(' ');
+
+test('promote FAIL: a reply without why is asked for again, and the second reply is used; two replies without it leave the report without a suggestion', async () => {
+  const again = await promoteWorld({ overrides: flipExample });
+  again.setEnv('FAKE_LOOP_WHY_SEQ', JSON.stringify([null, 'The second reply has a reason.']));
+  const h = again.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 11, h.io.errs.join('\n'));
+  assert.equal(wordingCalls(again).length, 2, 'the first reply had no why, so the model was asked again');
+  assert.equal(assertReport(h, r).extra, suggestion('rule 4', SENTENCE, 'The second reply has a reason.', [NEW_TEXT, SENTENCE]));
+
+  const never = await promoteWorld({ overrides: flipExample });
+  never.setEnv('FAKE_LOOP_WHY', 'none');
+  const none = await promote(never.hooks());
+  assert.equal(wordingCalls(never).length, 2, 'two attempts, as for a bad sentence');
+  assert.match(none.report.sentence, /; a suggested sentence could not be written\.$/);
+  assert.equal('extra' in none.report, false);
+  assert.match(none.report.next, /open the change and write all of rule 4 in Editor wording so that ".*" keeps its answer; then type \/claim-tagger promote again\.$/, 'the no-sentence form of the Next line');
+  assert.match(readJson(join(none.runDir, 'run.json')).wording_failed, /no reason/);
+
+  const blank = await promoteWorld({ overrides: flipExample });
+  blank.setEnv('FAKE_LOOP_WHY', '   ');
+  assert.match((await promote(blank.hooks())).report.sentence, /could not be written/, 'an empty why is a missing why');
+});
+
+test('promote FAIL: a why of more than 40 words is refused, one of exactly 40 is taken; quotes round it come off and its double quotes become single ones', async () => {
+  const long = await promoteWorld({ overrides: flipExample });
+  long.setEnv('FAKE_LOOP_WHY', words(41));
+  const refused = await promote(long.hooks());
+  assert.match(refused.report.sentence, /; a suggested sentence could not be written\.$/);
+  assert.equal(wordingCalls(long).length, 2);
+  assert.match(readJson(join(refused.runDir, 'run.json')).wording_failed, /the reason has 41 words, more than 40/);
+
+  const exact = await promoteWorld({ overrides: flipExample });
+  exact.setEnv('FAKE_LOOP_WHY', `"${words(40)}"`);
+  const ok = await promote(exact.hooks());
+  assert.ok(ok.report.extra.includes(`\n\nWhy: ${words(40)}\n\n`), ok.report.extra);
+
+  const quotes = await promoteWorld({ overrides: flipExample });
+  quotes.setEnv('FAKE_LOOP_WHY', 'It reads "the market" as an abstract noun,\nso the rule skips it.');
+  assert.ok((await promote(quotes.hooks())).report.extra.includes("\n\nWhy: It reads 'the market' as an abstract noun, so the rule skips it.\n\n"));
+});
+
+test('promote FAIL: the rule to copy is the Editor wording that was tested when there is one (numbering dropped), else the proposed text; it keeps its own double quotes, and so does the card', async () => {
   const wording = '4. Test: a general reference such as "the market" needs no answer; every other definite reference must point at one specific thing.';
   const w = await promoteWorld({ wording, mark: 'needs no answer; every other definite reference', overrides: flipExample });
   const h = w.hooks();
@@ -433,20 +638,22 @@ test('promote FAIL: the whole text is the Editor wording that was tested when th
   assert.equal(r.exit, 11, h.io.errs.join('\n'));
   const report = assertReport(h, r);
   const tested = 'Test: a general reference such as "the market" needs no answer; every other definite reference must point at one specific thing.';
-  assert.equal(report.next, `Next: in Lessons waiting (${lessonsLink(w)}), open the change and put this whole text into Editor wording: "${tested.replace(/"/g, "'")} ${SENTENCE}"; then type /claim-tagger promote again.`);
+  assert.equal(report.extra, suggestion('rule 4', SENTENCE, WHY, [tested, SENTENCE]), 'the block holds the text that was tested, as it was tested');
+  assert.equal(report.next, nextAfterFail(w));
   assert.ok(readFileSync(join(r.runDir, 'card.md'), 'utf8').includes(`: "${tested} ${SENTENCE}"`));
   assert.ok(wordingCalls(w)[0].stdin.includes(`<proposed_text>${tested}</proposed_text>`), 'the wording call got the text that was tested');
   assert.equal(w.row('rule_changes', TITLE)['Editor wording'], wording, 'the editor\'s field is untouched');
 });
 
-test('promote FAIL: the wording call runs for an earlier decision that broke and for one of the editor\'s own rows, and the report hands over the whole text for each', async () => {
-  const wholeText = `"${NEW_TEXT} ${SENTENCE}"`;
+test('promote FAIL: the wording call runs for an earlier decision that broke and for one of the editor\'s own rows, with the case that tells the model which it is, and the report hands over the suggestion for each', async () => {
   const earlier = await promoteWorld({ overrides: { [claimText(3)]: { decision: 'do_not_apply', p: 0.1 } } }); // claim 3 was decided Applies
   const re = await promote(earlier.hooks());
   assert.equal(re.exit, 11);
   assert.equal(wordingCalls(earlier).length, 1, 'asked for an earlier decision as for an example');
   assert.ok(wordingCalls(earlier)[0].stdin.includes(`<claim answer="Applies">${claimText(3)}</claim>`));
-  assert.equal(re.report.next, `Next: in Lessons waiting (${lessonsLink(earlier)}), open the change and put this whole text into Editor wording: ${wholeText}; then type /claim-tagger promote again.`);
+  assert.ok(wordingCalls(earlier)[0].stdin.includes('<case>broke</case>'), 'the earlier decision was right under the rule in force: the change broke it');
+  assert.equal(re.report.extra, suggestion('rule 4', SENTENCE, WHY, [NEW_TEXT, SENTENCE]));
+  assert.equal(re.report.next, nextAfterFail(earlier));
 
   const yours = await promoteWorld({ overrides: { [claimText(2)]: { decision: 'apply', p: 0.9 } } }); // row 2 was decided Does not apply
   const ry = await promote(yours.hooks());
@@ -454,8 +661,11 @@ test('promote FAIL: the wording call runs for an earlier decision that broke and
   assert.equal(yours.row('rule_changes', TITLE)['Safety check result'], `FAIL: '${claimText(2)}' now Applies`);
   assert.equal(wordingCalls(yours).length, 1, 'asked for one of the editor\'s own rows as well');
   assert.ok(wordingCalls(yours)[0].stdin.includes(`<claim answer="Does not apply">${claimText(2)}</claim>`));
-  assert.equal(ry.report.next, `Next: in Lessons waiting (${lessonsLink(yours)}), open the change and put this whole text into Editor wording: ${wholeText}; then type /claim-tagger promote again.`);
-  assert.ok(readFileSync(join(ry.runDir, 'card.md'), 'utf8').includes(`Whole text for Editor wording (the rule as it was tested, a space, the sentence): ${wholeText}`));
+  assert.ok(wordingCalls(yours)[0].stdin.includes('<case>still_wrong</case>'), 'the row was wrong under the rule in force (Can\'t tell) and the new text does not fix it');
+  assert.equal(ry.report.extra, suggestion('rule 4', SENTENCE, WHY, [NEW_TEXT, SENTENCE]));
+  assert.equal(ry.report.next, nextAfterFail(yours));
+  assert.ok(ry.report.sentence.endsWith(`to Applies; the right answer is Does not apply.`), ry.report.sentence);
+  assert.ok(readFileSync(join(ry.runDir, 'card.md'), 'utf8').includes(`Whole text for Editor wording (the rule as it was tested, a space, the sentence): "${NEW_TEXT} ${SENTENCE}"`));
 });
 
 test('promote FAIL on a practice page: the command is the demo one, and the first sentence names the practice page', async () => {
@@ -466,9 +676,10 @@ test('promote FAIL on a practice page: the command is the demo one, and the firs
   assert.equal(r.exit, 11, h.io.errs.join('\n'));
   const report = assertReport(h, r);
   const cut = EXAMPLE_1.length > 60 ? `${EXAMPLE_1.slice(0, 57)}...` : EXAMPLE_1;
-  assert.equal(report.sentence, `Promote: FAIL, rule 4 is unchanged: the new wording turns "${cut}" to Does not apply (practice page ${title}).`);
+  assert.equal(report.sentence, `Promote: FAIL, rule 4 is unchanged: the new wording turns "${cut}" to Does not apply; the right answer is Applies (practice page ${title}).`);
   assert.ok(r.markdown.startsWith('Demo · Promote: FAIL, rule 4 is unchanged'), r.markdown);
-  assert.equal(report.next, `Next: in Lessons waiting (${lessonsLink(w)}), open the change and put this whole text into Editor wording: "${NEW_TEXT} ${SENTENCE}"; then type /claim-tagger demo promote again.`);
+  assert.equal(report.extra, suggestion('rule 4', SENTENCE, WHY, [NEW_TEXT, SENTENCE]), 'the suggestion is the same on a practice page');
+  assert.equal(report.next, nextAfterFail(w, 'rule 4', '/claim-tagger demo promote'));
   assert.equal(readJson(join(r.runDir, 'run.json')).exit_code, 11);
 });
 
@@ -480,7 +691,7 @@ test('promote FAIL: an earlier decision that was right and breaks is named, and 
   const report = assertReport(h, r);
   assert.deepEqual(report.rows[1], ['Earlier decisions', '1 of 2 still right', '']);
   assert.equal(w.row('rule_changes', TITLE)['Safety check result'], `FAIL: '${claimText(3)}' now Does not apply`);
-  assert.ok(report.sentence.endsWith(`the new wording turns "${claimText(3)}" to Does not apply.`));
+  assert.ok(report.sentence.endsWith(`the new wording turns "${claimText(3)}" to Does not apply; the right answer is Applies.`));
 });
 
 test('promote FAIL: a row of the lesson that still comes out wrong is a FAIL too, and "leaves" says the new wording changed nothing for it', async () => {
@@ -490,7 +701,7 @@ test('promote FAIL: a row of the lesson that still comes out wrong is a FAIL too
   assert.equal(r.exit, 11);
   const report = assertReport(h, r);
   assert.deepEqual(report.rows[2], ['Your 2 rows', '1 of 2 now right', '']);
-  assert.ok(report.sentence.endsWith(`the new wording leaves "${claimText(2)}" at Can't tell.`), report.sentence);
+  assert.ok(report.sentence.endsWith(`the new wording leaves "${claimText(2)}" at Can't tell; the right answer is Does not apply.`), report.sentence);
   assert.equal(w.row('rule_changes', TITLE)['Safety check result'], `FAIL: '${claimText(2)}' now Can't tell`);
 });
 

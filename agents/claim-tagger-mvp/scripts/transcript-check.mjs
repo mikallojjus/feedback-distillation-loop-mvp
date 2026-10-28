@@ -29,6 +29,8 @@
 // What makes a problem, each named in plain words in `problems`:
 //  a  The final text fails lintReport (lib/report.mjs) or is not exactly: one sentence line, an optional Markdown table (at most 5 body rows
 //     and 3 columns, its own part), one line "Next: ...". Blank lines separate the parts; the Next line is never glued to the table.
+//     The FAIL report of promote may carry one more part between the table and the Next line, the suggestion ("Suggested sentence for rule 3:", the sentence,
+//     the Why line, the rule to copy in a fenced block; lintReport checks its shape); it is the only fenced block a final message may hold.
 //     One thing may follow the Next line (decision 58): after one blank line, a checklist, which is one numbered list (1., 2., ...) of at most
 //     5 lines, one item per line, with no heading and no words before or after it. The report part still has to pass on its own, and each
 //     checklist line has to pass the word rules of the report lint (no file path, script name, run id, duration word, dollar sign, JSON brace
@@ -59,7 +61,7 @@ import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { EXIT } from './lib/exit-codes.mjs';
 import { agentRoot, isMain } from './lib/paths.mjs';
-import { lintReport, lintWords } from './lib/report.mjs';
+import { lintReport, lintWords, splitExtra } from './lib/report.mjs';
 
 export const DEFAULT_ALLOWED_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status', 'decide', 'walkthrough']);
 export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused']);
@@ -385,18 +387,19 @@ function finalProblems(final) {
   if (t.trim() === '') return ['there is no final message text'];
   const out = [];
   const insight = INSIGHT.test(t);
-  const json = findJson(t);
+  const { rest } = splitExtra(t); // the one fenced block that is allowed, the suggestion of a FAIL report (lintReport checks its shape), is left out of the fence, JSON and money-word checks
+  const json = findJson(rest);
   const { report, checklist, problems: listProblems } = splitChecklist(t);
   const skip = (list) => list.filter((p) => !(insight && p.includes('Insight block marker')) && !(json.length && p.includes('JSON brace')));
   out.push(...skip(lintReport(report)));
   out.push(...listProblems);
   if (checklist) out.push(...skip(lintWords(checklist)).map((p) => `checklist ${p}`));
-  out.push(...shapeProblems(report));
+  out.push(...shapeProblems(splitExtra(report).rest));
   if (insight) out.push('it holds an Insight block (the output-style override did not hold)');
-  if (FENCE.test(t)) out.push('it holds a fenced code block');
+  if (FENCE.test(rest)) out.push('it holds a fenced code block');
   if (BOX_RULE.test(t)) out.push('it holds a rule line made of box-drawing characters');
   for (const j of json) out.push(`it holds a JSON ${j.kind}: "${shown(j.text, 50)}"`);
-  const unquoted = t.replace(QUOTED, '""');
+  const unquoted = rest.replace(QUOTED, '""');
   for (const m of unquoted.match(DOLLAR_WORDS) ?? []) out.push(`it names money in words: "${m}"`);
   return out.map((p) => `final message: ${p}`);
 }

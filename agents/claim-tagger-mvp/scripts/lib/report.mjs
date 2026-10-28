@@ -2,14 +2,19 @@
 // tasks, so it has exactly three parts and nothing else: one sentence, an optional table, one "Next:" line. The skill prints report.md
 // word for word at the start of its final message (a checklist may follow it, CONTRACTS section 9), so whatever passes the lint here is what the editor sees of the report.
 //
-//   buildReport({ demo, sentence, header, rows, next }) -> the checked report object (the shape of report.json); throws on a bad shape
+//   buildReport({ demo, sentence, header, rows, extra, next }) -> the checked report object (the shape of report.json); throws on a bad shape
 //        demo      true: the sentence is shown with "Demo · " in front of it (default false)
 //        sentence  one line, without the prefix
 //        header    three strings, default ["What", "Result", ""]; the third is empty for a two-column table
 //        rows      at most 5 rows of exactly 3 strings (the third is "" in a two-column table); [] or left out: no table
+//        extra     optional, and used only by the FAIL report of promote: the suggestion (EXTRA_HEAD ... a fenced block), a fourth part between the table and the Next line.
+//                  Left out, the report is the three parts it has always been, byte for byte
 //        next      one line that starts with "Next: "
-//   renderReport(report)  -> the Markdown of report.md: sentence, a blank line, the table, a blank line, the Next line
-//   lintReport(markdown)  -> string[] of problems; [] means the report may be shown. Flags: more than three parts, a heading line, a file path
+//   renderReport(report)  -> the Markdown of report.md: sentence, a blank line, the table, a blank line, the suggestion if there is one, a blank line, the Next line
+//   splitExtra(markdown)  -> { rest, extra }: the suggestion split off a report's Markdown (extra is null when the text has none, or one that is not whole) and the report without it
+//   lintReport(markdown)  -> string[] of problems; [] means the report may be shown. The suggestion of a FAIL report is the one allowed fourth part: it is split off first
+//        (splitExtra), must have its own fixed shape and sit right before the Next line, and its words are not checked (it holds the rule's text and a model's sentence, like a quoted
+//        claim); everything else is checked as below. Flags: more than three parts, a heading line, a file path
 //        or script name, a run id, a duration word, a dollar sign, a JSON brace, a shorthand code, the words database, rubric and gate
 //        (editors say table, rulebook and safety check), an Insight block marker, and a missing, repeated or misplaced Next line.
 //        Text inside double quotes (straight or curly) is a quoted claim and is not checked for those words and characters, because a claim
@@ -19,7 +24,7 @@
 //        them to the checklist that may follow a report (CONTRACTS section 9)
 //   writeReport(dir, report) -> builds, renders and lints; writes dir/report.json then dir/report.md; throws (code REPORT_LINT, .problems)
 //        before writing anything when the lint finds a problem
-//   constants: MAX_ROWS, DEMO_PREFIX, DEFAULT_HEADER
+//   constants: MAX_ROWS, DEMO_PREFIX, DEFAULT_HEADER, EXTRA_HEAD
 
 import { join } from 'node:path';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './jsonl.mjs';
@@ -29,6 +34,8 @@ import { validate } from './validate.mjs';
 export const MAX_ROWS = 5;
 export const DEMO_PREFIX = 'Demo · ';
 export const DEFAULT_HEADER = Object.freeze(['What', 'Result', '']);
+/** The first line of the suggestion, the optional fourth part of a FAIL report: "Suggested sentence for rule 3:". */
+export const EXTRA_HEAD = /^Suggested sentence for [^\n]+:$/;
 
 let schemaCache = null;
 const reportSchema = () => (schemaCache ??= readJson(join(codeRoot(), 'schemas', 'report.schema.json')));
@@ -36,13 +43,14 @@ const reportSchema = () => (schemaCache ??= readJson(join(codeRoot(), 'schemas',
 // ---- build -----------------------------------------------------------------------------------------------------------------
 
 /** Check the parts of a report and return the object that report.json holds: { demo, sentence, header, rows, next } (header and rows only when there are rows). */
-export function buildReport({ demo = false, sentence, header = DEFAULT_HEADER, rows = [], next } = {}) {
+export function buildReport({ demo = false, sentence, header = DEFAULT_HEADER, rows = [], extra, next } = {}) {
   const body = rows ?? [];
   const candidate = { demo, sentence: typeof sentence === 'string' ? sentence.trim() : sentence };
   if (!Array.isArray(body) || body.length > 0) {
     candidate.header = Array.isArray(header) ? [...header] : header;
     candidate.rows = Array.isArray(body) ? body.map((row) => (Array.isArray(row) ? [...row] : row)) : body;
   }
+  if (extra !== undefined && extra !== null) candidate.extra = typeof extra === 'string' ? extra.trim() : extra;
   candidate.next = typeof next === 'string' ? next.trim() : next;
   const { errors } = validate(reportSchema(), candidate);
   if (candidate.header && Array.isArray(candidate.header)) {
@@ -70,6 +78,7 @@ export function renderReport(report) {
   const sentence = r.demo && !r.sentence.startsWith(DEMO_PREFIX) ? DEMO_PREFIX + r.sentence : r.sentence;
   const parts = [sentence];
   if (r.rows) parts.push(renderTable(r.header, r.rows));
+  if (r.extra) parts.push(r.extra);
   parts.push(r.next);
   return `${parts.join('\n\n')}\n`;
 }
@@ -111,12 +120,41 @@ export function lintWords(lines) {
   return problems;
 }
 
+// The fixed shape of the suggestion (editor-words.mjs suggestionPart builds it): its head line, the sentence as a quote, the reason, a line that introduces the rule to copy, the rule in a fenced block.
+const EXTRA_SHAPE = /^Suggested sentence for [^\n]+:\n> [^\n]+\n\nWhy: [^\n]+\n\n[^\n]+, to copy into Editor wording:\n```\n[^\n]+(?:\n[^\n]+)*\n```$/;
+const FENCE_OPEN = /^`{3}[A-Za-z]*\s*$/;
+const FENCE_CLOSE = /^`{3}\s*$/;
+
+/**
+ * The suggestion of a FAIL report split off its Markdown: { rest, extra, before, after }. It starts at the line "Suggested sentence for <rule>:" and ends at the closing fence of the block
+ * that follows; extra is that text, before and after are what stands around it (trimmed), and rest is the report without it, as it would read with three parts. A text with no such head,
+ * or whose block is not closed, has no suggestion: extra is null and rest is the text as it is.
+ */
+export function splitExtra(markdown) {
+  const text = String(markdown ?? '').replace(/\r\n?/g, '\n');
+  const lines = text.split('\n');
+  const start = lines.findIndex((l) => EXTRA_HEAD.test(l));
+  const open = start < 0 ? -1 : lines.findIndex((l, i) => i > start && FENCE_OPEN.test(l));
+  const close = open < 0 ? -1 : lines.findIndex((l, i) => i > open && FENCE_CLOSE.test(l));
+  if (close < 0) return { rest: text, extra: null, before: '', after: '' };
+  const before = lines.slice(0, start).join('\n').trim();
+  const after = lines.slice(close + 1).join('\n').trim();
+  return { rest: `${[before, after].filter(Boolean).join('\n\n')}\n`, extra: lines.slice(start, close + 1).join('\n'), before, after };
+}
+
 /** What is wrong with a report's Markdown, as plain sentences; an empty array means it may be shown. */
 export function lintReport(markdown) {
-  const text = String(markdown ?? '').replace(/\r\n?/g, '\n');
+  const whole = String(markdown ?? '').replace(/\r\n?/g, '\n');
+  const split = splitExtra(whole);
+  const text = split.extra === null ? whole : split.rest; // the suggestion is checked on its own, below, and the rest as a report of three parts
   const lines = text.split('\n');
   const parts = text.split(/\n[ \t]*\n/).map((p) => p.trim()).filter(Boolean);
   const problems = [];
+  if (split.extra !== null) {
+    if (!EXTRA_SHAPE.test(split.extra)) problems.push('the suggestion does not have its fixed shape: the head line, the sentence as a quote, the Why line, the line that introduces the rule, and the rule in a fenced block');
+    const [stood, followed = ''] = whole.split(split.extra);
+    if (!stood.endsWith('\n\n') || !followed.startsWith('\n\n') || /(?:^|\n)Next:/.test(split.before) || !split.after.startsWith('Next:')) problems.push('the suggestion is not its own part between the table and the Next line');
+  }
 
   if (parts.length > 3) problems.push(`more than three parts (${parts.length}): a report is a sentence, a table and a Next line`);
   if (parts.length > 0) {

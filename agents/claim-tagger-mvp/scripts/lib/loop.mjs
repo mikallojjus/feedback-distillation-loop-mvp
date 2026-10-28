@@ -7,7 +7,9 @@
 //   resumeLine(script, parts)          "node agents/claim-tagger-mvp/scripts/<script>.mjs <parts>" for run.json (on a practice page the run records it through the walkthrough runner, lib/resume.mjs)
 //   withRun({ script, label, opts, args, resume }, body)   open the run, load the config, call body(ctx), write the report and run.json, print the
 //                                                          report, return { exit, runId, runDir, report, ...details }. body returns
-//                                                          { exit?, sentence, header?, rows?, next, details? } or throws a LoopExit.
+//                                                          { exit?, sentence, header?, rows?, extra?, next, details? } or throws a LoopExit. `extra` is
+//                                                          the suggestion of promote's FAIL report, rendered between the table and the Next line
+//                                                          (lib/report.mjs); no other report has it.
 //                                                          On a practice page (a demo profile) the report says "/claim-tagger demo <command>" and
 //                                                          its first sentence names the practice page (reportWords, editor-words.mjs).
 //   class LoopExit(code, message, { sentence, header, rows, next })   end the run with an exit code and the words of its report
@@ -196,7 +198,7 @@ function finishRun(ctx, out) {
   let problem = null;
   for (const sentence of words.sentences) {
     try {
-      written = writeReport(ctx.runDir, { demo: ctx.demo, sentence, header: out.header, rows: out.rows ?? [], next });
+      written = writeReport(ctx.runDir, { demo: ctx.demo, sentence, header: out.header, rows: out.rows ?? [], extra: out.extra, next });
       if (problem) ctx.warnings.push(`the sentence of report.md does not name the practice page, because that did not pass the report lint: ${why(problem)}`);
       break;
     } catch (err) {

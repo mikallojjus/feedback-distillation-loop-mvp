@@ -4,7 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  DEFAULT_HEADER, DEMO_PREFIX, MAX_ROWS, buildReport, lintReport, renderReport, writeReport,
+  DEFAULT_HEADER, DEMO_PREFIX, EXTRA_HEAD, MAX_ROWS, buildReport, lintReport, renderReport, splitExtra, writeReport,
 } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 
 const roots = [];
@@ -405,4 +405,84 @@ test('writeReport replaces the files of an earlier report in the same folder', (
   assert.equal(readFileSync(join(dir, 'report.md'), 'utf8'), 'Later report.\n\nNext: done.\n');
   assert.deepEqual(JSON.parse(readFileSync(join(dir, 'report.json'), 'utf8')), { demo: false, sentence: 'Later report.', next: 'Next: done.' });
   assert.deepEqual(readdirSync(dir).sort(), ['report.json', 'report.md'], 'no temp files are left');
+});
+
+// ---- the suggestion of a FAIL report: the one optional fourth part ----------------------------------------------------------------------------
+
+const SUGGESTION = [
+  'Suggested sentence for rule 3:',
+  '> A description that names no particular program or law still needs context.',
+  '',
+  'Why: The claim names a kind of thing without saying which, so the sentence keeps it under the rule.',
+  '',
+  'Rule 3 with the sentence, to copy into Editor wording:',
+  '```',
+  'A descriptive definite that names a kind of thing but not which one makes the claim Context-dependent.',
+  'A description that names no particular program or law still needs context.',
+  '```',
+].join('\n');
+const failReport = () => ({ demo: false, sentence: 'Promote: FAIL, rule 3 is unchanged: the new wording turns "A claim." to Applies; the right answer is Does not apply.', header: ['Check', 'Result', ''], rows: [['Example claims', '10 of 11 right', '']], extra: SUGGESTION, next: 'Next: put rule 3 with the suggested sentence into Editor wording; then type /claim-tagger promote again.' });
+
+test('extra: the suggestion is rendered between the table and the Next line, is in report.json, and passes the lint', () => {
+  const md = renderReport(failReport());
+  assert.equal(md, `${failReport().sentence}\n\n| Check | Result |\n|---|---|\n| Example claims | 10 of 11 right |\n\n${SUGGESTION}\n\n${failReport().next}\n`);
+  assert.deepEqual(lintReport(md), []);
+  assert.deepEqual(buildReport(failReport()).extra, SUGGESTION);
+  const dir = tmp();
+  writeReport(dir, failReport());
+  assert.equal(readFileSync(join(dir, 'report.md'), 'utf8'), md);
+  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'report.json'), 'utf8')), { demo: false, sentence: failReport().sentence, header: ['Check', 'Result', ''], rows: [['Example claims', '10 of 11 right', '']], extra: SUGGESTION, next: failReport().next });
+  const noTable = renderReport({ ...failReport(), rows: [] });
+  assert.deepEqual(lintReport(noTable), [], 'with no table the suggestion follows the sentence');
+});
+
+test('extra: a report without it is what it always was, byte for byte, and report.json has no extra key', () => {
+  const plain = { ...failReport() };
+  delete plain.extra;
+  assert.equal(renderReport(plain), `${plain.sentence}\n\n| Check | Result |\n|---|---|\n| Example claims | 10 of 11 right |\n\n${plain.next}\n`);
+  assert.equal('extra' in buildReport(plain), false);
+  assert.equal('extra' in buildReport({ ...plain, extra: undefined }), false);
+  assert.equal('extra' in buildReport({ ...plain, extra: null }), false);
+  assert.throws(() => buildReport({ ...failReport(), extra: '' }), /extra/);
+  assert.throws(() => buildReport({ ...failReport(), extra: 7 }), /extra/);
+});
+
+test('extra: the lint accepts only that part with its own shape, right before the Next line; any other fourth part is still a problem', () => {
+  const good = renderReport(failReport());
+  // another fourth paragraph, or a suggestion whose shape is broken, is not allowed
+  const other = good.replace('\n\nNext:', '\n\nA word more.\n\nNext:');
+  assert.ok(has(lintReport(other), 'more than three parts'), lintReport(other).join('; '));
+  assert.ok(has(lintReport(good.replace('\n\nWhy: ', '\n\nBecause: ')), 'fixed shape'));
+  assert.ok(has(lintReport(good.replace('> A description', 'A description')), 'fixed shape'));
+  assert.ok(has(lintReport(good.replace('\n```\nA descriptive', '\n```\n\nA descriptive')), 'fixed shape'), 'a blank line inside the block');
+  // a suggestion after the Next line, one glued to the table, one glued to the Next line, one without its Next line
+  assert.ok(lintReport(`${good}\n${SUGGESTION}\n`).length > 0, 'a second suggestion after the Next line');
+  const afterNext = `${failReport().sentence}\n\n${failReport().next}\n\n${SUGGESTION}\n`;
+  assert.ok(has(lintReport(afterNext), 'between the table and the Next line'), lintReport(afterNext).join('; '));
+  assert.ok(has(lintReport(good.replace('|\n\nSuggested', '|\nSuggested')), 'its own part'));
+  assert.ok(has(lintReport(good.replace('```\n\nNext:', '```\nNext:')), 'its own part'));
+  assert.ok(lintReport(good.replace(/\n\nNext:.*\n$/, '\n')).length > 0, 'a report without its Next line');
+  // a head line whose block never closes is no suggestion: it is ordinary text, and too many parts
+  const open = good.replace(/\n```\n\nNext:/, '\n\nNext:');
+  assert.equal(splitExtra(open).extra, null);
+  assert.ok(lintReport(open).length > 0);
+});
+
+test('extra: the words and characters of the suggestion are not checked, as in a quoted claim, and everything around it still is', () => {
+  const words = { ...failReport(), extra: SUGGESTION.replace('names a kind of thing', 'names a database, a rubric gate, 3 days, $2 and {x} in C:/x/y.mjs') };
+  assert.deepEqual(lintReport(renderReport(words)), []);
+  assert.ok(has(lintReport(renderReport({ ...words, sentence: 'Promote: FAIL after 3 days.' })), 'duration word'), 'the sentence is still checked');
+  assert.ok(has(lintReport(renderReport({ ...words, next: 'Next: ask for the database.' })), 'database'), 'so is the Next line');
+});
+
+test('splitExtra: the suggestion and the report without it; nothing to split in a three-part report', () => {
+  const md = renderReport(failReport());
+  const { rest, extra, before, after } = splitExtra(md);
+  assert.equal(extra, SUGGESTION);
+  assert.equal(rest, `${failReport().sentence}\n\n| Check | Result |\n|---|---|\n| Example claims | 10 of 11 right |\n\n${failReport().next}\n`);
+  assert.deepEqual([before, after], [`${failReport().sentence}\n\n| Check | Result |\n|---|---|\n| Example claims | 10 of 11 right |`, failReport().next]);
+  const plain = renderReport(base());
+  assert.deepEqual(splitExtra(plain), { rest: plain, extra: null, before: '', after: '' });
+  assert.equal(splitExtra(md.replace(/\n/g, '\r\n')).extra, SUGGESTION, 'Windows line breaks');
+  assert.equal(EXTRA_HEAD.test('Suggested sentence for rule 3:'), true);
 });

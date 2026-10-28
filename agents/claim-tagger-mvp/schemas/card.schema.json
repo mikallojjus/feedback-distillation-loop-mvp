@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Safety check card (runs/<run-id>/card.json)",
-  "description": "The result of the simple safety check of a proposed rule change. PASS: every example holds, no earlier decision newly fails and every supporting row comes out as the editor decided. FAIL: any of those breaks. HOLD: there was nothing to evaluate.",
+  "description": "The result of the simple safety check of a proposed rule change. PASS: no example that was right under the rulebook in force breaks, no earlier decision newly fails and every supporting row comes out as the editor decided. FAIL: any of those breaks. HOLD: there was nothing to evaluate.",
   "type": "object",
   "required": ["mode", "verdict", "checks", "flips", "editions"],
   "properties": {
@@ -20,7 +20,8 @@
           "properties": {
             "passed": { "type": "integer", "minimum": 0 },
             "total": { "type": "integer", "minimum": 0 },
-            "failures": { "type": "array", "items": { "$ref": "#/definitions/miss" } }
+            "failures": { "type": "array", "items": { "$ref": "#/definitions/miss" }, "description": "Examples that were right under the rulebook in force and are wrong under the candidate: the only ones that block the change." },
+            "already_wrong": { "type": "array", "items": { "$ref": "#/definitions/miss" }, "description": "Examples that are wrong under the rulebook in force, with their answer under the candidate in `got`. Shown, never counted against the change." }
           }
         },
         "cases": {

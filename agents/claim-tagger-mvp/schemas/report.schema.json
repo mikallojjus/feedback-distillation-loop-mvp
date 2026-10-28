@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Report (runs/<run-id>/report.json)",
-  "description": "The three parts of every report: one sentence, an optional table of at most five rows of three cells, one Next line. report.md is rendered from this by renderReport() in scripts/lib/report.mjs and linted before it is written.",
+  "description": "The three parts of every report: one sentence, an optional table of at most five rows of three cells, one Next line (the FAIL report of promote may carry a fourth part, the suggestion, between the table and the Next line). report.md is rendered from this by renderReport() in scripts/lib/report.mjs and linted before it is written.",
   "type": "object",
   "additionalProperties": false,
   "required": ["demo", "sentence", "next"],
@@ -22,6 +22,7 @@
       "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "string", "pattern": "^[^\\r\\n]*$" } },
       "description": "Body rows of exactly three cells (the third is empty in a two-column table). Left out when there is nothing to count."
     },
+    "extra": { "type": "string", "minLength": 1, "description": "Only the FAIL report of promote has it: the suggestion (a sentence, the reason for it and the rule to copy), a fourth part rendered between the table and the Next line. Left out in every other report." },
     "next": { "type": "string", "pattern": "^Next: [^\\r\\n]*[^\\s\\r\\n][^\\r\\n]*$", "description": "One line that starts with 'Next: '." }
   }
 }

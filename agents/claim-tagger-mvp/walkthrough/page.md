@@ -201,15 +201,15 @@ The Rulebook does not change: a draft changes nothing until you approve it and i
 |---|---|---|
 | Claim tagger | the next edition | Promote · {{date}} 11:20 · PASS |
 
-The press pool and the AI Force claim are now earlier decisions too: every future safety check tests a new rule against them. The check counts only the earlier decisions the agent had right before the change, which is why the USPS claim, where the agent slipped, is not in the count.
+The press pool and the AI Force claim are now earlier decisions too: every future safety check tests a new rule against them. The check counts only the earlier decisions (and example claims) the agent had right before the change, which is why the USPS claim, where the agent slipped, is not in the count.
 
-**If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Excluding CNN from Air Force One violates the federal court…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence and quotes that claim; its Next line hands you the whole text for Editor wording: the rule as it was tested, with a sentence written from that claim added at the end. For example, the added sentence reads: "A definite that names one particular order, case or document the claim does not identify still makes the claim Context-dependent."
+**If it does not pass.** Rule changes shows Status Approved and a Safety check result such as "FAIL: 'Excluding CNN from Air Force One violates the federal court…' now Does not apply". The Rulebook is unchanged. Claude's report says FAIL in its sentence, quotes that claim and says which answer is the right one. Between its table and its Next line it suggests a sentence written from that claim, says why in a Why line, and gives a block with rule 3 as it was tested, one sentence per line, and the suggested sentence last. For example, the suggested sentence reads: "A definite that names one particular order, case or document the claim does not identify still makes the claim Context-dependent."
 
-1. Open the change in Lessons waiting. Editor wording must hold all of rule 3: put the whole text the report gives you into it (the rule as it was tested, with the added sentence at the end), or write all of rule 3 as you want it. Edit the added sentence if it does not say what you mean. You may also reject the change.
+1. Open the change in Lessons waiting. Editor wording must hold all of rule 3: copy the block of the report into it (rule 3 as it was tested, with the suggested sentence at the end), or write all of rule 3 as you want it. Read the Why line first, and edit the suggested sentence if it does not say what you mean. You may also reject the change.
 2. Type `/claim-tagger demo promote` again.
 3. If it fails again, set Status to Rejected. The rule stays as it was, the demo ends here, and the safety check has done its job.
 
-The same three steps apply when the check names one of your own claims instead of an example claim: the Safety check result then reads like "FAIL: 'The press pool was justified in suspending coverage…' now Applies", and the report proposes a sentence for that claim in the same way.
+The same three steps apply when the check names one of your own claims instead of an example claim: the Safety check result then reads like "FAIL: 'The press pool was justified in suspending coverage…' now Applies", and the report suggests a sentence for that claim in the same way.
 
 ## Step 7 · The agent re-checks your claims
 

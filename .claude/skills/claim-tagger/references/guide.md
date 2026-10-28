@@ -4,7 +4,7 @@ Some reports end with a Next line that sends the editor to Notion. Under such a 
 
 ## How a checklist is added
 
-- Relay the report first, verbatim and complete: the sentence, the table, the Next line. Never reword it, and never put a word before it.
+- Relay the report first, verbatim and complete: the sentence, the table, the Next line; a FAIL report of promote has a part more between the table and the Next line, the suggestion (the sentence, its Why line and the block to copy), which is relayed with the rest. Never reword it, and never put a word before it.
 - Then one blank line, then the checklist of the Next line (the table below picks it). A checklist is a numbered list of at most five lines, with no heading and no words before or after it.
 - A checklist says which view to open, which columns to fill in and in which order, what to look at, and ends with the next command to type.
 - A report whose Next line only names a command (`Next: type ...`), a stopped run, a refusal and a report about a pause get no checklist. In the demo, `Next: look at step 7 on the practice page` gets none either: the page has the text; nor does a `where` report that only names a command or says there is nothing to type.
@@ -16,7 +16,7 @@ Some reports end with a Next line that sends the editor to Notion. Under such a 
 | `decide ... in Your queue (link)` or `start at the top of Your queue (link)` (tag, status, and promote after a PASS when claims still wait) | Decide in Your queue |
 | `add a note on ... in Needs your note (link), then type /claim-tagger distill again` (distill, when a decision has no note and no rule change was drafted or waits) | Needs your note |
 | `read it in Lessons waiting (link) ... and approve it or write your own wording`, or `approve or reject ... in Lessons waiting (link)` (distill, status), or `reject the rule change ... in Lessons waiting (link), then type /claim-tagger distill again` (distill, status and promote, when a rule change rests on a decision the editor now calls the agent's slip) | Approve in Lessons waiting |
-| `in Lessons waiting (link), open the change and put this whole text into Editor wording` or `write all of the rule in Editor wording` (promote after a FAIL) | After a FAIL |
+| `in Lessons waiting (link), put rule 3 with the suggested sentence into Editor wording, or write it as you want it` or `in Lessons waiting (link), open the change and write all of the rule in Editor wording` (promote after a FAIL; the first when the report has the suggestion with its Why line and the block to copy, the second when no sentence could be written) | After a FAIL |
 | `add a note in Challenged tags notes on the claims in Agent disagreed (link)` (follow-up, the demo's step 7, and where at step 7) | Agent disagreed |
 | `open Your queue (link) and decide your four claims` (where at step 3; once some claims are decided it reads "your remaining claims", and "your remaining claim" for the last one) | Decide in Your queue, Demo form |
 | `open Lessons waiting (link) and set Status to Approved` (where at step 5) | Approve in Lessons waiting, Demo form |
@@ -81,14 +81,14 @@ Demo:
 Real:
 
 1. Open Lessons waiting (the link in the Next line) and open the change.
-2. Put the whole text the Next line gives into Editor wording, or write all of the rule as you want it; edit the added sentence if it does not say what you mean.
+2. Copy the rule with the suggested sentence (the block in the report) into Editor wording, or write all of the rule as you want it; read the Why line first.
 3. To give the change up, set Status to Rejected instead: the rule stays as it was.
 4. Type /claim-tagger promote again.
 
 Demo:
 
 1. Open Lessons waiting (the link in the Next line) and open the change.
-2. Put the whole text the Next line gives into Editor wording, or write all of rule 3 as you want it; edit the added sentence if it does not say what you mean.
+2. Copy rule 3 with the suggested sentence (the block in the report) into Editor wording, or write all of rule 3 as you want it; read the Why line first.
 3. If it fails again, set Status to Rejected: the rule stays as it was, the demo ends here, and the safety check has done its job.
 4. Type /claim-tagger demo promote again.
 

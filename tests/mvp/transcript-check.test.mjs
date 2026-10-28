@@ -328,6 +328,27 @@ test('a fenced code block or a rule line in the final message is refused', () =>
   assert.deepEqual(grade({ final: GOOD.replace('Your queue (link)', '`Your queue` (link)') }).problems, [], 'inline code is fine');
 });
 
+// the FAIL report of promote has a fourth part between the table and the Next line (the suggestion), and with it the one fenced block a final message may hold
+const SUGGESTION = [
+  'Suggested sentence for rule 3:', '> A description that names no particular program or law still needs context.', '', 'Why: The claim names a kind of thing without saying which, so the sentence keeps it under the rule.', '',
+  'Rule 3 with the sentence, to copy into Editor wording:', '```', 'A descriptive definite that names a kind of thing but not which one makes the claim Context-dependent.', 'A description that names no particular program or law still needs context.', '```',
+].join('\n');
+const FAIL_SENTENCE = 'Promote: FAIL, rule 3 is unchanged: the new wording turns "The shift to domestic chips..." to Applies; the right answer is Does not apply.';
+const FAIL_NEXT = 'Next: in Lessons waiting (link), put rule 3 with the suggested sentence into Editor wording, or write it as you want it; then type /claim-tagger promote again.';
+const failFinal = (...parts) => [FAIL_SENTENCE, '', '| Check | Result |', '|---|---|', '| Example claims | 10 of 11 right |', '', ...parts].join('\n');
+
+test('the suggestion of a FAIL report is allowed in the final message: its fenced block is not refused, and the rest is checked as before', () => {
+  assert.deepEqual(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT) }).problems, []);
+  assert.deepEqual(grade({ final: `${FAIL_SENTENCE}\n\n${SUGGESTION}\n\n${FAIL_NEXT}` }).problems, [], 'with no table');
+  assert.deepEqual(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT, '', '1. Open the change in Lessons waiting.', '2. Put the block of the report into Editor wording.') }).problems, [], 'and a checklist may follow the Next line as for every report');
+  // a fence of any other kind is still refused, in a FAIL report too; so is a fourth part that is not the suggestion, and one with a broken shape
+  assert.ok(has(grade({ final: failFinal('```\nplain text\n```', '', FAIL_NEXT) }).problems, 'fenced code block'));
+  assert.ok(has(grade({ final: failFinal(SUGGESTION, '', '```\nplain text\n```', '', FAIL_NEXT) }).problems, 'fenced code block'));
+  assert.ok(has(grade({ final: failFinal('A word more.', '', FAIL_NEXT) }).problems, 'more than three parts'));
+  assert.ok(has(grade({ final: failFinal(SUGGESTION.replace('Why: ', 'Because: '), '', FAIL_NEXT) }).problems, 'fixed shape'));
+  assert.ok(has(grade({ final: failFinal(SUGGESTION, '', FAIL_NEXT).replace('FAIL, rule 3', 'FAIL after 3 days, rule 3') }).problems, 'duration word'), 'the sentence is still linted');
+});
+
 // ---- (c) JSON ------------------------------------------------------------------------------------------------------------------------
 
 test('a JSON object or array in the final message is refused; a footnote number in brackets is not JSON', () => {

@@ -17,6 +17,13 @@ test('oneLineRule: one line, without the number an editor typed in front', () =>
   assert.equal(oneLineRule('  4. The text\n  over two lines.  '), 'The text over two lines.');
   assert.equal(oneLineRule('12) a number in the other style'), 'a number in the other style');
   assert.equal(oneLineRule(null), '');
+  // a rule pasted from the block of a FAIL report (one sentence per line, as it stood in the report) or typed over several lines is tested as the same one-line text the report started from
+  const oneLine = 'A descriptive definite that names a kind of thing but not which one makes the claim Context-dependent. A description that works as the name of one specific law does not count. Applies to countable things.';
+  const pasted = ['A descriptive definite that names a kind of thing but not which one makes the claim Context-dependent.', 'A description that works as the name of one specific law does not count.', 'Applies to countable things.'];
+  assert.equal(oneLineRule(pasted.join('\n')), oneLine, 'one sentence per line');
+  assert.equal(oneLineRule(pasted.join('\r\n')), oneLine, 'Windows line breaks');
+  assert.equal(oneLineRule(`3. ${pasted[0]}  \n\n   ${pasted[1]} \n\t${pasted[2]}\n`), oneLine, 'blank lines, trailing spaces, indents, a no-break space and a number in front are one space each');
+  assert.equal(oneLineRule(pasted.join('\n')), oneLineRule(oneLine), 'the pasted rule and the one-line rule are the same text for the safety check');
   assert.equal(oneLineRule('3.5 percent of claims'), '3.5 percent of claims');
 });
 
