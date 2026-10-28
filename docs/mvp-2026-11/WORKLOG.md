@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. In step 10, distill drafted a change to rule 3; promote failed it on an example the rule in force already missed, and P33 and P34 fixed the check and its report (entry 50, merged as 61df7bb). Next: promote again, then follow-up.
+- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. In step 10, distill drafted a change to rule 3; promote failed it on an example the rule in force already missed, and P33 and P34 fixed the check and its report (entry 50, merged as 61df7bb). Promote then passed: rule 3 is live in edition 2026-10-28.1 (entry 51). Next: the product owner's review, then a tag run at the new edition.
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -600,3 +600,18 @@ Follow-ups, not done:
 - Product questions from the editor review: should the Rule changes row keep the suggestion, so it outlives the chat (P-1)? Who acts on a "Wrong before the change" example, and is the editor told when it is fixed (P-2)?
 
 Next: on the product owner's instruction, an Opus agent runs `/claim-tagger promote` on the Approved rule-3 change, with evidence in `evidence/29-people-loop/`.
+
+### 51. Live runbook step 10: promote PASS, rule 3 is live (edition 2026-10-28.1; 2026-10-28)
+
+Done: on the product owner's instruction, an Opus agent ran `/claim-tagger promote` once in the main checkout (run 20261028T124052Z-promote, exit 0, no warnings), then status. I checked the run records and git myself.
+- PASS: example claims 10 of 10 right, plus 1 more wrong before and not counted (canary-8: 2 of 3 reads say Applies under the rule in force, 3 of 3 under the new text); earlier decisions 5 of 5 still right; both of the editor's rows now right and marked Fixed. 5 items re-read; 4 model calls (everything else from the morning's cached reads).
+- 7 Notion writes, all read back: the Rulebook's When to use; the rule change Live with "PASS: examples 10/10 (1 more wrong before, not counted), earlier 5/5, yours 2/2"; Agent settings; two Tag decisions rows Fixed; two claims Done at the new edition.
+- The rubric commit 7fc868c ("rulebook edition 2026-10-28.1: ..."). Status: nothing paused, nothing waits, no drift, 1 decision points at a rule (the universities claim, rule 5, below distill's minimum). Evidence `evidence/29-people-loop/11-promote-pass.md`, `11-promote-pass-card.json`, `12-status-after-promote.md`.
+
+Found (none a bug in this run):
+- "Earlier decisions 5 of 5" leaves out two decisions the change fixed (FCC/ABC and universities); examples have `fixed_by_change`, earlier decisions do not.
+- The Claims table keeps the old agent answers for those two claims until the next tag run.
+- canary-8 stays wrong under both rulebooks; recalibrating it is a person's decision.
+- The judge sub-runs' report.md files end "Next: type /claim-tagger tag to finish", which misleads a reader of the run folders.
+
+Next: the product owner reviews. Then a tag run to refresh the agent's answers at the new edition, the MVP report artifact, the final Opus verification (`evidence/30-verification/`), and briefing the session "Claims table MVP setup (explain decide)".
