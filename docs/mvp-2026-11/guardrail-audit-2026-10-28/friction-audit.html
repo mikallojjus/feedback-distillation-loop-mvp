@@ -1,0 +1,215 @@
+<title>Claim Tagger Friction Audit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column; a morning box first, then four areas of flags, then missing conveniences. Severity is carried by a pill and a left tick. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #1d2421;
+  --muted: #5c6862;
+  --line: #dde2de;
+  --accent: #2f6b58;
+  --major: #b3372c;
+  --major-bg: #f8e4e1;
+  --moderate: #9a6200;
+  --moderate-bg: #f6ecd8;
+  --minor: #4f6a7d;
+  --minor-bg: #e5edf2;
+  --note-bg: #eef4f1;
+  --display: "Fraunces", Georgia, "Times New Roman", serif;
+  --body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141917; --surface: #1c2220; --fg: #e4e9e6; --muted: #9aa8a1; --line: #2e3733; --accent: #7cc3aa;
+    --major: #f08a7e; --major-bg: #3a2220; --moderate: #e2b25a; --moderate-bg: #352b18; --minor: #9fbbd0; --minor-bg: #1f2a32; --note-bg: #1b2925;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141917; --surface: #1c2220; --fg: #e4e9e6; --muted: #9aa8a1; --line: #2e3733; --accent: #7cc3aa;
+  --major: #f08a7e; --major-bg: #3a2220; --moderate: #e2b25a; --moderate-bg: #352b18; --minor: #9fbbd0; --minor-bg: #1f2a32; --note-bg: #1b2925;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 15px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 760px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 36px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h1 { font-family: var(--display); font-weight: 600; font-size: clamp(26px, 5vw, 34px); line-height: 1.15; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+.counts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+h2 { font-family: var(--display); font-weight: 600; font-size: 21px; margin: 0; text-wrap: balance; }
+h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0; font-weight: 700; }
+section { display: grid; gap: 14px; }
+.morning { background: var(--note-bg); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; display: grid; gap: 14px; }
+.morning ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.morning p { margin: 0; }
+code { font-family: var(--mono); font-size: 13px; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; overflow-wrap: anywhere; }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters span { font-size: 13px; color: var(--muted); margin-right: 4px; }
+.chip { font: inherit; font-size: 13px; font-weight: 600; border: 1px solid var(--line); background: var(--surface); color: var(--fg); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.area { display: grid; gap: 10px; }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.flag { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--tick); border-radius: 8px; padding: 10px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline; }
+.flag.major { --tick: var(--major); }
+.flag.moderate { --tick: var(--moderate); }
+.flag.minor { --tick: var(--minor); }
+.flag.new { --tick: var(--minor); }
+.flag strong { font-weight: 600; min-width: 0; }
+.flag p { grid-column: 1 / -1; margin: 0; color: var(--muted); min-width: 0; }
+.pill { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+.pill.major { color: var(--major); background: var(--major-bg); }
+.pill.moderate { color: var(--moderate); background: var(--moderate-bg); }
+.pill.minor { color: var(--minor); background: var(--minor-bg); }
+.pill.status { color: var(--accent); background: var(--note-bg); }
+.found { font-size: 12px; color: var(--accent); font-weight: 600; }
+.missing .flag { border-left-color: var(--accent); }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (prefers-reduced-motion: no-preference) { .flag { transition: opacity .15s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Claim tagger · night of 28 Oct 2026</div>
+    <h1>Where the guardrails get in a pro editor's way</h1>
+    <p class="lede">Every guardrail an editor can meet, judged by a reviewer playing a senior editor who owns the rulebook, and each flag checked against the code. Nothing was treated as fixed, security rules included.</p>
+    <div class="counts" aria-label="Counts by severity">
+      <span class="pill major">4 major</span>
+      <span class="pill moderate">11 moderate</span>
+      <span class="pill minor">18 minor</span>
+      <span class="pill status">9 missing conveniences</span>
+    </div>
+  </header>
+
+  <section class="morning" aria-labelledby="morning-h">
+    <h2 id="morning-h">First, from the night</h2>
+    <div>
+      <h3>Needs you</h3>
+      <p>The session <strong>Claims table MVP setup (continue path)</strong> started an old-style decide on the 6 claims in Your queue at 22:38 UTC (00:38 your time). It is parked at a prompt. Nothing was written: status still shows all 6 waiting. Answer <strong>No</strong> there, type <code>/claim-tagger decide check</code> to close that run, then decide the 6 again with the new draft-and-OK flow.</p>
+    </div>
+    <div>
+      <h3>Done and merged (not pushed)</h3>
+      <p>The decide step as a conversation (P21 to P25) is on <code>claims-hub-2026-10</code> (<code>5153eb6</code>). The Opus review said NO-GO, a fix pass followed, then the re-check said GO; 2,307 tests pass.</p>
+    </div>
+    <div>
+      <h3>Calls I made for you (each easy to reverse)</h3>
+      <ul>
+        <li>The connector's page update has <strong>no permission rule</strong>, rather than "allow". The guard hook decides, so if it ever fails to run you get a prompt instead of an unchecked write (decision 121).</li>
+        <li>Builder sessions now get a prompt for each connector write (the guard answers "ask").</li>
+        <li>The guard accepts Review status only as Reviewed.</li>
+        <li>New line for editors: an unexpected update-page prompt means the guard didn't run. Answer No, never "don't ask again", and tell the engineer.</li>
+        <li>Left out the hook's <code>onFailure: "block"</code> setting, which needs Claude Code 2.1.295 or later.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="filters" role="group" aria-label="Show flags by severity">
+    <span>Show</span>
+    <button class="chip" id="f-all" data-sev="all" aria-pressed="true">All</button>
+    <button class="chip" id="f-major" data-sev="major" aria-pressed="false">Major</button>
+    <button class="chip" id="f-moderate" data-sev="moderate" aria-pressed="false">Moderate</button>
+    <button class="chip" id="f-minor" data-sev="minor" aria-pressed="false">Minor</button>
+  </div>
+
+  <section class="area" aria-labelledby="a1">
+    <h2 id="a1">Talking to Claude</h2>
+    <ul class="list">
+      <li class="flag moderate" data-sev="moderate"><strong>Claude can't explain a tag</strong><span class="pill moderate">moderate</span><p>During a skill run Claude only runs scripts and reads no run records, so "why claim 12?" gets the Agent reasons line at most.</p></li>
+      <li class="flag moderate" data-sev="moderate"><strong>Thin reports, relayed word for word</strong><span class="pill moderate">moderate</span><p>"None of the drafts passed the checks", and nobody may say which check.</p></li>
+      <li class="flag moderate" data-sev="moderate"><strong>"Ask the engineer" dead ends</strong><span class="pill moderate">moderate</span><p>Many refusals end with "ask the engineer to look at the message", even when the editor could fix it.</p></li>
+      <li class="flag moderate" data-sev="moderate"><strong>A stuck decide run blocks the next one for 2 hours</strong><span class="pill moderate">moderate</span><p>The refusal says "ask the engineer". <code>decide check</code> would close it, but the refusal doesn't say so.</p></li>
+      <li class="flag moderate" data-sev="moderate"><strong>A note-only decision quietly means Does not apply</strong><span class="pill moderate">moderate</span><span class="found">Found in the code check</span><p>It leaves Verified tags empty and sets Reviewed, so the agent's tag counts as rejected. The draft says "unchanged" and nothing warns.</p></li>
+      <li class="flag moderate" data-sev="moderate"><strong>One report per answer</strong><span class="pill moderate">moderate</span><p>"Tag, then distill, then show me what waits" works, but Claude can relay only one report at the end.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>One changed claim refuses the whole batch</strong><span class="pill minor">minor</span><p>If one claim changed in Notion after Claude read it, all 10 decisions are refused: re-read and OK again.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>The same checklist after every Notion report</strong><span class="pill minor">minor</span><p>The guide's fixed 5-line checklist comes every time, with no way to turn it off.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Claude can only set Reviewed</strong><span class="pill minor">minor</span><p>It can't put a claim back to To review, and even trivial batches need a draft and an OK.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>A replaced decide run is never read back</strong><span class="pill minor">minor</span><span class="found">Found in the code check</span><p>When a new decide replaces a stale run, the hint for checking the old one is printed for Claude only, and the skill never acts on it.</p></li>
+    </ul>
+  </section>
+
+  <section class="area" aria-labelledby="a2">
+    <h2 id="a2">Changing the rulebook</h2>
+    <ul class="list">
+      <li class="flag major" data-sev="major"><strong>Editing your own rulebook stops everything</strong><span class="pill major">major</span><p>Any edit to the judged tag's When to use, Description, Example Claims or Counterpart stops tag, status, decide and distill until it is undone.</p></li>
+      <li class="flag major" data-sev="major"><strong>No direct way to start a rule change</strong><span class="pill major">major</span><p>A change starts only when distill finds 2 or more decided claims pointing at one rule. Claude can't write one for you, and a row typed by hand isn't supported.</p></li>
+      <li class="flag major" data-sev="major"><strong>Only an existing numbered rule can change</strong><span class="pill major">major</span><p>There's no way to add a rule 6, remove or merge rules, or edit the text around them.</p></li>
+      <li class="flag major" data-sev="major"><strong>The safety check can't be overruled, and its examples are out of reach</strong><span class="pill major">major</span><p>A FAIL always wins. The 11 example claims sit in a frozen file only the engineer changes: 5 are nowhere in Notion, and editing the other 6 in the Rulebook counts as a forbidden edit.</p></li>
+      <li class="flag moderate" data-sev="moderate"><strong>Editor wording means retyping the whole rule</strong><span class="pill moderate">moderate</span><p>To change one word you paste the full rule. After a FAIL you copy the report's suggested text into Notion by hand.</p></li>
+      <li class="flag moderate" data-sev="moderate"><strong>Only the engineer can make a tag judged</strong><span class="pill moderate">moderate</span><p>Rules written for Wordy judge nothing until the engineer edits the config.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Drafts dropped without a visible reason</strong><span class="pill minor">minor</span><p>A draft that repeats 8 words of a claim is dropped. You see only "none of the drafts passed the checks".</p></li>
+      <li class="flag minor" data-sev="minor"><strong>A withdrawn row means reject and redraft</strong><span class="pill minor">minor</span><p>When you re-read a supporting claim as an agent slip, you must reject the change yourself and run distill again.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>One change at a time</strong><span class="pill minor">minor</span><p>One open change per rule, at most 3 drafts per run, and promote needs a title when two changes are approved.</p></li>
+    </ul>
+  </section>
+
+  <section class="area" aria-labelledby="a3">
+    <h2 id="a3">Working in Notion</h2>
+    <ul class="list">
+      <li class="flag moderate" data-sev="moderate"><strong>The views hide what you decide on</strong><span class="pill moderate">moderate</span><p>The handover says to sort All claims by Agent confidence, a column it hides. Your queue shows neither confidence nor the Geo link. On a To review claim the agent's answer appears nowhere.</p></li>
+      <li class="flag moderate" data-sev="moderate"><strong>Lessons waiting hides what you act on</strong><span class="pill moderate">moderate</span><p>Editor wording, Safety check result, Tag, Rule and Supporting rows aren't shown, and finished changes leave the view.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Re-tick the agent's tags you agree with</strong><span class="pill minor">minor</span><p>A judged tag left out of Verified tags counts as Does not apply, even when the agent had it.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Notes need exact syntax</strong><span class="pill minor">minor</span><p>Each line should start "Tag:", and a reason word only counts with its full stop. The practice page's own examples skip the prefix.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Some claims have no way in</strong><span class="pill minor">minor</span><p>The hub doesn't link Agent disagreed, and claims the agent could not read have no view.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Hub clutter</strong><span class="pill minor">minor</span><p>Tag decisions (17 columns, "never edit here") and the archive page sit on the hub you work from.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Stale status, cut reasons</strong><span class="pill minor">minor</span><p>Agent status still says Waits for you after you decide, until the next tag run, and Agent reasons are cut at 40 words.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>After a review, the agent's own answer leaves Claims</strong><span class="pill minor">minor</span><span class="found">Found in the code check</span><p>The next tag run overwrites Agent tags with your tags; only the hidden ledger keeps what the agent proposed.</p></li>
+    </ul>
+  </section>
+
+  <section class="area" aria-labelledby="a4">
+    <h2 id="a4">Hard rules and security</h2>
+    <ul class="list">
+      <li class="flag moderate" data-sev="moderate"><strong>Claude can't do rule-owner actions, even when you ask</strong><span class="pill moderate">moderate</span><p>"Approve it", "use that wording" and "untick Paused" are refused. You set each one in Notion.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>No unpause command</strong><span class="pill minor">minor</span><p>You untick Paused in Notion. A pause file on disk needs the engineer.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Claude can't add a view or column for you</strong><span class="pill minor">minor</span><p>"Add a By Geo Space view" is refused. You can still add it by hand.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Nothing is ever deleted</strong><span class="pill minor">minor</span><p>Rejected changes and old practice pages pile up.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>A different model stops the run</strong><span class="pill minor">minor</span><p>If another model answers, tag, distill or promote stops with "ask the engineer". The same command resumes later.</p></li>
+      <li class="flag minor" data-sev="minor"><strong>Only the Claims table trains the rulebook</strong><span class="pill minor">minor</span><p>Work in Claims to review or the other real tables never reaches the rulebook.</p></li>
+    </ul>
+  </section>
+
+  <section class="area missing" aria-labelledby="a5">
+    <h2 id="a5">Missing conveniences</h2>
+    <ul class="list">
+      <li class="flag"><strong>Undo a decide write</strong><span class="pill status">partly there</span><p>Each run keeps the earlier values, but there's no "put these back", and Reviewed can't be cleared.</p></li>
+      <li class="flag"><strong>Why this tag</strong><span class="pill status">partly there</span><p>Agent reasons gives one line per tag. There's no answer word, no confidence in the views, and no way to ask about one claim.</p></li>
+      <li class="flag"><strong>Bulk agree</strong><span class="pill status">partly there</span><p>"Agree on everything above 0.9" works as a decide description, but every claim still goes through the draft.</p></li>
+      <li class="flag"><strong>Try a wording</strong><span class="pill status">missing</span><p>Run the safety check on a sentence without approving it.</p></li>
+      <li class="flag"><strong>Put a Rulebook edit through the check</strong><span class="pill status">missing</span><p>A hand edit should go through the safety check instead of stopping everything.</p></li>
+      <li class="flag"><strong>Add, remove or split a rule</strong><span class="pill status">missing</span><p>Only one numbered rule's text can change today.</p></li>
+      <li class="flag"><strong>Example claims in Notion</strong><span class="pill status">partly there</span><p>See every example and correct its expected answer yourself.</p></li>
+      <li class="flag"><strong>Reopen or hand on a claim</strong><span class="pill status">partly there</span><p>Setting To review by hand works; Claude can't do it, and there's no assignee.</p></li>
+      <li class="flag"><strong>The draft rule change in the chat</strong><span class="pill status">missing</span><p>Distill gives a title only; Current and Proposed text, approval and rewording all happen in Notion.</p></li>
+    </ul>
+  </section>
+
+  <footer>Method: three read-only sweeps inventoried every guardrail; a reviewer playing a senior editor and rulebook owner flagged what gets in the way; an independent pass checked each flag against the code at <code>5153eb6</code> and corrected 17 of them. No Notion writes; the only Notion contact was a read-only status check.</footer>
+</div>
+
+<script>
+(function () {
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+  var flags = Array.prototype.slice.call(document.querySelectorAll('.flag[data-sev]'));
+  function show(sev) {
+    chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c.dataset.sev === sev)); });
+    flags.forEach(function (f) { f.hidden = !(sev === 'all' || f.dataset.sev === sev); });
+    document.querySelectorAll('.area:not(.missing)').forEach(function (a) {
+      a.hidden = sev !== 'all' && !a.querySelector('.flag[data-sev="' + sev + '"]');
+    });
+    try { localStorage.setItem('friction-filter', sev); } catch (e) {}
+  }
+  chips.forEach(function (c) { c.addEventListener('click', function () { show(c.dataset.sev); }); });
+  var saved = 'all';
+  try { saved = localStorage.getItem('friction-filter') || 'all'; } catch (e) {}
+  if (saved !== 'all') show(saved);
+})();
+</script>

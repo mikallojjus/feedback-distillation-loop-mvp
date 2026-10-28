@@ -533,3 +533,27 @@ Calls made overnight under the product owner's instruction to decide in P21 to P
 Verified: the full suite after the merge (`evidence/01-tests/node-test-claims-hub-decide-conversation.txt`). No Notion write; nothing was decided live.
 
 Next: the guardrail research (Haiku sweeps, an Opus pro-editor review, an Opus check against the code, an artifact), then step 10 on the product owner's word.
+
+### 48. The guardrail audit for pro editors; an old decide run left open (night of 28 October)
+
+Done: the product owner asked, before going to sleep, for a list of the guardrails that would annoy a pro editor ("editors are the owners of the rulebook ... they should be able to operate rather freely"). The answers to the setup questions:
+- scope: editor commands, rule changes and the Notion layout;
+- nothing is treated as fixed, security rules included;
+- each flag gets one line and a severity;
+- missing conveniences are listed apart;
+- Notion is read only.
+
+The audit ran in three steps:
+1. Three Haiku sweeps inventoried every guardrail (`guardrail-audit-2026-10-28/inventory-*.md`).
+2. The Opus editor persona flagged 30 and named 10 missing conveniences (`flags-draft.md`).
+3. An Opus verifier checked each against the code at 5153eb6: 13 true, 17 partly true and corrected, none false. Several severities came down; it added 3 annoyances, the worst being that a note-only decide leaves Verified tags empty, so the agent's tag counts as Does not apply.
+
+The result is 4 major, 11 moderate and 18 minor flags and 9 missing conveniences, published as https://claude.ai/artifact/MWzo4rj8CFTtpw6iiF9tG5, with a copy in `guardrail-audit-2026-10-28/friction-audit.html`. The four majors:
+- a hand edit of the judged tag stops every command;
+- a rule change cannot be started directly;
+- only one existing numbered rule can change;
+- the safety check cannot be overruled, and its examples are out of the editor's reach.
+
+Found: the session "Claims table MVP setup (continue path)" opened a decide run in the live agent folder at 22:38 UTC on 27 October (run 20261027T223853Z-decide, the 6 claims of Your queue, Claude's own verdicts). It used the old one-shot flow and is parked at a prompt. Nothing was written: a read-only status shows all 6 still waiting. Its `runs/DECIDING` marker is past two hours, so the guard refuses its writes. In the morning: answer No in that session, type `/claim-tagger decide check` to read the run back and close it, then decide the 6 again with the new flow.
+
+Next: the product owner reads the artifact and decides which guardrails to loosen; then step 10.
