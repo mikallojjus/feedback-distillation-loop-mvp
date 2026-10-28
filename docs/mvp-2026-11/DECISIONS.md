@@ -56,6 +56,9 @@ One line of reason each. The product owner's decisions D1 to D35 live in `docs/a
 | P25 | The editor's reasoning is theirs. Claude keeps the editor's substance and words and adds only structure (the `<Tag>:` prefix); a reason word only when the editor's words make it clear or the editor picks it. When Claude judges a claim itself ("decide the first 6"), it writes its own reason line. | 2026-10-28 |
 | P33 | Only new breaks block. An example claim counts against a rule change only when the rule in force gets it right; one that both rulebooks get wrong is shown in its own row, "Wrong before the change", and not counted. Amends decision 17. (P26 to P32 are the numbers of the separate plan for the rule owner's actions through Claude, drafted the same day.) | 2026-10-28 |
 | P34 | On a FAIL the report may suggest a sentence for Editor wording, formatted so that it is not a wall of text, and with the reasoning behind the suggestion. | 2026-10-28 |
+| P35 | Editors add claims from Geo by link or Geo ID with `/claim-tagger add`, with no permission prompt. The script creates new rows in Claims with the Geo columns only and reads each one back; it never changes an existing row. Hard rule 10 gains this one exception (`ADD-CLAIMS.md`). | 2026-10-28 |
+| P36 | Only entities of the Claim type in the six configured spaces may be added, tagged Debate or not. One command takes at most 50. A claim whose text is the same as one already in Claims, or as another in the same command, is refused, and the report names the existing claim. A Geo ID already in Claims is reported as already there. | 2026-10-28 |
+| P37 | Added claims are not marked. `add` does not tag: its Next line says to type `/claim-tagger tag`. Production only: there is no `demo add`. | 2026-10-28 |
 
 ## Decisions for the walkthrough (settling the design's open points)
 

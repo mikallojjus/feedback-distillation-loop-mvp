@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. In step 10, distill drafted a change to rule 3; promote failed it on an example the rule in force already missed, and P33 and P34 fixed the check and its report (entry 50, merged as 61df7bb). Promote then passed: rule 3 is live in edition 2026-10-28.1 (entry 51). Next: the product owner's review, then a tag run at the new edition.
+- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. In step 10, distill drafted a change to rule 3; promote failed it on an example the rule in force already missed, and P33 and P34 fixed the check and its report (entry 50, merged as 61df7bb). Promote then passed: rule 3 is live in edition 2026-10-28.1 (entry 51). P35 to P37 (entry 52, `ADD-CLAIMS.md`): editors add Geo claims to Claims with `/claim-tagger add`; it is being built. Next: the build, then the product owner's live test, then a tag run at the new edition.
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -615,3 +615,22 @@ Found (none a bug in this run):
 - The judge sub-runs' report.md files end "Next: type /claim-tagger tag to finish", which misleads a reader of the run folders.
 
 Next: the product owner reviews. Then a tag run to refresh the agent's answers at the new edition, the MVP report artifact, the final Opus verification (`evidence/30-verification/`), and briefing the session "Claims table MVP setup (explain decide)".
+
+### 52. Decisions P35 to P37: editors add Geo claims to Claims; the plan (2026-10-28)
+
+Context: the product owner looked for demo claims. Two candidates I proposed (the Lula and US–Iran conflict claims) and two reset candidates (the Dallas convention and the US-led campaign) were judged "very debatable". Under the live rule, the agent agrees with all 9 earlier decisions, so a reset gives no mistake to show. The product owner then asked how editors can bring specific Geo claims into the loop.
+
+Found:
+- Only setup, in a builder session, creates Claims rows.
+- `geo-pick.mjs` draws a seeded sample and cannot take specific claims.
+- A row typed by hand in Notion is read by the pull, which needs only a Geo ID, but nothing checks it.
+- `lib/plan.mjs` refuses the Geo columns for any plan made without the setup flag.
+
+Decided by the product owner, in two question batches:
+- P35: editors add by link or ID with no prompt; this is hard rule 10's exception.
+- P36: Claim entities in the six spaces, Debate or not; at most 50 per command; the same text is refused.
+- P37: not marked; tag stays a separate step; production only.
+
+The design and the plan are in `ADD-CLAIMS.md`. My calls there: a shared row builder for the pick and add; which space a claim takes; unknown Geo Tags left out; an allowance in `lib/plan.mjs` for the script `add` only; a re-read before sending; setup verify counting added rows as information.
+
+Next: the Sonnet build, an Opus code review and an editor-persona review, fix rounds until GO, then the merge. Then stop before any live add.
