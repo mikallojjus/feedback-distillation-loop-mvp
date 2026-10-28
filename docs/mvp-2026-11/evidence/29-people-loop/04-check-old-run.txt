@@ -1,0 +1,12 @@
+decide: 6 of 6 claims do not read back as decided: 0888703c48e3953f0bb93f9265c0501e (not written); 010324ce0ad1317d65b64d81e3e837f9 (not written); 0e5a1d19cf354b13bc0f6fff6bd41fe4 (not written); 4aa87f426fb234137f8ce60ac7c23955 (not written); c1870eeda558909aab71f379ca9743cf (not written); 0dc04fba852143708ff6a9727db4be3f (not written)
+Decide: 6 of 6 claims were not written.
+
+| Claim | What differs |
+|---|---|
+| "The FCC’s early review of ABC license..." | not written |
+| "The federal noncitizen voting ban lac..." | not written |
+| "The Part D premium stabilization rule..." | not written |
+| "The US-led campaign against Iran shou..." | not written |
+| and 2 more |  |
+
+Next: type /claim-tagger decide again and name "The FCC’s early review of ABC licenses exceeds its legiti...", "The federal noncitizen voting ban lacks a workable remedy...", "The Part D premium stabilization rule should be made perm..." and 3 more.

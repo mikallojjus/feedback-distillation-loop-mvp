@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, but not run live yet. Next: the guardrail research the product owner asked for overnight (an artifact), then step 10.
+- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. Next: the rest of step 10 (distill, approve, promote, follow-up).
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -557,3 +557,16 @@ The result is 4 major, 11 moderate and 18 minor flags and 9 missing conveniences
 Found: the session "Claims table MVP setup (continue path)" opened a decide run in the live agent folder at 22:38 UTC on 27 October (run 20261027T223853Z-decide, the 6 claims of Your queue, Claude's own verdicts). It used the old one-shot flow and is parked at a prompt. Nothing was written: a read-only status shows all 6 still waiting. Its `runs/DECIDING` marker is past two hours, so the guard refuses its writes. In the morning: answer No in that session, type `/claim-tagger decide check` to read the run back and close it, then decide the 6 again with the new flow.
 
 Next: the product owner reads the artifact and decides which guardrails to loosen; then step 10.
+
+### 49. Live runbook step 10, part 1: the old decide run closed, and the 6 queue claims decided with the new flow (2026-10-28)
+
+Done:
+- The parked session could not be stopped from here: the app stops no session that waits at a prompt. The product owner stopped it by hand, but at 09:13 UTC the app still listed its update-page call as waiting. Its hook approved that call at 22:39 UTC, and removing the marker does not withdraw an approval already given. So until the prompt is dismissed, a Yes there would write claim 1 with the old note.
+- `decide check` read the old run 20261027T223853Z-decide back: 6 of 6 not written, and the marker removed (`04-check-old-run.txt`). The new check reads a record made before P24 correctly.
+- Pull 20261028T090931Z-pull, then `decide list`: 6 claims in Your queue, all Can't tell. Claude judged them: claim 4 (the US-led campaign against Iran) is Context-dependent (Agent slip). The other five do not apply: 2 and 3 are Rule unclear and name rule 3, 5 is Rule unclear and names rule 5, and 1 and 6 are Agent slip. These are the same tags and reason words the old run had. The draft was shown (`03-draft.md`), and the product owner said "Write it".
+- `open` (run 20261028T091325Z-decide) took five note-only decisions and one with tags, and its summary lines matched the draft (`05-open.txt`). Six connector calls followed with no prompt: the guard allowed them.
+- `check`: 6 decided and read back, 6 differ from the agent, all with a note (`06-check.txt`). Status: Your queue is empty, with 9 decisions to read: the 6 and the 3 from the audit (`07-status.txt`).
+
+Found: the five claims whose tags stay none were sent note-only, as the skill says (give only the fields that change). With Review status Reviewed, an empty Verified tags reads as Does not apply. That is the audit's moderate flag, and here it is what was meant.
+
+Next: the rest of step 10, distill (plan only first), an Opus review, distill, approval, promote and follow-up. Claims 2 and 3 both blame rule 3 as Rule unclear, two distinct claims, so distill should draft a clarification of rule 3.

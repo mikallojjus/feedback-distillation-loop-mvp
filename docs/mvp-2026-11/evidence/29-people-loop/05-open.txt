@@ -1,0 +1,13 @@
+Decide run 20261028T091325Z-decide is open for 6 claims. Send one notion-update-page call per claim, with exactly the input on the JSON line below its summary and nothing else, then run decide.mjs check.
+0888703c48e3953f0bb93f9265c0501e: note added
+{"page_id":"406273e214eb811788c9d33efb78f698","command":"update_properties","allow_async":false,"properties":{"Challenged tags notes":"Context-dependent: Agent slip. The FCC, ABC licenses and the early review are all named in the claim, and the pronoun its points back to the FCC, so no rule fires (rule 5).","Review status":"Reviewed"}}
+010324ce0ad1317d65b64d81e3e837f9: note added
+{"page_id":"406273e214eb81c4ac69f72f6a657b39","command":"update_properties","allow_async":false,"properties":{"Challenged tags notes":"Context-dependent: Rule unclear. The words federal and noncitizen voting pick out the one federal ban, and rule 3 does not say whether a description like this counts as saying which one.","Review status":"Reviewed"}}
+0e5a1d19cf354b13bc0f6fff6bd41fe4: note added
+{"page_id":"406273e214eb81fa8a74dcfdec8eaa09","command":"update_properties","allow_async":false,"properties":{"Challenged tags notes":"Context-dependent: Rule unclear. Part D premium stabilization works as the name of one Medicare program, and rule 3 does not say whether a name-like description counts as saying which one.","Review status":"Reviewed"}}
+4aa87f426fb234137f8ce60ac7c23955: tags none → Context-dependent; note added
+{"page_id":"406273e214eb814c8697f7b12affc0f7","command":"update_properties","allow_async":false,"properties":{"Verified tags":["406273e214eb81b89334e309cdb8eaef"],"Challenged tags notes":"Context-dependent: Agent slip. Rule 3 fires: the US has led more than one campaign against Iran (sanctions, strikes), and the claim does not say which one.","Review status":"Reviewed"}}
+c1870eeda558909aab71f379ca9743cf: note added
+{"page_id":"406273e214eb8169893ac10b14b2bb74","command":"update_properties","allow_async":false,"properties":{"Challenged tags notes":"Context-dependent: Rule unclear. The government here is the one that funds the universities, a role rather than a body to look up; rule 5 excludes generics, but no rule says whether a role noun like this counts.","Review status":"Reviewed"}}
+0dc04fba852143708ff6a9727db4be3f: note added
+{"page_id":"406273e214eb814086ddd73f6253a626","command":"update_properties","allow_async":false,"properties":{"Challenged tags notes":"Context-dependent: Agent slip. The US-China trade truce is named by its two parties and short extensions is indefinite, so no rule fires (rule 5).","Review status":"Reviewed"}}

@@ -1,0 +1,9 @@
+Decide: 6 claims decided and read back; 6 differ from the agent.
+
+| What | Result |
+|---|---|
+| Decided | 6 |
+| Same as the agent | 0 |
+| Different from the agent | 6, all with a note |
+
+Next: type /claim-tagger distill to read the decisions.
