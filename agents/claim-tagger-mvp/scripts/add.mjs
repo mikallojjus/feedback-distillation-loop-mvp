@@ -37,8 +37,8 @@ import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { ADD_SCRIPT, CLAIMS_GEO_COLUMNS, tableEntry } from './lib/config.mjs';
 import { isReviewed } from './lib/decisions.mjs';
-import { listNames, plural, quoted, tableLink } from './lib/editor-words.mjs';
-import { MAX_ROWS } from './lib/report.mjs';
+import { cutText, listNames, plural, quoted, tableLink } from './lib/editor-words.mjs';
+import { MAX_ROWS, hardRefusals } from './lib/report.mjs';
 import {
   GEO_ID, GeoError, countGeoRequests, createGeoClient, entityIsStub, geoRequestLogger, validateGeoConfig,
 } from './lib/geo-read.mjs';
@@ -87,11 +87,14 @@ const PHRASE = Object.freeze({
 });
 
 const flat = (v) => String(v ?? '').replace(/-/g, '').toLowerCase();
+const byCodePoints = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
 const bareHost = (host) => host.replace(/^www\./, '');
-/** How a table cell or a sentence names an item that has no text of its own: the last 8 characters of its Geo ID. */
-const linkEnding = (id) => `link ending ${String(id).slice(-8)}`;
+/** How a table cell or a sentence names an item that has no text of its own: the last 8 characters of its Geo ID, called a link when the editor gave a link and an ID when the editor gave the ID. */
+const ending = (id, isLink) => `${isLink ? 'link' : 'ID'} ending ${String(id).slice(-8)}`;
 /** The text of a claim for a sentence or a cell, cut and quoted; the link ending when there is no text. */
-const nameOf = (text, id) => (typeof text === 'string' && text.trim() !== '' ? quoted(text, CUT) : linkEnding(id));
+const nameOf = (text, id, isLink = false) => (typeof text === 'string' && text.trim() !== '' ? quoted(text, CUT) : ending(id, isLink));
+/** An item the editor typed that is not a Geo link or ID, echoed (cut, in quotes) only when the cut text passes the hard refusals of the report lint: no brace, no run folder, no script file, no drive path, no run id. */
+const typedItem = (raw) => (hardRefusals(cutText(raw, CUT)).length === 0 ? quoted(raw, CUT) : 'an item that is not a link');
 /** At most three names, then "and n more". */
 const namesOf = (names) => (names.length > NAMED ? `${names.slice(0, NAMED).join(', ')} and ${names.length - NAMED} more` : listNames(names));
 
@@ -282,14 +285,14 @@ async function body(ctx, claimsText) {
 
   // 3. already in Claims, and the ones to read from Geo
   const results = items.map((item) => ({
-    raw: item.raw, geo_id: item.ok ? item.id : null, outcome: item.ok ? null : 'bad_input', label: item.ok ? null : quoted(item.raw, CUT),
+    raw: item.raw, geo_id: item.ok ? item.id : null, outcome: item.ok ? null : 'bad_input', label: item.ok ? null : typedItem(item.raw),
   }));
   const toRead = [];
   items.forEach((item, i) => {
     if (!item.ok) return;
     if (inClaims.has(item.id)) {
       const held = inClaims.get(item.id);
-      Object.assign(results[i], { outcome: 'already', claim: held.claim, label: nameOf(held.claim, item.id), unread: !isReviewed(held) && String(held.agent_status ?? '').trim() === '' });
+      Object.assign(results[i], { outcome: 'already', claim: held.claim, label: nameOf(held.claim, item.id, item.spaceId !== null), unread: !isReviewed(held) && String(held.agent_status ?? '').trim() === '' });
     } else toRead.push(i);
   });
   const unknownTags = [];
@@ -299,9 +302,12 @@ async function body(ctx, claimsText) {
     ctx.record.add = {
       items: results.length,
       added: results.filter((r) => r.outcome === 'added').map((r) => ({ geo_id: r.geo_id, claim: r.claim, space: r.space, page_id: r.page_id })),
-      not_added: results.filter((r) => !['added', 'candidate', 'not_written'].includes(r.outcome)).map((r) => ({
+      not_added: results.filter((r) => !['added', 'candidate', 'written_unchecked', 'maybe_written', 'not_written'].includes(r.outcome)).map((r) => ({
         item: r.raw, geo_id: r.geo_id, reason: r.outcome, ...(r.same_as ? { same_as: r.same_as } : {}), ...(r.added_meanwhile ? { added_meanwhile: true } : {}), ...(r.claim && r.outcome === 'already' ? { claim: r.claim } : {}),
       })),
+      // after a stop: rows that were written but could not be read back (they have a page), rows whose create answered an error and may have landed (no page known), and rows with no page
+      ...(results.some((r) => r.outcome === 'written_unchecked') ? { written_unchecked: results.filter((r) => r.outcome === 'written_unchecked').map((r) => ({ geo_id: r.geo_id, claim: r.claim, page_id: r.page_id })) } : {}),
+      ...(results.some((r) => r.outcome === 'maybe_written') ? { maybe_written: results.filter((r) => r.outcome === 'maybe_written').map((r) => ({ geo_id: r.geo_id, claim: r.claim })) } : {}),
       ...(results.some((r) => r.outcome === 'not_written') ? { not_written: results.filter((r) => r.outcome === 'not_written').map((r) => ({ geo_id: r.geo_id, claim: r.claim })) } : {}),
       ...(unknownTags.length ? { geo_tags_left_out: unknownTags } : {}),
       ...(duplicates.length ? { in_claims_twice: duplicates } : {}),
@@ -349,24 +355,24 @@ async function body(ctx, claimsText) {
     const r = results[i];
     const entity = entities.get(item.id);
     if (entityIsStub(entity)) {
-      Object.assign(r, { outcome: 'not_found', label: linkEnding(item.id) });
+      Object.assign(r, { outcome: 'not_found', label: ending(item.id, item.spaceId !== null) });
       continue;
     }
     if (!(entity.typeIds ?? []).map(flat).includes(geo.ids.claim_type)) {
-      Object.assign(r, { outcome: 'not_claim', label: nameOf(entity.name, item.id) });
+      Object.assign(r, { outcome: 'not_claim', label: nameOf(entity.name, item.id, item.spaceId !== null) });
       continue;
     }
     const held = new Set((entity.spaceIds ?? []).map(flat));
     const space = (item.spaceId && spaceOrder.find((s) => s.id === item.spaceId && held.has(s.id))) || spaceOrder.find((s) => held.has(s.id));
     if (!space) {
-      Object.assign(r, { outcome: 'not_in_spaces', label: nameOf(entity.name, item.id) });
+      Object.assign(r, { outcome: 'not_in_spaces', label: nameOf(entity.name, item.id, item.spaceId !== null) });
       continue;
     }
     const built = geoRowOf({ entity, id: item.id, fallbackName: '', fallbackCreated: null, space, geo });
     const name = String(built.row['Geo Name'] ?? '').trim();
     const text = normaliseName(name);
     if (name === '' || text === '') {
-      Object.assign(r, { outcome: 'no_name', label: linkEnding(item.id) });
+      Object.assign(r, { outcome: 'no_name', label: ending(item.id, item.spaceId !== null) });
       continue;
     }
     const twin = textInClaims.get(text) ?? acceptedText.get(text);
@@ -380,7 +386,7 @@ async function body(ctx, claimsText) {
     }
     const pieces = sourcePieces(built.row);
     if (protectedInLinks(ctx.config, new Map([[item.id, pieces]])).length > 0) {
-      Object.assign(r, { outcome: 'source_link', label: nameOf(name, item.id), claim: name });
+      Object.assign(r, { outcome: 'source_link', label: nameOf(name, item.id, item.spaceId !== null), claim: name });
       continue;
     }
     // Geo Tags: only the option names the column has; the others are left out and listed
@@ -390,7 +396,7 @@ async function body(ctx, claimsText) {
     built.row['Geo Tags'] = tags;
     acceptedText.set(text, { geo_id: item.id, claim: name });
     rows.set(item.id, { row: built.row, pieces, name, space: space.name, index: i });
-    Object.assign(r, { outcome: 'candidate', claim: name, space: space.name, label: nameOf(name, item.id) });
+    Object.assign(r, { outcome: 'candidate', claim: name, space: space.name, label: nameOf(name, item.id, item.spaceId !== null) });
   }
 
   // 6. the last look at Claims, right before the plan: a row that appeared since the pull is dropped
@@ -433,22 +439,37 @@ async function body(ctx, claimsText) {
     }
     const made = result.created_by_table?.claims ?? {};
     if (result.code === EXIT.ERROR) {
-      // a write that stopped part way: say what is true. A row counts as added only when it was written and read back
-      const unsure = new Set([...result.lists.failed, ...result.lists.uncertain, ...result.lists.unchecked, ...result.lists.mismatches].map((x) => x.key));
+      // a write that stopped part way: say what is true. A row counts as added only when it was written and read back. A row that was written but could not be read back, and a row whose
+      // create answered an error (it may have landed), are told apart from the rows that truly have no page; the next run finds the ones that landed "already in Claims"
+      const keys = (list) => new Set(list.map((x) => x.key));
+      const unchecked = keys(result.lists.unchecked);
+      const mismatched = keys(result.lists.mismatches);
+      const uncertain = keys(result.lists.uncertain);
       let confirmed = 0;
+      let may = 0;
       for (const v of toWrite) {
-        const ok = Boolean(made[v.id]) && !unsure.has(v.id);
-        results[v.index].outcome = ok ? 'added' : 'not_written';
-        if (ok) {
-          results[v.index].page_id = made[v.id];
+        const r = results[v.index];
+        if (made[v.id] && !unchecked.has(v.id) && !mismatched.has(v.id)) {
+          Object.assign(r, { outcome: 'added', page_id: made[v.id] });
           confirmed += 1;
-        }
+        } else if (made[v.id]) {
+          Object.assign(r, { outcome: 'written_unchecked', page_id: made[v.id] });
+          may += 1;
+        } else if (uncertain.has(v.id)) {
+          r.outcome = 'maybe_written';
+          may += 1;
+        } else r.outcome = 'not_written';
       }
       record();
       const left = result.failed + result.uncertain + result.unchecked + result.pending;
+      const total = toWrite.length;
+      let sentence = 'Add: it stopped before any claim was added.';
+      if (confirmed > 0 && may > 0) sentence = `Add: ${confirmed} of ${total} claims ${confirmed === 1 ? 'was' : 'were'} added and ${may} more may have been, before it stopped.`;
+      else if (confirmed > 0) sentence = `Add: ${confirmed} of ${total} claims ${confirmed === 1 ? 'was' : 'were'} added before it stopped.`;
+      else if (may > 0) sentence = `Add: none was confirmed and ${may} may have been added, before it stopped.`;
       throw new LoopExit(EXIT.ERROR, `${left} write(s) did not finish: ${[...result.lists.failed, ...result.lists.uncertain, ...result.lists.unchecked].slice(0, 3).map((m) => `${m.table} "${m.key}" ${m.detail ?? ''}`).join('; ') || 'not reached'}`, {
-        sentence: confirmed > 0 ? `Add: ${confirmed} of ${toWrite.length} claims ${confirmed === 1 ? 'was' : 'were'} added before it stopped.` : 'Add: it stopped before any claim was added.',
-        next: confirmed > 0 ? PARTLY : LATER,
+        sentence,
+        next: confirmed + may > 0 ? PARTLY : LATER,
       });
     }
     assertApplied(ctx, result);
@@ -462,7 +483,8 @@ async function body(ctx, claimsText) {
     const madeIds = toWrite.filter((v) => made[v.id]).map((v) => v.id);
     const now = await pagesNow(ctx, entry, madeIds, 'Add: the claims were written, but Claims could not be read again to check that none is there twice.');
     duplicates = madeIds.filter((id) => (now.get(id) ?? []).length > 1).map((id) => {
-      const pages = [...now.get(id)].sort((a, b) => (a.created_time < b.created_time ? -1 : a.created_time > b.created_time ? 1 : a.page_id < b.page_id ? -1 : 1));
+      // the order of the pull (pull.mjs indexRows): created_time, then page id. Notion rounds created_time to the minute, so the row the pull keeps may be either; the one to remove is the one it treats as the extra
+      const pages = [...now.get(id)].sort((a, b) => byCodePoints(a.created_time ?? '', b.created_time ?? '') || byCodePoints(a.page_id, b.page_id));
       return { geo_id: id, claim: rows.get(id).name, page_ids: pages.map((p) => p.page_id), remove: pages.slice(1).map((p) => p.page_id) };
     });
     if (duplicates.length > 0) {
@@ -472,7 +494,9 @@ async function body(ctx, claimsText) {
         sentence: duplicates.length === 1
           ? `Add: ${named} is in Claims twice now, because the same claim was added from two places at the same moment.`
           : `Add: ${duplicates.length} claims are in Claims twice now (${named}), because the same claims were added from two places at the same moment.`,
-        next: `Next: ask the engineer to remove the later-created row of ${duplicates.length === 1 ? 'that claim' : 'each of them'} in Claims; every command stops until then.`,
+        next: duplicates.length === 1
+          ? 'Next: ask the engineer to remove the row named in the run record (the two rows are identical); every command stops until then.'
+          : 'Next: ask the engineer to remove the rows named in the run record (each pair is identical); every command stops until then.',
       });
     }
   }

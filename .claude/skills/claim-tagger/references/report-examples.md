@@ -324,7 +324,7 @@ Next: type /claim-tagger tag to read the 3 new claims; they are in All claims (l
 
 ### add (Claims), some claims refused
 
-Seven items: one claim was added and six were not. The table has a row for each kind of reason that is present, in this order: Added (the count), Already in Claims, Not found in Geo, Not a claim, Not in the six spaces of Claims, Same text as a claim in Claims, Not a Geo link or ID, No name in Geo, A source links to a protected Notion page. Every row but Added names its items, at most three and then "and n more": the claim's text when Geo or Claims has it, else "link ending" and the last eight characters of its Geo ID (an item that is not a link or ID is named as it was typed). The same-text row names the claim that is there already (or, for a claim earlier in the same list, says "earlier in your list"). With more than five kinds the table would be too long: the first four kinds present in the fixed order Added, Already in Claims, Same text as a claim in Claims, Not found in Geo, Not a claim, Not in the six spaces of Claims, Not a Geo link or ID, No name in Geo, A source links to a protected Notion page keep their row (in the order above), and the rest are one row, "Other reasons", which names its kinds (here the item that is not a claim, the one in a space Claims does not use and the one that is not a Geo link or ID). The Geo IDs, the reason for each item, the existing claims and the page ids are in the run record, not in the report.
+Seven items: one claim was added and six were not. The table has a row for each kind of reason that is present, in this order: Added (the count), Already in Claims, Not found in Geo, Not a claim, Not in the six spaces of Claims, Same text as a claim in Claims, Not a Geo link or ID, No name in Geo, A source links to a protected Notion page. Every row but Added names its items, at most three and then "and n more": the claim's text when Geo or Claims has it, else "link ending" (when the editor gave a link) or "ID ending" (when the editor gave the ID) and the last eight characters of its Geo ID. An item that is not a link or ID is echoed as it was typed, cut at 40 characters, only when it is harmless text (no brace, folder or script name, drive path or run id); otherwise it is named "an item that is not a link". The same-text row names the claim that is there already (or, for a claim earlier in the same list, says "earlier in your list"). With more than five kinds the table would be too long: the first four kinds present in the fixed order Added, Already in Claims, Same text as a claim in Claims, Not found in Geo, Not a claim, Not in the six spaces of Claims, Not a Geo link or ID, No name in Geo, A source links to a protected Notion page keep their row (in the order above), and the rest are one row, "Other reasons", which names its kinds (here the item that is not a claim, the one in a space Claims does not use and the one that is not a Geo link or ID). The Geo IDs, the reason for each item, the existing claims and the page ids are in the run record, not in the report.
 
 Add: 1 claim added to Claims from Geo ("The new tax will cost families about..."); 6 were not added.
 
@@ -332,7 +332,7 @@ Add: 1 claim added to Claims from Geo ("The new tax will cost families about..."
 |---|---|
 | Added | 1 |
 | Already in Claims | 1: "The senator voted against it twice." |
-| Not found in Geo | 1: link ending 0000000e |
+| Not found in Geo | 1: ID ending 0000000e |
 | Same text as a claim in Claims | 1: "The senator voted against it twice." is there already |
 | Other reasons | 3: 1 not a claim, 1 not in the six spaces of Claims, 1 not a Geo link or ID |
 
@@ -364,7 +364,7 @@ Add: nothing was added to Claims: 1 not found in Geo, 1 not a claim and 1 not a 
 
 | What | Result |
 |---|---|
-| Not found in Geo | 1: link ending 0000000e |
+| Not found in Geo | 1: ID ending 0000000e |
 | Not a claim | 1: "A person" |
 | Not a Geo link or ID | 1: "nonsense" |
 
@@ -392,13 +392,27 @@ Add: 2 of 5 claims were added before it stopped.
 
 Next: type /claim-tagger add again with the same links; the ones added are skipped.
 
+A claim whose write answered an error may have landed all the same, and a claim that was written may not have been read back; they are told apart from the ones that were read back:
+
+Add: 1 of 3 claims was added and 1 more may have been, before it stopped.
+
+Next: type /claim-tagger add again with the same links; the ones added are skipped.
+
+When none was read back:
+
+Add: none was confirmed and 2 may have been added, before it stopped.
+
+Next: type /claim-tagger add again with the same links; the ones added are skipped.
+
+When no claim was written or may have been, the sentence is "Add: it stopped before any claim was added." and the Next line is "type /claim-tagger add again with the same links in a while."
+
 ### add (Claims), a claim found twice
 
-Two editors added the same claim at the same moment, and Claims now holds it twice. The run that made its row finds it after the read-back and says so (exit 2). No script removes a row: the engineer removes the later-created one, and every command stops on the repeated key until then. Both page ids are in the run record.
+Two editors added the same claim at the same moment, and Claims now holds it twice. The run that made its row finds it after the read-back and says so (exit 2). No script removes a row: the engineer removes the row the run record names (the two rows are identical), and every command stops on the repeated key until then. Both page ids and the one to remove are in the run record.
 
 Add: "The mayor said the budget grew by half." is in Claims twice now, because the same claim was added from two places at the same moment.
 
-Next: ask the engineer to remove the later-created row of that claim in Claims; every command stops until then.
+Next: ask the engineer to remove the row named in the run record (the two rows are identical); every command stops until then.
 
 ### A stopped run
 
