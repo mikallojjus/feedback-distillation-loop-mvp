@@ -3,3 +3,4 @@
 - 2026-10-27 · edition 2026-10-27.1 · setup: fresh tables under the hub (P9), copied from the taxonomy
 - 2026-10-28 · edition 2026-10-28.1 · lesson A name-like description of one program or law says which PASS
 - 2026-10-28 · edition 2026-10-28.2 · lesson Named institutions resolve; a bare 'the ruling' does not PASS
+- 2026-10-28 · edition 2026-10-28.3 · rolled back Named institutions resolve; a bare 'the ruling' does not
