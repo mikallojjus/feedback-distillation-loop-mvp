@@ -2,7 +2,7 @@
 // Claude Code PreToolUse hook for the Notion connector: the session never writes Notion unless a script prepared the write.
 //
 // Reads the hook input (JSON on stdin: tool_name, tool_input, ...) and prints
-//   { "hookSpecificOutput": { "hookEventName": "PreToolUse", "permissionDecision": "allow" | "deny", "permissionDecisionReason": "..." } }
+//   { "hookSpecificOutput": { "hookEventName": "PreToolUse", "permissionDecision": "allow" | "ask" | "deny", "permissionDecisionReason": "..." } }
 // then exits 0. It never throws: input it cannot read is denied with a reason. A tool it does not guard gets {} (no opinion).
 //
 // Always denied: delete-pages, delete-databases, delete-comment, move-pages, duplicate-page, restore-pages (hard rule 8: nothing is
@@ -11,14 +11,17 @@
 // One exception to the editor-column rule (decisions P18 to P20 and 114): an editor's Claude may decide claims. A notion-update-page call is allowed when
 //   - command is update_properties, and the input holds only page_id, command, properties and allow_async (no icon, cover, content or skill field);
 //   - the properties are only some of the three Claims editor columns (Verified tags, Review status, Challenged tags notes), and Review status, when given, is
-//     Reviewed or To review;
+//     Reviewed (P24: a decision always closes the claim; "To review" is refused);
 //   - every page id found in page_id (a 32-hex id, a dashed id or a notion.so address; there must be one) is listed in page_ids of a live marker runs/DECIDING (a regular
 //     file written by decide.mjs open, younger than two hours), in this folder or in a practice page's folder runs/demos/<id>/;
 //   - the agent is not paused: no runs/PAUSED in this folder, or in the practice page's folder for its own marker (the Paused box in Notion is for decide.mjs, which has the network);
 //   - and no protected id appears anywhere in the input (that check comes first, as for every call).
 // The page list is what keeps the protected real tables safe: their columns may share these names, their page ids are never in a marker.
-// Everything else stays as it was. Otherwise allowed only while the marker file runs/SETUP exists (the setup or walkthrough script creates it for one builder
-// session and removes it at the end):
+// This hook is the gate of the decide step, and the only one: .claude/settings.json has NO permission rule (neither allow nor ask) for notion-update-page, so the hook's
+// "allow" is what lets a decision through without a prompt, and when the hook cannot run (it fails to start, it is missing) the call falls to the normal permission flow,
+// which is a prompt. A rule under "allow" would let every update-page through when the hook fails.
+// Everything else stays as it was. Otherwise it answers "ask" (the editor of the session still sees a prompt) only while the marker file runs/SETUP exists (the setup or
+// walkthrough script creates it for one builder session and removes it at the end):
 //   create-pages   a plain page (title only, no database properties) under a page listed in config notion.setup_page_parents or in
 //                  runs/builder/pages.json (pages the scripts created and registered);
 //   update-page    content commands (insert_content, update_content, replace_content without deleting children) on a page listed in
@@ -50,7 +53,7 @@ const DEFAULT_EDITOR_STATUS = ['Approved', 'Rejected'];
 // and how long a runs/DECIDING marker counts (the same two hours as the other markers of the loop)
 const DEFAULT_CLAIMS_COLUMNS = ['Verified tags', 'Review status', 'Challenged tags notes'];
 const DECIDE_KEYS = new Set(['page_id', 'command', 'properties', 'allow_async']);
-const DECIDE_REVIEW_VALUES = ['Reviewed', 'To review'];
+const DECIDE_REVIEW_VALUES = ['Reviewed'];
 const DECIDING_STALE_MS = 2 * 60 * 60 * 1000;
 
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -58,6 +61,8 @@ const normId = (id) => String(id ?? '').replace(/^collection:\/\//, '').replace(
 
 const deny = (reason) => ({ permissionDecision: 'deny', permissionDecisionReason: reason });
 const allow = (reason) => ({ permissionDecision: 'allow', permissionDecisionReason: reason });
+// a builder session's write is not the guard's to wave through: the editor of the session still sees a prompt for it
+const ask = (reason) => ({ permissionDecision: 'ask', permissionDecisionReason: reason });
 
 function readJsonSafe(file) {
   try {
@@ -224,7 +229,7 @@ export function decide(input, root = AGENT_ROOT, options = {}) {
       const keys = Object.keys(isObject(page?.properties) ? page.properties : {}).filter((k) => k.toLowerCase() !== 'title');
       if (keys.length) return deny(`a setup page may only have a title; got properties ${keys.join(', ')}`);
     }
-    return allow('a plain page under a registered setup page while runs/SETUP exists');
+    return ask('a plain page under a registered setup page while runs/SETUP exists');
   }
   if (tool === 'update-page') {
     const pageId = normId(toolInput.page_id ?? '');
@@ -232,14 +237,14 @@ export function decide(input, root = AGENT_ROOT, options = {}) {
     const command = String(toolInput.command ?? '');
     if (!['insert_content', 'update_content', 'replace_content'].includes(command)) return deny(`only content commands are allowed on a setup page; got "${command || 'none'}"`);
     if (toolInput.allow_deleting_content === true) return deny('a content replace may not delete child pages or databases (hard rule 8)');
-    return allow(`${command} on a registered setup page while runs/SETUP exists`);
+    return ask(`${command} on a registered setup page while runs/SETUP exists`);
   }
   if (SCHEMA_TOOLS.has(tool)) {
     const target = normId(toolInput.parent?.page_id ?? toolInput.parent_page_id ?? toolInput.database_id ?? toolInput.data_source_id ?? toolInput.view_id ?? '');
     const dataSource = normId(toolInput.data_source_id ?? '');
     if (!(registered.has(target) || registered.has(dataSource))) return deny(`the target ${target || dataSource || '(none)'} is not a registered setup page or table`);
     if (tool === 'update-data-source' && (toolInput.in_trash === true || 'in_trash' in toolInput)) return deny('a table is never trashed (hard rule 8)');
-    return allow(`notion-${tool} on a registered setup target while runs/SETUP exists`);
+    return ask(`notion-${tool} on a registered setup target while runs/SETUP exists`);
   }
   return deny(`notion-${tool} is not something the session may do`);
 }
