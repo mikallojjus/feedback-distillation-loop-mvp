@@ -673,7 +673,11 @@ Done: `agents/claim-tagger-mvp/scripts/demo-mocks.mjs`, an owner tool. It is not
 - `status` shows what changed since the checkpoint.
 - Rows are written directly through `lib/notion-rest.mjs`, outside the plan machinery: the product owner's call.
 
-Verified live: `setup` (checkpoint at edition 2026-10-28.1). A test helper then marked mock 1 decided and read (Reviewed, a note, Verified tags, a reading, Follow-up Fixed), and `reset` brought both mocks back fresh. `decide list` shows the mock answers. Not verified live: the rollback path of `reset`, which needs a promote PASS first.
+Verified live: `setup` (checkpoint at edition 2026-10-28.1). A test helper then marked mock 1 decided and read (Reviewed, a note, Verified tags, a reading, Follow-up Fixed), and `reset` brought both mocks back fresh. `decide list` shows the mock answers. Then the product owner's first full run on the mocks:
+- decide, then distill, which drafted "Named institutions resolve; a bare 'the ruling' does not" on rule 2;
+- approve, then promote: PASS at edition 2026-10-28.2 (commit e4f9751), with the follow-up marking both mocks Fixed.
+
+`reset` then rolled the change back through `rollback.mjs` (edition 2026-10-28.3, commit 3a8a50a, the rule change marked Rolled back) and made both mocks fresh. `status` showed no drift, and the working tree came back clean (the earlier decisions file regenerated without the mocks).
 
 What reset does not undo: edition numbers move forward (a PASS and its rollback are two editions with the same text, both committed). The test's rule change rows stay in Rule changes as Rolled back or Rejected; they are out of Lessons waiting and block nothing.
 
