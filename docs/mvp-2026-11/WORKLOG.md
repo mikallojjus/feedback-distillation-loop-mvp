@@ -4,7 +4,7 @@ Append-only. One numbered entry per step: what was done, what was verified, what
 
 ## State at the last entry
 
-- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. Next: the rest of step 10 (distill, approve, promote, follow-up).
+- Phase (entry 47): "The hub and the Geo claims" (P5 to P25, `HUB-AND-GEO-CLAIMS.md`, `CLAUDE-DECIDES.md`) on the branch `claims-hub-2026-10`. The live runbook is done to step 9: 200 claims tagged, 6 waiting in Your queue. The decide step is a conversation (P21 to P25, decisions 117 to 122). Claude drafts, the editor iterates and says "write it". Any claim may be decided, a Reviewed one included, and writes may be partial. The guard hook is the gate, with no permission rule for update-page. It is built, reviewed and merged, and ran live for the first time on 28 October (entry 49): the 6 claims of Your queue are decided and read back. In step 10, distill drafted a change to rule 3; promote failed it on an example the rule in force already missed, and P33 and P34 fixed the check and its report (entry 50, merged as 61df7bb). Next: promote again, then follow-up.
 - Earlier phase: "Read the decisions" (P4) is complete and merged into `main` on 22 October.
 - Blockers: none open.
 - Branch: merged into `main` on 22 October (fast-forward) and pushed to https://github.com/mikallojjus/feedback-distillation-loop-mvp. Before the first push the history was rewritten once to drop the brief MVP-PROMPT.md (every commit from the first MVP commit on has a new hash), so the commit hashes quoted in entries 1 to 30, in STATE.md, DECISIONS.md and the evidence folders belong to the history before that rewrite; it is kept locally as the branch `history-before-github`, which is never pushed.
@@ -570,3 +570,33 @@ Done:
 Found: the five claims whose tags stay none were sent note-only, as the skill says (give only the fields that change). With Review status Reviewed, an empty Verified tags reads as Does not apply. That is the audit's moderate flag, and here it is what was meant.
 
 Next: the rest of step 10, distill (plan only first), an Opus review, distill, approval, promote and follow-up. Claims 2 and 3 both blame rule 3 as Rule unclear, two distinct claims, so distill should draft a clarification of rule 3.
+
+### 50. The safety check stops blaming a change for old misses, and the FAIL suggestion becomes readable (P33, P34; 2026-10-28)
+
+Found: the product owner ran the rest of step 10 in another session.
+- Distill read 9 decisions and drafted one change to rule 3 from claims 2 and 3 ("A name-like description of one program or law says which").
+- The first promote stopped because nothing was approved yet (exit 2).
+- After the approval, promote ended in FAIL (run 20261028T095657Z-promote; `evidence/29-people-loop/08` to `10`). The only failure was canary-8, "The shift to domestic chips...", which the rule in force also answered wrong. Example claims were counted absolutely, earlier decisions relatively.
+- The report's suggested sentence chased that unrelated miss, and the whole rule sat inside its Next line.
+
+Decided by the product owner: P33 (only new breaks block; an old miss gets its own row) and P34 (a formatted suggestion with its reasoning). They also decided:
+- Claude setting Approved on the editor's OK is P26 of the other plan;
+- this fix is built here, on its own, before that plan;
+- today's change stays Approved until the merge.
+
+Done:
+- A Sonnet coder made three commits: 2ca3c47, 29347a9 and 4582888.
+- Opus code review: GO, with two moderate findings. The transcript check accepted the suggestion part anywhere, and the new row counted examples the change fixes.
+- The editor-persona review raised ED-1 to ED-9. The main one: "not counted" sat next to a total that counted the old miss.
+- My calls C1 to C6 became decisions 123 to 126.
+- Opus re-check: GO, with R1 to R5. Single-quoted phrases could carry paths into the report, and ordinary rule words such as "a second program" were refused.
+- Every finding was fixed. Merged as 61df7bb.
+
+Note: the plan file was shared with the session "Claims table MVP setup (explain decide)", and its P26 to P32 draft was in it. On the product owner's word this plan replaced that draft, and that session is to be briefed. This merge takes the numbers its draft had reserved: decisions 123 onwards and work log entry 50.
+
+Follow-ups, not done:
+- `cutText` cuts claims mid-word.
+- A PASS whose Next line says "nothing waits; type /claim-tagger status to see what is open".
+- Product questions from the editor review: should the Rule changes row keep the suggestion, so it outlives the chat (P-1)? Who acts on a "Wrong before the change" example, and is the editor told when it is fixed (P-2)?
+
+Next: on the product owner's instruction, an Opus agent runs `/claim-tagger promote` on the Approved rule-3 change, with evidence in `evidence/29-people-loop/`.

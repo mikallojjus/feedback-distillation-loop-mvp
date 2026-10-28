@@ -1,0 +1,71 @@
+{
+  "mode": "simple",
+  "verdict": "FAIL",
+  "lesson": "A name-like description of one program or law says which",
+  "tag": "Context-dependent",
+  "checks": {
+    "canaries": {
+      "passed": 10,
+      "total": 11,
+      "failures": [
+        {
+          "id": "canary-8",
+          "claim": "The shift to domestic chips supports Beijing's ambitions to substitute American technology.",
+          "expected": "do_not_apply",
+          "got": "apply"
+        }
+      ]
+    },
+    "cases": {
+      "passed": 5,
+      "total": 5,
+      "newly_failing": []
+    },
+    "supporting": {
+      "passed": 2,
+      "total": 2,
+      "failures": []
+    }
+  },
+  "flips": [
+    {
+      "id": "010324ce0ad1317d65b64d81e3e837f9::Context-dependent",
+      "tag": "Context-dependent",
+      "claim": "The federal noncitizen voting ban lacks a workable remedy for ballots already cast",
+      "from": "apply",
+      "to": "do_not_apply"
+    },
+    {
+      "id": "0888703c48e3953f0bb93f9265c0501e::Context-dependent",
+      "tag": "Context-dependent",
+      "claim": "The FCC’s early review of ABC licenses exceeds its legitimate regulatory authority",
+      "from": "apply",
+      "to": "do_not_apply"
+    },
+    {
+      "id": "0e5a1d19cf354b13bc0f6fff6bd41fe4::Context-dependent",
+      "tag": "Context-dependent",
+      "claim": "The Part D premium stabilization rule should be made permanent",
+      "from": "apply",
+      "to": "do_not_apply"
+    },
+    {
+      "id": "c1870eeda558909aab71f379ca9743cf::Context-dependent",
+      "tag": "Context-dependent",
+      "claim": "The government should cut funding to universities that fail to stop antisemitism",
+      "from": "ask_editor",
+      "to": "do_not_apply"
+    }
+  ],
+  "editions": {
+    "baseline": "2026-10-27.1",
+    "candidate": "2026-10-28.1"
+  },
+  "usage": {
+    "input": 26,
+    "cache_write": 18940,
+    "cache_read": 16345,
+    "output": 12500
+  },
+  "rejudged": 4
+}
