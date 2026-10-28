@@ -1009,14 +1009,16 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
     const entry = tableEntry(config, 'claims');
     const byId = new Map(rows.map((r) => [text(r.props[entry.key]).trim(), r]));
     const wantIds = pick.rows.map((r) => r[entry.key]);
-    // a row that is not in the pick was added after setup (/claim-tagger add, P35): it is not a difference, it is counted (verify.json "added_after_setup", an information line)
-    const addedAfterSetup = [...byId.keys()].filter((id) => !wantIds.includes(id));
+    // a row whose key is a Geo ID (32 hex characters) that is not in the pick was added after setup (/claim-tagger add, P35): it is not a difference, it is counted (verify.json
+    // "added_after_setup", an information line). Any other row that is not in the pick is still an extra row. The Geo columns of an added row are not checked: they were read from Geo, not picked.
+    const addedAfterSetup = [...byId.keys()].filter((id) => !wantIds.includes(id) && /^[0-9a-f]{32}$/.test(id));
     if (rows.length - addedAfterSetup.length !== pick.rows.length) {
       add('claims', 'row count', addedAfterSetup.length === 0
         ? `${rows.length} rows in the Claims table, ${pick.rows.length} in the pick`
-        : `${rows.length - addedAfterSetup.length} rows in the Claims table are in the pick (${addedAfterSetup.length} were added after setup), ${pick.rows.length} in the pick file`);
+        : `${rows.length - addedAfterSetup.length} rows in the Claims table besides the ${addedAfterSetup.length} added after setup, ${pick.rows.length} in the pick`);
     }
     for (const id of wantIds) if (!byId.has(id)) add('claims', 'missing row', `the claim ${id} is not in the Claims table`);
+    for (const id of byId.keys()) if (!wantIds.includes(id) && !addedAfterSetup.includes(id)) add('claims', 'extra row', `the claim ${id} is in the Claims table but not in the pick`);
     addedLater = addedAfterSetup.length;
     const notGeo = [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims')];
     const geoColumns = columnsOf(root, 'claims').filter((c) => !notGeo.includes(c) && c !== entry.key);

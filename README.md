@@ -4,7 +4,7 @@ Agents of the Geo content team, one folder per agent.
 
 | Agent | Folder | Status |
 |---|---|---|
-| **Claim tagger with its editor feedback loop**, built as an MVP in October 2026 from the overnight research "Learning from editor feedback" | `agents/claim-tagger-mvp/` | The live build. Works under the Notion page "Claim tagger" (the hub): one table, Claims, of 200 Geo claims tagged Debate, which people decide on and the rulebook learns from. The first build of 15 to 22 October sits in the hub's archive page, read only. Runbook: `agents/claim-tagger-mvp/AGENT.md` |
+| **Claim tagger with its editor feedback loop**, built as an MVP in October 2026 from the overnight research "Learning from editor feedback" | `agents/claim-tagger-mvp/` | The live build. Works under the Notion page "Claim tagger" (the hub): one table, Claims: the 200 Geo claims tagged Debate picked at setup, and the Geo claims editors add, which people decide on and the rulebook learns from. The first build of 15 to 22 October sits in the hub's archive page, read only. Runbook: `agents/claim-tagger-mvp/AGENT.md` |
 | Claim tagger, previous build | `agents/claim-tagger/` | Read-only history: kept for orientation, never run against Notion again, never edited. The live build still imports eight small helper modules from its `scripts/lib/`, so the folder stays |
 
 ## Install
@@ -25,7 +25,7 @@ Agents of the Geo content team, one folder per agent.
 
 ```
 /claim-tagger status              what is open: is the agent paused, which edition of the rulebook is in force, what waits for whom
-/claim-tagger add <Geo links>     bring specific Geo claims into Claims (by Geo link or Geo ID, up to 50); they are not tagged until you type tag
+/claim-tagger add <Geo links or IDs>  bring specific Geo claims into Claims (by Geo link or Geo ID, up to 50); they are not tagged until you type tag
 /claim-tagger tag                 read the claims, put the answers the agent is unsure about in Your queue
    ... editors decide the rows in "Your queue" on the Notion page, or tell Claude to: ...
 /claim-tagger decide <what to do>  Claude drafts the decisions with you (your words on the claims you name, or its own judgement of the first N of Your queue), writes them after your OK, then reads each one back

@@ -9,7 +9,8 @@ import { ADD_SCRIPT, CLAIMS_GEO_COLUMNS, addableProperties } from '../../agents/
 import { countGeoRequests } from '../../agents/claim-tagger-mvp/scripts/lib/geo-read.mjs';
 import { geoRowOf, normaliseName } from '../../agents/claim-tagger-mvp/scripts/lib/geo-row.mjs';
 import { readJson } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
-import { PlanError, applyPlan, checkPlan, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
+import { LoopExit, applyStep, withRun } from '../../agents/claim-tagger-mvp/scripts/lib/loop.mjs';
+import { AUDIT_PREFIX, PlanError, applyPlan, checkPlan, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { RUN_SCRIPTS } from '../../agents/claim-tagger-mvp/scripts/walkthrough.mjs';
 import { DEFAULT_ALLOWED_SCRIPTS } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
@@ -56,6 +57,7 @@ function assertReport(h, r) {
   assert.ok(!/\bcalls?\b|token|duration|\$|\.mjs|--[a-z]|runs\//i.test(r.markdown), r.markdown);
   return r.report;
 }
+const allClaims = (w) => `https://www.notion.so/${w.DB.claims}`; // the link to Claims the Next line gives
 const runRecord = (r) => readJson(join(r.runDir, 'run.json'));
 const claimRows = (w) => w.rows('claims');
 const postsToClaims = (w) => w.writes().filter((q) => q.method === 'POST' && q.path === '/pages');
@@ -69,6 +71,14 @@ test('parseItems: links of the configured host, Geo IDs with or without dashes, 
   assert.deepEqual(items.map((i) => [i.ok, i.id, i.spaceId]), [
     [true, gid(1), SPACE[US]], [true, gid(2), null], [true, gid(3), null], [true, gid(4), SPACE[AI]], [true, gid(5), SPACE[US]],
   ], 'the dashed form of claim 1 is the same claim as its link: it counts once');
+  // the same site with or without www; a stop, a bracket or a mark after the link is not part of it
+  const site = `https://geobrowser.io/space/${SPACE[US]}/${gid(6)}`;
+  const punctuated = parseItems([`${site}.`, `${linkOf(7)};`, `(${linkOf(8)})`, `[${linkOf(9)}]`, `${linkOf(10)}!`, `"${linkOf(11)}":`, `<${linkOf(12)}>`].join(' '), GEO).items;
+  assert.deepEqual(punctuated.map((i) => [i.ok, i.id]), [6, 7, 8, 9, 10, 11, 12].map((n) => [true, gid(n)]));
+  assert.equal(punctuated[0].spaceId, SPACE[US], 'geobrowser.io without www is the same site');
+  for (const other of [`https://www.geobrowser.io.example.com/space/${SPACE[US]}/${gid(1)}`, `https://evilgeobrowser.io/space/${SPACE[US]}/${gid(1)}`, `https://app.geobrowser.io/space/${SPACE[US]}/${gid(1)}`]) {
+    assert.equal(parseItems(other, GEO).items[0].ok, false, other);
+  }
   const bad = parseItems([
     'hello', `https://example.com/space/${SPACE[US]}/${gid(1)}`, `http://www.geobrowser.io/space/${SPACE[US]}/${gid(1)}`, `${BROWSER}/space/${SPACE[US]}`,
     `${BROWSER}/space/${SPACE[US]}/${gid(1)}/extra`, `${BROWSER}/space/nothex/${gid(1)}`, `${BROWSER}/${SPACE[US]}/${gid(1)}`, gid(1).slice(1), `${gid(1)}0`, 'hello',
@@ -91,7 +101,7 @@ test('add by link, by ID and mixed: three claims are added with the nine Geo col
   assert.equal(report.sentence, `Add: 3 claims added to Claims from Geo ("${text(11)}", "${text(12)}" and "${text(13)}").`);
   assert.deepEqual(report.header, ['What', 'Result', '']);
   assert.deepEqual(report.rows, [['Added', '3', '']]);
-  assert.equal(report.next, 'Next: type /claim-tagger tag to read the 3 new claims.');
+  assert.equal(report.next, `Next: type /claim-tagger tag to read the 3 new claims; they are in All claims (${allClaims(w)}).`);
   assert.equal(claimRows(w).length, before + 3);
 
   const row = w.row('claims', gid(11));
@@ -124,17 +134,17 @@ test('add by link, by ID and mixed: three claims are added with the nine Geo col
 });
 
 test('add: one claim added says "the new claim", and a report names at most three claims', async () => {
-  const { geo, run, claim } = await setup();
+  const { w: w1, geo, run, claim } = await setup();
   claim(11);
   const one = await run(gid(11));
   assert.equal(one.report.sentence, `Add: 1 claim added to Claims from Geo ("${text(11)}").`);
-  assert.equal(one.report.next, 'Next: type /claim-tagger tag to read the new claim.');
+  assert.equal(one.report.next, `Next: type /claim-tagger tag to read the new claim; it is in All claims (${allClaims(w1)}).`);
   const { w, run: run2, claim: claim2 } = await setup();
   for (let n = 21; n <= 25; n++) claim2(n, { name: `Claim number ${n} is a long claim and it goes on and on about the budget of the city.` });
   const five = await run2([21, 22, 23, 24, 25].map(gid).join(' '));
   assert.equal(five.r.exit, 0, five.h.io.errs.join('\n'));
   assert.equal(five.report.sentence, 'Add: 5 claims added to Claims from Geo ("Claim number 21 is a long claim and i...", "Claim number 22 is a long claim and i...", "Claim number 23 is a long claim and i..." and more).');
-  assert.equal(five.report.next, 'Next: type /claim-tagger tag to read the 5 new claims.');
+  assert.equal(five.report.next, `Next: type /claim-tagger tag to read the 5 new claims; they are in All claims (${allClaims(w)}).`);
   assert.equal(claimRows(w).length, 5);
   assert.equal(geo.requests.length, 1, 'one claim, one request');
 });
@@ -201,13 +211,15 @@ test('add: every claim is already in Claims: nothing is added, exit 2, and the N
   const { r, h, report } = await run(`${gid(1)} ${linkOf(2)}`);
   assert.equal(r.exit, 2);
   assertReport(h, r);
-  assert.equal(report.sentence, 'Add: nothing was added, because all 2 claims are already in Claims.');
-  assert.deepEqual(report.rows, [['Already in Claims', '2', '']]);
+  assert.equal(report.sentence, `Add: nothing was added; both claims are already in Claims ("${text(1)}" and "${text(2)}").`);
+  assert.deepEqual(report.rows, [['Already in Claims', `2: "${text(1)}" and "${text(2)}"`, '']]);
+  // the agent has not read them (no Agent status, not Reviewed): tag has something to read
   assert.equal(report.next, 'Next: type /claim-tagger tag to read them.');
   assert.equal(geo.requests.length, 0, 'a claim that is in Claims is not read from Geo');
   assert.equal(w.writes().length, 0);
   const one = await run(gid(1));
-  assert.equal(one.report.sentence, 'Add: nothing was added, because the claim is already in Claims.');
+  assert.equal(one.report.sentence, `Add: nothing was added; the claim is already in Claims ("${text(1)}").`);
+  assert.equal(one.report.next, 'Next: type /claim-tagger tag to read it.');
   const rec = runRecord(r);
   assert.equal(rec.exit_code, 2);
   assert.equal(rec.status, 'stopped');
@@ -227,8 +239,9 @@ test('add: the same text as a claim in Claims is refused and the existing claim 
   assert.equal(report.sentence, 'Add: 2 claims added to Claims from Geo ("A brand new claim about taxes." and "Another new claim about roads"); 3 were not added.');
   assert.deepEqual(report.rows, [
     ['Added', '2', ''],
-    ['Not a claim', '1', ''],
-    ['Same text as a claim in Claims', `2 (the first has the same text as "${text(1)}")`, ''],
+    ['Not a claim', '1: "Another new claim about roads."', ''],
+    // 11 has the text of claim 1 (in Claims), 13 the text of claim 12 (earlier in this command): the report names both existing claims
+    ['Same text as a claim in Claims', `2: "${text(1)}" and "A brand new claim about taxes." are there already or earlier in your list`, ''],
   ]);
   assert.deepEqual(claimRows(w).map((x) => x['Geo ID']).sort(), [gid(1), gid(12), gid(15)]);
   const refused = runRecord(r).add.not_added;
@@ -250,9 +263,10 @@ test('add: not found, not a claim, not in our spaces and already in Claims are e
   assertReport(h, r);
   assert.equal(report.sentence, `Add: 1 claim added to Claims from Geo ("${text(11)}"); 4 were not added.`);
   assert.deepEqual(report.rows, [
-    ['Added', '1', ''], ['Already in Claims', '1', ''], ['Not found in Geo', '1', ''], ['Not a claim', '1', ''], ['Not in our spaces', '1', ''],
+    ['Added', '1', ''], ['Already in Claims', `1: "${text(1)}"`, ''], ['Not found in Geo', `1: link ending ${gid(14).slice(-8)}`, ''],
+    ['Not a claim', '1: "A person, not a claim"', ''], ['Not in the six spaces of Claims', `1: "${text(13)}"`, ''],
   ]);
-  assert.equal(report.next, 'Next: type /claim-tagger tag to read the new claim.');
+  assert.equal(report.next, `Next: type /claim-tagger tag to read the new claim; it is in All claims (${allClaims(w)}).`);
   assert.deepEqual(runRecord(r).add.not_added.map((n) => [n.geo_id, n.reason]), [[gid(1), 'already'], [gid(12), 'not_claim'], [gid(13), 'not_in_spaces'], [gid(14), 'not_found']]);
   assert.equal(claimRows(w).length, 2);
 });
@@ -270,7 +284,9 @@ test('add: every kind of refusal at once: the table has five rows at most, the k
   assertReport(h, r);
   assert.equal(report.sentence, `Add: 1 claim added to Claims from Geo ("${text(11)}"); 8 were not added.`);
   assert.deepEqual(report.rows, [
-    ['Added', '1', ''], ['Already in Claims', '1', ''], ['Not found in Geo', '1', ''], ['Same text as a claim in Claims', `1 (the same text as "${text(2)}")`, ''], ['Other reasons', '5', ''],
+    ['Added', '1', ''], ['Already in Claims', `1: "${text(1)}"`, ''], ['Not found in Geo', `1: link ending ${gid(17).slice(-8)}`, ''],
+    ['Same text as a claim in Claims', `1: "${text(2)}" is there already`, ''],
+    ['Other reasons', '5: 1 not a claim, 1 not in the six spaces of Claims, 1 not a Geo link or ID, 1 with no name in Geo, 1 with a source that links to a protected Notion page', ''],
   ]);
   const kinds = runRecord(r).add.not_added.map((n) => n.reason).sort();
   assert.deepEqual(kinds, ['already', 'bad_input', 'no_name', 'not_claim', 'not_found', 'not_in_spaces', 'same_text', 'source_link']);
@@ -285,8 +301,11 @@ test('add: nothing added because of refusals: exit 2, the sentence says why, and
   const { r, h, report } = await run(`${gid(1)} ${gid(11)} ${gid(12)} nonsense`);
   assert.equal(r.exit, 2);
   assertReport(h, r);
-  assert.equal(report.sentence, 'Add: nothing was added to Claims: 1 already in Claims, 1 not found in Geo, 1 not in our spaces and 1 not a Geo link or ID.');
-  assert.deepEqual(report.rows, [['Already in Claims', '1', ''], ['Not found in Geo', '1', ''], ['Not in our spaces', '1', ''], ['Not a Geo link or ID', '1', '']]);
+  assert.equal(report.sentence, 'Add: nothing was added to Claims: 1 already in Claims, 1 not found in Geo, 1 not in the six spaces of Claims and 1 not a Geo link or ID.');
+  assert.deepEqual(report.rows, [
+    ['Already in Claims', `1: "${text(1)}"`, ''], ['Not found in Geo', `1: link ending ${gid(11).slice(-8)}`, ''],
+    ['Not in the six spaces of Claims', `1: "${text(12)}"`, ''], ['Not a Geo link or ID', '1: "nonsense"', ''],
+  ]);
   assert.equal(report.next, 'Next: check the links and type /claim-tagger add again.');
   assert.equal(w.writes().length, 0);
   assert.equal(geo.requests.length, 1, 'the claims that could be there were read once');
@@ -328,7 +347,7 @@ test('add: a source link at a protected id refuses that claim; an ordinary sourc
   claim(12, { sources: [{ id: hexId(4, 'e'), name: 'Fine source', url: 'https://example.com/fine' }] });
   const { r, h, report } = await run(`${gid(11)} ${gid(12)}`);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
-  assert.deepEqual(report.rows, [['Added', '1', ''], ['Source link refused', '1', '']]);
+  assert.deepEqual(report.rows, [['Added', '1', ''], ['A source links to a protected Notion page', `1: "${text(11)}"`, '']]);
   assert.equal(w.row('claims', gid(11)), null);
   assert.ok(w.row('claims', gid(12)));
   assert.equal(JSON.stringify(w.requests()).includes(protectedId.replace(/-/g, '')), false, 'the protected id went nowhere');
@@ -344,7 +363,7 @@ test('add: Geo that cannot be read is exit 1 with nothing written, and the same 
   assert.equal(r.exit, 1);
   assertReport(h, r);
   assert.equal(report.sentence, 'Add: nothing was added, because Geo could not be read.');
-  assert.equal(report.next, 'Next: type /claim-tagger add again in a while.');
+  assert.equal(report.next, 'Next: type /claim-tagger add again with the same links in a while.');
   assert.equal(w.writes().length, 0);
   assert.equal(claimRows(w).length, 1);
   assert.equal(runRecord(r).status, 'stopped');
@@ -399,7 +418,7 @@ test('add: a practice page refuses it (P37: production only), and the walkthroug
     const { r, h, report } = await run(gid(11));
     assert.equal(r.exit, 2, h.io.errs.join('\n'));
     assert.equal(report.demo, true);
-    assert.equal(report.sentence, 'Add: nothing was done, because adding claims works on the real Claims table, not on a practice page.');
+    assert.equal(report.sentence, 'Add: nothing was done, because adding claims works only on the real Claims table; the practice page has its own claims.');
     assert.equal(report.next, 'Next: type /claim-tagger demo status to see where the practice page stands.');
     assert.equal(w.requests().length, before);
     assert.equal(geo.requests.length, 0);
@@ -439,8 +458,8 @@ test('add: a write that did not finish is exit 1, and the same command goes on: 
     const first = await run(`${gid(11)} ${gid(12)}`);
     assert.equal(first.r.exit, 1, first.h.io.errs.join('\n'));
     assertReport(first.h, first.r);
-    assert.equal(first.report.sentence, 'Add stopped before every change was written to Notion.');
-    assert.equal(first.report.next, 'Next: type /claim-tagger add again; it continues where it stopped.');
+    assert.equal(first.report.sentence, 'Add: it stopped before any claim was added.');
+    assert.equal(first.report.next, 'Next: type /claim-tagger add again with the same links in a while.');
     assert.equal(postsToClaims(w).length, 1, 'the failed create was sent once and not again');
     assert.equal(claimRows(w).length, landed ? 1 : 0);
     const again = await run(`${gid(11)} ${gid(12)}`);
@@ -495,7 +514,7 @@ test('add: a claim another editor added after the pull is dropped as already in 
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assertReport(h, r);
   assert.equal(report.sentence, `Add: 1 claim added to Claims from Geo ("${text(12)}"); 1 was not added.`);
-  assert.deepEqual(report.rows, [['Added', '1', ''], ['Already in Claims', '1', '']]);
+  assert.deepEqual(report.rows, [['Added', '1', ''], ['Already in Claims', `1: "${text(11)}"`, '']]);
   assert.deepEqual(claimRows(w).map((x) => x['Geo ID']).sort(), [gid(11), gid(12)], 'each Geo ID once');
   assert.equal(postsToClaims(w).length, 1, 'only claim 12 was created');
   assert.deepEqual(runRecord(r).add.not_added, [{ item: gid(11), geo_id: gid(11), reason: 'already', added_meanwhile: true, claim: text(11) }]);
@@ -513,6 +532,121 @@ test('add: when the last look at Claims cannot be made, nothing is written (exit
   assert.equal(report.sentence, 'Add: nothing was added, because Notion could not be read.');
   assert.equal(w.writes().length, 0);
   assert.equal(claimRows(w).length, 0);
+});
+
+test('add: a write that stops part way says how many claims were added, and the same links go on from there', async () => {
+  const { w, run, claim } = await setup();
+  for (const n of [11, 12, 13]) claim(n);
+  // the second create of the claims is answered with an error that does not reach Notion; the script cannot know it did not land, so it stops there
+  let creates = 0;
+  const stopping = async (url, init) => {
+    if (String(init?.method).toUpperCase() === 'POST' && new URL(url).pathname.endsWith('/pages')) {
+      creates += 1;
+      if (creates === 2) return new Response(JSON.stringify({ object: 'error', status: 500, code: 'internal_server_error', message: 'boom' }), { status: 500, headers: { 'content-type': 'application/json' } });
+    }
+    return w.fake.fetchImpl(url, init);
+  };
+  const first = await run(`${gid(11)} ${gid(12)} ${gid(13)}`, { fetchImpl: stopping });
+  assert.equal(first.r.exit, 1, first.h.io.errs.join('\n'));
+  assertReport(first.h, first.r);
+  assert.equal(first.report.sentence, 'Add: 1 of 3 claims was added before it stopped.');
+  assert.equal(first.report.rows, undefined, 'no table');
+  assert.equal(first.report.next, 'Next: type /claim-tagger add again with the same links; the ones added are skipped.');
+  assert.deepEqual(claimRows(w).map((x) => x['Geo ID']), [gid(11)]);
+  const rec = runRecord(first.r).add;
+  assert.deepEqual(rec.added.map((a) => a.geo_id), [gid(11)]);
+  assert.deepEqual(rec.not_written.map((a) => a.geo_id), [gid(12), gid(13)]);
+  const again = await run(`${gid(11)} ${gid(12)} ${gid(13)}`);
+  assert.equal(again.r.exit, 0, again.h.io.errs.join('\n'));
+  assert.equal(again.report.sentence, `Add: 2 claims added to Claims from Geo ("${text(12)}" and "${text(13)}"); 1 was not added.`);
+  assert.deepEqual(again.report.rows, [['Added', '2', ''], ['Already in Claims', `1: "${text(11)}"`, '']]);
+  assert.deepEqual(claimRows(w).map((x) => x['Geo ID']).sort(), [gid(11), gid(12), gid(13)], 'each Geo ID once');
+});
+
+test('add: a claim that is in Claims twice after the write (added from two places at the same moment) is told by the run that made it: exit 2, the claim named, both pages in the run record', async () => {
+  const { w, run, claim } = await setup();
+  claim(11);
+  claim(12);
+  // another editor's add creates claim 11 too, right after this run created it (after the last look at Claims, so the last look could not see it)
+  let other = null;
+  const second = async (url, init) => {
+    const res = await w.fake.fetchImpl(url, init);
+    if (other === null && res.ok && String(init?.method).toUpperCase() === 'POST' && new URL(url).pathname.endsWith('/pages')) {
+      const made = await res.clone().json();
+      if (made.properties['Geo ID'].rich_text.map((x) => x.plain_text).join('') === gid(11)) other = w.fake.addRow(w.DB.claims, { 'Geo Name': text(11), 'Geo ID': gid(11), 'Geo URL': linkOf(11), 'Geo Space': US });
+    }
+    return res;
+  };
+  const { r, h, report } = await run(`${gid(11)} ${gid(12)}`, { fetchImpl: second });
+  assert.ok(other, 'the other editor added the claim');
+  assert.equal(r.exit, 2, h.io.errs.join('\n'));
+  assertReport(h, r);
+  assert.equal(report.sentence, `Add: "${text(11)}" is in Claims twice now, because the same claim was added from two places at the same moment.`);
+  assert.equal(report.rows, undefined);
+  assert.equal(report.next, 'Next: ask the engineer to remove the later-created row of that claim in Claims; every command stops until then.');
+  assert.deepEqual(claimRows(w).map((x) => x['Geo ID']).sort(), [gid(11), gid(11), gid(12)]);
+  const twice = runRecord(r).add.in_claims_twice;
+  assert.equal(twice.length, 1);
+  assert.equal(twice[0].geo_id, gid(11));
+  assert.equal(twice[0].page_ids.length, 2);
+  assert.deepEqual(twice[0].remove, [other], 'the later-created row is the one to remove');
+  assert.equal(twice[0].page_ids[1], other, 'the earlier row comes first, the later one second');
+  assert.ok(!JSON.stringify(report).includes(other) && !JSON.stringify(report).includes(twice[0].page_ids[0]), 'the page ids are in the run record only');
+  // and the next command says it too (the shared pull stops on a key twice)
+  const again = await run(`${gid(11)}`);
+  assert.equal(again.r.exit, 2);
+  assert.match(again.report.sentence, /two rows with the same key/);
+});
+
+test('add: when every claim is already in Claims the Next line depends on whether the agent has anything to read (no Agent status and not Reviewed)', async () => {
+  const names = (...ns) => ns.map((n) => `"${text(n)}"`);
+  // all read or decided: nothing new to read
+  const read = await setup({ inClaims: [[1], [2], [3], [4]], claimRows: { [gid(1)]: { 'Agent status': 'Done' }, [gid(2)]: { 'Agent status': 'Done' }, [gid(3)]: { 'Review status': 'Reviewed' }, [gid(4)]: { 'Agent status': 'Could not read' } } });
+  const a = await read.run(`${gid(1)} ${gid(2)}`);
+  assert.equal(a.r.exit, 2);
+  assertReport(a.h, a.r);
+  assert.equal(a.report.sentence, `Add: nothing was added; both claims are already in Claims (${names(1, 2).join(' and ')}).`);
+  assert.equal(a.report.next, `Next: nothing new to read; they are in All claims (${allClaims(read.w)}).`);
+  const one = await read.run(gid(3));
+  assert.equal(one.report.sentence, `Add: nothing was added; the claim is already in Claims ("${text(3)}").`);
+  assert.equal(one.report.next, `Next: nothing new to read; it is in All claims (${allClaims(read.w)}).`);
+  const four = await read.run([1, 2, 3, 4].map(gid).join(' '));
+  assert.equal(four.report.sentence, `Add: nothing was added; all 4 claims are already in Claims (${names(1, 2, 3).join(', ')} and more).`);
+  assert.deepEqual(four.report.rows, [['Already in Claims', `4: ${names(1, 2, 3).join(', ')} and 1 more`, '']]);
+  assert.equal(four.report.next, `Next: nothing new to read; they are in All claims (${allClaims(read.w)}).`);
+  const three = await read.run([1, 2, 3].map(gid).join(' '));
+  assert.equal(three.report.sentence, `Add: nothing was added; all 3 claims are already in Claims (${names(1, 2).join(', ')} and ${names(3)[0]}).`);
+  // one of them has not been read: tag has something to read
+  const mixed = await setup({ inClaims: [[1], [2]], claimRows: { [gid(1)]: { 'Agent status': 'Done' } } });
+  const b = await mixed.run(`${gid(1)} ${gid(2)}`);
+  assert.equal(b.report.next, 'Next: type /claim-tagger tag to read them.');
+  // a claim another editor added a moment ago has not been read either
+  const fresh = await setup({ inClaims: [[1]], claimRows: { [gid(1)]: { 'Agent status': 'Done' } } });
+  fresh.claim(11);
+  const meanwhile = async (url, init) => {
+    if (!fresh.w.rows('claims').some((x) => x['Geo ID'] === gid(11))) fresh.w.fake.addRow(fresh.w.DB.claims, { 'Geo Name': text(11), 'Geo ID': gid(11), 'Geo URL': linkOf(11), 'Geo Space': US });
+    return fresh.geo.fetchImpl(url, init);
+  };
+  const c = await fresh.run(`${gid(1)} ${gid(11)}`, { geoFetchImpl: meanwhile });
+  assert.equal(c.r.exit, 2);
+  assert.equal(c.report.next, 'Next: type /claim-tagger tag to read them.');
+});
+
+test('add: when Claims has no Geo Space option for the space of a claim, nothing is written, no option is made and the engineer is told (exit 2)', async () => {
+  const withoutAi = { ...CLAIMS_SPEC, 'Geo Space': { type: 'select', options: [US, WORLD, HEALTH, CRYPTO, TECH] } };
+  const { w, run, claim } = await setup({ tableSpecs: { claims: withoutAi } });
+  claim(11);
+  claim(12, { spaces: [SPACE[AI]] });
+  const optionsBefore = w.fake.createdOptions.length;
+  const { r, h, report } = await run(`${gid(11)} ${gid(12)}`);
+  assert.equal(r.exit, 2, h.io.errs.join('\n'));
+  assertReport(h, r);
+  assert.equal(report.sentence, 'Add: nothing was added, because the Claims table does not have the space of a claim as an option.');
+  assert.equal(report.next, 'Next: ask the engineer to look at the message the script printed.');
+  assert.match(h.io.errs.join('\n'), /Geo Space column of Claims has no option for: AI/);
+  assert.equal(w.writes().length, 0, 'not even the claim in a space that has its option was written');
+  assert.equal(claimRows(w).length, 0);
+  assert.equal(w.fake.createdOptions.length, optionsBefore, 'no option was made');
 });
 
 // ---- the plan check --------------------------------------------------------------------------------------------------------------------
@@ -590,6 +724,62 @@ test('checkPlan: no other script may create a claims row, and the add allowance 
   } finally {
     rmSync(demoRoot, { recursive: true, force: true });
   }
+});
+
+test('checkPlan: a plan of the add script writes no page content, and the setup flag opens nothing more to it', () => {
+  const block = { object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: 'x' } }] } };
+  const withContent = planOver(ADD_SCRIPT);
+  withContent.plan.create('claims', gid(1), geoProps(1), { children: [block] });
+  const content = checkPlan(withContent.plan, withContent.config);
+  assert.equal(content.ok, false);
+  assert.match(content.problems.join('\n'), /writes no page content \(children\)/);
+  // the same row without content is fine, with and without the setup flag
+  for (const setup of [false, true]) {
+    const ok = planOver(ADD_SCRIPT);
+    ok.plan.create('claims', gid(1), geoProps(1));
+    assert.deepEqual(checkPlan(ok.plan, ok.config, { setup }).problems, [], `setup ${setup}`);
+  }
+  // with setup: true a setup plan may fill more columns of a new row, a plan of the add script may not: the flag does not widen it
+  const refuse = (build, pattern) => {
+    const p = planOver(ADD_SCRIPT);
+    build(p.plan);
+    const checked = checkPlan(p.plan, p.config, { setup: true });
+    assert.equal(checked.ok, false);
+    assert.match(checked.problems.join('\n'), pattern);
+  };
+  for (const column of ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', 'Agent reading']) {
+    refuse((pl) => pl.create('claims', gid(2), { ...geoProps(2), [column]: column === 'Agent confidence' ? 0.5 : 'x' }), new RegExp(`"${column}" is not a column this plan may write to claims`));
+  }
+  refuse((pl) => pl.create('claims', gid(2), { ...geoProps(2), 'Verified tags': [] }), /"Verified tags" is a column only an editor writes/);
+  // the audit seed (setup's one exception for the editor's columns) is not available to it either
+  refuse((pl) => pl.create('claims', gid(2), { ...geoProps(2), 'Review status': 'Reviewed', 'Challenged tags notes': `${AUDIT_PREFIX}: the claim is fine.` }), /"Review status" is a column only an editor writes/);
+  refuse((pl) => pl.update('claims', gid(2), 'p'.repeat(32), { 'Geo Name': 'changed' }), /may only create rows of the claims table/);
+  refuse((pl) => pl.create('rulebook', 'New tag', { Name: 'New tag', 'When to use': 'x', Category: 'Quality' }), /may only create rows of the claims table/);
+  refuse((pl) => pl.create('agent_settings', 'Claim tagger', { Name: 'Claim tagger', 'Rulebook edition': 'x' }), /may only create rows of the claims table/);
+});
+
+test('applyStep: a plan of the add script is applied only by the run of the add script', async () => {
+  const w = await makeWorld({ claims: [] });
+  const writesBefore = w.writes().length;
+  let seen = null;
+  const r = await withRun({ script: 'propose', label: 'Tag', opts: w.hooks() }, async (ctx) => {
+    const plan = newPlan({ runId: ctx.runId, script: ADD_SCRIPT, rubricEdition: '2026-10-16.1', config: ctx.config });
+    plan.create('claims', gid(1), geoProps(1));
+    // a plan that checkPlan accepts, from a run that is not add: still refused, before the plan is even written
+    assert.deepEqual(checkPlan(plan, ctx.config, { root: ctx.root }).problems, []);
+    try {
+      await applyStep(ctx, plan);
+    } catch (e) {
+      seen = e;
+    }
+    return { exit: 0, sentence: 'Tag: nothing was done.', next: 'Next: type /claim-tagger status.' };
+  });
+  assert.equal(r.exit, 0);
+  assert.ok(seen instanceof LoopExit, 'applyStep refused');
+  assert.equal(seen.code, 2);
+  assert.match(seen.message, /plan of the add script was handed to the propose script and nothing was sent/);
+  assert.equal(existsSync(join(r.runDir, 'plan.jsonl')), false, 'the plan was not written');
+  assert.equal(w.writes().length, writesBefore, 'nothing was sent');
 });
 
 test('applyPlan repeats the check: a plan of the add script with an update, an agent column or another table is never sent', async () => {
@@ -677,6 +867,37 @@ test('the places that name the script: the allow list of the project settings, t
   assert.ok(!settings.permissions.ask.includes(rule) && !settings.permissions.deny.includes(rule));
   const claudeMd = readFileSync(new URL('CLAUDE.md', root), 'utf8');
   assert.match(claudeMd, /and `add\.mjs` creates new rows of the claims table with the Geo columns only, from claims read from Geo \(P35\)\./);
+  // the words the editor and the skill share
+  const skill = readFileSync(new URL('.claude/skills/claim-tagger/SKILL.md', root), 'utf8');
+  const handover = readFileSync(new URL('docs/mvp-2026-11/EDITOR-HANDOVER.md', root), 'utf8');
+  const practice = 'Add: nothing was done, because adding claims works only on the real Claims table; the practice page has its own claims.';
+  assert.equal(skill.split(practice).length - 1, 2, 'the one wording of the practice page, in the Adding claims section and in Demo mode');
+  assert.match(skill, /a Geo ID is 32 characters: digits and the letters a to f/);
+  assert.match(skill, /whether Geo marks it factual/);
+  assert.match(skill, /relay the report and stop; the editor types the command again with the same links/);
+  assert.match(skill, /markdown link/);
+  assert.match(handover, /32 characters, digits and the letters a to f/);
+  assert.match(handover, /whether Geo marks it factual/);
+  assert.match(handover, /it need not be tagged Debate in Geo/);
+  assert.match(handover, /Nothing on the row shows it was added by hand/);
+  assert.doesNotMatch(handover, /P1 to P25/);
+  assert.doesNotMatch(skill, /the Geo claims of the pick/);
+  const contracts = readFileSync(new URL('docs/mvp-2026-11/CONTRACTS.md', root), 'utf8').slice(readFileSync(new URL('docs/mvp-2026-11/CONTRACTS.md', root), 'utf8').indexOf('## 20. The add step'));
+  assert.doesNotMatch(contracts, /never make a repeated key|no Geo ID is ever in Claims twice/);
+  assert.match(contracts, /Known limit of the same-text check/);
+});
+
+test('add: a stop in the shared harness (the pull cannot read Notion) also says to give the same links again', async () => {
+  const { w, geo, run, claim } = await setup();
+  claim(11);
+  w.fake.failNext('POST', /\/query$/, 500, 40);
+  const { r, h, report } = await run(gid(11));
+  assert.equal(r.exit, 1, h.io.errs.join('\n'));
+  assertReport(h, r);
+  assert.equal(report.sentence, 'Add: nothing was done, because Notion could not be read.');
+  assert.equal(report.next, 'Next: type /claim-tagger add again with the same links in a while.');
+  assert.equal(geo.requests.length, 0);
+  assert.equal(w.writes().length, 0);
 });
 
 test('source scan: add.mjs reaches Geo through the client only, sends no write to Geo and reads no secret', () => {

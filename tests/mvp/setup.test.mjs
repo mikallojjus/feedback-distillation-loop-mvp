@@ -1462,7 +1462,7 @@ for (const applied of [false, true]) {
   });
 }
 
-test('verify finds an edited Rulebook row, an edited claim, an edited seeded row and an edited settings row; a claim added after setup is counted, not a difference (P35)', async () => {
+test('verify finds an edited Rulebook row, an edited claim, an edited seeded row, an edited settings row and an extra row', async () => {
   const w = await filled();
   const v0 = await w.run(verifyArgs(w));
   assert.equal(v0.code, 0, v0.text);
@@ -1486,23 +1486,28 @@ test('verify finds an edited Rulebook row, an edited claim, an edited seeded row
   assert.match(text, /rulebook: field - "Context-dependent": When to use differs/);
   assert.match(text, /claims: field - .*Geo Name differs/);
   assert.match(text, /claims: field - .*Geo Topics differs/);
-  assert.doesNotMatch(text, /row count/, 'a Claims row that is not in the pick was added after setup: it is no difference');
-  assert.doesNotMatch(text, /extra row/);
-  assert.match(r.out.join('\n'), /verify: added after setup: 1/, 'it is counted in an information line');
+  assert.match(text, /claims: row count - 14 rows in the Claims table, 13 in the pick/, 'a key that is not a Geo ID was not added by /claim-tagger add: it is still a difference');
+  assert.match(text, /claims: extra row - the claim extra-1 is in the Claims table but not in the pick/);
+  assert.doesNotMatch(r.out.join('\n'), /added after setup/);
   assert.match(text, /tag_decisions: seeded row - .*Tag outcome differs/);
   assert.match(text, /tag_decisions: seeded row - .*Why wrong differs/);
   assert.match(text, /agent_settings: settings - Rulebook edition is "2099-01-01\.7", the edition in force is /);
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.equal(verify.ok, false);
-  assert.ok(verify.differences.length >= 6);
-  assert.equal(verify.added_after_setup, 1);
+  assert.ok(verify.differences.length >= 8);
+  assert.equal(verify.added_after_setup, undefined);
   assert.equal(verify.requests.writes, 0);
   assert.ok(r.err.length <= 22, 'a short list');
 });
 
-test('verify: claims added after setup are counted and are no difference; a claim of the pick that is gone is still one', async () => {
+test('verify: a claim added after setup (a Geo ID that is not in the pick) is counted, not a difference; its Geo columns are not checked (P35)', async () => {
   const w = await filled();
-  w.fake.addRow(tableEntries(w.root).claims.database_id, { 'Geo Name': 'A claim an editor added', 'Geo ID': 'c0ffee00000000000000000000000001', 'Geo Space': 'AI' });
+  const ID1 = 'c0ffee00000000000000000000000001';
+  assert.match(ID1, /^[0-9a-f]{32}$/);
+  w.fake.addRow(tableEntries(w.root).claims.database_id, { 'Geo Name': 'A claim an editor added', 'Geo ID': ID1, 'Geo Space': 'AI' });
+  const one = await w.run(verifyArgs(w));
+  assert.equal(one.code, 0, one.text);
+  assert.match(one.out.join('\n'), /verify: added after setup: 1/);
   w.fake.addRow(tableEntries(w.root).claims.database_id, { 'Geo Name': 'Another one', 'Geo ID': 'c0ffee00000000000000000000000002' });
   const r = await w.run(verifyArgs(w));
   assert.equal(r.code, 0, r.text);
@@ -1511,13 +1516,19 @@ test('verify: claims added after setup are counted and are no difference; a clai
   assert.match(r.out.join('\n'), /verify: no differences/);
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.deepEqual([verify.ok, verify.added_after_setup, verify.differences], [true, 2, []]);
+  // a row whose key is not a Geo ID is no claim that add made: it stays an extra row, also next to rows that were added
+  w.fake.addRow(tableEntries(w.root).claims.database_id, { 'Geo Name': 'Typed by hand', 'Geo ID': 'typed-by-hand' });
+  const typed = await w.run(verifyArgs(w));
+  assert.equal(typed.code, 2);
+  assert.match(typed.err.join('\n'), /claims: extra row - the claim typed-by-hand is in the Claims table but not in the pick/);
+  assert.match(typed.err.join('\n'), /claims: row count - 14 rows in the Claims table besides the 2 added after setup, 13 in the pick/);
+  assert.doesNotMatch(typed.err.join('\n'), new RegExp(ID1), 'an added claim is not named as a difference');
   // a row of the pick that is no longer there is still a difference, whatever was added
   const gone = rowsOf(w, 'claims')[0];
   w.fake.editRow(gone.page_id, { 'Geo ID': 'c0ffee00000000000000000000000003' });
   const again = await w.run(verifyArgs(w));
   assert.equal(again.code, 2);
   assert.match(again.err.join('\n'), /claims: missing row - the claim .* is not in the Claims table/);
-  assert.match(again.err.join('\n'), /claims: row count - 12 rows in the Claims table are in the pick \(3 were added after setup\), 13 in the pick file/);
 });
 
 test('verify compares the page ids in rubric/rubric.json with the live Rulebook rows, one per tag; a rubric of other tables, a tag without a row and a row without a tag are named', async () => {
