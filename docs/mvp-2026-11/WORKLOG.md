@@ -654,3 +654,27 @@ Not done or not verified:
 Open for the product owner: should added claims always wait for an editor? An added claim the agent is sure about lands in Done, not Your queue (the editor review's PQ-1). With "not marked" (P37) the agent cannot tell it apart, and a script may not set Review status.
 
 Next: stop. The product owner tests live: `/claim-tagger add <one or two Geo links>`, then `/claim-tagger tag`, with evidence in `evidence/31-add-claims/`.
+
+### 54. Demo mocks: two staged claims for showing the loop, with a checkpoint and a reset (2026-10-28)
+
+Context: the product owner wants to show an editor the loop on claims the agent gets wrong. Real candidates were debatable, and the agent now agrees with every earlier decision. The product owner asked for two mock claims with mock agent tags, set up so they can be decided, distilled and promoted, and reset to a checkpoint on request so the demo can be run twice. They also said (memory: "Owner in conversation") that in conversation guardrails are not to be presented as blockers.
+
+Done: `agents/claim-tagger-mvp/scripts/demo-mocks.mjs`, an owner tool. It is not an editor command and not in the skill.
+- `setup` puts two mock claims in Claims (Geo IDs `de000000000000000000000000000001` and `…02`):
+  - "The ruling weakens public confidence in the state's election officials": the agent "missed" it (no tag, Does not apply, 0.91);
+  - "The European Central Bank should cut interest rates before inflation reaches 2%": the agent "over-tagged" it (Context-dependent, Applies, 0.88).
+  
+  It also puts their ledger rows in Tag decisions, as if the agent had read them, so that decide, distill, promote and follow-up treat them like real claims. Then it writes `runs/demo-mocks/checkpoint.json` with the edition, Context-dependent's rules and the ids of the existing rule change rows.
+- `reset`:
+  - rolls back, through `rollback.mjs`, every rule change the test made Live, newest first;
+  - sets the test's open rule changes to Rejected;
+  - checks that the rules read as at the checkpoint;
+  - makes both mocks fresh again, editor columns, readings, the decision copy and Follow-up included.
+- `status` shows what changed since the checkpoint.
+- Rows are written directly through `lib/notion-rest.mjs`, outside the plan machinery: the product owner's call.
+
+Verified live: `setup` (checkpoint at edition 2026-10-28.1). A test helper then marked mock 1 decided and read (Reviewed, a note, Verified tags, a reading, Follow-up Fixed), and `reset` brought both mocks back fresh. `decide list` shows the mock answers. Not verified live: the rollback path of `reset`, which needs a promote PASS first.
+
+What reset does not undo: edition numbers move forward (a PASS and its rollback are two editions with the same text, both committed). The test's rule change rows stay in Rule changes as Rolled back or Rejected; they are out of Lessons waiting and block nothing.
+
+Never run `tag` while the mocks are in Claims: it overwrites the mock answers with real reads. When the demos are over, delete the two mock claims and their two ledger rows by hand.
