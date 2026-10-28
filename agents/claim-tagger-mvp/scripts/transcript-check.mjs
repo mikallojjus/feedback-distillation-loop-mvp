@@ -66,7 +66,7 @@ import { EXIT } from './lib/exit-codes.mjs';
 import { agentRoot, isMain } from './lib/paths.mjs';
 import { lintReport, lintWords, splitExtra } from './lib/report.mjs';
 
-export const DEFAULT_ALLOWED_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status', 'decide', 'walkthrough']);
+export const DEFAULT_ALLOWED_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status', 'decide', 'walkthrough', 'add']);
 export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused']);
 /** The three columns of Claims that a decide step may write through the connector (decision 115); the CLI reads config.json editor_columns.claims. */
 export const DEFAULT_DECIDE_COLUMNS = Object.freeze(['Verified tags', 'Review status', 'Challenged tags notes']);

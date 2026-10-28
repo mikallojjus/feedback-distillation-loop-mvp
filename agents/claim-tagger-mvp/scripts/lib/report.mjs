@@ -27,6 +27,7 @@
 //        them to the checklist that may follow a report (CONTRACTS section 9)
 //   writeReport(dir, report) -> builds, renders and lints; writes dir/report.json then dir/report.md; throws (code REPORT_LINT, .problems)
 //        before writing anything when the lint finds a problem
+//   hardRefusals(text)    -> string[] of the hard refusals alone (a JSON brace, a run folder, a script file, a drive path, a run id); [] means the text may be echoed in a report
 //   constants: MAX_ROWS, DEMO_PREFIX, DEFAULT_HEADER, EXTRA_HEAD
 
 import { join } from 'node:path';
@@ -164,6 +165,9 @@ function hardProblems(line) {
   if (runId) out.push(`holds a run id: ${runId[0]}`);
   return out;
 }
+
+/** The hard refusals alone (see hardProblems) for a text that is not a report, such as an item an editor typed that a report would echo; [] when it has none. */
+export const hardRefusals = (text) => hardProblems(String(text ?? ''));
 
 const HARD_KINDS = /^(?:holds a JSON brace|names a run folder|names a script file|holds a run id)/;
 

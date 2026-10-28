@@ -10,6 +10,7 @@
 //   isProtected(config, id)                     -> true when the id is in protected_database_ids or protected_page_ids (dashes and case ignored)
 //   writableProperties(config, table, { setup }) -> Set of the column names a plan may write to that table (CONTRACTS section 8); with
 //                                                  setup: true also what a create made by the one-time setup may fill
+//   addableProperties(config)                   -> Set of the columns a plan of the add script (ADD_SCRIPT) may write to a NEW claims row: the key and CLAIMS_GEO_COLUMNS (P35)
 //   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the two exceptions of hard rule 1):
 //                                                  three on claims (Verified tags, Review status, Challenged tags notes), Editor wording on rule_changes,
 //                                                  Paused on agent_settings; [] for the others
@@ -403,6 +404,17 @@ export function writableProperties(config, table, { setup = false } = {}) {
       throw new Error(`writableProperties: unknown table "${table}" (expected one of ${TABLES.join(', ')})`);
   }
   return set;
+}
+
+/**
+ * The script whose plans may CREATE rows of the claims table, from claims read from Geo (decision P35): scripts/add.mjs. checkPlan gives a plan with this script
+ * name (and only that) the columns of addableProperties on a create of a claims row; no other script may create one (setup has its own path, `setup: true`).
+ */
+export const ADD_SCRIPT = 'add';
+
+/** The columns a plan of the add script may write to a new claims row (P35): the table's key (Geo ID) and the nine Geo columns, nothing else: no agent column, no editor column. */
+export function addableProperties(config) {
+  return new Set([tableEntry(config, 'claims').key, ...CLAIMS_GEO_COLUMNS]);
 }
 
 /** The columns of a table that only an editor writes (config.editor_columns): [] for the tables that have none (the ledger has none). */

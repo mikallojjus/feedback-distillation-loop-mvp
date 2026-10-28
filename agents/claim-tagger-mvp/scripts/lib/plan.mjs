@@ -27,7 +27,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import {
-  RULE_CHANGES_AGENT_STATUS, TABLES, editorColumns, tableEntry, writableProperties,
+  ADD_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, addableProperties, editorColumns, tableEntry, writableProperties,
 } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { appendJsonl, readJson, readJsonl, writeTextAtomic } from './jsonl.mjs';
@@ -240,6 +240,9 @@ const SCHEMA_WORDS = new Map([
  *   <root>/runs/SETUP exists (a practice page's build); Status on rule_changes is Proposed, Live or Rolled back; no string anywhere holds a protected id (dashes
  *   ignored) and no op targets a protected table; an update has a page_id and a create has none; a create carries its key column; a key
  *   appears once per table; the header counts match the ops.
+ *   The add script (header script "add", decision P35) has one narrow allowance: its plan may only CREATE rows of the claims table, with the key column and the Geo columns
+ *   (addableProperties) and no page content; an update, another table, an agent column or an editor column in it is refused, also with `setup: true` (the flag opens nothing more
+ *   to it). No other plan creates a claims row except a setup plan.
  *
  * No plan ever writes an editor column on an UPDATE, on a practice page or anywhere else (decision P7: no agent acts as the editor); a practice
  * page's decided rows are written only by a create, under its runs/SETUP marker.
@@ -254,6 +257,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     return { ok: false, problems: [e.message], counts: { creates: 0, updates: 0 } };
   }
   const demoOpen = config?.demo === true && existsSync(join(root, 'runs', 'SETUP'));
+  const addPlan = header?.plan?.script === ADD_SCRIPT;
   const needles = protectedNeedles(config);
   const seen = new Set();
   const named = (i, op) => `op ${i + 1} (${typeof op?.table === 'string' ? op.table : 'no table'}${nonEmpty(op?.key) ? ` "${short(op.key, 40)}"` : ''})`;
@@ -294,10 +298,21 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     seen.add(id);
     if (op.op === 'update' && op.children !== undefined) add('page content (children) can only go with a create');
 
+    // the one narrow allowance of decision P35: a plan of the add script (the header names the script) may CREATE rows of the claims table with the key and the Geo columns,
+    // and nothing else: no update, no other table. No other script creates a claims row (setup, in a builder session, has its own path)
+    if (addPlan && !(op.op === 'create' && op.table === 'claims')) {
+      add('a plan of the add script may only create rows of the claims table (it never updates a row and never writes another table)');
+      return;
+    }
+    if (addPlan && op.children !== undefined) add('a plan of the add script writes no page content (children): a new claims row carries its Geo columns only');
+    if (!addPlan && !setup && op.op === 'create' && op.table === 'claims') {
+      add('a row of the claims table is created only by setup or by the add script, from claims read from Geo'); // the checks below say more about the columns
+    }
+
     // which columns, which values
     let writable;
     try {
-      writable = writableProperties(config, op.table, { setup: setup && op.op === 'create' });
+      writable = addPlan ? addableProperties(config) : writableProperties(config, op.table, { setup: setup && op.op === 'create' });
     } catch (e) {
       add(`the writable columns cannot be worked out (${e.message})`);
       return;
@@ -306,7 +321,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     const notesColumn = tableEntryOrNull(config, 'claims')?.columns?.notes ?? 'Challenged tags notes';
     const challenged = op.properties[notesColumn];
     const seeded = setup && op.table === 'claims' && typeof challenged === 'string' && challenged.startsWith(AUDIT_PREFIX);
-    const mayWriteEditor = seeded || (demoOpen && op.op === 'create');
+    const mayWriteEditor = !addPlan && (seeded || (demoOpen && op.op === 'create')); // a plan of the add script never writes an editor column, whatever the folder it runs in
     for (const name of Object.keys(op.properties)) {
       const base = name.endsWith(':end') ? name.slice(0, -4) : name; // the end of a date goes with its start
       if (editor.has(base)) {

@@ -42,8 +42,9 @@ import { loadConfig } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { sha256Hex } from './lib/hash.mjs';
 import {
-  GEO_ID, GeoError, countGeoRequests, createGeoClient, entityIsStub, geoRequestLogger, readClaim, validateGeoConfig,
+  GEO_ID, GeoError, countGeoRequests, createGeoClient, entityIsStub, geoRequestLogger, validateGeoConfig,
 } from './lib/geo-read.mjs';
+import { dayOf, geoRowOf, monthOf, normaliseName } from './lib/geo-row.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { agentRoot, codeFile, ensureDir, isMain, repoRoot, runId as makeRunId } from './lib/paths.mjs';
 import { mulberry32, sample, seedFromString } from './lib/rng.mjs';
@@ -64,28 +65,8 @@ const normId = (v) => String(v ?? '').replace(/-/g, '').toLowerCase();
 
 // ---- small pure helpers ---------------------------------------------------------------------------------------------------------
 
-/** The text two claims are compared on: lower case, white space collapsed, a final full stop dropped. */
-export function normaliseName(name) {
-  return String(name ?? '').toLowerCase().replace(/\s+/g, ' ').trim().replace(/\.$/, '').trim();
-}
-
-function dateOf(createdAt) {
-  if (createdAt === null || createdAt === undefined || createdAt === '') return null;
-  const seconds = Number(createdAt);
-  if (!Number.isFinite(seconds) || seconds <= 0) return null;
-  const d = new Date(seconds * 1000);
-  return Number.isNaN(d.getTime()) ? null : d.toISOString();
-}
-
-/** The UTC month YYYY-MM of a createdAt in Unix seconds, or null when it is not a time. */
-export function monthOf(createdAt) {
-  return dateOf(createdAt)?.slice(0, 7) ?? null;
-}
-
-/** The UTC date YYYY-MM-DD of a createdAt in Unix seconds, or null when it is not a time. */
-export function dayOf(createdAt) {
-  return dateOf(createdAt)?.slice(0, 10) ?? null;
-}
+// normaliseName, monthOf and dayOf live in lib/geo-row.mjs (the add command builds its rows there too) and are exported from here as before.
+export { dayOf, monthOf, normaliseName };
 
 /**
  * How many claims each month gives to a space quota. months: [{ month, pop, forced }] oldest first (pop = the claims of the month, forced = the audit claims
@@ -591,37 +572,19 @@ export async function runPick(opts = {}) {
       return finish(EXIT.INVALID, 'invalid', `Geo holds only enough usable claims for ${picked.length} of the ${geo.total}; nothing was written`);
     }
     const entities = await client.details(picked.map((p) => p.claim.id));
-    const browser = geo.browser_url.replace(/\/+$/, '');
     const detailStats = { name_own: 0, name_fallback: 0, sources: 0, sources_without_web_url: 0, month_matches: 0 };
     const rows = picked.map(({ space, month, claim }) => {
-      const entity = entities.get(claim.id);
-      let f;
-      if (entityIsStub(entity)) {
-        warnings.push(`${claim.id}: Geo gave no details, so the row has only what the Debate listing held (no sources, tags or topics)`);
-        f = { name: claim.name, name_source: 'fallback', created_at: claim.created_at, is_factual: null, tags: [], topics: [], sources: [], truncated: false };
-      } else {
-        f = readClaim(entity, { geo, spaceId: space.id });
-        if (f.truncated) warnings.push(`${claim.id}: a list of values or relations came back full (100), so some may be cut off`);
-      }
+      // the row itself is built by lib/geo-row.mjs, the same builder the add command uses; the pick adds the month beside it
+      const built = geoRowOf({ entity: entities.get(claim.id), id: claim.id, fallbackName: claim.name, fallbackCreated: claim.created_at, space, geo });
+      const f = built.fields;
+      if (built.stub) warnings.push(`${claim.id}: Geo gave no details, so the row has only what the Debate listing held (no sources, tags or topics)`);
+      else if (f.truncated) warnings.push(`${claim.id}: a list of values or relations came back full (100), so some may be cut off`);
       detailStats[f.name_source === 'own' ? 'name_own' : 'name_fallback'] += 1;
       detailStats.sources += f.sources.length;
       detailStats.sources_without_web_url += f.sources.filter((s) => !s.has_web_url).length;
-      const created = f.created_at ?? claim.created_at;
-      if (monthOf(created) === month) detailStats.month_matches += 1;
-      else warnings.push(`${claim.id}: createdAt in the details (${monthOf(created)}) differs from the Debate listing (${month}); the listing's month is used`);
-      return {
-        'Geo Name': f.name || claim.name,
-        'Geo ID': claim.id,
-        'Geo URL': `${browser}/space/${space.id}/${claim.id}`,
-        'Geo Space': space.name,
-        'Geo Created': dayOf(created),
-        'Geo Sources': f.sources.map((s) => s.name).join('\n'),
-        source_pieces: f.sources.map((s) => ({ name: s.name, url: s.url })),
-        'Geo Is factual': f.is_factual,
-        'Geo Tags': f.tags,
-        'Geo Topics': f.topics.join('\n'),
-        month,
-      };
+      if (monthOf(built.created) === month) detailStats.month_matches += 1;
+      else warnings.push(`${claim.id}: createdAt in the details (${monthOf(built.created)}) differs from the Debate listing (${month}); the listing's month is used`);
+      return { ...built.row, month };
     });
     const tagNames = [...new Set(rows.flatMap((r) => r['Geo Tags']))].sort(byCodePoints);
 

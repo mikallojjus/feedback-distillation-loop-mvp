@@ -1,4 +1,4 @@
-// The harness the loop scripts (propose, distill, promote, followup, rollback, restore, status) run inside, so that each of them is only its own
+// The harness the loop scripts (propose, distill, promote, followup, rollback, restore, status, add) run inside, so that each of them is only its own
 // decisions. One run is one folder, runs/<run-id>/, with run.json written first and last (CONTRACTS section 10), the plan and its ledger, the
 // request log of what was sent to Notion, and the report (report.json and report.md, the three parts of section 9). Nothing here decides what a
 // script means; it does the things every script does the same way.
@@ -44,7 +44,7 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { cutText, demoCommands, listNames, namePracticePage, quoted, viewLink } from './editor-words.mjs';
 import { claudeVersion, findClaudeBin, runClaude, withTransientRetry } from './claude.mjs';
-import { isDemo, loadConfig, tableEntry } from './config.mjs';
+import { ADD_SCRIPT, isDemo, loadConfig, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic } from './jsonl.mjs';
 import { clientFromConfig, requestLogger } from './notion-rest.mjs';
@@ -544,6 +544,14 @@ export function notionClient(ctx) {
  * run with exit 2 before anything is sent.
  */
 export async function applyStep(ctx, plan) {
+  // defence in depth (P35): the allowance of checkPlan belongs to the plan that names the script "add", so only the run of that script may apply such a plan
+  const planScript = (typeof plan?.header === 'function' ? plan.header() : plan?.header)?.plan?.script;
+  if (planScript === ADD_SCRIPT && ctx.script !== ADD_SCRIPT) {
+    throw new LoopExit(EXIT.INVALID, `a plan of the ${ADD_SCRIPT} script was handed to the ${ctx.script} script and nothing was sent`, {
+      sentence: `${ctx.label}: nothing was written, because the plan belongs to another command.`,
+      next: ENGINEER,
+    });
+  }
   const checked = checkPlan(plan, ctx.config, { root: ctx.root });
   if (!checked.ok) {
     ctx.record.plan_problems = checked.problems.slice(0, 10);
