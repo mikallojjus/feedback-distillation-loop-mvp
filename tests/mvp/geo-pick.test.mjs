@@ -195,6 +195,17 @@ test('quotas are met: 200 rows, 50 / 50 / 40 / 30 / 20 / 10, each month\'s share
   assert.deepEqual(r.pick.populations[US], { total: 142, months: { '2026-08': 12, '2026-09': 40, '2026-10': 90 } });
 });
 
+test('the pick file is byte for byte what it was before the row builder moved to lib/geo-row.mjs (P35)', async () => {
+  const w = makeWorld(BIG);
+  const r = await pick(w);
+  assert.equal(r.code, 0, r.line);
+  // the one thing that differs from run to run is the path of the audit file (a temporary folder); everything else is fixed by the seed, the fake Geo and the clock
+  const bytes = readFileSync(r.path, 'utf8').split(JSON.stringify(r.pick.audit.file)).join('"AUDIT_FILE"');
+  const sha = createHash('sha256').update(bytes).digest('hex');
+  // pinned with the code of claims-hub-2026-10, before the move: the same seed and the same fake Geo gave exactly these bytes
+  assert.equal(sha, '3c543eb460cd63ddfd48cdc7494e4640ea52b178fea37cb00f6ebfd3d1ef6dfb');
+});
+
 test('the run folder holds report.md, report.json and requests.jsonl, and the log has queries only and no bodies', async () => {
   const w = makeWorld(BIG);
   const r = await pick(w);

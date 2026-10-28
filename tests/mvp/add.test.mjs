@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { MAX_CLAIMS, USAGE, add, main, parseItems } from '../../agents/claim-tagger-mvp/scripts/add.mjs';
 import { status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
@@ -14,8 +15,8 @@ import { RUN_SCRIPTS } from '../../agents/claim-tagger-mvp/scripts/walkthrough.m
 import { DEFAULT_ALLOWED_SCRIPTS } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
 import { createFakeGeo, hexId } from './fixtures/fake-geo.mjs';
 import { builtConfig } from './helpers/config-fixture.mjs';
-import { claimText, makeWorld } from './helpers/loop-world.mjs';
-import { TABLE_SPECS, restProps } from './helpers/tables.mjs';
+import { claimText, makeWorld, quietIo } from './helpers/loop-world.mjs';
+import { TABLE_SPECS } from './helpers/tables.mjs';
 
 // /claim-tagger add (decisions P35 to P37) on the fakes: the Notion fake with the five tables, the Geo fake with claims, in a temporary state folder. No network, no .env, nothing real.
 
@@ -175,6 +176,22 @@ test('add: nothing given, and the options: no --claims is exit 2 with a report; 
   assert.equal(await main(['--claims', 'x', '--bogus'], io), 2);
   assert.match(io.errs.join('\n'), /add: .*bogus/);
   void w;
+});
+
+test('main: --claims runs the script and prints the report; a run id the loop keeps for its own files is exit 2', async () => {
+  const { w, geo, claim } = await setup();
+  claim(11);
+  const { io: ignored, ...deps } = w.hooks({ geoFetchImpl: geo.fetchImpl });
+  void ignored;
+  const io = quietIo();
+  assert.equal(await main(['--claims', `${linkOf(11)}`, '--run-id', 'add-by-main'], io, deps), 0, io.errs.join('\n'));
+  assert.ok(existsSync(join(w.root, 'runs', 'add-by-main', 'report.md')));
+  assert.match(io.outs.join('\n'), /^Add: 1 claim added to Claims from Geo \(/);
+  assert.equal(w.row('claims', gid(11))['Geo Space'], US);
+  const reserved = quietIo();
+  assert.equal(await main(['--claims', gid(12), '--run-id', 'PAUSED'], reserved, deps), 2);
+  assert.match(reserved.errs.join('\n'), /PAUSED/);
+  assert.equal(await main(['--claims', gid(12), '--driver', 'banana'], quietIo(), deps), 2);
 });
 
 // ---- already in Claims, and the same text ---------------------------------------------------------------------------------------------
@@ -557,30 +574,48 @@ test('checkPlan: no other script may create a claims row, and the add allowance 
   const demoConfig = builtConfig();
   demoConfig.demo = true;
   demoConfig.demo_id = 'practice-1';
-  const { plan } = planOver(ADD_SCRIPT, demoConfig);
-  plan.create('claims', gid(1), { ...geoProps(1), 'Review status': 'Reviewed' });
-  assert.equal(checkPlan(plan, demoConfig, { root: join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp') }).ok, false);
+  const demoRoot = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-add-plan-'));
+  try {
+    mkdirSync(join(demoRoot, 'runs'), { recursive: true });
+    writeFileSync(join(demoRoot, 'runs', 'SETUP'), '{}\n');
+    const { plan } = planOver(ADD_SCRIPT, demoConfig);
+    plan.create('claims', gid(1), { ...geoProps(1), 'Review status': 'Reviewed' });
+    // the marker of a practice page's build is open: another plan may create a row with an editor column under it, the add plan may not
+    const other = planOver('walkthrough', demoConfig);
+    other.plan.create('claims', gid(1), { 'Review status': 'Reviewed' });
+    assert.ok(checkPlan(other.plan, demoConfig, { root: demoRoot, setup: true }).problems.every((p) => !/only an editor writes/.test(p)), 'the marker lets a practice page build create editor columns');
+    const checked = checkPlan(plan, demoConfig, { root: demoRoot });
+    assert.equal(checked.ok, false);
+    assert.match(checked.problems.join('\n'), /"Review status" is a column only an editor writes/);
+  } finally {
+    rmSync(demoRoot, { recursive: true, force: true });
+  }
 });
 
 test('applyPlan repeats the check: a plan of the add script with an update, an agent column or another table is never sent', async () => {
-  const w = await makeWorld({ claims: 1 });
+  const w = await makeWorld({ claims: [{ id: gid(1), text: text(1) }] });
   const bad = (build) => {
     const plan = newPlan({ runId: 'r1', script: ADD_SCRIPT, rubricEdition: '2026-10-16.1', config: w.config });
     build(plan);
     return plan;
   };
   const before = w.requests().length;
-  const schemas = { claims: await (async () => w.fake.database(w.DB.claims))(), tag_decisions: w.fake.database(w.DB.tag_decisions) };
-  const client = { createPage: async () => assert.fail('sent'), updatePage: async () => assert.fail('sent'), retrievePage: async () => assert.fail('read') };
-  for (const build of [
-    (pl) => pl.update('claims', gid(1), w.ids.claim[gid(1)], { 'Geo Name': 'changed' }),
-    (pl) => pl.create('claims', gid(7), { ...geoProps(7), 'Agent status': 'Done' }),
-    (pl) => pl.create('tag_decisions', `${gid(7)}::Context-dependent`, { Claim: 'x', Key: `${gid(7)}::Context-dependent`, Tag: 'Context-dependent' }),
+  const schemas = { claims: w.fake.database(w.DB.claims), tag_decisions: w.fake.database(w.DB.tag_decisions) };
+  const sent = [];
+  const client = { createPage: async () => sent.push('createPage'), updatePage: async () => sent.push('updatePage'), retrievePage: async () => sent.push('retrievePage') };
+  for (const [build, why] of [
+    [(pl) => pl.update('claims', gid(1), w.ids.claim[gid(1)], { 'Geo Name': 'changed' }), /may only create rows of the claims table/],
+    [(pl) => pl.create('claims', gid(7), { ...geoProps(7), 'Agent status': 'Done' }), /"Agent status" is not a column this plan may write to claims/],
+    [(pl) => pl.create('tag_decisions', `${gid(7)}::Context-dependent`, { Claim: 'x', Key: `${gid(7)}::Context-dependent`, Tag: 'Context-dependent' }), /may only create rows of the claims table/],
   ]) {
-    await assert.rejects(applyPlan({ plan: bad(build), dir: w.root, client, config: w.config, schemas, pulled: {} }), (e) => e instanceof PlanError && /the plan was refused and nothing was sent/.test(e.message));
+    assert.ok(w.ids.claim[gid(1)], 'the update names a page that exists');
+    await assert.rejects(
+      applyPlan({ plan: bad(build), dir: w.root, client, config: w.config, schemas, pulled: {} }),
+      (e) => e instanceof PlanError && /the plan was refused and nothing was sent/.test(e.message) && e.problems.some((p) => why.test(p)),
+    );
   }
+  assert.deepEqual(sent, [], 'nothing reached the client');
   assert.equal(w.requests().length, before);
-  void restProps;
 });
 
 // ---- afterwards ----------------------------------------------------------------------------------------------------------------------
