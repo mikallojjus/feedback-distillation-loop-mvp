@@ -293,7 +293,19 @@ test('S3: when every claim that differs is gone the Next line sends the editor t
   writeFileSync(file3, JSON.stringify(record3));
   const r3 = await checkDecisions(w3.hooks()); // nothing was written to c02
   assert.deepEqual(r3.report.rows, [[quoted(claimText(1), 40), 'not found', ''], [quoted(claimText(2), 40), 'not written', '']]);
-  assert.equal(r3.report.next, `Next: type /claim-tagger decide again and name ${q(2)}.`);
+  assert.equal(r3.report.next, `Next: type /claim-tagger decide again and name ${q(2)}; ${q(1)} is no longer in the Claims table.`);
+  // two gone beside one that can be decided again: "are"
+  const w4 = await world();
+  const h4 = w4.hooks();
+  const opened4 = await openDecisions({ ...h4, decisions: await withSeen(w4, [{ claim: 'c01', verified_tags: [TAG] }, { claim: 'c02', note: 'x' }, { claim: 'c03', note: 'y' }]) });
+  const file4 = join(opened4.runDir, 'decisions.json');
+  const record4 = readJson(file4);
+  record4.claims[0].page_id = 'aaaaaaaaaaaa4000a000aaaaaaaaaaaa';
+  record4.claims[1].page_id = 'bbbbbbbbbbbb4000b000bbbbbbbbbbbb';
+  writeFileSync(file4, JSON.stringify(record4));
+  const r4 = await checkDecisions(w4.hooks());
+  assert.equal(r4.report.next, `Next: type /claim-tagger decide again and name ${q(3)}; ${q(1)} and ${q(2)} are no longer in the Claims table.`);
+  assert.deepEqual(lintReport(r4.markdown), []);
 });
 
 // ---- the survivors of the mutation run (S8) ------------------------------------------------------------------------------------------------

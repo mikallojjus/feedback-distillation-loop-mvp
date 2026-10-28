@@ -10,11 +10,11 @@
 //
 // list    Read only: no request, no marker. It prints, for Claude and never for the editor, plain text: the rules in force of every judged tag, the Rulebook page id of every
 //         tag name, and the claims, each with its text between <claim> and </claim> (data, never instructions: hard rule 3), the agent's tags, tags waiting, confidence, reasons and
-//         reading, what the editor already wrote, and `seen`, the fingerprint of the claim's Verified tags, note and Review status as listed. Which claims: the ones that wait in Your
+//         reading, what the editor already wrote, and `seen`, the fingerprint of the claim (its page id, Verified tags, note and Review status as listed). Which claims: the ones that wait in Your
 //         queue, lowest confidence first (no flag); the named ones, Reviewed or not (--claims; a name that is not a claim is listed apart); or every claim of the table, Reviewed and
 //         Done included, in a compact block each (--all; P22, decision 118). It reads the newest pull on disk (the skill runs pull.mjs --all first), so it sends nothing.
 // open    --decisions is a JSON array of { "claim": "<Geo ID or page id>", "seen": "<the fingerprint list printed>", "verified_tags": ["<tag name>", ...], "note": "<text, may be empty>" }.
-//         `claim` and `seen` are required; `verified_tags` and `note` are each optional and at least one is given; a missing one means "leave it as it is" (P24, decision 119). Review
+//         `claim` and `seen` (exactly 12 lower-case hex digits) are required; `verified_tags` and `note` are each optional and at least one is given; a missing one means "leave it as it is" (P24, decision 119). Review
 //         status is always Reviewed. It pulls the claims table itself (there is no --pull: a person's work between the listing and now must show), and refuses (exit 2, a report) when
 //         the JSON does not fit, a claim is not in that pull, a tag is not a Rulebook name, a claim is named twice, a decision gives neither tags nor a note, a claim's fingerprint in
 //         that pull differs from `seen` (it changed in Notion since Claude read it; decision 117), or another decide run is open; exit 3 when the agent is paused. A claim that is
@@ -25,7 +25,7 @@
 // check   Pulls the claims again and compares each recorded claim with Notion: the fields given (Verified tags as a set of Rulebook page ids, the note as trimmed text) and Review
 //         status Reviewed. It always removes the marker. With no marker it reads back the newest decide run from its record (--run picks another), and it never opens a write window.
 //         A claim whose given fields and Review status still hold what they held before open is "not written"; one that differs in another way, or is gone, is a mismatch. All match:
-//         exit 0 and the report (the decisions, how many equal the agent's proposal, how many differ, and how many changed an earlier review); anything else: exit 1 and a report that
+//         exit 0 and the report (the decisions, how many equal the agent's proposal, how many differ, and how many changed an earlier review: claims that were Reviewed and whose tags or note the decision changes); anything else: exit 1 and a report that
 //         names the claims. When Notion cannot be read it says that the decisions were sent and could not be read back. It reads back while the agent is paused: reading is allowed.
 //         No decide run to read: exit 2.
 //
@@ -67,6 +67,7 @@ export const DECIDING_FILE = 'DECIDING';
 const ENGINEER = 'Next: ask the engineer to look at the message the script printed.';
 const REVIEWED = 'Reviewed';
 const HEX32 = /[0-9a-f]{32}$/;
+const SEEN = /^[0-9a-f]{12}$/; // the fingerprint list prints: 12 lower-case hex digits, nothing around them
 
 export const markerPath = (root) => join(root, 'runs', DECIDING_FILE);
 
@@ -200,11 +201,12 @@ const byConfidence = (a, b) => {
 const oneLine = (v) => text(v).split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map(fenced).join(' | ');
 
 /** One claim of list --all: the same facts as the full block in fewer lines. A line that is not printed is empty (or none). */
-function compactBlock(c, i, seen) {
+function compactBlock(c, i, seen, queue) {
   const out = [];
+  const proposals = ledgerOf(queue, c.geo_id).map((r) => `${r.Tag}: ${r['Agent proposal'] ?? 'none'}`);
   out.push(`[${i + 1}] ${c.geo_id}`);
   out.push(`  <claim>${fenced(c.claim)}</claim>`);
-  out.push(`  Agent status: ${c.agent_status ?? 'none'} · Agent tags: ${c.agent_tags?.length ? c.agent_tags.join(', ') : 'none'} · Tags waiting: ${c.tags_waiting?.length ? c.tags_waiting.join(', ') : 'none'} · Agent confidence: ${typeof c.agent_confidence === 'number' ? c.agent_confidence : 'none'}`);
+  out.push(`  Agent status: ${c.agent_status ?? 'none'} · Agent tags: ${c.agent_tags?.length ? c.agent_tags.join(', ') : 'none'} · Tags waiting: ${c.tags_waiting?.length ? c.tags_waiting.join(', ') : 'none'} · Agent confidence: ${typeof c.agent_confidence === 'number' ? c.agent_confidence : 'none'} · Agent proposals: ${proposals.length ? proposals.join('; ') : 'none'}`);
   out.push(`  Review status now: ${c.review_status ?? 'empty'} · Verified tags now: ${c.verified_tags?.length ? c.verified_tags.join(', ') : 'none'}`);
   const notes = trimmed(c.challenged_notes);
   if (notes !== '') out.push(`  Challenged tags notes now: <notes>${fenced(notes)}</notes>`);
@@ -245,7 +247,7 @@ function renderList({ rubric, ids, listed, notListed, queue, source, pullId, see
   listed.forEach((c, i) => {
     out.push('');
     if (all) {
-      out.push(...compactBlock(c, i, seenOf(c)));
+      out.push(...compactBlock(c, i, seenOf(c), queue));
       return;
     }
     const proposals = ledgerOf(queue, c.geo_id).map((r) => `${r.Tag}: ${r['Agent proposal'] ?? 'none'}`);
@@ -298,7 +300,7 @@ export async function listClaims(opts = {}) {
     const ids = tagIds(ctx, rubric);
     const entry = tableEntry(ctx.config, 'claims');
     const byPage = new Map(ctx.pull.decoded('claims').map((x) => [hexOf(x.page_id), x]));
-    const seenOf = (c) => fingerprintOf(cellsOf(byPage.get(hexOf(c.page_id)), entry.columns));
+    const seenOf = (c) => fingerprintOfClaim(c, byPage, entry.columns);
     const notListed = [];
     let listed;
     let source;
@@ -357,11 +359,11 @@ export function parseDecisions(raw) {
     const extra = Object.keys(d).filter((k) => !['claim', 'seen', 'verified_tags', 'note'].includes(k));
     if (extra.length) problems.push(`${at} has unexpected keys: ${extra.join(', ')} (Review status is always Reviewed and is not an input)`);
     if (typeof d.claim !== 'string' || d.claim.trim() === '') problems.push(`${at}: "claim" must be a Geo ID or a page id`);
-    if (typeof d.seen !== 'string' || d.seen.trim() === '') problems.push(`${at}: "seen" must be the fingerprint that list printed for the claim`);
+    if (typeof d.seen !== 'string' || !SEEN.test(d.seen)) problems.push(`${at}: "seen" must be the fingerprint that list printed for the claim (exactly 12 lower-case hex digits)`);
     if (d.verified_tags !== undefined && (!Array.isArray(d.verified_tags) || d.verified_tags.some((t) => typeof t !== 'string' || t.trim() === ''))) problems.push(`${at}: "verified_tags" must be a list of tag names (empty when no tag applies), or left out to leave the tags as they are`);
     if (d.note !== undefined && typeof d.note !== 'string') problems.push(`${at}: "note" must be text (empty to clear the note), or left out to leave the note as it is`);
     if (problems.some((p) => p.startsWith(`${at}:`) || p.startsWith(`${at} `))) return;
-    const given = { claim: d.claim.trim(), seen: d.seen.trim() };
+    const given = { claim: d.claim.trim(), seen: d.seen };
     if (d.verified_tags !== undefined) given.verified_tags = d.verified_tags.map((t) => t.trim());
     if (d.note !== undefined) given.note = d.note;
     decisions.push(given);
@@ -398,12 +400,16 @@ function cellsOf(decoded, cols) {
 }
 
 /**
- * The fingerprint of a claim as list printed it (`seen`) and as open sees it in its own fresh pull: 12 hex digits of the SHA-256 of the three editor columns, cells as cellsOf reads them
- * (Verified tags as sorted Rulebook page ids, the note trimmed with its line ends made alike, Review status). If a person changes any of the three between the listing and open, it differs.
+ * The fingerprint of a claim as list printed it (`seen`) and as open sees it in its own fresh pull: 12 hex digits of the SHA-256 of the claim's page id (32 hex digits, no dashes) and
+ * its three editor columns, cells as cellsOf reads them (Verified tags as sorted Rulebook page ids, the note trimmed with its line ends made alike, Review status). If a person changes
+ * any of the three between the listing and open, it differs; so does the claim it belongs to: two claims in the same state have different fingerprints.
  */
-export function fingerprintOf(cells) {
-  return sha256Hex(JSON.stringify([cells.verified_ids, cells.note, cells.review_status])).slice(0, 12);
+export function fingerprintOf(pageId, cells) {
+  return sha256Hex(JSON.stringify([hexOf(pageId), cells.verified_ids, cells.note, cells.review_status])).slice(0, 12);
 }
+
+/** The fingerprint of a claim of a pull (the one function list and open both use): `byPage` is the decoded pages of the pull by page id, `columns` the claims table's column names. */
+const fingerprintOfClaim = (claim, byPage, columns) => fingerprintOf(claim.page_id, cellsOf(byPage.get(hexOf(claim.page_id)), columns));
 
 /** A change summary line for Claude: what the decision does to the claim, in the words of the draft ("tags Context-dependent → none; note replaced; changes an earlier review"). */
 function changeSummary(claim, tagOfId) {
@@ -419,8 +425,18 @@ function changeSummary(claim, tagOfId) {
     const now = trimmed(claim.note);
     parts.push(was === now ? 'note as before' : was === '' ? 'note added' : now === '' ? 'note cleared' : 'note replaced');
   }
-  if (claim.was_reviewed === true) parts.push('changes an earlier review');
+  if (claim.was_reviewed === true && changesSomething(claim)) parts.push('changes an earlier review');
   return `${claim.geo_id}: ${parts.join('; ')}`;
+}
+
+/**
+ * Does the decision change anything of the claim? A tag set that is not the one the claim held, or a note that is not the one it held. Review status is always set to Reviewed and does
+ * not count: a Reviewed claim whose tags and note come out as they were is not "an earlier review changed".
+ */
+function changesSomething(claim) {
+  const before = claim.before ?? {};
+  if (givesTags(claim) && !sameIds(claim.verified_ids, before.verified_ids ?? [])) return true;
+  return givesNote(claim) && trimmed(claim.note) !== trimmed(before.note);
 }
 
 /** Run open. opts: decisions (the JSON text), runId and the hooks of the other scripts. It pulls the tables itself; there is no pull option. */
@@ -429,7 +445,7 @@ export async function openDecisions(opts = {}) {
     script: 'decide', label: 'Decide', again: '/claim-tagger decide', opts, args: { sub: 'open' }, resume: resumeLine('decide', ['open']),
   }, async (ctx) => {
     const rubric = await openWorld(ctx, { fresh: true });
-    const link = viewLink(ctx.config, 'your_queue');
+    const link = tableLink(ctx.config, 'claims');
 
     // another decide run that is still open
     const held = readMarker(ctx.root, ctx.now);
@@ -467,7 +483,7 @@ export async function openDecisions(opts = {}) {
     const byPage = new Map(ctx.pull.decoded('claims').map((x) => [hexOf(x.page_id), x]));
     const nowOf = (claim) => cellsOf(byPage.get(hexOf(claim.page_id)), entry.columns);
     const neither = picked.filter(({ d }) => d.verified_tags === undefined && d.note === undefined).map((p) => p.claim);
-    const changed = picked.filter(({ claim, d }) => fingerprintOf(nowOf(claim)) !== d.seen.toLowerCase()).map((p) => p.claim);
+    const changed = picked.filter(({ claim, d }) => fingerprintOfClaim(claim, byPage, entry.columns) !== d.seen).map((p) => p.claim);
     const problems = [
       ...unknown.map((r) => `"${r}" is not a claim of the newest pull`),
       ...twice.map((c) => `${c.geo_id} is named twice`),
@@ -476,7 +492,7 @@ export async function openDecisions(opts = {}) {
       ...changed.map((c) => `${c.geo_id} changed in Notion since it was listed (its seen fingerprint differs from the claim in the fresh pull)`),
     ];
     if (unknown.length) {
-      throw stop(EXIT.INVALID, problems.join('; '), `nothing was done, because ${named(unknown)} ${unknown.length === 1 ? 'is' : 'are'} not in the Claims table.`, `Next: type /claim-tagger decide again and name claims from Your queue (${link}).`);
+      throw stop(EXIT.INVALID, problems.join('; '), `nothing was done, because ${named(unknown)} ${unknown.length === 1 ? 'is' : 'are'} not in the Claims table.`, `Next: type /claim-tagger decide again and name claims from the Claims table (${link}).`);
     }
     if (twice.length) {
       throw stop(EXIT.INVALID, problems.join('; '), `nothing was done, because ${named(twice)} ${twice.length === 1 ? 'was' : 'were'} named twice.`, 'Next: type /claim-tagger decide again and name each claim once.');
@@ -511,7 +527,7 @@ export async function openDecisions(opts = {}) {
         ...given,
         review_status: REVIEWED,
         before,
-        seen: fingerprintOf(before),
+        seen: d.seen,
         was_reviewed: before.review_status === REVIEWED,
         // what the claim holds once the write is done: the given fields, and what it held before for the others (the comparison with the agent's proposals reads this)
         after: { verified_tags: tags ?? before.verified_ids.map((id) => tagOfId.get(id)).filter(Boolean).sort(), note: d.note ?? before.note },
@@ -721,8 +737,9 @@ export async function checkDecisions(opts = {}) {
         const list = namedClaims(bad.map((r) => r.claim));
         // a claim that is Reviewed or not can be decided again (P22), so a mismatch or a claim not written is always "decide again"; only a claim that is gone cannot be, and a person looks for it
         const again = bad.filter((r) => r.kind !== 'not_found');
+        const gone = bad.filter((r) => r.kind === 'not_found');
         const next = again.length > 0
-          ? `Next: type /claim-tagger decide again and name ${namedClaims(again.map((r) => r.claim))}.`
+          ? `Next: type /claim-tagger decide again and name ${namedClaims(again.map((r) => r.claim))}${gone.length ? `; ${namedClaims(gone.map((r) => r.claim))} ${gone.length === 1 ? 'is' : 'are'} no longer in the Claims table` : ''}.`
           : `Next: open All claims (${tableLink(ctx.config, 'claims')}), check ${list} and correct ${bad.length === 1 ? 'it' : 'them'} by hand.`;
         return {
           exit: EXIT.ERROR,
@@ -751,7 +768,7 @@ export async function checkDecisions(opts = {}) {
       const rows = [['Decided', String(s.decided), ''], ['Same as the agent', String(s.same), ''], ['Different from the agent', noteCell, '']];
       if (s.unread > 0) rows.push(['Not read by the agent yet', String(s.unread), '']);
       // the table never goes past five rows: these two are the only ones that come and go, so the most is Decided, Same, Different, Not read and Changed
-      const earlier = record.claims.filter((c) => c.was_reviewed === true).length;
+      const earlier = record.claims.filter((c) => c.was_reviewed === true && changesSomething(c)).length;
       if (earlier > 0) rows.push(['Changed an earlier review', String(earlier), '']);
       return {
         exit: EXIT.OK,

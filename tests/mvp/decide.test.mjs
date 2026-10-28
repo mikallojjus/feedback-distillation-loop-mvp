@@ -90,12 +90,15 @@ test('list --all lists every claim of the table, Reviewed and Done included, in 
   assert.deepEqual([...at].sort((a, b) => a - b), at);
   assert.deepEqual([...seenIn(out).keys()], ['c01', 'c02', 'c03', 'c04', 'c05', 'c06']);
   // the compact block of a Done claim and of the Reviewed one, line by line
-  assert.match(out, /\[5\] c05\n {2}<claim>[^\n]*<\/claim>\n {2}Agent status: Done · Agent tags: none · Tags waiting: none · Agent confidence: 0\.95\n {2}Review status now: empty · Verified tags now: none\n {2}seen: [0-9a-f]{12}\n/);
+  assert.match(out, /\[5\] c05\n {2}<claim>[^\n]*<\/claim>\n {2}Agent status: Done · Agent tags: none · Tags waiting: none · Agent confidence: 0\.95 · Agent proposals: none\n {2}Review status now: empty · Verified tags now: none\n {2}seen: [0-9a-f]{12}\n/);
   assert.match(out, /\[6\] c06\n {2}<claim>[^\n]*<\/claim>\n {2}Agent status: Waits for you · [^\n]*\n {2}Review status now: Reviewed · Verified tags now: Context-dependent\n {2}Challenged tags notes now: <notes>Context-dependent: Rule unclear\.\nSecond line of the note\.<\/notes>\n {2}seen: /);
   // the reading and the reasons sit between their own tags, on one line each
   assert.match(out, /\n {2}Agent reasons: <reasons>Context-dependent: the pronoun has no antecedent[^\n]*<\/reasons>\n/);
   assert.match(out, /\n {2}Agent reading: <reading>Context-dependent: Agent slip · the claim names the budget \| Context-dependent: second line<\/reading>\n/);
-  assert.ok(!/Agent proposals|page_id:/.test(out), 'no page ids and no proposals in the compact blocks');
+  // the state line ends with the agent's proposals (none when it has not read the claim), and the compact block has no page id
+  assert.match(out, /\[2\] c02\n[^\n]*\n {2}Agent status: Waits for you · [^\n]*Agent confidence: 0\.5 · Agent proposals: Context-dependent: Applies\n/);
+  assert.match(out, /\[6\] c06\n[^\n]*\n {2}Agent status: Waits for you · [^\n]*Agent proposals: none\n/);
+  assert.ok(!/page_id:/.test(out), 'no page ids in the compact blocks');
   // --all and --claims together are refused
   const both = w.hooks();
   const refused = await listClaims({ ...both, all: true, claims: 'c01' });
@@ -221,8 +224,8 @@ test('open refuses what does not fit and records nothing: bad JSON, an empty lis
   const w = await world();
   // a missing `seen`, a `seen` that is no text, a null where a field is optional (a missing field is the way to leave it as it is), and a key it does not take
   for (const decisions of ['not json', '{}', '[]', json([5]), json([{ claim: 'c01' }]), json([{ claim: 'c01', verified_tags: [] }]), json([{ claim: 'c01', seen: 5, verified_tags: [] }]), json([{ claim: 'c01', seen: ' ', note: 'x' }]),
-    json([{ claim: '', seen: 'abc', verified_tags: [] }]), json([{ claim: 'c01', seen: 'abc', verified_tags: 'x' }]), json([{ claim: 'c01', seen: 'abc', verified_tags: null }]), json([{ claim: 'c01', seen: 'abc', verified_tags: [], note: 5 }]),
-    json([{ claim: 'c01', seen: 'abc', note: null }]), json([{ claim: 'c01', seen: 'abc', verified_tags: [], note: '', review_status: 'Reviewed' }])]) {
+    json([{ claim: '', seen: '0123456789ab', verified_tags: [] }]), json([{ claim: 'c01', seen: '0123456789ab', verified_tags: 'x' }]), json([{ claim: 'c01', seen: '0123456789ab', verified_tags: null }]), json([{ claim: 'c01', seen: '0123456789ab', verified_tags: [], note: 5 }]),
+    json([{ claim: 'c01', seen: '0123456789ab', note: null }]), json([{ claim: 'c01', seen: '0123456789ab', verified_tags: [], note: '', review_status: 'Reviewed' }])]) {
     const h = w.hooks();
     const r = await openDecisions({ ...h, decisions });
     assert.equal(r.exit, 2, decisions);
@@ -233,22 +236,61 @@ test('open refuses what does not fit and records nothing: bad JSON, an empty lis
     assert.deepEqual(lintReport(r.markdown), []);
   }
   // what parses: a missing field stays missing ("leave it as it is"), an empty one is given
-  assert.deepEqual(parseDecisions(json([{ claim: ' c01 ', seen: ' abc123 ', verified_tags: [' Wordy '] }])), { decisions: [{ claim: 'c01', seen: 'abc123', verified_tags: ['Wordy'] }] });
-  assert.deepEqual(parseDecisions(json([{ claim: 'c01', seen: 'abc123', note: 'x' }])), { decisions: [{ claim: 'c01', seen: 'abc123', note: 'x' }] });
-  assert.deepEqual(parseDecisions(json([{ claim: 'c01', seen: 'abc123', verified_tags: [], note: '' }])), { decisions: [{ claim: 'c01', seen: 'abc123', verified_tags: [], note: '' }] });
+  assert.deepEqual(parseDecisions(json([{ claim: ' c01 ', seen: '0123456789ab', verified_tags: [' Wordy '] }])), { decisions: [{ claim: 'c01', seen: '0123456789ab', verified_tags: ['Wordy'] }] });
+  assert.deepEqual(parseDecisions(json([{ claim: 'c01', seen: '0123456789ab', note: 'x' }])), { decisions: [{ claim: 'c01', seen: '0123456789ab', note: 'x' }] });
+  assert.deepEqual(parseDecisions(json([{ claim: 'c01', seen: '0123456789ab', verified_tags: [], note: '' }])), { decisions: [{ claim: 'c01', seen: '0123456789ab', verified_tags: [], note: '' }] });
   // a decision with neither field passes the shape: open refuses it by name
-  assert.deepEqual(parseDecisions(json([{ claim: 'c01', seen: 'abc123' }])), { decisions: [{ claim: 'c01', seen: 'abc123' }] });
+  assert.deepEqual(parseDecisions(json([{ claim: 'c01', seen: '0123456789ab' }])), { decisions: [{ claim: 'c01', seen: '0123456789ab' }] });
+});
+
+test('open refuses a seen that is not exactly the 12 lower-case hex digits list printed: a prefix, something longer, capitals, white space around it', async () => {
+  const w = await world();
+  const full = await seenOf(w, 'c01');
+  assert.match(full, /^[0-9a-f]{12}$/);
+  for (const seen of [full.slice(0, 11), full.slice(0, 6), full.slice(0, 1), `${full}0`, 'ABCDEF012345', ` ${full}`, `${full} `, `${full}\n`, '']) {
+    const h = w.hooks();
+    const r = await openDecisions({ ...h, decisions: json([{ claim: 'c01', seen, note: 'x' }]) });
+    assert.equal(r.exit, 2, JSON.stringify(seen));
+    assert.equal(r.report.sentence, 'Decide: nothing was done, because the decisions were not in the shape the script reads.', JSON.stringify(seen));
+    assert.ok(h.io.errs.some((e) => /"seen" must be the fingerprint that list printed for the claim \(exactly 12 lower-case hex digits\)/.test(e)), JSON.stringify(seen));
+    assert.ok(!existsSync(markerPath(w.root)));
+  }
+  const h = w.hooks();
+  assert.equal((await openDecisions({ ...h, decisions: json([{ claim: 'c01', seen: full, note: 'x' }]) })).exit, 0, 'the whole fingerprint is fine');
+});
+
+test('seen is bound to its claim: the seen of another claim, even one in the very same state, is refused', async () => {
+  const w = await world(); // c02, c03 and c04 wait, with the same three editor cells
+  const q = (n) => quoted(claimText(n));
+  const s = {};
+  for (const id of ['c02', 'c03', 'c04', 'c06']) s[id] = await seenOf(w, id);
+  assert.equal(new Set([s.c02, s.c03, s.c04]).size, 3, 'three claims in one state, three fingerprints');
+  const refuse = async (claim, seen, n) => {
+    const h = w.hooks();
+    const r = await openDecisions({ ...h, decisions: json([{ claim, seen, note: 'x' }]) });
+    assert.equal(r.exit, 2);
+    assert.equal(r.report.sentence, `Decide: nothing was done, because ${q(n)} changed in Notion since Claude read it.`);
+    assert.ok(!existsSync(markerPath(w.root)));
+  };
+  await refuse('c02', s.c03, 2);
+  await refuse('c04', s.c02, 4);
+  // a person makes c04 look exactly like c06, which is Reviewed with the tag and the note "Fine.": the seen of c06 is still not c04's
+  w.editClaim('c04', { 'Review status': 'Reviewed', 'Verified tags': [TAG], 'Challenged tags notes': 'Fine.' });
+  await refuse('c04', s.c06, 4);
+  await refuse('c04', s.c04, 4);
+  const h = w.hooks();
+  assert.equal((await openDecisions({ ...h, decisions: json([{ claim: 'c04', seen: await seenOf(w, 'c04'), note: 'x' }]) })).exit, 0, 'its own seen, read again, opens it');
 });
 
 test('open refuses an unknown claim, a claim named twice and an unknown tag, each with its own report and no marker (a Reviewed claim is no longer refused: P22)', async () => {
   const w = await world();
-  const link = viewLink(w.config, 'your_queue');
+  const link = tableLink(w.config, 'claims');
   const cases = [
-    [[{ claim: 'zzz', verified_tags: [] }], 2, 'Decide: nothing was done, because "zzz" is not in the Claims table.', `Next: type /claim-tagger decide again and name claims from Your queue (${link}).`],
-    [[{ claim: 'c01', verified_tags: [] }, { claim: 'q1', verified_tags: [] }, { claim: 'q2', verified_tags: [] }], 2, 'Decide: nothing was done, because "q1" and "q2" are not in the Claims table.', `Next: type /claim-tagger decide again and name claims from Your queue (${link}).`],
+    [[{ claim: 'zzz', verified_tags: [] }], 2, 'Decide: nothing was done, because "zzz" is not in the Claims table.', `Next: type /claim-tagger decide again and name claims from the Claims table (${link}).`],
+    [[{ claim: 'c01', verified_tags: [] }, { claim: 'q1', verified_tags: [] }, { claim: 'q2', verified_tags: [] }], 2, 'Decide: nothing was done, because "q1" and "q2" are not in the Claims table.', `Next: type /claim-tagger decide again and name claims from the Claims table (${link}).`],
     [[{ claim: 'c01', verified_tags: [] }, { claim: hex(w.ids.claim.c01), verified_tags: [] }], 2, `Decide: nothing was done, because "${claimText(1)}" was named twice.`, 'Next: type /claim-tagger decide again and name each claim once.'],
     [[{ claim: 'c01', verified_tags: ['Not a tag'] }], 2, 'Decide: nothing was done, because "Not a tag" is not a tag in the Rulebook.', `Next: type /claim-tagger decide again with tags from the Rulebook (${viewLink(w.config, 'rulebook')}).`],
-    [[{ claim: 'c01', note: 'x', verified_tags: ['Not a tag'] }, { claim: 'zzz', note: 'x' }], 2, 'Decide: nothing was done, because "zzz" is not in the Claims table.', `Next: type /claim-tagger decide again and name claims from Your queue (${link}).`],
+    [[{ claim: 'c01', note: 'x', verified_tags: ['Not a tag'] }, { claim: 'zzz', note: 'x' }], 2, 'Decide: nothing was done, because "zzz" is not in the Claims table.', `Next: type /claim-tagger decide again and name claims from the Claims table (${link}).`],
   ];
   for (const [decisions, exit, sentence, next] of cases) {
     const h = w.hooks();
@@ -316,6 +358,74 @@ test('open accepts a note only and tags only: the printed call carries just thos
   assert.equal(w.claim('c02')['Challenged tags notes'] ?? '', '');
 });
 
+test('open: a tags-only decision on a claim that has a note keeps that note in what the claim holds once written, and check counts it (C6)', async () => {
+  const w = await world();
+  const note = `${TAG}: Agent slip. The title names it.`;
+  w.editClaim('c02', { 'Challenged tags notes': note });
+  const h = w.hooks();
+  const r = await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c02', verified_tags: [] }]) });
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const record = readJson(join(r.runDir, 'decisions.json'));
+  assert.ok(!('note' in record.claims[0]), 'the decision gives no note');
+  assert.deepEqual(record.claims[0].after, { verified_tags: [], note }, 'but the claim keeps its note');
+  // the agent proposed Applies, the decision is Does not apply, and the note that stays has a reason word: a difference with a note
+  claudeWrites(w, openedOutput(h));
+  const c = await checkDecisions(w.hooks());
+  assert.deepEqual(c.report.rows, [['Decided', '1', ''], ['Same as the agent', '0', ''], ['Different from the agent', '1, with a note', '']]);
+});
+
+test('check: "not written" looks at every field the decision gave and at none it left out (K5, K7)', async () => {
+  // tags and note given; only the tags were written: the claim no longer holds what it held, so it is a mismatch, not "not written"
+  const w = await world();
+  const h = w.hooks();
+  await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c01', verified_tags: [TAG], note: 'a note' }]) });
+  w.fake.editRow(w.ids.claim.c01, { 'Verified tags': [w.ids.tag[TAG]] });
+  const r = await checkDecisions(w.hooks());
+  assert.equal(r.report.sentence, 'Decide: 1 of 1 claim did not read back as decided.');
+  assert.deepEqual(r.report.rows, [[quoted(claimText(1), 40), 'Challenged tags notes, Review status', '']]);
+  assert.deepEqual(readJson(join(r.runDir, 'check.json')).results.map((x) => x.kind), ['mismatch']);
+
+  // only the note given; nothing was written, but a person changed the tags meanwhile: the tags are not part of the decision, so it is still "not written"
+  const w2 = await world();
+  const h2 = w2.hooks();
+  await openDecisions({ ...h2, decisions: await withSeen(w2, [{ claim: 'c01', note: 'a note' }]) });
+  w2.fake.editRow(w2.ids.claim.c01, { 'Verified tags': [w2.ids.tag[TAG]] });
+  const r2 = await checkDecisions(w2.hooks());
+  assert.equal(r2.report.sentence, 'Decide: 1 of 1 claim was not written.');
+  assert.deepEqual(r2.report.rows, [[quoted(claimText(1), 40), 'not written', '']]);
+  assert.deepEqual(readJson(join(r2.runDir, 'check.json')).results.map((x) => x.kind), ['not_written']);
+});
+
+test('check: "Changed an earlier review" counts only the Reviewed claims whose decision changes their tags or their note', async () => {
+  const w = await world();
+  // c06 is Reviewed with the tag and the note "Fine."; the decision gives exactly that, and for c05 (not Reviewed) a new note
+  const h = w.hooks();
+  const opened = await openDecisions({ ...h, decisions: await withSeen(w, [{ claim: 'c06', verified_tags: [TAG], note: 'Fine.' }, { claim: 'c05', note: 'x' }]) });
+  assert.ok(!/earlier review/.test(openedOutput(h)), 'a Reviewed claim whose tags and note come out as they were changes nothing');
+  claudeWrites(w, openedOutput(h));
+  const r = await checkDecisions(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.ok(!r.report.rows.some((row) => row[0] === 'Changed an earlier review'));
+  assert.equal(readJson(join(opened.runDir, 'decisions.json')).claims[0].was_reviewed, true, 'it was Reviewed all the same');
+
+  // a note-only change of a Reviewed claim counts; a tags-only one counts; one that is not changed does not
+  const w2 = await world();
+  w2.review('c01', { tags: [TAG], notes: 'first' });
+  w2.review('c02', { tags: [TAG], notes: 'second' });
+  w2.review('c03', { tags: [TAG], notes: 'third' });
+  const h2 = w2.hooks();
+  await openDecisions({ ...h2, decisions: await withSeen(w2, [{ claim: 'c01', note: 'first, and more' }, { claim: 'c02', verified_tags: [] }, { claim: 'c03', verified_tags: [TAG], note: 'third' }]) });
+  const lines = openedOutput(h2).split('\n').filter((l) => /^c0\d: /.test(l));
+  assert.deepEqual(lines, [
+    'c01: note replaced; changes an earlier review',
+    'c02: tags Context-dependent → none; changes an earlier review',
+    'c03: tags Context-dependent (as before); note as before',
+  ]);
+  claudeWrites(w2, openedOutput(h2));
+  const r2 = await checkDecisions(w2.hooks());
+  assert.deepEqual(r2.report.rows.at(-1), ['Changed an earlier review', '2', '']);
+});
+
 test('open refuses a claim that changed in Notion since Claude read it (decision 117): its tags, its note or its Review status; nothing is recorded and no marker is opened', async () => {
   const w = await world();
   const q = (n) => quoted(claimText(n));
@@ -345,7 +455,7 @@ test('open refuses a claim that changed in Notion since Claude read it (decision
     `Decide: nothing was done, because ${q(2)}, ${q(3)} and ${q(4)} changed in Notion since Claude read them.`);
   // one stale claim among good ones refuses all of them; a seen that was never a fingerprint is stale too
   await refuse([{ claim: 'c01', seen: seen.c01, note: 'x' }, { claim: 'c02', seen: seen.c02, note: 'x' }], `Decide: nothing was done, because ${q(2)} changed in Notion since Claude read it.`);
-  await refuse([{ claim: 'c01', seen: 'not a fingerprint', note: 'x' }], `Decide: nothing was done, because ${q(1)} changed in Notion since Claude read it.`);
+  await refuse([{ claim: 'c01', seen: '000000000000', note: 'x' }], `Decide: nothing was done, because ${q(1)} changed in Notion since Claude read it.`);
   // the agent's columns are not the person's work (c01 still opens), and once Claude has read the claims again the person's work is what is decided on
   const h = w.hooks();
   const ok = await openDecisions({ ...h, decisions: json([{ claim: 'c01', seen: seen.c01, note: 'x' }, { claim: 'c02', seen: await seenOf(w, 'c02'), note: 'y' }]) });

@@ -40,7 +40,10 @@ test('the three Claims columns, or some of them, on a page that a live marker li
   assert.equal(verdict(decision(), root).permissionDecision, 'allow');
   assert.match(verdict(decision(), root).permissionDecisionReason, /open decide run/);
   assert.equal(verdict(decision({ 'Review status': 'Reviewed' }), root).permissionDecision, 'allow');
-  assert.equal(verdict(decision({ 'Review status': 'To review' }), root).permissionDecision, 'allow', 'Reviewed and To review are the two values');
+  const toReview = verdict(decision({ 'Review status': 'To review' }), root);
+  assert.equal(toReview.permissionDecision, 'deny', 'a decision always closes the claim (P24): To review is refused');
+  assert.match(toReview.permissionDecisionReason, /may be set to Reviewed only/);
+  assert.equal(verdict(decision({ 'Challenged tags notes': 'x', 'Review status': 'To review' }), root).permissionDecision, 'deny');
   assert.equal(verdict(decision({ 'Verified tags': [] }), root).permissionDecision, 'allow', 'a decision with no verified tag');
   assert.equal(verdict(decision(THREE, { allow_async: false }), root).permissionDecision, 'allow', 'allow_async is the one flag the connector call may carry');
   assert.equal(verdict(decision({ 'verified tags': [], 'REVIEW STATUS': 'Reviewed' }), root).permissionDecision, 'allow', 'letter case does not matter');
@@ -128,7 +131,10 @@ test('S5: a folder named like a marker is not a marker: the decide allowance and
   mkdirSync(join(real, 'runs', 'builder'), { recursive: true });
   writeFileSync(join(real, 'runs', 'builder', 'pages.json'), JSON.stringify({ pages: ['0a9e0000-0000-4000-8000-000000000001'] }));
   writeFileSync(join(real, 'runs', 'SETUP'), '{}\n');
-  assert.equal(verdict(content, real).permissionDecision, 'allow');
+  // the guard does not wave a builder session through: the editor of the session still sees a prompt
+  const builder = verdict(content, real);
+  assert.equal(builder.permissionDecision, 'ask');
+  assert.match(builder.permissionDecisionReason, /registered setup page while runs\/SETUP exists/);
 });
 
 test('S6: no decision is written while runs/PAUSED exists, in the agent folder or in the practice page\'s folder for its own marker', () => {
@@ -237,10 +243,10 @@ test('one property more, an agent column, or another value of Review status is r
   ]) {
     assert.equal(verdict(decision(properties), root).permissionDecision, 'deny', JSON.stringify(properties));
   }
-  for (const value of ['Approved', 'Rejected', 'Done', '', null, 1, ['Reviewed']]) {
+  for (const value of ['Approved', 'Rejected', 'Done', 'To review', 'reviewed', '', null, 1, ['Reviewed']]) {
     const d = verdict(decision({ ...THREE, 'Review status': value }), root);
     assert.equal(d.permissionDecision, 'deny', String(value));
-    assert.match(d.permissionDecisionReason, /may be set to Reviewed or To review only/);
+    assert.match(d.permissionDecisionReason, /may be set to Reviewed only/);
   }
 });
 
@@ -308,6 +314,53 @@ test('the claims columns come from config.editor_columns.claims when it names th
   const bare = rootWith({ notion: {} });
   open(bare);
   assert.equal(verdict(decision(), bare).permissionDecision, 'allow');
+});
+
+test('a builder session is asked, not waved through: create-pages, a content update and the schema tools answer "ask" while runs/SETUP exists, and every refusal is still a deny', () => {
+  const PAGE1 = '0a9e0000-0000-4000-8000-000000000001';
+  const DB = '0a9e0000-0000-4000-8000-000000000002';
+  const root = rootWith(placeholderConfig());
+  mkdirSync(join(root, 'runs', 'builder'), { recursive: true });
+  writeFileSync(join(root, 'runs', 'builder', 'pages.json'), JSON.stringify({ pages: [PAGE1] }));
+  writeFileSync(join(root, 'runs', 'builder', 'databases.json'), JSON.stringify({ ids: [DB] }));
+  const tool = (name, tool_input) => ({ tool_name: `mcp__notion__notion-${name}`, tool_input });
+  const plain = tool('create-pages', { parent: { page_id: PAGE1 }, pages: [{ properties: { title: 'A page' } }] });
+  const content = tool('update-page', { page_id: PAGE1, command: 'replace_content', new_str: 'x' });
+  const schema = [tool('update-data-source', { data_source_id: DB, title: 'x' }), tool('create-view', { database_id: DB, name: 'v' }), tool('update-view', { view_id: DB, name: 'v' })];
+
+  // no builder session: nothing passes
+  for (const input of [plain, content, ...schema]) assert.equal(verdict(input, root).permissionDecision, 'deny');
+  writeFileSync(join(root, 'runs', 'SETUP'), '{}\n');
+  for (const input of [plain, content, ...schema]) {
+    const d = verdict(input, root);
+    assert.equal(d.permissionDecision, 'ask', input.tool_name);
+    assert.match(d.permissionDecisionReason, /while runs\/SETUP exists/);
+  }
+  // what was a refusal stays a refusal
+  assert.equal(verdict(tool('create-pages', { parent: { page_id: '0a9e0000-0000-4000-8000-0000000000f1' }, pages: [{ properties: { title: 'A page' } }] }), root).permissionDecision, 'deny', 'an unregistered parent');
+  assert.equal(verdict(tool('create-pages', { parent: { page_id: PAGE1 }, pages: [{ properties: { title: 'A page', Name: 'row' } }] }), root).permissionDecision, 'deny', 'a page with database properties');
+  assert.equal(verdict(tool('update-page', { page_id: '0a9e0000-0000-4000-8000-0000000000f1', command: 'replace_content', new_str: 'x' }), root).permissionDecision, 'deny', 'an unregistered page');
+  assert.equal(verdict(tool('update-page', { page_id: PAGE1, command: 'update_properties', properties: { Name: 'x' } }), root).permissionDecision, 'deny', 'a property change on a setup page');
+  assert.equal(verdict(tool('update-page', { page_id: PAGE1, command: 'replace_content', new_str: 'x', allow_deleting_content: true }), root).permissionDecision, 'deny', 'a replace that deletes');
+  assert.equal(verdict(tool('update-data-source', { data_source_id: DB, in_trash: true }), root).permissionDecision, 'deny', 'a table in the trash');
+  assert.equal(verdict(tool('update-data-source', { data_source_id: '0a9e0000-0000-4000-8000-0000000000f2' }), root).permissionDecision, 'deny', 'an unregistered table');
+  assert.equal(verdict(tool('delete-pages', { page_ids: [PAGE1] }), root).permissionDecision, 'deny');
+  // the decide allowance is the one "allow" the guard gives; a decision is allowed by it whether or not a builder session is open
+  open(root);
+  assert.equal(verdict(decision(), root).permissionDecision, 'allow');
+});
+
+test('M1: .claude/settings.json has no permission rule for notion-update-page, so the guard is the only gate: its "allow" skips the prompt, and a guard that cannot run leaves the normal prompt', () => {
+  const settings = JSON.parse(readFileSync(new URL('../../.claude/settings.json', import.meta.url), 'utf8'));
+  for (const list of ['allow', 'ask', 'deny']) assert.deepEqual(settings.permissions[list].filter((rule) => /update-page/.test(rule)), [], `${list} has no rule for update-page`);
+  // the hook is registered for both connector names, and the other writes keep their prompt
+  const matcher = new RegExp(settings.hooks.PreToolUse.find((entry) => /update-page/.test(entry.matcher)).matcher);
+  for (const name of ['mcp__claude_ai_notion__notion-update-page', 'mcp__16f81eb6-6eb4-423e-9e64-a5cb678b0953__notion-update-page']) {
+    assert.match(name, matcher);
+    for (const verb of ['create-pages', 'create-database', 'update-data-source', 'create-view', 'update-view']) {
+      assert.ok(settings.permissions.ask.includes(name.replace('update-page', verb)), `${verb} stays under ask`);
+    }
+  }
 });
 
 test('the shipped hook reads the marker itself: no import of the agent\'s library, no network, and input it cannot read is denied', () => {

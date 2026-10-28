@@ -33,7 +33,7 @@ export function seenIn(output) {
 
 /**
  * The JSON of --decisions the way Claude builds it: the world is read again (pull, then list --all) and each decision gets the `seen` that list printed for its claim. A decision that has
- * its own `seen`, or that is not an object, is left as it is; a claim that list does not know (or any claim when list refuses, as under a pause) gets "x".
+ * its own `seen`, or that is not an object, is left as it is; a claim that list does not know (or any claim when list refuses, as under a pause) gets "000000000000" (12 hex digits that are nobody's fingerprint).
  */
 export async function withSeen(w, list) {
   const p = await w.pull();
@@ -43,7 +43,7 @@ export async function withSeen(w, list) {
   const claims = loadPull(w.root, p.pullId, { config: w.config }).claims();
   return json(list.map((d) => {
     if (d === null || typeof d !== 'object' || Array.isArray(d) || d.seen !== undefined) return d;
-    return { ...d, seen: seen.get(resolveClaim(claims, d.claim)?.geo_id) ?? 'x' };
+    return { ...d, seen: seen.get(resolveClaim(claims, d.claim)?.geo_id) ?? '000000000000' };
   }));
 }
 
