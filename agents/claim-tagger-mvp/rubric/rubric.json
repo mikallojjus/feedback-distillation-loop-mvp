@@ -1,11 +1,11 @@
 {
-  "edition": "2026-10-28.3",
-  "built_at": "2026-10-28T17:37:49.546Z",
+  "edition": "2026-10-29.1",
+  "built_at": "2026-10-29T11:16:44.332Z",
   "source": {
     "database_id": "dba96ff240e64832b48798386abaff01",
     "data_source_id": "9b8cef6c20934d44829ea3417858754a",
     "read_via": "rest",
-    "read_at": "2026-10-28T17:37:49.546Z"
+    "read_at": "2026-10-29T11:16:44.332Z"
   },
   "tags": [
     {
@@ -16,7 +16,7 @@
       "status": "Verified",
       "counterpart": "Self-contained",
       "description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
-      "when_to_use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+      "when_to_use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\", or a bare \"the ruling\" or \"the state\" that the claim does not specify) makes the claim Context-dependent, even when other entities in the claim are named; a bare reference to a particular event, decision or place is not a generic. The proper name of one specific institution, agency or court (a central bank, a commission) identifies itself and does not count. A bare 'the government' or 'the state' used generically for whoever governs, as in a general policy recommendation, is not an outside antecedent and does not count.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
       "rules": [
         {
           "n": 1,
@@ -24,7 +24,7 @@
         },
         {
           "n": 2,
-          "text": "A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\") makes the claim Context-dependent, even when other entities in the claim are named."
+          "text": "A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\", or a bare \"the ruling\" or \"the state\" that the claim does not specify) makes the claim Context-dependent, even when other entities in the claim are named; a bare reference to a particular event, decision or place is not a generic. The proper name of one specific institution, agency or court (a central bank, a commission) identifies itself and does not count. A bare 'the government' or 'the state' used generically for whoever governs, as in a general policy recommendation, is not an outside antecedent and does not count."
         },
         {
           "n": 3,
@@ -57,7 +57,7 @@
       ],
       "capability": "text",
       "judged": true,
-      "tag_hash": "sha256:efabe2f2b6afbe05"
+      "tag_hash": "sha256:825d9e0cc540f37c"
     },
     {
       "name": "Exact duplicate",
@@ -417,5 +417,5 @@
       "tag_hash": "sha256:b53ab3bd92a2dbaf"
     }
   ],
-  "rubric_hash": "sha256:2d5fde15d1b02ba4"
+  "rubric_hash": "sha256:61109fe20e32d23d"
 }

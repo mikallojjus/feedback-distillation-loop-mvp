@@ -4,3 +4,4 @@
 - 2026-10-28 · edition 2026-10-28.1 · lesson A name-like description of one program or law says which PASS
 - 2026-10-28 · edition 2026-10-28.2 · lesson Named institutions resolve; a bare 'the ruling' does not PASS
 - 2026-10-28 · edition 2026-10-28.3 · rolled back Named institutions resolve; a bare 'the ruling' does not
+- 2026-10-29 · edition 2026-10-29.1 · lesson Bare 'the ruling' needs an antecedent; named bodies don't PASS
