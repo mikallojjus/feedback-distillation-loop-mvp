@@ -4,7 +4,10 @@
 //   loadConfig(root = agentRoot())              -> the parsed config.json of a state root; throws one Error listing every problem found
 //   validateConfig(config)                      -> { ok, errors: string[] } (messages such as "notion.rulebook.key: expected a non-empty string")
 //   isDemo(config)                              -> true for a demo profile (config.demo === true)
-//   tableEntry(config, name)                    -> the entry of one table: rulebook, claims (notion.claims, one object: there is one claims table, P5),
+//   isV2(config)                                -> true for the v2 profile (config.profile === 'v2'): a second Notion page with its own five tables, built beside the live one.
+//                                                  Its shape differs from production's in three places only (see validateConfig): notion.root_parent_page_id (the live hub it
+//                                                  hangs under, never protected), no editor columns on Claims, and the editor columns Tag outcome and Your note on Tag decisions.
+//   tableEntry(config, name)                  -> the entry of one table: rulebook, claims (notion.claims, one object: there is one claims table, P5),
 //                                                  tag_decisions, rule_changes or agent_settings. It is the entry object itself, not a copy,
 //                                                  so setup can write the ids it learns into it before it saves the file.
 //   isProtected(config, id)                     -> true when the id is in protected_database_ids or protected_page_ids (dashes and case ignored)
@@ -32,6 +35,10 @@ import { normId } from './notion-values.mjs';
 import { agentRoot } from './paths.mjs';
 
 export const AGENT_NAME = 'claim-tagger-mvp';
+/** The value of config.profile for the v2 page (docs/mvp-2026-11/STRUCTURE-V2.md): its state root is profiles/v2/ and, for now, only setup.mjs runs on it. */
+export const V2_PROFILE = 'v2';
+/** What a loop script says when it is started on a v2 root. The loop is ported to v2 at checkpoint 3; until then nothing but setup.mjs may touch that profile. */
+export const V2_REFUSAL = 'this is the v2 profile: only setup.mjs runs on it until the loop is ported (checkpoint 3)';
 // The internal key of the claims table is `claims` (it was `claims_copy` until decision P5, 27 Oct 2026: there is one claims table, not a list).
 export const TABLES = Object.freeze(['rulebook', 'claims', 'tag_decisions', 'rule_changes', 'agent_settings']);
 export const CAPABILITIES = Object.freeze(['text', 'deterministic', 'source', 'corpus']);
@@ -157,13 +164,18 @@ export function validateConfig(config) {
 
   if (!obj('config', config)) return { ok: false, errors };
   if (config.agent !== AGENT_NAME) bad('agent', `expected "${AGENT_NAME}"`);
+  // profile: absent for production and the practice pages; "v2" for the second page (the one other shape, see isV2)
+  if (config.profile !== undefined && config.profile !== V2_PROFILE) bad('profile', `expected "${V2_PROFILE}" or no profile`);
+  const v2 = config.profile === V2_PROFILE;
 
   // notion
   const n = config.notion;
   if (obj('notion', n)) {
     version('notion.api_version', n.api_version);
     version('notion.builder_api_version', n.builder_api_version);
-    id('notion.parent_page_id', n.parent_page_id);
+    // v2: the page that holds the five tables is made by `setup.mjs root`, so until then parent_page_id is a placeholder
+    id('notion.parent_page_id', n.parent_page_id, v2);
+    if (v2) id('notion.root_parent_page_id', n.root_parent_page_id);
     if (obj('notion.pages', n.pages)) for (const k of ['proposal', 'demos', 'demo_tests', 'onboarding', 'archive']) id(`notion.pages.${k}`, n.pages[k], true);
     if (obj('notion.rulebook', n.rulebook)) {
       table('notion.rulebook', n.rulebook);
@@ -177,7 +189,9 @@ export function validateConfig(config) {
       const c = n.claims;
       text(`${path}.label`, c.label);
       table(path, c);
-      if (obj(`${path}.columns`, c.columns)) for (const k of ['claim', 'link', 'sources', 'is_factual', ...CLAIMS_EDITOR_KEYS]) text(`${path}.columns.${k}`, c.columns[k]);
+      if (obj(`${path}.columns`, c.columns)) for (const k of ['claim', 'link', 'sources', 'is_factual', ...(v2 ? [] : CLAIMS_EDITOR_KEYS)]) text(`${path}.columns.${k}`, c.columns[k]);
+      // v2 has no editor column on Claims (editors decide on Tag decisions): a config that still names one is refused
+      if (v2 && isPlain(c.columns)) for (const k of CLAIMS_EDITOR_KEYS) if (c.columns[k] !== undefined) bad(`${path}.columns.${k}`, 'the v2 profile has no editor column on Claims; remove this key');
       if (obj(`${path}.write_columns`, c.write_columns)) {
         for (const k of CLAIMS_WRITE_KEYS) text(`${path}.write_columns.${k}`, c.write_columns[k]);
         for (const k of CLAIMS_RETIRED_WRITE_KEYS) if (c.write_columns[k] !== undefined) bad(`${path}.write_columns.${k}`, 'Agent notes is retired (CLAIMS-REVIEW.md section 6.1); remove this key');
@@ -197,7 +211,8 @@ export function validateConfig(config) {
     }
     list('notion.protected_database_ids', n.protected_database_ids, (path, v) => id(path, v), { min: 1 });
     list('notion.protected_page_ids', n.protected_page_ids, (path, v) => id(path, v));
-    list('notion.setup_page_parents', n.setup_page_parents, (path, v) => id(path, v), { min: 1 });
+    // v2: a placeholder until `setup.mjs root` makes the v2 page (the live hub is never a setup parent, so a build step run too early finds no parent and stops)
+    list('notion.setup_page_parents', n.setup_page_parents, (path, v) => id(path, v, v2), { min: 1 });
     if (typeof n.requests_per_second !== 'number' || !(n.requests_per_second > 0)) bad('notion.requests_per_second', 'expected a number above 0');
     int('notion.page_size', n.page_size, 1, 100);
     int('notion.max_text', n.max_text, 1, 2000);
@@ -205,6 +220,8 @@ export function validateConfig(config) {
     // the sources are protected; the agent's own tables are not
     if (Array.isArray(n.protected_database_ids) && Array.isArray(n.protected_page_ids)) {
       const protectedIds = new Set([...n.protected_database_ids, ...n.protected_page_ids].map((p) => normId(p)));
+      // v2 hangs under the live hub, which it only ever reads children of: if the hub were protected, `setup.mjs root` could never make the v2 page under it
+      if (v2 && typeof n.root_parent_page_id === 'string' && protectedIds.has(normId(n.root_parent_page_id))) bad('notion.root_parent_page_id', 'is in the protected lists, so no page could be made under it');
       for (const [k, s] of Object.entries(isPlain(n.sources) ? n.sources : {})) {
         for (const f of ['database_id', 'data_source_id']) {
           if (isPlain(s) && typeof s[f] === 'string' && !protectedIds.has(normId(s[f]))) bad(`notion.sources.${k}.${f}`, 'must also be listed in protected_database_ids');
@@ -225,6 +242,12 @@ export function validateConfig(config) {
   if (obj('editor_columns', config.editor_columns)) {
     for (const k of ['claims', 'rule_changes', 'rule_changes_status_editor_values', 'agent_settings']) {
       list(`editor_columns.${k}`, config.editor_columns[k], (path, v) => text(path, v));
+    }
+    if (v2) {
+      if (Array.isArray(config.editor_columns.claims) && config.editor_columns.claims.length > 0) bad('editor_columns.claims', 'the v2 profile has no editor column on Claims: expected an empty list');
+      const td = config.editor_columns.tag_decisions;
+      if (!Array.isArray(td)) bad('editor_columns.tag_decisions', 'the v2 profile needs the editor columns of Tag decisions (Tag outcome, Your note)');
+      else for (const name of ['Tag outcome', 'Your note']) if (!td.includes(name)) bad('editor_columns.tag_decisions', `the v2 profile needs "${name}" in this list`);
     }
     if (config.editor_columns.tag_decisions !== undefined) list('editor_columns.tag_decisions', config.editor_columns.tag_decisions, (path, v) => text(path, v));
     // the claims table must name every column it needs: the three editor columns are the ones editor_columns.claims lists, and none of the agent's
@@ -322,6 +345,11 @@ export function validateConfig(config) {
 }
 
 // ---- questions -------------------------------------------------------------------------------------------------------------
+
+/** True for the v2 profile: a config with "profile": "v2" (the second page, built beside the live one; only setup.mjs runs on it for now). */
+export function isV2(config) {
+  return config?.profile === V2_PROFILE;
+}
 
 /** True for a demo profile: a config with "demo": true (its tables live on the practice page). */
 export function isDemo(config) {

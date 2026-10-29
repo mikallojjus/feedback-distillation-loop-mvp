@@ -9,6 +9,7 @@
 //                                                            -> [{ key, properties }] / one properties object: what the plans create
 //   buildCanaries(taxonomy)                                  -> the rows of evals/canaries.jsonl
 //   richTextFromPieces(pieces), withLinkedSources(client, byGeoId)   -> Geo Sources with its links (plans carry plain text only)
+//   stepRoot(ctx, { title }) -> the v2 profile only: finds or makes the v2 page under the live hub (notion.root_parent_page_id) and records it as notion.parent_page_id
 //   stepStructure(ctx, parts), stepApiCheck(ctx), stepRulebook(ctx, { from }), stepClaims(ctx, { from }), stepSeedAudit(ctx, { from, claims }),
 //   stepMigrateDecisions(ctx, { claims }), stepSettings(ctx), stepRubric(ctx, { from }), stepCanaries(ctx, { from }), stepVerify(ctx, { taxonomy, claims, audit })
 //                                                            -> { code, lines, errors?, ... }; the caller prints and records the run
@@ -29,7 +30,7 @@
 
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, tableEntry } from './config.mjs';
+import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, isProtected, isV2, tableEntry, validateConfig } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { fileSha256 } from './hash.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './jsonl.mjs';
@@ -579,6 +580,67 @@ export function stepOptionsFrom(ctx, { pickFile } = {}) {
 }
 
 const relativePath = (root, file) => file.startsWith(root) ? file.slice(root.length).replace(/^[\\/]+/, '').replace(/\\/g, '/') : file;
+
+const placeholderId = (v) => typeof v === 'string' && v.trim().startsWith('<');
+
+/**
+ * The v2 root step: the one page the five tables of the v2 profile live on. Under notion.root_parent_page_id (the live hub, which v2 only lists and adds one page to) it
+ * lists the block children, adopts the child page whose title is the hub title of the structure (loadStructure(root).hub.title; `--title` when there is no structure yet), or makes it
+ * with createPageUnderPage (the call runStructure makes for a page). Then config.json is rewritten atomically: notion.parent_page_id and notion.setup_page_parents become the page, so
+ * the build steps (pages, databases, views, hub) build there and nowhere else. Until then they find a placeholder and stop. Every request goes into runs/builder/requests.jsonl.
+ * Refuses: a profile that is not v2; a root parent or a found/made page that is on the protected lists; two pages of that title; a parent_page_id that is already set to another
+ * page (it is never overwritten). Run again it finds the page it made, changes nothing and says so.
+ */
+export async function stepRoot(ctx, { title: given } = {}) {
+  const { root, config } = ctx;
+  if (!isV2(config)) throw new InputError('root is for the v2 profile only (config.json has no "profile": "v2")');
+  const parent = config.notion.root_parent_page_id;
+  if (typeof parent !== 'string' || normId(parent).length !== 32) throw new InputError('config.json has no notion.root_parent_page_id');
+  if (isProtected(config, parent)) throw new InputError('notion.root_parent_page_id is on the protected lists of config.json; nothing is made under it');
+  let title = null;
+  try {
+    title = loadStructure(root).hub?.title ?? null;
+  } catch (e) {
+    if (!(e instanceof StructureError)) throw e; // no structure file yet: --title stands in
+  }
+  title = title ?? (typeof given === 'string' && given.trim() !== '' ? given.trim() : null);
+  if (!title) throw new InputError('there is no hub title: the structure has no hub block (or no setup/structure.json yet); give --title "<name of the v2 page>"');
+
+  const client = ctx.builderClient({ logFile: join(builderPaths(root).dir, 'requests.jsonl') });
+  const listing = await client.retrieveBlockChildren(parent);
+  const hits = listing.filter((b) => b?.type === 'child_page' && b.child_page?.title === title);
+  if (hits.length > 1) throw new InputError(`more than one page titled "${title}" is under the live hub; keep one, then run root again`);
+  let id;
+  let status;
+  if (hits.length === 1) {
+    id = normId(hits[0].id);
+    status = 'adopted';
+  } else {
+    const have = config.notion.parent_page_id;
+    if (!placeholderId(have)) throw new InputError(`config.json already names the v2 page (${normId(have)}) but no page titled "${title}" is under the live hub; root does not overwrite it`);
+    const created = await client.createPageUnderPage({ parentPageId: parent, title });
+    id = normId(created.id);
+    status = 'created';
+  }
+  if (isProtected(config, id)) throw new InputError(`the page "${title}" (${id}) is on the protected lists of config.json; it is not used`);
+  const have = config.notion.parent_page_id;
+  if (!placeholderId(have) && normId(have) !== id) {
+    throw new InputError(`config.json names the v2 page as ${normId(have)} but the page titled "${title}" under the live hub is ${id}; root does not overwrite it`);
+  }
+  const unchanged = normId(have) === id && Array.isArray(config.notion.setup_page_parents) && config.notion.setup_page_parents.length === 1 && normId(config.notion.setup_page_parents[0]) === id;
+  if (!unchanged) {
+    const next = structuredClone(config);
+    next.notion.parent_page_id = id;
+    next.notion.setup_page_parents = [id];
+    const { ok, errors } = validateConfig(next);
+    if (!ok) throw new InputError(`the rewritten config.json would not be valid: ${errors.join('; ')}`);
+    writeJsonAtomic(join(root, 'config.json'), next);
+    config.notion.parent_page_id = id;
+    config.notion.setup_page_parents = [id];
+  }
+  ctx.run.update({ v2_page: { id, title, status } });
+  return { code: EXIT.OK, lines: [`root: the page "${title}" ${status === 'created' ? 'was made' : 'was found'} under the live hub (${id})${unchanged ? '; config.json already names it, nothing changed' : '; config.json now names it as notion.parent_page_id'}`], page: { id, title, status } };
+}
 
 /** One GET of the parent page under the builder version: proof that the token and the version work. Reads only. */
 export async function stepApiCheck(ctx) {

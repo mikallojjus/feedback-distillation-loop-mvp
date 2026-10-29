@@ -58,7 +58,7 @@ import { spawn } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, isProtected, loadConfig, tableEntry } from './lib/config.mjs';
+import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, V2_REFUSAL, editorColumns, isProtected, isV2, loadConfig, tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { notionUrl, plural, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
@@ -227,12 +227,14 @@ const saveDemo = (ctx) => {
 const saveConfig = (ctx) => writeJsonAtomic(join(ctx.demoRoot, 'config.json'), ctx.config);
 
 function loadProduction(root, env) {
-  if (env.config) return env.config;
+  let config;
   try {
-    return loadConfig(root);
+    config = env.config ?? loadConfig(root);
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
+  if (isV2(config)) throw stop(EXIT.INVALID, V2_REFUSAL); // the loop does not run on the v2 profile yet (checkpoint 3)
+  return config;
 }
 
 /**

@@ -135,6 +135,7 @@ export const OPTION_COLORS = Object.freeze({
     'Why wrong': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
     'Agent reading': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
     'Follow-up': { Fixed: 'green', 'Still wrong': 'red' },
+    'Agent status': { 'Waits for you': 'yellow', Done: 'green', 'Disagrees with your decision': 'red', 'Could not read': 'gray' }, // per row, on the v2 page
   },
   rule_changes: {
     Kind: { 'Clarify wording': 'blue', 'Change the rule': 'purple', 'Initial rules': 'gray' },
@@ -536,7 +537,7 @@ export function validateStructure(structure) {
   return structure;
 }
 
-const HUB_KEYS = Object.freeze(['title', 'note', 'view_links', 'table_order', 'pages_after']);
+const HUB_KEYS = Object.freeze(['title', 'note', 'view_links', 'table_order', 'pages_after', 'link_text']);
 
 // The hub block (P11, P14): what the hub page holds besides its title, in order: the one line of warning (the note), the link lines to some views, the five tables, then some pages. A
 // structure without one (the earlier builds) is valid and builds as before.
@@ -560,6 +561,14 @@ function validateHub(structure, bad) {
   const pageKeys = structure.pages.map(pageKey);
   for (const k of hub.pages_after) if (k !== 'archive' && !pageKeys.includes(k)) bad(`hub: pages_after names "${k}", which is neither "archive" nor one of the pages (${pageKeys.join(', ') || 'none'})`);
   for (const k of pageKeys) if (!hub.pages_after.includes(k)) bad(`hub: pages_after does not place the page "${k}"`);
+  // link_text (optional, the v2 page): the words after a view's name on its link line, in place of HUB_LINK_TEXT, for views linked from the hub
+  if (hub.link_text !== undefined) {
+    if (!isPlain(hub.link_text)) bad('hub: link_text must be an object of view key -> text');
+    for (const [k, v] of Object.entries(hub.link_text)) {
+      if (!hub.view_links.includes(k)) bad(`hub: link_text names "${k}", which is not one of view_links`);
+      if (typeof v !== 'string' || v.trim() === '' || /[\r\n]/.test(v) || [...v].length > 200) bad(`hub: link_text of "${k}" must be one line of at most 200 characters`);
+    }
+  }
 }
 
 export function loadStructure(root = agentRoot()) {
@@ -686,7 +695,7 @@ export function hubPlan(structure) {
     pages: Object.fromEntries(structure.pages.map((title) => [pageKey(title), title])),
     view_links: hub.view_links.map((key) => {
       const view = structure.views.find((v) => viewKey(v.name) === key);
-      return { key, name: view.name, text: `${view.name}: ${HUB_LINK_TEXT[key] ?? `the view "${view.name}"`}` };
+      return { key, name: view.name, text: `${view.name}: ${hub.link_text?.[key] ?? HUB_LINK_TEXT[key] ?? `the view "${view.name}"`}` };
     }),
   };
 }

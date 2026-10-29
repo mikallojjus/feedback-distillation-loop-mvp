@@ -40,6 +40,10 @@
 //   setup.mjs settings                                    the one Agent settings row (run rubric first)
 //   setup.mjs all --taxonomy <f> --claims <f> --audit <f> every step above in order, ending with verify; run it again after a stop
 //
+//   The v2 root (needs the session; NOT part of "all"; only for a config with "profile": "v2", i.e. CLAIM_TAGGER_MVP_ROOT=agents/claim-tagger-mvp/profiles/v2):
+//   setup.mjs root [--title <name>]                       find or make the v2 page under the live hub (notion.root_parent_page_id) and write it into config.json as notion.parent_page_id
+//                                                         and notion.setup_page_parents; the title is the structure's hub title, else --title; run again it adopts and changes nothing
+//
 //   The archive (needs the session; NOT part of "all"; decision P9, hard rule 8 as amended: nothing is deleted, only setup moves the agent's own pages and tables)
 //   setup.mjs archive [--plan-only]                       rename the root page to "Claim tagger", make the page "Feedback Distillation MVP (archive, to 27 Oct 2026)" under it with a
 //                                                         first line that links back to the hub, move the eight old objects into it (the pages Structure proposal, Demos and Demo
@@ -92,6 +96,7 @@ export const USAGE = [
   '       setup.mjs pages | databases | views | hub | build      (needs a builder session)',
   '       setup.mjs rulebook [--from f] | claims [--from f] | seed-audit [--from f] [--claims pick] | migrate-decisions [--claims pick] | rubric [--from f] | canaries [--from f] | settings',
   '       setup.mjs all --taxonomy <f> --claims <f> --audit <f>',
+  '       setup.mjs root [--title <name>]                         (the v2 profile only; needs a builder session; not part of "all"; run it first)',
   '       setup.mjs archive [--plan-only]                        (needs a builder session; not part of "all"; run it before build)',
 ].join('\n');
 
@@ -152,6 +157,8 @@ const COMMANDS = {
   settings: { setup: true },
   all: { setup: true, options: INPUTS },
   archive: { setup: true, options: { 'plan-only': { type: 'boolean' } } },
+  // the v2 profile only (profiles/v2): finds or makes the v2 page under the live hub and records it in config.json; not part of "all" (it runs first, once)
+  root: { setup: true, options: { title: { type: 'string' } } },
 };
 
 const ALL_STEPS = ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'];
@@ -290,6 +297,8 @@ async function dispatch(name, values, ctx) {
       return steps.stepCanaries(ctx, { from: path(values.from) });
     case 'settings':
       return steps.stepSettings(ctx);
+    case 'root':
+      return steps.stepRoot(ctx, { title: values.title });
     case 'archive':
       return stepArchive(ctx, { planOnly: values['plan-only'] === true });
     case 'verify':

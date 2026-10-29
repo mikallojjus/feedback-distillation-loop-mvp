@@ -38,7 +38,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { TABLES, isProtected, loadConfig, tableEntry } from './lib/config.mjs';
+import { TABLES, V2_REFUSAL, isProtected, isV2, loadConfig, tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { BUILDER_API_VERSION, clientFromConfig, countRequests, requestLogger } from './lib/notion-rest.mjs';
@@ -511,6 +511,7 @@ export function tablesFor(names) {
 export async function pull({
   root = agentRoot(), config = loadConfig(root), client, tables = 'all', pullId, now = () => new Date(), fetchImpl, token, repoRoot, sleep,
 } = {}) {
+  if (isV2(config)) throw new UsageError(V2_REFUSAL); // the loop does not run on the v2 profile yet (checkpoint 3)
   const wanted = tablesFor(tables);
   const skipped = [];
   const targets = [];
@@ -922,6 +923,10 @@ export async function main(argv, io = defaultIo, env = {}) {
     config = env.config ?? loadConfig(root);
   } catch (e) {
     io.err(`pull: ${e.message}`);
+    return EXIT.INVALID;
+  }
+  if (isV2(config)) {
+    io.err(`pull: ${V2_REFUSAL}`);
     return EXIT.INVALID;
   }
   try {

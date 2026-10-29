@@ -44,7 +44,7 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { cutText, demoCommands, listNames, namePracticePage, quoted, viewLink } from './editor-words.mjs';
 import { claudeVersion, findClaudeBin, runClaude, withTransientRetry } from './claude.mjs';
-import { ADD_SCRIPT, isDemo, loadConfig, tableEntry } from './config.mjs';
+import { ADD_SCRIPT, V2_REFUSAL, isDemo, isV2, loadConfig, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic } from './jsonl.mjs';
 import { clientFromConfig, requestLogger } from './notion-rest.mjs';
@@ -258,6 +258,8 @@ export async function withRun({ script, label, again = '/claim-tagger', opts = {
     } catch (e) {
       throw new LoopExit(EXIT.INVALID, e.message, { sentence: `${label}: nothing was done, because config.json is not valid.`, next: ENGINEER });
     }
+    // the v2 profile is built by setup.mjs only until the loop is ported (checkpoint 3): every loop script ends here, before it reads or writes anything
+    if (isV2(ctx.config)) throw new LoopExit(EXIT.INVALID, V2_REFUSAL, { sentence: `${label}: nothing was done, because this is the v2 profile and the loop does not run on it yet.`, next: ENGINEER });
     ctx.demo = isDemo(ctx.config);
     out = await body(ctx);
   } catch (e) {

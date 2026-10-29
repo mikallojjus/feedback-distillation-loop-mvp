@@ -5,3 +5,4 @@ agents/*/sandbox/runs/
 node_modules/
 *.log
 .claude/worktrees/
+agents/*/profiles/*/runs/

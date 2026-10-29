@@ -774,3 +774,39 @@ Verified:
 - The demo mocks are still in Claims (entry 54).
 
 **Next.** `/claim-tagger tag` when the owner asks: never while the demo mocks are in Claims (entry 54), or remove the mocks first. Then commit this entry with the docs, skills and evidence.
+
+### 56. The v2 page, checkpoint 1: per-tag decisions, built empty beside the live hub (P42 to P44; 2026-10-29)
+
+**Why.** Today editors decide per claim, and P16 makes every judged tag left out of Verified tags count as Does not apply. With a second judged tag that causes four problems:
+- made-up decisions on every claim already Reviewed;
+- false disagreements;
+- old untagged notes supporting rule changes on the wrong tag;
+- editors asked to explain decisions they never made.
+
+The owner chose per-tag decisions (P42). The move happens gradually, on a separate page that the editor, now reviewing the live hub, does not have to see break (P43). Checkpoint 1 is the empty page (P44). Plan: `C:\Users\John Malkovich\.claude\plans\we-could-start-a-melodic-thacker.md`. Branch `v2-page` off `import-claims`.
+
+**Done.**
+- **Snapshot.** Production `setup verify` showed 0 writes and the 7 known differences (`evidence/33-v2-page/production-verify-before.md`). The 3 columns people added to Claims (Proposed fix, Reviewer, Filter tags) and the two widened views are the editor's feedback on the live page.
+- **Spec.** `STRUCTURE-V2.md`, drafted by Opus. It is reviewed by the editor persona (ED-1 to ED-10). ED-1 (Claim page in Your queue), ED-2 (Lessons waiting with Editor wording) and ED-10 (a wider All claims, an Agent disagreed link) are applied. The rest are open questions 5 to 10 for the owner.
+- **Code** (Sonnet, then mine):
+  - `lib/v2-profile.mjs` and `v2-profile.mjs init | structure`: the config from the live one, and the structure from the spec with its completion block;
+  - `config.mjs`: the v2 shape;
+  - every loop script refuses a v2 root;
+  - `setup.mjs root`;
+  - `notion-build.mjs`: the hub block's `link_text`, and colours for the per-row Agent status;
+  - `.gitignore`: `agents/*/profiles/*/runs/`.
+  - Tests: 2,409 → 2,441, all passing.
+- **Built.** `setup.mjs root` and `build` in the v2 root (`evidence/33-v2-page/build.md`). The page is "Claim tagger v2 (in preparation)" (408273e214eb81d78f78ecfe4885d1ab), under the hub, with 5 tables, 4 views and 0 rows.
+
+**Verified.**
+- v2 `setup verify` found no structure differences. Its 6 reports are missing data inputs, which is by design.
+- Production `setup verify` after the build: 0 writes, the 7 old differences, and one new difference, the v2 child page on the hub, listed as a "leftover". That is by design until the switch-over; do not remove it.
+- The build's 18 writes all name v2 objects.
+- An independent Opus read-back sent 116 requests and 0 writes. All six checks passed: page, tables, views, write targets, live tables unchanged (600 / 602 / 13 / 3 / 1 rows, no edits after the build started), and the spec's intent.
+
+**Not done.**
+- The open questions 1 to 10 of `STRUCTURE-V2.md` are the owner's to decide.
+- v2 Claims has no back-relation to its rows, because the builder makes one-way relations only (open question 6).
+- Nothing is committed.
+
+**Next.** Checkpoint 1: the owner clicks through the v2 page and answers the open questions. Then plan checkpoint 2, the keyed data copy.

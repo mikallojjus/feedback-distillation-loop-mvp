@@ -1,0 +1,680 @@
+{
+  "tables": {
+    "rulebook": {
+      "title": "Rulebook",
+      "columns": [
+        {
+          "name": "Name",
+          "type": "title",
+          "options": [],
+          "description": "The tag's name; one row per tag."
+        },
+        {
+          "name": "Category",
+          "type": "select",
+          "options": [
+            "Nature",
+            "Form",
+            "Quality",
+            "Style",
+            "Tone",
+            "Format",
+            "Meaning",
+            "Usage",
+            "Check"
+          ],
+          "description": "The tag's group."
+        },
+        {
+          "name": "Counterpart",
+          "type": "rich_text",
+          "options": [],
+          "description": "The opposite tag it pairs with (Self-contained for Context-dependent)."
+        },
+        {
+          "name": "Description",
+          "type": "rich_text",
+          "options": [],
+          "description": "One or two sentences describing a claim that carries the tag."
+        },
+        {
+          "name": "Evidence",
+          "type": "url",
+          "options": [],
+          "description": "The report the tag's verification rests on."
+        },
+        {
+          "name": "Example Claims",
+          "type": "rich_text",
+          "options": [],
+          "description": "Claims that show the tag, one per line."
+        },
+        {
+          "name": "Geo Status",
+          "type": "select",
+          "options": [
+            "Existing in Geo",
+            "To be created",
+            "Implemented differently"
+          ],
+          "description": "Whether the tag exists in Geo."
+        },
+        {
+          "name": "Geo Tag ID",
+          "type": "rich_text",
+          "options": [],
+          "description": "The tag's id in Geo."
+        },
+        {
+          "name": "Polarity",
+          "type": "select",
+          "options": [
+            "Classification",
+            "Positive",
+            "Issue"
+          ],
+          "description": "Kept as in the taxonomy; the agent does not use it."
+        },
+        {
+          "name": "Status",
+          "type": "select",
+          "options": [
+            "Verified",
+            "Proposed"
+          ],
+          "description": "Whether the tag is verified."
+        },
+        {
+          "name": "Verified on",
+          "type": "date",
+          "options": [],
+          "description": "When the tag was verified."
+        },
+        {
+          "name": "When to use",
+          "type": "rich_text",
+          "options": [],
+          "description": "The numbered rules the agent applies; a tag is judged only when this holds rules."
+        },
+        {
+          "name": "Work tags",
+          "type": "multi_select",
+          "options": [
+            "Pipeline benchmark check",
+            "Issue"
+          ],
+          "description": "The work the tag belongs to; every row here has Issue."
+        },
+        {
+          "name": "Created",
+          "type": "created_time",
+          "options": [],
+          "description": "When the row was made."
+        },
+        {
+          "name": "Created by",
+          "type": "created_by",
+          "options": [],
+          "description": "Who made the row."
+        },
+        {
+          "name": "Last edited",
+          "type": "last_edited_time",
+          "options": [],
+          "description": "When the row last changed."
+        },
+        {
+          "name": "Last edited by",
+          "type": "last_edited_by",
+          "options": [],
+          "description": "Who last changed the row."
+        }
+      ],
+      "description": "One row per tag; When to use holds the rules. Change rules through Lessons waiting.",
+      "default_view": {
+        "name": "Rulebook",
+        "columns": [
+          "Name",
+          "Category",
+          "Status",
+          "When to use",
+          "Example Claims"
+        ]
+      }
+    },
+    "claims": {
+      "title": "Claims",
+      "columns": [
+        {
+          "name": "Geo Name",
+          "type": "title",
+          "options": [],
+          "description": "The claim text."
+        },
+        {
+          "name": "Agent tags",
+          "type": "relation",
+          "options": [],
+          "description": "The tags that apply, from the Rulebook: the ones you decided Applies in Tag decisions, and the ones the agent applies where nothing waits for you. Tags that wait for you are in Tags waiting instead.",
+          "relation_to": "rulebook"
+        },
+        {
+          "name": "Agent confidence",
+          "type": "number",
+          "options": [],
+          "description": "How sure the agent is: the lowest confidence among the tags it judged on the claim, from 0.5 (a coin flip) to 1 (certain)."
+        },
+        {
+          "name": "Agent reasons",
+          "type": "rich_text",
+          "options": [],
+          "description": "Why the agent proposed what it did: one line per judged tag, \"<Tag>: <reason> · <rule cited> · <k> of <n> runs agree\"."
+        },
+        {
+          "name": "Agent status",
+          "type": "select",
+          "options": [
+            "Waits for you",
+            "Done",
+            "Disagrees with your decision",
+            "Could not read"
+          ],
+          "description": "What the agent says about the claim as a whole: Waits for you (one of its tags waits in Your queue), Done, Disagrees with your decision (on one of its tags), or Could not read. You decide in Tag decisions, not here."
+        },
+        {
+          "name": "Tags waiting",
+          "type": "relation",
+          "options": [],
+          "description": "The tags of this claim that wait for your decision in Your queue, from the Rulebook. Empty when nothing waits.",
+          "relation_to": "rulebook"
+        },
+        {
+          "name": "Agent edition",
+          "type": "rich_text",
+          "options": [],
+          "description": "The rulebook edition the agent wrote this row under."
+        },
+        {
+          "name": "Agent remarks",
+          "type": "rich_text",
+          "options": [],
+          "description": "What the agent could not check, such as \"not checked: 6 tags without rules\"; empty when it checked everything."
+        },
+        {
+          "name": "Agent reading",
+          "type": "rich_text",
+          "options": [],
+          "description": "What the agent made of your decisions, one line per tag where you differed from it: Agent slip, Rule unclear or Rule should change, the rule, and why. The same reading is on the tag's row in Tag decisions."
+        },
+        {
+          "name": "Geo ID",
+          "type": "rich_text",
+          "options": [],
+          "description": "The claim's identity in Geo; the Key of its rows in Tag decisions starts with it."
+        },
+        {
+          "name": "Geo URL",
+          "type": "url",
+          "options": [],
+          "description": "The claim's page in Geo."
+        },
+        {
+          "name": "Geo Space",
+          "type": "select",
+          "options": [
+            "U.S. Politics",
+            "World affairs",
+            "AI",
+            "Health",
+            "Crypto",
+            "Technology",
+            "Pharma",
+            "Industries",
+            "Education",
+            "Software",
+            "Places",
+            "Documentation"
+          ],
+          "description": "The Geo space the claim was read from."
+        },
+        {
+          "name": "Geo Created",
+          "type": "date",
+          "options": [],
+          "description": "The day the claim was made in Geo."
+        },
+        {
+          "name": "Geo Sources",
+          "type": "rich_text",
+          "options": [],
+          "description": "The claim's sources, as Geo lists them."
+        },
+        {
+          "name": "Geo Is factual",
+          "type": "checkbox",
+          "options": [],
+          "description": "Ticked when Geo marks the claim as factual."
+        },
+        {
+          "name": "Geo Tags",
+          "type": "multi_select",
+          "options": [
+            "Debate",
+            "Featured",
+            "Main claim",
+            "Top Debate"
+          ],
+          "description": "The claim's tags in Geo."
+        },
+        {
+          "name": "Geo Topics",
+          "type": "rich_text",
+          "options": [],
+          "description": "The claim's topics in Geo."
+        }
+      ],
+      "description": "Claims read from Geo, with the agent's summary of each. Read only: you decide each claim and tag in Tag decisions.",
+      "default_view": {
+        "name": "All claims",
+        "columns": [
+          "Geo Name",
+          "Geo Space",
+          "Agent status",
+          "Agent tags",
+          "Tags waiting",
+          "Agent reasons",
+          "Agent reading",
+          "Geo URL"
+        ]
+      }
+    },
+    "tag_decisions": {
+      "title": "Tag decisions",
+      "columns": [
+        {
+          "name": "Claim",
+          "type": "title",
+          "options": [],
+          "description": "The claim text."
+        },
+        {
+          "name": "Claim page",
+          "type": "relation",
+          "options": [],
+          "description": "The claim's row in Claims; open it for the claim's sources and its Geo link.",
+          "relation_to": "claims"
+        },
+        {
+          "name": "Tag",
+          "type": "select",
+          "options": [
+            "Context-dependent",
+            "Exact duplicate",
+            "Factually challenged",
+            "Improper capitalization",
+            "Improperly sourced",
+            "Incorrect grammar",
+            "Multi-sentence",
+            "Poor wording",
+            "Semantically duplicated",
+            "Source inaccessible",
+            "Trailing period",
+            "Unsourced",
+            "Wordy"
+          ],
+          "description": "The tag the row is about."
+        },
+        {
+          "name": "Agent proposal",
+          "type": "select",
+          "options": [
+            "Applies",
+            "Does not apply",
+            "Can't tell"
+          ],
+          "description": "The agent's answer for this claim and tag."
+        },
+        {
+          "name": "Agent confidence",
+          "type": "number",
+          "options": [],
+          "description": "How sure the agent is of its answer, from 0.5 (a coin flip) to 1 (certain); Your queue is sorted by it, lowest first."
+        },
+        {
+          "name": "Agent reason",
+          "type": "rich_text",
+          "options": [],
+          "description": "At most 40 words, then the rule cited and how many runs agreed."
+        },
+        {
+          "name": "Tag outcome",
+          "type": "select",
+          "options": [
+            "Applies",
+            "Does not apply"
+          ],
+          "description": "Your decision on this claim and tag; it always wins over the agent's answer. Empty means the row waits in Your queue."
+        },
+        {
+          "name": "Your note",
+          "type": "rich_text",
+          "options": [],
+          "description": "Your words, when you want to say something. Open with Agent slip, Rule unclear or Rule should change and a full stop to say what went wrong; otherwise the agent reads it. \"rule 4\" names the rule."
+        },
+        {
+          "name": "Agent status",
+          "type": "select",
+          "options": [
+            "Waits for you",
+            "Done",
+            "Disagrees with your decision",
+            "Could not read"
+          ],
+          "description": "What the agent says about this row: Waits for you (it needs your decision), Done, Disagrees with your decision (a later run answered otherwise), or Could not read."
+        },
+        {
+          "name": "Agent reading",
+          "type": "select",
+          "options": [
+            "Agent slip",
+            "Rule unclear",
+            "Rule should change"
+          ],
+          "description": "What the agent made of your decision where you differed from it: Agent slip (the rule settles it your way), Rule unclear (it reads both ways) or Rule should change (it decides against you)."
+        },
+        {
+          "name": "Rule",
+          "type": "rich_text",
+          "options": [],
+          "description": "The rule the reading points at, for example \"Context-dependent rule 3\"."
+        },
+        {
+          "name": "Reading note",
+          "type": "rich_text",
+          "options": [],
+          "description": "One line of why. It opens with \"without your note\" when you wrote nothing, and reads \"Your note says so.\" when your note opened with a reason word."
+        },
+        {
+          "name": "Follow-up",
+          "type": "select",
+          "options": [
+            "Fixed",
+            "Still wrong"
+          ],
+          "description": "Set after a safety check PASS, on the rows the change rests on."
+        },
+        {
+          "name": "Key",
+          "type": "rich_text",
+          "options": [],
+          "description": "The claim's Geo ID, two colons, the tag; one row per claim and tag."
+        },
+        {
+          "name": "Rulebook edition",
+          "type": "rich_text",
+          "options": [],
+          "description": "The edition the proposal was made under."
+        },
+        {
+          "name": "Decided under",
+          "type": "rich_text",
+          "options": [],
+          "description": "The edition the proposal you decided on was made under; the agent records it when it first finds your Tag outcome."
+        },
+        {
+          "name": "Read under",
+          "type": "rich_text",
+          "options": [],
+          "description": "The edition and a short mark of what the reading rests on: your decision, your note and the proposal the agent made. The agent reads a row again only when one of those changes."
+        }
+      ],
+      "description": "One row per claim and tag the agent judged. Decide here: set Tag outcome, and add Your note when you have something to say.",
+      "default_view": {
+        "columns": [
+          "Claim",
+          "Tag",
+          "Agent proposal",
+          "Agent status",
+          "Tag outcome",
+          "Your note",
+          "Agent reading",
+          "Follow-up"
+        ]
+      }
+    },
+    "rule_changes": {
+      "title": "Rule changes",
+      "columns": [
+        {
+          "name": "Lesson",
+          "type": "title",
+          "options": [],
+          "description": "A short name for the change."
+        },
+        {
+          "name": "Tag",
+          "type": "select",
+          "options": [
+            "Context-dependent",
+            "Exact duplicate",
+            "Factually challenged",
+            "Improper capitalization",
+            "Improperly sourced",
+            "Incorrect grammar",
+            "Multi-sentence",
+            "Poor wording",
+            "Semantically duplicated",
+            "Source inaccessible",
+            "Trailing period",
+            "Unsourced",
+            "Wordy"
+          ],
+          "description": "The tag the change is about."
+        },
+        {
+          "name": "Rule",
+          "type": "rich_text",
+          "options": [],
+          "description": "Which rule, for example \"Context-dependent rule 3\"."
+        },
+        {
+          "name": "Kind",
+          "type": "select",
+          "options": [
+            "Clarify wording",
+            "Change the rule",
+            "Initial rules"
+          ],
+          "description": "What kind of change."
+        },
+        {
+          "name": "Current text",
+          "type": "rich_text",
+          "options": [],
+          "description": "The rule's text now."
+        },
+        {
+          "name": "Proposed text",
+          "type": "rich_text",
+          "options": [],
+          "description": "The text the agent proposes."
+        },
+        {
+          "name": "Safety check result",
+          "type": "rich_text",
+          "options": [],
+          "description": "For example \"PASS: examples 11/11, earlier 10/10, yours 2/2\" or \"FAIL: 'Excluding CNN from Air Force One violates the federal court order' now Does not apply\"."
+        },
+        {
+          "name": "Supporting rows",
+          "type": "rich_text",
+          "options": [],
+          "description": "One line per decided row the change rests on: the claim shortened, \" · \", the row's Key."
+        },
+        {
+          "name": "Editor wording",
+          "type": "rich_text",
+          "options": [],
+          "description": "The rule as the editor words it; when filled, the safety check tests it instead of the Proposed text. Never written by the agent."
+        },
+        {
+          "name": "Status",
+          "type": "select",
+          "options": [
+            "Proposed",
+            "Approved",
+            "Rejected",
+            "Live",
+            "Rolled back"
+          ],
+          "description": "The editor sets Approved and Rejected; the agent sets Proposed, Live and Rolled back."
+        }
+      ],
+      "description": "Rule changes the agent drafted. The rule owner sets Approved or Rejected.",
+      "default_view": {
+        "columns": [
+          "Lesson",
+          "Tag",
+          "Rule",
+          "Status",
+          "Current text",
+          "Proposed text",
+          "Editor wording",
+          "Safety check result"
+        ]
+      }
+    },
+    "agent_settings": {
+      "title": "Agent settings",
+      "columns": [
+        {
+          "name": "Name",
+          "type": "title",
+          "options": [],
+          "description": "The row's name, Claim tagger."
+        },
+        {
+          "name": "Paused",
+          "type": "checkbox",
+          "options": [],
+          "description": "Ticked by a person, every command then refuses; cleared by a person."
+        },
+        {
+          "name": "Rulebook edition",
+          "type": "rich_text",
+          "options": [],
+          "description": "The edition in force: a date plus a count, such as 2026-10-16.1; it goes up when a rule changes."
+        },
+        {
+          "name": "Last run summary",
+          "type": "rich_text",
+          "options": [],
+          "description": "One short line, such as \"Promote · 16 Oct 11:20 · PASS\"."
+        }
+      ],
+      "description": "Tick Paused to stop every command; untick to resume.",
+      "default_view": {
+        "columns": [
+          "Name",
+          "Paused",
+          "Rulebook edition",
+          "Last run summary"
+        ]
+      }
+    }
+  },
+  "views": [
+    {
+      "name": "Your queue",
+      "table": "tag_decisions",
+      "filter": "Agent status is Waits for you, and Tag outcome is empty",
+      "sort": "Agent confidence, lowest first",
+      "columns": [
+        "Claim",
+        "Claim page",
+        "Tag",
+        "Agent proposal",
+        "Agent reason",
+        "Tag outcome",
+        "Your note"
+      ],
+      "wrap": true
+    },
+    {
+      "name": "Needs your note",
+      "table": "tag_decisions",
+      "filter": "Reading note contains \"without your note\"",
+      "sort": "Agent confidence, lowest first",
+      "columns": [
+        "Claim",
+        "Tag",
+        "Agent proposal",
+        "Tag outcome",
+        "Agent reading",
+        "Reading note",
+        "Your note"
+      ],
+      "wrap": true
+    },
+    {
+      "name": "Agent disagreed",
+      "table": "tag_decisions",
+      "filter": "Agent status is Disagrees with your decision",
+      "sort": "Agent confidence, lowest first",
+      "columns": [
+        "Claim",
+        "Tag",
+        "Tag outcome",
+        "Agent proposal",
+        "Agent reason",
+        "Your note",
+        "Rulebook edition"
+      ],
+      "wrap": true
+    },
+    {
+      "name": "Lessons waiting",
+      "table": "rule_changes",
+      "filter": "Status is Proposed or Approved",
+      "sort": "none",
+      "columns": [
+        "Lesson",
+        "Tag",
+        "Rule",
+        "Current text",
+        "Proposed text",
+        "Editor wording",
+        "Safety check result",
+        "Status"
+      ],
+      "wrap": true
+    }
+  ],
+  "pages": [],
+  "made_from": "docs/mvp-2026-11/STRUCTURE-V2.md (the v2 page, draft of 29 Oct 2026)",
+  "hub": {
+    "title": "Claim tagger v2 (in preparation)",
+    "note": "In preparation and not in use yet: claims are still decided on the Claims table of \"Claim tagger\".",
+    "view_links": [
+      "your_queue",
+      "needs_your_note",
+      "agent_disagreed",
+      "lessons_waiting"
+    ],
+    "table_order": [
+      "tag_decisions",
+      "claims",
+      "rulebook",
+      "rule_changes",
+      "agent_settings"
+    ],
+    "pages_after": [
+      "archive"
+    ],
+    "link_text": {
+      "your_queue": "the rows, a claim and one tag, that wait for your decision",
+      "needs_your_note": "rows where you overruled the agent and left no note",
+      "agent_disagreed": "rows where the agent's newest answer differs from your decision"
+    }
+  }
+}

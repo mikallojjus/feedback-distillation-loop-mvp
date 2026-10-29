@@ -54,7 +54,7 @@ import { basename, join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { claudeVersion, extractJson, findClaudeBin, runClaude, usageResetHint, withTransientRetry } from './lib/claude.mjs';
 import { STORE_LOCKED, archiveStore, openStore } from './lib/cells.mjs';
-import { capabilityOf, isDemo } from './lib/config.mjs';
+import { V2_REFUSAL, capabilityOf, isDemo, isV2 } from './lib/config.mjs';
 import { demoCommands, namePracticePage } from './lib/editor-words.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { h16 } from './lib/hash.mjs';
@@ -236,6 +236,7 @@ export function loadJudgeConfig(root) {
       throw new ExitError(EXIT.INVALID, e.message);
     }
     if (!isPlain(raw)) throw new ExitError(EXIT.INVALID, `${file}: expected a JSON object`);
+    if (isV2(raw)) throw new ExitError(EXIT.INVALID, V2_REFUSAL); // the loop does not run on the v2 profile yet (checkpoint 3)
   }
   const judge = mergePlain(JUDGE_DEFAULTS, raw.judge);
   if (isPlain(raw.judge?.groups)) judge.groups = raw.judge.groups; // the groups a config names replace the default; they are never merged into it
