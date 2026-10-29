@@ -4,7 +4,7 @@ import { appendFileSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  GeoError, countGeoRequests, createGeoClient, debateTaggedQuery, detailsQuery, entityIsStub, geoRequestLogger, readClaim, validateGeoConfig,
+  GeoError, allowedSpaces, countGeoRequests, createGeoClient, debateTaggedQuery, detailsQuery, entityIsStub, geoRequestLogger, readClaim, validateGeoConfig,
 } from '../../agents/claim-tagger-mvp/scripts/lib/geo-read.mjs';
 import { createFakeGeo, hexId } from './fixtures/fake-geo.mjs';
 
@@ -72,6 +72,70 @@ test('validateGeoConfig: a bad host, a plain-http endpoint, quotas that do not a
   assert.equal(validateGeoConfig({}).ok, false);
   assert.match(validateGeoConfig({}).errors[0], /no "geo" block|geo\./);
   assert.equal(validateGeoConfig(null).ok, false);
+});
+
+test('validateGeoConfig: the live block holds the twelve allowed spaces (the six of the pick first, Podcasts not among them) and the Geo bot\'s personal space', () => {
+  assert.deepEqual(GEO.allowed_spaces.map((s) => s.name), ['U.S. Politics', 'World affairs', 'AI', 'Health', 'Crypto', 'Technology', 'Pharma', 'Industries', 'Education', 'Software', 'Places', 'Documentation']);
+  assert.deepEqual(GEO.allowed_spaces.map((s) => s.id), [
+    '4582fbbee28a16589154f7e36f1ee3c5', '89bd89bf28ff8a0963faf92a8c905e20', '41e851610e13a19441c4d980f2f2ce6b', '52c7ae149838b6d47ce0f3b2a5974546', 'c9f267dcb0d270718c2a3c45a64afd32', '870e3b3068661e6280fad2ab456829bc',
+    '19f11bc6f1a62ac434936af814d1f8b5', 'd69608290513c2a91102c939b3265bd7', 'ec349623f33236aee13c12dcd629ee81', '9b611b848b12491b9b6b43f3cf019b8b', '84a679ce188f061ac9a92380bac2bab5', '784bfddae3f3976118c561bf28195b44',
+  ]);
+  assert.deepEqual(GEO.allowed_spaces.slice(0, 6).map(({ name, id }) => ({ name, id })), GEO.spaces.map(({ name, id }) => ({ name, id })), 'the pick\'s six come first, in the same order');
+  assert.equal(GEO.allowed_spaces.some((s) => s.id === 'b5a31f8182b042437ede0f84ee02f104'), false, 'Podcasts is deliberately not allowed');
+  assert.deepEqual(GEO.bot_spaces, ['cc0bf85a27c217d75993bc785a15b198']);
+  // the pick is unchanged: six spaces with their quotas, which add up to the total
+  assert.equal(GEO.spaces.length, 6);
+  assert.equal(validateGeoConfig(GEO).ok, true);
+});
+
+test('validateGeoConfig: allowed_spaces and bot_spaces are checked when present; a list that is wrong, a repeated name or id, a space of the pick that is missing and a bad id are each refused', () => {
+  const bad = (mutate, pattern) => {
+    const geo = clone(GEO);
+    mutate(geo);
+    const r = validateGeoConfig(geo);
+    assert.equal(r.ok, false);
+    assert.ok(r.errors.some((e) => pattern.test(e)), `${pattern}: ${r.errors.join(' | ')}`);
+  };
+  bad((g) => { g.allowed_spaces = 'everything'; }, /allowed_spaces: expected a non-empty list of spaces \{ name, id \}/);
+  bad((g) => { g.allowed_spaces = []; }, /allowed_spaces: expected a non-empty list/);
+  bad((g) => { g.allowed_spaces = null; }, /allowed_spaces: expected a non-empty list/);
+  bad((g) => { g.allowed_spaces[6] = 'Pharma'; }, /allowed_spaces\[6\]: expected an object \{ name, id \}/);
+  bad((g) => { g.allowed_spaces[6].id = 'NOT-HEX'; }, /allowed_spaces\[6\]\.id: expected 32 lowercase hex/);
+  bad((g) => { g.allowed_spaces[6].id = g.allowed_spaces[6].id.toUpperCase(); }, /allowed_spaces\[6\]\.id: expected 32 lowercase hex/);
+  bad((g) => { delete g.allowed_spaces[7].id; }, /allowed_spaces\[7\]\.id: expected 32 lowercase hex/);
+  bad((g) => { g.allowed_spaces[6].name = ''; }, /allowed_spaces\[6\]\.name: expected a name/);
+  bad((g) => { delete g.allowed_spaces[6].name; }, /allowed_spaces\[6\]\.name: expected a name/);
+  bad((g) => { g.allowed_spaces[7].name = g.allowed_spaces[6].name; }, /allowed_spaces: two spaces have the same name/);
+  bad((g) => { g.allowed_spaces[7].id = g.allowed_spaces[6].id; }, /allowed_spaces: two spaces have the same id/);
+  bad((g) => { g.allowed_spaces.splice(2, 1); }, /allowed_spaces: the space "AI" of spaces \(41e851610e13a19441c4d980f2f2ce6b\) is not among the allowed spaces/);
+  bad((g) => { g.allowed_spaces = g.allowed_spaces.slice(1); }, /the space "U\.S\. Politics" of spaces .* is not among the allowed spaces/);
+  bad((g) => { g.allowed_spaces[2].name = 'Artificial intelligence'; }, /allowed_spaces: the id 41e851610e13a19441c4d980f2f2ce6b is "Artificial intelligence" here and "AI" in spaces/);
+  bad((g) => { g.bot_spaces = 'cc0bf85a27c217d75993bc785a15b198'; }, /bot_spaces: expected a list of space ids/);
+  bad((g) => { g.bot_spaces = ['bot']; }, /bot_spaces\[0\]: expected 32 lowercase hex/);
+  bad((g) => { g.bot_spaces = [g.bot_spaces[0], g.bot_spaces[0]]; }, /bot_spaces: a space is listed twice/);
+  // an empty list of bot spaces is fine (nobody is left out), and so is a block with neither key
+  const none = clone(GEO);
+  none.bot_spaces = [];
+  assert.equal(validateGeoConfig(none).ok, true);
+  const bare = clone(GEO);
+  delete bare.allowed_spaces;
+  delete bare.bot_spaces;
+  assert.deepEqual(validateGeoConfig(bare).errors, [], 'old configs have neither key');
+  // allowed_spaces may hold more than the pick's spaces and the quotas are only the pick's
+  const more = clone(GEO);
+  more.allowed_spaces.push({ name: 'Podcasts', id: 'b5a31f8182b042437ede0f84ee02f104' });
+  assert.equal(validateGeoConfig(more).ok, true);
+});
+
+test('allowedSpaces: allowed_spaces when the block has it, else the six spaces of the pick', () => {
+  assert.equal(allowedSpaces(GEO), GEO.allowed_spaces);
+  assert.equal(allowedSpaces(GEO).length, 12);
+  const bare = clone(GEO);
+  delete bare.allowed_spaces;
+  assert.equal(allowedSpaces(bare), bare.spaces);
+  assert.equal(allowedSpaces(bare).length, 6);
+  assert.deepEqual(allowedSpaces(null), []);
+  assert.deepEqual(allowedSpaces({}), []);
 });
 
 test('createGeoClient refuses a geo block that does not validate', () => {

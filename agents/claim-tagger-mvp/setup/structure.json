@@ -251,7 +251,13 @@
             "AI",
             "Health",
             "Crypto",
-            "Technology"
+            "Technology",
+            "Pharma",
+            "Industries",
+            "Education",
+            "Software",
+            "Places",
+            "Documentation"
           ],
           "description": "The Geo space the claim was read from."
         },

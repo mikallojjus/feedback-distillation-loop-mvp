@@ -1,6 +1,7 @@
 // The only door the scripts use to read Geo: a small GraphQL client that sends queries and nothing else.
 //
-//   validateGeoConfig(config)                         -> { ok, errors, geo }: checks the "geo" block of config.json (the block itself, or a whole config that has one)
+//   validateGeoConfig(config)                         -> { ok, errors, geo }: checks the "geo" block of config.json (the block itself, or a whole config that has one), allowed_spaces and bot_spaces included
+//   allowedSpaces(geo)                                -> the spaces `add` accepts: geo.allowed_spaces, else geo.spaces
 //   createGeoClient({ geo, fetchImpl, log, sleep })   -> the client: send, debateTagged, details, paginateDebate, stats
 //   debateTaggedQuery(geo, { spaceId, after, first }) -> { operationName, document, variables }: the frozen query for one page of Debate-tagged links in a space
 //   detailsQuery(geo, ids)                            -> { operationName, document, variables }: the frozen query for up to geo.detail_batch entities by id
@@ -64,8 +65,8 @@ export class GeoError extends Error {
 // ---- the geo block of config.json -----------------------------------------------------------------------------------------------
 
 /**
- * Check the "geo" block: an https endpoint on an allowlisted host, 32-hex ids, six spaces { name, id, quota } whose quotas add up to `total`, and the
- * paging sizes. Accepts the block itself or a whole config that has a `geo` key. Never throws: { ok, errors, geo } with a dotted path in front of each message.
+ * Check the "geo" block: an https endpoint on an allowlisted host, 32-hex ids, six spaces { name, id, quota } whose quotas add up to `total`, the paging sizes, and (when
+ * present) allowed_spaces { name, id } (a list that holds every space of `spaces`) and bot_spaces (a list of ids). Accepts the block itself or a whole config that has a `geo` key. Never throws: { ok, errors, geo } with a dotted path in front of each message.
  */
 export function validateGeoConfig(config) {
   const errors = [];
@@ -129,7 +130,47 @@ export function validateGeoConfig(config) {
     if (new Set(spaceIds).size !== spaceIds.length) bad('spaces', 'two spaces have the same id');
     if (Number.isInteger(geo.total) && sum !== geo.total) bad('spaces', `the quotas add up to ${sum}, but total is ${geo.total}`);
   }
+
+  // allowed_spaces (optional; decision P39): the spaces `add` accepts, { name, id } in the order in which a claim held by several of them is given its space. Every space of the pick
+  // (geo.spaces) must be among them, with the same name. Without it, everything falls back to geo.spaces (allowedSpaces below).
+  if (geo.allowed_spaces !== undefined) {
+    if (!Array.isArray(geo.allowed_spaces) || geo.allowed_spaces.length === 0) {
+      bad('allowed_spaces', 'expected a non-empty list of spaces { name, id }');
+    } else {
+      geo.allowed_spaces.forEach((s, i) => {
+        if (!isPlain(s)) return bad(`allowed_spaces[${i}]`, 'expected an object { name, id }');
+        if (typeof s.name !== 'string' || s.name.trim() === '') bad(`allowed_spaces[${i}].name`, 'expected a name');
+        hexId(`allowed_spaces[${i}].id`, s.id);
+      });
+      const names = geo.allowed_spaces.map((s) => s?.name);
+      const spaceIds = geo.allowed_spaces.map((s) => s?.id);
+      if (new Set(names).size !== names.length) bad('allowed_spaces', 'two spaces have the same name');
+      if (new Set(spaceIds).size !== spaceIds.length) bad('allowed_spaces', 'two spaces have the same id');
+      if (Array.isArray(geo.spaces)) {
+        for (const s of geo.spaces) {
+          if (!isPlain(s)) continue;
+          const there = geo.allowed_spaces.find((a) => isPlain(a) && a.id === s.id);
+          if (!there) bad('allowed_spaces', `the space "${s.name}" of spaces (${s.id}) is not among the allowed spaces`);
+          else if (there.name !== s.name) bad('allowed_spaces', `the id ${s.id} is "${there.name}" here and "${s.name}" in spaces`);
+        }
+      }
+    }
+  }
+  // bot_spaces (optional): the personal spaces of the Geo bot, recorded for the import workflow (decision P40); add does not use them
+  if (geo.bot_spaces !== undefined) {
+    if (!Array.isArray(geo.bot_spaces)) {
+      bad('bot_spaces', 'expected a list of space ids');
+    } else {
+      geo.bot_spaces.forEach((id, i) => hexId(`bot_spaces[${i}]`, id));
+      if (new Set(geo.bot_spaces).size !== geo.bot_spaces.length) bad('bot_spaces', 'a space is listed twice');
+    }
+  }
   return { ok: errors.length === 0, errors, geo };
+}
+
+/** The spaces `add` accepts, in the order that decides the space of a claim held by several: geo.allowed_spaces, else geo.spaces (the six of the pick). */
+export function allowedSpaces(geo) {
+  return geo?.allowed_spaces ?? geo?.spaces ?? [];
 }
 
 // ---- the frozen queries ---------------------------------------------------------------------------------------------------------

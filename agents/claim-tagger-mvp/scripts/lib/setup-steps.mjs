@@ -36,6 +36,7 @@ import { readJson, writeJsonAtomic, writeTextAtomic } from './jsonl.mjs';
 import {
   StructureError, AUTOMATIC_TYPES, loadStructure, optionColor, planStructure, runStructure, saveStructure, verifyStructure, viewKey, viewUrl, withGeoOptions,
 } from './notion-build.mjs';
+import { allowedSpaces } from './geo-read.mjs';
 import { splitRichText, countRequests } from './notion-rest.mjs';
 import { decodePage, normId, sameValue } from './notion-values.mjs';
 import { codeRoot } from './paths.mjs';
@@ -541,13 +542,13 @@ export async function stepStructure(ctx, parts) {
 
 /**
  * setup.mjs structure --options-from <pick file>: the options of the Claims' two Geo select columns, from files only (no session, no Notion). Geo Tags gets the pick's tag_names
- * (sorted), Geo Space the names of config.geo.spaces in their order; the colours follow from the names alone (notion-build optionColor), so they are the same on every run. Writes
+ * (sorted), Geo Space the names of config.geo.allowed_spaces in their order (else config.geo.spaces); the colours follow from the names alone (notion-build optionColor), so they are the same on every run. Writes
  * setup/structure.json when an option changed and says what; run again it says "nothing changed" and does not touch the file. `config` must hold the geo block.
  */
 export function stepOptionsFrom(ctx, { pickFile } = {}) {
   const { root, config } = ctx;
   const pick = readPick(pickFile);
-  const spaces = config?.geo?.spaces;
+  const spaces = allowedSpaces(config?.geo); // geo.allowed_spaces (the six of the pick, then the others add accepts, P39), else geo.spaces
   if (!Array.isArray(spaces) || spaces.length === 0 || spaces.some((s) => typeof s?.name !== 'string' || s.name === '')) {
     throw new InputError('config.json has no geo.spaces (the six spaces of the pick), so the options of Geo Space cannot be set');
   }

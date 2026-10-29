@@ -36,6 +36,7 @@ const RULEBOOK_FIXTURE = join(REPO_ROOT, 'tests', 'mvp', 'fixtures', 'rulebook-r
 
 export const LIVE_GEO = JSON.parse(readFileSync(join(REPO_ROOT, 'agents', 'claim-tagger-mvp', 'config.json'), 'utf8')).geo;
 export const SPACE_NAMES = LIVE_GEO.spaces.map((s) => s.name);
+export const ALLOWED_SPACE_NAMES = (LIVE_GEO.allowed_spaces ?? LIVE_GEO.spaces).map((s) => s.name); // the options of Geo Space in the structure: the six of the pick, then the other spaces add accepts (P39)
 
 /** A moment in the middle of the day, local time, so the UTC day is the same everywhere: 15 Oct 2026 14:22. */
 export const NOW = () => new Date(2026, 9, 15, 14, 22);

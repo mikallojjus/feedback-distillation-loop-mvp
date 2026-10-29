@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { MAX_CLAIMS, USAGE, add, main, parseItems } from '../../agents/claim-tagger-mvp/scripts/add.mjs';
+import { USAGE, add, main, parseItems, readSelection } from '../../agents/claim-tagger-mvp/scripts/add.mjs';
 import { status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
 import { ADD_SCRIPT, CLAIMS_GEO_COLUMNS, addableProperties } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { countGeoRequests } from '../../agents/claim-tagger-mvp/scripts/lib/geo-read.mjs';
@@ -25,13 +25,16 @@ const CONFIG = JSON.parse(readFileSync(new URL('../../agents/claim-tagger-mvp/co
 const GEO = CONFIG.geo;
 const SPACE = Object.fromEntries(GEO.spaces.map((s) => [s.name, s.id]));
 const [US, WORLD, AI, HEALTH, CRYPTO, TECH] = GEO.spaces.map((s) => s.name);
-const OUTSIDE = hexId(900, 'b'); // a space that is not one of the six
+const ALLOWED = Object.fromEntries(GEO.allowed_spaces.map((s) => [s.name, s.id])); // the twelve spaces add accepts (P39): the six of the pick, then Pharma, Industries, Education, Software, Places, Documentation
+const PHARMA = 'Pharma';
+const PODCASTS = 'b5a31f8182b042437ede0f84ee02f104'; // the Podcasts space: deliberately not allowed
+const OUTSIDE = hexId(900, 'b'); // a space that is not allowed
 const BROWSER = GEO.browser_url;
 const CLAIMS_SPEC = { ...TABLE_SPECS.claims, 'Geo Tags': { type: 'multi_select', options: ['Debate', 'Politics', 'Economy'] } };
 const clone = (v) => JSON.parse(JSON.stringify(v));
 
 const gid = (n) => hexId(n); // the Geo ID of the test claim n
-const linkOf = (n, space = US) => `${BROWSER}/space/${SPACE[space]}/${gid(n)}`;
+const linkOf = (n, space = US) => `${BROWSER}/space/${ALLOWED[space]}/${gid(n)}`;
 const text = (n) => `Mayor ${n} said the plan costs less.`;
 
 /** A world: Claims holds `inClaims` ([[n, text]]), the Geo fake is empty (the test adds its claims), and run(claimsText) runs add on both. */
@@ -46,8 +49,29 @@ async function setup({ inClaims = [], ...more } = {}) {
     return { r, h, report: r.report };
   };
   const claim = (n, over = {}) => geo.addClaim({ id: gid(n), name: text(n), spaces: [SPACE[US]], created: '2026-09-14', ...over });
-  return { w, geo, run, claim };
+  // add --claims-file: the selection (an object, or text for a file that is not JSON) is written to a file of the state folder and given to add
+  let files = 0;
+  const runFile = async (selection, extra = {}) => {
+    const file = join(w.root, `selection-${++files}.json`);
+    writeFileSync(file, typeof selection === 'string' ? selection : JSON.stringify(selection, null, 1));
+    const h = w.hooks({ claimsFile: file, geoFetchImpl: geo.fetchImpl, ...extra });
+    const r = await add(h);
+    return { r, h, report: r.report, file };
+  };
+  return { w, geo, run, runFile, claim };
 }
+
+/** A selection file as the import workflow writes it (schemas/import-selection.schema.json): one claim for each [n, space name, changes to the entry]. */
+const selectionOf = (entries, over = {}) => ({
+  run_id: 'import-test',
+  created_at: '2026-10-29T09:00:00.000Z',
+  criteria_file: 'runs/import/import-test/criteria.md',
+  bot_spaces: [...GEO.bot_spaces],
+  claims: entries.map(([n, space = US, changes = {}]) => ({
+    geo_id: gid(n), space_id: ALLOWED[space], space, name: text(n), month: '2026-09', published_at: '2026-09-14T09:30:00Z', bucket: 'issue', predicted_tags: ['Context-dependent'], why: 'Opens with a bare "the ruling".', ...changes,
+  })),
+  ...over,
+});
 
 /** What every report must be: the lint, and report.md is what the script printed. */
 function assertReport(h, r) {
@@ -149,28 +173,26 @@ test('add: one claim added says "the new claim", and a report names at most thre
   assert.equal(geo.requests.length, 1, 'one claim, one request');
 });
 
-test('add: more than 50 items is exit 2 before anything is read; 50 are fine and are read in batches', async () => {
+test('add: there is no limit on the number of items (decision P38): 60 are added, read from Geo in batches of 25, and a repeat counts once', async () => {
   const { w, geo, run, claim } = await setup({ inClaims: [[1]] });
-  const requestsBefore = w.requests().length;
-  const tooMany = Array.from({ length: MAX_CLAIMS + 1 }, (_, i) => gid(100 + i)).join(' ');
-  const { r, h, report } = await run(tooMany);
-  assert.equal(r.exit, 2);
-  assertReport(h, r);
-  assert.equal(report.sentence, 'Add: nothing was read or added, because 51 links or IDs are more than the 50 that one command takes.');
-  assert.equal(report.rows, undefined, 'no table');
-  assert.equal(report.next, 'Next: type /claim-tagger add again with at most 50 links.');
-  assert.equal(w.requests().length, requestsBefore, 'Notion was not asked anything');
-  assert.equal(geo.requests.length, 0, 'Geo was not asked anything');
-  assert.equal(w.writes().length, 0);
-  // the same 51 with one repeated is 50 and goes through; 50 real claims are added, read from Geo in batches of 25
-  for (let i = 0; i < MAX_CLAIMS; i++) claim(100 + i);
-  const fifty = Array.from({ length: MAX_CLAIMS }, (_, i) => gid(100 + i));
-  const ok = await run([...fifty, fifty[0]].join(', '));
+  const sixty = Array.from({ length: 60 }, (_, i) => gid(100 + i));
+  for (let i = 0; i < 60; i++) claim(100 + i);
+  const ok = await run([...sixty, sixty[0]].join(', '));
   assert.equal(ok.r.exit, 0, ok.h.io.errs.join('\n'));
-  assert.equal(ok.report.sentence.startsWith('Add: 50 claims added to Claims from Geo ('), true);
-  assert.equal(claimRows(w).length, 1 + 50);
-  assert.deepEqual(geo.requests.map((q) => q.aliases), [25, 25]);
-  assert.equal(postsToClaims(w).length, 50);
+  assertReport(ok.h, ok.r);
+  assert.equal(ok.report.sentence.startsWith('Add: 60 claims added to Claims from Geo ('), true, ok.report.sentence);
+  assert.deepEqual(ok.report.rows, [['Added', '60', '']]);
+  assert.equal(ok.report.next, `Next: type /claim-tagger tag to read the 60 new claims; they are in All claims (${allClaims(w)}).`);
+  assert.equal(claimRows(w).length, 1 + 60);
+  assert.deepEqual(geo.requests.map((q) => q.aliases), [25, 25, 10]);
+  assert.equal(postsToClaims(w).length, 60);
+  assert.equal(runRecord(ok.r).geo_requests.nonQuery, 0);
+  // the same 60 again: all are in Claims already, nothing is written (a stopped import is run again the same way)
+  const writesBefore = w.writes().length;
+  const again = await run(sixty.join(' '));
+  assert.equal(again.r.exit, 2);
+  assert.equal(again.report.sentence.startsWith('Add: nothing was added; all 60 claims are already in Claims ('), true, again.report.sentence);
+  assert.equal(w.writes().length, writesBefore);
 });
 
 test('add: nothing given, and the options: no --claims is exit 2 with a report; the usage and a bad option exit before any run', async () => {
@@ -264,7 +286,7 @@ test('add: not found, not a claim, not in our spaces and already in Claims are e
   assert.equal(report.sentence, `Add: 1 claim added to Claims from Geo ("${text(11)}"); 4 were not added.`);
   assert.deepEqual(report.rows, [
     ['Added', '1', ''], ['Already in Claims', `1: "${text(1)}"`, ''], ['Not found in Geo', `1: ID ending ${gid(14).slice(-8)}`, ''],
-    ['Not a claim', '1: "A person, not a claim"', ''], ['Not in the six spaces of Claims', `1: "${text(13)}"`, ''],
+    ['Not a claim', '1: "A person, not a claim"', ''], ['Not in the spaces of Claims', `1: "${text(13)}"`, ''],
   ]);
   assert.equal(report.next, `Next: type /claim-tagger tag to read the new claim; it is in All claims (${allClaims(w)}).`);
   assert.deepEqual(runRecord(r).add.not_added.map((n) => [n.geo_id, n.reason]), [[gid(1), 'already'], [gid(12), 'not_claim'], [gid(13), 'not_in_spaces'], [gid(14), 'not_found']]);
@@ -286,7 +308,7 @@ test('add: every kind of refusal at once: the table has five rows at most, the k
   assert.deepEqual(report.rows, [
     ['Added', '1', ''], ['Already in Claims', `1: "${text(1)}"`, ''], ['Not found in Geo', `1: ID ending ${gid(17).slice(-8)}`, ''],
     ['Same text as a claim in Claims', `1: "${text(2)}" is there already`, ''],
-    ['Other reasons', '5: 1 not a claim, 1 not in the six spaces of Claims, 1 not a Geo link or ID, 1 with no name in Geo, 1 with a source that links to a protected Notion page', ''],
+    ['Other reasons', '5: 1 not a claim, 1 not in the spaces of Claims, 1 not a Geo link or ID, 1 with no name in Geo, 1 with a source that links to a protected Notion page', ''],
   ]);
   const kinds = runRecord(r).add.not_added.map((n) => n.reason).sort();
   assert.deepEqual(kinds, ['already', 'bad_input', 'no_name', 'not_claim', 'not_found', 'not_in_spaces', 'same_text', 'source_link']);
@@ -301,10 +323,10 @@ test('add: nothing added because of refusals: exit 2, the sentence says why, and
   const { r, h, report } = await run(`${gid(1)} ${gid(11)} ${gid(12)} nonsense`);
   assert.equal(r.exit, 2);
   assertReport(h, r);
-  assert.equal(report.sentence, 'Add: nothing was added to Claims: 1 already in Claims, 1 not found in Geo, 1 not in the six spaces of Claims and 1 not a Geo link or ID.');
+  assert.equal(report.sentence, 'Add: nothing was added to Claims: 1 already in Claims, 1 not found in Geo, 1 not in the spaces of Claims and 1 not a Geo link or ID.');
   assert.deepEqual(report.rows, [
     ['Already in Claims', `1: "${text(1)}"`, ''], ['Not found in Geo', `1: ID ending ${gid(11).slice(-8)}`, ''],
-    ['Not in the six spaces of Claims', `1: "${text(12)}"`, ''], ['Not a Geo link or ID', '1: "nonsense"', ''],
+    ['Not in the spaces of Claims', `1: "${text(12)}"`, ''], ['Not a Geo link or ID', '1: "nonsense"', ''],
   ]);
   assert.equal(report.next, 'Next: check the links and type /claim-tagger add again.');
   assert.equal(w.writes().length, 0);
@@ -798,21 +820,289 @@ test('add: when every claim is already in Claims the Next line depends on whethe
   assert.equal(c.report.next, 'Next: type /claim-tagger tag to read them.');
 });
 
-test('add: when Claims has no Geo Space option for the space of a claim, nothing is written, no option is made and the engineer is told (exit 2)', async () => {
+test('add: a space the Geo Space column has no option for yet is written, Notion makes the option and the read-back confirms it (P39); no Geo Tags option is made', async () => {
   const withoutAi = { ...CLAIMS_SPEC, 'Geo Space': { type: 'select', options: [US, WORLD, HEALTH, CRYPTO, TECH] } };
   const { w, run, claim } = await setup({ tableSpecs: { claims: withoutAi } });
   claim(11);
   claim(12, { spaces: [SPACE[AI]] });
+  claim(13, { spaces: [ALLOWED[PHARMA]], tags: ['Hypothetical'] });
   const optionsBefore = w.fake.createdOptions.length;
-  const { r, h, report } = await run(`${gid(11)} ${gid(12)}`);
-  assert.equal(r.exit, 2, h.io.errs.join('\n'));
+  const { r, h, report } = await run(`${gid(11)} ${gid(12)} ${linkOf(13, PHARMA)}`);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
   assertReport(h, r);
-  assert.equal(report.sentence, 'Add: nothing was added, because the Claims table does not have the space of a claim as an option.');
-  assert.equal(report.next, 'Next: ask the engineer to look at the message the script printed.');
-  assert.match(h.io.errs.join('\n'), /Geo Space column of Claims has no option for: AI/);
-  assert.equal(w.writes().length, 0, 'not even the claim in a space that has its option was written');
-  assert.equal(claimRows(w).length, 0);
-  assert.equal(w.fake.createdOptions.length, optionsBefore, 'no option was made');
+  assert.deepEqual(report.rows, [['Added', '3', '']]);
+  assert.equal(w.row('claims', gid(12))['Geo Space'], AI);
+  assert.equal(w.row('claims', gid(13))['Geo Space'], PHARMA);
+  assert.equal(w.row('claims', gid(13))['Geo URL'], linkOf(13, PHARMA));
+  // Notion made the two options as the rows were written; the column keeps the options it had besides
+  assert.deepEqual(w.fake.createdOptions.slice(optionsBefore).sort(), ['claims.Geo Space=AI', `claims.Geo Space=${PHARMA}`].sort());
+  assert.deepEqual(w.fake.dataSource(w.config.notion.claims.data_source_id).properties['Geo Space'].select.options.map((o) => o.name), [US, WORLD, HEALTH, CRYPTO, TECH, AI, PHARMA]);
+  // the read-back ran on every row and found what was written
+  const rec = runRecord(r);
+  assert.equal(rec.apply.mismatches, 0);
+  assert.equal(rec.apply.unchecked, 0);
+  assert.equal(rec.apply.done, 3);
+  // Geo Tags is as it was: the tag Notion's column does not have is left out and no option is made
+  assert.deepEqual(w.row('claims', gid(13))['Geo Tags'], ['Debate']);
+  assert.deepEqual(rec.add.geo_tags_left_out, [{ geo_id: gid(13), tags: ['Hypothetical'] }]);
+  assert.equal(w.fake.createdOptions.some((o) => /Geo Tags=/.test(o)), false);
+});
+
+test('add: the allowed spaces are the twelve of config.json (P39): Pharma and the other five are accepted, a claim only in Podcasts or elsewhere is not in the spaces, the first allowed space in config order wins', async () => {
+  const { w, run, claim } = await setup();
+  const names = ['Pharma', 'Industries', 'Education', 'Software', 'Places', 'Documentation'];
+  names.forEach((name, i) => claim(11 + i, { spaces: [ALLOWED[name]] }));
+  claim(21, { spaces: [PODCASTS] }); // the Podcasts space is deliberately not allowed
+  claim(22, { spaces: [OUTSIDE] });
+  claim(23, { spaces: [PODCASTS, ALLOWED.Documentation, ALLOWED.Pharma] }); // a link to Podcasts: Documentation is allowed, Pharma comes first in config order
+  const ids = [...names.map((_, i) => gid(11 + i)), gid(21), gid(22), `${BROWSER}/space/${PODCASTS}/${gid(23)}`];
+  const { r, h, report } = await run(ids.join(' '));
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assertReport(h, r);
+  assert.equal(report.sentence, `Add: 7 claims added to Claims from Geo ("${text(11)}", "${text(12)}", "${text(13)}" and more); 2 were not added.`);
+  assert.deepEqual(report.rows, [['Added', '7', ''], ['Not in the spaces of Claims', `2: "${text(21)}" and "${text(22)}"`, '']]);
+  names.forEach((name, i) => {
+    assert.equal(w.row('claims', gid(11 + i))['Geo Space'], name);
+    assert.equal(w.row('claims', gid(11 + i))['Geo URL'], linkOf(11 + i, name));
+  });
+  assert.equal(w.row('claims', gid(23))['Geo Space'], PHARMA);
+  assert.equal(w.row('claims', gid(21)), null);
+  assert.equal(w.row('claims', gid(22)), null);
+  assert.deepEqual(runRecord(r).add.not_added.map((n) => [n.geo_id, n.reason]), [[gid(21), 'not_in_spaces'], [gid(22), 'not_in_spaces']]);
+});
+
+test('add: without allowed_spaces in config.json the six spaces of the pick are the allowed ones (old configs and fixtures keep working)', async () => {
+  const { w, run, claim } = await setup({ configure: (c) => { c.geo = clone(GEO); delete c.geo.allowed_spaces; delete c.geo.bot_spaces; } });
+  claim(11, { spaces: [SPACE[AI]] });
+  claim(12, { spaces: [ALLOWED[PHARMA]] });
+  claim(13, { spaces: [ALLOWED[PHARMA], SPACE[CRYPTO]] });
+  const { r, h, report } = await run(`${gid(11)} ${gid(12)} ${gid(13)}`);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.deepEqual(report.rows, [['Added', '2', ''], ['Not in the spaces of Claims', `1: "${text(12)}"`, '']]);
+  assert.equal(w.row('claims', gid(11))['Geo Space'], AI);
+  assert.equal(w.row('claims', gid(13))['Geo Space'], CRYPTO);
+  assert.equal(w.row('claims', gid(12)), null);
+});
+
+// ---- the selection file (--claims-file, P38) -----------------------------------------------------------------------------------------------
+
+test('add --claims-file: the claims of a selection file are added like the same IDs would be, in the file\'s space when it is allowed and holds the claim, and the report is the same', async () => {
+  const { w, geo, runFile, claim } = await setup({ inClaims: [[1]] });
+  claim(11, { created: '2026-09-14', tags: ['Politics'] });
+  claim(12, { spaces: [ALLOWED[PHARMA]], created: '2026-10-02' });
+  claim(13, { spaces: [SPACE[US], SPACE[WORLD]] });
+  claim(14, { spaces: [SPACE[HEALTH]], name: 'The text Geo holds.' });
+  const selection = selectionOf([[11], [12, PHARMA], [13, WORLD, { name: 'The text of the file is not used.' }], [14, AI, { space: AI }], [1]]); // 14 is in Health, not in AI: the first allowed space that holds it
+  const { r, h, report, file } = await runFile(selection);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assertReport(h, r);
+  assert.equal(report.sentence, `Add: 4 claims added to Claims from Geo ("${text(11)}", "${text(12)}", "${text(13)}" and more); 1 was not added.`);
+  assert.deepEqual(report.header, ['What', 'Result', '']);
+  assert.deepEqual(report.rows, [['Added', '4', ''], ['Already in Claims', `1: "${text(1)}"`, '']]);
+  assert.equal(report.next, `Next: type /claim-tagger tag to read the 4 new claims; they are in All claims (${allClaims(w)}).`);
+  assert.equal(w.row('claims', gid(11))['Geo Space'], US);
+  assert.deepEqual(w.row('claims', gid(11))['Geo Tags'], ['Debate', 'Politics']);
+  assert.equal(w.row('claims', gid(12))['Geo Space'], PHARMA);
+  assert.equal(w.row('claims', gid(12))['Geo Created'], '2026-10-02');
+  assert.equal(w.row('claims', gid(13))['Geo Space'], WORLD, 'the space of the file, which holds the claim');
+  assert.equal(w.row('claims', gid(13))['Geo URL'], linkOf(13, WORLD));
+  assert.equal(w.row('claims', gid(13))['Geo Name'], text(13), 'the claim is read from Geo again: the file\'s text is only its record');
+  assert.equal(w.row('claims', gid(14))['Geo Space'], HEALTH);
+  assert.equal(w.row('claims', gid(14))['Geo Name'], 'The text Geo holds.');
+  const rec = runRecord(r);
+  assert.equal(rec.args.claims_file, file);
+  assert.equal(rec.args.claims, null);
+  assert.equal(rec.resume, `node agents/claim-tagger-mvp/scripts/add.mjs --claims-file "${file.replace(/"/g, '\\"')}"`);
+  assert.deepEqual(rec.add.added.map((a) => a.geo_id), [gid(11), gid(12), gid(13), gid(14)], 'in the order of the file');
+  assert.deepEqual(rec.add.not_added.map((n) => [n.geo_id, n.reason]), [[gid(1), 'already']]);
+  assert.deepEqual(rec.plan, { creates: 4, updates: 0 }, 'the plan is the same create-only plan');
+  assert.equal(rec.geo_requests.nonQuery, 0);
+  assert.deepEqual(geo.requests.map((q) => [q.op, q.aliases]), [['ClaimDetails', 4]], 'claim 1 is in Claims and is not read from Geo');
+  // the agent\'s and the editor\'s columns of a new row stay empty
+  const c = w.claim(gid(12));
+  assert.deepEqual([c['Agent tags'], c['Verified tags'], c['Tags waiting']], [[], [], []]);
+  assert.ok(!c['Review status'] && !c['Agent status']);
+});
+
+test('add --claims-file: the same refusals as for links: not found, not a claim, a Podcasts-only claim, the same text, with the item named by its ID ending', async () => {
+  const { w, geo, runFile, claim } = await setup({ inClaims: [[1]] });
+  claim(11);
+  geo.addEntity({ id: gid(12), name: 'A person, not a claim', typeIds: [hexId(555, 'a')], spaceIds: [SPACE[US]], createdAt: '1789000000' });
+  claim(13, { spaces: [PODCASTS] });
+  claim(14, { name: text(1) });
+  const { r, h, report } = await runFile(selectionOf([[11], [12], [13, US], [14], [15]]));
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assertReport(h, r);
+  assert.equal(report.sentence, `Add: 1 claim added to Claims from Geo ("${text(11)}"); 4 were not added.`);
+  assert.deepEqual(report.rows, [
+    ['Added', '1', ''], ['Not found in Geo', `1: ID ending ${gid(15).slice(-8)}`, ''], ['Not a claim', '1: "A person, not a claim"', ''],
+    ['Not in the spaces of Claims', `1: "${text(13)}"`, ''],
+    ['Same text as a claim in Claims', `1: "${text(1)}" is there already`, ''],
+  ]);
+  assert.equal(claimRows(w).length, 2);
+});
+
+test('add --claims-file: a file that does not fit the schema is exit 2 and nothing is read from Notion or Geo', async () => {
+  const { w, geo, runFile } = await setup({ inClaims: [[1]] });
+  const requestsBefore = w.requests().length;
+  const cases = [
+    ['an unknown bucket', (s) => { s.claims[0].bucket = 'weird'; }, /claims\[0\]\.bucket: expected one of/],
+    ['no why', (s) => { delete s.claims[0].why; }, /claims\[0\]\.why: missing required property/],
+    ['a why over 300 characters', (s) => { s.claims[0].why = 'x'.repeat(301); }, /claims\[0\]\.why: must be at most 300 characters/],
+    ['a Geo ID that is not 32 hex characters', (s) => { s.claims[1].geo_id = 'abc'; }, /claims\[1\]\.geo_id: must match/],
+    ['a space id that is not 32 hex characters', (s) => { s.claims[0].space_id = 'U.S. Politics'; }, /claims\[0\]\.space_id: must match/],
+    ['a month that is not YYYY-MM', (s) => { s.claims[0].month = 'October'; }, /claims\[0\]\.month: must match/],
+    ['a published_at that is not a date', (s) => { s.claims[0].published_at = 'last week'; }, /claims\[0\]\.published_at/],
+    ['predicted_tags that is not a list', (s) => { s.claims[0].predicted_tags = 'Context-dependent'; }, /predicted_tags: expected array/],
+    ['a key the schema does not have', (s) => { s.claims[0].score = 0.9; }, /claims\[0\]\.score: unexpected property/],
+    ['no claims', (s) => { s.claims = []; }, /\$\.claims: must have at least 1 items/],
+    ['no criteria_file', (s) => { delete s.criteria_file; }, /\$\.criteria_file: missing required property/],
+    ['a created_at that is not a time', (s) => { s.created_at = 'yesterday'; }, /\$\.created_at: must match/],
+    ['a bot space that is not an ID', (s) => { s.bot_spaces = ['bot']; }, /bot_spaces\[0\]: must match/],
+  ];
+  for (const [label, change, pattern] of cases) {
+    const selection = selectionOf([[11], [12]]);
+    change(selection);
+    const { r, h, report } = await runFile(selection);
+    assert.equal(r.exit, 2, label);
+    assertReport(h, r);
+    assert.equal(report.sentence, 'Add: nothing was read or added, because the selection file is not valid.', label);
+    assert.equal(report.next, 'Next: correct the selection file and run it again.', label);
+    assert.equal(report.rows, undefined, 'no table');
+    assert.match(h.io.errs.join('\n'), /does not fit schemas\/import-selection\.schema\.json/, label);
+    assert.match(h.io.errs.join('\n'), pattern, label);
+  }
+  assert.equal(w.requests().length, requestsBefore, 'Notion was not asked anything');
+  assert.equal(geo.requests.length, 0, 'Geo was not asked anything');
+  assert.equal(w.writes().length, 0);
+});
+
+test('add --claims-file: a file that is not JSON, a file that is not there, and a Geo ID listed twice are each exit 2 with nothing read; links and a file together are refused', async () => {
+  const { w, geo, run, runFile } = await setup({ inClaims: [[1]] });
+  const requestsBefore = w.requests().length;
+  const notJson = await runFile('{ this is not json');
+  assert.equal(notJson.r.exit, 2);
+  assertReport(notJson.h, notJson.r);
+  assert.equal(notJson.report.sentence, 'Add: nothing was read or added, because the selection file could not be read.');
+  assert.equal(notJson.report.next, 'Next: check the selection file and run it again.');
+  const hMissing = w.hooks({ claimsFile: join(w.root, 'there-is-no-such-file.json'), geoFetchImpl: geo.fetchImpl });
+  const missing = await add(hMissing);
+  assert.equal(missing.exit, 2);
+  assertReport(hMissing, missing);
+  assert.equal(missing.report.sentence, 'Add: nothing was read or added, because the selection file could not be read.');
+  const twice = await runFile(selectionOf([[11], [12], [11]]));
+  assert.equal(twice.r.exit, 2);
+  assertReport(twice.h, twice.r);
+  assert.equal(twice.report.sentence, 'Add: nothing was read or added, because the selection file lists the same claim more than once.');
+  assert.match(twice.h.io.errs.join('\n'), new RegExp(`lists 1 Geo ID\\(s\\) more than once: ${gid(11)}`));
+  // links and a file in one command: refused, with the usage
+  const file = join(w.root, 'selection-both.json');
+  writeFileSync(file, JSON.stringify(selectionOf([[11]])));
+  const hBoth = w.hooks({ claims: gid(11), claimsFile: file, geoFetchImpl: geo.fetchImpl });
+  const both = await add(hBoth);
+  assert.equal(both.exit, 2);
+  assertReport(hBoth, both);
+  assert.equal(both.report.sentence, 'Add: nothing was done, because both Geo links and a selection file were given.');
+  assert.equal(both.report.next, 'Next: give either the links or the selection file, not both.');
+  assert.equal(w.requests().length, requestsBefore, 'Notion was not asked anything');
+  assert.equal(geo.requests.length, 0, 'Geo was not asked anything');
+  assert.equal(w.writes().length, 0);
+  void run;
+});
+
+test('add --claims-file: main reads --claims-file from the command line, prints the report, and usage names both inputs', async () => {
+  const { w, geo, claim } = await setup();
+  claim(11);
+  const file = join(w.root, 'selection-main.json');
+  writeFileSync(file, JSON.stringify(selectionOf([[11]])));
+  const { io: ignored, ...deps } = w.hooks({ geoFetchImpl: geo.fetchImpl });
+  void ignored;
+  const io = quietIo();
+  assert.equal(await main(['--claims-file', file, '--run-id', 'add-by-file'], io, deps), 0, io.errs.join('\n'));
+  assert.match(io.outs.join('\n'), /^Add: 1 claim added to Claims from Geo \(/);
+  assert.equal(w.row('claims', gid(11))['Geo Space'], US);
+  assert.match(USAGE, /\(--claims "<Geo links or IDs, separated by spaces or commas>" \| --claims-file <selection file>\)/);
+  const both = quietIo();
+  assert.equal(await main(['--claims', gid(11), '--claims-file', file], both, deps), 2);
+  assert.match(both.errs.join('\n'), /give either --claims or --claims-file, not both/);
+  const none = quietIo();
+  assert.equal(await main([], none, deps), 2);
+  assert.match(none.errs.join('\n'), /no Geo links or IDs were given/);
+});
+
+test('add --claims-file: a write that did not finish is exit 1 and the Next line says to run the same file again; run again, the claim that landed is already in Claims', async () => {
+  const { w, runFile, claim } = await setup();
+  claim(11);
+  claim(12);
+  const selection = selectionOf([[11], [12]]);
+  w.fake.failNext('POST', /^\/pages$/, 500, 1, { applied: true });
+  const first = await runFile(selection);
+  assert.equal(first.r.exit, 1, first.h.io.errs.join('\n'));
+  assertReport(first.h, first.r);
+  assert.equal(first.report.sentence, 'Add: none was confirmed and 1 may have been added, before it stopped.');
+  assert.equal(first.report.next, 'Next: run the same selection file again; the ones added are skipped.');
+  assert.equal(claimRows(w).length, 1);
+  const again = await runFile(selection);
+  assert.equal(again.r.exit, 0, again.h.io.errs.join('\n'));
+  assert.equal(again.report.sentence, `Add: 1 claim added to Claims from Geo ("${text(12)}"); 1 was not added.`);
+  assert.deepEqual(again.report.rows, [['Added', '1', ''], ['Already in Claims', `1: "${text(11)}"`, '']]);
+  assert.deepEqual(claimRows(w).map((x) => x['Geo ID']).sort(), [gid(11), gid(12)], 'two rows, none twice');
+  // Geo could not be read: the same
+  const down = await setup();
+  down.claim(11);
+  down.geo.failNext('500', Infinity);
+  const stopped = await down.runFile(selectionOf([[11]]));
+  assert.equal(stopped.r.exit, 1);
+  assert.equal(stopped.report.sentence, 'Add: nothing was added, because Geo could not be read.');
+  assert.equal(stopped.report.next, 'Next: run the same selection file again in a while.');
+  assert.equal(down.w.writes().length, 0);
+});
+
+test('add --claims-file: a file of 105 claims over the twelve spaces is added in one command, the six new options are made and read back, and nothing else is written', async () => {
+  const { w, geo, runFile, claim } = await setup();
+  const names = Object.keys(ALLOWED);
+  const entries = [];
+  for (let i = 0; i < 105; i++) {
+    const space = names[i % names.length];
+    claim(200 + i, { spaces: [ALLOWED[space]] });
+    entries.push([200 + i, space]);
+  }
+  const optionsBefore = w.fake.createdOptions.length;
+  const { r, h, report } = await runFile(selectionOf(entries));
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assertReport(h, r);
+  assert.deepEqual(report.rows, [['Added', '105', '']]);
+  assert.equal(claimRows(w).length, 105);
+  assert.equal(postsToClaims(w).length, 105);
+  assert.deepEqual(geo.requests.map((q) => q.aliases), [25, 25, 25, 25, 5]);
+  for (const [n, space] of entries) assert.equal(w.row('claims', gid(n))['Geo Space'], space);
+  assert.deepEqual(w.fake.createdOptions.slice(optionsBefore).sort(), ['Pharma', 'Industries', 'Education', 'Software', 'Places', 'Documentation'].map((n) => `claims.Geo Space=${n}`).sort());
+  const rec = runRecord(r);
+  assert.equal(rec.apply.done, 105);
+  assert.equal(rec.apply.mismatches, 0);
+  assert.deepEqual(rec.plan, { creates: 105, updates: 0 });
+  // no table but Claims was written, and no row was changed
+  assert.equal(w.writes().every((q) => q.method === 'POST' && q.path === '/pages'), true, 'creates of pages only');
+});
+
+test('readSelection: the items of a valid file keep the file\'s order and space ids; a problem names what is wrong', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-add-selection-'));
+  try {
+    const file = join(dir, 'selection.json');
+    writeFileSync(file, `\uFEFF${JSON.stringify(selectionOf([[3, AI], [1, PHARMA], [2]]))}`); // a byte order mark in front is fine
+    const read = readSelection(file, dir);
+    assert.equal(read.problem, undefined);
+    assert.deepEqual(read.items, [
+      { raw: gid(3), ok: true, id: gid(3), spaceId: ALLOWED[AI], isLink: false },
+      { raw: gid(1), ok: true, id: gid(1), spaceId: ALLOWED[PHARMA], isLink: false },
+      { raw: gid(2), ok: true, id: gid(2), spaceId: ALLOWED[US], isLink: false },
+    ]);
+    writeFileSync(file, JSON.stringify({ ...selectionOf([[1]]), run_id: 'bad id' }));
+    assert.match(readSelection(file, dir).problem.message, /run_id: must match/);
+    assert.match(readSelection(join(dir, 'missing.json'), dir).problem.message, /could not be read/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 // ---- the plan check --------------------------------------------------------------------------------------------------------------------
@@ -1032,7 +1322,7 @@ test('the places that name the script: the allow list of the project settings, t
   assert.ok(settings.permissions.allow.includes(rule), 'no permission prompt (P35)');
   assert.ok(!settings.permissions.ask.includes(rule) && !settings.permissions.deny.includes(rule));
   const claudeMd = readFileSync(new URL('CLAUDE.md', root), 'utf8');
-  assert.match(claudeMd, /and `add\.mjs` creates new rows of the claims table with the Geo columns only, from claims read from Geo \(P35\)\./);
+  assert.match(claudeMd, /and `add\.mjs` creates new rows of the claims table with the Geo columns only, from claims read from Geo \(P35[;)]/); // P35, and since P38 "P35; any number of them, ..."
   // the words the editor and the skill share
   const skill = readFileSync(new URL('.claude/skills/claim-tagger/SKILL.md', root), 'utf8');
   const handover = readFileSync(new URL('docs/mvp-2026-11/EDITOR-HANDOVER.md', root), 'utf8');

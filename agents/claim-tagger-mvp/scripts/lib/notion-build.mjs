@@ -1612,6 +1612,11 @@ function canonFilter(filter, nameOf) {
 
 const canonSorts = (sorts, nameOf) => (Array.isArray(sorts) ? sorts : []).map((s) => (s.property !== undefined ? { property: nameOf(s.property), direction: s.direction } : { timestamp: s.timestamp, direction: s.direction }));
 
+// The select columns whose options Notion makes by itself when the add step writes a row with a name the column has no option for yet (Geo Space: a space of config.json geo.allowed_spaces
+// that the table has not held a claim of, decision P39). The structure lists all the options the column may have, so verify finds an option that is in Notion but not in the structure
+// ("extra"); it does not find an option that the structure lists and the table has not been given yet ("missing"), so it is clean before the first claim of a new space and after it.
+const GROWING_OPTIONS = Object.freeze({ claims: Object.freeze(['Geo Space']) });
+
 function compareColumns(add, key, t, dataSource, config) {
   const actual = dataSource?.properties ?? {};
   for (const c of t.columns) {
@@ -1642,7 +1647,8 @@ function compareColumns(add, key, t, dataSource, config) {
     if (c.type === 'select' || c.type === 'multi_select') {
       const have = new Set((def[c.type]?.options ?? []).map((o) => o.name));
       const want = new Set(c.options);
-      const missing = [...want].filter((n) => !have.has(n));
+      // a column whose options Notion adds as rows are written lists in the structure every option it may have: one it has not been given yet is not missing (GROWING_OPTIONS)
+      const missing = GROWING_OPTIONS[key]?.includes(c.name) ? [] : [...want].filter((n) => !have.has(n));
       const extra = [...have].filter((n) => !want.has(n));
       if (missing.length || extra.length) {
         add(key, 'options', `"${c.name}":${missing.length ? ` missing ${missing.map((n) => `"${n}"`).join(', ')}` : ''}${missing.length && extra.length ? ';' : ''}${extra.length ? ` extra ${extra.map((n) => `"${n}"`).join(', ')}` : ''}`);

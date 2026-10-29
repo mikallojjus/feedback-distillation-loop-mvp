@@ -15,7 +15,7 @@ import {
   migrationOps, protectedInLinks, rulebookOps, settingsProperties, unknownOptions, withLinkedSources,
 } from '../../agents/claim-tagger-mvp/scripts/lib/setup-steps.mjs';
 import {
-  AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, SPACE_NAMES, builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, fullTaxonomy, makePick, newWorld, readAuditFile,
+  AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, SPACE_NAMES, ALLOWED_SPACE_NAMES, builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, fullTaxonomy, makePick, newWorld, readAuditFile,
   readJson, readLines, restClient, revisedStructure, smallTaxonomy, tmp, writeInputs,
 } from './helpers/setup-world.mjs';
 
@@ -199,7 +199,7 @@ test('preview of the fresh structure shows the five tables in the hub\'s order, 
   assert.match(md, /then: Onboarding, the archive page "Feedback Distillation MVP \(archive, to 27 Oct 2026\)"/);
   assert.deepEqual([...md.matchAll(/^## (.+)$/gm)].map((m) => m[1].replace(/ \(\d+ columns\)$/, '')).slice(2), ['Claims', 'Rulebook', 'Rule changes', 'Tag decisions', 'Agent settings']);
   assert.match(md, /## Claims \(20 columns\)/, 'the lean Claims set: nine Geo columns, eight agent columns, three editor columns');
-  assert.match(md, /\| Geo Space \| select \| U\.S\. Politics, World affairs, AI, Health, Crypto, Technology \|/);
+  assert.match(md, /\| Geo Space \| select \| U\.S\. Politics, World affairs, AI, Health, Crypto, Technology, Pharma, Industries, Education, Software, Places, Documentation \|/, 'the six spaces of the pick, then the six more that add accepts (P39)');
   assert.match(md, /\| Geo Created \| date \|/);
   assert.match(md, /\| Geo Tags \| multi_select \| Debate(, [^|]+)? \|/, 'Debate first, then the tag names the committed pick added, if it has run');
   assert.doesNotMatch(md, /\(old\)|Geo Score|Geo Name source|renamed|retired|Claims copy|Rulebook copy/);
@@ -220,7 +220,7 @@ test('preview of the fresh structure shows the five tables in the hub\'s order, 
   assert.equal(w.fake.requests.length, 0, 'local files only');
 });
 
-test('structure --options-from sets Geo Tags (the pick\'s tag names, sorted) and Geo Space (the six spaces), writes setup/structure.json, says what changed, and run again changes nothing', async () => {
+test('structure --options-from sets Geo Tags (the pick\'s tag names, sorted) and Geo Space (the allowed spaces: the six of the pick, then six more), writes setup/structure.json, says what changed, and run again changes nothing', async () => {
   const w = newWorld({ structure: 'fresh' });
   writeFileSync(join(w.root, 'setup', 'structure.json'), `${JSON.stringify(forFake(freshStructureBeforeOptions()), null, 2)}\n`);
   const dir = join(w.root, 'inputs');
@@ -236,12 +236,13 @@ test('structure --options-from sets Geo Tags (the pick\'s tag names, sorted) and
   const r = await w.run(['structure', '--options-from', file]);
   assert.equal(r.code, 0, r.text);
   assert.deepEqual(columns().find((c) => c.name === 'Geo Tags').options, ['Debate', 'Economy', 'Immigration']);
-  assert.deepEqual(columns().find((c) => c.name === 'Geo Space').options, SPACE_NAMES);
+  assert.deepEqual(columns().find((c) => c.name === 'Geo Space').options, ALLOWED_SPACE_NAMES);
+  assert.deepEqual(ALLOWED_SPACE_NAMES.slice(0, 6), SPACE_NAMES, 'the six spaces of the pick come first');
   assert.ok(r.out.includes('structure: Geo Tags: added Economy, Immigration (3 in all)'), r.out.join('\n'));
-  assert.ok(r.out.includes('structure: Geo Space: its 6 options are the pick\'s already'));
+  assert.ok(r.out.includes('structure: Geo Space: its 12 options are the pick\'s already'));
   assert.ok(r.out.some((l) => /^structure: setup\/structure\.json written$/.test(l)));
   assert.match(r.out.join('\n'), /Geo Tags colours: Debate \w+, Economy \w+, Immigration \w+/);
-  assert.match(r.out.join('\n'), /Geo Space colours: U\.S\. Politics blue, World affairs green, AI purple, Health red, Crypto orange, Technology gray/);
+  assert.match(r.out.join('\n'), /Geo Space colours: U\.S\. Politics blue, World affairs green, AI purple, Health red, Crypto orange, Technology gray, Pharma default, Industries default, Education default, Software default, Places default, Documentation default/);
   assert.equal(w.fake.requests.length, 0, 'files only: no request, no session needed');
   const after = readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8');
 
@@ -259,6 +260,22 @@ test('structure --options-from sets Geo Tags (the pick\'s tag names, sorted) and
   assert.ok(fewer.out.includes('structure: Geo Tags: removed Economy, Immigration (1 in all)'), fewer.out.join('\n'));
 });
 
+test('structure --options-from takes the options of Geo Space from geo.spaces when config.json has no allowed_spaces', async () => {
+  const w = newWorld({ structure: 'fresh' });
+  const configFile = join(w.root, 'config.json');
+  const config = readJson(configFile);
+  delete config.geo.allowed_spaces;
+  writeFileSync(configFile, JSON.stringify(config, null, 2));
+  const dir = join(w.root, 'inputs');
+  mkdirSync(dir, { recursive: true });
+  const file = join(dir, 'pick.json');
+  writeFileSync(file, JSON.stringify(makePick({ audit: readAuditFile(), extra: 3 })));
+  const r = await w.run(['structure', '--options-from', file]);
+  assert.equal(r.code, 0, r.text);
+  assert.deepEqual(readJson(join(w.root, 'setup', 'structure.json')).tables.claims.columns.find((c) => c.name === 'Geo Space').options, SPACE_NAMES);
+  assert.ok(r.out.includes(`structure: Geo Space: removed ${ALLOWED_SPACE_NAMES.slice(6).join(', ')} (6 in all)`), r.out.join('\n'));
+});
+
 test('the colours of the Geo options are the same on every run and for every order of the names: Geo Space has its own, Geo Tags a hash of the name', () => {
   assert.equal(optionColor('claims', 'Geo Space', 'AI'), 'purple');
   assert.equal(optionColor('claims', 'Geo Tags', 'Debate'), optionColor('claims', 'Geo Tags', 'Debate'));
@@ -270,7 +287,10 @@ test('the colours of the Geo options are the same on every run and for every ord
   assert.equal(optionColor('claims', 'Review status', 'Reviewed'), 'green');
   assert.equal(optionColor('claims', 'Agent confidence', 'x'), 'default', 'a column that takes no colours from a file keeps the default');
   const body = planStructure(forFake(freshStructure()), { notion: { parent_page_id: '3fa273e214eb805199f3d12ef01db453' } }).databases.find((d) => d.table === 'claims').body.initial_data_source.properties;
-  assert.deepEqual(body['Geo Space'].select.options.map((o) => [o.name, o.color]), [['U.S. Politics', 'blue'], ['World affairs', 'green'], ['AI', 'purple'], ['Health', 'red'], ['Crypto', 'orange'], ['Technology', 'gray']]);
+  assert.deepEqual(body['Geo Space'].select.options.map((o) => [o.name, o.color]), [
+    ['U.S. Politics', 'blue'], ['World affairs', 'green'], ['AI', 'purple'], ['Health', 'red'], ['Crypto', 'orange'], ['Technology', 'gray'],
+    ['Pharma', 'default'], ['Industries', 'default'], ['Education', 'default'], ['Software', 'default'], ['Places', 'default'], ['Documentation', 'default'], // the six more that add accepts (P39) have no colour of their own
+  ]);
 });
 
 test('structure --options-from refuses what it cannot set: no geo.spaces in the config, a space or tag the pick lists inconsistently, a file that is not a Geo pick, or other options with it', async () => {
@@ -1498,6 +1518,46 @@ test('verify finds an edited Rulebook row, an edited claim, an edited seeded row
   assert.equal(verify.added_after_setup, undefined);
   assert.equal(verify.requests.writes, 0);
   assert.ok(r.err.length <= 22, 'a short list');
+});
+
+test('verify: the Geo Space options of Claims may be fewer than the structure lists (Notion makes an option when add writes the first claim of a space, P39) and are clean before and after; an option the structure does not list is a difference, and so is a missing option of any other select', async () => {
+  const w = await filled();
+  const entry = tableEntries(w.root).claims;
+  const client = builderClient(w.fake);
+  const options = (type, names) => ({ [type]: { options: names.map((name) => ({ name })) } });
+  const setSpace = (names) => client.updateDataSource(entry.data_source_id, { properties: { 'Geo Space': options('select', names) } });
+  const spaceOptions = () => w.fake.dataSource(entry.data_source_id).properties['Geo Space'].select.options.map((o) => o.name);
+  assert.deepEqual(spaceOptions(), ALLOWED_SPACE_NAMES, 'the table is built with all twelve options the structure lists');
+
+  // the live table today: the six spaces of the pick; the structure lists twelve
+  await setSpace(SPACE_NAMES);
+  assert.deepEqual(spaceOptions(), SPACE_NAMES);
+  const before = await w.run(verifyArgs(w));
+  assert.equal(before.code, 0, before.text);
+  assert.match(before.out.join('\n'), /verify: no differences/);
+  assert.deepEqual(readJson(join(w.root, 'runs', 'builder', 'verify.json')).differences, []);
+  // after the import: Notion has made the options of the spaces the new claims are in
+  await setSpace([...SPACE_NAMES, 'Pharma', 'Software']);
+  assert.equal((await w.run(verifyArgs(w))).code, 0);
+  await setSpace(ALLOWED_SPACE_NAMES);
+  const after = await w.run(verifyArgs(w));
+  assert.equal(after.code, 0, after.text);
+
+  // an option the structure does not list (the Podcasts space is not allowed) is a difference
+  await setSpace([...ALLOWED_SPACE_NAMES, 'Podcasts']);
+  const extra = await w.run(verifyArgs(w));
+  assert.equal(extra.code, 2);
+  assert.match(extra.err.join('\n'), /claims: options - "Geo Space": extra "Podcasts"$/m);
+  assert.doesNotMatch(extra.err.join('\n'), /"Geo Space": missing/);
+  await setSpace(ALLOWED_SPACE_NAMES);
+
+  // every other select still names the options it lacks
+  const tags = w.fake.dataSource(entry.data_source_id).properties['Geo Tags'].multi_select.options.map((o) => o.name);
+  const dropped = tags.at(-1);
+  await client.updateDataSource(entry.data_source_id, { properties: { 'Geo Tags': options('multi_select', tags.slice(0, -1)) } });
+  const missing = await w.run(verifyArgs(w));
+  assert.equal(missing.code, 2);
+  assert.match(missing.err.join('\n'), new RegExp(`claims: options - "Geo Tags": missing "${dropped}"$`, 'm'));
 });
 
 test('verify: a claim added after setup (a Geo ID that is not in the pick) is counted, not a difference; its Geo columns are not checked (P35)', async () => {

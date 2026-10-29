@@ -10,7 +10,7 @@ import {
 import { claimWaits } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
-import { builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, newWorld, readAuditFile, readJson, revisedStructure, makePick, writeInputs, SPACE_NAMES, tmp } from './helpers/setup-world.mjs';
+import { builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, newWorld, readAuditFile, readJson, revisedStructure, makePick, writeInputs, SPACE_NAMES, ALLOWED_SPACE_NAMES, tmp } from './helpers/setup-world.mjs';
 
 // The hub (decisions P9 to P11): the structure's hub block, the tables built as full-page tables in the order of the hub, the pages after them, the link lines at the top of the hub page, and
 // the report of what else is on the page. Everything runs against the fake that keeps child pages and tables among a page's blocks.
@@ -61,7 +61,7 @@ test('the fresh structure file is valid: made from the specification, Onboarding
     'Verified tags', 'Review status', 'Challenged tags notes', 'Geo ID', 'Geo URL', 'Geo Space', 'Geo Created', 'Geo Sources', 'Geo Is factual', 'Geo Tags', 'Geo Topics',
   ]);
   const column = (name) => s.tables.claims.columns.find((c) => c.name === name);
-  assert.deepEqual([column('Geo Space').type, column('Geo Space').options], ['select', SPACE_NAMES]);
+  assert.deepEqual([column('Geo Space').type, column('Geo Space').options], ['select', ALLOWED_SPACE_NAMES]);
   assert.equal(column('Geo Created').type, 'date');
   assert.equal(column('Geo Is factual').type, 'checkbox');
   // Geo Tags holds the committed pick's tag names once structure --options-from has run on it, and the option Debate only before there is a pick

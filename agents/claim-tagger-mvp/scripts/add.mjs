@@ -1,20 +1,24 @@
 #!/usr/bin/env node
-// Add: bring specific Geo claims into Claims, by Geo link or Geo ID (decisions P35 to P37).
+// Add: bring specific Geo claims into Claims, by Geo link or Geo ID, or from a selection file (decisions P35 to P38).
 //
-//   node agents/claim-tagger-mvp/scripts/add.mjs --claims "<Geo links or IDs, separated by spaces or commas>" [--run-id <id>]
+//   node agents/claim-tagger-mvp/scripts/add.mjs (--claims "<Geo links or IDs, separated by spaces or commas>" | --claims-file <selection file>) [--run-id <id>]
 //
-//   --claims   each item is a Geo link, <geo.browser_url>/space/<space id>/<entity id> (that site, with or without www), or a Geo ID (32 hex characters; dashes are allowed and removed).
-//              Any other item is refused as "not a Geo link or ID". More than 50 items (duplicates count once): exit 2 before anything is read.
+//   --claims        each item is a Geo link, <geo.browser_url>/space/<space id>/<entity id> (that site, with or without www), or a Geo ID (32 hex characters; dashes are allowed and removed).
+//                   Any other item is refused as "not a Geo link or ID".
+//   --claims-file   a selection file (schemas/import-selection.schema.json, the file the import workflow writes): the claims to add, each with its Geo ID and its space. A file that does not fit
+//                   the schema, or that lists a Geo ID twice: exit 2 before anything is read. Give one of --claims and --claims-file, not both.
+//
+// There is no limit on the number of claims in one command. A stopped run is run again with the same input: it pulls first, so the claims that were added are "already in Claims".
 //
 // What it does. The usual frame of a loop script (a fresh pull of every table, the pause and drift checks, the columns the scripts need), then:
 //   1. A Geo ID that Claims holds already is reported as "already in Claims" (not an error).
 //   2. The others are read from Geo, through lib/geo-read.mjs only (queries only; the request log is runs/<run-id>/geo-requests.jsonl, and a request that is not a query stops the run
-//      with exit 2). Not found (a stub), not of the Claim type, not in any of the six configured spaces, or with no name: refused, each with its reason. The space of a row is the
-//      link's space when it is configured and holds the entity, else the first configured space (config order) that holds it.
+//      with exit 2). Not found (a stub), not of the Claim type, not in any of the allowed spaces (config.json geo.allowed_spaces; without it, geo.spaces), or with no name: refused, each with
+//      its reason. The space of a row is the item's space (the link's, or the selection file's) when it is allowed and holds the entity, else the first allowed space (config order) that holds it.
 //   3. A claim whose text (normaliseName, as the pick compares) is the same as one in Claims, or as an earlier claim of this command, is refused, and the existing claim is named.
-//   4. The row is the pick's row (lib/geo-row.mjs): the nine Geo columns. Geo Space is an option the column has; Geo Tags writes only the option names the column already has (the
-//      others are left out and listed in run.json; no option and no column is ever made); a Geo Sources link at a protected id refuses the claim; the links of Geo Sources are
-//      written by withLinkedSources, as setup writes them.
+//   4. The row is the pick's row (lib/geo-row.mjs): the nine Geo columns. Geo Space is the name of the allowed space; when the column has no option for it yet, Notion makes the option as
+//      the row is written, and the read-back confirms the value. Geo Tags writes only the option names the column already has (the others are left out and listed in run.json; no Geo Tags
+//      option and no column is ever made); a Geo Sources link at a protected id refuses the claim; the links of Geo Sources are written by withLinkedSources, as setup writes them.
 //   5. Right before the plan is made, Claims is asked again for those Geo IDs: a row that appeared since the pull (another editor added the claim a moment ago) is dropped as
 //      "already in Claims". That narrows the window in which two editors adding the same claim at the same moment could make a repeated key (which stops every loop script); it does not
 //      close it, so:
@@ -27,12 +31,13 @@
 //
 // The report (lib/report.mjs): one sentence, one table of at most five rows, one Next line. The ids, the reasons and the existing claim of a same-text refusal are in run.json ("add").
 //
-// Exit codes: 0 ok (at least one claim added and read back), 1 Geo or Notion could not be read, or a write did not finish (the editor types the command again with the same links; the
-// claims that were added are then "already in Claims"), 2 invalid (nothing was added; more than 50 items; a request to Geo that was not a query; a read-back that differs; a claim that is
-// in Claims twice), 3 paused, 4 drift or a changed rulebook file.
+// Exit codes: 0 ok (at least one claim added and read back), 1 Geo or Notion could not be read, or a write did not finish (the command is given again with the same links or file; the
+// claims that were added are then "already in Claims"), 2 invalid (nothing was added; no input, or both kinds; a selection file that is not valid; a request to Geo that was not a query;
+// a read-back that differs; a claim that is in Claims twice), 3 paused, 4 drift or a changed rulebook file.
 //
-// Exports: add, main, USAGE, MAX_CLAIMS, parseItems.
+// Exports: add, main, USAGE, parseItems, readSelection.
 
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { ADD_SCRIPT, CLAIMS_GEO_COLUMNS, tableEntry } from './lib/config.mjs';
@@ -40,24 +45,26 @@ import { isReviewed } from './lib/decisions.mjs';
 import { cutText, listNames, plural, quoted, tableLink } from './lib/editor-words.mjs';
 import { MAX_ROWS, hardRefusals } from './lib/report.mjs';
 import {
-  GEO_ID, GeoError, countGeoRequests, createGeoClient, entityIsStub, geoRequestLogger, validateGeoConfig,
+  GEO_ID, GeoError, allowedSpaces, countGeoRequests, createGeoClient, entityIsStub, geoRequestLogger, validateGeoConfig,
 } from './lib/geo-read.mjs';
 import { geoRowOf, normaliseName } from './lib/geo-row.mjs';
 import {
   LoopExit, applyStep, assertApplied, needClaimColumns, needTables, notionClient, parseCli, resumeLine, runPreflight, takePull, withRun,
 } from './lib/loop.mjs';
 import { decodePage } from './lib/notion-values.mjs';
-import { isMain } from './lib/paths.mjs';
+import { codeFile, isMain } from './lib/paths.mjs';
 import { newPlan } from './lib/plan.mjs';
 import { claimOps, protectedInLinks, sourcePieces, withLinkedSources } from './lib/setup-steps.mjs';
+import { validate } from './lib/validate.mjs';
 
-export const MAX_CLAIMS = 50;
-export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/add.mjs --claims "<Geo links or IDs, separated by spaces or commas>" [--run-id <id>]';
+export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/add.mjs (--claims "<Geo links or IDs, separated by spaces or commas>" | --claims-file <selection file>) [--run-id <id>]';
 
 const ENGINEER = 'Next: ask the engineer to look at the message the script printed.';
-// every exit-1 Next line says to give the same links again: typed without them the command gives nothing useful
+// every exit-1 Next line says to give the same input again: typed without it the command gives nothing useful
 const LATER = 'Next: type /claim-tagger add again with the same links in a while.';
 const PARTLY = 'Next: type /claim-tagger add again with the same links; the ones added are skipped.';
+const LATER_FILE = 'Next: run the same selection file again in a while.';
+const PARTLY_FILE = 'Next: run the same selection file again; the ones added are skipped.';
 const QUERY_SIZE = 10; // Geo IDs per question when Claims is asked again (one `or` filter each)
 const NAMED = 3; // the claims a sentence or a table cell names, then "and n more"
 const CUT = 40; // the longest text of a claim in a sentence or a table cell
@@ -68,7 +75,7 @@ const KINDS = Object.freeze([
   ['already', 'Already in Claims'],
   ['not_found', 'Not found in Geo'],
   ['not_claim', 'Not a claim'],
-  ['not_in_spaces', 'Not in the six spaces of Claims'],
+  ['not_in_spaces', 'Not in the spaces of Claims'],
   ['same_text', 'Same text as a claim in Claims'],
   ['bad_input', 'Not a Geo link or ID'],
   ['no_name', 'No name in Geo'],
@@ -79,7 +86,7 @@ const PHRASE = Object.freeze({
   already: (n) => `${n} already in Claims`,
   not_found: (n) => `${n} not found in Geo`,
   not_claim: (n) => `${n} not ${n === 1 ? 'a claim' : 'claims'}`,
-  not_in_spaces: (n) => `${n} not in the six spaces of Claims`,
+  not_in_spaces: (n) => `${n} not in the spaces of Claims`,
   same_text: (n) => `${n} with the same text as a claim in Claims`,
   bad_input: (n) => `${n} not ${n === 1 ? 'a Geo link or ID' : 'Geo links or IDs'}`,
   no_name: (n) => `${n} with no name in Geo`,
@@ -115,11 +122,11 @@ function hexOf(text) {
   return GEO_ID.test(id) ? id : null;
 }
 
-/** One item of the input: { raw, ok: true, id, spaceId (of a link, else null) } or { raw, ok: false }. */
+/** One item of the input: { raw, ok: true, id, spaceId (of a link, else null), isLink } or { raw, ok: false }. */
 function parseItem(raw, geo) {
   const token = raw.replace(/^[<(["'“‘]+/, '').replace(/[>)\]"'”’.;,!:]+$/, ''); // a link pasted between quotes, brackets or angle brackets, or with a stop after it
   const bare = hexOf(token);
-  if (bare) return { raw, ok: true, id: bare, spaceId: null };
+  if (bare) return { raw, ok: true, id: bare, spaceId: null, isLink: false };
   let url;
   try {
     url = new URL(token);
@@ -132,7 +139,7 @@ function parseItem(raw, geo) {
   if (parts.length !== 3 || parts[0] !== 'space') return { raw, ok: false };
   const spaceId = hexOf(parts[1]);
   const id = hexOf(parts[2]);
-  return spaceId && id ? { raw, ok: true, id, spaceId } : { raw, ok: false };
+  return spaceId && id ? { raw, ok: true, id, spaceId, isLink: true } : { raw, ok: false };
 }
 
 /**
@@ -150,6 +157,41 @@ export function parseItems(text, geo) {
     items.push(item);
   }
   return { items };
+}
+
+/**
+ * The items of a selection file (--claims-file): the file is read, checked against schemas/import-selection.schema.json, and every Geo ID must appear once. Each claim becomes an item
+ * { raw: its Geo ID, ok: true, id, spaceId: its space_id, isLink: false }, in the order of the file. Returns { items } or { problem: { message, sentence, next } }; nothing else is read.
+ */
+export function readSelection(file, root) {
+  const fail = (message, sentence, next) => ({ problem: { message, sentence, next } });
+  let selection;
+  try {
+    selection = JSON.parse(readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+  } catch (e) {
+    return fail(`the selection file could not be read: ${e.message}`, 'Add: nothing was read or added, because the selection file could not be read.', 'Next: check the selection file and run it again.');
+  }
+  const schema = JSON.parse(readFileSync(codeFile(root, 'schemas', 'import-selection.schema.json'), 'utf8'));
+  const verdict = validate(schema, selection);
+  if (!verdict.ok) {
+    return fail(
+      `the selection file ${file} does not fit schemas/import-selection.schema.json:\n  - ${verdict.errors.slice(0, 8).join('\n  - ')}${verdict.errors.length > 8 ? `\n  - ... and ${verdict.errors.length - 8} more` : ''}`,
+      'Add: nothing was read or added, because the selection file is not valid.', 'Next: correct the selection file and run it again.',
+    );
+  }
+  const seen = new Set();
+  const twice = [];
+  for (const c of selection.claims) {
+    if (seen.has(c.geo_id)) twice.push(c.geo_id);
+    seen.add(c.geo_id);
+  }
+  if (twice.length > 0) {
+    return fail(
+      `the selection file lists ${twice.length} Geo ID(s) more than once: ${[...new Set(twice)].slice(0, 5).join(', ')}`,
+      'Add: nothing was read or added, because the selection file lists the same claim more than once.', 'Next: correct the selection file and run it again.',
+    );
+  }
+  return { items: selection.claims.map((c) => ({ raw: c.geo_id, ok: true, id: c.geo_id, spaceId: c.space_id, isLink: false })) };
 }
 
 // ---- Claims ---------------------------------------------------------------------------------------------------------------------------
@@ -226,25 +268,26 @@ function tableOf(results) {
 
 // ---- the run ----------------------------------------------------------------------------------------------------------------------------
 
-/** Add the claims. opts: claims (the text of --claims), runId and the hooks of the other loop scripts; geoFetchImpl replaces the fetch of the Geo client (tests). */
+/** Add the claims. opts: claims (the text of --claims) or claimsFile (the path of --claims-file), runId and the hooks of the other loop scripts; geoFetchImpl replaces the fetch of the Geo client (tests). */
 export async function add(opts = {}) {
   const claimsText = typeof opts.claims === 'string' ? opts.claims : '';
+  const claimsFile = typeof opts.claimsFile === 'string' && opts.claimsFile !== '' ? opts.claimsFile : null;
   return withRun({
     script: 'add', label: 'Add', again: '/claim-tagger add', opts,
-    args: { claims: claimsText === '' ? null : claimsText },
-    resume: resumeLine('add', claimsText === '' ? [] : ['--claims', claimsText]),
+    args: { claims: claimsText === '' ? null : claimsText, claims_file: claimsFile },
+    resume: resumeLine('add', [...(claimsText === '' ? [] : ['--claims', claimsText]), ...(claimsFile === null ? [] : ['--claims-file', claimsFile])]),
   }, async (ctx) => {
     try {
-      return await body(ctx, claimsText);
+      return await body(ctx, claimsText, claimsFile);
     } catch (e) {
-      // a stop in the shared harness (the pull, say) says "type /claim-tagger add again in a while": typed without the links the command gives nothing useful
-      if (e instanceof LoopExit && e.code === EXIT.ERROR && /^Next: type \/claim-tagger add again(?: in a while|; it continues where it stopped)\.$/.test(e.next ?? '')) e.next = LATER;
+      // a stop in the shared harness (the pull, say) says "type /claim-tagger add again in a while": typed without the links or the file the command gives nothing useful
+      if (e instanceof LoopExit && e.code === EXIT.ERROR && /^Next: type \/claim-tagger add again(?: in a while|; it continues where it stopped)\.$/.test(e.next ?? '')) e.next = claimsFile === null ? LATER : LATER_FILE;
       throw e;
     }
   });
 }
 
-async function body(ctx, claimsText) {
+async function body(ctx, claimsText, claimsFile) {
   // production only (P37): a practice page has no add command
   if (ctx.demo) {
     throw new LoopExit(EXIT.INVALID, 'add works on the real Claims table, not on a practice page', {
@@ -261,20 +304,29 @@ async function body(ctx, claimsText) {
   }
   const geo = checkedGeo.geo;
 
-  // 1. the input: checked before anything is read
-  const { items } = parseItems(claimsText, geo);
-  if (items.length === 0) {
-    throw new LoopExit(EXIT.INVALID, `no Geo links or IDs were given\n${USAGE}`, {
-      sentence: 'Add: nothing was done, because no Geo links or IDs were given.',
-      next: 'Next: type /claim-tagger add with the Geo links or IDs of the claims.',
+  // 1. the input, links or a selection file (one of the two): checked before anything is read, and there is no limit on how many claims
+  if (claimsText !== '' && claimsFile !== null) {
+    throw new LoopExit(EXIT.INVALID, `give either --claims or --claims-file, not both\n${USAGE}`, {
+      sentence: 'Add: nothing was done, because both Geo links and a selection file were given.',
+      next: 'Next: give either the links or the selection file, not both.',
     });
   }
-  if (items.length > MAX_CLAIMS) {
-    throw new LoopExit(EXIT.INVALID, `${items.length} items were given; one command takes at most ${MAX_CLAIMS}`, {
-      sentence: `Add: nothing was read or added, because ${items.length} links or IDs are more than the ${MAX_CLAIMS} that one command takes.`,
-      next: `Next: type /claim-tagger add again with at most ${MAX_CLAIMS} links.`,
-    });
+  let items;
+  if (claimsFile !== null) {
+    const read = readSelection(claimsFile, ctx.root);
+    if (read.problem) throw new LoopExit(EXIT.INVALID, read.problem.message, { sentence: read.problem.sentence, next: read.problem.next });
+    items = read.items;
+  } else {
+    items = parseItems(claimsText, geo).items;
+    if (items.length === 0) {
+      throw new LoopExit(EXIT.INVALID, `no Geo links or IDs were given\n${USAGE}`, {
+        sentence: 'Add: nothing was done, because no Geo links or IDs were given.',
+        next: 'Next: type /claim-tagger add with the Geo links or IDs of the claims.',
+      });
+    }
   }
+  const later = claimsFile === null ? LATER : LATER_FILE;
+  const partly = claimsFile === null ? PARTLY : PARTLY_FILE;
 
   // 2. the frame every loop script has
   await takePull(ctx);
@@ -300,7 +352,7 @@ async function body(ctx, claimsText) {
     if (!item.ok) return;
     if (inClaims.has(item.id)) {
       const held = inClaims.get(item.id);
-      Object.assign(results[i], { outcome: 'already', claim: held.claim, label: nameOf(held.claim, item.id, item.spaceId !== null), unread: !isReviewed(held) && String(held.agent_status ?? '').trim() === '' });
+      Object.assign(results[i], { outcome: 'already', claim: held.claim, label: nameOf(held.claim, item.id, item.isLink), unread: !isReviewed(held) && String(held.agent_status ?? '').trim() === '' });
     } else toRead.push(i);
   });
   const unknownTags = [];
@@ -348,13 +400,13 @@ async function body(ctx, claimsText) {
       const mine = geoError.kind === 'config' || geoError.kind === 'refused';
       throw new LoopExit(mine ? EXIT.INVALID : EXIT.ERROR, `Geo could not be read: ${geoError.message}`, {
         sentence: mine ? 'Add: nothing was added, because the request to Geo was refused.' : 'Add: nothing was added, because Geo could not be read.',
-        next: mine ? ENGINEER : LATER,
+        next: mine ? ENGINEER : later,
       });
     }
   }
 
   // 5. each claim read from Geo: what it is, which space, which row
-  const spaceOrder = geo.spaces;
+  const spaceOrder = allowedSpaces(geo); // geo.allowed_spaces, else the six spaces of the pick (P39)
   const rows = new Map(); // geo id -> { row, pieces, name, space, index }
   const acceptedText = new Map(); // normalised text -> { geo_id, claim } of the claims of this command that will be added
   const knownTags = new Set(optionsOf(schema, 'Geo Tags'));
@@ -363,24 +415,24 @@ async function body(ctx, claimsText) {
     const r = results[i];
     const entity = entities.get(item.id);
     if (entityIsStub(entity)) {
-      Object.assign(r, { outcome: 'not_found', label: ending(item.id, item.spaceId !== null) });
+      Object.assign(r, { outcome: 'not_found', label: ending(item.id, item.isLink) });
       continue;
     }
     if (!(entity.typeIds ?? []).map(flat).includes(geo.ids.claim_type)) {
-      Object.assign(r, { outcome: 'not_claim', label: nameOf(entity.name, item.id, item.spaceId !== null) });
+      Object.assign(r, { outcome: 'not_claim', label: nameOf(entity.name, item.id, item.isLink) });
       continue;
     }
     const held = new Set((entity.spaceIds ?? []).map(flat));
     const space = (item.spaceId && spaceOrder.find((s) => s.id === item.spaceId && held.has(s.id))) || spaceOrder.find((s) => held.has(s.id));
     if (!space) {
-      Object.assign(r, { outcome: 'not_in_spaces', label: nameOf(entity.name, item.id, item.spaceId !== null) });
+      Object.assign(r, { outcome: 'not_in_spaces', label: nameOf(entity.name, item.id, item.isLink) });
       continue;
     }
     const built = geoRowOf({ entity, id: item.id, fallbackName: '', fallbackCreated: null, space, geo });
     const name = String(built.row['Geo Name'] ?? '').trim();
     const text = normaliseName(name);
     if (name === '' || text === '') {
-      Object.assign(r, { outcome: 'no_name', label: ending(item.id, item.spaceId !== null) });
+      Object.assign(r, { outcome: 'no_name', label: ending(item.id, item.isLink) });
       continue;
     }
     const twin = textInClaims.get(text) ?? acceptedText.get(text);
@@ -394,7 +446,7 @@ async function body(ctx, claimsText) {
     }
     const pieces = sourcePieces(built.row);
     if (protectedInLinks(ctx.config, new Map([[item.id, pieces]])).length > 0) {
-      Object.assign(r, { outcome: 'source_link', label: nameOf(name, item.id, item.spaceId !== null), claim: name });
+      Object.assign(r, { outcome: 'source_link', label: nameOf(name, item.id, item.isLink), claim: name });
       continue;
     }
     // Geo Tags: only the option names the column has; the others are left out and listed
@@ -404,7 +456,7 @@ async function body(ctx, claimsText) {
     built.row['Geo Tags'] = tags;
     acceptedText.set(text, { geo_id: item.id, claim: name });
     rows.set(item.id, { row: built.row, pieces, name, space: space.name, index: i });
-    Object.assign(r, { outcome: 'candidate', claim: name, space: space.name, label: nameOf(name, item.id, item.spaceId !== null) });
+    Object.assign(r, { outcome: 'candidate', claim: name, space: space.name, label: nameOf(name, item.id, item.isLink) });
   }
 
   // 6. the last look at Claims, right before the plan: a row that appeared since the pull is dropped
@@ -419,19 +471,11 @@ async function body(ctx, claimsText) {
     }
   }
 
-  // 7. the plan: creates of the Geo columns only, Geo Space and Geo Tags with option names that exist, the links of Geo Sources written beside the text
+  // 7. the plan: creates of the Geo columns only, Geo Tags with option names that exist, the links of Geo Sources written beside the text. Geo Space is the name of an allowed space (P39): when the
+  // column has no option for it yet, Notion makes the option as the row is written, and the read-back below confirms the value
   const columns = CLAIMS_GEO_COLUMNS.filter((c) => schema?.properties?.[c]);
   const toWrite = [...rows.entries()].map(([id, v]) => ({ id, ...v }));
   if (toWrite.length > 0) {
-    const spaceOptions = new Set(optionsOf(schema, 'Geo Space'));
-    const missing = [...new Set(toWrite.map((v) => v.space))].filter((name) => !spaceOptions.has(name));
-    if (missing.length) {
-      record();
-      throw new LoopExit(EXIT.INVALID, `the Geo Space column of Claims has no option for: ${missing.join(', ')}`, {
-        sentence: 'Add: nothing was added, because the Claims table does not have the space of a claim as an option.',
-        next: ENGINEER,
-      });
-    }
     const plan = newPlan({ runId: ctx.runId, script: ADD_SCRIPT, rubricEdition: ctx.edition, config: ctx.config, now: ctx.now });
     const ops = claimOps({ rows: toWrite.map((v) => v.row) }, columns, { keyColumn: entry.key });
     for (const op of ops) plan.create('claims', op.key, op.properties);
@@ -477,7 +521,7 @@ async function body(ctx, claimsText) {
       else if (may > 0) sentence = `Add: none was confirmed and ${may} may have been added, before it stopped.`;
       throw new LoopExit(EXIT.ERROR, `${left} write(s) did not finish: ${[...result.lists.failed, ...result.lists.uncertain, ...result.lists.unchecked].slice(0, 3).map((m) => `${m.table} "${m.key}" ${m.detail ?? ''}`).join('; ') || 'not reached'}`, {
         sentence,
-        next: confirmed + may > 0 ? PARTLY : LATER,
+        next: confirmed + may > 0 ? partly : later,
       });
     }
     assertApplied(ctx, result);
@@ -532,7 +576,7 @@ async function body(ctx, claimsText) {
         : `Next: nothing new to read; ${n === 1 ? 'it is' : 'they are'} in All claims (${link}).`;
     } else {
       sentence = `Add: nothing was added to Claims: ${listNames(kinds.map(([kind]) => PHRASE[kind](counts[kind])))}.`;
-      next = 'Next: check the links and type /claim-tagger add again.';
+      next = claimsFile === null ? 'Next: check the links and type /claim-tagger add again.' : 'Next: check the selection and run it again.';
     }
     return { exit: EXIT.INVALID, message: sentence, sentence, header, rows: rowsOut, next, details, counts };
   }
@@ -557,11 +601,11 @@ const consoleIo = { out: (s) => console.log(s), err: (s) => console.error(s) };
 
 /** Parse the command line and run; returns the exit code. deps (tests): everything add() takes besides the flags. */
 export async function main(argv, io = consoleIo, deps = {}) {
-  const parsed = parseCli('add', argv, { claims: { type: 'string' }, 'run-id': { type: 'string' } }, USAGE, io);
+  const parsed = parseCli('add', argv, { claims: { type: 'string' }, 'claims-file': { type: 'string' }, 'run-id': { type: 'string' } }, USAGE, io);
   if (parsed.exit !== undefined) return parsed.exit;
   const v = parsed.values;
   try {
-    return (await add({ ...deps, io, claims: v.claims, runId: v['run-id'] })).exit;
+    return (await add({ ...deps, io, claims: v.claims, claimsFile: v['claims-file'], runId: v['run-id'] })).exit;
   } catch (e) {
     io.err(`add: unexpected error: ${e.stack ?? e.message}`);
     return EXIT.ERROR;

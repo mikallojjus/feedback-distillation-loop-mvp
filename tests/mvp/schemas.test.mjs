@@ -17,9 +17,9 @@ const hash = 'sha256:0123456789abcdef';
 
 // ---- all of them ---------------------------------------------------------------------------------------------------------------------
 
-test('the folder holds the eleven schemas the contracts name, each in the subset the validator supports', () => {
+test('the folder holds the twelve schemas the contracts name, each in the subset the validator supports', () => {
   const files = readdirSync(dir).filter((f) => f.endsWith('.schema.json')).sort();
-  assert.deepEqual(files, ['card', 'cell', 'claim-row', 'geo-pick', 'judge-reply', 'ledger-row', 'lesson', 'plan', 'reading-reply', 'report', 'rubric'].map((n) => `${n}.schema.json`));
+  assert.deepEqual(files, ['card', 'cell', 'claim-row', 'geo-pick', 'import-selection', 'judge-reply', 'ledger-row', 'lesson', 'plan', 'reading-reply', 'report', 'rubric'].map((n) => `${n}.schema.json`));
   for (const file of files) {
     const schema = JSON.parse(readFileSync(new URL(file, dir), 'utf8'));
     assertSchema(schema); // throws on a keyword the validator does not know: a typo would switch a check off
@@ -345,4 +345,55 @@ test('reading reply: {"readings": [...]} with a reading of the three, a rule or 
   bad(readingReply, { readings: [readingOf({ note: '' })] }, /note: must be at least 1 characters/);
   bad(readingReply, { readings: [readingOf({ note: undefined })] }, /note: missing required property/);
   bad(readingReply, [readingOf()], /expected object/);
+});
+
+// ---- import selection (add.mjs --claims-file, P38) ---------------------------------------------------------------------------------------
+
+const importSelection = load('import-selection');
+const importClaim = (over = {}) => ({
+  geo_id: 'c0000000000000000000000000000001', space_id: '4582fbbee28a16589154f7e36f1ee3c5', space: 'U.S. Politics', name: 'The mayor said the ruling was unfair', month: '2026-09',
+  published_at: '2026-09-14T09:30:00Z', bucket: 'issue', predicted_tags: ['Context-dependent', 'Trailing period'], why: 'A bare "the ruling" with no antecedent, and no final stop.', ...over,
+});
+const importOf = (over = {}) => ({
+  run_id: '20261029T090000Z-import', created_at: '2026-10-29T09:00:00.000Z', criteria_file: 'runs/import/20261029T090000Z-import/criteria.md', bot_spaces: ['cc0bf85a27c217d75993bc785a15b198'],
+  claims: [importClaim(), importClaim({ geo_id: 'c0000000000000000000000000000002', bucket: 'near_miss', predicted_tags: [], published_at: null, why: '' })], ...over,
+});
+
+test('import selection: a selection with issues, near misses and controls, a published_at that is a time, a day or null, and a why that may be empty', () => {
+  ok(importSelection, importOf());
+  for (const bucket of ['issue', 'near_miss', 'control']) ok(importSelection, importOf({ claims: [importClaim({ bucket })] }), bucket);
+  for (const published_at of [null, '2026-09-14', '2026-09-14T09:30', '2026-09-14T09:30:15.250Z', '2026-09-14T09:30:15+02:00']) ok(importSelection, importOf({ claims: [importClaim({ published_at })] }), String(published_at));
+  ok(importSelection, importOf({ bot_spaces: [] }), 'a list of bot spaces may be empty');
+  ok(importSelection, importOf({ claims: [importClaim({ why: 'x'.repeat(300) })] }), 'a why of 300 characters');
+  assert.equal(importSelection.title, 'Import selection (runs/import/<run-id>/selection.json)');
+});
+
+test('import selection: what makes a selection invalid', () => {
+  const claimBad = (over, pattern, note) => bad(importSelection, importOf({ claims: [importClaim(over)] }), pattern, note);
+  claimBad({ bucket: 'weird' }, /claims\[0\]\.bucket: expected one of "issue", "near_miss", "control"/);
+  claimBad({ geo_id: 'abc' }, /claims\[0\]\.geo_id: must match/);
+  claimBad({ geo_id: 'C0000000000000000000000000000001' }, /claims\[0\]\.geo_id: must match/, 'lower-case hex only');
+  claimBad({ space_id: 'U.S. Politics' }, /claims\[0\]\.space_id: must match/);
+  claimBad({ space: '' }, /claims\[0\]\.space: must be at least 1 characters/);
+  claimBad({ name: '' }, /claims\[0\]\.name: must be at least 1 characters/);
+  claimBad({ month: 'October 2026' }, /claims\[0\]\.month: must match/);
+  claimBad({ month: '2026-9' }, /claims\[0\]\.month: must match/);
+  claimBad({ published_at: 'last week' }, /claims\[0\]\.published_at: does not match any of the 2 allowed schemas/);
+  claimBad({ published_at: 1789387200 }, /claims\[0\]\.published_at: does not match any of the 2 allowed schemas/);
+  claimBad({ published_at: undefined }, /claims\[0\]\.published_at: missing required property/);
+  claimBad({ predicted_tags: 'Context-dependent' }, /claims\[0\]\.predicted_tags: expected array/);
+  claimBad({ predicted_tags: [''] }, /predicted_tags\[0\]: must be at least 1 characters/);
+  claimBad({ why: 'x'.repeat(301) }, /claims\[0\]\.why: must be at most 300 characters/);
+  claimBad({ why: undefined }, /claims\[0\]\.why: missing required property/);
+  claimBad({ confidence: 0.9 }, /claims\[0\]\.confidence: unexpected property/);
+  bad(importSelection, importOf({ claims: [] }), /\$\.claims: must have at least 1 items/);
+  bad(importSelection, importOf({ claims: undefined }), /\$\.claims: missing required property/);
+  bad(importSelection, importOf({ run_id: 'has a space' }), /\$\.run_id: must match/);
+  bad(importSelection, importOf({ created_at: 'yesterday' }), /\$\.created_at: must match/);
+  bad(importSelection, importOf({ criteria_file: '' }), /\$\.criteria_file: must be at least 1 characters/);
+  bad(importSelection, importOf({ criteria_file: undefined }), /\$\.criteria_file: missing required property/);
+  bad(importSelection, importOf({ bot_spaces: ['bot'] }), /\$\.bot_spaces\[0\]: must match/);
+  bad(importSelection, importOf({ bot_spaces: undefined }), /\$\.bot_spaces: missing required property/);
+  bad(importSelection, importOf({ note: 'extra' }), /\$\.note: unexpected property/);
+  bad(importSelection, [importClaim()], /expected object/);
 });

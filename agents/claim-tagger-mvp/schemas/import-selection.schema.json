@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Import selection (runs/import/<run-id>/selection.json)",
+  "description": "The Geo claims Claude chose to bring into Claims, as add.mjs --claims-file reads them (decisions P38 to P40): the run, the file of working criteria the choice followed, the personal spaces of the Geo bot whose claims were left out, and one entry per claim with its Geo ID, its space, its month, why it was chosen and which tags it was expected to break. add.mjs uses only each claim's geo_id and space_id (the claim itself is read from Geo again); the rest is the record of the choice. Every geo_id appears once. Nothing in it is a decision of an editor and nothing in it enters the rulebook or a judge prompt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "created_at", "criteria_file", "bot_spaces", "claims"],
+  "properties": {
+    "run_id": { "type": "string", "pattern": "^[A-Za-z0-9._-]+$", "description": "The import run that made the selection (the folder under runs/import/)." },
+    "created_at": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$" },
+    "criteria_file": { "type": "string", "minLength": 1, "description": "The working criteria (criteria.md) the choice followed. They are for the selection only." },
+    "bot_spaces": { "type": "array", "items": { "$ref": "#/definitions/geoId" }, "description": "The personal spaces of the Geo bot (config.json geo.bot_spaces) whose claims were left out." },
+    "claims": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/claim" } }
+  },
+  "definitions": {
+    "geoId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "month": { "type": "string", "pattern": "^\\d{4}-\\d{2}$" },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["geo_id", "space_id", "space", "name", "month", "published_at", "bucket", "predicted_tags", "why"],
+      "properties": {
+        "geo_id": { "$ref": "#/definitions/geoId" },
+        "space_id": { "$ref": "#/definitions/geoId", "description": "The space the claim is added from; add.mjs keeps it when that space is allowed and holds the claim, else the first allowed space that does." },
+        "space": { "type": "string", "minLength": 1, "description": "The name of that space." },
+        "name": { "type": "string", "minLength": 1, "description": "The claim's text, as it was read when it was chosen." },
+        "month": { "$ref": "#/definitions/month" },
+        "published_at": {
+          "anyOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}(:\\d{2}(\\.\\d+)?)?(Z|[+-]\\d{2}:\\d{2})?)?$" }
+          ],
+          "description": "When the claim was published (ISO 8601), or null when Geo does not say."
+        },
+        "bucket": { "enum": ["issue", "near_miss", "control"], "description": "issue: expected to break a rule; near_miss: looks like one but should not; control: clean." },
+        "predicted_tags": { "type": "array", "items": { "type": "string", "minLength": 1 }, "description": "The tags the claim was expected to break (empty for a near miss or a control)." },
+        "why": { "type": "string", "maxLength": 300, "description": "One line: why it was chosen." }
+      }
+    }
+  }
+}
