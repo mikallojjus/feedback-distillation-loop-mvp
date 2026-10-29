@@ -1,0 +1,120 @@
+{"id":"746767a035c5c84a0a77678cde3087d0","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym ACIP, a named body, in capitals"}
+{"id":"6a5034c7001b5e8a9f45bea8834c25aa","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained generic principle, no trigger"}
+{"id":"040d0ebf312a4944818b2f124ffae125","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Serbia's student movement' resolved by the named country"}
+{"id":"515e6afcd88e40348323581071a705e0","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained policy claim, indefinite and named places"}
+{"id":"43258087fba24b458d707fb52e295530","tags":[],"confidence":0.85,"bucket":"clean","why":"named agency Frontex, generic monitors"}
+{"id":"a0dacae3f2e5ad8437bc6141a67bc66f","tags":["Improper capitalization"],"confidence":0.5,"why":"'Models' capitalized mid-sentence though not a proper noun","bucket":"issue"}
+{"id":"5b939f78e32943aaa7b5cbf823d05790","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'at a much faster rate than ... catch up to' shortens to 'faster than'"}
+{"id":"3ec5b02aa2beb641189863fcddea6f65","tags":[],"confidence":0.7,"bucket":"near_miss","why":"abstract 'the restoration of democratic elections' resolves itself"}
+{"id":"73b5d8a87d39520d856910c4364955a3","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the West' generic, 'it' resolves to 'a path', time expression"}
+{"id":"50e591e5c4634e3d807657d4ca727725","tags":[],"confidence":0.9,"bucket":"clean","why":"plain generic claim, no trigger"}
+{"id":"7e2969399e54d7f4b09eff641f6026aa","tags":[],"confidence":0.85,"bucket":"clean","why":"named person's government, self-contained"}
+{"id":"526444dc19dfea8811580fd140e12bb0","tags":[],"confidence":0.5,"bucket":"near_miss","why":"indefinite 'a television advertisement', midterm time expression"}
+{"id":"39fac4784ed5469185c9ee80444ef0c7","tags":[],"confidence":0.85,"bucket":"clean","why":"named company, generic subject"}
+{"id":"d20adc29d9e24a49899244dd509abb4a","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym ICC, a named court"}
+{"id":"950d3348bcec50cb86d733f0648caf35","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"long, padded 'improve communication with experts to better understand it'"}
+{"id":"c3b6c9f62c9723ec3d2803a15121270b","tags":[],"confidence":0.9,"bucket":"clean","why":"named person, self-contained"}
+{"id":"7057e7def9024b91b8b287cb41662e50","tags":[],"confidence":0.8,"bucket":"clean","why":"named companies and network, self-contained"}
+{"id":"5f1f6a74cd184152912b1503ccfdee39","tags":[],"confidence":0.85,"bucket":"clean","why":"named countries, self-contained"}
+{"id":"ef2850d75dc0b29a871868542e7978e2","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named academy and Congress; 'its' resolves inside the claim"}
+{"id":"85ead7a52c1d55cf8d2432b1d0cc23a3","tags":[],"confidence":0.85,"bucket":"clean","why":"generic subject, no trigger"}
+{"id":"a5018ee1fa71546188a1f7456ef264a9","tags":[],"confidence":0.7,"bucket":"clean","why":"generic society, no definite referent"}
+{"id":"8546c1e128dc5d9d912f925b08589e9f","tags":[],"confidence":0.7,"bucket":"clean","why":"long but each clause carries meaning"}
+{"id":"dabfcf5aa73e4d4327f1e9638e9e6287","tags":[],"confidence":0.75,"bucket":"clean","why":"named country, aircraft and base"}
+{"id":"134e56febf7950688f557fd08832203c","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the ozone layer' is a unique self-resolving thing"}
+{"id":"05a8e55f00464dea9b02d75591543c61","tags":[],"confidence":0.85,"bucket":"clean","why":"short generic claim"}
+{"id":"f39cfcc2014c48ee93b4e4866fdefa2f","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym JNIM in capitals, named country"}
+{"id":"9a2bcf86fcde434d84d65282be9419a5","tags":[],"confidence":0.85,"bucket":"clean","why":"mixed-case chemical name NAD+, generic policy"}
+{"id":"5ed5d7e703f858fe37982fb99352117e","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the original congressional primaries' resolved by Missouri's map"}
+{"id":"7bdb3b74a62e5fcaad81cfe426608ce3","tags":[],"confidence":0.85,"bucket":"clean","why":"generic subject, 'their' resolves to AI companies"}
+{"id":"ebbbf768424a42d2b0aafb4de632ffac","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the arms race on the Korean Peninsula' resolves itself"}
+{"id":"12fe490c4cac6a64168cd25cb4a3b0e2","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Tennessee's failed attempt' resolved by named people and state"}
+{"id":"8dd3c42aefe1ef501c3db719ffd88dbc","tags":[],"confidence":0.7,"bucket":"clean","why":"generic mass nouns, idiom 'housing ladder'"}
+{"id":"8a170ec907cd643328de3f3247215f85","tags":["Context-dependent"],"confidence":0.45,"bucket":"issue","why":"'The Senate map' gives no cycle; 'remains' presumes earlier context"}
+{"id":"543e516836c29651be6759e7fe7f3478","tags":[],"confidence":0.9,"bucket":"near_miss","why":"generic 'the government' in a recommendation"}
+{"id":"11db03465436f5d5b54d856b273d6591","tags":[],"confidence":0.7,"bucket":"clean","why":"indefinite department, self-contained"}
+{"id":"421b3ad7314d481b99bdff72b375dda5","tags":[],"confidence":0.6,"bucket":"clean","why":"generic claim, no definite referent"}
+{"id":"7df1798586f050c9997bad178a80b46e","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'very difficult to define what constitutes' padded, shorter rewrite exists"}
+{"id":"50c5621b0b745e5050ae62331052d652","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'California's lawsuit' does not say which lawsuit"}
+{"id":"22c67f8c5ffe4ba5831694a0d2f35a4e","tags":[],"confidence":0.7,"bucket":"clean","why":"self-contained, named countries"}
+{"id":"9737aa282cc956f2bc7d66202bc94c6a","tags":[],"confidence":0.8,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"2bc49ad045c35fcbac77939727eb9fff","tags":["Wordy"],"confidence":0.6,"bucket":"issue","why":"'those individuals' for 'they'; 'released back into society' padded"}
+{"id":"51c51cbb2fb049fba276dabd3f77cb5b","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the region' resolved by South Ossetians; abstract principle"}
+{"id":"46e898b7906651b8bb2b65e0c4cdafbc","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'The existence of' nominalization and trailing clause pad the claim"}
+{"id":"63ac8602a2d349f08847acbc549924ef","tags":[],"confidence":0.85,"bucket":"clean","why":"plain policy claim"}
+{"id":"74f462dcd36c4b5da9fdde4d1cb00b3b","tags":[],"confidence":0.6,"bucket":"near_miss","why":"indefinite 'an election date', abstract 'the credibility'"}
+{"id":"7d004b6855fc4daa955e7106badbcfa1","tags":[],"confidence":0.85,"bucket":"clean","why":"named people, self-contained"}
+{"id":"64e91fb398e344b7908e327abc56b7cb","tags":[],"confidence":0.5,"bucket":"near_miss","why":"generic 'You', not an antecedent-less pronoun reference"}
+{"id":"120127d333ac44d197b6f1ce9299d325","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"fcd48654722c4fb0a9660afc4972f8b1","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the organisers ... of Cambodia's industry' resolves itself"}
+{"id":"a2d16abd977959b987a04395d5ed1897","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'similar or the same' and 'try harder ... more drive' redundant"}
+{"id":"dc0c61f38f4bee1182765fe413489f79","tags":[],"confidence":0.9,"bucket":"clean","why":"plain generic claim"}
+{"id":"0e8b0f33a6c54edf9d2cb05fb9f592e7","tags":[],"confidence":0.7,"bucket":"near_miss","why":"'the war in Ukraine' resolves itself"}
+{"id":"a37e382a7b71474ea41a78e20e5f1ad4","tags":[],"confidence":0.85,"bucket":"near_miss","why":"generic 'The federal government' in a recommendation"}
+{"id":"94b6c6b526c65a3ca2b43ea0e3a6ba10","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"filler 'Actual' and restating clause 'function of intake and activity'"}
+{"id":"6dea5799a7d34891977692b2d3e97a13","tags":[],"confidence":0.6,"bucket":"near_miss","why":"abstract 'the electoral process', named country"}
+{"id":"8d1bbafa737547ba8794eb332cb2fb68","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the disputed ... resources' resolved by the two named states"}
+{"id":"b561a84683d4472a90b5f00ab7262c80","tags":[],"confidence":0.8,"bucket":"clean","why":"named country, plain claim"}
+{"id":"ae7cdc524544bd5346ef7f0fa3afa6c5","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the unlawful firing' resolved by the named person"}
+{"id":"b2d691d128d944c180ed9611586cf68f","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"5a2be5d52bf6428a965c1f1c01b0adff","tags":[],"confidence":0.75,"bucket":"near_miss","why":"named region and agreement, description works as a name"}
+{"id":"1f18cb41daa26dc99149ef5fa5a94364","tags":[],"confidence":0.9,"bucket":"clean","why":"plain generic claim"}
+{"id":"aefef3f63c3e5eb6a6695a849bfe2e8d","tags":[],"confidence":0.85,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"5dd19a10b2194060a0d378da20336e62","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"1b45c72f1ba05fdc9821e103b6a60bd5","tags":["Wordy"],"confidence":0.6,"bucket":"issue","why":"'The use of ... is a right that' nominalized; shorter rewrite exists"}
+{"id":"c90f386c41a156ccabab647967940be1","tags":[],"confidence":0.6,"bucket":"clean","why":"'this right' resolves to the right just named"}
+{"id":"8f4f7af6a7f75052806cedbace6db0e3","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"a09a144e445a3d4994ade3d9ed44edc6","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"7a717d42319f4506bcda7e383ee88eb2","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"fbf43427f61e5a8da9029f9cab24481c","tags":["Wordy"],"confidence":0.35,"bucket":"issue","why":"'The way ... are asked should be changed' nominalized and vague"}
+{"id":"f9efc60790a45fcd8b8e3a423f839968","tags":[],"confidence":0.85,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"489605d0d4a444949a81f041df845530","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named institution Congress"}
+{"id":"ef7f56bba1a006e7ac310469780b67e0","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"38c7164e15b452e790a13f3ef9c213f2","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'The definition of what constitutes' shortens to 'Defining'"}
+{"id":"e6b97594dd8e4284a4ad46a60db298f7","tags":[],"confidence":0.85,"bucket":"clean","why":"named places, self-contained"}
+{"id":"605c59930bdd5382849b6cf7a0303692","tags":[],"confidence":0.65,"bucket":"clean","why":"'its' resolves to AI inside the claim"}
+{"id":"39652b3e5feca6106640f32aa6e90948","tags":[],"confidence":0.5,"bucket":"near_miss","why":"named institution Congress, named president"}
+{"id":"68d3d1eb9c1217b49341abe9c8bdb143","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named payout, 'another round' implies an earlier round"}
+{"id":"0ccc4355be145d719d55732e29892f66","tags":[],"confidence":0.85,"bucket":"clean","why":"indefinite embryo, plain claim"}
+{"id":"0e14d5ab99c5448190cb8fa1e3474344","tags":[],"confidence":0.9,"bucket":"clean","why":"named person, self-contained"}
+{"id":"e852800320f15f79bcedb55b637e1c4e","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'his election victory' and time reference resolved by named person"}
+{"id":"0260ee2bd9a84173a8354d1fdc69dbda","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the ... terms of every ... agreement' resolved by 'every'"}
+{"id":"2fbba8408b464cc49c5d4caf342efcd3","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"ed0fe6d32fa4430ca421b49c6faed9b5","tags":[],"confidence":0.7,"bucket":"clean","why":"named country, 'its' resolves inside the claim"}
+{"id":"fb9397fa0b6145d08ccd4b3d024041c5","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"f5c43a21dba18e2fea4509234f6d3f37","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"22f34d18e61068bebf9efa2e06c31f7d","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"867b87302dfb42a9a203b76a0a1acc6c","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}
+{"id":"3374786abf7d5d5187243a834d4b51ac","tags":[],"confidence":0.6,"bucket":"clean","why":"generic claim, 'their' resolves to people"}
+{"id":"92813ea411454a0e85217c012e879f5f","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"23ad99d77adb52f9a82d0747ef9f33d1","tags":["Wordy","Poor wording"],"confidence":0.85,"bucket":"issue","why":"'matter of probability, not a certainty ... may or may not' is filler"}
+{"id":"3751e9058bd95edcb1e66943d04f5b2d","tags":[],"confidence":0.55,"bucket":"clean","why":"long but each phrase carries meaning"}
+{"id":"dfb2745aea7ef1de61751d0c9ff4f6f7","tags":[],"confidence":0.85,"bucket":"clean","why":"plain short claim"}
+{"id":"a38d54cee0031310ad10fcb9f7c4415c","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"6f67fab73581091c8117bb59c784e38a","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"85d35b8c4ada4875963b033226df3009","tags":[],"confidence":0.8,"bucket":"clean","why":"named protocol, 'its' resolves to Balancer"}
+{"id":"d8988533f48a4979ae009a1e79ba2ad4","tags":[],"confidence":0.85,"bucket":"clean","why":"named countries, plain claim"}
+{"id":"66b8cd070797916de1b8609a0cb4e6d3","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite 'a few AI providers', plain claim"}
+{"id":"36d429d36dc6842f6e5ccdb616ae6386","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"4d31eccf734c0d1984b930f72e9d4cd8","tags":[],"confidence":0.6,"bucket":"near_miss","why":"generic 'The world'"}
+{"id":"b8f2050600bf4a428ba8b5deb09528a5","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"0f70f29ddd0c4c9abdee44bed19f5df1","tags":[],"confidence":0.85,"bucket":"near_miss","why":"named court Supreme Court resolved by India"}
+{"id":"ecd9b65f9b3490fb8213cca17550ebea","tags":[],"confidence":0.65,"bucket":"clean","why":"headline style but parses; named people"}
+{"id":"44ccc4c44e2c4b948ca7c5f9e9dfb11e","tags":[],"confidence":0.8,"bucket":"near_miss","why":"named agency FDA, acronym"}
+{"id":"7538f65c218d48afb4181a890fe8de16","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'its ... gap' resolved by Germany; acronym U.S."}
+{"id":"92f820a1bc9e43fa83983207d82df109","tags":[],"confidence":0.75,"bucket":"clean","why":"quoted project name, balanced quotes"}
+{"id":"783b46dda1fd541c8863462087816084","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"3503f999ff1c5643bd32284c226b991b","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the day' generic time expression"}
+{"id":"5ee3979e6bd94a71f8b06f36c5874275","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"2f8fe8c5a3315906a75b2c5cfa45e99f","tags":["Wordy"],"confidence":0.75,"bucket":"issue","why":"'There appears to be a consistent dismissal of' is filler"}
+{"id":"74c3900441e44a7c83cc72f4498c9b27","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"ccc035e46a5345b88ce7ed48e664ce4a","tags":[],"confidence":0.8,"bucket":"clean","why":"'it' resolves to the dollar inside the claim"}
+{"id":"3c6f0344d2ab5cbeaf0bc12fc9c2b298","tags":[],"confidence":0.6,"bucket":"clean","why":"generic claim, mild redundancy only"}
+{"id":"6f977566192a4ba47ccdee03ee288ab4","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"9aedddbb39cd4fc57732ca312ebd803a","tags":[],"confidence":0.85,"bucket":"clean","why":"named person and policy, self-contained"}
+{"id":"7bb2b7eff84d47ce8e8d6897499130e9","tags":[],"confidence":0.75,"bucket":"clean","why":"named program Housing First"}
+{"id":"7c251f19475054008d70a4eb2be125d3","tags":[],"confidence":0.7,"bucket":"clean","why":"vague passive but no definite referent"}
+{"id":"c4812f09d5249932823a56e484db8ac4","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronym FAA, named agency"}
+{"id":"6f2f7f5ec99f53c3a910e394cac698b3","tags":[],"confidence":0.8,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"ce878ad47cf2130a4d3cd38148789f0d","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"1dc7ea271092446b8d29a0edee9ecea2","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}

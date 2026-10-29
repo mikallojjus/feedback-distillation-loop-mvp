@@ -1,0 +1,115 @@
+{"id":"60a2a66e4c5f715e2971c9c2f8f0dc4b","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}
+{"id":"84711142bdeab4873f2a13528efcc7fe","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the West Bank' is a named place"}
+{"id":"05326b046baa16e8037829a659773545","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"1cd5357518e346a9ad6de918a51a0b99","tags":[],"confidence":0.65,"bucket":"near_miss","why":"acronym ASEAN in capitals"}
+{"id":"eb18cd910aba4e6193819c40a6d34625","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}
+{"id":"7e379107cae740c4ab0633d040dbaf60","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The Kyauktaw market airstrike' names a specific event by place"}
+{"id":"8e5cdb528d40ac6f0abb1323fb81a623","tags":[],"confidence":0.7,"bucket":"clean","why":"named people, self-contained"}
+{"id":"846014e273f0462fbf0c1b941a2b059d","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"7e7c8ad0d280544990416d34fa03413e","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"trailing 'which created conflict with Russia' repeats the point"}
+{"id":"db4840600c9c4007b113e32e4185a77e","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronym UN; lower-case title 'secretary-general'"}
+{"id":"3ff9df3139fb47f5ac65ff4ad102f9c5","tags":[],"confidence":0.7,"bucket":"clean","why":"named countries, acronym LNG only"}
+{"id":"8ac5c660c6ef4bc9a669638ece67a39b","tags":[],"confidence":0.7,"bucket":"near_miss","why":"named law 'the CLARITY Act', named institution Congress"}
+{"id":"e19874e884ac5be7b935e01e4ca03759","tags":[],"confidence":0.9,"bucket":"clean","why":"'it' resolves to animal testing"}
+{"id":"68e47f80957957b985131ae0da0e512b","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"b8fd5c4f900a52188db9ff1b427966a6","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'on a daily basis' shortens to 'daily'"}
+{"id":"d03ab57e17a44f41aa46f342ed41f634","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named body 'Security Council'"}
+{"id":"8a58c020c0084dbaab6294223d076906","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the Karak church attack' names a specific event by place"}
+{"id":"f7dffb46a3564d36915a989654d59d45","tags":[],"confidence":0.75,"bucket":"clean","why":"plain policy claim"}
+{"id":"8ac667616a634f909063dbbd8ef3e5ee","tags":[],"confidence":0.8,"bucket":"clean","why":"named countries, indefinite settlement"}
+{"id":"6ebcd18448d0ebdf744d1ef53ebb77b6","tags":[],"confidence":0.65,"bucket":"clean","why":"named product, plain claim"}
+{"id":"dbe21d0b4c1a4a6e9fe16fa3a32a8c77","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym FDA, a named agency"}
+{"id":"a99c8b0eec6db3691b72486dfbcbd8bd","tags":[],"confidence":0.65,"bucket":"near_miss","why":"dated election named by year; long but not shortenable"}
+{"id":"515e00ef419c4f75a9eb8ebb08299a9f","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"8abd3fdc044a465a8f8d3f334c48b86b","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named agency; 'its ... review' resolves to the FDA"}
+{"id":"83db5d35df3de228fde9fbc9a959bc2e","tags":[],"confidence":0.7,"bucket":"near_miss","why":"generic 'The president' as an office"}
+{"id":"89e7dfd35b365ba98b54ff74b78467e8","tags":[],"confidence":0.7,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"fbf7d6f6c6cd41ea9fbf9dd741396e6b","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'Thailand's flood response' resolved by the named country"}
+{"id":"071bb0ed340e58558d4af8ea616a59da","tags":["Wordy","Poor wording"],"confidence":0.6,"bucket":"issue","why":"long hedged claim; 'may be necessary ... but is not required' muddled"}
+{"id":"d5560665aed55eada3b8624df3d3189e","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'DDHQ's forecast' does not say which forecast"}
+{"id":"a2f9970eed724d1e84df04fd16bf52f7","tags":["Wordy"],"confidence":0.55,"bucket":"issue","why":"'It is not fair or safe ... to have to deal with' padded"}
+{"id":"58399735f2b599c55255de9455251055","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the 2026 midterms' time expression; long but not shortenable"}
+{"id":"2687664dc162547cb218ee407994da52","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'which in turn reduces their productivity' shortens to a participle"}
+{"id":"59cc79a94df44d4cb8740ed7253f6d45","tags":[],"confidence":0.8,"bucket":"clean","why":"named country, plain claim"}
+{"id":"80f8e4d1340cab24e441551f794e079b","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named agency, law and bank; long but not shortenable"}
+{"id":"462aafd30257500e9f196a5775e25a2b","tags":[],"confidence":0.5,"bucket":"clean","why":"paired words but meaning would shrink if cut"}
+{"id":"05de8dfa81155a86962094f63d9732e1","tags":[],"confidence":0.8,"bucket":"clean","why":"'it' resolves to the spending"}
+{"id":"d957496faf304575b5443eb15ae357e5","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"f5c34b5722e747c09a8c397acede4c59","tags":["Incorrect grammar"],"confidence":0.65,"bucket":"issue","why":"'the Professor Molchanov' wrong article before title and name"}
+{"id":"e4ed826f01ee4619a8bcb9776221bba3","tags":[],"confidence":0.75,"bucket":"clean","why":"indefinite mission, named strait"}
+{"id":"627f67be075d5875b0980daf5d647622","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"49c106cc1bee46db9aed56609c84f890","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"cccea6125b4e4c059812cfaf78d78b4d","tags":[],"confidence":0.55,"bucket":"near_miss","why":"time expression '2026', named country"}
+{"id":"820e9e481ac7d1e8eaedebe0c4cd5907","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'The Russia sanctions law' does not say which law"}
+{"id":"0517646a180c5441a16c40eeaf6ce05c","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'placed in the hands of' shortens to 'given to'"}
+{"id":"cad7a07b01ef1e581bb8d5b847cf4e60","tags":[],"confidence":0.8,"bucket":"clean","why":"named person, self-contained"}
+{"id":"26fb097528dadeafcb18bea1b6f6385c","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim, indefinite company"}
+{"id":"b8f90cc1447c557e832f4d567f3e3e4b","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"long; 'indicates ... requiring professional help rather than being a flaw'"}
+{"id":"524b1963749455d8ad5fd2254caec532","tags":["Poor wording"],"confidence":0.5,"bucket":"issue","why":"jargon 'whole-body bidirectional cognition' hides the assertion"}
+{"id":"b82f8b40cf5c6a2dae941af76775dee3","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"fae931ae36ba4d64a273199ca43ddbbf","tags":[],"confidence":0.65,"bucket":"near_miss","why":"acronym NATO in capitals"}
+{"id":"6ce2a6ee718e5145b344388770f92ea3","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'a large number of' shortens to 'many'"}
+{"id":"c083e9e028314271856e11f18cd5532a","tags":[],"confidence":0.8,"bucket":"clean","why":"named country, plain claim"}
+{"id":"a1483b6977f2217929f656f2d3af6894","tags":["Context-dependent"],"confidence":0.55,"bucket":"issue","why":"'Trump's debate demand' and 'the Texas Senate race' need outside context"}
+{"id":"066019796fe54f489aedd0c66b9cd3d9","tags":[],"confidence":0.9,"bucket":"clean","why":"plain generic claim"}
+{"id":"bfdf6c80f3bf516792586a036693e271","tags":[],"confidence":0.65,"bucket":"clean","why":"mild redundancy only, generic claim"}
+{"id":"d3248922f71f408499f818dd8ab20f7b","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}
+{"id":"4c998e016820431c815ddc054729dacb","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym G7 in capitals"}
+{"id":"0d348186cbe5fdf89aca2132498de9ac","tags":[],"confidence":0.9,"bucket":"clean","why":"plain generic claim"}
+{"id":"a5c1c07c6a6de2dabd2a2a087d53f442","tags":[],"confidence":0.5,"bucket":"near_miss","why":"named institution Congress, named companies"}
+{"id":"a61cfdf8c27d4c19b01dd4858763258f","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'Thailand's ballot-identification system' resolved by country"}
+{"id":"db9eed0cdc1a7182c3a001fd744732c3","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Brazil's election' and 'the Bolsonaros' resolved by names"}
+{"id":"fbc1ccff4ff14b9cb0e4daeb39fabb57","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic 'the exchanges' and 'the police's'"}
+{"id":"52ee610998b0450293349d5a6fef4e15","tags":[],"confidence":0.55,"bucket":"near_miss","why":"indefinite 'some Russian-speaking residents'"}
+{"id":"df7f7a0f079d4fbba37244f682fd4e2c","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Venezuela's election framework' resolved by the named country"}
+{"id":"bb6380083e045f55ac141a64eb6ffb1a","tags":["Wordy"],"confidence":0.55,"bucket":"issue","why":"'artificial intelligence' repeated; 'the impact of ... on' padded"}
+{"id":"d653202739115c30e5027c5e13dedad0","tags":[],"confidence":0.6,"bucket":"near_miss","why":"time expression 'today's'"}
+{"id":"4929fa395ed855c4856d6d5c654abdf3","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The speed of the United States' decline' resolves itself"}
+{"id":"c002cd75b66c4872a4eef37aab7e906c","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"4a881187849d4cb598ae14fb42ddd4fb","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Trump's federal agency overhaul' possessive; generic 'government'"}
+{"id":"8fcc5089893ee2de2a92b66b25c8cc3d","tags":[],"confidence":0.65,"bucket":"near_miss","why":"indefinite 'A federal court'; abstract 'the rule of law'"}
+{"id":"c5975e42dc174cdcbdcc55473025944b","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'The US consular shutdown' is an unidentified event"}
+{"id":"4b79db7c1de04d8b80069c377880d133","tags":[],"confidence":0.8,"bucket":"clean","why":"named person, plain claim"}
+{"id":"6670a737bea6535f9fcf3dfadfadd14a","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"0de7fe9402ca5c1a97b0b8415e4137fd","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"7bab80879068b5d9bf44103b748c2f92","tags":[],"confidence":0.85,"bucket":"clean","why":"short generic claim"}
+{"id":"661b018ca69651f7ad462dda9ef0af0d","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"3d7ee72db82744bea2a93f66d6c1b4c6","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"4b0b335c4b65346c1f51a333c14b1f29","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"177c3955e42456a7874804b228092ed4","tags":[],"confidence":0.6,"bucket":"clean","why":"'regarding' is a mild choice, no clear shorter rewrite"}
+{"id":"a1a1834770f33a042eedfb940739f484","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"2e725295e55f4a41a122d5b5fcfc982b","tags":[],"confidence":0.7,"bucket":"clean","why":"generic claim, 'their' resolves to data centers"}
+{"id":"a8ec492b577a172aea19d493552e1e42","tags":[],"confidence":0.65,"bucket":"clean","why":"generic claim, no definite referent"}
+{"id":"78ddb7171d785419bb97042b681393a7","tags":[],"confidence":0.7,"bucket":"clean","why":"named people, 'it' resolves to Ukraine"}
+{"id":"5017b4d9cd1b550a882ed1a28bb7615d","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'serve as a step toward ... pursuing diplomatic relationships' padded"}
+{"id":"c9967f8f044e4cb39927bfcc6192154c","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronyms GLP-1 and NAION; 'Current' time expression"}
+{"id":"6439b46ae42540cf94a57dd28cb65ee7","tags":[],"confidence":0.65,"bucket":"near_miss","why":"acronym ICC; 'the court's' resolved by it"}
+{"id":"979592579780ddd5378e1114f604f2e4","tags":[],"confidence":0.9,"bucket":"clean","why":"plain generic claim"}
+{"id":"4ee303f57e9b4a7dad81500c8228e07b","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic 'the elite'; 'no longer' time expression"}
+{"id":"54ecad3b732eb91768634e9821407867","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'Washington' as metonym; 'renewed strikes' implies earlier ones"}
+{"id":"63272c4baa7752b5b9fe61d2085459c3","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'even in the absence of' shortens to 'without'"}
+{"id":"b51db3b10360417fba673b96faf0592e","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"92d7ded2a28a7c0ff7b114f2294f706c","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"b6f844e5918e472798db455eb722489f","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"f27af28568144033895c431faeafa30b","tags":[],"confidence":0.75,"bucket":"clean","why":"named person and state, self-contained"}
+{"id":"e65790cd46774f898a27067c90575af8","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"d10755fd2564b22cf0349a0f571d5bff","tags":[],"confidence":0.7,"bucket":"clean","why":"elliptical 'if men are' still parses"}
+{"id":"00298cfe195f5dd890c78c59931b141d","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"ac955fb780f35a90830c00039a52d542","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"4d023bcae4f55651a7357bcbd48c2e33","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"two ideas fused; 'exact necessary documents' redundant"}
+{"id":"828b65ca13d4c441d5281452f1142d63","tags":[],"confidence":0.5,"bucket":"near_miss","why":"abstract 'the legitimacy'; 'his' resolves to the named person"}
+{"id":"50eac00c5cc35b45ac8a27c8414bd9f9","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'The actions of ... affect the interests of' padded"}
+{"id":"1a63c64bccf04e4ea340e4160c15226a","tags":[],"confidence":0.8,"bucket":"clean","why":"named country, plain claim"}
+{"id":"263357856ad15f6e9bf867a4db50c25c","tags":[],"confidence":0.55,"bucket":"near_miss","why":"list of time horizons 'next 5, 10, 15, or 20 years'"}
+{"id":"9b677fbebf8c4472a6c8dbb5bc3bf120","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym CDC, a named agency"}
+{"id":"3b7904a7f2815d5e858ebf8d6579c2dd","tags":[],"confidence":0.6,"bucket":"clean","why":"'it' resolves to the prevalence of AI"}
+{"id":"db821a05eb384bf8a15ed5bc22baa477","tags":[],"confidence":0.85,"bucket":"clean","why":"named asset, plain claim"}
+{"id":"5e2b7bb107bc5657bd52077ce04aee5c","tags":[],"confidence":0.55,"bucket":"clean","why":"generic claim; 'The purpose of' mild only"}
+{"id":"e42d58bf48942eae6214b5032812be2b","tags":[],"confidence":0.9,"bucket":"clean","why":"plain generic claim"}
+{"id":"430d149c64acc5c1082f5615f7f5a315","tags":[],"confidence":0.65,"bucket":"near_miss","why":"abstract 'the economy'"}
+{"id":"61ab8477442d57cf840d58e5147267f0","tags":[],"confidence":0.65,"bucket":"clean","why":"named country, plain claim"}
+{"id":"fb43b5bf0fadef121688309785ca0616","tags":[],"confidence":0.8,"bucket":"near_miss","why":"named institution Federal Reserve"}
+{"id":"5d6e6266c88a510986a5066a10546c4e","tags":[],"confidence":0.5,"bucket":"near_miss","why":"long but not shortenable without losing meaning"}
+{"id":"202dd4c66d9b51c0b96163211a5abc65","tags":[],"confidence":0.55,"bucket":"clean","why":"mild 'has proven to be', no clear shorter rewrite"}
+{"id":"2d0f037b15c64df497b35f4437ed7580","tags":[],"confidence":0.65,"bucket":"near_miss","why":"acronym MAID in capitals"}
+{"id":"ae34ef060f0c4cb1b1dbaf764efb9640","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'its next government' time expression, resolved by Romania"}

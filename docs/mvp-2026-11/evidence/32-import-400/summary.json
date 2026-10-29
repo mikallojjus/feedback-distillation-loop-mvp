@@ -1,0 +1,99 @@
+{
+ "picked": 400,
+ "issue_slots": {
+  "U.S. Politics": 78,
+  "World affairs": 78,
+  "AI": 64,
+  "Health": 49,
+  "Crypto": 11,
+  "Technology": 0
+ },
+ "issue_slots_moved": 31,
+ "issue_slots_unfilled": 0,
+ "by_space": {
+  "U.S. Politics": 100,
+  "World affairs": 100,
+  "AI": 80,
+  "Health": 60,
+  "Crypto": 40,
+  "Technology": 20
+ },
+ "by_space_bucket": {
+  "U.S. Politics issue": 78,
+  "U.S. Politics near_miss": 15,
+  "U.S. Politics control": 7,
+  "World affairs issue": 78,
+  "World affairs near_miss": 15,
+  "World affairs control": 7,
+  "AI issue": 63,
+  "AI near_miss": 11,
+  "AI control": 6,
+  "Health issue": 49,
+  "Health near_miss": 7,
+  "Health control": 4,
+  "Crypto issue": 11,
+  "Crypto near_miss": 19,
+  "Crypto control": 10,
+  "Technology near_miss": 5,
+  "Technology control": 15
+ },
+ "by_bucket": {
+  "issue": 279,
+  "near_miss": 72,
+  "control": 49
+ },
+ "by_month": {
+  "2026-10": 268,
+  "2026-09": 105,
+  "2026-08": 25,
+  "2026-07": 2
+ },
+ "by_space_month": {
+  "U.S. Politics 2026-10": 68,
+  "U.S. Politics 2026-09": 29,
+  "U.S. Politics 2026-08": 3,
+  "World affairs 2026-10": 75,
+  "World affairs 2026-09": 24,
+  "World affairs 2026-08": 1,
+  "AI 2026-10": 60,
+  "AI 2026-09": 12,
+  "AI 2026-08": 7,
+  "AI 2026-07": 1,
+  "Health 2026-10": 36,
+  "Health 2026-09": 23,
+  "Health 2026-08": 1,
+  "Crypto 2026-09": 17,
+  "Crypto 2026-08": 13,
+  "Crypto 2026-10": 9,
+  "Crypto 2026-07": 1,
+  "Technology 2026-10": 20
+ },
+ "by_tag": {
+  "Context-dependent": 115,
+  "Improper capitalization": 3,
+  "Poor wording": 59,
+  "Multi-sentence": 1,
+  "Incorrect grammar": 17,
+  "Wordy": 95,
+  "Trailing period": 7
+ },
+ "scored": 2807,
+ "scored_by_bucket": {
+  "control": 1638,
+  "near_miss": 767,
+  "issue": 402
+ },
+ "scored_by_tag": {
+  "Poor wording": 72,
+  "Wordy": 181,
+  "Multi-sentence": 1,
+  "Context-dependent": 138,
+  "Improper capitalization": 3,
+  "Incorrect grammar": 18,
+  "Trailing period": 7
+ },
+ "corrections": {
+  "trailing_added": 0,
+  "trailing_removed": 0
+ }
+}

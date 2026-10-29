@@ -1,0 +1,4986 @@
+{
+ "run_id": "20261029-import-400",
+ "created_at": "2026-10-29T13:51:10.685Z",
+ "criteria_file": "docs/mvp-2026-11/evidence/32-import-400/criteria.md",
+ "bot_spaces": [
+  "cc0bf85a27c217d75993bc785a15b198"
+ ],
+ "claims": [
+  {
+   "geo_id": "b6540d259b62ae3d5f4b15edc2a5a969",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Immediate enforcement of the ruling protects statutory limits more effectively than pausing it during appeal",
+   "month": "2026-10",
+   "published_at": "2026-10-29T10:31:20Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'the ruling' with no antecedent"
+  },
+  {
+   "geo_id": "2fb1a6852e7df11f08af7fd50938e5b5",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Government sponsorship makes the advertisement less persuasive by making its partisan purpose impossible to ignore",
+   "month": "2026-09",
+   "published_at": "2026-09-25T01:50:45Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'the advertisement' with no antecedent"
+  },
+  {
+   "geo_id": "56d4953f92debd71f3597bd39a7d0e7b",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The investigation shifts responsibility for press-pool rules from the White House to federal prosecutors",
+   "month": "2026-10",
+   "published_at": "2026-10-12T21:53:31Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'The investigation' with no antecedent"
+  },
+  {
+   "geo_id": "9b45d2778f6fdf2d203c9782828fc3c6",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The appeals court’s ruling weakens federal enforcement against noncitizen voting",
+   "month": "2026-10",
+   "published_at": "2026-10-27T02:02:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The appeals court's ruling' names no court or ruling"
+  },
+  {
+   "geo_id": "c0f93f8ecc0ccf9fc84c6d1e2644cc15",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Congress should block the sale unless Europe pays first",
+   "month": "2026-09",
+   "published_at": "2026-09-20T14:42:36Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the sale' with no antecedent"
+  },
+  {
+   "geo_id": "1204747a938e13356bdc4340296eef83",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Turning the arch into a military complex materially changes the project enough to require supplemental preservation review",
+   "month": "2026-09",
+   "published_at": "2026-09-25T01:50:45Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the arch' and 'the project' have no antecedent"
+  },
+  {
+   "geo_id": "1ca103e50ef54c792e6833a599f74cc0",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The subpoena dispute exposes weaker transparency standards for politically connected nonprofits",
+   "month": "2026-10",
+   "published_at": "2026-10-19T09:34:08Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The subpoena dispute' needs outside antecedent"
+  },
+  {
+   "geo_id": "2e71587edce8886357c76d8df6501502",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The temporary order preserves the status quo without deciding whether the administration’s refugee-review policy is lawful",
+   "month": "2026-10",
+   "published_at": "2026-10-28T16:47:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The temporary order' and 'the administration' not identified"
+  },
+  {
+   "geo_id": "5f8ae1e26f5b1b82e640b1124dbb7173",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The oil proposal gives Russia leverage to delay peace while extracting concessions",
+   "month": "2026-10",
+   "published_at": "2026-10-03T22:19:42Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The oil proposal' does not say which proposal"
+  },
+  {
+   "geo_id": "5fcc760768f1da9640367d2e40d1fd7d",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The supreme court ruling leaves the midterms exposed to the fraud the rule was meant to prevent",
+   "month": "2026-09",
+   "published_at": "2026-09-16T06:50:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent",
+    "Improper capitalization"
+   ],
+   "why": "'The supreme court ruling' and 'the rule' unresolved; 'supreme court' lower case"
+  },
+  {
+   "geo_id": "7f2fd45843978e9e79dd076975ca6e13",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The accusations against Talarico and Brown were fabricated",
+   "month": "2026-10",
+   "published_at": "2026-10-29T04:24:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The accusations' with no antecedent"
+  },
+  {
+   "geo_id": "a2fdf58799ec601d3799c767a36b3500",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "El-Sayed’s refusal to repudiate Obama criticism makes the endorsement politically costly",
+   "month": "2026-10",
+   "published_at": "2026-10-12T21:53:31Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'the endorsement' with no antecedent"
+  },
+  {
+   "geo_id": "a43cbbf3fa763810e56707de432d0e05",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The appeals court’s pause leaves VA employees without enforceable contract protections",
+   "month": "2026-10",
+   "published_at": "2026-10-07T19:27:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The appeals court's pause' unspecified court and pause"
+  },
+  {
+   "geo_id": "c30934b26f9c3ece7be0e6e93186c32f",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The appeals court’s pause legitimately preserves executive control over VA labor policy during litigation",
+   "month": "2026-10",
+   "published_at": "2026-10-07T19:27:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The appeals court's pause' unspecified court and pause"
+  },
+  {
+   "geo_id": "d79e23a581b4c329d2c88185582796d6",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The federal challenge was disproportionate because preventing speculative dilution risked immediate disenfranchisement",
+   "month": "2026-10",
+   "published_at": "2026-10-29T10:31:20Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The federal challenge' names a kind of thing, not which one"
+  },
+  {
+   "geo_id": "d874459183c57b2eb1bc34276640a52a",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The appellate pause gives the VA an unfair advantage in contract negotiations",
+   "month": "2026-10",
+   "published_at": "2026-10-07T19:27:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The appellate pause' unspecified"
+  },
+  {
+   "geo_id": "1029f336854058c70f5c3b9a40afcdd6",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The arch’s proposed mitigation measures are inadequate compensation for permanently changing Arlington’s monumental landscape",
+   "month": "2026-09",
+   "published_at": "2026-09-25T01:50:45Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'The arch' with no antecedent"
+  },
+  {
+   "geo_id": "58cc67585eb5a66cfabe06f31e363731",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The anti-waiver legislation should require continued intelligence support for Ukraine",
+   "month": "2026-10",
+   "published_at": "2026-10-29T04:24:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The anti-waiver legislation' has no antecedent"
+  },
+  {
+   "geo_id": "77a1537146bebf0baa63e7076c6fff25",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Congress should apply the superintelligence restrictions to military developers rather than create a national-security exemption",
+   "month": "2026-09",
+   "published_at": "2026-09-25T01:50:45Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the superintelligence restrictions' need outside antecedent"
+  },
+  {
+   "geo_id": "bd7b15987251bcdc8c4b1052ad9e2e74",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Greg Abbott should investigate the DPS failure before Texas certifies the midterm voter rolls",
+   "month": "2026-09",
+   "published_at": "2026-09-24T15:53:34Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the DPS failure' needs outside antecedent"
+  },
+  {
+   "geo_id": "6b010ac7fb875d4ea43395f43c8c21e9",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Alaska should investigate the alleged spoiler recruitment as potential criminal election interference",
+   "month": "2026-10",
+   "published_at": "2026-10-29T10:31:20Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the alleged spoiler recruitment' needs an outside event"
+  },
+  {
+   "geo_id": "0365ad407e6926c588dbd0a38a070010",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Andy Beshear’s Texas funding stance alienates Latino Democrats",
+   "month": "2026-10",
+   "published_at": "2026-10-19T09:34:08Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent",
+    "Poor wording"
+   ],
+   "why": "review: 'Andy Beshear's Texas funding stance' needs an outside antecedent (rule 3)"
+  },
+  {
+   "geo_id": "388ee0ff6f9ff98b398adfb33ad9ca95",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Sabato’s statewide rating shifts accurately reflect the competitive races",
+   "month": "2026-10",
+   "published_at": "2026-10-29T04:24:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the competitive races' not specified by the claim"
+  },
+  {
+   "geo_id": "5b20e1fb41a1465aa4191de4da7fd75f",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "An otherwise identical case involving a poor Black mother would receive less public sympathy",
+   "month": "2026-09",
+   "published_at": "2026-09-11T14:23:06Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'An otherwise identical case' needs an outside antecedent"
+  },
+  {
+   "geo_id": "67f82d7d010821f53a8138b434af1097",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The videos targeting Talarico and Brown were AI-generated or manipulated",
+   "month": "2026-10",
+   "published_at": "2026-10-29T04:24:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The videos' needs outside antecedent despite named targets"
+  },
+  {
+   "geo_id": "71dee8ac5c758406a1976e4a89ec2210",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Ending the Biden-era rule improved deportation enforcement by reducing administrative delays",
+   "month": "2026-10",
+   "published_at": "2026-10-29T10:31:20Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Biden-era rule' does not say which rule"
+  },
+  {
+   "geo_id": "a3c72169f25b61a7b9e5aa0743f125bc",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Texas’s Republican advantage outweighs Ken Paxton’s unfavorable personal image in this Senate race",
+   "month": "2026-09",
+   "published_at": "2026-09-28T13:15:54Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'this Senate race' points to an outside antecedent"
+  },
+  {
+   "geo_id": "c2f653ff5da86386981b637a2eba58f2",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Trump’s post-election green light would make Israeli security policy an American partisan issue",
+   "month": "2026-10",
+   "published_at": "2026-10-27T02:02:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent",
+    "Poor wording"
+   ],
+   "why": "review: 'Trump's post-election green light' does not say which (rule 3)"
+  },
+  {
+   "geo_id": "16016a8320889e8eff587d78d566b663",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Candidate appeal explains the Michigan and New Hampshire leads better than a uniform Democratic wave",
+   "month": "2026-09",
+   "published_at": "2026-09-25T01:50:45Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Michigan and New Hampshire leads' need outside data"
+  },
+  {
+   "geo_id": "3573ad4269eca07ce63441fb0a3b4ba5",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The BOP injunction strengthens judicial limits on executive orders over federal labor rights",
+   "month": "2026-10",
+   "published_at": "2026-10-01T18:36:33Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The BOP injunction' names a kind, not which injunction"
+  },
+  {
+   "geo_id": "4ecbf86697f6f25ed86041c2beeae891",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Allowing prosecutors to seek another indictment would prolong uncertainty without strengthening the public case",
+   "month": "2026-10",
+   "published_at": "2026-10-28T16:47:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the public case' and 'another indictment' need antecedent"
+  },
+  {
+   "geo_id": "66cfa93c0ec55866a4220347ba8fe217",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "A nuclear-focused agenda would leave Iran’s regional conduct outside the agreement’s immediate constraints",
+   "month": "2026-10",
+   "published_at": "2026-10-29T10:31:20Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the agreement's' constraints need an outside antecedent"
+  },
+  {
+   "geo_id": "fbd881e9ff2b4f64991acd03ae177ef5",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Keeping the Camp David meeting secret shields Iran-Yemen policy from public accountability",
+   "month": "2026-10",
+   "published_at": "2026-10-03T22:19:42Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Camp David meeting' does not say which meeting"
+  },
+  {
+   "geo_id": "42e1113122fb1ba00487e8d0a9818d09",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The September jobs report shows a labor market losing momentum",
+   "month": "2026-10",
+   "published_at": "2026-10-03T22:19:42Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The September jobs report' does not say which report"
+  },
+  {
+   "geo_id": "7577a8803a5e5e088fa32e93d4e5d74f",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Christian nationalist lobby holds significant political power in the state of Texas",
+   "month": "2026-10",
+   "published_at": "2026-10-27T18:07:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The Christian nationalist lobby' names a kind, not which group"
+  },
+  {
+   "geo_id": "7cdc02305770b2ee7bb4ee7df78711ec",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Trump’s California remarks expose a broader failure to explain the Iran war’s purpose",
+   "month": "2026-10",
+   "published_at": "2026-10-07T19:27:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'Trump's California remarks' does not say which remarks"
+  },
+  {
+   "geo_id": "82fe7cc2ac3b7726a71c956ad25d366e",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Fort Pierce venue gives prosecutors an unfair advantage in the conspiracy investigation",
+   "month": "2026-09",
+   "published_at": "2026-09-22T19:15:16Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the conspiracy investigation' does not say which investigation"
+  },
+  {
+   "geo_id": "cb0994609d171cd7b18b5d578708001c",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "GAO’s finding strengthens Congress’s case for enforcing AHRQ appropriations",
+   "month": "2026-10",
+   "published_at": "2026-10-09T03:33:11Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'GAO's finding' with no way to tell which finding"
+  },
+  {
+   "geo_id": "ce7fc02a81b159ed7f50f319cfa31e5b",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Fish and Wildlife Service underestimated Starbase’s environmental effects in approving the exchange",
+   "month": "2026-09",
+   "published_at": "2026-09-22T19:15:26Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the exchange' needs an outside antecedent"
+  },
+  {
+   "geo_id": "d27f502918a25cae57d9903c6874255d",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Third-country removals should remain paused while the Supreme Court considers the administration’s appeal",
+   "month": "2026-09",
+   "published_at": "2026-09-25T01:50:45Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the administration's appeal' names no administration or appeal"
+  },
+  {
+   "geo_id": "448585d455094a7b259cd28c48ae5cc8",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The administration’s Epstein-file handling gives Democrats a defining 2026 midterm issue",
+   "month": "2026-10",
+   "published_at": "2026-10-27T02:02:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'The administration's' with no named administration"
+  },
+  {
+   "geo_id": "a1483b6977f2217929f656f2d3af6894",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Trump’s debate demand makes the Texas Senate race more dependent on presidential approval",
+   "month": "2026-10",
+   "published_at": "2026-10-09T03:33:11Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'Trump's debate demand' and 'the Texas Senate race' need outside context"
+  },
+  {
+   "geo_id": "a7c6e43218982f4398cc8e5be0402fae",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Justice Department was right to investigate Powell over the renovation overruns",
+   "month": "2026-10",
+   "published_at": "2026-10-01T18:23:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the renovation overruns' needs an outside antecedent"
+  },
+  {
+   "geo_id": "e8a8ded34c610e5f14227cbe6e242eb1",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The DOJ survey does not prove that Trump’s policies caused the crime decline",
+   "month": "2026-10",
+   "published_at": "2026-10-27T02:02:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the DOJ survey' and 'the crime decline' need outside antecedents"
+  },
+  {
+   "geo_id": "f5113c18646aaedc8c7cde0f66f40025",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Dallas convention prioritizes culture-war attacks over voters’ cost-of-living concerns",
+   "month": "2026-09",
+   "published_at": "2026-09-09T03:54:23Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The Dallas convention' does not say which convention"
+  },
+  {
+   "geo_id": "13d40bf290c5ccec864a57a6cd9c0d2d",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Senate passage would pressure Trump toward diplomacy more than it would weaken Iran deterrence",
+   "month": "2026-09",
+   "published_at": "2026-09-24T15:53:34Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'Senate passage' of an unspecified measure"
+  },
+  {
+   "geo_id": "1e5fa445b1f1344bc1f8eca332727d0a",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "A narrow nuclear understanding would make Vance’s outreach more credible than broad talks on Iran’s regional conduct",
+   "month": "2026-10",
+   "published_at": "2026-10-29T10:31:20Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'Vance's outreach' needs an outside antecedent"
+  },
+  {
+   "geo_id": "c51bb8e34ff8349cf88af7a04f8c2bdf",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The biggest threat to free speech isn’t censorship. It’s a country that no longer agrees truth matters",
+   "month": "2026-09",
+   "published_at": "2026-09-11T14:33:15Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Multi-sentence"
+   ],
+   "why": "two sentences joined by a full stop"
+  },
+  {
+   "geo_id": "ddd6de9a7eefcec57031cd30b7405da7",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Mitch McConnell should step down instead rather than serve out the final months of his Senate term",
+   "month": "2026-09",
+   "published_at": "2026-09-16T06:49:34Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "doubled 'instead rather than'"
+  },
+  {
+   "geo_id": "f1b1318b71295b1ea86f348bb037f565",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The American political left has concluded that whenever Americans celebrate an event, Americans must simultaneously not celebrate that event, which is off-putting to the public",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:36:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy",
+    "Poor wording"
+   ],
+   "why": "circular 'celebrate... must not celebrate that event'; ambiguous 'which'"
+  },
+  {
+   "geo_id": "1841d659f56450008365ebc05a981349",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Breaking up big tech companies would harm the economy, reduce jobs, and lower the GDP, negatively impacting foreign policy and trade",
+   "month": "2026-10",
+   "published_at": "2026-10-23T20:26:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "review: 'harm the economy ... lower the GDP' is redundant"
+  },
+  {
+   "geo_id": "8e5fd1662e5a41d48efe0604fc0ac45f",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Mail in voting makes it easier to cheat the elections",
+   "month": "2026-08",
+   "published_at": "2026-08-17T15:51:11Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "'Mail in voting' unhyphenated; 'cheat the elections' wrong form"
+  },
+  {
+   "geo_id": "0996a186e285675ef0a822c7f2c5a43f",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "An undocumented donor payment request creates an independent ethics violation for ambassadorial nominees",
+   "month": "2026-10",
+   "published_at": "2026-10-09T03:33:11Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "stacked modifiers 'undocumented donor payment request' hard to parse"
+  },
+  {
+   "geo_id": "2f8fe8c5a3315906a75b2c5cfa45e99f",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "There appears to be a consistent dismissal of mainstream conservative views within mainstream media publications",
+   "month": "2026-10",
+   "published_at": "2026-10-19T17:10:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'There appears to be a consistent dismissal of' is filler"
+  },
+  {
+   "geo_id": "e34c2adc9cbcf4e550089bfccb2a2a1a",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Democrats killed Clarity Act to keep Trump’s business in the headlines",
+   "month": "2026-09",
+   "published_at": "2026-09-16T06:50:25Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "missing article before 'Clarity Act'"
+  },
+  {
+   "geo_id": "156946d8421655f08345b91f33ce48bf",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The left-right political divide brings emphasis to the different policies that each party and caucus wants to pursue",
+   "month": "2026-10",
+   "published_at": "2026-10-23T20:29:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy",
+    "Poor wording"
+   ],
+   "why": "'brings emphasis to the different policies that each... wants to pursue'"
+  },
+  {
+   "geo_id": "85b71a2a4ffb541188acb947dae15dc9",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The two major political sides in American politics are like two sides of the same coin and are not fundamentally different",
+   "month": "2026-10",
+   "published_at": "2026-10-23T20:29:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'two sides of the same coin' and 'not fundamentally different' repeat"
+  },
+  {
+   "geo_id": "31e04ec4cec75f67a44d814796b8f580",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Native-born American workers avoid the jobs typically held by undocumented immigrants because those positions are brutal, unpleasant, and offer low pay",
+   "month": "2026-10",
+   "published_at": "2026-10-26T20:25:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "adjectives 'brutal, unpleasant' not parallel with 'offer low pay'"
+  },
+  {
+   "geo_id": "6c2e9b253091551180195c6e8fa09829",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "It is questionable whether prisoners' potential demands for lower sentences should be considered in a democratic process",
+   "month": "2026-10",
+   "published_at": "2026-10-23T16:55:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy",
+    "Poor wording"
+   ],
+   "why": "'It is questionable whether ... potential demands' padded and indirect"
+  },
+  {
+   "geo_id": "c76c319ecf2c5f82b2cb1699aaefe9cb",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "In the U.S., there are stark differences between the two major political parties on some major key issues",
+   "month": "2026-10",
+   "published_at": "2026-10-23T20:29:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'major key issues' redundant; nominal opening"
+  },
+  {
+   "geo_id": "959a75e7cd5ac058a66c0ab2c66019d5",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "U.S. universities have not made adequate progress in addressing antisemitism, since October 7, 2023",
+   "month": "2026-10",
+   "published_at": "2026-10-20T15:33:22Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "stray comma before 'since October 7, 2023'"
+  },
+  {
+   "geo_id": "cdf646a94a375a8b9895ba40cf14cb14",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The ownership of the X platform by Elon Musk, described as a 'mega supporter', exemplifies potential bias in content moderation",
+   "month": "2026-10",
+   "published_at": "2026-10-20T16:20:55Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording",
+    "Wordy"
+   ],
+   "why": "'a mega supporter' of whom is unclear; nominalized 'The ownership of'"
+  },
+  {
+   "geo_id": "2bc49ad045c35fcbac77939727eb9fff",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Convicted prisoners who are released back into society should have a pathway to full reintegration if those individuals dedicate themselves to repairing the community",
+   "month": "2026-10",
+   "published_at": "2026-10-26T20:20:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'those individuals' for 'they'; 'released back into society' padded"
+  },
+  {
+   "geo_id": "75f7bd7df8cfaf04ff2c5e7bcfd8dd5a",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Acts God commands are morally right even if they cause innocent suffering",
+   "month": "2026-10",
+   "published_at": "2026-10-15T02:16:20Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'Acts God commands' garbled on first read"
+  },
+  {
+   "geo_id": "4e92ea8f2d985aada77dc0de9b706c27",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Denying the right to vote to paroled individuals who have committed heinous crimes can be helpful for the welfare of the victims of those crimes",
+   "month": "2026-10",
+   "published_at": "2026-10-26T20:20:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'can be helpful for the welfare of the victims of those crimes' padded"
+  },
+  {
+   "geo_id": "9889eacaa3fa5c71839071af56789182",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The majority of released prisoners should retain the right to vote",
+   "month": "2026-10",
+   "published_at": "2026-10-27T20:09:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'The majority of released prisoners should retain' unclear scope"
+  },
+  {
+   "geo_id": "77aaa8f44b365b4da1f5ad90f2c076a6",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The assertion that people are smarter than ever and the assertion that people are taking judgments into their own hands more than ever lack a clear relationship",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:09:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The assertion that ... and the assertion that' is redundant framing"
+  },
+  {
+   "geo_id": "13708b428a8f5cb3b2bf6b16a73c68bc",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Allowing private corporations to censor political speech gives analytic executives the power to control public narratives, influence elections, and suppress non-mainstream viewpoints",
+   "month": "2026-10",
+   "published_at": "2026-10-20T16:20:55Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'analytic executives' is an odd, unclear phrase"
+  },
+  {
+   "geo_id": "8a5ae8aba2725fe1a44c1ac197e715c7",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Granting an authority the power to regulate speech carries risks of negative consequences",
+   "month": "2026-10",
+   "published_at": "2026-10-10T20:18:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'carries risks of negative consequences' redundant"
+  },
+  {
+   "geo_id": "670123ef34585505b4f5861f990533fb",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Equality of opportunity is an important metric that should be upheld",
+   "month": "2026-10",
+   "published_at": "2026-10-23T17:05:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'metric that should be upheld' mixes measure and value"
+  },
+  {
+   "geo_id": "190a7c3fea5b56c5b1fde12826cd8457",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Undocumented immigrants accept harsh manual labor jobs out of desperate necessity for survival",
+   "month": "2026-10",
+   "published_at": "2026-10-26T20:25:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'out of desperate necessity for survival' is redundant"
+  },
+  {
+   "geo_id": "a84b594f29aa13a61749c02888ed2cb1",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Early leadership elections are standard preparation regardless of expected outcomes",
+   "month": "2026-10",
+   "published_at": "2026-10-29T04:24:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'standard preparation regardless of expected outcomes' hides what is asserted"
+  },
+  {
+   "geo_id": "1fbee5b43280598e8a925a4048f186a7",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Knowingly repeating mistakes, despite being aware they are wrong, makes people less smart",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:12:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'Knowingly... despite being aware' redundant"
+  },
+  {
+   "geo_id": "bdd6d566ae175e21b18740dcc748b3e2",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Social media is vital for public opinion",
+   "month": "2026-10",
+   "published_at": "2026-10-18T09:28:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'vital for public opinion' unclear what is claimed"
+  },
+  {
+   "geo_id": "a087796409d55599b436c2a5f5a73f9f",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The concept of the United States having a national religion contradicts the principles of freedom of religion, democracy, and freedom of speech",
+   "month": "2026-10",
+   "published_at": "2026-10-27T18:07:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The concept of ... having' and 'the principles of' padding"
+  },
+  {
+   "geo_id": "d166eda6ebfa253258001d724d07de51",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Repeated Hegseth dismissals of senior officers risk politicizing military advice even without explicit partisan tests",
+   "month": "2026-10",
+   "published_at": "2026-10-29T10:31:20Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'Repeated Hegseth dismissals' and 'explicit partisan tests' jargon-heavy"
+  },
+  {
+   "geo_id": "a43a6b55a9d958979cf5bde369ded04b",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Unrestricted freedom of speech can have negative consequences that harm society",
+   "month": "2026-10",
+   "published_at": "2026-10-10T20:18:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'negative consequences that harm society' = 'can harm society'"
+  },
+  {
+   "geo_id": "dca918676ef65bff86279121ec8b6b89",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "While people should be able to post what they want, online security regulations need to be improved",
+   "month": "2026-10",
+   "published_at": "2026-10-10T20:18:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "two loosely fused ideas joined by 'While'"
+  },
+  {
+   "geo_id": "543e516836c29651be6759e7fe7f3478",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The government should guarantee a job to everyone who wants one",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:33:35Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'the government' in a recommendation"
+  },
+  {
+   "geo_id": "0a77bda84ed846b787ea9cde62bbd857",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The government should financially incentivize people to have children",
+   "month": "2026-09",
+   "published_at": "2026-09-03T03:45:36Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'the government' in recommendation"
+  },
+  {
+   "geo_id": "18068b0efe23b60d8a4009dde5d13e36",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Supreme Court should apply heightened constitutional scrutiny to military personnel policies that explicitly target transgender Americans",
+   "month": "2026-08",
+   "published_at": "2026-08-28T22:27:22Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named court Supreme Court resolved by 'Americans'"
+  },
+  {
+   "geo_id": "f36ad2d6acf2436baf76cdee58200175",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The federal government should withhold funding from schools with transgender-inclusive policies",
+   "month": "2026-09",
+   "published_at": "2026-09-09T15:38:26Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'the federal government' in a recommendation"
+  },
+  {
+   "geo_id": "746767a035c5c84a0a77678cde3087d0",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Disabling ACIP during litigation makes national vaccine policy less effective",
+   "month": "2026-10",
+   "published_at": "2026-10-07T19:27:00Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "acronym ACIP, a named body, in capitals"
+  },
+  {
+   "geo_id": "90628776c8b5f1cf6026b3675dfd3bec",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Pentagon lacks authority to broadcast Hasan’s execution without congressional approval",
+   "month": "2026-10",
+   "published_at": "2026-10-09T03:33:11Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named Pentagon"
+  },
+  {
+   "geo_id": "906d425161055a18687021742201766c",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Federal Reserve policy should account for federal debt-service costs",
+   "month": "2026-09",
+   "published_at": "2026-09-18T13:01:17Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named institution Federal Reserve"
+  },
+  {
+   "geo_id": "c49347062689afd9f5ead801bd3187cc",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Pentagon should publicly disclose Iran-war costs beyond $45.1 billion",
+   "month": "2026-09",
+   "published_at": "2026-09-20T14:30:48Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named Pentagon"
+  },
+  {
+   "geo_id": "ce7e24ae2e583d2551cd797ce7c39178",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Federal Reserve should answer to democratically elected leaders",
+   "month": "2026-09",
+   "published_at": "2026-09-16T06:50:02Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named institution 'The Federal Reserve'"
+  },
+  {
+   "geo_id": "fb43b5bf0fadef121688309785ca0616",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Federal Reserve should abandon billion-dollar headquarters renovations",
+   "month": "2026-10",
+   "published_at": "2026-10-01T18:23:46Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named institution Federal Reserve"
+  },
+  {
+   "geo_id": "31499d8ea42317c484e6fc819d97d5d0",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The ends justify the means",
+   "month": "2026-10",
+   "published_at": "2026-10-09T12:56:39Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "idiom with generic 'the ends' and 'the means'"
+  },
+  {
+   "geo_id": "40d42f6e39bc4c4c9edf6940db6d3254",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The federal government should conduct workplace immigration-enforcement raids",
+   "month": "2026-09",
+   "published_at": "2026-09-09T15:56:43Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'The federal government' in a recommendation"
+  },
+  {
+   "geo_id": "1128ab8350ba3f3159567ed31750e429",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "The Supreme Court should determine the legality of President Trump’s mail-in voting order before the 2026 midterms instead of allowing temporary court orders to determine election procedures",
+   "month": "2026-08",
+   "published_at": "2026-08-28T22:27:22Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named Supreme Court; long, hard to shorten"
+  },
+  {
+   "geo_id": "20bb8b4eb14b3cff0a0725d65b4f5b5f",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Firing the prosecutor who convicted Ghislaine Maxwell was part of Epstein's cover-up",
+   "month": "2026-10",
+   "published_at": "2026-10-28T02:40:10Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the prosecutor who convicted ...' resolves itself"
+  },
+  {
+   "geo_id": "3ec5b02aa2beb641189863fcddea6f65",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "US oil investment in Venezuela should depend on the restoration of democratic elections",
+   "month": "2026-09",
+   "published_at": "2026-09-07T14:16:33Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "abstract 'the restoration of democratic elections' resolves itself"
+  },
+  {
+   "geo_id": "002f8e4ba6274856b55d4226b01bc9c8",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Hate speech should be illegal",
+   "month": "2026-09",
+   "published_at": "2026-09-03T03:45:28Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "short, self-contained"
+  },
+  {
+   "geo_id": "00ad164f52d4146eb7d3a332489fd052",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Sex work should be treated like any other profession",
+   "month": "2026-10",
+   "published_at": "2026-10-09T12:56:39Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear, well formed"
+  },
+  {
+   "geo_id": "02b765dcfb58f27285001dbd13553f5a",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "All recreational drugs should be legalized",
+   "month": "2026-10",
+   "published_at": "2026-10-09T12:56:39Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "short clear claim"
+  },
+  {
+   "geo_id": "0533ecd48a16b382d15f725de99c6805",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Inheritance should be heavily taxed",
+   "month": "2026-10",
+   "published_at": "2026-10-09T12:56:39Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "066019796fe54f489aedd0c66b9cd3d9",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Transgender women should be allowed to compete in women's sports",
+   "month": "2026-09",
+   "published_at": "2026-09-11T18:56:19Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain generic claim"
+  },
+  {
+   "geo_id": "07736de6dc19428f9b35004b9edbd92c",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Assault weapons should be banned",
+   "month": "2026-09",
+   "published_at": "2026-09-03T03:45:23Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "09046cc50842019c0ef7c503a2a9f587",
+   "space_id": "4582fbbee28a16589154f7e36f1ee3c5",
+   "space": "U.S. Politics",
+   "name": "Governments should be banned from using live facial recognition in public spaces",
+   "month": "2026-09",
+   "published_at": "2026-09-11T14:23:06Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "b070f770552c41ce9860dee6293cbfb7",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Claims that an outside organisation directed the co-pilot require evidence from the investigation",
+   "month": "2026-10",
+   "published_at": "2026-10-05T13:21:07Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the co-pilot' and 'the investigation' need antecedents"
+  },
+  {
+   "geo_id": "c84f3905f9854e0da49be2706ddbde83",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Germany should disclose the alleged foreign recipient before drawing diplomatic conclusions from the investigation",
+   "month": "2026-10",
+   "published_at": "2026-10-07T04:30:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the alleged foreign recipient' and 'the investigation' need antecedents"
+  },
+  {
+   "geo_id": "d66ded6643484d4c98700476e45a2a4a",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Chinese ambassador's remarks constitute coercive diplomacy",
+   "month": "2026-10",
+   "published_at": "2026-10-17T21:30:08Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The Chinese ambassador's remarks' name no ambassador or remarks"
+  },
+  {
+   "geo_id": "07ff620cb74345ec826e61b9f4af710b",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Netanyahu's Abu Dhabi visit was intended primarily to contain the political damage caused by the warning allegation",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the warning allegation' needs outside antecedent"
+  },
+  {
+   "geo_id": "20d35040d53b4b6393e21ec7b3a7c954",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The exclusion of soybeans demonstrates that the summit failed to resolve the most politically sensitive trade disputes",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the summit' with no antecedent"
+  },
+  {
+   "geo_id": "7894832783be4e8f97e521e38dd56652",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Withdrawing the bombers was a proportionate response to the reported threat at RAF Fairford",
+   "month": "2026-10",
+   "published_at": "2026-10-07T03:46:09Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the bombers' and 'the reported threat' need outside antecedents"
+  },
+  {
+   "geo_id": "c3508f6961b14e029be1cd3744d0eeec",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The pipeline's restart substantially reduces the global economic impact of attacks on Gulf shipping",
+   "month": "2026-10",
+   "published_at": "2026-10-03T01:25:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The pipeline's restart' with no pipeline named"
+  },
+  {
+   "geo_id": "fba3cf9dc0e545678f81fc2cd85a63d4",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Chronic underinvestment in French schools is the principal cause of the student protests",
+   "month": "2026-10",
+   "published_at": "2026-10-05T13:21:07Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the student protests' with no specifying antecedent"
+  },
+  {
+   "geo_id": "30065c250014417a95d7f1cc3a806a38",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Congress should receive the pact's classified side letters before voting on it",
+   "month": "2026-10",
+   "published_at": "2026-10-05T11:16:35Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the pact' is never identified"
+  },
+  {
+   "geo_id": "5131575f010c4d91a6b2117bb107e4a6",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The reported waiver should not be treated as US policy until the Treasury publicly confirms it",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The reported waiver' has no antecedent"
+  },
+  {
+   "geo_id": "93b425a2a86245098f2a31954f0df069",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "UN-backed conciliation offers a better route to resolving the maritime dispute than renewed bilateral negotiations",
+   "month": "2026-09",
+   "published_at": "2026-09-16T18:12:16Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the maritime dispute' needs outside antecedent"
+  },
+  {
+   "geo_id": "9c6037930d6c446c834180f235a56215",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The official description of the talks as constructive does not demonstrate progress towards ending the war",
+   "month": "2026-10",
+   "published_at": "2026-10-01T18:45:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the talks' and 'the war' need outside antecedents"
+  },
+  {
+   "geo_id": "ba4b2e0957af43649f7e1a9580bea80f",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Eastern Libyan parliamentary approval strengthens the maritime accord's political legitimacy",
+   "month": "2026-10",
+   "published_at": "2026-10-29T06:23:26Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the maritime accord' does not say which accord"
+  },
+  {
+   "geo_id": "cabfdb1d64864c4f9398dada9ca8711d",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The leaked reports about pre-October 7 warnings are politically motivated attempts to influence the election",
+   "month": "2026-10",
+   "published_at": "2026-10-01T02:39:49Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The leaked reports' and 'the election' need outside antecedents"
+  },
+  {
+   "geo_id": "f02ecd0643b3450c949b6132086667ea",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Political characterisations of the incident should remain separate from the British police investigation",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the incident' and 'the British police investigation' need an antecedent"
+  },
+  {
+   "geo_id": "f9778eeee2ab4316bc7d8a357e9f0bcd",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Brazil's relationship with the United States should be a central issue in the runoff",
+   "month": "2026-10",
+   "published_at": "2026-10-07T03:46:09Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the runoff' not identified"
+  },
+  {
+   "geo_id": "f9f74d24147643d4a5bba455a703d0ba",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The US withdrawal will strengthen Iranian-backed armed groups inside Iraq",
+   "month": "2026-10",
+   "published_at": "2026-10-01T18:45:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The US withdrawal' does not say which withdrawal"
+  },
+  {
+   "geo_id": "42f8604b05ef4471a221154bdaec7238",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Allegations of foreign direction in the Manchester case require evidence before state responsibility is assigned",
+   "month": "2026-10",
+   "published_at": "2026-10-05T11:16:35Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Manchester case' needs an outside antecedent"
+  },
+  {
+   "geo_id": "773e055c6eb143f88ffcd5b0d6dac011",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Australian intrusion demonstrates that voluntary AI-safety controls are inadequate",
+   "month": "2026-09",
+   "published_at": "2026-09-25T12:21:52Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The Australian intrusion' needs an outside antecedent"
+  },
+  {
+   "geo_id": "ba35b70cf4dd4a1886214d8c118f9da4",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "NATO should expand defensive deployments before establishing who carried out the shipping attacks",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:49:59Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the shipping attacks' does not say which attacks"
+  },
+  {
+   "geo_id": "d96d4fbea0f64716893080ac63ca5d9e",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Iran's denial should not end the investigation into possible state or proxy involvement",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'Iran's denial' and 'the investigation' not identified"
+  },
+  {
+   "geo_id": "02af68551e89472f85d6ff6aea2e9837",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Emergency stock releases offer only temporary relief from the war's disruption of fuel supplies",
+   "month": "2026-10",
+   "published_at": "2026-10-05T11:16:35Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'the war's disruption': which war is not named"
+  },
+  {
+   "geo_id": "23749fa13bf84db7a6ffa217b5ab7638",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The UAE's limited official account fails to resolve the controversy over the alleged warning",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the alleged warning' and 'the controversy' need outside antecedent"
+  },
+  {
+   "geo_id": "29a7be4d615b44b19042b6486abcdca1",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Constitutional Court was correct not to invalidate the 2026 election without evidence that individual votes were traced",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The Constitutional Court' and 'the 2026 election' country not stated"
+  },
+  {
+   "geo_id": "2c52941b6d1647cab36b389c7f3f5355",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Armed conflict and displacement are more responsible for the outbreak's scale than the absence of approved medical countermeasures",
+   "month": "2026-09",
+   "published_at": "2026-09-02T00:29:33Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the outbreak's scale' with no outbreak named"
+  },
+  {
+   "geo_id": "c7ce63eb9d394b3cb1cd0b1294a9d1ca",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "France's proposed increase should be tied to transparent reporting on how aid reaches affected communities",
+   "month": "2026-10",
+   "published_at": "2026-10-05T13:21:07Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'France's proposed increase' does not say what increases"
+  },
+  {
+   "geo_id": "0988799baec54170be30be2389bc13ee",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Trade unions should maintain joint mobilisation with students despite violence surrounding the protests",
+   "month": "2026-10",
+   "published_at": "2026-10-19T12:35:43Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the protests' needs an outside antecedent"
+  },
+  {
+   "geo_id": "53a45f5c480348d985a1db797af4a8df",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Ukraine violated South Korea's diplomatic trust by disclosing the transfer of the North Korean prisoners",
+   "month": "2026-09",
+   "published_at": "2026-09-28T15:11:59Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the North Korean prisoners' and 'the transfer' need an antecedent"
+  },
+  {
+   "geo_id": "99c24de3a2e14dacb04b971f8203f119",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The flydubai attack exposes serious gaps in international pilot screening",
+   "month": "2026-10",
+   "published_at": "2026-10-05T13:21:07Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The flydubai attack' does not say which attack"
+  },
+  {
+   "geo_id": "a0ead60cc4e34fb9847f0d6402185712",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "French authorities have relied too heavily on arrests to respond to the student movement",
+   "month": "2026-10",
+   "published_at": "2026-10-05T13:21:07Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the student movement' does not say which movement"
+  },
+  {
+   "geo_id": "ee9cf62b6c0a4029bff12c5657df4646",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Ethiopia and its neighbours should accept international mediation before the fighting crosses borders",
+   "month": "2026-10",
+   "published_at": "2026-10-07T04:30:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the fighting' needs an outside antecedent"
+  },
+  {
+   "geo_id": "1c27f3e0d8014c7a8530ff2fcb6f8104",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Latvia should maintain its military and political support for Ukraine after the election",
+   "month": "2026-10",
+   "published_at": "2026-10-03T01:25:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'the election' with no antecedent"
+  },
+  {
+   "geo_id": "8141ad72f77d46d68378d527dc338d3c",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Israel's revocation of the Dutch diplomats' status is disproportionate retaliation for a lawful trade restriction",
+   "month": "2026-09",
+   "published_at": "2026-09-28T15:11:59Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Dutch diplomats' status' unspecified diplomats"
+  },
+  {
+   "geo_id": "91a06f67b9fb57b79d9dfa29d414c00a",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The current vulnerability of the United States is temporary as its foreign policy is expected to change with the next administration",
+   "month": "2026-10",
+   "published_at": "2026-10-23T18:19:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The current vulnerability' unspecified; needs outside antecedent"
+  },
+  {
+   "geo_id": "b5b1a2442f2a43d7b460667d3aa3970c",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Both Koreas should accept an independent investigation into the disputed DMZ mine explosion",
+   "month": "2026-10",
+   "published_at": "2026-10-26T05:35:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the disputed DMZ mine explosion' needs outside antecedent"
+  },
+  {
+   "geo_id": "fa674f7a60a046dca0786d1fb32fb9f5",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Malaysia's claim that the repatriation programme is voluntary lacks sufficient independent verification",
+   "month": "2026-10",
+   "published_at": "2026-10-01T18:45:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the repatriation programme' not specified"
+  },
+  {
+   "geo_id": "15322ea6f3cb48c4846d15b4a9e55ce4",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Forcing residents out of Hebron neighbourhoods is a disproportionate response to the killing of Israeli soldiers",
+   "month": "2026-10",
+   "published_at": "2026-10-26T05:35:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the killing of Israeli soldiers' points to an unspecified incident"
+  },
+  {
+   "geo_id": "35148dc9afbacb52f73278233be9ea14",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Alexandre de Moraes was right to seize Flávio Bolsonaro's passport after the election",
+   "month": "2026-10",
+   "published_at": "2026-10-27T19:01:42Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'the election' with no antecedent"
+  },
+  {
+   "geo_id": "535b4668fa384c45bad600d5c81d7d83",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The detection of most new Ebola cases outside monitoring lists requires a fundamental change in the response strategy",
+   "month": "2026-09",
+   "published_at": "2026-09-28T12:42:19Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the response strategy' needs an outside antecedent"
+  },
+  {
+   "geo_id": "68ea2730485f4134b937f52274b1779f",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Fairford arrests warrant a public explanation of the evidence for an alleged plot",
+   "month": "2026-10",
+   "published_at": "2026-10-07T04:30:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The Fairford arrests' needs an outside antecedent"
+  },
+  {
+   "geo_id": "6f97279ca2084d9db6cb6cdd210cbb51",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "South Sudan should respond to the Abyei attack through diplomacy rather than military retaliation",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:49:59Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Abyei attack' does not say which attack"
+  },
+  {
+   "geo_id": "70fd8f99030545a697c301209b36ba3e",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The September floods demonstrate that Bangkok's drainage infrastructure is inadequate for extreme rainfall",
+   "month": "2026-10",
+   "published_at": "2026-10-01T18:45:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The September floods' does not say which event"
+  },
+  {
+   "geo_id": "932aec8cd8c74431a45d5e24700e1bfb",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The suspected Fairford plot demonstrates the security risks created by using British bases for US strikes on Iran",
+   "month": "2026-10",
+   "published_at": "2026-10-07T04:30:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The suspected Fairford plot' refers to an unexplained outside event"
+  },
+  {
+   "geo_id": "9b4a9df7944848a1a4b7ef7837c8e971",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "NATO should require conclusive attribution before taking military action over the Black Sea shipping attacks",
+   "month": "2026-10",
+   "published_at": "2026-10-18T11:34:08Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Black Sea shipping attacks' needs an outside antecedent"
+  },
+  {
+   "geo_id": "adacb51e0d5b430080f471f681d5363b",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Saudi Arabia should increase military support for Yemen's government following the Al-Alam attack",
+   "month": "2026-10",
+   "published_at": "2026-10-21T12:53:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Al-Alam attack' does not say which attack"
+  },
+  {
+   "geo_id": "ccf11db050e84743a2aa6c8be99846d8",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Failure to protect and compensate healthcare workers is preventing effective containment of the Ebola outbreak",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Ebola outbreak' does not say which outbreak"
+  },
+  {
+   "geo_id": "03e253c294724daf9b918ba6e93f937d",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The United States should ease its blockade in exchange for Iran reopening the Strait of Hormuz",
+   "month": "2026-09",
+   "published_at": "2026-09-25T12:21:52Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'its blockade' not specified in the claim"
+  },
+  {
+   "geo_id": "f5c34b5722e747c09a8c397acede4c59",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Norway was justified in arresting the Professor Molchanov to enforce Naftogaz's arbitration award against Russia",
+   "month": "2026-09",
+   "published_at": "2026-09-07T11:23:24Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "'the Professor Molchanov' wrong article before title and name"
+  },
+  {
+   "geo_id": "323a2346e10452939a85fe49fcbd1d66",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "US foreign policy may at times be conservative and traditional, but it will not be as conservative as other countries focused on conservative values",
+   "month": "2026-10",
+   "published_at": "2026-10-23T18:37:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy",
+    "Poor wording"
+   ],
+   "why": "'conservative' repeated, hedged comparison hard to follow"
+  },
+  {
+   "geo_id": "fb53f4b90c355a528d997391521963b5",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The United States ignores modern human rights crises and abuses that the United States is directly involved in funding",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:40:44Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The United States' repeated; 'directly involved in funding'"
+  },
+  {
+   "geo_id": "a7cf4852903d5132b0bb95fcf4532d3e",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "U.S. membership in the International Criminal Court (ICC) could improve diplomacy, particularly concerning humanitarian assistance and at the United Nations",
+   "month": "2026-10",
+   "published_at": "2026-10-21T15:57:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "broken parallelism 'concerning X and at the United Nations'"
+  },
+  {
+   "geo_id": "97a15de5304354ca83180e186aee7ebc",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "North Korea and Russia increase authoritarianism and destroy the importance of liberalism and democracy",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:18:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'destroy the importance of liberalism' hard to parse"
+  },
+  {
+   "geo_id": "927ba2afa2684f79adb36fd63b085f1b",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "A host country's failure to secure its border is the reason people are able to be in that country illegally",
+   "month": "2026-10",
+   "published_at": "2026-10-01T16:40:48Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'is the reason people are able to be in that country' padded"
+  },
+  {
+   "geo_id": "f6f91a9a2b9d500595c47dfee83a0779",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "It is unrealistic and unpragmatic for European NATO members to conduct nuclear operations or make decisions about them independently of the United States",
+   "month": "2026-10",
+   "published_at": "2026-10-23T18:37:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'unrealistic and unpragmatic' redundant; 'It is ... for' padding"
+  },
+  {
+   "geo_id": "a2f9970eed724d1e84df04fd16bf52f7",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "It is not fair or safe for a country to have to deal with illegal migration",
+   "month": "2026-10",
+   "published_at": "2026-10-01T16:40:48Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'It is not fair or safe ... to have to deal with' padded"
+  },
+  {
+   "geo_id": "ee2f3349ae7658548b24a9bbade69fcf",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "European diplomats have a lot of disagreements with the current U.S. administration and with U.S. foreign policy",
+   "month": "2026-10",
+   "published_at": "2026-10-23T18:37:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'have a lot of disagreements with' nominalises 'disagree with'"
+  },
+  {
+   "geo_id": "04876cf53af05ab08b7633599526c063",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "When used responsibly, advanced AI has the potential to solve many issues in fields like logistics, health, science, technology, and medicine",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:07:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'has the potential to solve' could be 'can solve'"
+  },
+  {
+   "geo_id": "7c67ded088235ce7905b254f0f66cce3",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The current US administration has contributed to a poor reputation for the United States among other nations, particularly over the last two years",
+   "month": "2026-10",
+   "published_at": "2026-10-23T18:19:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'has contributed to a poor reputation' padded; two time phrases"
+  },
+  {
+   "geo_id": "a90d17a057ba5ee7abebd62b4cece571",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The value proposition for the U.S. joining the International Criminal Court may not be high enough to justify the loss of sovereignty",
+   "month": "2026-10",
+   "published_at": "2026-10-21T15:57:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'value proposition ... high enough to justify' padded"
+  },
+  {
+   "geo_id": "0517646a180c5441a16c40eeaf6ce05c",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The benefits of advanced AI can be realized if the technology is placed in the hands of people with good intentions",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:07:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'placed in the hands of' shortens to 'given to'"
+  },
+  {
+   "geo_id": "3be116e4eff650239816fdf04cdec817",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "If the United States does not have a position at the International Criminal Court, its interests could be negatively affected",
+   "month": "2026-10",
+   "published_at": "2026-10-21T15:57:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'does not have a position at' and 'negatively affected' padded"
+  },
+  {
+   "geo_id": "50eac00c5cc35b45ac8a27c8414bd9f9",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The actions of the International Criminal Court affect the interests of the United States and other countries",
+   "month": "2026-10",
+   "published_at": "2026-10-21T15:57:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The actions of ... affect the interests of' padded"
+  },
+  {
+   "geo_id": "6372951516815a9ba8e3e1a196aa4b7e",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Even though advanced AI can be beneficial, it is still possible to slow its development down",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:07:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'it is still possible to slow its development down'"
+  },
+  {
+   "geo_id": "93c7d108c8d75d0f8c1724074b4c5e8e",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Russia is a major threat to the West and is currently the most aggressive player in a war with the West",
+   "month": "2026-10",
+   "published_at": "2026-10-27T18:07:50Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'the West' repeated; 'a war with the West' redundant after 'threat'"
+  },
+  {
+   "geo_id": "a1e7bf680395509aba21c077c2a5180e",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The deployment of advanced AI must be done with guardrails and responsibility",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:07:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "nominalised passive; 'Advanced AI must be deployed responsibly' shorter"
+  },
+  {
+   "geo_id": "b6420bc9c46156f0b997b1a8f87ae129",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "A Chinese takeover of Taiwan could harm smaller areas around China, negatively affecting regional economic development and diplomacy",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:18:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'harm ... negatively affecting' redundant"
+  },
+  {
+   "geo_id": "cead9518274c56358f77f9e3369dfb00",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Establishing diplomatic relations with North Korea should require a change in the country's regime and government structure in addition to denuclearization",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:21:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'regime and government structure' redundant"
+  },
+  {
+   "geo_id": "05ebb976b5a3526d9088c27eb18b8de7",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Refugee migration is likely the type of migration most characterized by push factors from the country of origin",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:32:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'is likely the type of migration most characterized by' hedged filler"
+  },
+  {
+   "geo_id": "5017b4d9cd1b550a882ed1a28bb7615d",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "North Korean denuclearization could serve as a step toward other states pursuing diplomatic relationships with North Korea",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:21:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'serve as a step toward ... pursuing diplomatic relationships' padded"
+  },
+  {
+   "geo_id": "6b44f766e9635d319249d279c83c524b",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "China's primary goal is to break the transatlantic alliance in order to expand the influence of communism and authoritarianism",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:18:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'in order to' is filler for 'to'"
+  },
+  {
+   "geo_id": "7e7c8ad0d280544990416d34fa03413e",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "A primary cause of Russia's invasion of Ukraine was Ukraine's desire to sign a treaty with NATO, which created conflict with Russia",
+   "month": "2026-10",
+   "published_at": "2026-10-19T18:56:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "trailing 'which created conflict with Russia' repeats the point"
+  },
+  {
+   "geo_id": "c9b0b4f8b5455a31a2ccfb9e3d47d915",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "A UN Security Council member may veto a humanitarian intervention for national security reasons, such as protecting a client state, rather than on moral grounds",
+   "month": "2026-10",
+   "published_at": "2026-10-19T18:44:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "26 words; example clause and contrast padded"
+  },
+  {
+   "geo_id": "f8119abee41d5f9f8b5917bf563cf3c2",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The self-identification of citizens in Crimea contributed to the ease of Russia's takeover of the region",
+   "month": "2026-10",
+   "published_at": "2026-10-19T18:56:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'the ease of' nominalisation, could be shorter"
+  },
+  {
+   "geo_id": "194f3c344a4357cba1a03deb0573300b",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The United States has good intentions in its development of AI",
+   "month": "2026-10",
+   "published_at": "2026-10-23T20:20:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'has good intentions in its development of AI' slightly padded"
+  },
+  {
+   "geo_id": "29592fc9ad4353dcbbf05535db06e1bf",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Nuclear weapons are used to protect a state and for self-defense, not to initiate conflict",
+   "month": "2026-10",
+   "published_at": "2026-10-19T18:49:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'protect a state and for self-defense' is redundant"
+  },
+  {
+   "geo_id": "329930b652705a5ba4d1ae4bb768a890",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "United Nations member states should have a say in the voting process, especially for military operations",
+   "month": "2026-10",
+   "published_at": "2026-10-19T18:44:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the voting process' not specified"
+  },
+  {
+   "geo_id": "32b8c7825a6f4a64a90e91204ced735c",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The FII postponement exposes the vulnerability of Saudi Arabia's investment-led diversification strategy",
+   "month": "2026-10",
+   "published_at": "2026-10-21T12:53:46Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The FII postponement' refers to an unexplained outside event"
+  },
+  {
+   "geo_id": "5e27437dcb37416a9cf795509f77ca90",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Blocking the PTI march is a disproportionate restriction on political protest",
+   "month": "2026-10",
+   "published_at": "2026-10-07T03:46:09Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the PTI march' does not say which march"
+  },
+  {
+   "geo_id": "0f70f29ddd0c4c9abdee44bed19f5df1",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Supreme Court should supervise an independent audit of India's voter-roll revision",
+   "month": "2026-10",
+   "published_at": "2026-10-14T11:42:36Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named court Supreme Court resolved by India"
+  },
+  {
+   "geo_id": "24d5599610f04b8a93b2fff6c6186533",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Supreme Court should invalidate third-country deportations conducted without individual risk assessments",
+   "month": "2026-09",
+   "published_at": "2026-09-30T11:39:39Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named court 'The Supreme Court' resolves itself"
+  },
+  {
+   "geo_id": "014484d969154f838f61a77d6b2d9c71",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Pacific Islands Forum should suspend Israel's partnership over its conduct in Gaza",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:49:59Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named Pacific Islands Forum"
+  },
+  {
+   "geo_id": "752d1507c24d4ad8b0b49e4235c4955d",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The UN Security Council should authorise an international mission to protect commercial shipping through the Strait of Hormuz",
+   "month": "2026-09",
+   "published_at": "2026-09-24T12:35:51Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named UN Security Council"
+  },
+  {
+   "geo_id": "d20adc29d9e24a49899244dd509abb4a",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "US sanctions against the ICC undermine international accountability for war crimes",
+   "month": "2026-10",
+   "published_at": "2026-10-14T10:12:55Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "acronym ICC, a named court"
+  },
+  {
+   "geo_id": "1694f788d2494dd9bf5b67a9b9df8b67",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "EU governments should shield companies serving the ICC from US sanctions",
+   "month": "2026-10",
+   "published_at": "2026-10-14T10:12:55Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "ICC acronym, named institution"
+  },
+  {
+   "geo_id": "486d48ba387d407bb643d57f55db2854",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Partners for Multilateralism initiative provides middle powers with a credible platform for institutional reform",
+   "month": "2026-09",
+   "published_at": "2026-09-23T11:33:25Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'The Partners for Multilateralism initiative' works as a name"
+  },
+  {
+   "geo_id": "58e63cd256f04a318ac2f026eed85cb5",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The China–Laos Joint Support and Training Centre constitutes a Chinese overseas military base",
+   "month": "2026-10",
+   "published_at": "2026-10-01T18:45:00Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'The China-Laos Joint Support and Training Centre' is a name"
+  },
+  {
+   "geo_id": "5a2be5d52bf6428a965c1f1c01b0adff",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "US-backed mineral investments in the Great Lakes region should depend on verified compliance with the Congo–Rwanda peace agreement",
+   "month": "2026-10",
+   "published_at": "2026-10-29T11:31:17Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named region and agreement, description works as a name"
+  },
+  {
+   "geo_id": "df21b8d1422d57ad8a8cfedccb8d22f0",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Joining the International Criminal Court would require the U.S. to give up its sovereignty on the global stage",
+   "month": "2026-10",
+   "published_at": "2026-10-21T15:57:38Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named ICC"
+  },
+  {
+   "geo_id": "0e8b0f33a6c54edf9d2cb05fb9f592e7",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Germany should maintain direct diplomatic contact with Russia despite the war in Ukraine",
+   "month": "2026-09",
+   "published_at": "2026-09-28T13:05:27Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the war in Ukraine' resolves itself"
+  },
+  {
+   "geo_id": "4497744859984894a82b87a8fe960b71",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "NATO forces should intercept foreign military vessels reasonably suspected of preparing attacks on subsea infrastructure",
+   "month": "2026-09",
+   "published_at": "2026-09-11T10:47:09Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "NATO acronym, named institution"
+  },
+  {
+   "geo_id": "48489e0abcb64d8992f471291f5b4c07",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The people of Taiwan and its administered islands should determine their future independently of the One-China principle",
+   "month": "2026-09",
+   "published_at": "2026-09-03T05:52:14Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the One-China principle' is a named policy"
+  },
+  {
+   "geo_id": "8abd0420eef55b219760e7a26e705c69",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "By joining the International Criminal Court, the United States could represent its positions within the institution",
+   "month": "2026-10",
+   "published_at": "2026-10-21T15:57:38Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the institution' resolves to the named court"
+  },
+  {
+   "geo_id": "918c38f5a8dd168e1880d8d36d9f14aa",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The Iranian government is systematically repressing its citizens",
+   "month": "2026-08",
+   "published_at": "2026-08-03T17:18:10Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'The Iranian government' named by nationality; 'its' resolved"
+  },
+  {
+   "geo_id": "06f9d2d750e48aac6dd0461c694b2377",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Tougher border enforcement stops people from migrating",
+   "month": "2026-09",
+   "published_at": "2026-09-23T13:53:04Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "short, self-contained"
+  },
+  {
+   "geo_id": "0e14d5ab99c5448190cb8fa1e3474344",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Imran Khan's continued imprisonment is politically motivated",
+   "month": "2026-10",
+   "published_at": "2026-10-07T03:46:09Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "named person, self-contained"
+  },
+  {
+   "geo_id": "1b3dd4d5f19e500dbc71dda6e568b790",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "The United States should take control of Greenland",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:35:48Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "25e72d6fffe442fe8cc85b69eb0d524b",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Anti-immigrant vigilante organisations should be banned",
+   "month": "2026-10",
+   "published_at": "2026-10-29T06:23:26Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "32446a053e0041ee95db40236a4babb1",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Syria's missing-persons investigations should be led by an independent international body",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:49:59Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear self-contained recommendation"
+  },
+  {
+   "geo_id": "3a2f12911a6d4efa992d27d8278db4f7",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Kenya should reserve selected small-business sectors for its citizens",
+   "month": "2026-09",
+   "published_at": "2026-09-09T12:23:54Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "4befcdb32ee4ab99f4371b8785a15729",
+   "space_id": "89bd89bf28ff8a0963faf92a8c905e20",
+   "space": "World affairs",
+   "name": "Flávio Bolsonaro fled Brazil to escape justice",
+   "month": "2026-10",
+   "published_at": "2026-10-27T19:01:42Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "named person, clear"
+  },
+  {
+   "geo_id": "3c2992c2ff50561e993960c1f2143002",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The government promotes a laissez-faire attitude regarding the development of AI software that creates harm",
+   "month": "2026-10",
+   "published_at": "2026-10-23T21:06:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'The government' in a factual claim, not a recommendation"
+  },
+  {
+   "geo_id": "92dfa9954f64549483ca27eef9d43a75",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The military is using artificial intelligence",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:08:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "bare 'The military' with no country specified"
+  },
+  {
+   "geo_id": "aa7e04506e87480cb15531d922b89653",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The Anthropic settlement's default 50-50 split between authors and publishers is unfair to writers",
+   "month": "2026-09",
+   "published_at": "2026-09-08T02:08:43Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The Anthropic settlement' does not say which; like 'the settlement terms'"
+  },
+  {
+   "geo_id": "269127878f5d5367f4de9601be12346b",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "We should slow down AI development",
+   "month": "2026-08",
+   "published_at": "2026-08-05T16:33:45Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "pronoun 'We' has no antecedent inside the claim"
+  },
+  {
+   "geo_id": "fe562002db30564caea2e25a4b887cdd",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "We are developing AI technology that we do not fully understand",
+   "month": "2026-10",
+   "published_at": "2026-10-22T16:50:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "pronoun 'We' with no antecedent in claim"
+  },
+  {
+   "geo_id": "a0dacae3f2e5ad8437bc6141a67bc66f",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "System One Models can be made more reliable than slow reasoning models",
+   "month": "2026-09",
+   "published_at": "2026-09-21T12:50:55Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Improper capitalization"
+   ],
+   "why": "'Models' capitalized mid-sentence though not a proper noun"
+  },
+  {
+   "geo_id": "70394c0220b2ccc4f52823e840448b6d",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Artist and content creators should have the right to opt out of AI training",
+   "month": "2026-08",
+   "published_at": "2026-08-03T16:30:58Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "'Artist and content creators' should be 'Artists'"
+  },
+  {
+   "geo_id": "23ad99d77adb52f9a82d0747ef9f33d1",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "It is a matter of probability, not a certainty, that China may or may not take the lead in AI if the U.S. were to ban superintelligence",
+   "month": "2026-10",
+   "published_at": "2026-10-23T10:36:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy",
+    "Poor wording"
+   ],
+   "why": "'matter of probability, not a certainty ... may or may not' is filler"
+  },
+  {
+   "geo_id": "c425d6c482a553ed962562a8747b8daa",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Equating artificial intelligence-generated art with real art logically extends to accepting artificial intelligence-generated video mock-ups of real people as authentic representations of those individuals",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:48:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "repeats 'artificial intelligence-generated'; over 25 words, shortenable"
+  },
+  {
+   "geo_id": "48ef6e14bb4f47ab8137c467d8325ad2",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "System One Models will replace LLM wrappers for most business automation",
+   "month": "2026-09",
+   "published_at": "2026-09-21T12:50:55Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Improper capitalization"
+   ],
+   "why": "'System One Models' capitalised common term"
+  },
+  {
+   "geo_id": "28c2fb69f5265da89dccc97081032eb8",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "There is no significant difference about a conscious, human-level intelligent AGI that would make ceasing its conscious existence not murder",
+   "month": "2026-10",
+   "published_at": "2026-10-20T22:32:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording",
+    "Incorrect grammar"
+   ],
+   "why": "'no significant difference about... not murder' garbled, hard to parse"
+  },
+  {
+   "geo_id": "448e144cdff252ebb6213c7a5e84bb84",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Since the Industrial Revolution, predictions that technological change would radically reduce human labor have not proven to be the case",
+   "month": "2026-10",
+   "published_at": "2026-10-19T19:09:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "review: 'predictions have not proven to be the case' is a semantic mismatch"
+  },
+  {
+   "geo_id": "bde943381b7a5be292318e45bcdbf417",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The presence of artificial intelligence reduces the need for people to engage in deep thinking, as users can simply rely on artificial intelligence outputs even in unfamiliar areas",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:38:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The presence of artificial intelligence' repeated, 29 words"
+  },
+  {
+   "geo_id": "5b7419af345226ee4842f815dd25df7d",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "US needs more data centers not less",
+   "month": "2026-09",
+   "published_at": "2026-09-16T22:14:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "missing article/comma; 'less' should be 'fewer'"
+  },
+  {
+   "geo_id": "05f4defeb90b0705d0f4fa41b0ae0cd6",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Pacing enables evaluations that smarter models cannot deceive",
+   "month": "2026-09",
+   "published_at": "2026-09-14T11:59:32Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'Pacing' is jargon that hides the assertion"
+  },
+  {
+   "geo_id": "06f9da7f0eb052feb901ae6e12c7deca",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Technology and AI have given people the ability to have a greater breadth of knowledge",
+   "month": "2026-10",
+   "published_at": "2026-10-23T15:30:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'the ability to have a greater breadth of knowledge' = 'know more'"
+  },
+  {
+   "geo_id": "261201719a635781afa59bf5623b73d9",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The misuse of AI and its effect on productivity depends on the individual user",
+   "month": "2026-10",
+   "published_at": "2026-10-22T17:07:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "compound subject with singular verb 'depends'"
+  },
+  {
+   "geo_id": "071bb0ed340e58558d4af8ea616a59da",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Real-time human approval for artificial intelligence agents may be necessary for tasks requiring high compliance, but is not required for every subject matter area",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:52:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy",
+    "Poor wording"
+   ],
+   "why": "long hedged claim; 'may be necessary ... but is not required' muddled"
+  },
+  {
+   "geo_id": "15c3b80210cd55d8afd8633359dbc5b3",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The rapid pace of technological advancement makes it highly likely that humanoid robots will be available sooner than expected",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:21:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'makes it highly likely that' and vague 'than expected'"
+  },
+  {
+   "geo_id": "4226c231a3fc5213867ec2bb553144eb",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Artificial General Intelligence (AGI) is as intelligent or more intelligent than a human, as shown by benchmarks",
+   "month": "2026-10",
+   "published_at": "2026-10-20T22:32:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "'as intelligent or more intelligent than' lacks 'as ... as' second 'as'"
+  },
+  {
+   "geo_id": "966395a0cf925803a6c76ecd1b32f37b",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "It is not certain that the development of AI cannot be slowed down",
+   "month": "2026-10",
+   "published_at": "2026-10-19T19:02:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording",
+    "Wordy"
+   ],
+   "why": "double negative 'not certain ... cannot'; unclear scope of 'not'"
+  },
+  {
+   "geo_id": "194e3910605b527992ec82fe3c566bdd",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI will not significantly increase or decrease workloads, which will remain more or less the same",
+   "month": "2026-10",
+   "published_at": "2026-10-19T19:09:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'increase or decrease ... more or less the same' redundant"
+  },
+  {
+   "geo_id": "653b7f04e847829a402d0242b144d4cc",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI bubble is already bursting in China",
+   "month": "2026-10",
+   "published_at": "2026-10-28T02:40:18Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "missing article before 'AI bubble'"
+  },
+  {
+   "geo_id": "c5a3d61c699857a29f8722caa95ee110",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI development should be slowed for use in recombinant DNA technology that can increase the virulence of pathogens",
+   "month": "2026-10",
+   "published_at": "2026-10-19T19:02:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'slowed for use in' is garbled"
+  },
+  {
+   "geo_id": "3c8f7e2e5e39580b8be854286caecd94",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Increases in employee workloads following the adoption of artificial intelligence tools are caused by poor time management and a lack of boundary setting rather than by the technology itself",
+   "month": "2026-10",
+   "published_at": "2026-10-27T18:03:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "31 words; 'following the adoption of ...' nominalised"
+  },
+  {
+   "geo_id": "e41f6a1f3afeb5dd7db8e997796fd9ad",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI “end of the world” narrative is a complete overreaction",
+   "month": "2026-09",
+   "published_at": "2026-09-23T13:53:47Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "singular 'narrative' lacks an article before the compound subject"
+  },
+  {
+   "geo_id": "f917ef2ff92a5aff89c939e86095d72f",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Artificial intelligence functions primarily as a productivity tool or a targeted tool for specific emotional or skill-based areas a person may lack",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:54:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'targeted tool for specific ... areas a person may lack' convoluted"
+  },
+  {
+   "geo_id": "c5d654cf5dfa5c9d862e1f0a216ad878",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Artificial intelligence content can be misleading, and users often lack the ability to distinguish whether artificial intelligence-generated information is correct",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:38:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'lack the ability to distinguish whether'; repeated 'artificial intelligence'"
+  },
+  {
+   "geo_id": "fc9632bd9de658e8a29f7abc2f877500",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "An AI company may be aware of a risky situation with its product but not act to prevent it if regulations do not require them to",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:32:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar",
+    "Wordy"
+   ],
+   "why": "singular 'company' then plural 'them'; long"
+  },
+  {
+   "geo_id": "2e98d6622a5e5cccadbda2a613088465",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI models are tools with their own brains that are the source of mistakes, not the companies that create them",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:32:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'tools with their own brains' and scope of 'not the companies' muddled"
+  },
+  {
+   "geo_id": "d42aa70d61bb59028c29bf2b424f0d72",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Using artificial intelligence agents involves making decisions about which path the artificial intelligence should take",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:33:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "repeats 'artificial intelligence'; 'involves making decisions about' padded"
+  },
+  {
+   "geo_id": "3bdf334e4aaf50b1a6820d2be40baf2f",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI is useful in various areas, including cybersecurity, interpersonal life, and for people with disabilities",
+   "month": "2026-10",
+   "published_at": "2026-10-22T16:30:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "broken parallelism 'in areas, including X, Y, and for people'"
+  },
+  {
+   "geo_id": "5d7c3fa3b60e59cea330d0efcca1b181",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Robots with a superficial resemblance to humans designed for specific tasks requiring little manual dexterity could be available within a decade",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:21:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "stacked qualifiers before the verb make the subject hard to parse"
+  },
+  {
+   "geo_id": "6adfaea4a4f1579a84656f42d5ad38cd",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The development of AI technology that could be used by bad actors to increase the pathogenicity of pathogens needs to be slowed down",
+   "month": "2026-10",
+   "published_at": "2026-10-19T19:02:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'pathogenicity of pathogens' redundant; 'needs to be slowed down'"
+  },
+  {
+   "geo_id": "fdb6a6e60fcc43f695ec957d65b6df6e",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Sam Altman expects an internal OpenAI system he would call AGI by end of 2026",
+   "month": "2026-08",
+   "published_at": "2026-08-26T17:55:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Incorrect grammar"
+   ],
+   "why": "'by end of 2026' missing article; 'he' resolved"
+  },
+  {
+   "geo_id": "37a4339fdb0c47858be2480cd74140e6",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI recommendations may be better prepared than human intuition, although they should still be verified by a professional",
+   "month": "2026-09",
+   "published_at": "2026-09-10T19:50:51Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'better prepared than human intuition' is an odd comparison"
+  },
+  {
+   "geo_id": "962230b5e0705f25b7da5b437774653e",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Artificial intelligence is changing the world and the job market on a daily basis",
+   "month": "2026-10",
+   "published_at": "2026-10-23T18:05:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'on a daily basis' shortens to 'daily'"
+  },
+  {
+   "geo_id": "524b1963749455d8ad5fd2254caec532",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Hierarchical robotic structures consisting of a central computer and appendages lack an effective way to replicate whole-body bidirectional cognition",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:21:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "jargon 'whole-body bidirectional cognition' hides the assertion"
+  },
+  {
+   "geo_id": "a074c6a58e9456a5b29dfa3e3dd2f58e",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Slowing down the development of artificial intelligence is advisable in order to pursue safety",
+   "month": "2026-10",
+   "published_at": "2026-10-23T10:36:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'is advisable in order to pursue safety' shortens"
+  },
+  {
+   "geo_id": "5b372013cb2253269e625bd014bde99a",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI funds the world",
+   "month": "2026-10",
+   "published_at": "2026-10-23T18:05:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'AI funds the world' unclear what is claimed"
+  },
+  {
+   "geo_id": "bb6380083e045f55ac141a64eb6ffb1a",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Artificial intelligence and employers share responsibility for the impact of artificial intelligence on employee workloads",
+   "month": "2026-10",
+   "published_at": "2026-10-27T18:03:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'artificial intelligence' repeated; 'the impact of ... on' padded"
+  },
+  {
+   "geo_id": "66f769bf41e1523ba9dca77f8e13e169",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "It will be impossible to implement safeguards for or detect deception from an AI that becomes smarter than humans",
+   "month": "2026-10",
+   "published_at": "2026-10-22T16:23:48Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'safeguards for or detect deception from an AI' compressed coordination"
+  },
+  {
+   "geo_id": "d73de34e2fe95dbc9b74a1aa16155710",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI development can be beneficial and helpful in many areas",
+   "month": "2026-10",
+   "published_at": "2026-10-20T16:20:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'beneficial and helpful' redundant pair"
+  },
+  {
+   "geo_id": "78a4978542be51efb15fdbcb2f5395bd",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI can enable people to work more profoundly or to work on other things",
+   "month": "2026-10",
+   "published_at": "2026-10-19T17:05:43Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'work more profoundly' is unclear on first read"
+  },
+  {
+   "geo_id": "047198e324115e19a6a0431a41fc75ee",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Governments should form public-private partnerships to improve the application of artificial intelligence and prevent citizens from becoming overly reliant on the technology",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:16:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "27 words; 'the application of artificial intelligence ... the technology'"
+  },
+  {
+   "geo_id": "88afd3f5153b4e03981a86727ff67bc9",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Defining Artificial General Intelligence (AGI) as a living, self-directed organism is a potentially undesirable and overly advanced definition",
+   "month": "2026-09",
+   "published_at": "2026-09-10T18:15:50Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording",
+    "Wordy"
+   ],
+   "why": "'potentially undesirable and overly advanced definition' hedged and redundant"
+  },
+  {
+   "geo_id": "16a1bb3899fc5bd5a80cde87b6644392",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Technological capabilities in robotics advance rapidly enough to change significantly within a three-month period",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:21:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'advance rapidly enough to change significantly within a three-month period'"
+  },
+  {
+   "geo_id": "b8794f67a75655a0bd4def0a760cc466",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Artificial intelligence image generation is an interpretation of an art form that steals from existing art forms",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:49:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'an interpretation of an art form that steals' unclear what steals"
+  },
+  {
+   "geo_id": "47f3042ab5105f3c882523c18ba0ed25",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Students must understand the foundational basics of any field they study",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:41:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'foundational basics' redundant"
+  },
+  {
+   "geo_id": "bc2052c8f2d7544f86a5591b156a478d",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Debates about AI often lack conceptual clarity over what it means for people to use the technology and for it to make them dumber",
+   "month": "2026-10",
+   "published_at": "2026-10-23T15:30:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "nested 'it ... them' chain hides what is claimed"
+  },
+  {
+   "geo_id": "5b939f78e32943aaa7b5cbf823d05790",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI is progressing at a much faster rate than governments can catch up to and properly regulate",
+   "month": "2026-09",
+   "published_at": "2026-09-10T20:10:50Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'at a much faster rate than ... catch up to' shortens to 'faster than'"
+  },
+  {
+   "geo_id": "03f79f8b70bb5422beb4f682c73fee9e",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Humanoid robots capable of simple functions and human-like appearance will be available to consumers quickly",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:21:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'capable of simple functions and human-like appearance' garbled pairing"
+  },
+  {
+   "geo_id": "7989a1b6ae3e5a1d9c8f9ca5e1fd85b2",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The power of AI technology and the uncertainty of its consequences necessitate a focus on public safety",
+   "month": "2026-10",
+   "published_at": "2026-10-23T18:05:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'necessitate a focus on' nominalisation; shorter rewrite exists"
+  },
+  {
+   "geo_id": "13b4fe5bc21852d09dbd7a349fa8a221",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Literature shows that people tend to rely on AI to save mental effort from thinking",
+   "month": "2026-10",
+   "published_at": "2026-10-23T15:30:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'save mental effort from thinking' is garbled"
+  },
+  {
+   "geo_id": "8142fd07c0a95e8c9fecc8853678f987",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Writing prompts for artificial intelligence can be interpreted as a skill gained through practice, trial and error, and education",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:49:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'can be interpreted as a skill gained through' is padded"
+  },
+  {
+   "geo_id": "1c7a9eca49369afd266a30d16c7d6098",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "A deceased person’s likeness should endorse new products only with permission given while alive",
+   "month": "2026-10",
+   "published_at": "2026-10-05T16:09:04Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'likeness should endorse' and dangling 'given while alive' unclear"
+  },
+  {
+   "geo_id": "8191e3e5a7f4560d8d1e182e4f1df807",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The process of prompting artificial intelligence to generate visual content involves human creativity and manual tweaking",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:48:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The process of prompting ... involves' nominalisation; 'Prompting AI ... involves'"
+  },
+  {
+   "geo_id": "5d3a4241bf495e7a975a6aa76d25557d",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "With AI, people can go more profoundly into their work",
+   "month": "2026-10",
+   "published_at": "2026-10-18T09:19:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'go more profoundly into their work' is unidiomatic and vague"
+  },
+  {
+   "geo_id": "98501a39b6c85f81beb148091c2a6b6f",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The designation of \"real art\" requires that a work be created entirely by a human using their own skills without external augmentation",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:48:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The designation of real art requires that a work be' shortens"
+  },
+  {
+   "geo_id": "713e5e4dbf0659648a6b6b4a7647b929",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Governments will not control the private sector regarding artificial intelligence development and models",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:42:45Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'control the private sector regarding ... development and models' garbled"
+  },
+  {
+   "geo_id": "a28b29af106c5a8d9f2240234fec3146",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "If AI performs work for people, it can lead to the loss of the essence of human talent",
+   "month": "2026-10",
+   "published_at": "2026-10-22T17:07:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'lead to the loss of the essence of' nominalised, shortenable"
+  },
+  {
+   "geo_id": "e4bc6a8caa705cb3b5260c74c0b43450",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "People are beginning to rely on AI for professional tasks such as coding, creating graphs, and economics",
+   "month": "2026-10",
+   "published_at": "2026-10-22T17:07:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'economics' is not a task; list is not parallel"
+  },
+  {
+   "geo_id": "adaadde7b693598691a61da5032d8828",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Artificial intelligence increases overall workloads because the capacity to complete tasks faster creates opportunities to do more work",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:31:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'capacity to complete tasks faster creates opportunities to do more work'"
+  },
+  {
+   "geo_id": "35a3c85f806150c4b047bc8f2ea89079",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "If the U.S. stops using AI in foreign policy, it will lose influence in cybersecurity, the market, and the economy",
+   "month": "2026-10",
+   "published_at": "2026-10-19T19:02:37Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the market' and 'the economy' are abstract"
+  },
+  {
+   "geo_id": "57b835289fe25332871ca92662beb5d0",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The Chinese government has full control over how artificial intelligence is applied in society",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:42:45Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'The Chinese government' is the named government"
+  },
+  {
+   "geo_id": "f19a57dbb4ca52ce803054b76e79f5af",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Basic knowledge still needs to be learned and tested in exams",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:41:37Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "mass noun 'basic knowledge', generic"
+  },
+  {
+   "geo_id": "085d2653dc8858e4a497d37320985845",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Ten years is a long time for development in the artificial intelligence industry",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:59:38Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "time expression 'Ten years'"
+  },
+  {
+   "geo_id": "962670812abe57188d4965a89ce0b846",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The information revolution did not result in a drastic decrease in the workweek",
+   "month": "2026-10",
+   "published_at": "2026-10-19T19:09:39Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the information revolution' and 'the workweek' are generic"
+  },
+  {
+   "geo_id": "e8795b11177e4d6c8ffb05ed9a44822c",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The US government should trust Anthropic on AI safety and national defense",
+   "month": "2026-09",
+   "published_at": "2026-09-08T02:13:35Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'The US government' in a recommendation"
+  },
+  {
+   "geo_id": "1d200480ffe260f7274321af05013bd6",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Traditional homework is no longer fit for the age of AI",
+   "month": "2026-08",
+   "published_at": "2026-08-03T16:30:58Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "time word 'no longer'; abstract 'the age of AI'"
+  },
+  {
+   "geo_id": "28d203ad452f5166ace518f69350ce7c",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "The internet will eventually be viewed as a foundational but outdated communication technology similar to the telegraph",
+   "month": "2026-10",
+   "published_at": "2026-10-28T17:54:38Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "time word 'eventually'; generic 'the telegraph'"
+  },
+  {
+   "geo_id": "43c5e4e4d6105985b7fb4626e21bbf42",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "A global AI alliance is not feasible under the Trump administration due to its isolationist foreign policy and withdrawal from multilateral agreements",
+   "month": "2026-10",
+   "published_at": "2026-10-20T16:35:41Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named 'the Trump administration'"
+  },
+  {
+   "geo_id": "c779e22d7d1e5eefbe3c8d70ee6a435e",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI itself, not the company that created it, is responsible for the mistakes it makes",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:32:37Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the mistakes it makes' resolves itself"
+  },
+  {
+   "geo_id": "fad6baf26d81503486fb314a3eb2bddc",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Some people use AI to complete their work more quickly",
+   "month": "2026-10",
+   "published_at": "2026-10-19T19:09:39Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "indefinite 'Some people'"
+  },
+  {
+   "geo_id": "0106804cfe3d4b25b8d4381800f79d2f",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Meta should obtain explicit consent before using user photos to train AI",
+   "month": "2026-09",
+   "published_at": "2026-09-12T20:57:33Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "075e717d37ab9e80c69f02243ef28d02",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Simulating a mind is equivalent to creating a mind",
+   "month": "2026-08",
+   "published_at": "2026-08-03T16:30:58Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "0b6de41f13dfa82a6b371db3112d99c9",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "People who refuse to use AI will become economically irrelevant",
+   "month": "2026-08",
+   "published_at": "2026-08-05T16:33:45Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear claim"
+  },
+  {
+   "geo_id": "133c3f274e99b54c96ed0c0606a8f3b2",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Patients should have the right to refuse AI-assisted healthcare",
+   "month": "2026-08",
+   "published_at": "2026-08-03T16:30:58Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "180fe04e9f10d6e3795f326cf22ef8cb",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "AI agents can make genuine biological discoveries with minimal human direction",
+   "month": "2026-09",
+   "published_at": "2026-09-23T18:45:25Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear, well formed"
+  },
+  {
+   "geo_id": "1f18cb41daa26dc99149ef5fa5a94364",
+   "space_id": "41e851610e13a19441c4d980f2f2ce6b",
+   "space": "AI",
+   "name": "Slowing AI development would hinder innovation and economic growth",
+   "month": "2026-07",
+   "published_at": "2026-07-29T17:52:37Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain generic claim"
+  },
+  {
+   "geo_id": "9711a19a5cb343839b5cad0dcc2f50f2",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The appeals court should lift the block on Robert F. Kennedy Jr.'s vaccine panel appointments",
+   "month": "2026-10",
+   "published_at": "2026-10-08T22:06:05Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The appeals court' and 'the block' unspecified"
+  },
+  {
+   "geo_id": "5c5f92c5dd5146e1bf46c6e3bacee65e",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The new dietary guidelines depart from the science without explanation",
+   "month": "2026-09",
+   "published_at": "2026-09-15T22:47:43Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The new dietary guidelines' names a kind, not which one"
+  },
+  {
+   "geo_id": "5d89f85b04a742b19791c360edab6b7f",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Exempting drugmakers that struck voluntary price deals from the mandatory pricing model undermines the program",
+   "month": "2026-10",
+   "published_at": "2026-10-01T19:30:02Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the mandatory pricing model' and 'the program' not identified"
+  },
+  {
+   "geo_id": "c5838c0695c04b74a9a3889acce5e339",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The new guidelines should not prioritize animal protein over plants",
+   "month": "2026-09",
+   "published_at": "2026-09-15T22:47:43Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The new guidelines' does not say which guidelines"
+  },
+  {
+   "geo_id": "1df9ec380efc48268fc333694847ab80",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The six-month broker suspension will reduce legitimate enrollment assistance",
+   "month": "2026-09",
+   "published_at": "2026-09-28T03:32:15Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The six-month broker suspension' does not say which suspension"
+  },
+  {
+   "geo_id": "ae7b89bbeafc41b0924019481eafcdb0",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Pharmaceutical companies are right to challenge the mandatory pricing model in court",
+   "month": "2026-10",
+   "published_at": "2026-10-01T19:30:02Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the mandatory pricing model' names a kind, not which one"
+  },
+  {
+   "geo_id": "c6f4b830d98d43aaab0ac97ec113ff5a",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "RFK Jr.'s vaccine rhetoric is directly responsible for the Pennsylvania measles deaths",
+   "month": "2026-09",
+   "published_at": "2026-09-17T16:12:26Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the Pennsylvania measles deaths' does not say which deaths"
+  },
+  {
+   "geo_id": "f554ed9ea9f847c5b128775821dbdf1a",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The federal response to the measles outbreak has been sufficient to contain its spread",
+   "month": "2026-10",
+   "published_at": "2026-10-15T17:14:24Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the measles outbreak' needs an outside antecedent"
+  },
+  {
+   "geo_id": "7f1cd4fe14a442318c7e005ca4851b17",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Kenya's public health system successfully contained the imported Ebola threat",
+   "month": "2026-10",
+   "published_at": "2026-10-13T02:09:08Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the imported Ebola threat' needs an outside antecedent"
+  },
+  {
+   "geo_id": "86afe432131941adba5b3e42eacd4186",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The CDC should formally recommend the mRNA flu vaccine for all adults 50 and older",
+   "month": "2026-09",
+   "published_at": "2026-09-28T03:32:29Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the mRNA flu vaccine' names a kind, not which one"
+  },
+  {
+   "geo_id": "affdcfaf93eb45009d113c7cc458ee6b",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The routine childhood vaccination schedule should be reduced",
+   "month": "2026-08",
+   "published_at": "2026-08-03T16:40:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'The routine childhood vaccination schedule' does not say which one"
+  },
+  {
+   "geo_id": "1f01cb40b1154d6d95c9bcbe8384b2ec",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The Cass Review findings justify pausing puberty blocker prescriptions outside clinical trials.",
+   "month": "2026-09",
+   "published_at": "2026-09-24T01:47:03Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Trailing period"
+   ],
+   "why": "one sentence ending with a period"
+  },
+  {
+   "geo_id": "d933592a49635985a8159205c7668304",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Working out at night may be done in a more established nutritional state",
+   "month": "2026-10",
+   "published_at": "2026-10-23T17:36:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'done in a more established nutritional state' garbled"
+  },
+  {
+   "geo_id": "fe0a4d8330c2505fb57fa09996940436",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Individuals, rather than society, should have the authority to decide how to handle their own families regarding the social messaging and use of embryo selection",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:55:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording",
+    "Wordy"
+   ],
+   "why": "garbled 'handle their own families regarding social messaging'"
+  },
+  {
+   "geo_id": "2885874c11b84a7ba4b77e1d5459c7d3",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Withholding gender-affirming care causes measurable psychological harm to minors.",
+   "month": "2026-09",
+   "published_at": "2026-09-24T01:46:43Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Trailing period"
+   ],
+   "why": "one sentence ending with a period"
+  },
+  {
+   "geo_id": "7b5fae56623e5ec2b5e0089532d7695b",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Selecting embryos for predicted intelligence is a possibility of social action resulting from technological change rather than an established right",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:55:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'possibility of social action resulting from technological change' obscure"
+  },
+  {
+   "geo_id": "2fbe983d7b3e5c22a678abf461e4bac5",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Diet and exercise are essential and very important for addressing childhood obesity",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:16:40Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'essential and very important' redundant"
+  },
+  {
+   "geo_id": "3cb690d331074a95b64ba22af95bb435",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "State restrictions on gender-affirming care interfere with the doctor-patient relationship.",
+   "month": "2026-09",
+   "published_at": "2026-09-24T01:47:03Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Trailing period"
+   ],
+   "why": "ends with a period"
+  },
+  {
+   "geo_id": "c0940760175752e69a81ce56b8d0332c",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "There is no price for selecting embryos for intelligence, as the work of raising the child must still be done",
+   "month": "2026-10",
+   "published_at": "2026-10-23T16:47:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'There is no price for' unclear; 'the child' generic"
+  },
+  {
+   "geo_id": "1b45c72f1ba05fdc9821e103b6a60bd5",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The use of scientific advancements such as embryo selection is a right that should not be restricted unless there is a strong case that the practice hurts others",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:55:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The use of ... is a right that' nominalized; shorter rewrite exists"
+  },
+  {
+   "geo_id": "4284e5266bca42c58ce71c8c8c628d28",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Gender-affirming care for minors is prescribed too rarely to justify the political attention it receives.",
+   "month": "2026-09",
+   "published_at": "2026-09-24T01:47:03Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Trailing period"
+   ],
+   "why": "one sentence ends with a period"
+  },
+  {
+   "geo_id": "0813766bcd9f5ae9b1c5f8aeffd19238",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Families eating together correlates with limited food intake because shared meals provide pleasure that individuals otherwise seek directly from food when eating alone",
+   "month": "2026-10",
+   "published_at": "2026-10-26T20:31:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "correlation plus mechanism fused in one convoluted sentence"
+  },
+  {
+   "geo_id": "34d515d0812b52ce98abe6d0884293ff",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Genetically enhancing an embryo through genetic modification should not be allowed",
+   "month": "2026-10",
+   "published_at": "2026-10-20T16:18:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'genetically enhancing ... through genetic modification' redundant"
+  },
+  {
+   "geo_id": "795d955628da47e6bdf5922331de5f95",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Long-term effects of puberty blockers on bone density and fertility remain inadequately studied.",
+   "month": "2026-09",
+   "published_at": "2026-09-24T01:46:43Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Trailing period"
+   ],
+   "why": "one sentence ending with a period"
+  },
+  {
+   "geo_id": "2842dc3daa2250d0b1b1a3be8b7ef580",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Diet and exercise policy interventions cannot extend to the full life of a child",
+   "month": "2026-10",
+   "published_at": "2026-10-26T20:31:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "noun stack and 'extend to the full life of a child' unclear"
+  },
+  {
+   "geo_id": "806d2f75197556a1adc55f01c6923f66",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Teenagers and Generation Z individuals are isolating themselves by treating ChatGPT as a friend and relying on ChatGPT to answer questions instead of talking to humans",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:56:48Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "repeats ChatGPT; 'Teenagers and Generation Z individuals' overlap"
+  },
+  {
+   "geo_id": "902410a0f4ec4dd5b2e5dfd204ca256d",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "AI is more effective at assisting doctors than replacing them entirely.",
+   "month": "2026-09",
+   "published_at": "2026-09-22T20:09:29Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Trailing period"
+   ],
+   "why": "one sentence ending with a period"
+  },
+  {
+   "geo_id": "6886aeb249d9582da32bf31a4f7d3721",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Genetic technologies are already being used to give people a better chance",
+   "month": "2026-10",
+   "published_at": "2026-10-20T16:18:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'a better chance' at what is left unsaid"
+  },
+  {
+   "geo_id": "b71cb357d9aa5cf1bbfce623c8d68f3b",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Voice conversations with artificial intelligence chatbots can serve as training tools to help individuals with poor socialization skills practice and improve their communication abilities",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:56:48Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'practice and improve their communication abilities' padded, 28 words"
+  },
+  {
+   "geo_id": "791dcfb3546745969e9474324ad3c870",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Biological aging is not ready for clinical cancer screening",
+   "month": "2026-09",
+   "published_at": "2026-09-15T23:09:59Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'Biological aging is not ready for' clinical screening: unclear scope"
+  },
+  {
+   "geo_id": "cdb0573162445bca96b5f0a170c31b67",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The focus of public health efforts should be on preventing diseases rather than treating them",
+   "month": "2026-10",
+   "published_at": "2026-10-23T17:51:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The focus of ... should be on' shortens to 'should focus on'"
+  },
+  {
+   "geo_id": "8fea7583ddc55dbe915aae344aaa67a7",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "It is possible to select embryos that have the likeliest chance to be more intelligent",
+   "month": "2026-10",
+   "published_at": "2026-10-23T16:47:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy",
+    "Poor wording"
+   ],
+   "why": "'have the likeliest chance to be more intelligent' clumsy"
+  },
+  {
+   "geo_id": "0814d9b6e83558bbb5517919e899c69a",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Environmental regulations can reach a point of diminishing returns, where spending no longer provides the same level of benefit",
+   "month": "2026-10",
+   "published_at": "2026-10-23T17:51:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'reach a point of diminishing returns, where...' restates itself"
+  },
+  {
+   "geo_id": "c60edfcb85ac598abbb6be33cf1c367a",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Generative AI requires demonstrated effective regulation before being deployed",
+   "month": "2026-10",
+   "published_at": "2026-10-27T18:30:48Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'demonstrated effective regulation' stacked; unclear what is deployed"
+  },
+  {
+   "geo_id": "26d270feed305f61906cb370a5da4692",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Restricting the right of parents to use reproductive technology is only justified if there is sufficient evidence that using such technology causes harm to others",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:55:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "25 words; 'is only justified if there is sufficient evidence that'"
+  },
+  {
+   "geo_id": "d7c094854d2259f38441dac8a8325466",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Stricter environmental regulation has a greater negative impact on susceptible populations than the public health benefits it provides",
+   "month": "2026-10",
+   "published_at": "2026-10-23T17:51:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "compares impact with benefits; comparison is garbled"
+  },
+  {
+   "geo_id": "4bc733b20fdd598c83855e362a1d9bbe",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The psychological effect on a patient of receiving a drug prescribed by a doctor is beneficial in itself",
+   "month": "2026-10",
+   "published_at": "2026-10-15T12:18:41Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The psychological effect on a patient of receiving a drug' nominal, shortenable"
+  },
+  {
+   "geo_id": "db3f701a8620535fb9db7140230fa7e6",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Selecting embryos for predicted intelligence creates harm through social messaging about human value by reducing a human being to an object based on IQ",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:55:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy",
+    "Poor wording"
+   ],
+   "why": "chain of 'through ... by ... based on' stacks qualifiers"
+  },
+  {
+   "geo_id": "63d44d250fea545a9fb5a5f10de93a3e",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Artificial intelligence chatbots can cause social isolation, particularly for individuals with social anxiety who choose to stay home and interact with artificial intelligence",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:56:48Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'Artificial intelligence' repeated; long"
+  },
+  {
+   "geo_id": "64d87404972c543da5bd58a72e84d159",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Families increasingly do not eat together, which correlates with higher food intake because individuals eating alone seek pleasure from food rather than social interaction",
+   "month": "2026-10",
+   "published_at": "2026-10-26T20:31:39Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "trend and causal explanation fused in one sentence"
+  },
+  {
+   "geo_id": "85f35fbee531525ba1b4a17dbe87a025",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "A distinction should be made between genetic treatment and genetic enhancement",
+   "month": "2026-10",
+   "published_at": "2026-10-23T10:23:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'A distinction should be made' is a nominalisation"
+  },
+  {
+   "geo_id": "a314f654023042c8b1eff2a1dcd6f77e",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Insurance prior authorization for addiction medication costs lives through treatment delays",
+   "month": "2026-09",
+   "published_at": "2026-09-24T15:21:22Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'addiction medication costs lives' misreads 'costs' as a noun"
+  },
+  {
+   "geo_id": "ae1edb19973c5a39be146d0410a3b9f7",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Selecting embryos for the future existence of a human being on the basis of IQ reduces a human being to an object",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:55:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'for the future existence of a human being on the basis of IQ' padded"
+  },
+  {
+   "geo_id": "f1b84c4f107c478b9dc63d0f1e54a598",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Biological aging should become a routine cancer screening tool",
+   "month": "2026-09",
+   "published_at": "2026-09-15T23:09:43Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'Biological aging should become a screening tool' hides the assertion"
+  },
+  {
+   "geo_id": "b8f90cc1447c557e832f4d567f3e3e4b",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Believing an artificial intelligence chatbot is an actual human being indicates a deeper psychological problem requiring professional help rather than being a flaw in the application",
+   "month": "2026-10",
+   "published_at": "2026-10-27T17:56:48Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "long; 'indicates ... requiring professional help rather than being a flaw'"
+  },
+  {
+   "geo_id": "cf07adaa55f3584da51e2ec056f6c128",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Over the longer term, stricter environmental regulation impacts susceptible populations more than it contributes to public health",
+   "month": "2026-10",
+   "published_at": "2026-10-23T17:51:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'impacts ... more than it contributes' fuses two unclear ideas"
+  },
+  {
+   "geo_id": "c27101b24b7652158dc31fb67fcc60d5",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Allowing genetic modification for health conditions could create a slippery slope with no clear stopping point",
+   "month": "2026-10",
+   "published_at": "2026-10-20T16:18:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'slippery slope with no clear stopping point' is redundant"
+  },
+  {
+   "geo_id": "d92972c6b553551fb59df4c055714631",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Restricting access to scientific developments like embryo selection based on another person's religious beliefs is unfair to individuals who wish to leverage those advancements",
+   "month": "2026-10",
+   "published_at": "2026-10-28T18:55:38Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'is unfair to individuals who wish to leverage those advancements' shortens"
+  },
+  {
+   "geo_id": "ef6f4709e07c56208b44e3c1eec5431e",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "A genetically enhanced child will have an advantage in the world and be able to compete better",
+   "month": "2026-10",
+   "published_at": "2026-10-23T10:23:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'advantage in the world and be able to compete better' redundant"
+  },
+  {
+   "geo_id": "0df2aed40e314f7db9f20ba897516c14",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The federal government should impose work requirements on Medicaid beneficiaries",
+   "month": "2026-09",
+   "published_at": "2026-09-30T22:35:13Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'The federal government' in recommendation"
+  },
+  {
+   "geo_id": "a106b92541db4d4d8792f5d6ea05dd3d",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The federal government should cap out-of-pocket healthcare costs for all Americans",
+   "month": "2026-09",
+   "published_at": "2026-09-28T03:32:04Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'the federal government' in a recommendation"
+  },
+  {
+   "geo_id": "a37e382a7b71474ea41a78e20e5f1ad4",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The federal government should guarantee birth control access in all counties",
+   "month": "2026-09",
+   "published_at": "2026-09-28T03:32:15Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'The federal government' in a recommendation"
+  },
+  {
+   "geo_id": "44ccc4c44e2c4b948ca7c5f9e9dfb11e",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The FDA should require stricter safety testing for sprout producers",
+   "month": "2026-09",
+   "published_at": "2026-09-15T23:09:59Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named agency FDA, acronym"
+  },
+  {
+   "geo_id": "dbe21d0b4c1a4a6e9fe16fa3a32a8c77",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "The FDA should require full clinical trials for updated COVID-19 vaccines",
+   "month": "2026-09",
+   "published_at": "2026-09-14T22:47:52Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "acronym FDA, a named agency"
+  },
+  {
+   "geo_id": "43abbfc8a5b04604aea1238c1489f77c",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "MAID programs should publicly disclose death data by diagnosis category",
+   "month": "2026-09",
+   "published_at": "2026-09-24T15:21:13Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "acronym MAID in capitals"
+  },
+  {
+   "geo_id": "69af52413d484e31b3b12c1686195e26",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Sucralose is safe at current approved levels",
+   "month": "2026-09",
+   "published_at": "2026-09-15T23:00:46Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'current approved levels' time expression"
+  },
+  {
+   "geo_id": "003f8d5334e1497a9b162d415abe8de7",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Mental health screening in schools should require explicit parental consent",
+   "month": "2026-09",
+   "published_at": "2026-09-22T20:10:15Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "0eb6f1e9bbe34686a171b62408928525",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Cold water immersion should be recommended as part of standard athletic recovery protocols",
+   "month": "2026-09",
+   "published_at": "2026-09-28T03:32:53Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear claim"
+  },
+  {
+   "geo_id": "12c6d9fd775b57ffbcef998b24f8fc56",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Interventions to prevent childhood obesity should begin very early in childhood",
+   "month": "2026-10",
+   "published_at": "2026-10-21T16:16:40Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "207fad439f585eb89b0011b55ed1a02e",
+   "space_id": "52c7ae149838b6d47ce0f3b2a5974546",
+   "space": "Health",
+   "name": "Working out at night can make it difficult to fall asleep",
+   "month": "2026-10",
+   "published_at": "2026-10-23T17:36:38Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain short claim"
+  },
+  {
+   "geo_id": "90a12107d1af4f9eb7babface2f35a35",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Stablecoins let banks offer 24/7 cross-border settlement at lower cost than legacy payment rails, which is why the same institutions building this consortium see them as core infrastructure, not a side bet",
+   "month": "2026-09",
+   "published_at": "2026-09-04T01:15:55Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent",
+    "Wordy"
+   ],
+   "why": "'this consortium', 'the same institutions' need outside antecedents; 38 words"
+  },
+  {
+   "geo_id": "ff45853a35fe40a990c858b99bb7adff",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Blockstream should pay the 10% bounty to recover the remaining Liquid Network bitcoin",
+   "month": "2026-09",
+   "published_at": "2026-09-11T18:36:35Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Context-dependent"
+   ],
+   "why": "'the 10% bounty' and 'the remaining ... bitcoin' need outside antecedents"
+  },
+  {
+   "geo_id": "00c696d6263749c589097e5bc634631c",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Stablecoins enable faster and cheaper cross-border transactions, bypassing traditional banking infrastructure limitations and foreign exchange exposure.",
+   "month": "2026-08",
+   "published_at": "2026-08-20T16:20:03Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Trailing period"
+   ],
+   "why": "ends with a period"
+  },
+  {
+   "geo_id": "ee4c801bb84b45788bb2ee1d3b185ea4",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Strategy selling Bitcoin near 60,000 dollars and rebuying above 80,000 was the right trade",
+   "month": "2026-09",
+   "published_at": "2026-09-03T13:04:12Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'Strategy selling Bitcoin ...' reads as gerund, unclear on first read"
+  },
+  {
+   "geo_id": "5042b955c3895e46b7175b0017309e47",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The general policy approach towards betting should be to restrict it",
+   "month": "2026-10",
+   "published_at": "2026-10-19T17:11:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'general policy approach ... should be to restrict' = 'Betting should be restricted'"
+  },
+  {
+   "geo_id": "9a43ab017b814a87a0fd9167d8dc9f27",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Exchanges should be responsible for sanctioned users' trades even without proof they knew about them",
+   "month": "2026-09",
+   "published_at": "2026-09-23T13:03:05Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Poor wording"
+   ],
+   "why": "'they knew about them' has unclear referents"
+  },
+  {
+   "geo_id": "a7c81e705594598b80fac2e6a21ac2b6",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The prevailing view in the US is that there is currently an excessive amount of betting",
+   "month": "2026-10",
+   "published_at": "2026-10-18T09:17:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The prevailing view ... is that there is currently an excessive amount'"
+  },
+  {
+   "geo_id": "8c6df14751ff5781bf68aced97907f74",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The involvement of money is the best way to determine what people truly think, which is not the case in polls",
+   "month": "2026-10",
+   "published_at": "2026-10-18T09:17:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'which is not the case in polls' padded; shorter rewrite possible"
+  },
+  {
+   "geo_id": "3c0896eac74f59b083fe64aa25df6a93",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The US would allow Polymarket, but it is not a good idea to import it into France",
+   "month": "2026-10",
+   "published_at": "2026-10-18T09:17:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'it is not a good idea to import it' two clauses, shortenable"
+  },
+  {
+   "geo_id": "b9271f1add215c6d81e196f52ea519b5",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The prevalence of betting in the US serves as a cautionary example against legalizing Polymarket in France",
+   "month": "2026-10",
+   "published_at": "2026-10-19T17:11:00Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'The prevalence of ... serves as a cautionary example against' padded"
+  },
+  {
+   "geo_id": "97178254be2e51399ed10381cb2de852",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "There is intrinsic value in having an accurate predictor for the truth",
+   "month": "2026-10",
+   "published_at": "2026-10-18T09:17:37Z",
+   "bucket": "issue",
+   "predicted_tags": [
+    "Wordy"
+   ],
+   "why": "'There is intrinsic value in having' padded"
+  },
+  {
+   "geo_id": "0afbd1f6a553446ea3fb7f8c62c7fbd0",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Ethereum is too centralized around the Ethereum Foundation",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named Ethereum Foundation"
+  },
+  {
+   "geo_id": "efb0e1db0a0a4dbea2f5e96a1f23f848",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The OCC is right to grant bank charters to fintechs that issue stablecoins",
+   "month": "2026-09",
+   "published_at": "2026-09-06T19:35:09Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "OCC named institution"
+  },
+  {
+   "geo_id": "2eeced459ecb45819fd4fc4fc064af25",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The CLARITY Act sets a clear standard for how crypto should be regulated",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named law 'The CLARITY Act' in capitals"
+  },
+  {
+   "geo_id": "5e70bd1a995648b6a09655a944ec2c7a",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The SEC's new crypto rules let projects raise money with too little oversight",
+   "month": "2026-08",
+   "published_at": "2026-08-19T09:05:20Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named SEC; 'new crypto rules' works as a name"
+  },
+  {
+   "geo_id": "7164aba932d04a1c875fd298fd6cd72b",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "You don't need a hardware wallet to store crypto safely",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'You'"
+  },
+  {
+   "geo_id": "8ac5c660c6ef4bc9a669638ece67a39b",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Congress should pass the CLARITY Act",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named law 'the CLARITY Act', named institution Congress"
+  },
+  {
+   "geo_id": "bf7af1834f5a46d192e61215a589127f",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "A flawed CLARITY Act this year is better than no CLARITY Act",
+   "month": "2026-09",
+   "published_at": "2026-09-09T12:01:56Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "time expression 'this year', named act"
+  },
+  {
+   "geo_id": "7d8dfddc6fb441aeb81ac54aab213d3e",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Money no longer rotates from Bitcoin into altcoins",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'no longer' time expression"
+  },
+  {
+   "geo_id": "81b9c57be39f460ca969b651f7cedc4b",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The Ethereum Foundation is weakening Ethereum development",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named organisation 'The Ethereum Foundation'"
+  },
+  {
+   "geo_id": "d39f5edcd0f65affbfb3aed42967528c",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The accuracy of prediction markets is not worth the cost of the 'gamblification' of the economy",
+   "month": "2026-10",
+   "published_at": "2026-10-18T09:17:37Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the economy' abstract; scare quotes"
+  },
+  {
+   "geo_id": "ef02931740114b65878852b01b390893",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The Senate should pass the CLARITY Act even with its ban on deposit-like stablecoin yield",
+   "month": "2026-09",
+   "published_at": "2026-09-03T13:04:12Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named bill 'the CLARITY Act', 'The Senate'"
+  },
+  {
+   "geo_id": "f30f9c84f8454503bc2ab606984da4de",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The SEC should finalize Regulation Crypto Assets even if the CLARITY Act stalls",
+   "month": "2026-09",
+   "published_at": "2026-09-03T13:04:12Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "acronym SEC and named bill 'the CLARITY Act'"
+  },
+  {
+   "geo_id": "0677a78f87f646f9835204dc2cbb76d4",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Congress should pass the CLARITY Act in a lame-duck session rather than let it die",
+   "month": "2026-09",
+   "published_at": "2026-09-06T19:35:09Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "named bill 'the CLARITY Act' resolves itself"
+  },
+  {
+   "geo_id": "4ef84a8716af5b9eaa4e3e5f6e125578",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "The legalization of Polymarket would lead to the \"gamblification\" of the economy",
+   "month": "2026-10",
+   "published_at": "2026-10-19T17:11:00Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "mass noun 'the economy'; quoted coinage"
+  },
+  {
+   "geo_id": "62629c5d3d3a449cb0a59b77a5b67b13",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Blockchains should repair hacked records instead of rolling back the whole chain",
+   "month": "2026-09",
+   "published_at": "2026-09-22T21:16:35Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the whole chain' resolved by 'Blockchains' in the claim"
+  },
+  {
+   "geo_id": "6a9cdbb8ff804383ac7fb169676ac993",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Crypto custodians should start moving customer assets to quantum-resistant systems now",
+   "month": "2026-09",
+   "published_at": "2026-09-23T13:03:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "time expression 'now'"
+  },
+  {
+   "geo_id": "a2ac396cb6a243a69091f5360e1bdd71",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Bitcoin ETFs are turning Bitcoin into just another Wall Street product",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "ETF acronym and Wall Street named"
+  },
+  {
+   "geo_id": "a44abba709e3461ab90a0dae2a3603eb",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Governments can ban privacy coins, but they can't stop them",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'they' and 'them' resolve inside the claim"
+  },
+  {
+   "geo_id": "f92dfa5019204b97aba5bc59781243db",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Banning prediction markets only makes them more popular",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'them' resolved by 'prediction markets'"
+  },
+  {
+   "geo_id": "01a11d5737d72b5cbc4dea385f5e9544",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Insider trading makes prediction markets better",
+   "month": "2026-09",
+   "published_at": "2026-09-29T13:33:15Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear, well formed"
+  },
+  {
+   "geo_id": "18bd9867b85b5d1bb4db142b81516a68",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Prediction markets can lead to users making outrageous bets",
+   "month": "2026-10",
+   "published_at": "2026-10-18T09:17:37Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear, well formed"
+  },
+  {
+   "geo_id": "418cf07d622fd66a9305b00256ee04fe",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Polymarket should be legal in France",
+   "month": "2026-09",
+   "published_at": "2026-09-29T13:33:15Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain short claim"
+  },
+  {
+   "geo_id": "4d7c058644084dae9038db6d0606c3ad",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Paying bounties to hackers encourages more hacking",
+   "month": "2026-08",
+   "published_at": "2026-08-03T15:49:05Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear, well formed"
+  },
+  {
+   "geo_id": "55569406c9da41d082d8a7905f0336d4",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Stablecoin companies should be allowed to make loans",
+   "month": "2026-09",
+   "published_at": "2026-09-11T20:25:07Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "5a6357795a76bd7b17f772f514782a12",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Prediction markets are just gambling",
+   "month": "2026-09",
+   "published_at": "2026-09-29T13:33:15Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain short claim"
+  },
+  {
+   "geo_id": "6d0453b4e6454095bcc2d804abe3e4d0",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Card payments should settle in bank-issued stablecoins",
+   "month": "2026-09",
+   "published_at": "2026-09-23T13:03:05Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain claim"
+  },
+  {
+   "geo_id": "904126c89d694af898a41df294593f0b",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Canada should build digital money through bank deposits rather than private stablecoins",
+   "month": "2026-09",
+   "published_at": "2026-09-23T13:03:05Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "90c9f965984b4024ad5557e3fe2a7914",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Platforms should be free to pay yield on stablecoins",
+   "month": "2026-07",
+   "published_at": "2026-07-10T10:13:26Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "97a7652f54434cf6bbbff52f2021de92",
+   "space_id": "c9f267dcb0d270718c2a3c45a64afd32",
+   "space": "Crypto",
+   "name": "Stocks should trade 24/7",
+   "month": "2026-08",
+   "published_at": "2026-08-15T12:57:17Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain claim"
+  },
+  {
+   "geo_id": "e1582141cc07f0e9ce152f759ec5a32c",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "A low-carbon fuel is not a good solution if its infrastructure is unreliable",
+   "month": "2026-10",
+   "published_at": "2026-10-08T00:56:00Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "indefinite generic; 'its' resolves inside"
+  },
+  {
+   "geo_id": "0735e8b07722f803709ae2313130fc0a",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Existing gas infrastructure should not decide which clean-energy technology we choose",
+   "month": "2026-10",
+   "published_at": "2026-10-08T00:56:00Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic 'we'; 'Existing' modifier"
+  },
+  {
+   "geo_id": "3c15c51c8258dd99d750ddbd393f2459",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Children need more unsupervised time with friends, even if it makes parents anxious",
+   "month": "2026-10",
+   "published_at": "2026-10-08T00:51:26Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'it' resolved loosely within claim"
+  },
+  {
+   "geo_id": "4c6e22acfb3ba41e735dccdd8ac4ad0c",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Companies should be banned from charging different prices based on your personal data",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:35:38Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "generic second-person 'your personal data' with no antecedent"
+  },
+  {
+   "geo_id": "b8b50f43ae148b1fa4292c8d38eb2c2c",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Social media users should be allowed anonymity even from the platform",
+   "month": "2026-10",
+   "published_at": "2026-10-15T02:16:34Z",
+   "bucket": "near_miss",
+   "predicted_tags": [],
+   "why": "'the platform' generic distributive reading"
+  },
+  {
+   "geo_id": "0d348186cbe5fdf89aca2132498de9ac",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Employers should be banned from tracking workers' screens and keystrokes",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:35:38Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain generic claim"
+  },
+  {
+   "geo_id": "235aa95c17bd090ecbed883bb8c09e95",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Platforms should be required to let users choose third-party recommendation algorithms",
+   "month": "2026-10",
+   "published_at": "2026-10-15T02:16:34Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "24b782f8b04a501231fc2bfc94f9b2ba",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Smartphones have done more harm than good to teenagers",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:35:38Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "plain short claim"
+  },
+  {
+   "geo_id": "3f7dfe1047d46e7bbe1703c36db6cf24",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Elon Musk is a great tech entrepreneur",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:35:38Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "named person, clear"
+  },
+  {
+   "geo_id": "439f5c084e5ac1f7f817fb460f82d260",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Technology is making humans less intelligent",
+   "month": "2026-10",
+   "published_at": "2026-10-09T12:57:47Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "63cbdeb65e62dd558dd37d12c2249d07",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Loot boxes in video games should be banned",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:35:38Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "short, self-contained"
+  },
+  {
+   "geo_id": "63f42f7b11fbb8d7f77fd4683cf242c0",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Platforms should label disputed health claims instead of removing them",
+   "month": "2026-10",
+   "published_at": "2026-10-15T02:16:34Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "'them' resolved; self-contained"
+  },
+  {
+   "geo_id": "65b537a5f8e20a5d037eae718f4e02be",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Social media platforms should disclose how their recommendation algorithms work",
+   "month": "2026-10",
+   "published_at": "2026-10-15T07:48:42Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "80b99fe5aba6ff6ffee7471b5a8ef595",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Health insurers should give discounts to people who share fitness tracker data",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:35:38Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "88522a0133fd06d400aec01da2d59dc1",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Parents should wait until secondary school before giving a child a smartphone",
+   "month": "2026-10",
+   "published_at": "2026-10-08T00:51:26Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "88d2bd3483d5ca19aa43de70f0bca003",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Smartphones should be banned for children under 16",
+   "month": "2026-10",
+   "published_at": "2026-10-09T12:57:47Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear recommendation"
+  },
+  {
+   "geo_id": "986ef91bf344b4077618ad659ec63b8a",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Paying ransom to hackers should be illegal",
+   "month": "2026-10",
+   "published_at": "2026-10-22T09:35:38Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  },
+  {
+   "geo_id": "a67fd3c1526927cd6598262af14e8d0e",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Teenagers need practice managing digital freedom, not just blanket bans",
+   "month": "2026-10",
+   "published_at": "2026-10-08T00:51:26Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear claim"
+  },
+  {
+   "geo_id": "a937a01f1ba24dd7ec3d045fda8db105",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Behavioral advertising should require explicit consent rather than an opt-out",
+   "month": "2026-10",
+   "published_at": "2026-10-15T02:16:34Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "clear, well formed"
+  },
+  {
+   "geo_id": "aea65afa940e46d4f750f2b66c886431",
+   "space_id": "870e3b3068661e6280fad2ab456829bc",
+   "space": "Technology",
+   "name": "Parents should be allowed to earn money from social media content featuring their children",
+   "month": "2026-10",
+   "published_at": "2026-10-15T07:48:42Z",
+   "bucket": "control",
+   "predicted_tags": [],
+   "why": "self-contained"
+  }
+ ]
+}

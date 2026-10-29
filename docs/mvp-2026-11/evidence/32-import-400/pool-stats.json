@@ -1,0 +1,199 @@
+{
+ "read_at": "2026-10-29",
+ "per_space": {
+  "U.S. Politics": {
+   "edges": 2413,
+   "not_claim": 1,
+   "no_name": 0,
+   "other_space_first": 0,
+   "in_claims": 50,
+   "same_text": 0,
+   "kept": 2362,
+   "bot": 31
+  },
+  "World affairs": {
+   "edges": 2152,
+   "not_claim": 2,
+   "no_name": 0,
+   "other_space_first": 20,
+   "in_claims": 50,
+   "same_text": 8,
+   "kept": 2072,
+   "bot": 21
+  },
+  "AI": {
+   "edges": 1155,
+   "not_claim": 1,
+   "no_name": 0,
+   "other_space_first": 1,
+   "in_claims": 40,
+   "same_text": 6,
+   "kept": 1107,
+   "bot": 87
+  },
+  "Health": {
+   "edges": 445,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 2,
+   "in_claims": 30,
+   "same_text": 11,
+   "kept": 402,
+   "bot": 9
+  },
+  "Crypto": {
+   "edges": 181,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 0,
+   "in_claims": 20,
+   "same_text": 0,
+   "kept": 161,
+   "bot": 3
+  },
+  "Technology": {
+   "edges": 74,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 8,
+   "in_claims": 10,
+   "same_text": 0,
+   "kept": 56
+  },
+  "Pharma": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 0,
+   "in_claims": 0,
+   "same_text": 0,
+   "kept": 0
+  },
+  "Industries": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 0,
+   "in_claims": 0,
+   "same_text": 0,
+   "kept": 0
+  },
+  "Education": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 0,
+   "in_claims": 0,
+   "same_text": 0,
+   "kept": 0
+  },
+  "Software": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 0,
+   "in_claims": 0,
+   "same_text": 0,
+   "kept": 0
+  },
+  "Places": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 0,
+   "in_claims": 0,
+   "same_text": 0,
+   "kept": 0
+  },
+  "Documentation": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "other_space_first": 0,
+   "in_claims": 0,
+   "same_text": 0,
+   "kept": 0
+  }
+ },
+ "bot_left_out": 151,
+ "unknown_author": 0,
+ "authors_top": [
+  [
+   "fcf1ddb14f461bf747bbf148254935ed",
+   1631
+  ],
+  [
+   "88883e1ec8261b8ac323f564e272b5be",
+   1621
+  ],
+  [
+   "1310f810454cd482e35ce81cb86ca383",
+   1091
+  ],
+  [
+   "cc31e40f74231d530f1b5d0fc1cd94d8",
+   948
+  ],
+  [
+   "5093b6ab1b48f1111dd31275b5413ddb",
+   217
+  ],
+  [
+   "cc0bf85a27c217d75993bc785a15b198",
+   151
+  ],
+  [
+   "e8173628fb65f0957475a58933040614",
+   118
+  ],
+  [
+   "4cd9cca5530b69056aead853c8088e7e",
+   105
+  ],
+  [
+   "d034abce49b07859234384a5a66decbd",
+   57
+  ],
+  [
+   "8b7e1476ab4e5f0d98d7ac179cad4d7e",
+   50
+  ]
+ ],
+ "requests": {
+  "total": 66,
+  "nonQuery": 0
+ },
+ "kept": 6009,
+ "kept_by_space_month": {
+  "U.S. Politics": {
+   "2026-09": 726,
+   "2026-10": 1495,
+   "2026-08": 110
+  },
+  "World affairs": {
+   "2026-09": 398,
+   "2026-10": 1578,
+   "2026-08": 75
+  },
+  "AI": {
+   "2026-10": 696,
+   "2026-09": 230,
+   "2026-08": 86,
+   "2026-07": 8
+  },
+  "Health": {
+   "2026-10": 260,
+   "2026-09": 112,
+   "2026-08": 21
+  },
+  "Crypto": {
+   "2026-10": 39,
+   "2026-09": 78,
+   "2026-08": 40,
+   "2026-07": 1
+  },
+  "Technology": {
+   "2026-10": 56
+  }
+ }
+}

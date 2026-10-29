@@ -1,0 +1,160 @@
+{"id":"fffbf8b47203d355869d75272cef5cee","tags":[],"confidence":0.75,"bucket":"clean","why":"generic plurals, one clear sentence"}
+{"id":"62b64cdca6a253d1812e35eaddcb1aa1","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'alleviate the issue of ... not wanting to take time off' is padded"}
+{"id":"1928636189f74a69bbfdf83c5c35ebdd","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"03f79f8b70bb5422beb4f682c73fee9e","tags":["Poor wording"],"confidence":0.45,"bucket":"issue","why":"'capable of simple functions and human-like appearance' garbled pairing"}
+{"id":"55204fc8095a4a4f9df5ee3147b4d8cf","tags":[],"confidence":0.85,"bucket":"clean","why":"short clear claim"}
+{"id":"adcf23ca88104f55a48238e17a522d1a","tags":[],"confidence":0.7,"bucket":"clean","why":"named pact specified by 'its Mecca pact'"}
+{"id":"f03d920d02a6ebb809899c3952a94d09","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"2a018ed2fddc53548e887de44e59cc65","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronym NATO with expansion, named institution"}
+{"id":"06c4d499988e4c8a946e52c323ae1bc1","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"827a72a04be75e2b9c26b89b1a17e9dc","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"55b672428ac0408ba8181c4fd7a5f090","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"df4236fa5fdc5c74b5671e752eb8e950","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'as being like human beings' could be 'as human-like'"}
+{"id":"fcd54299d3839d9ac42a52b6557d4380","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"66d303b5121b6cb934a36e6e7d40c430","tags":[],"confidence":0.5,"bucket":"near_miss","why":"named Justice Department; 'the president' unique office"}
+{"id":"9ab5924dc96e51f0ac8509bb8a5d6252","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named office-holder and institution, long but not shortenable"}
+{"id":"79f42baf6c2e4c11a97dab20dfcece0a","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"e8535e1418ff865f4643c5bcd553d9c1","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"0566844cbfe053299c637103892b5548","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"23238a36a9f04890b00ef8848e683749","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the contracts governing Vectus Global's operations' self-resolved"}
+{"id":"918e5260167d449983402dff352673ce","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"46967bb8c081d01af2f03b13e1e0585c","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"99cce1d614a64d7a9addda9045f32bc1","tags":[],"confidence":0.75,"bucket":"clean","why":"named conference, clear claim"}
+{"id":"932aec8cd8c74431a45d5e24700e1bfb","tags":["Context-dependent"],"confidence":0.55,"bucket":"issue","why":"'The suspected Fairford plot' refers to an unexplained outside event"}
+{"id":"f546b65c0e815ff4b7aadb4cf5ebb802","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named court (ICC) resolves itself"}
+{"id":"51e81217138159c7acf0f9972b02d5aa","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The mathematical backing for ...' resolved by its own phrase"}
+{"id":"b4cb61e5dde9f88db58244479e7d41b4","tags":[],"confidence":0.8,"bucket":"clean","why":"generic claim"}
+{"id":"ff4535297ae84e87bac7bbc3eb98f5d9","tags":[],"confidence":0.75,"bucket":"clean","why":"generic plural, 'their' resolves in claim"}
+{"id":"a22fa1bde32527ffb03a5d93e7872ef0","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the US-Iran war' name-like conflict"}
+{"id":"dcb7909329414a0f9b3d93183893d148","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"fba3cf9dc0e545678f81fc2cd85a63d4","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'the student protests' with no specifying antecedent"}
+{"id":"87642ba8cd884ef9ae3d3685a2777d39","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"b19591dedcff4076b6a003247026af89","tags":[],"confidence":0.8,"bucket":"clean","why":"'its' resolves to North Korea"}
+{"id":"8a9fab3a2f154f27adc908e216d6c1b7","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"40d42f6e39bc4c4c9edf6940db6d3254","tags":[],"confidence":0.75,"bucket":"near_miss","why":"generic 'The federal government' in a recommendation"}
+{"id":"21f5e7e7b2ecc6bb5ca3d127c31fb6f6","tags":[],"confidence":0.8,"bucket":"clean","why":"named subjects, clear claim"}
+{"id":"74c0de2f9cd45682bdb671a6dfc6ffbd","tags":[],"confidence":0.75,"bucket":"clean","why":"generic claim, clear enough"}
+{"id":"610c0dc4da4d65e29c1b12c8659c322d","tags":[],"confidence":0.75,"bucket":"clean","why":"named strait, clear claim"}
+{"id":"7e5e3715bcc37485ffbcc3a115d4786e","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"07a1ef43ec93adcd0a1b39f1e14e278d","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"6825489c4646421bbdf4d1da3cfd1017","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"3014e49425bc2f07082c7e2eb8d5f145","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"4dcfba18a2c54566bcb15a8d7b2fcfd4","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named court 'The Kosovo Specialist Chambers' resolves itself"}
+{"id":"039da5e15fec8ede6427cef919e94f25","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"63c78e9ed15f1795fc50c558fa2d2495","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"16016a8320889e8eff587d78d566b663","tags":["Context-dependent"],"confidence":0.65,"bucket":"issue","why":"'the Michigan and New Hampshire leads' need outside data"}
+{"id":"12b8650fc6414a75a6e55b516c211c30","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"fdf1ad9096ff508b977fbec4c986969a","tags":[],"confidence":0.55,"bucket":"clean","why":"25 words but not clearly shortenable"}
+{"id":"1b48af35fb96745c994a45b3ab296a12","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"cf9c9fd817b674cb6f4909aa91473414","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"e07c6e46bb1b4b0a9f6a37ad4520326d","tags":[],"confidence":0.65,"bucket":"clean","why":"named agency and person, 'official explanation' unambiguous"}
+{"id":"983b0655b357d76ea30f73470caeccaa","tags":[],"confidence":0.8,"bucket":"clean","why":"'they' resolves to chatbots"}
+{"id":"a78b8a9cb1374f45b680473efee7e9c6","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'next government' time expression; named party"}
+{"id":"3cdf97571f3e457ad1decf20ee02fdd0","tags":[],"confidence":0.9,"bucket":"clean","why":"short clear claim"}
+{"id":"4c92c53e13bcd7a921164b0734dedf12","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"639385f21d8fb9923ad51e64cf9f66d1","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"d879d208d58de67eaa5d958d0a75c970","tags":[],"confidence":0.85,"bucket":"clean","why":"short clear claim"}
+{"id":"f1e7c711ceff5b849c9c36e8b5a42059","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"9f9387d5584b471ea92207b0bbc54090","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the political grievances driving ...' resolved by its own phrase"}
+{"id":"b081d820e70dc137c9aeebb1fc53ce77","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"d5d9e17e0de8377081f2d12b759a0789","tags":["Poor wording"],"confidence":0.35,"bucket":"issue","why":"'clarify polling liability' is jargon hiding the assertion"}
+{"id":"53f994ef3652087b7c74211e5447c3dd","tags":[],"confidence":0.6,"bucket":"near_miss","why":"indefinite 'Some human lives'"}
+{"id":"896474850b4b5b519dd90fb25a749848","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"9454711a8fb8599a924098245e39ac11","tags":[],"confidence":0.5,"bucket":"near_miss","why":"long (28 words) but each clause carries meaning"}
+{"id":"a28b29af106c5a8d9f2240234fec3146","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'lead to the loss of the essence of' nominalised, shortenable"}
+{"id":"b33278b450cc7ded855ada9c172d0623","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"30dc78a78f624e2ead5a1e7840e96c96","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"b55f838deecc0254070110448cf5e8a0","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"3b2719be31e24ea699fc7dc72557ec70","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"a17d1f87c49354d7bf1978baf5f93bd0","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"1be4f12e96685e568dfc46a59e10d3d8","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"39b617b86d434c0eb71c531981bc143a","tags":[],"confidence":0.85,"bucket":"clean","why":"named subjects, clear claim"}
+{"id":"448585d455094a7b259cd28c48ae5cc8","tags":["Context-dependent"],"confidence":0.55,"bucket":"issue","why":"bare 'The administration's' with no named administration"}
+{"id":"677d926bb0b6bd035c22c5c14c8fa09a","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"594c4c447cb4589d9f85d14d79f23377","tags":[],"confidence":0.75,"bucket":"clean","why":"generic claim, parses clearly"}
+{"id":"97319b05d0d640bb945f98057e1c5c4b","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronym ASEAN, named institution"}
+{"id":"28e87d7cc96454b793cc3394f85db6f0","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'makes it easy for them to be completely exploited as' padded"}
+{"id":"f46236264a05b1007e76c3e8afebd3cc","tags":[],"confidence":0.8,"bucket":"clean","why":"named subject, clear claim"}
+{"id":"36c364241e33415b8074a9a54507d1e3","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"30aea94a20d4516586677abf3b6ee4c8","tags":[],"confidence":0.6,"bucket":"near_miss","why":"indefinite 'Some people'; 'in the morning' time expression"}
+{"id":"be3efb86cd0d53b9a14c68491c0e01a7","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic 'The public'; 'the latest AI models' superlative"}
+{"id":"78b4b4e80db64743a97e8c5d7531a842","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the alliance' resolved by NATO in the claim"}
+{"id":"a00d6253868a4688919df59d1e9ed0e3","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite 'A stablecoin', clear claim"}
+{"id":"f9f7951c83a443adb224c2bd57e0013d","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"7f2b8459696924538015ed02cde59aa2","tags":[],"confidence":0.8,"bucket":"clean","why":"'it' resolves to Russia"}
+{"id":"7088e94255d44978abcdef4b2c293eb2","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"c07e1b717570e3e4077ee445d073a11c","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named bodies 'The Supreme Court' and 'the FCC'"}
+{"id":"24cf77784fa75911b47a35910447eee9","tags":[],"confidence":0.6,"bucket":"near_miss","why":"generic 'the workplace'"}
+{"id":"40925d8cb9485053ad6dbb8af8edf002","tags":[],"confidence":0.6,"bucket":"near_miss","why":"generic 'the private sector'; 'the innovation that AI builds' self-resolved"}
+{"id":"bbadab8721a853d0ad5ff90ee8778057","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the time saved by AI' resolved in the claim; long"}
+{"id":"97afcbc7540d5a4eaab7f8e1d3764ece","tags":[],"confidence":0.75,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"e7600fa56ef5588ea737aa653aca1240","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"1a5a1f268ce55ed6a8d2b6df0dacaf99","tags":[],"confidence":0.6,"bucket":"near_miss","why":"definites 'the compliance costs ...' resolved by own phrases"}
+{"id":"a87bab192ffd456daf114348faa886af","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"d8d54e340d065e79952950fd50b24198","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'fight against' and 'to show why they are wrong' pad the claim"}
+{"id":"b5c9cfbe221c443e8544bd66ea00fb78","tags":[],"confidence":0.75,"bucket":"clean","why":"'its' resolves to the United States"}
+{"id":"fe9ea6d6e0c8936e038d0bd54fbb7099","tags":[],"confidence":0.85,"bucket":"clean","why":"named subjects, clear claim"}
+{"id":"867fd9bc120ad9c6e5dd302b3f9a7ba2","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the workers it displaces' resolved by relative clause"}
+{"id":"3c8f7e2e5e39580b8be854286caecd94","tags":["Wordy"],"confidence":0.6,"bucket":"issue","why":"31 words; 'following the adoption of ...' nominalised"}
+{"id":"4e7263d83e0dcc22f18d4ee48134c74c","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym FBI; 'the bureau' resolves to FBI"}
+{"id":"f7b9f699b9bd42e6aa6ac842b16ea103","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"d344739893784c918342464f06ec7c81","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"2634199a2ef32b5d9f7afb7252dce343","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"9dd5669aad8a5293b647a7f018260f9f","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"a8b8ce043c9e4e63bb85ebf5f205b788","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"6f77bdf302db4980b59301079c96a0a1","tags":[],"confidence":0.7,"bucket":"clean","why":"acronym IPCC, clear claim"}
+{"id":"49a4185a4a23525c8dad43f0e92e7f5f","tags":[],"confidence":0.85,"bucket":"clean","why":"short clear claim"}
+{"id":"f9d2fce5cb8148efa383517c7e805c46","tags":[],"confidence":0.6,"bucket":"near_miss","why":"generic 'the public's best interest'"}
+{"id":"70394c0220b2ccc4f52823e840448b6d","tags":["Incorrect grammar"],"confidence":0.85,"bucket":"issue","why":"'Artist and content creators' should be 'Artists'"}
+{"id":"7f2fd45843978e9e79dd076975ca6e13","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'The accusations' with no antecedent"}
+{"id":"ecc8145470ce5bcfe20beffb08586341","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"0b81c4ca3b9740b29bab5bf09aecaecc","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the associated privacy costs' resolved in the claim"}
+{"id":"1029f336854058c70f5c3b9a40afcdd6","tags":["Context-dependent"],"confidence":0.8,"bucket":"issue","why":"bare 'The arch' with no antecedent"}
+{"id":"5551dc4b6b2c54faa0f27d3101530721","tags":[],"confidence":0.9,"bucket":"clean","why":"short clear claim"}
+{"id":"92b1c4ab40355fb4a9614d29cbe68629","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the company that created it' resolved by relative clause"}
+{"id":"691a064caf6bf9fd53bbab3e6e0a8baf","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"e3cf5dc88936920128298610026efa40","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the Texas Senate race' name-like election"}
+{"id":"f87295681e975780b3639cf24019701f","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the definition of murder' abstract; acronym AGI"}
+{"id":"bc4b5f0bffd74fb3a88cac9199bb94f8","tags":[],"confidence":0.55,"bucket":"clean","why":"idiom 'in disguise' clear; 'really just' mild filler"}
+{"id":"7541b6dcc01b15b70ea2bc2fcce66659","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"ea24495eeeb13025e377e4d666334976","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"4cd28430658079647782cf9dc920163c","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"b2299b53d267daeae35613cf82b106c1","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"5c7b2e45c8c0589e914cbcf4be83fc6c","tags":[],"confidence":0.7,"bucket":"clean","why":"clear claim with stated reason"}
+{"id":"3dc0778edd235d5e875496445b855a86","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the Brexit process' named historical event"}
+{"id":"6d8bb821989e5897b231fcbaa9561a65","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"f976bad6826e98e43b4dcba0721d3b09","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"587e40a2726d5c00bf4aa93adc243a75","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"long (26 words) with stacked descriptors"}
+{"id":"4370a4187a934aa9a723b91aac2cd5ce","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named UN body 'The Security Council' and named mission"}
+{"id":"4e9fb9be5ae743d9bad28bc645a6f35a","tags":[],"confidence":0.85,"bucket":"clean","why":"named company, clear claim"}
+{"id":"b8c16b7e35e546a4a3f0f6d0067cf32b","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"795a1df36b0d4a3286b2139e4c08195c","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named law 'the War Powers Resolution'"}
+{"id":"a8edeaf7e54757aaa763fd35a7ec4050","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the ... harmful results of their models' use' self-resolved"}
+{"id":"9b45d2778f6fdf2d203c9782828fc3c6","tags":["Context-dependent"],"confidence":0.9,"bucket":"issue","why":"'The appeals court's ruling' names no court or ruling"}
+{"id":"ae9ccacdca88fca3fa62f4775f31993e","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"31256413c9d046f9a25b09b89c363f56","tags":[],"confidence":0.8,"bucket":"clean","why":"'China's proposed ... controls' specified by possessive"}
+{"id":"82c1f41e56ca5e06b3ac99888bc25df4","tags":[],"confidence":0.7,"bucket":"clean","why":"long but not shortenable"}
+{"id":"46376d186a155b6fa06f865c3d837b74","tags":[],"confidence":0.55,"bucket":"clean","why":"slightly redundant pair but clear"}
+{"id":"c50c061608775126e5ffb8876843e492","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"23c2765fbf5c5deba8d0daf50758f320","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the current political system' generic with time expression"}
+{"id":"2006a9fd3edfbb450945e76cf1c8843d","tags":[],"confidence":0.9,"bucket":"clean","why":"short clear claim"}
+{"id":"eb879c2a8ca34fbd9994e033779e7c3e","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'the transfer of wartime command' names no parties"}
+{"id":"98f49928afdd1113fa8ed3319cabc446","tags":[],"confidence":0.7,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"8f5669f8d50f4362bc8e7af9a31cc481","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"e0ba69f2e4fd470c80656bd27d5211ed","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite 'a ceasefire'; Moscow metonym"}
+{"id":"01d3df038ef62f3e6997ce7e6d1c3244","tags":[],"confidence":0.85,"bucket":"clean","why":"short clear claim"}
+{"id":"d3ef64d4ea7f4c988b13cde659b4ecb7","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"7609e3fba08650ee9b0352486d8a4a35","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"1a68ed91f2deade6251df6fc249f9a04","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic 'the public'"}
+{"id":"a15ec0e546864c858d27e01868c27617","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"f48e745726a75e938a0354ba2c91db72","tags":[],"confidence":0.55,"bucket":"near_miss","why":"time expression 'Historically'; generic 'the world's strongest countries'"}
+{"id":"041dcee0dbf4586f9e493095e43b58cc","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the models' resolved by 'AI models' in claim"}
+{"id":"989f96ff02044ed2b607052eb43ee8d4","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"0d2be59bf8d854b0ae4482fe19f60807","tags":[],"confidence":0.55,"bucket":"near_miss","why":"long (27 words) but each clause adds meaning"}
+{"id":"7048458cfc2c489f8f6e6fdbde6cf4eb","tags":[],"confidence":0.7,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"7b10907450765c4a87ac4782c89b284c","tags":[],"confidence":0.75,"bucket":"clean","why":"clear claim"}
+{"id":"8f2d7ebf058144a999759cbd1c61e65b","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"b316e26b6c2c4e878575f19cae963c33","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"dcc3d7ad467a46fab3b00da957621af3","tags":[],"confidence":0.85,"bucket":"clean","why":"short clear claim"}
+{"id":"ce19ba116b7d4a359f71a6f3367a8f9f","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"2fb1a6852e7df11f08af7fd50938e5b5","tags":["Context-dependent"],"confidence":0.9,"bucket":"issue","why":"bare 'the advertisement' with no antecedent"}

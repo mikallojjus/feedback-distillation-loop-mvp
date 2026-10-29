@@ -1,0 +1,160 @@
+{"id":"4ec3a8f8dd015f9eb9b58b0a5fe9167d","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'A disparity exists ... where' is filler; 'the president' resolved by US"}
+{"id":"274992383f24f59827af27e7a7a6f9eb","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"821c1c34a6594eebb6ff7f8aa36c08bf","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"7bbc6d6eea8f5d219f4603924eca8971","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the platforms' tied to AI-agent management in same sentence"}
+{"id":"36039520f6645da9979f23e0524dbe70","tags":[],"confidence":0.7,"bucket":"clean","why":"'its' resolves to Polymarket inside the claim"}
+{"id":"9f56411643d14a5abeac6ebc691e5762","tags":[],"confidence":0.7,"bucket":"clean","why":"named speaker, no unresolved reference"}
+{"id":"f7ab22b0118048a2905109ec320deda1","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named institution NATO and named place resolve themselves"}
+{"id":"ab16492af2995822b637633f53df4e7b","tags":[],"confidence":0.75,"bucket":"clean","why":"'those odds' resolved by earlier phrase in the claim"}
+{"id":"71a4bacd90336f09fd0b648d296a6dcc","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronyms NIH and DEI, named agency"}
+{"id":"f531bd5d459257bfba2562e70d17e9fc","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"75ce79aba238466ab846b06ca9fd5082","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite 'state registries', no unresolved definite"}
+{"id":"3d4fd93a168c69c92ba539bc26acb561","tags":[],"confidence":0.8,"bucket":"clean","why":"generic plural subjects, no definite referent"}
+{"id":"29f83ff481b7f27d55f812e739bd1a4c","tags":[],"confidence":0.9,"bucket":"clean","why":"short clear policy claim"}
+{"id":"e8a668df024450a5912046d08574c18c","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the tech sector' is a generic abstract noun"}
+{"id":"66cd9c769b4dde1ef81325b8c2f39eab","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"13ecf44a8409b965bdb32c4803bcd54d","tags":[],"confidence":0.8,"bucket":"clean","why":"'U.S.' abbreviation only, no trailing period"}
+{"id":"b9c316f960a940ef832a808f9a35d988","tags":[],"confidence":0.55,"bucket":"near_miss","why":"named agency Frontex; 'agency operations' resolves to it"}
+{"id":"f234415a25194f2ab5de55179a5ee72d","tags":[],"confidence":0.85,"bucket":"clean","why":"generic plural, clear claim"}
+{"id":"13a8630662635948b13e6e721238f742","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"82379d9d654341c5aa00baaf315e6d2a","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"c39f12517bc268a2c0958d4c2494d4fc","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'MAGA Inc.' name with abbreviation period, text does not end in one"}
+{"id":"443af51500d24b96ab7603969e02269d","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"61614c545cee9c5ffd7e02af082158f8","tags":[],"confidence":0.8,"bucket":"clean","why":"named subject, clear claim"}
+{"id":"2a3872a9460cecb4b19205bccc9408e3","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite 'a pipeline', generic claim"}
+{"id":"ba00fb0a4bac573f8df7ca4877652356","tags":[],"confidence":0.55,"bucket":"clean","why":"slightly abstract but parses and self-contained"}
+{"id":"d55e8302047742e48ff24ab8f03f83c5","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym ICE and named Army, long but not shortenable"}
+{"id":"92f57020ce349b27b5e56f54068cbc05","tags":[],"confidence":0.5,"bucket":"near_miss","why":"capitalised name 'The AI Force' works as a proper name"}
+{"id":"8c6af664d2d920096f4014a75e03561b","tags":[],"confidence":0.8,"bucket":"clean","why":"generic claim, no definite referent"}
+{"id":"419fee657a5c5051bba21c61129f6558","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear sentence"}
+{"id":"15d26022e1ea50d8baf58499f6763827","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'The specific crime' resolved by its relative clause"}
+{"id":"3199bf9bf240791f64fa967aeeae882b","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'both parties' implied US parties, generic voters"}
+{"id":"1fd532db9971b95b8823d6e2bbe6e1f3","tags":[],"confidence":0.85,"bucket":"clean","why":"short clear claim"}
+{"id":"26121ac127c41a6c3a64c0639b339051","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the American midterm elections' resolved by nationality; time expression"}
+{"id":"d2ebff0dbeb504f8299d5c9363b058c4","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"29caa2f10d8e53f589f62ed6cc52227d","tags":[],"confidence":0.65,"bucket":"clean","why":"'those jobs' resolves to farm and trucking work"}
+{"id":"49b744a7dbae45e796d2eae88f2b6004","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"e64a9d5213604c07e742cef38cde7ec4","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"1d99e51e80326f50cea102dc06ee40f0","tags":[],"confidence":0.85,"bucket":"clean","why":"generic claim"}
+{"id":"9291d4ecc1c75dab89bb0c40fa80d405","tags":[],"confidence":0.5,"bucket":"near_miss","why":"generic hypothetical 'the child', not a specific referent"}
+{"id":"f651e26ca43557b384dbfb7f9c0bc74f","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'A well-understood bias exists ... where' could be stated directly"}
+{"id":"b2c1dd7117244bf6b6eb38e4f912c554","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"bdc4c47aa9034fe8a02e9c7af39ab033","tags":[],"confidence":0.9,"bucket":"clean","why":"short clear claim"}
+{"id":"a452174389bf6b6a80ec751b933c7463","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"0677a78f87f646f9835204dc2cbb76d4","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named bill 'the CLARITY Act' resolves itself"}
+{"id":"ee2f3349ae7658548b24a9bbade69fcf","tags":["Wordy"],"confidence":0.55,"bucket":"issue","why":"'have a lot of disagreements with' nominalises 'disagree with'"}
+{"id":"e070ab9d029b4cf0b090c16b79366351","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the executive' generic; Supreme Court is the one US court"}
+{"id":"b061a7ae1a754181bb950401c22c97f3","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"1c0591cb26a449138fd7478584e29df8","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"64136b47a8f426b2e08945ce1cd9d69b","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"f19a57dbb4ca52ce803054b76e79f5af","tags":[],"confidence":0.75,"bucket":"near_miss","why":"mass noun 'basic knowledge', generic"}
+{"id":"a07b7dd606af4d7dadbc208c39b999b0","tags":[],"confidence":0.75,"bucket":"clean","why":"'Serbia's election' specified by the possessive"}
+{"id":"dffd01d2404288e7caed117504afbd39","tags":[],"confidence":0.7,"bucket":"clean","why":"indefinite 'a weak economy', named subject"}
+{"id":"ba7ebc4f88614e1789aa46c3fd344f1d","tags":[],"confidence":0.9,"bucket":"clean","why":"short clear claim"}
+{"id":"75a214e85869517db47139a61565af39","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"c998ba94c66d49d392e6634a23b48744","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"3aceb5b96c9a4de49b92b6f7fa4f8a60","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"3d736508dca7522530d661ab621636f8","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"f87f197da1855f3c6a345c250d27b1cb","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"08f29fb50d2b0db8a896bf6840ae0991","tags":[],"confidence":0.6,"bucket":"clean","why":"'Trump's AI Force' possessive proper name, parses clearly"}
+{"id":"6e4567bc1589597589c9b0d96939e33d","tags":[],"confidence":0.6,"bucket":"clean","why":"generic claim; 'help secure regulations' slightly loose but clear"}
+{"id":"2acd6086498d58dea7ff8f9a0d45034d","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"d84d9eb6764983aae4bc34317b5966cc","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"f1a7459d267b8f6aceebccec936f5697","tags":[],"confidence":0.8,"bucket":"clean","why":"named subject and system"}
+{"id":"f4c5de404a09474098c216aa85342e96","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The autism life expectancy gap' reads as a named concept"}
+{"id":"edb28e278417593f89f482e1778c3ddc","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"b1d7a65e3ac641ee917e552bf0222038","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"daaab78df292880dec9513fff0ff3b00","tags":[],"confidence":0.85,"bucket":"clean","why":"named subject, 'his' resolves inside claim"}
+{"id":"88de218b4c30210d25694080a9d6d7a7","tags":[],"confidence":0.8,"bucket":"clean","why":"named subject, clear claim"}
+{"id":"97562451e8c714048c358e769e9ea2d9","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the real internet' is a unique abstract noun"}
+{"id":"d4a0fef8ded0b083d8bc26488f33271f","tags":[],"confidence":0.9,"bucket":"clean","why":"short clear claim"}
+{"id":"b690446bf56c47e2a47452dbc8120c1d","tags":[],"confidence":0.75,"bucket":"clean","why":"named actors, clear claim"}
+{"id":"2e0776b1058e61bfe10593b4b9cd7be9","tags":[],"confidence":0.85,"bucket":"clean","why":"'its' resolves to the US"}
+{"id":"d52b1bccb9f65cff923e875ba3c7f062","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named body UN Security Council; long but not shortenable"}
+{"id":"3f2ad81fc03151e6921e2d7fe0739b71","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"ae171fd57bf24cb1a394b27825ffa341","tags":[],"confidence":0.85,"bucket":"clean","why":"indefinite 'An international mechanism'"}
+{"id":"56d4953f92debd71f3597bd39a7d0e7b","tags":["Context-dependent"],"confidence":0.9,"bucket":"issue","why":"bare 'The investigation' with no antecedent"}
+{"id":"1509a9264a755b5885c6e26550dbe11b","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"23be7466856c4ae9a78a8df55c0797d3","tags":[],"confidence":0.85,"bucket":"clean","why":"'its' resolves to Saudi Arabia"}
+{"id":"14644dc6f0c54b349b68f0e0e0434fe9","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"576bcf1714735a2092774406a3718456","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"7746a850177c441fa9c8a2c6f49d0d14","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"97951102e6244730b911f1f181a047bb","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"54b608f1e6f8e92d6b43643460a40584","tags":[],"confidence":0.7,"bucket":"clean","why":"named subject; 'his' resolves to Jack Smith"}
+{"id":"97fb90657789fdab47d26fdacf105653","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"f8b8313898d8444eb5d8f5f44766ba3a","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"c922f8dd533031e69432fe672ac4baa8","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"f2b56503319c40dea9e383eb905361b8","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"0d5734062df54fe099946d18f6263c7e","tags":[],"confidence":0.85,"bucket":"clean","why":"short clear claim"}
+{"id":"ff97fc46cc4757989c05262cc806f13a","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The potential nutritional disadvantage' resolved by its own phrase"}
+{"id":"3b909b64add34e0b818967d2f5f6c851","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"c9f25d51edb25aa7a7105a953e6d1ccb","tags":[],"confidence":0.55,"bucket":"clean","why":"'It is unclear' construction but not clearly shortenable"}
+{"id":"7cee300a4b9158759fe3c5feb6ca0d72","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the human user' is generic within a conditional"}
+{"id":"0d35d3854adb4b86b84d833e69298091","tags":[],"confidence":0.4,"bucket":"near_miss","why":"capitalised short name 'Forum' inside an indefinite phrase"}
+{"id":"cf07adaa55f3584da51e2ec056f6c128","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"'impacts ... more than it contributes' fuses two unclear ideas"}
+{"id":"53fdec392f04541691894a80c5a1f832","tags":[],"confidence":0.6,"bucket":"clean","why":"repeats subject but a rewrite barely shortens it"}
+{"id":"179dbcce407702fed1fcc2c4f74a6ce7","tags":[],"confidence":0.85,"bucket":"clean","why":"short clear claim"}
+{"id":"77aaa8f44b365b4da1f5ad90f2c076a6","tags":["Wordy"],"confidence":0.6,"bucket":"issue","why":"'The assertion that ... and the assertion that' is redundant framing"}
+{"id":"7c1cda98cdceee44a24214be9ec0a480","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"a7232c55a7384c42beef0c7e9f87c0a8","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The Ban Keun facility' works as a proper name"}
+{"id":"8d2d893e00b6a2973c20ea461bc22938","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"d0e2a1c338634328a7d0d03844f21db4","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"862560d13cd9566d93591f4fb3ab1f02","tags":[],"confidence":0.75,"bucket":"clean","why":"clear claim with example"}
+{"id":"15208194d04e425b92153f73da1d8d34","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"1d4db97ef7a489dc4b72dc35ad6cc097","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"37e035d75873e434f78ced04ca2be30a","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"6039a4aee21bd11808eacc315780f644","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"8eda3cf4389b55e387564f7a2a1f1023","tags":[],"confidence":0.7,"bucket":"clean","why":"indefinite 'a task'; clear enough"}
+{"id":"90c1ab6c0d38443a987af16dadee916d","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"902410a0f4ec4dd5b2e5dfd204ca256d","tags":["Trailing period"],"confidence":0.97,"bucket":"issue","why":"one sentence ending with a period"}
+{"id":"23ab421666e347a59e80e41739b5d390","tags":["Context-dependent"],"confidence":0.4,"bucket":"issue","why":"bare 'the election's outcome' with no specified election"}
+{"id":"85d89f3f120d842c69a2b96e71c36fdf","tags":[],"confidence":0.6,"bucket":"near_miss","why":"generic 'the first safe country reached'"}
+{"id":"2026d833fd01431d9863af5a15e470d2","tags":[],"confidence":0.8,"bucket":"clean","why":"'its' resolves to Ukraine"}
+{"id":"018be23eac0447c7bd9837d2b93eebfd","tags":[],"confidence":0.7,"bucket":"clean","why":"named subject and named candidacy"}
+{"id":"d94dcace6e224ad79d2bff77d6a0d731","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"329492b464ba5a818f17807d3b3ae63e","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"1c527eccbe3c5aba90e7ad8328cadd35","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'The promise that ...' resolved by its own clause"}
+{"id":"fcbb262b77554dabb4b6ee3880e98aed","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"cf4af6baf52747169c18b5993cbb1db0","tags":[],"confidence":0.9,"bucket":"clean","why":"short clear claim"}
+{"id":"52f4c9df7cb510e19d2db3cd6376dfb4","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"330e7987a9b4fb30fcf050a042a48845","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"a42de20e2d063160e0019a55db4c0aaf","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"eceaa9bef067dd2a13ff11d126764ec6","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"aeca809e0a4f63958903935aa8cea0de","tags":[],"confidence":0.7,"bucket":"clean","why":"named currency, long but not shortenable"}
+{"id":"7939adf73e9af64f74adf9d3cdfb3a8e","tags":["Context-dependent"],"confidence":0.45,"bucket":"issue","why":"'The Jackson-Collins confrontation' needs an outside event"}
+{"id":"ccab8d1ce13b406a8a29bb3fd57a294e","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named US reserve 'Strategic Petroleum Reserve' resolves itself"}
+{"id":"be1876b9fb1ebc7a9e6356b44e96a9d4","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"2813e30ef3a642c09bc903c167358d72","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"86547f225f1a492d826445470152883f","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym ICE in capitals"}
+{"id":"df9e5ae5c3cd5bccbd7e98785b33a778","tags":[],"confidence":0.6,"bucket":"clean","why":"'the results of using their tools' resolved in the claim"}
+{"id":"c77fda79c05757c69df87dee19e256a1","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the electoral process' is an abstract noun"}
+{"id":"0bb90cd3acd74b97a71b5ac01551db57","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The post-9/11 wars' defined by its own descriptor"}
+{"id":"a2fdf58799ec601d3799c767a36b3500","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"bare 'the endorsement' with no antecedent"}
+{"id":"29592fc9ad4353dcbbf05535db06e1bf","tags":["Wordy"],"confidence":0.35,"bucket":"issue","why":"'protect a state and for self-defense' is redundant"}
+{"id":"d8c37fa3714559739e30fca1d13f5110","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named court (ICC), long conditional not shortenable"}
+{"id":"819565ebf3f04f36a1a1dea943cb5637","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the pope' is a unique office"}
+{"id":"01b84cbd69cb0ee795ffccc1663e714d","tags":[],"confidence":0.75,"bucket":"clean","why":"generic 'government approval', clear claim"}
+{"id":"d79e23a581b4c329d2c88185582796d6","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'The federal challenge' names a kind of thing, not which one"}
+{"id":"356577342181533f9487511c92fba383","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the technology sector' is a generic abstract noun"}
+{"id":"3e933f1712df2712d7cd45e0b42139d1","tags":[],"confidence":0.6,"bucket":"clean","why":"jargon but clear assertion"}
+{"id":"142c3e425c6f168c8ea1590be40c45c8","tags":[],"confidence":0.85,"bucket":"clean","why":"named subjects, clear claim"}
+{"id":"b182fc7d4b522edeb6de77d069a42509","tags":[],"confidence":0.6,"bucket":"clean","why":"compressed but parses; named subject"}
+{"id":"6e126957afbd4979a8e045fc5cb2e6ca","tags":[],"confidence":0.65,"bucket":"near_miss","why":"acronym NATO, named institution"}
+{"id":"f4bbb436693d4556a90c614e8097567c","tags":[],"confidence":0.8,"bucket":"clean","why":"'their' resolves to missiles"}
+{"id":"32b8c7825a6f4a64a90e91204ced735c","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'The FII postponement' refers to an unexplained outside event"}
+{"id":"24f160bbd5be5d8da8d2608a46740c41","tags":[],"confidence":0.6,"bucket":"clean","why":"long but parses; indefinite 'an educational course'"}
+{"id":"269127878f5d5367f4de9601be12346b","tags":["Context-dependent"],"confidence":0.4,"bucket":"issue","why":"pronoun 'We' has no antecedent inside the claim"}
+{"id":"cd1615c500b04389a1b89bcedadd53cd","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the Iran war' name-like; 'the Houthis' named group"}
+{"id":"8a27a5f8a43151aa83f6f35c3603f7a8","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"dce78add813e4f3c9cd5ec4f65fefc96","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"7996a19e3b4e5ced9d44949e51628b90","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'due to consistent attacks on the idea of liberty...' could be shorter"}
+{"id":"fad6baf26d81503486fb314a3eb2bddc","tags":[],"confidence":0.65,"bucket":"near_miss","why":"indefinite 'Some people'"}
+{"id":"054ae34dfd8657e7b89eb4d0c5d33500","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the issue of school segregation' resolved in the claim"}
+{"id":"ebf0093bd11f16b52fb55016540e3a1d","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"58b7af25eccc47ecaa36f6e4b59c9505","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"b71cb357d9aa5cf1bbfce623c8d68f3b","tags":["Wordy"],"confidence":0.55,"bucket":"issue","why":"'practice and improve their communication abilities' padded, 28 words"}
+{"id":"b39354955bc01d271288776409aaf70a","tags":[],"confidence":0.6,"bucket":"near_miss","why":"generic 'The public'"}
+{"id":"238afd5f6a7941b2a5de5107ca5e3707","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"d5d7346f82974d05994e750c41dd8916","tags":[],"confidence":0.8,"bucket":"clean","why":"one clear self-contained sentence"}
+{"id":"b8e484ca6bed34c5c9e8f8ee0041039b","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Maryland's mask ban' works as the name of one specific law"}
+{"id":"8ba36d48091b46a480b1946a60a1e3fc","tags":[],"confidence":0.85,"bucket":"clean","why":"one clear self-contained sentence"}

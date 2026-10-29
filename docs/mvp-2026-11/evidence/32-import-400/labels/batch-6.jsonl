@@ -1,0 +1,457 @@
+{"id":"3a81973408bc4f0d9094d7370e24af17","tags":[],"confidence":0.8,"bucket":"clean","why":"named country, one clear sentence"}
+{"id":"d3e4772934eb1c6e04b12ef54f168486","tags":[],"confidence":0.7,"bucket":"clean","why":"bare 'Congress' named; clear recommendation"}
+{"id":"a6dfaf1504774981b7e87f15fec331b7","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the rise in childhood obesity' resolves itself"}
+{"id":"6e703a3bbf7d47bfbf9b5cad6e4ff3b9","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the risk of losing' resolved within claim"}
+{"id":"5e082d2a9e1229c08c9c839958b45507","tags":[],"confidence":0.8,"bucket":"clean","why":"acronym U.S. mid-sentence, no issue"}
+{"id":"d9f4e812a4e55d93b6e67370e2c273c4","tags":[],"confidence":0.5,"bucket":"near_miss","why":"superlative definites resolved by United States"}
+{"id":"82903e103e02bb4afe16e098f1e78ea3","tags":[],"confidence":0.55,"bucket":"clean","why":"dense but parses; no shorter rewrite"}
+{"id":"4668f4229af050409e4a87ab2fa45d96","tags":[],"confidence":0.7,"bucket":"clean","why":"generic indefinites, well formed"}
+{"id":"fe562002db30564caea2e25a4b887cdd","tags":["Context-dependent"],"confidence":0.4,"bucket":"issue","why":"pronoun 'We' with no antecedent in claim"}
+{"id":"0a77bda84ed846b787ea9cde62bbd857","tags":[],"confidence":0.85,"bucket":"near_miss","why":"generic 'the government' in recommendation"}
+{"id":"b69783d0eed5898005fa43f33f350a02","tags":[],"confidence":0.85,"bucket":"clean","why":"clear self-contained recommendation"}
+{"id":"93b425a2a86245098f2a31954f0df069","tags":["Context-dependent"],"confidence":0.8,"bucket":"issue","why":"'the maritime dispute' needs outside antecedent"}
+{"id":"01a40f2b3bf5581a8b5ab570a53e49e2","tags":[],"confidence":0.75,"bucket":"clean","why":"generic statement, well formed"}
+{"id":"3d0126a18bf6552ab84ba40e1a352ef7","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the resources to do so' resolves within claim"}
+{"id":"66b1eafaee4f5a6c8a507ce4d0884799","tags":[],"confidence":0.55,"bucket":"clean","why":"odd claim but grammatical and clear"}
+{"id":"0df2aed40e314f7db9f20ba897516c14","tags":[],"confidence":0.85,"bucket":"near_miss","why":"generic 'The federal government' in recommendation"}
+{"id":"c3997225631295b6e2c60dd5fdb74f4e","tags":[],"confidence":0.55,"bucket":"near_miss","why":"long dense claim, not shortenable"}
+{"id":"4b67bf0e46d2559cb84b9ff294b42a82","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'their' resolved by 'a minor'; indefinites"}
+{"id":"7cd220e695e64ea4b8165ef58b70a69f","tags":[],"confidence":0.85,"bucket":"clean","why":"'its' resolved by Israel"}
+{"id":"af580e93d34f49b48b3eb37fadb799dd","tags":[],"confidence":0.85,"bucket":"clean","why":"clear self-contained claim"}
+{"id":"3db6bb895eba596d8124d58dd8470e6b","tags":[],"confidence":0.85,"bucket":"clean","why":"indefinite 'People'; clear"}
+{"id":"625d93bb38d248d19d95dceb247a2a15","tags":[],"confidence":0.9,"bucket":"clean","why":"generic recommendation"}
+{"id":"31fc74499d814653803cfc7a164de71f","tags":[],"confidence":0.85,"bucket":"clean","why":"clear self-contained claim"}
+{"id":"715464c9882156ea9247cb6844c3a432","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"19d8bc993c10415fb1c69237f49e8f1f","tags":[],"confidence":0.85,"bucket":"clean","why":"clear self-contained recommendation"}
+{"id":"9e12a1666055427596119972e2c30b0f","tags":[],"confidence":0.9,"bucket":"clean","why":"clear self-contained recommendation"}
+{"id":"f51c7a395758bdfafa63172db502ebaf","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the American and Canadian portions of Lake Ontario' self-resolved"}
+{"id":"8c3aa0a45bab8fc39deec860116e0fde","tags":[],"confidence":0.6,"bucket":"clean","why":"jargon but clear assertion"}
+{"id":"199a10d956554ec9ac0378fb5615bdb7","tags":[],"confidence":0.8,"bucket":"clean","why":"named country and Washington metonym"}
+{"id":"0bda2aaf8e30541eb981932b37116950","tags":[],"confidence":0.55,"bucket":"near_miss","why":"abstract 'the public narrative'"}
+{"id":"93ef847805a99b998f0ca28afd196701","tags":[],"confidence":0.8,"bucket":"clean","why":"named Congress, clear claim"}
+{"id":"33a13c92ece24c9b99bf359a4a757444","tags":[],"confidence":0.9,"bucket":"clean","why":"named organization, short claim"}
+{"id":"7ab7d72150cf4848a2059fbf29634cd6","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'subsequent' presupposes an event outside the claim"}
+{"id":"cf8116dd1a8d4a75bc3cb76e1a671ec8","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The Carpathian Eight' works as a name"}
+{"id":"32446a053e0041ee95db40236a4babb1","tags":[],"confidence":0.9,"bucket":"clean","why":"clear self-contained recommendation"}
+{"id":"fe0a4d8330c2505fb57fa09996940436","tags":["Poor wording","Wordy"],"confidence":0.7,"bucket":"issue","why":"garbled 'handle their own families regarding social messaging'"}
+{"id":"954cc78254c645bfb28e063ee2370ce5","tags":[],"confidence":0.9,"bucket":"clean","why":"named person, clear"}
+{"id":"9a90aa20f7fd5efdbd0b624b7fa86767","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'its development' resolved by China; slightly long"}
+{"id":"d23355505c71e8e74b842cd435b6b8d8","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the 1967 lines' works as a name"}
+{"id":"c30934b26f9c3ece7be0e6e93186c32f","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'The appeals court's pause' unspecified court and pause"}
+{"id":"b423992414a84d6fb0d7f64c15c3d7aa","tags":[],"confidence":0.7,"bucket":"clean","why":"clear self-contained claim"}
+{"id":"43c5e4e4d6105985b7fb4626e21bbf42","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named 'the Trump administration'"}
+{"id":"facb9c6a86945438a8c7cd8c34e30b98","tags":[],"confidence":0.5,"bucket":"near_miss","why":"long-ish but no clearly shorter rewrite"}
+{"id":"e7f500ca25064015b3e4e6b0a1ba3c52","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the 2026 election' resolved by Israel and year"}
+{"id":"b9eb534356a38674439fd1bdb41d9caf","tags":[],"confidence":0.55,"bucket":"near_miss","why":"long conditional, not shortenable"}
+{"id":"6fc5d5ab9f07b3e859b52ce3f3a971de","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named United Nations and named people"}
+{"id":"da95c94c3f5e4b39beb45b3c2f34a818","tags":[],"confidence":0.8,"bucket":"clean","why":"clear assertion"}
+{"id":"569b70bb7e730501e74b363a45fb2b2e","tags":[],"confidence":0.85,"bucket":"clean","why":"generic recommendation"}
+{"id":"08dc516e4537449991c3678f17ae3983","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'lower in the socioeconomic class' could be 'low-income'"}
+{"id":"65d9ee1ed96949e8904c27aedb707ecb","tags":[],"confidence":0.9,"bucket":"clean","why":"generic, well formed"}
+{"id":"fca78796780d43d19ab665b3900e994c","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"dbc503929e7587648780bd4424745fb2","tags":[],"confidence":0.5,"bucket":"near_miss","why":"possessive of named person; candidacy implied"}
+{"id":"bd510ac11c505711a40d2007e2a66730","tags":[],"confidence":0.9,"bucket":"clean","why":"clear well formed"}
+{"id":"b33f33c3ed5f458c9405aa68095b6bf9","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym UAE; 'the findings' resolved by 'a joint investigation'"}
+{"id":"a1305d7f22784a4f98ba15c0c0b8a81f","tags":[],"confidence":0.7,"bucket":"clean","why":"clear self-contained claim"}
+{"id":"b83467ca372b5793b22c649db2891f17","tags":[],"confidence":0.85,"bucket":"clean","why":"generic, well formed"}
+{"id":"b86fb7547549418b9a0c19a8b1d2b1a6","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named agency FDA resolves itself"}
+{"id":"8cee8ba0f2364b61beff76332d4311e8","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"b8b50f43ae148b1fa4292c8d38eb2c2c","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the platform' generic distributive reading"}
+{"id":"489fadff347f410c9c0601c0a7510ec5","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'currently' time expression"}
+{"id":"839d2bd4a37c4790bdae239af5d2a095","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the RAF Fairford incident' works as a name; acronym"}
+{"id":"b2a6816362e44d538382855d942b51a4","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym MAID, resolved by Canada"}
+{"id":"bd7b15987251bcdc8c4b1052ad9e2e74","tags":["Context-dependent"],"confidence":0.8,"bucket":"issue","why":"'the DPS failure' needs outside antecedent"}
+{"id":"73255a14bc1e7467e39fdbe88d0a2970","tags":[],"confidence":0.75,"bucket":"clean","why":"clear, well formed"}
+{"id":"6e46ba6ac1c15e9097c5361594d92a92","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"d0c4d24dbd5f191435a4db6224a50f18","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the Gaza war' named conflict"}
+{"id":"6cfa5b06b3b4592a84dbc3ed9c0e5465","tags":[],"confidence":0.75,"bucket":"clean","why":"clear, well formed"}
+{"id":"816b578e06d64844ae29c42ec1114fca","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"eeb5af9dbde041d0af3dd54226a6af44","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, clear"}
+{"id":"3eb6b338292e4502b946ca954b3cf886","tags":[],"confidence":0.85,"bucket":"clean","why":"mass nouns, clear recommendation"}
+{"id":"8a00e36f068f51eead67fec7c9f27e84","tags":[],"confidence":0.8,"bucket":"clean","why":"generic relative clause, clear"}
+{"id":"ed0174e805aa5c0c83dc2dcbecbcf790","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'It is ... that' frame but meaning kept"}
+{"id":"e7b13bde6b1c4bd6a3ea376d64eddaa5","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"3908289af0fd162e9549fb68dd97db3a","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the EPA power-plant rule' works as a name"}
+{"id":"a90d17a057ba5ee7abebd62b4cece571","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'value proposition ... high enough to justify' padded"}
+{"id":"4a5ad496a5f448989772aabb32cd6bb0","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The Trump-Xi trade arrangements' named parties"}
+{"id":"ba1b5581fd9177df3c07417926c4c62d","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"dca918676ef65bff86279121ec8b6b89","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"two loosely fused ideas joined by 'While'"}
+{"id":"bea20e0bb82bdbcf8ffd5490e3ba68c5","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'Current' and 'yet' time expressions"}
+{"id":"64d50b8395c05dbba0e2954d36504901","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"a779351767da5b13af98af666566907a","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the current childhood obesity epidemic' self-resolved"}
+{"id":"07afe01247c9475c915afd4c0c3d6b70","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"e83a5e8099214d66a0260992dc05cd70","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named organization resolves itself"}
+{"id":"dea343b70db5481e95f46e5572573f53","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"6f4676e2b90a5f7291446f54933db102","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the concepts it provides' self-resolved; 'only' scope"}
+{"id":"2871c3096fab53660755571cffdfe198","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the Iran war' named conflict"}
+{"id":"97178254be2e51399ed10381cb2de852","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'There is intrinsic value in having' padded"}
+{"id":"c0f93f8ecc0ccf9fc84c6d1e2644cc15","tags":["Context-dependent"],"confidence":0.9,"bucket":"issue","why":"'the sale' with no antecedent"}
+{"id":"a937a01f1ba24dd7ec3d045fda8db105","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"2dcf178c412c59978369625b3b849cb7","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the AI race' generic metaphor"}
+{"id":"0348b5ebd735564990a80bb8edb7ca2f","tags":[],"confidence":0.85,"bucket":"clean","why":"clear comparison"}
+{"id":"cce484c69226314d81a4c1031bea4404","tags":[],"confidence":0.75,"bucket":"clean","why":"idiomatic 'the pulpit', generic"}
+{"id":"91441868efeb40df935033f41df37afa","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"16c40f41c6004b99b7921c206789ed45","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the Leipzig Airport drone attack plot' works as a name"}
+{"id":"7704bcb732f0e665486e3ede7db74a83","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"f7fccb06b46f864f0a5763d8eed6dd96","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"180fe04e9f10d6e3795f326cf22ef8cb","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"cd6b5195aaac664f8ca2bc9d0aed02f1","tags":[],"confidence":0.55,"bucket":"near_miss","why":"indefinite 'A parent'; 'their' resolved"}
+{"id":"6ad6f61234c09faae09e979bc0393201","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'the party' inferred, not named in claim"}
+{"id":"23aa16962d4d5d53a1667216476ff57e","tags":[],"confidence":0.55,"bucket":"near_miss","why":"abstract 'The economic system'"}
+{"id":"4cfa50ab1104e5b017d8837b242c3274","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"4ecbf86697f6f25ed86041c2beeae891","tags":["Context-dependent"],"confidence":0.65,"bucket":"issue","why":"'the public case' and 'another indictment' need antecedent"}
+{"id":"64d87404972c543da5bd58a72e84d159","tags":["Poor wording"],"confidence":0.45,"bucket":"issue","why":"trend and causal explanation fused in one sentence"}
+{"id":"3c904b6b07b8ed59bf94f40033b83384","tags":[],"confidence":0.8,"bucket":"clean","why":"named person, clear"}
+{"id":"65c966ebafa8e76794f5185d943f6297","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"11aba90b44e950f4bebdb3b1c1b228ba","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"two ideas fused, weak 'as ... important' link"}
+{"id":"85d931ac146950648444d950179c8a41","tags":[],"confidence":0.55,"bucket":"clean","why":"slightly loose list but clear"}
+{"id":"d80d06afdd535ca1929ff638b5f4acb3","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'artificial intelligence-generated' and padding"}
+{"id":"cb13945fdefb486e8f97d2d936293b18","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"64fec188e9a35b87ac1e8a57ebdae831","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"54c2f40fff8951a89b89e89ee9a3877e","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'has the potential to give' could be 'could give'"}
+{"id":"3f66e94ffabd47feb5ee2b7b9feb8cd4","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"1fa1c1b5af55526993323f3932867c3a","tags":[],"confidence":0.6,"bucket":"clean","why":"appositive adds meaning, well formed"}
+{"id":"d6d74083998c12dd04842f0746cefab9","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"1b3dd4d5f19e500dbc71dda6e568b790","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"453dc64f819eeb4cded84c45823e8077","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"70f9a00e20b1d22d72985aff291253fa","tags":["Incorrect grammar"],"confidence":0.5,"bucket":"issue","why":"'their brain' singular for plural 'young people'"}
+{"id":"b369099bfe045174bcc0597685a3a591","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"29eb509adc4de055cc0ba41db629d4d3","tags":[],"confidence":0.75,"bucket":"clean","why":"clear recommendation"}
+{"id":"77fca7ba9b59591ab6686e5bece25ed4","tags":[],"confidence":0.8,"bucket":"clean","why":"clear recommendation"}
+{"id":"8830cb7b9f5e46789b82e5cdadeca026","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"6372951516815a9ba8e3e1a196aa4b7e","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'it is still possible to slow its development down'"}
+{"id":"8dfa65380c5d4197bc925d8eb4b47d17","tags":[],"confidence":0.55,"bucket":"near_miss","why":"possessive 'Iran's maritime campaign' implies one campaign"}
+{"id":"00c696d6263749c589097e5bc634631c","tags":["Trailing period"],"confidence":0.97,"bucket":"issue","why":"ends with a period"}
+{"id":"7789dd42f23ac8f555d59bf15f1e3e86","tags":[],"confidence":0.55,"bucket":"near_miss","why":"long but not clearly shortenable"}
+{"id":"b6420bc9c46156f0b997b1a8f87ae129","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'harm ... negatively affecting' redundant"}
+{"id":"429d262a44cad25bd1a5d072292bb9f8","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"1b27fffa4cde4a20bbd47e55b6942c39","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"5a1854b0e5b8d82bcd737b82198410d3","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'Putin's G-20 invitation' acronym; invitation implied"}
+{"id":"62383aae0d635bd937a8e811bf645e50","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'The benefits'/'the risks' resolved by 'of AI'"}
+{"id":"5b18d9d553663d02cec4f19bc247e265","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"83eca01eebc047c2b22fb4dfd4b6b98f","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"0b844e1f368961217e0510c5f7db7063","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"e18251b6e7185dc99bb017473759a94f","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the type and quantity' resolved within claim"}
+{"id":"329930b652705a5ba4d1ae4bb768a890","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'the voting process' not specified"}
+{"id":"fe81359ddc75b89dfe0bf6bc5bb315a1","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"256bae9997385f1393a6825cd33aba45","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named institution ICC resolves itself"}
+{"id":"c82e6a9fcee1bfc04868d794510ef884","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym FDA; named person"}
+{"id":"e91e339f01d7a2dd5441927d2bf50d95","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"ae79a8ae6e25fcc638ccbbae425297e0","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'within this decade' time expression"}
+{"id":"c7ff945ecd55848eeac24d06226caed7","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym DEI"}
+{"id":"1899f8d555c357d4bb76f5d72a2c2c3e","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"ef35f184932c7cc6731e1a74bc1bc05b","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'a significant amount of control' could be 'significant control'"}
+{"id":"bde943381b7a5be292318e45bcdbf417","tags":["Wordy"],"confidence":0.65,"bucket":"issue","why":"'The presence of artificial intelligence' repeated, 29 words"}
+{"id":"f8119abee41d5f9f8b5917bf563cf3c2","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'the ease of' nominalisation, could be shorter"}
+{"id":"9e6527d071e0542ebcb4046eb8894e87","tags":[],"confidence":0.85,"bucket":"clean","why":"generic, well formed"}
+{"id":"fe1dc64d6e2e56a78a7e27c53b52f461","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the NAJI system' acronym used as name"}
+{"id":"9512a7b5dbea534ca78baa136083670d","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"dc61accbe532499fb468d4a232cddbeb","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"afe06b9a1cce7049190c86b382b89969","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"f932f403ac1d531283fb4f75124681db","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The market' abstract; 'its' resolved"}
+{"id":"68f708eb2bf1347815f289e3a2c2b2f5","tags":[],"confidence":0.85,"bucket":"clean","why":"indefinite, clear"}
+{"id":"bf8a9f468b6dc60b3732b102e149814d","tags":[],"confidence":0.55,"bucket":"near_miss","why":"indefinite 'A map change'; named state"}
+{"id":"d0d1b73b2ed04ff1a090c39ed61555cb","tags":[],"confidence":0.8,"bucket":"clean","why":"'any negotiations' generic, resolved"}
+{"id":"5b372013cb2253269e625bd014bde99a","tags":["Poor wording"],"confidence":0.5,"bucket":"issue","why":"'AI funds the world' unclear what is claimed"}
+{"id":"285b2589176a46fcb24bebe45bb5e151","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"88d2bd3483d5ca19aa43de70f0bca003","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"38f3c558fd784afeab39c89057ecedb3","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the government's' generic/nation implied"}
+{"id":"8e903aff703d520fa803f3e50c903582","tags":[],"confidence":0.65,"bucket":"clean","why":"'The United States criminal justice system' named"}
+{"id":"304deb83d42d0cb840e4bc6a25710ba9","tags":[],"confidence":0.55,"bucket":"clean","why":"dense headline style but parses"}
+{"id":"e2d256d5422ad0c602a4bb528b862a55","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'The Rogoff stay' works as an event name"}
+{"id":"c76cf7d7fd694c5097aa606f837a0c09","tags":[],"confidence":0.75,"bucket":"clean","why":"named parties, clear recommendation"}
+{"id":"336642017cfc0bf2eb168946af03156c","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"2c6e66f6666f9bc94e445e2d427ae28b","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"97a15de5304354ca83180e186aee7ebc","tags":["Poor wording"],"confidence":0.45,"bucket":"issue","why":"'destroy the importance of liberalism' hard to parse"}
+{"id":"c9e550e734cdced7c5f26a650d85a73f","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"45a104e7e95a4f8da10a1714dc39cfe8","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"64915d7d98a4406d8d30781aeebe2dd7","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the individual tasks that constitute a job' self-resolved"}
+{"id":"d0011534a3208473abca4f71c956926d","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"8dc9956f4da45493a5ca7bd5c095da20","tags":[],"confidence":0.8,"bucket":"clean","why":"clear comparison"}
+{"id":"62af92ec0a7d4c9296c37f3dabd5437b","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"aa22ce64d72b4fccf8f01c8973dd7a36","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"7ee495c160124577a89f908f097130d6","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"ee4c801bb84b45788bb2ee1d3b185ea4","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"'Strategy selling Bitcoin ...' reads as gerund, unclear on first read"}
+{"id":"b9a725d51244579aa7affdc9ecd38616","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the conditions that create' self-resolved; long"}
+{"id":"f96eb8420c2c1f454fc3049678c1fb90","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"89034c8b50ab48a3b48430b4e0d0ca57","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named institutions EU and NATO"}
+{"id":"0da5bcc033e7c673ce1c9820e7b661f4","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Affected states' generic reading"}
+{"id":"970991617f5949eab6c1f6b95438071d","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The reasoning behind AI-based decisions' self-resolved"}
+{"id":"f89eeec0c6d546d4ad29438f605d8bc2","tags":[],"confidence":0.6,"bucket":"clean","why":"clear, well formed"}
+{"id":"34d515d0812b52ce98abe6d0884293ff","tags":["Wordy"],"confidence":0.55,"bucket":"issue","why":"'genetically enhancing ... through genetic modification' redundant"}
+{"id":"02c3a344c79643159f23cdde2db1631e","tags":[],"confidence":0.45,"bucket":"near_miss","why":"bare 'Candidates' but no definite reference"}
+{"id":"b3040c94b557441385dede7f74bdc843","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"90f488b1054155ddbc57dd761efcbc62","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the Western Alliance' works as a name"}
+{"id":"44e813295df24ed2a065c8077afc27c9","tags":[],"confidence":0.85,"bucket":"clean","why":"clear comparison"}
+{"id":"b7ef918cfd82db0e74e588428124b45d","tags":[],"confidence":0.65,"bucket":"clean","why":"named person, clear"}
+{"id":"982d12a85b4de99c59c3befc6c4c51c3","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"1741066a85dfa2d82359e4ff01a207f0","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"91a06f67b9fb57b79d9dfa29d414c00a","tags":["Context-dependent"],"confidence":0.6,"bucket":"issue","why":"'The current vulnerability' unspecified; needs outside antecedent"}
+{"id":"ab44c9a1568c87e25b906f8386d21bc6","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'The Hugging Face incident' works as an event name"}
+{"id":"9ab9973e55544452b61028e8762dfade","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"135d0bea1b415f9f9ca792596cfd0710","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"040f19ad125f560c9f771cb321f6b6b9","tags":[],"confidence":0.6,"bucket":"clean","why":"named outlet, clear"}
+{"id":"7c67ded088235ce7905b254f0f66cce3","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'has contributed to a poor reputation' padded; two time phrases"}
+{"id":"b495b040a8204345bd16fff7642bcd61","tags":[],"confidence":0.5,"bucket":"near_miss","why":"acronym EU; 'Frontex's standing corps' named"}
+{"id":"1467e3309accee437b3d8ce4cca76ba2","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"529241a8cf04876a801c1dc74fc755b3","tags":[],"confidence":0.75,"bucket":"clean","why":"named strait, clear recommendation"}
+{"id":"f0d9f937c0264b15964f15b5eccec234","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"db4b82c8058949a18e8a3644c6a0f3f8","tags":[],"confidence":0.8,"bucket":"clean","why":"clear assertion"}
+{"id":"3bc8cd98f0984c308c51b5f67ac98513","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"4024248f2ce1203110f2748982e3dd34","tags":[],"confidence":0.85,"bucket":"clean","why":"God is a proper noun, clear"}
+{"id":"62fcacf1863b4a5d8794e135453f6f34","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"ce19805e7b8b188e666b2ba617034333","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"dafdedfaf9da51ae8ef05e6275ac2e13","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"9ad091d84b1948ec8685b823a6f531fa","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"454aa7ccbec6e2864f5cadbbb27233af","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The tied Texas Senate race' time-bound but named"}
+{"id":"f77e1d6b0510d4c0d4e239c64ac3ee93","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'The Fed' named; 'the next policy move' time expression"}
+{"id":"4f25a4a46a3c4f8e959e39919e498790","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"6c2e9b253091551180195c6e8fa09829","tags":["Wordy","Poor wording"],"confidence":0.5,"bucket":"issue","why":"'It is questionable whether ... potential demands' padded and indirect"}
+{"id":"cf2eec4e52ae5934a4c523c6c55d492d","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"9a8c4a6b740054ecacd83568058d13fc","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"3fe83d5a9e5d592a887c051c231281c8","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"3c2992c2ff50561e993960c1f2143002","tags":["Context-dependent"],"confidence":0.6,"bucket":"issue","why":"bare 'The government' in a factual claim, not a recommendation"}
+{"id":"ea70de5c6b0fbf6f3105a13d46f0343a","tags":[],"confidence":0.8,"bucket":"clean","why":"named people, clear"}
+{"id":"0799109f3b545395b58ff8626845d54f","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"6daa321101c4ad5de8fb6b6cca1f4133","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"375dfe23f97a48c48f6abaaae6a1c097","tags":[],"confidence":0.55,"bucket":"near_miss","why":"long but not shortenable; named conflict"}
+{"id":"6498475733b5434583aa8c7f6a44a4c2","tags":[],"confidence":0.8,"bucket":"clean","why":"named person, clear"}
+{"id":"e83e6892b20456db833e3cd9323d0dee","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"52e32d8297ec013cc8d6885f5113fe8d","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"86a5b5ff28494e43925f7fe0bfbcbd50","tags":[],"confidence":0.6,"bucket":"clean","why":"clear, well formed"}
+{"id":"fe73058d92a36b274cb02d4ff935661c","tags":[],"confidence":0.7,"bucket":"clean","why":"clear, well formed"}
+{"id":"4d7c058644084dae9038db6d0606c3ad","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"ba396531252f4dc3a891d37cb36a6b64","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"ef9a3ae634135f4daf0b5e7e9e391392","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'are human beings with different personalities' padded"}
+{"id":"b3996967ffee4b60b266b1ac685fc08b","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym IPCC; named 2028 stocktake"}
+{"id":"03732c4f0b3641f8bfd2062cbc21a650","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"0ff989f166cc6bf7c0eb705916639c21","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"ebbab45168515d109070e2031c8a097b","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"67ed92736a3b4fb0bf9c31de80819148","tags":[],"confidence":0.85,"bucket":"clean","why":"named people, clear"}
+{"id":"7da17f8b7b5b565f817ba62e7a86e33f","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"comparison 'quicker than search engines' unclear scope"}
+{"id":"4f36d6abd3e0502da58107f73c606d7a","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"088639cb7fa04f38bc02b35f73fb26d4","tags":[],"confidence":0.85,"bucket":"clean","why":"named Congress, clear"}
+{"id":"0b04fed04391545285535df6d6a17766","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"40eb9afbcae65018a0e781fb7845f2ac","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"long; 'preventing them from having to stand' could be shorter"}
+{"id":"6ef92707abb56fef78431f8e2a2612af","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"ebaba5aaa2cb8b92f273594a937f7f55","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"51f7eb32e5985ba8c4a53e2b4ea93871","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"b070f770552c41ce9860dee6293cbfb7","tags":["Context-dependent"],"confidence":0.9,"bucket":"issue","why":"'the co-pilot' and 'the investigation' need antecedents"}
+{"id":"263a97f0deff012e0e364d3c60efab1e","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"7329360bb41e5673ac7f5dfc26babe51","tags":[],"confidence":0.6,"bucket":"clean","why":"named newspaper, hedged but clear"}
+{"id":"3c177a2682fa454b864ffbe0a42c62b8","tags":[],"confidence":0.7,"bucket":"clean","why":"clear, well formed"}
+{"id":"524d08ab9e774d15a4adebb7324ccff4","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"15f42e4d9856777c8bc48868700814e8","tags":[],"confidence":0.8,"bucket":"clean","why":"named people, clear"}
+{"id":"b2c17c3602516190f9260cfc4ca887aa","tags":[],"confidence":0.85,"bucket":"clean","why":"clear comparison"}
+{"id":"65435e0b64965983ad7fe45a26fe6297","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"601cf897a77741618233e250511a94b7","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"252469f783a0408bb8060d2096a95992","tags":[],"confidence":0.85,"bucket":"clean","why":"clear comparison"}
+{"id":"afbacffd02c9d0a4067a3287a206385f","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the state's' resolved by California"}
+{"id":"01aca76d6b9043219d11bb3cc4cc8faf","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"047198e324115e19a6a0431a41fc75ee","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"27 words; 'the application of artificial intelligence ... the technology'"}
+{"id":"4563041930204e8d93bf0c7494f2b8bd","tags":[],"confidence":0.8,"bucket":"clean","why":"clear recommendation"}
+{"id":"36334984072e59c3b97e1f014254bb06","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"ae29dde1b1fc577bacfcf1847e5bfdd8","tags":[],"confidence":0.85,"bucket":"clean","why":"clear conditional"}
+{"id":"2eba8f4b2ec05140355f3b00bf67f24c","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"82322466d85e42f2a7b267915e14a187","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"f7706948a64d33e347647157e5e863ef","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"86c02755ee3e576d89a40afde35883d2","tags":[],"confidence":0.55,"bucket":"clean","why":"long-ish but meaning needs the clause"}
+{"id":"261201719a635781afa59bf5623b73d9","tags":["Incorrect grammar"],"confidence":0.6,"bucket":"issue","why":"compound subject with singular verb 'depends'"}
+{"id":"e440a976aeb742daadc260d8962d9807","tags":[],"confidence":0.8,"bucket":"clean","why":"clear recommendation"}
+{"id":"20d35040d53b4b6393e21ec7b3a7c954","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'the summit' with no antecedent"}
+{"id":"30ca5f6bdbcd2b9e01298839180e3a4b","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"26e7b41a2fb7cd6571afd02aef368410","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"18bd9867b85b5d1bb4db142b81516a68","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"07736de6dc19428f9b35004b9edbd92c","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"2b3c01278e6951758814be4ac4b07ae5","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"6a531a8ac86346f698a440ba1961347b","tags":[],"confidence":0.8,"bucket":"clean","why":"named person, clear"}
+{"id":"b844c009623d4b70d155cb33c82d3ee8","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"e9545821e62a566b980ea182d8fe7a32","tags":[],"confidence":0.55,"bucket":"clean","why":"clear; 'increasingly' mild time word"}
+{"id":"8e9bfd1df0f21bdd3f08e00bf130e49d","tags":[],"confidence":0.6,"bucket":"clean","why":"superlative but self-contained"}
+{"id":"6421f3d5e5e6aa3af6527fed11f3899a","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the national Democratic agenda' abstract"}
+{"id":"719386789f2a4d5ba0ba5674a286f1e1","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'the Kuhestak wedding' works as an event name"}
+{"id":"434b891c91b84348b1fc504c5586351c","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the main trial supporting it' self-resolved"}
+{"id":"2fed831a8b4f024d5c3289c9c66b541e","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"e3828372c2b93300b034c6b6ac86c226","tags":[],"confidence":0.85,"bucket":"clean","why":"clear comparison"}
+{"id":"5042b955c3895e46b7175b0017309e47","tags":["Wordy"],"confidence":0.75,"bucket":"issue","why":"'general policy approach ... should be to restrict' = 'Betting should be restricted'"}
+{"id":"2d151b5d23234f9c8fe740d0bcb718bd","tags":[],"confidence":0.85,"bucket":"clean","why":"named person and prize, clear"}
+{"id":"3662620ce30568f47b96347c2d4fb086","tags":[],"confidence":0.5,"bucket":"near_miss","why":"named war; bare 'administration claims'"}
+{"id":"033f32723abd1fe7ae503f2e519b925d","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The AI Force' works as a name"}
+{"id":"35329e0ea51451448beaf02176441202","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"4befcdb32ee4ab99f4371b8785a15729","tags":[],"confidence":0.9,"bucket":"clean","why":"named person, clear"}
+{"id":"db89e18cd5f7432d8ef4e732083fadbd","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"83bddc216ccaa181ea3b5ed4b1496d62","tags":[],"confidence":0.8,"bucket":"clean","why":"clear comparison"}
+{"id":"df00c65a72da436f987d394d1d6982c0","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"23f567d6bb354d8e823f2dff535d04db","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"fc9632bd9de658e8a29f7abc2f877500","tags":["Incorrect grammar","Wordy"],"confidence":0.45,"bucket":"issue","why":"singular 'company' then plural 'them'; long"}
+{"id":"105d136541d4cd415f6d7401e4cecc25","tags":[],"confidence":0.75,"bucket":"clean","why":"named people and place, clear"}
+{"id":"fd73deb3b6d1628443fe24d3963281f0","tags":[],"confidence":0.85,"bucket":"clean","why":"clear comparison"}
+{"id":"04876cf53af05ab08b7633599526c063","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'has the potential to solve' could be 'can solve'"}
+{"id":"748a33bae19a4fdc8364a10e673385a5","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"11955677078084a04dca8e3ce77bcadc","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"5ee1f25acf4b4da6bea40f8217d4682d","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"fa674f7a60a046dca0786d1fb32fb9f5","tags":["Context-dependent"],"confidence":0.6,"bucket":"issue","why":"'the repatriation programme' not specified"}
+{"id":"1a8b88e83bc95d9fafff7d7ccafd18a5","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the technology' resolved by 'artificial intelligence'"}
+{"id":"83f798523bae4982b9c52cb366d42d76","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"9df6a915a66d4e5381f68b5306013287","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"44880c2092554d92a98b8b0a591cd173","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"d1efe2d02cb141d090c4559a9889a7cc","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named agency FDA resolves itself"}
+{"id":"7a19be18293b5d89a1d582df111cf783","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"06069530c57040d414e431e5b6dfc7a3","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"63d44d250fea545a9fb5a5f10de93a3e","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'Artificial intelligence' repeated; long"}
+{"id":"a4e29c0ae4d8406dadc17bfb9fe4fb3c","tags":[],"confidence":0.6,"bucket":"clean","why":"named parties, clear"}
+{"id":"06f9da7f0eb052feb901ae6e12c7deca","tags":["Wordy"],"confidence":0.6,"bucket":"issue","why":"'the ability to have a greater breadth of knowledge' = 'know more'"}
+{"id":"3087735465434c5e93d33b620746cd76","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the risk' resolved by releasing"}
+{"id":"c38af0b7c7eeffdd65150e51a2b3d46b","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"1ca103e50ef54c792e6833a599f74cc0","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'The subpoena dispute' needs outside antecedent"}
+{"id":"958e2a9104151865254cdc5e125ea92e","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"3f43c148276f4dc6a7f854e6a6d5503d","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"864564807f7b59e98dda02eb38365888","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'could lead to people abusing it to do their work for them' padded"}
+{"id":"ca7ade893d7c41c88a762340524a5805","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"db53b69721a3a83a90ec70b8dba62a67","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The reported scale of voter fraud' abstract, self-resolved"}
+{"id":"37edb19783705be9a25a354adac5a922","tags":[],"confidence":0.65,"bucket":"clean","why":"'their' resolved by robots; clear"}
+{"id":"c84f3905f9854e0da49be2706ddbde83","tags":["Context-dependent"],"confidence":0.9,"bucket":"issue","why":"'the alleged foreign recipient' and 'the investigation' need antecedents"}
+{"id":"c6d8a0da2f74420bbb5c990f736abc17","tags":[],"confidence":0.6,"bucket":"clean","why":"'The two Koreas' resolves itself"}
+{"id":"be5671ca0339505fa2301228e67386b1","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'still in the process of understanding and adapting to'"}
+{"id":"c7913d23e99353739e7da893f63e3b69","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Historically' time word; named revolutions"}
+{"id":"9d5a3c8dc9cf341c3bb4342eff5e1c24","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym GOP; named 2026 midterms"}
+{"id":"98dead7824125289ba37035983e1adef","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'20 years ago' time expression"}
+{"id":"ef6f4709e07c56208b44e3c1eec5431e","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'advantage in the world and be able to compete better' redundant"}
+{"id":"5dd36ff873b8c30f16363042ae76446e","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"6dbecdae9b1b425a9d98209131229a97","tags":[],"confidence":0.75,"bucket":"clean","why":"'its blockade' resolved by United States"}
+{"id":"bdd6d566ae175e21b18740dcc748b3e2","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"'vital for public opinion' unclear what is claimed"}
+{"id":"0fa479bedb1d55b89b275e279ba27522","tags":[],"confidence":0.45,"bucket":"near_miss","why":"long, 'risk or severe impact' but not shortenable"}
+{"id":"a9e5ecf0f19d5194967b37002728a68e","tags":[],"confidence":0.6,"bucket":"clean","why":"clear, well formed"}
+{"id":"07ff620cb74345ec826e61b9f4af710b","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'the warning allegation' needs outside antecedent"}
+{"id":"afc85047df7010283504a1fea1051807","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"a43cbbf3fa763810e56707de432d0e05","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'The appeals court's pause' unspecified court and pause"}
+{"id":"20b24ba7a869499c8c00ec89f3e4505c","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"194f3c344a4357cba1a03deb0573300b","tags":["Wordy"],"confidence":0.35,"bucket":"issue","why":"'has good intentions in its development of AI' slightly padded"}
+{"id":"323a2346e10452939a85fe49fcbd1d66","tags":["Wordy","Poor wording"],"confidence":0.6,"bucket":"issue","why":"'conservative' repeated, hedged comparison hard to follow"}
+{"id":"c2d1128a34e3c8d02c05e967b6967de9","tags":[],"confidence":0.55,"bucket":"near_miss","why":"named 'The White House'"}
+{"id":"d872416ec4045d0ba614933cd8d88a1d","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"circular 'form of artistic expression created out of a person's mind'"}
+{"id":"af16a7b0ced041079e9c4dbf7f83ec89","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronym AGI, model name"}
+{"id":"80de9195d93cf79eda977fd8d35f1bdf","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the war with Iran' named conflict"}
+{"id":"2378165e1bb3012737fbe488a7dc0dc6","tags":[],"confidence":0.85,"bucket":"clean","why":"'its' resolved by AI"}
+{"id":"c287deb5fee1cb52aa7becaf8f317b9b","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The scale and conduct of' resolved within claim"}
+{"id":"897a7a7f9f0eeab85d8c1ae4687d6d40","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"19912fc512174232af6b1b56072d8452","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'its current path' time word; resolved"}
+{"id":"8dc18fa2b19150539a5b6a9aa59bad8b","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym ICE"}
+{"id":"0533ecd48a16b382d15f725de99c6805","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"367ca13809ac90d3d3353caaf8437367","tags":[],"confidence":0.8,"bucket":"clean","why":"named people and place, clear"}
+{"id":"05f12cb156bdadbd726eaa3b10fe87d1","tags":[],"confidence":0.55,"bucket":"clean","why":"possessive named person; clear"}
+{"id":"fdd8b4971ac572d290551806c59afde5","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'The Omar citizenship investigation' works as a name"}
+{"id":"1c3c260601f344c5ad38de3d04db2fea","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the Russia-Ukraine war' named conflict"}
+{"id":"3cb690d331074a95b64ba22af95bb435","tags":["Trailing period"],"confidence":0.97,"bucket":"issue","why":"ends with a period"}
+{"id":"a177d4346a69a606167061972fa3b3a5","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"194e3910605b527992ec82fe3c566bdd","tags":["Wordy"],"confidence":0.6,"bucket":"issue","why":"'increase or decrease ... more or less the same' redundant"}
+{"id":"d874459183c57b2eb1bc34276640a52a","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'The appellate pause' unspecified"}
+{"id":"0f4286b26c230b97f45d2095d072de62","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"26d270feed305f61906cb370a5da4692","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"25 words; 'is only justified if there is sufficient evidence that'"}
+{"id":"4d284eeff09aa456bac5de862ad7488a","tags":[],"confidence":0.5,"bucket":"near_miss","why":"long; generic 'the military'"}
+{"id":"8b59cc0d836d4bfdab20a1cfde90112b","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"43a9f62057562c7dfee8dd8fbdf5d6e6","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym AGI"}
+{"id":"ddebe8472f085e9ab610e1d4ce99955d","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"f44f468c7eb358881823da1ad70cf6fe","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the public' generic"}
+{"id":"44dad86362064cf4b4522aab6a43f7ac","tags":[],"confidence":0.45,"bucket":"near_miss","why":"long, but not clearly shortenable"}
+{"id":"8a0952400a915a34af2b51591e77f467","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"stacked infinitives, 'time to invest elsewhere'"}
+{"id":"f359bc7a321a12624f2ead8fd1769edb","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"9fa643f9ba4eaf77024db090c044548d","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"024b28c13eaf5c0a816844c5e1c4a897","tags":[],"confidence":0.55,"bucket":"clean","why":"clear, well formed"}
+{"id":"ad5eecd2ff314bb99a1c5eea798f6ecd","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named institution; 'Further' presupposes"}
+{"id":"f48cfbe098b443098c25ed3891b25ebf","tags":[],"confidence":0.8,"bucket":"clean","why":"clear recommendation"}
+{"id":"15c3b80210cd55d8afd8633359dbc5b3","tags":["Wordy"],"confidence":0.6,"bucket":"issue","why":"'makes it highly likely that' and vague 'than expected'"}
+{"id":"20b6fdb8853a4ef88906c7f92de45cdd","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named agency FDA resolves itself"}
+{"id":"a6dd1f6a5de9b0c0fb464b4f962c3762","tags":[],"confidence":0.6,"bucket":"clean","why":"named people and events, clear"}
+{"id":"5d832333bbb05a92b2ee44f32ef7f718","tags":[],"confidence":0.55,"bucket":"clean","why":"'current' mild time word; clear"}
+{"id":"711eaff4098142d297915ab4fc61e424","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"5c4be11bba3eeb27940cf821cf8f09d3","tags":[],"confidence":0.85,"bucket":"clean","why":"named Congress, generic claim"}
+{"id":"e34c2adc9cbcf4e550089bfccb2a2a1a","tags":["Incorrect grammar"],"confidence":0.6,"bucket":"issue","why":"missing article before 'Clarity Act'"}
+{"id":"3f7dfe1047d46e7bbe1703c36db6cf24","tags":[],"confidence":0.9,"bucket":"clean","why":"named person, clear"}
+{"id":"48ef6e14bb4f47ab8137c467d8325ad2","tags":["Improper capitalization"],"confidence":0.4,"bucket":"issue","why":"'System One Models' capitalised common term"}
+{"id":"f4b4ba5e21ad51ab9be948c6147a9967","tags":[],"confidence":0.55,"bucket":"clean","why":"clear, well formed"}
+{"id":"21cea9e373055b8980b6db59f9728c02","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"31955e0725ab5ab8a7298662bd3264bf","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'they' resolved; 'already' time word; generic sector"}
+{"id":"c7ce63eb9d394b3cb1cd0b1294a9d1ca","tags":["Context-dependent"],"confidence":0.7,"bucket":"issue","why":"'France's proposed increase' does not say what increases"}
+{"id":"8eab8735d4514c5f80c5b57bdc9b27d3","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"562241dd292d41c8b86d96939baccc9e","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"8bbb44751566567ba94ea529bd534bcd","tags":[],"confidence":0.6,"bucket":"clean","why":"clear recommendation"}
+{"id":"242275d722b34107929b47adb714ee57","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named institution, 'its' resolved"}
+{"id":"0705323efc3f426596dd62f3576640d9","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic 'You'"}
+{"id":"c26abd1c89fe4f859fc35ff46bb022a2","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"d5ef2268fe31694e1ef85ca6b63125ee","tags":[],"confidence":0.85,"bucket":"clean","why":"clear comparison"}
+{"id":"3c005aa2fbec4ce593c4b05abb195074","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"f3d89125bf22455ea327f6c5997abad3","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"c7e4047abe2256e9a7104fd29aa52059","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"d3d0af95b4895c48bef88d6d8dd20252","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"6c6231f914b94f97bc3e87c7d7e4a518","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym WHO; 'the next Director-General' time"}
+{"id":"f54fe17c4575b12ac0bd71b09b4acb8e","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"ba7ad4c9e6974cff9a0210ac344bf3a9","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'current' time word; named country"}
+{"id":"1cf49e10f4dc51bc9a37fc6fa8f1f3a6","tags":[],"confidence":0.5,"bucket":"near_miss","why":"24 words, list not shortenable"}
+{"id":"68b7cd9e92cf5e5cb6df65ae34859744","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'is an example of political opinion that should be censored'"}
+{"id":"00ad164f52d4146eb7d3a332489fd052","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"4c6bb52d7cd457028d5d0d31fc64b5b7","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the gunship diplomacy utilized by the United States' self-resolved"}
+{"id":"9acc3686f5a74bd78c692d85ea70a1c5","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"f2b5a2c2721c4b0f889850dc6254a932","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The Congolese government' tied to country"}
+{"id":"530c3b59a35cf7585a92ebabb3a9cfb5","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"75f7bd7df8cfaf04ff2c5e7bcfd8dd5a","tags":["Poor wording"],"confidence":0.45,"bucket":"issue","why":"'Acts God commands' garbled on first read"}
+{"id":"38507469aa8c4f8ba3c5e9cdba7ea8ad","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"743ad169a55943a3be89c6b935fb62ae","tags":[],"confidence":0.85,"bucket":"clean","why":"named person and country, clear"}
+{"id":"a688e464073558019e8084eee8e7c701","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the system' abstract; long"}
+{"id":"09f55c11ccd641488a338cb1cd727eec","tags":[],"confidence":0.6,"bucket":"clean","why":"'Congo's Ebola outbreak' named, clear"}
+{"id":"32a9bb5f4bbe8189ea52851ec5900a1a","tags":[],"confidence":0.85,"bucket":"clean","why":"'its' resolved by United States"}
+{"id":"dfec45918d9c431cb2f82b5931441784","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"01a11d5737d72b5cbc4dea385f5e9544","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"3f1d8f107ea23a5994592827d1e56925","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"38e7820d871c5a1594a08dae7534761b","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"8141ad72f77d46d68378d527dc338d3c","tags":["Context-dependent"],"confidence":0.6,"bucket":"issue","why":"'the Dutch diplomats' status' unspecified diplomats"}
+{"id":"e614f8f295b54250be378fe457ec9475","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym MSG"}
+{"id":"c69acbdf08ff5934bd48a1a24c04b2d2","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the tech sector' generic; acronym-free"}
+{"id":"fb53f4b90c355a528d997391521963b5","tags":["Wordy"],"confidence":0.65,"bucket":"issue","why":"'The United States' repeated; 'directly involved in funding'"}
+{"id":"803dfb91ad1a0b4240d5da1463df6086","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'barred reporters' unspecified but not definite"}
+{"id":"67fa9bca94a4434bb9b57b09498f4c88","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronym ACA; process named"}
+{"id":"3c3c8f23ffbf5c9a9193f26e90b6a824","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"394ae8b54b7b439d8685131ae2518f66","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the payment source used for deposit' self-resolved"}
+{"id":"7bd6285618765ce6a0a489895a1736e5","tags":[],"confidence":0.45,"bucket":"near_miss","why":"long-ish; no clearly shorter rewrite"}
+{"id":"d797ef95babb9cd2084f688b64849c2f","tags":[],"confidence":0.5,"bucket":"near_miss","why":"long, named, hard to shorten"}
+{"id":"eff4555e61cfaf73a4d3fb43c78d7922","tags":[],"confidence":0.55,"bucket":"near_miss","why":"named 'The White House'"}
+{"id":"a904b65c327ad49c8979ed40badcb76a","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"0ce035dab321537583326a936f94f57b","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'currently' time word; long"}
+{"id":"bf1e158a4ecf4dd883815ec930dc7f5e","tags":[],"confidence":0.8,"bucket":"clean","why":"clear recommendation"}
+{"id":"d16fd3c07e574eb482bd14e43244be21","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the reported use' self-resolved"}
+{"id":"2d39e37a38e65fc0a4a6fb5654e48d5d","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the advancement of AI' self-resolved"}
+{"id":"816849bbb5efe71a7c8a3962323c3c8e","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Tribal cultural interests' unspecified but not definite"}
+{"id":"1ab517eb96314b6fb4844ffed81e45e0","tags":[],"confidence":0.5,"bucket":"clean","why":"clear enough"}
+{"id":"562ad722c0db4417a9d16540fc4a3913","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named agency FDA resolves itself"}
+{"id":"21699046848b772da7357c0ae7162127","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"98f4388a9a85402fa8b8023d48941576","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"6f94c9f639265dd88968d692cb6eb742","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"a012ac4dfcb70d71db7c7434b5659edb","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"10d21ee73c61c4add8cc1798de3ba801","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"6dc75e12110688faeae67945cd2b277c","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the police' generic"}
+{"id":"70794506598eff0d55f1a66d9e6a4d2f","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'It's time' time expression; informal"}
+{"id":"22c4b0e8fa107973a8b0d1cb256307d4","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym ICE"}
+{"id":"a94ade8973b943a28c5d42f6b1e848a3","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym VAERS"}
+{"id":"9711a19a5cb343839b5cad0dcc2f50f2","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'The appeals court' and 'the block' unspecified"}
+{"id":"83c92da8c9124f34a79073c166e56edc","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"acffff8f65954fba221d1a949c4e251d","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"e787b40b58755657bb12092064a458c2","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'consent or approval' redundant"}
+{"id":"e53a7fd0067b9a21106e91f739cf2953","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"1bdd4f4c98908cb3e9ca41c35d69fcc0","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"077b8992f3a544f89604f415da720c62","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"0c5f0b22f30b1dd388722d7c8d322808","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"504a5cb160aa45cf83498a3ab9467fcb","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"ab23e704ff5850e2bd518f6e1a6a43e4","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"c256b9dcb9cf4f7c9e87257c5d1e977d","tags":[],"confidence":0.8,"bucket":"clean","why":"clear recommendation"}
+{"id":"73c88134501a4f5f9fb13eff6159f4b3","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named court ICC resolves itself"}
+{"id":"c18b5e8bb95e49a8b589628edc7d2eba","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"a296498f597a46fe992e1033f17ab6e9","tags":[],"confidence":0.8,"bucket":"clean","why":"clear, well formed"}
+{"id":"db92a499439559548d7c1b3f1c601dd4","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"ba069fe1a11f4efabf5a45b95b66644e","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the 1MDB scandal' named"}
+{"id":"d6807a16fcd6231ea210fdff4c74a462","tags":[],"confidence":0.9,"bucket":"clean","why":"clear recommendation"}
+{"id":"2da703b8aeda4cafa9e7a3be2dbd75f2","tags":[],"confidence":0.9,"bucket":"clean","why":"clear, well formed"}
+{"id":"ab93c3e14a4d49f491f2bbc7ed6ddb28","tags":[],"confidence":0.85,"bucket":"clean","why":"clear, well formed"}
+{"id":"91fcf558c0ed5303becf4e24a16f8b6f","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'allows tasks to be completed faster' repeats the point"}
+{"id":"3443b40d935f34bb8df25a1bc7d6eccf","tags":[],"confidence":0.85,"bucket":"clean","why":"clear recommendation"}
+{"id":"7b42cc9a05d04d30ba6af72f153c8289","tags":[],"confidence":0.85,"bucket":"clean","why":"named person, clear"}
+{"id":"5c51b349986350238715c502d390e1af","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The aesthetic quality of AI-generated images' self-resolved"}

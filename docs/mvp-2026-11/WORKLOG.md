@@ -682,3 +682,95 @@ Verified live: `setup` (checkpoint at edition 2026-10-28.1). A test helper then 
 What reset does not undo: edition numbers move forward (a PASS and its rollback are two editions with the same text, both committed). The test's rule change rows stay in Rule changes as Rolled back or Rejected; they are out of Lessons waiting and block nothing.
 
 Never run `tag` while the mocks are in Claims: it overwrites the mock answers with real reads. When the demos are over, delete the two mock claims and their two ledger rows by hand.
+
+### 55. Import 400 more Geo claims, chosen by Claude (2026-10-29)
+
+**Context.** The product owner asked for 400 more claims "similar to seeded", with these rules:
+- tagged Debate;
+- not published by the Geo bot (the personal space "Web Knowledge", `cc0bf85a…`);
+- in the canonical spaces except Podcasts;
+- spread over publish dates;
+- leaning toward claims likely to break the rulebook.
+
+The selection was to be an agentic operation rather than a tight script, and guardrails that block it were to go: "We are the rulers of the rulebook".
+
+The owner's answers:
+- about 70% likely issues, the rest near-misses and controls;
+- the seed's space weights doubled, with a small share for the extra spaces;
+- for the likely issues, infer working tests for the text-only tags (phrasing, grammar, structure), and ignore the tags that need Geo or the web.
+
+The plan is at `~/.claude/plans/i-want-to-import-prancy-muffin.md`. Decisions P38 to P41.
+
+**Done.**
+
+Code (commits 17f78f2 and ff939fc, a Sonnet coder):
+- `scripts/geo-query.mjs` sends free-form read-only queries through `lib/geo-read.mjs`. The same refusals apply, and every attempt is logged and counted back. It runs with no permission prompt.
+- `config.json` gains:
+  - `geo.allowed_spaces`: 12 canonical spaces, Podcasts out;
+  - `geo.bot_spaces`.
+- `geo.spaces` and the pick are unchanged.
+- `add.mjs`:
+  - gains `--claims-file` (`schemas/import-selection.schema.json`);
+  - has no item cap;
+  - takes its spaces from the allowed list;
+  - lets Notion make a missing Geo Space option on write. The read-back is unchanged.
+- `setup.mjs verify` accepts Geo Space options listed in `structure.json` that are not live yet (`GROWING_OPTIONS`).
+- Tests: 2,384 to 2,409, all passing.
+
+Docs and skills:
+- A new `import` subcommand and `references/import.md`.
+- A copy of the geo-query skill (content-management 0.2.9), with its client section pointed at `geo-query.mjs`.
+- DECISIONS P38 to P41, CLAUDE.md rules 2 and 10, the AGENT.md add step and import paragraph, and both `report-examples.md` copies.
+
+The authorship path, found live:
+- An entity has no author field.
+- Take the smallest `validFromKey` of the claim's Name value versions. The `editVersion` with that `versionKey` has `createdById` (the author's personal space) and `createdAt` (the real publish time).
+- Checked on a seed claim ("Add Immigration claims", 2026-07-22) and on the bot's 6,915 edits.
+
+The pool (`evidence/32-import-400/pool-stats.json`):
+- The Debate edges were read for all 12 spaces.
+- The six extra canonical spaces hold no Debate claims, so the import comes from the seed's six spaces.
+- After Claim type, name, first-space-wins, not-in-Claims and same-text: 6,160.
+- The bot's claims were dropped: 151. Every claim's author was found.
+- That leaves 6,009.
+- Months run from 2026-07 to 2026-10, and the edit dates agree with `createdAt`.
+
+The selection:
+- Criteria: `criteria.md`, for choosing only (P41).
+- Scoring: six Sonnet scorers labelled a seeded, month-spread sample of 2,807 (`labels/`).
+- `pick.mjs` chose 400:
+  - by space: U.S. Politics 100, World affairs 100, AI 80, Health 60, Crypto 40, Technology 20;
+  - by bucket: 279 likely issues, 72 near-misses, 49 controls.
+- Crypto had only 12 likely issues in its whole pool and Technology none, so their 30 issue slots went to the four larger spaces. The space totals stayed as asked.
+- Tags: Context-dependent 115, Wordy 95, Poor wording 59, Incorrect grammar 17, Trailing period 7, Improper capitalization 3, Multi-sentence 1.
+- Months: October 268, September 105, August 25, July 2. Every month in a space's pool is represented, and the split mirrors the pool.
+
+Verified:
+- 10 random picks re-checked live: the Debate edge in the space, the Claim type, the space, an author that is not the bot, and the name. All passed, with 0 requests that were not queries.
+- `readSelection` validates the file: 400 items.
+- The 400 are unique, none is in Claims, and no two have the same text.
+- The Opus review of the criteria and 40 picks: GO with notes. It estimates about 74% of the issue bucket are real issues (Context-dependent about 84%, Wordy about 60%, Poor wording about 70%). Applied:
+  - the Context-dependent rules quoted verbatim;
+  - notes on the contested tests;
+  - six label overrides;
+  - Context-dependent's share raised to 60% of issue slots;
+  - Wordy picks that rest on length alone moved last.
+
+**The import, run live after the owner's yes.** Command: `add.mjs --claims-file docs/mvp-2026-11/evidence/32-import-400/selection.json --run-id 20261029-import-400-add`.
+- Exit 0: 400 added and read back, with 0 mismatches and 0 unchecked.
+- Geo: 16 requests, 0 that were not queries.
+- One claim's Geo Tags "AI" and "debate claim" were left out, because the column has no such options.
+- A claims-only pull afterwards: 602 rows (200 seed, 2 demo mocks, 400 imported), 0 duplicates, all 400 present and unread. Geo Space: U.S. Politics 100, World affairs 100, AI 80, Health 60, Crypto 40, Technology 20.
+- `status`: "400 new claims not read yet".
+- `setup.mjs verify`: "added after setup: 402" and 7 differences, none from the import:
+  - three columns people added to Claims (Proposed fix, Reviewer, Filter tags);
+  - three view column orders people changed;
+  - Context-dependent's When to use against `setup/taxonomy-issue.json`, which promotes have changed since setup.
+
+**Not done or not verified.**
+- Nothing is tagged. `/claim-tagger tag` reads the 400 when someone asks: 400 judge reads.
+- From the review: only Context-dependent feeds the loop today (distill reads judged tags). The roughly 165 picks for the other tags wait for rules that people write.
+- The near-misses lean on "named institution" and "generic government". The controls are easy.
+- The demo mocks are still in Claims (entry 54).
+
+**Next.** `/claim-tagger tag` when the owner asks: never while the demo mocks are in Claims (entry 54), or remove the mocks first. Then commit this entry with the docs, skills and evidence.

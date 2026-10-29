@@ -1,0 +1,6 @@
+query Pool($after: Cursor, $space: UUID!) {
+  relationsConnection(filter: {typeId: {is: "257090341ba5406f94e4d4af90042fba"}, toEntityId: {is: "55c95b2626f8482cb9739ea99dfde438"}, spaceId: {is: $space}}, first: 500, after: $after) {
+    nodes { spaceId fromEntity { id name typeIds spaceIds createdAt } }
+    pageInfo { hasNextPage endCursor }
+  }
+}

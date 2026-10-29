@@ -334,7 +334,7 @@ Add: 1 claim added to Claims from Geo ("The new tax will cost families about..."
 | Already in Claims | 1: "The senator voted against it twice." |
 | Not found in Geo | 1: ID ending 0000000e |
 | Same text as a claim in Claims | 1: "The senator voted against it twice." is there already |
-| Other reasons | 3: 1 not a claim, 1 not in the six spaces of Claims, 1 not a Geo link or ID |
+| Other reasons | 3: 1 not a claim, 1 not in the spaces of Claims, 1 not a Geo link or ID |
 
 Next: type /claim-tagger tag to read the new claim; it is in All claims (link).
 
@@ -370,13 +370,11 @@ Add: nothing was added to Claims: 1 not found in Geo, 1 not a claim and 1 not a 
 
 Next: check the links and type /claim-tagger add again.
 
-### add (Claims), too many
+### add (Claims), from a selection file
 
-One command takes at most 50 Geo links or IDs. Over that, the script refuses before it reads anything from Geo or Notion; there is no table.
+`/claim-tagger import` ends with `add.mjs --claims-file <selection file>` (decision P38). One command takes any number of claims; the report has the same sentence, table and Next line as for links. A stop says to run the same file again, not to type links:
 
-Add: nothing was read or added, because 62 links or IDs are more than the 50 that one command takes.
-
-Next: type /claim-tagger add again with at most 50 links.
+Next: run the same selection file again; the ones added are skipped.
 
 ### add (Claims), stopped
 

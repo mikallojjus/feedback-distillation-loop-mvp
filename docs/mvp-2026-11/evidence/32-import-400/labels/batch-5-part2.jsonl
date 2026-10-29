@@ -1,0 +1,120 @@
+{"id":"d7ab9737fa784274aaf97ecdfe080c6d","tags":[],"confidence":0.7,"bucket":"clean","why":"named city, mass noun 'unrest' only"}
+{"id":"d17bcbeb10a141868e7552baf3020ba6","tags":[],"confidence":0.8,"bucket":"clean","why":"named countries, self-contained"}
+{"id":"17b265228c334ec5b7999bbc786c308a","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"9119d6ae81c1a3ef9d6b208febf46e6c","tags":[],"confidence":0.65,"bucket":"clean","why":"named company, subject resolves to Anthropic"}
+{"id":"742600d3a3dd5fb9b392c8c47b05c2bf","tags":[],"confidence":0.5,"bucket":"near_miss","why":"indefinite 'Some people'; 'it' and 'their' resolve inside"}
+{"id":"ceec9a2622cc4db4ac71103ae666eeb2","tags":[],"confidence":0.8,"bucket":"clean","why":"plain policy claim, named region"}
+{"id":"b2db9c7a36c6060c017a0d373f1d0cfa","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"734c47b98a205d13a208eb845ae3f2e7","tags":[],"confidence":0.6,"bucket":"clean","why":"'it' resolves to 'Increasing ...'; generic society"}
+{"id":"2eeced459ecb45819fd4fc4fc064af25","tags":[],"confidence":0.7,"bucket":"near_miss","why":"named law 'The CLARITY Act' in capitals"}
+{"id":"e56b6aed3c8c45aebf7c774ff03d0b9a","tags":[],"confidence":0.7,"bucket":"near_miss","why":"named agreement; EFTA acronym"}
+{"id":"e567445b3968428d859bbe3667282193","tags":[],"confidence":0.85,"bucket":"clean","why":"named person, self-contained"}
+{"id":"30f6d3cb69f942a69baac8cc7f5de9ce","tags":[],"confidence":0.85,"bucket":"clean","why":"plain claim, IVF acronym only"}
+{"id":"2a6d578a5e73a5223d1105c1f2a0d2d6","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"a65a2fc11b1a5a719b321bcfa782b918","tags":[],"confidence":0.8,"bucket":"clean","why":"named countries, 'its own' resolves to China"}
+{"id":"e93b41b68cb15d00a842a51a1897f7f8","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"a3e90cc14570dbdb114fe926e72eb112","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"6cba9a453385ab7978ee760fe26f52e9","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym ICE, a named agency"}
+{"id":"2e98d6622a5e5cccadbda2a613088465","tags":["Poor wording"],"confidence":0.55,"bucket":"issue","why":"'tools with their own brains' and scope of 'not the companies' muddled"}
+{"id":"580a77bc22a7430d9581ede0efc4a6d1","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"5d7c3fa3b60e59cea330d0efcca1b181","tags":["Poor wording"],"confidence":0.55,"bucket":"issue","why":"stacked qualifiers before the verb make the subject hard to parse"}
+{"id":"04f46cc1374c5c4f9d29c37bba34f9bf","tags":[],"confidence":0.75,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"9b4a9df7944848a1a4b7ef7837c8e971","tags":["Context-dependent"],"confidence":0.55,"bucket":"issue","why":"'the Black Sea shipping attacks' needs an outside antecedent"}
+{"id":"8194fe6ccbfa51b7a934e2cc4b4ac160","tags":[],"confidence":0.6,"bucket":"clean","why":"short, vague but self-contained"}
+{"id":"32054d61f1824106b43d11eeb044da78","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"9a43ab017b814a87a0fd9167d8dc9f27","tags":["Poor wording"],"confidence":0.35,"bucket":"issue","why":"'they knew about them' has unclear referents"}
+{"id":"186afaaed79f4268bbbfc49ea5a36197","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"ff45853a35fe40a990c858b99bb7adff","tags":["Context-dependent"],"confidence":0.6,"bucket":"issue","why":"'the 10% bounty' and 'the remaining ... bitcoin' need outside antecedents"}
+{"id":"f9d179a155a2524eac94d38afe1e6eb5","tags":[],"confidence":0.8,"bucket":"clean","why":"'it' resolves to intelligence"}
+{"id":"927ba2afa2684f79adb36fd63b085f1b","tags":["Wordy"],"confidence":0.6,"bucket":"issue","why":"'is the reason people are able to be in that country' padded"}
+{"id":"cead9518274c56358f77f9e3369dfb00","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'regime and government structure' redundant"}
+{"id":"b1de53da110d4f999715faf42ec8828f","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym EU, a named body"}
+{"id":"98c55d7d43a823ed71548f745d025e62","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named event 'the Miami G-20'"}
+{"id":"caa6f968cd0d90b22c495104817ce0f0","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'his' ambiguous but resolves inside; named people"}
+{"id":"bf7af1834f5a46d192e61215a589127f","tags":[],"confidence":0.7,"bucket":"near_miss","why":"time expression 'this year', named act"}
+{"id":"0744dabae2674899b5fb83dc89dc9343","tags":[],"confidence":0.55,"bucket":"near_miss","why":"named party; 'their barrier' resolves to the parties"}
+{"id":"2ec1462858e75c7d93810772442e722e","tags":[],"confidence":0.8,"bucket":"clean","why":"generic claim, 'their' resolves to prisoners"}
+{"id":"0c573b58a0d64223b772b1319b7449a9","tags":[],"confidence":0.8,"bucket":"clean","why":"named country, indefinite budget"}
+{"id":"4814bc63215441e68d6e34c740b31ad8","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"535b4668fa384c45bad600d5c81d7d83","tags":["Context-dependent"],"confidence":0.55,"bucket":"issue","why":"'the response strategy' needs an outside antecedent"}
+{"id":"c2fe0a71e717553a9e782ab6bf9a5507","tags":[],"confidence":0.9,"bucket":"clean","why":"plain generic claim"}
+{"id":"59bbddc52a9e8ed166dd70f333831cc9","tags":[],"confidence":0.5,"bucket":"near_miss","why":"time expression 'extended period'"}
+{"id":"cae73fa62d84431ea983e851cc9d65aa","tags":[],"confidence":0.85,"bucket":"clean","why":"plain claim, named country"}
+{"id":"2182c91ae1be4d75a205f1046cc8a27f","tags":[],"confidence":0.85,"bucket":"clean","why":"named program, self-contained"}
+{"id":"121d357639a54bc9a7526462c2f697d5","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"bafe2f44ca44544f8ed6025d4c2f2887","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'The perfectionism encouraged by AI use' resolves itself"}
+{"id":"6359a9f99e0edbb3c4e547a23ad504b7","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"c8fdd4903f59542597cf9da9c9b46b36","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"0b1e2273d5c0470d8f67ff675821d5c6","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}
+{"id":"495b499f4d3a5dea80eaa831812d40e4","tags":[],"confidence":0.65,"bucket":"clean","why":"long but each clause carries meaning"}
+{"id":"86950bf5169d49b0ff848f7ed02cfca4","tags":[],"confidence":0.85,"bucket":"clean","why":"named state, plain claim"}
+{"id":"e24409d5c6a41ed7aeb393948bd712c6","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'mutually recognize each other's' says the same thing twice"}
+{"id":"1204747a938e13356bdc4340296eef83","tags":["Context-dependent"],"confidence":0.85,"bucket":"issue","why":"'the arch' and 'the project' have no antecedent"}
+{"id":"62969761fc4ecec8903dcc5296385970","tags":[],"confidence":0.5,"bucket":"near_miss","why":"named institution Congress, named person and party"}
+{"id":"4c255ef0434a44d38eae3f9255b532a8","tags":[],"confidence":0.7,"bucket":"clean","why":"named countries; 'its' resolves to Brazil"}
+{"id":"1ab2234e06191b0b8b32a0d3b301fbfe","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"d02434b8f62041988632471783402aec","tags":[],"confidence":0.6,"bucket":"near_miss","why":"dated election resolved by country and date"}
+{"id":"9207d6c3ad735601a4f86d97f6194c63","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the alliance' resolves to NATO; 'historically' time expression"}
+{"id":"4ca2a23f077451b0b2e831f1809de4a7","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'The concept of' and 'care and assistance' pad the claim"}
+{"id":"2dc4330ccf9b44899d66f5294b52094f","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'Washington' as the US government; 'the basis' resolved in claim"}
+{"id":"18068b0efe23b60d8a4009dde5d13e36","tags":[],"confidence":0.85,"bucket":"near_miss","why":"named court Supreme Court resolved by 'Americans'"}
+{"id":"2770b21348ad449aaa315b96d98116f7","tags":[],"confidence":0.7,"bucket":"clean","why":"mass nouns, named program, no trigger"}
+{"id":"8c3df63b89715d84910e13f9ba8fd6df","tags":[],"confidence":0.6,"bucket":"near_miss","why":"semicolon joins clauses; abstract 'the necessary credibility'"}
+{"id":"a13203ab4d7956c1b9dc0ad4d8609241","tags":[],"confidence":0.85,"bucket":"clean","why":"named platform and countries"}
+{"id":"2bc17052223d54f2a36fb217acc1e6ec","tags":[],"confidence":0.65,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"e5f2297f249f6ab86b68c7ed0ad92f3d","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"noun stacks 'transfer reprioritization' hide the assertion"}
+{"id":"6e4b742b01ed46a980d13db45c512125","tags":[],"confidence":0.85,"bucket":"clean","why":"plain policy claim"}
+{"id":"6829b691cd84d0d3505704fa66839621","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"0535b754f35b53d5a8a2ccff4c4e37dd","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"'that provide recommendations' attaches ambiguously to ads or chatbots"}
+{"id":"3790c2ef30b845bdbb8c80fd95bff993","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"64c472c431ad53c1b9ecff69f71a4f61","tags":[],"confidence":0.5,"bucket":"clean","why":"long but not clearly shortenable"}
+{"id":"391ef1726e9a4052a3553427db14a805","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronyms GLP-1 and NAION in capitals"}
+{"id":"e4ce47f7365b586e9cbda8c5ea3ddfe9","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"9ff14d3307a05835915bf6e192926130","tags":[],"confidence":0.7,"bucket":"clean","why":"named countries, self-contained comparison"}
+{"id":"1c83d20070d8559d690a74bdf7e5d860","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the Navy' and 'the Iran war' resolve to named things"}
+{"id":"c229b3e204ef5b79b72ca1e658ef9cdd","tags":[],"confidence":0.55,"bucket":"clean","why":"hedge 'in some form' is mild, no clear shorter rewrite"}
+{"id":"d54e1722320643e1915a1bdb5cc4835a","tags":[],"confidence":0.85,"bucket":"clean","why":"named country and company"}
+{"id":"4105f9e23396d8ecb7d2a7305a35ffa9","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the West Bank' is a named place"}
+{"id":"46cd6ef5cb2547208a1d99e0f359f1be","tags":[],"confidence":0.7,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"cdf646a94a375a8b9895ba40cf14cb14","tags":["Poor wording","Wordy"],"confidence":0.5,"bucket":"issue","why":"'a mega supporter' of whom is unclear; nominalized 'The ownership of'"}
+{"id":"a314f654023042c8b1eff2a1dcd6f77e","tags":["Poor wording"],"confidence":0.45,"bucket":"issue","why":"'addiction medication costs lives' misreads 'costs' as a noun"}
+{"id":"43abbfc8a5b04604aea1238c1489f77c","tags":[],"confidence":0.7,"bucket":"near_miss","why":"acronym MAID in capitals"}
+{"id":"96dd6b1518455083a18bc84545d50a28","tags":[],"confidence":0.6,"bucket":"near_miss","why":"indefinites 'A university', 'a stance', 'a student'"}
+{"id":"57d659a8a7f180501cee2be0cc4a216e","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'The war against Iran' resolves itself"}
+{"id":"e79f1fb7eb114da0a42fb7543a84b7d6","tags":[],"confidence":0.85,"bucket":"clean","why":"named person, self-contained"}
+{"id":"1fedce694e2950659d65302e2bd5ea48","tags":[],"confidence":0.55,"bucket":"clean","why":"vague 'consensus age' but generic and self-contained"}
+{"id":"0e65f3d2cbc445038395fe659d656cc3","tags":[],"confidence":0.8,"bucket":"clean","why":"named countries, indefinite process"}
+{"id":"bc2fff62681c67e64c70c040554cb593","tags":[],"confidence":0.85,"bucket":"clean","why":"named program, generic subject"}
+{"id":"d8f5dc1b872ba69c85aff5d99cb9ee65","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Democrats' losses' unspecified but tied to named region"}
+{"id":"709b641216cf5805b84f9adc66d8d09a","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'create a vacuum allowing for the rise of' shortens to 'let'"}
+{"id":"24b782f8b04a501231fc2bfc94f9b2ba","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"30d499ffd5d84e7c89700330213e49b2","tags":[],"confidence":0.65,"bucket":"near_miss","why":"acronym UNIFIL; 'another ... mission' resolved in claim"}
+{"id":"30065c250014417a95d7f1cc3a806a38","tags":["Context-dependent"],"confidence":0.8,"bucket":"issue","why":"'the pact' is never identified"}
+{"id":"815fd78faed40686cd691f242d5fd48c","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the Iran war' resolves itself"}
+{"id":"9e69f638917c411e895ce5f81c1ff30a","tags":[],"confidence":0.85,"bucket":"clean","why":"named countries, plain claim"}
+{"id":"0365ad407e6926c588dbd0a38a070010","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"'Texas funding stance' noun stack hides what the stance is"}
+{"id":"b3179ac903644531b222d9180ea26cbb","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"5131575f010c4d91a6b2117bb107e4a6","tags":["Context-dependent"],"confidence":0.8,"bucket":"issue","why":"'The reported waiver' has no antecedent"}
+{"id":"85b71a2a4ffb541188acb947dae15dc9","tags":["Wordy"],"confidence":0.65,"bucket":"issue","why":"'two sides of the same coin' and 'not fundamentally different' repeat"}
+{"id":"cf1807e434f34d7e823b20fc7110fa68","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"7e3aa9bd619b4299bedf972cbe803e02","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}
+{"id":"c36715aab06a4350b1ffcff2957fd505","tags":[],"confidence":0.85,"bucket":"clean","why":"plain claim, acronym ETF"}
+{"id":"543a319e2e3c5d51a7906977d7adbcac","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the child' resolved by 'embryos' in the same claim"}
+{"id":"5e264c5e02fa58f6b9e0a26c75120ed1","tags":[],"confidence":0.7,"bucket":"clean","why":"generic claim, mass nouns"}
+{"id":"e476aec166d55efb83cf45a23e66259a","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"'There is no evidence to show that' padded"}
+{"id":"a5b52443c6955c2db85b324828249cac","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"66aa4a0cb6224be5895107303882b79d","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"4da6687c9f7c10e8a873e169096a8273","tags":[],"confidence":0.7,"bucket":"clean","why":"noun stack but parses; no trigger"}
+{"id":"df4851050eb35be786f92e66531f1771","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"'Early consumer market humanoid robots' stacked modifiers"}
+{"id":"5b1a923eedc64840963e141a96dba361","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'Sudan's peace negotiations' resolved by the named country"}
+{"id":"906d425161055a18687021742201766c","tags":[],"confidence":0.8,"bucket":"near_miss","why":"named institution Federal Reserve"}
+{"id":"fe6c46b6b7c54e9ebef58c597728d40d","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronym CAR-T in capitals"}
+{"id":"4631882fce654f55a40b3cf8853a56ce","tags":[],"confidence":0.8,"bucket":"clean","why":"named countries, plain claim"}
+{"id":"d759e2f2914e2e30db6d840e9c90a5b7","tags":[],"confidence":0.7,"bucket":"near_miss","why":"named body 'The Board of Peace'"}
+{"id":"1eaf3735d3f958cf8a7472456f922866","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"27733984bd744f4e91b70b12c5e76cc7","tags":[],"confidence":0.5,"bucket":"near_miss","why":"generic 'the public'"}
+{"id":"1841d659f56450008365ebc05a981349","tags":[],"confidence":0.8,"bucket":"near_miss","why":"abstract 'the economy', 'the GDP'"}
+{"id":"1c7a9eca49369afd266a30d16c7d6098","tags":["Poor wording"],"confidence":0.45,"bucket":"issue","why":"'likeness should endorse' and dangling 'given while alive' unclear"}
+{"id":"dc983dbb3f4846e5a1f647d2abc2fc4e","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}
+{"id":"1c2dd0293de048728594cc670153ae89","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"7f1cd4fe14a442318c7e005ca4851b17","tags":["Context-dependent"],"confidence":0.55,"bucket":"issue","why":"'the imported Ebola threat' needs an outside antecedent"}

@@ -1,0 +1,115 @@
+{"id":"9d0b9dfab8ef52eba51c76b3cdd7de2f","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the future' is a generic time expression"}
+{"id":"c1b5e0c33d2f2476f5b3627d1a6d0e9e","tags":[],"confidence":0.5,"bucket":"near_miss","why":"long but each part adds meaning; 'Washington' as metonym"}
+{"id":"1079e2bd9150e27c5d3a33f5d4c675fe","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"330a4fc7214f03056b86472f29de513d","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"2735bb0b0a2147dc840320ef547f811d","tags":[],"confidence":0.5,"bucket":"near_miss","why":"indefinite 'a favoured candidate'"}
+{"id":"e41f6a1f3afeb5dd7db8e997796fd9ad","tags":["Incorrect grammar"],"confidence":0.45,"bucket":"issue","why":"singular 'narrative' lacks an article before the compound subject"}
+{"id":"20bb8b4eb14b3cff0a0725d65b4f5b5f","tags":[],"confidence":0.7,"bucket":"near_miss","why":"'the prosecutor who convicted ...' resolves itself"}
+{"id":"6f0f096cc66e401b975174622c4f7785","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"8b7b3719bd5140f5ba5c9e24d6f7b8a9","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"1d5e673e8801d7a55a9b3e8f6c213402","tags":[],"confidence":0.85,"bucket":"clean","why":"named country, plain claim"}
+{"id":"ebff7de60773f203ad3dce69830b7746","tags":[],"confidence":0.85,"bucket":"clean","why":"plain policy claim"}
+{"id":"c3b45e9562639e3dc1fc93f28adc6906","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"ea69239040195ec1d3dd53349d60efca","tags":[],"confidence":0.8,"bucket":"clean","why":"generic claim, 'their child' resolves to parents"}
+{"id":"d84fc14bb1ee6d0fff5638ded131597f","tags":[],"confidence":0.5,"bucket":"near_miss","why":"year 2028 is a time expression"}
+{"id":"c0f6564c2896b08560fa1ff5565c9c61","tags":[],"confidence":0.7,"bucket":"near_miss","why":"named institution Senate; 'the Iran war' resolves itself"}
+{"id":"7199bdb53bd5978b41a33aba9b52a0fc","tags":[],"confidence":0.55,"bucket":"near_miss","why":"noun stack but parses; 'next government' time expression"}
+{"id":"9eff3187672242949b15613150f92273","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'Embaló's return' resolved by named person and country"}
+{"id":"1b46b87ef51951d9b2e6a519608f0a3d","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The argument against ...' resolves itself; long but not shortenable"}
+{"id":"f2d24dd9ffc1be34fa33734adc1d7906","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"d65e196c28852b54ffb694fcb5261c50","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"fa52a1ab46630797f01a3e6f6f847e1e","tags":[],"confidence":0.8,"bucket":"clean","why":"named company and model, self-contained"}
+{"id":"b1ccf2b458c4614d97bf565f97463122","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"2a00b57ecde647bd84262ec6bc466428","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym NATO in capitals"}
+{"id":"c779e22d7d1e5eefbe3c8d70ee6a435e","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the mistakes it makes' resolves itself"}
+{"id":"f0445b2995a14cb5b38ee4d8b42e44fa","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"1209a572f2de50d2b66cccce7f70eb6b","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'is dependent on' and 'The effect of' shorten to 'depends on'"}
+{"id":"affdcfaf93eb45009d113c7cc458ee6b","tags":["Context-dependent"],"confidence":0.45,"bucket":"issue","why":"'The routine childhood vaccination schedule' does not say which one"}
+{"id":"c71e2f53cc5f9b0699eea11a313eb93c","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named institution United Nations"}
+{"id":"b9e5992e94394ff3a2a181b793cdd55f","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the U.S. healthcare crisis' resolves itself; named program"}
+{"id":"7be134ad3d2352d2a0dc06017b148d00","tags":[],"confidence":0.6,"bucket":"clean","why":"'utilized' is a mild choice, no clear shorter rewrite"}
+{"id":"3eaebc5337295a618ff542892727a267","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"5a6357795a76bd7b17f772f514782a12","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"76fd177c038f5b918589fbfa29ac61cf","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"bf098f6da2975fc09c24724f548a7513","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"'change the balance of work' and 'a better experience' are vague"}
+{"id":"0a3209e2127d5dbca24b0702d2467dbc","tags":[],"confidence":0.55,"bucket":"near_miss","why":"indefinite 'Some college teachers'; long but not shortenable"}
+{"id":"b9271f1add215c6d81e196f52ea519b5","tags":["Wordy"],"confidence":0.45,"bucket":"issue","why":"'The prevalence of ... serves as a cautionary example against' padded"}
+{"id":"f6953f69e15543f5b5c50d50bdb5a85a","tags":[],"confidence":0.75,"bucket":"clean","why":"named countries, indefinite strikes"}
+{"id":"418cf07d622fd66a9305b00256ee04fe","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"ea5c54b5d4314182ad9ebf46ca719b54","tags":[],"confidence":0.8,"bucket":"clean","why":"generic institutional claim"}
+{"id":"aea719e16ac1f71354a600243dfb8f20","tags":[],"confidence":0.85,"bucket":"clean","why":"plain short claim"}
+{"id":"dcea65e093ba4678a983f8d8d3fd6925","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'next national election' is a time expression tied to Italy"}
+{"id":"85d9855a2a569118ddf0599d8dedae63","tags":[],"confidence":0.7,"bucket":"near_miss","why":"abbreviation 'Lt. Gen.' contains periods; named Pentagon"}
+{"id":"f39832daecec674bbaeae37300739a8a","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"4f72e9946e5bc3d32600899cff756307","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"4e24d31b326d5ef09c8bafd94d981e84","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"f403359aaebe5ec3be8080de64411f96","tags":[],"confidence":0.75,"bucket":"clean","why":"plain generic claim"}
+{"id":"207fad439f585eb89b0011b55ed1a02e","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"bbf7b53abedf5f9c826345ceeb21a0ae","tags":[],"confidence":0.7,"bucket":"clean","why":"plain generic claim"}
+{"id":"e191d2ec979f5d1ba04f8c615ca6460a","tags":[],"confidence":0.6,"bucket":"clean","why":"generic claim, minor number mismatch only"}
+{"id":"6bc3148f91d939c1095533261ceb8d34","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym AGI in capitals"}
+{"id":"7924b542940e12cd486c13a8e3ae7184","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"2842dc3daa2250d0b1b1a3be8b7ef580","tags":["Poor wording"],"confidence":0.5,"bucket":"issue","why":"noun stack and 'extend to the full life of a child' unclear"}
+{"id":"a194398810437d1062707c5576bd3967","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the conflict with Iran' resolves itself"}
+{"id":"7af4374ab3d8abe0f4ecc1e08b070650","tags":[],"confidence":0.55,"bucket":"near_miss","why":"acronym FDA, a named agency"}
+{"id":"21ec3d4808a0453990d3ad4916b020e4","tags":[],"confidence":0.7,"bucket":"clean","why":"named model, self-contained"}
+{"id":"c23f6ccfde7a4f76bbe7ddf3ac0b6491","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'The existential threat of AGI' resolves itself"}
+{"id":"b1d2cffc2bef8df080cab6cfa74509f6","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'the internet' is a unique thing"}
+{"id":"14b8722e1b425755b42a28c42ce04297","tags":[],"confidence":0.55,"bucket":"near_miss","why":"indefinite 'Some people'"}
+{"id":"42664b9ee5c15d66b3fa2a02aabba7f0","tags":[],"confidence":0.7,"bucket":"clean","why":"generic claim, 'their' resolves to the companies"}
+{"id":"dc2ade0364e25c60a08366ef06192ff9","tags":[],"confidence":0.8,"bucket":"clean","why":"named country, plain claim"}
+{"id":"b6fa0a805e054bb090dcc96fe7dc92e5","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the occupied territories' is a named place"}
+{"id":"5faca27665615ea89a1a84b8a16cd44a","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'The environment in which children grow up' is generic and resolves itself"}
+{"id":"496085402d7df0a803d5a09d437a0060","tags":[],"confidence":0.75,"bucket":"clean","why":"plain generic claim"}
+{"id":"ae2732a89f09570cbf92683429e52475","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The food and habits available to children' resolves itself"}
+{"id":"76cd17b908062c109a99a99d2db4ddf3","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the higher prices Americans pay' resolves itself"}
+{"id":"e09de698383b5bafbeb29495274445f7","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'The user base of Polymarket' resolved by the named platform"}
+{"id":"870f99b8bf77f8273bfeaa7ebb00db5f","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"679ce6f23c6d10ccd5720cf2d75899fe","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named strait, named country"}
+{"id":"c925a5d1e2104f2fb25b03945da302ef","tags":[],"confidence":0.7,"bucket":"clean","why":"'it' resolves to support; 'Washington' metonym"}
+{"id":"3c19f2c7572a75aee2e4b95d5e75b43c","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"42f8604b05ef4471a221154bdaec7238","tags":["Context-dependent"],"confidence":0.75,"bucket":"issue","why":"'the Manchester case' needs an outside antecedent"}
+{"id":"2fbe983d7b3e5c22a678abf461e4bac5","tags":["Wordy"],"confidence":0.65,"bucket":"issue","why":"'essential and very important' redundant"}
+{"id":"e32236ed5a4c95456aaac8fd22a0fe27","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named institution Pentagon"}
+{"id":"d8c44612dd57439b8ed180b1ce1da45d","tags":[],"confidence":0.65,"bucket":"clean","why":"plain policy claim"}
+{"id":"f86cb3febd144d51925d8efc0c2e705f","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"b90cc842ea7847a5993400a4f8b07c42","tags":[],"confidence":0.75,"bucket":"clean","why":"named countries, plain claim"}
+{"id":"11abe6fd57a3561a9180c3cb0df02f9e","tags":[],"confidence":0.55,"bucket":"near_miss","why":"indefinite 'Some people'"}
+{"id":"a9b89f371a1646e48fb4926c35976cfe","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'The decline in teen ... identification' resolves itself"}
+{"id":"78a4978542be51efb15fdbcb2f5395bd","tags":["Poor wording"],"confidence":0.5,"bucket":"issue","why":"'work more profoundly' is unclear on first read"}
+{"id":"3b53f3a9f3984b3fb910680c45ca27d6","tags":[],"confidence":0.7,"bucket":"clean","why":"named country, self-contained"}
+{"id":"6246fcef9c504f8482d1109100cae4e1","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"4fd90490f92e522e81c71790eb5d35f6","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'global economy' and 'the American economy' overlap; list padded"}
+{"id":"e654f528d3625af2ab24bb7d2e86913d","tags":[],"confidence":0.85,"bucket":"clean","why":"'it' resolves to 'a work'"}
+{"id":"84aca5e629faf0f0e5d80387d9798884","tags":["Context-dependent"],"confidence":0.5,"bucket":"issue","why":"'DOJ's changed titles' needs an outside antecedent"}
+{"id":"e8f084ffec9c3acf4e58de570154d24b","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"2e81f4b9a8d65384b8c2c2ef0057035c","tags":[],"confidence":0.8,"bucket":"clean","why":"named country, plain claim"}
+{"id":"e76f73bf3246542280eb3cd1eaf9924d","tags":[],"confidence":0.55,"bucket":"clean","why":"slightly long but not clearly shortenable"}
+{"id":"928ca3dd223c49c2a521f5e61b9a3f58","tags":[],"confidence":0.7,"bucket":"clean","why":"named countries, noun stack still parses"}
+{"id":"13708b428a8f5cb3b2bf6b16a73c68bc","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"'analytic executives' is an odd, unclear phrase"}
+{"id":"3162cd4521fe5d10204fe531e7dc529d","tags":[],"confidence":0.55,"bucket":"near_miss","why":"named payout attached to a named person"}
+{"id":"93aa4609350e4b44affcfd68ce0a71ef","tags":[],"confidence":0.75,"bucket":"clean","why":"plain generic claim"}
+{"id":"89b1225f8b294bed8f390b22d35e41d9","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'original election deadline' resolved by named country"}
+{"id":"dc9b39afe8a165ebd090c1873738e2c9","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named office and institution Pentagon"}
+{"id":"a75a5cbe12604d0398e08bcd60fecddf","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"ba5e3737acf522ee0e456ca9dd963f87","tags":[],"confidence":0.75,"bucket":"clean","why":"generic claim, no trigger"}
+{"id":"71a808cfd0d05c86b2eaf2624dc49a39","tags":[],"confidence":0.8,"bucket":"clean","why":"named platform, 'its' resolves inside the claim"}
+{"id":"c73055b04fa7402a85ee9d122fc20052","tags":[],"confidence":0.8,"bucket":"clean","why":"named people and place"}
+{"id":"1519731b7a5f578cbbf5dbc7e0fa67dd","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"7a8fd889c3140f6fad846858b567e38c","tags":[],"confidence":0.8,"bucket":"clean","why":"plain generic claim"}
+{"id":"666c663b6a61567196c7decb3282097a","tags":[],"confidence":0.75,"bucket":"clean","why":"generic claim, 'their' resolves to the official"}
+{"id":"ec8024e56e87e941ecc3dec23b32b554","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"935b4f14b51a4c10ac15e14470bf7306","tags":[],"confidence":0.9,"bucket":"clean","why":"plain short claim"}
+{"id":"f2a011dacbe509da50af4b94c0f45fc6","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym MAGA in capitals, named network"}
+{"id":"99d346d1583846c8b1e040b68e66e5d0","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the Pretoria peace framework' works as a name"}
+{"id":"2626f762b5ed522084e1dd45455cd0f0","tags":[],"confidence":0.55,"bucket":"near_miss","why":"abstract 'the speed of AI change'"}
+{"id":"35ba23d861105057bebd2ccaf0253580","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the morning' generic time expression"}
+{"id":"3d2c749b27d14ae28485035e40973202","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the housing crisis' abstract, resolved by Spain"}
+{"id":"64c523de7f31868cc4ecc834c85a886f","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
+{"id":"3f19ea5a698b4f5cb7a8d0a25503e132","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite 'Many', plain claim"}
+{"id":"49547f09cc746829de8a57b7f99c3100","tags":[],"confidence":0.85,"bucket":"clean","why":"proper adjective correctly capitalized"}
+{"id":"0876e6e16b8d4634a2774f38212dea9e","tags":[],"confidence":0.85,"bucket":"clean","why":"plain short claim"}
+{"id":"58cc67585eb5a66cfabe06f31e363731","tags":["Context-dependent"],"confidence":0.8,"bucket":"issue","why":"'The anti-waiver legislation' has no antecedent"}
+{"id":"e8c53bdab7c8c814f4efb24377bf94d4","tags":[],"confidence":0.7,"bucket":"clean","why":"generic idiom 'the world a better place'"}
+{"id":"af94b3f1f7a942588b47d523930bfc6a","tags":[],"confidence":0.65,"bucket":"near_miss","why":"'the U.S.-China tariff truce' resolves itself"}
+{"id":"ee16fab17a334d5ebc4592ebd23ebba1","tags":[],"confidence":0.85,"bucket":"clean","why":"plain generic claim"}
