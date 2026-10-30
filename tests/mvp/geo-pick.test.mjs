@@ -709,14 +709,14 @@ test('the audit file is checked: not JSON, no decisions, a repeated id and a bad
     assert.equal(r.code, 2, text);
     assert.match(r.line, pattern);
   }
-  const liveUrl = new URL('../../agents/claim-tagger-mvp/setup/audit-decisions.json', import.meta.url);
+  const liveUrl = new URL('../../agents/claim-tagger-mvp/setup/v1/audit-decisions.json', import.meta.url);
   const live = JSON.parse(readFileSync(liveUrl, 'utf8'));
   const withLive = await pick(w, { audit: fileURLToPath(liveUrl) });
   assert.equal(withLive.code, 0, withLive.line);
   assert.equal(live.decisions.length, 10);
   assert.equal(withLive.pick.audit.left_out.length, 10, 'none of the ten real audit claims is in the fake');
   assert.deepEqual(withLive.pick.audit.left_out.map((l) => l.geo_id), live.decisions.map((d) => d.geo_id), 'named in the audit file\'s order');
-  assert.equal(withLive.pick.audit.file, 'agents/claim-tagger-mvp/setup/audit-decisions.json', 'a file inside the repository is named relative to it');
+  assert.equal(withLive.pick.audit.file, 'agents/claim-tagger-mvp/setup/v1/audit-decisions.json', 'a file inside the repository is named relative to it');
   assert.equal(withLive.pick.audit.sha256, createHash('sha256').update(readFileSync(liveUrl)).digest('hex'));
 });
 

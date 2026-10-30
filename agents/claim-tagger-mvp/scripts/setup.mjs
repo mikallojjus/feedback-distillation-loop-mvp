@@ -161,9 +161,10 @@ const COMMANDS = {
   root: { setup: true, options: { title: { type: 'string' } } },
 };
 
-const ALL_STEPS = ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'];
+const PER_CLAIM_STEPS = ['seed-audit', 'migrate-decisions', 'archive'];
+const ALL_STEPS = ['api-check', 'pages', 'databases', 'views', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'verify'];
 // With a hub block in the structure (P10, P11) the tables come before the pages, so that Onboarding stands below them, and the hub part follows the views.
-const ALL_STEPS_HUB = ['api-check', 'databases', 'pages', 'views', 'hub', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'];
+const ALL_STEPS_HUB = ['api-check', 'databases', 'pages', 'views', 'hub', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'verify'];
 
 function stepsOfAll(root) {
   try {
@@ -302,7 +303,7 @@ async function dispatch(name, values, ctx) {
     case 'archive':
       return stepArchive(ctx, { planOnly: values['plan-only'] === true });
     case 'verify':
-      return steps.stepVerify(ctx, { taxonomy: path(values.taxonomy), claims: path(values.claims), audit: path(values.audit) ?? defaultAudit(root) });
+      return steps.stepVerify(ctx, { taxonomy: path(values.taxonomy), claims: path(values.claims), audit: path(values.audit) });
     default:
       throw new Error(`setup: no such step "${name}"`);
   }
@@ -395,6 +396,11 @@ async function runCommand(name, args, io, env) {
   if (values.help) {
     io.out(USAGE);
     return EXIT.OK;
+  }
+  // P48: the per-claim steps of the first page. The v2 tables are filled by copy-live.mjs; the first page's archive is done and its files are in setup/v1/.
+  if (PER_CLAIM_STEPS.includes(name)) {
+    io.err(`setup ${name}: ${name} is a per-claim step of the first page (P48); the v2 page is filled by copy-live.mjs`);
+    return EXIT.INVALID;
   }
   const root = env.root ?? agentRoot();
   if (spec.setup && !existsSync(builderPaths(root).marker)) {

@@ -54,8 +54,8 @@ const rowsOf = (w, table) => w.fake.plainRows(tableEntries(w.root)[table].databa
 const runDirs = (root, step) => readdirSync(join(root, 'runs')).filter((d) => d.endsWith(`-setup-${step}`) || new RegExp(`-setup-${step}-\\d+$`).test(d)).sort().map((d) => join(root, 'runs', d));
 const lastRun = (root, step) => runDirs(root, step).at(-1);
 const files = (w) => ({ taxonomy: w.inputs.taxonomy, claims: w.inputs.claims, audit: w.inputs.audit });
-const allArgs = (w) => ['all', '--taxonomy', w.inputs.taxonomy, '--claims', w.inputs.claims, '--audit', w.inputs.audit];
-const verifyArgs = (w) => ['verify', '--taxonomy', w.inputs.taxonomy, '--claims', w.inputs.claims, '--audit', w.inputs.audit];
+const allArgs = (w) => ['all', '--taxonomy', w.inputs.taxonomy, '--claims', w.inputs.claims];
+const verifyArgs = (w) => ['verify', '--taxonomy', w.inputs.taxonomy, '--claims', w.inputs.claims];
 
 async function filled(opts) {
   const w = await built(opts);
@@ -113,7 +113,7 @@ test('builder open, close and status and register keep their behaviour', async (
 
 test('every command that writes refuses with exit 2 unless runs/SETUP exists, and touches nothing', async () => {
   const w = newWorld({ structure: true });
-  for (const name of ['pages', 'databases', 'views', 'build', 'rulebook', 'claims', 'seed-audit', 'rubric', 'canaries', 'settings', 'all']) {
+  for (const name of ['pages', 'databases', 'views', 'build', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'all']) {
     const r = await w.run([name]);
     assert.equal(r.code, 2, name);
     assert.match(r.err[0], new RegExp(`setup ${name}: no builder session is open \\(runs/SETUP is missing\\)`), name);
@@ -135,12 +135,32 @@ test('structure, preview, api-check and verify need no session; the others stop 
   mkdirSync(join(w.root, 'runs'), { recursive: true });
   writeFileSync(join(w.root, 'runs', 'PAUSED'), 'paused\n');
   const before = w.fake.requests.length;
-  for (const name of ['pages', 'build', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'all']) {
+  for (const name of ['pages', 'build', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'all']) {
     const r = await w.run([name]);
     assert.equal(r.code, 3, name);
     assert.match(r.err[0], /runs\/PAUSED exists/);
   }
   assert.equal(w.fake.requests.length, before, 'a paused agent sends nothing');
+});
+
+test('seed-audit, migrate-decisions and archive are per-claim steps of the first page: they refuse on v2 with exit 2 and one sentence, session or not, and send nothing (P48)', async () => {
+  const w = newWorld({ structure: 'fresh' });
+  for (const open of [false, true]) {
+    if (open) assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
+    for (const name of ['seed-audit', 'migrate-decisions', 'archive']) {
+      const r = await w.run([name]);
+      assert.equal(r.code, 2, name);
+      assert.equal(r.err[0], `setup ${name}: ${name} is a per-claim step of the first page (P48); the v2 page is filled by copy-live.mjs`);
+    }
+  }
+  assert.equal(w.fake.requests.length, 0);
+});
+
+test('"all" has no seed-audit and no migrate-decisions step', async () => {
+  const w = newWorld({ structure: 'fresh' });
+  assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
+  const r = await w.run(['all']);
+  assert.doesNotMatch(r.text, /seed-audit|migrate-decisions/);
 });
 
 // ---- structure, preview, api-check ---------------------------------------------------------------------------------------------------------
@@ -187,33 +207,24 @@ test('preview prints what would be built; without a structure file it says how t
   assert.match(none.err[0], /structure --from-proposal/);
 });
 
-test('preview of the fresh structure shows the five tables in the hub\'s order, the lean Claims set, the six views, Onboarding and the hub block', async () => {
+test('preview of the v2 structure shows the five tables in the hub order, the per-row Tag decisions, the four views of the page and the hub block', async () => {
   const w = newWorld({ structure: 'fresh' });
   const r = await w.run(['preview']);
   assert.equal(r.code, 0);
   const md = r.out[0];
-  assert.match(md, /^# Structure preview\n\n5 tables, \d+ columns, 6 views and 1 sub-pages/);
-  assert.match(md, /## Hub page "Claim tagger"/);
-  assert.match(md, /3 link lines at the top: Your queue: the claims that wait for your decision; Needs your note: .*; Lessons waiting: /);
-  assert.match(md, /the 5 tables as full-page tables, in this order: Claims, Rulebook, Rule changes, Tag decisions, Agent settings/);
-  assert.match(md, /then: Onboarding, the archive page "Feedback Distillation MVP \(archive, to 27 Oct 2026\)"/);
-  assert.deepEqual([...md.matchAll(/^## (.+)$/gm)].map((m) => m[1].replace(/ \(\d+ columns\)$/, '')).slice(2), ['Claims', 'Rulebook', 'Rule changes', 'Tag decisions', 'Agent settings']);
-  assert.match(md, /## Claims \(20 columns\)/, 'the lean Claims set: nine Geo columns, eight agent columns, three editor columns');
+  assert.match(md, /^# Structure preview\n\n5 tables, \d+ columns, 4 views and 0 sub-pages/);
+  assert.match(md, /## Hub page "Claim tagger v2"/);
+  assert.match(md, /4 link lines at the top: Your queue: .*; Needs your note: .*; Agent disagreed: .*; Lessons waiting: /);
+  assert.match(md, /the 5 tables as full-page tables, in this order: Tag decisions, Claims, Rulebook, Rule changes, Agent settings/);
+  assert.deepEqual([...md.matchAll(/^## (.+)$/gm)].map((m) => m[1].replace(/ \(\d+ columns\)$/, '')).slice(2), ['Tag decisions', 'Claims', 'Rulebook', 'Rule changes', 'Agent settings']);
+  assert.match(md, /## Tag decisions \(18 columns\)/);
+  assert.match(md, /## Claims \(18 columns\)/, 'the Geo columns and the agent columns: no editor column on Claims');
   assert.match(md, /\| Geo Space \| select \| U\.S\. Politics, World affairs, AI, Health, Crypto, Technology, Pharma, Industries, Education, Software, Places, Documentation \|/, 'the six spaces of the pick, then the six more that add accepts (P39)');
   assert.match(md, /\| Geo Created \| date \|/);
-  assert.match(md, /\| Geo Tags \| multi_select \| Debate(, [^|]+)? \|/, 'Debate first, then the tag names the committed pick added, if it has run');
-  assert.doesNotMatch(md, /\(old\)|Geo Score|Geo Name source|renamed|retired|Claims copy|Rulebook copy/);
-  assert.equal((md.match(/^- \*\*/gm) ?? []).length, 6, 'six named views; the Rulebook shows its own view once, not twice');
-  // the warning line first (P14), then the links
-  assert.match(md, /1\. the warning line at the very top: Claims is the real table: every decision you make there trains the rulebook\. To practise, open Onboarding\.\n2\. 3 link lines at the top: /);
-  // the lean views and the table's own views (P13, P15), the description under each table (ED-8)
-  assert.match(md, /- \*\*Your queue\*\*: rows shown: Agent status is Waits for you and Review status is not Reviewed; sorted by: Agent confidence, lowest first; columns: Geo Name, Tags waiting, Agent reasons, Agent tags, Verified tags, Challenged tags notes, Review status; cells wrap\n/);
-  assert.match(md, /- \*\*Needs your note\*\*: rows shown: Agent reading contains without your note; sorted by: Agent confidence, lowest first; columns: Geo Name, Verified tags, Agent reading, Challenged tags notes, Review status; cells wrap\n/);
-  assert.match(md, /- \*\*Agent disagreed\*\*: rows shown: Agent status is Disagrees with your decision; sorted by: Agent confidence, lowest first; columns: Geo Name, Agent reasons, Agent reading, Verified tags, Challenged tags notes, Review status; cells wrap\n/);
-  assert.match(md, /- The table's own view \(Notion's default\), the first tab, called All claims: shows Geo Name, Geo Space, Agent tags, Agent status, Verified tags, Review status, Geo URL; the other 13 columns are hidden\n/);
-  assert.match(md, /- The table's own view \(Notion's default\), the first tab, called Rulebook: shows Name, Category, Status, When to use, Example Claims; the other \d+ columns are hidden\n/);
-  // the own view stands before the named views in the list, as it does in the tab bar
-  assert.match(md, /Views, in the order of the tabs:\n\n- The table's own view \(Notion's default\), the first tab, called All claims: .*\n- \*\*Your queue\*\*: /);
+  assert.doesNotMatch(md, /Verified tags \||Review status \||Challenged tags notes \||\(old\)|Geo Score|Claims copy|Rulebook copy/);
+  assert.match(md, /- \*\*Your queue\*\*: rows shown: Agent status is Waits for you, and Tag outcome is empty, and \(Agent is right is not ticked, or Agent proposal is Can't tell\);/);
+  assert.match(md, /- \*\*Agent disagreed\*\*: rows shown: Agent status is Disagrees with your decision;/);
+  assert.match(md, /- \*\*Lessons waiting\*\*: rows shown: Status is Proposed or Approved;/);
   assert.equal((md.match(/^- The table's own view/gm) ?? []).length, 5, 'every table arranges its own view');
   assert.equal((md.match(/^Description under the table's name: /gm) ?? []).length, 5);
   assert.match(md, /^Description under the table's name: Tick Paused to stop every command; untick to resume\.$/m);
@@ -332,11 +343,11 @@ test('structure --from-proposal does not write over a structure that says where 
   const w = newWorld({ structure: 'fresh' });
   const proposal = join(import.meta.dirname, '..', '..', 'docs', 'mvp-2026-11', 'STRUCTURE.md');
   const before = readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8');
-  assert.match(JSON.parse(before).made_from, /HUB-AND-GEO-CLAIMS\.md \(P10-P12\)/);
+  assert.match(JSON.parse(before).made_from, /STRUCTURE-V2\.md/);
   for (const argv of [['structure', '--from-proposal', proposal], ['structure']]) {
     const r = await w.run(argv);
     assert.equal(r.code, 2, argv.join(' '));
-    assert.match(r.err[0], /setup\/structure\.json was made from docs\/mvp-2026-11\/HUB-AND-GEO-CLAIMS\.md \(P10-P12\) and --from-proposal would replace it with the first build's structure; give --replace/);
+    assert.match(r.err[0], /setup\/structure\.json was made from docs\/mvp-2026-11\/STRUCTURE-V2\.md .* and --from-proposal would replace it with the first build's structure; give --replace/);
   }
   assert.equal(readFileSync(join(w.root, 'setup', 'structure.json'), 'utf8'), before, 'untouched');
   const replaced = await w.run(['structure', '--from-proposal', proposal, '--replace']);
@@ -531,7 +542,7 @@ test('verify checks that config.json links every view that exists, and no view t
   writeFileSync(join(w.root, 'config.json'), JSON.stringify(config, null, 2));
   const r = await w.run(['verify', '--taxonomy', 'x', '--claims', 'x', '--audit', 'x']);
   const text = r.err.join('\n');
-  assert.match(text, /claims: view link - "Needs your note" is in Notion but config\.json has no notion\.views\.needs_your_note; run "setup\.mjs views" to record it/);
+  assert.match(text, /tag_decisions: view link - "Needs your note" is in Notion but config\.json has no notion\.views\.needs_your_note; run "setup\.mjs views" to record it/);
   assert.match(text, /rule_changes: view link - notion\.views\.lessons_waiting in config\.json says .*, but the view in Notion is /);
   const fix = await w.run(['views']);
   assert.equal(fix.code, 0, fix.text);
@@ -743,9 +754,9 @@ test('claims from a 200-row Geo pick: every row has its date, space, tags and so
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.deepEqual(verify.differences, []);
   assert.equal(verify.counts.claims, 200);
-  assert.equal(verify.counts.tag_decisions, 10);
+  assert.equal(verify.counts.tag_decisions, 0, "nothing is seeded on v2 (P48)");
   writeFileSync(join(w.root, 'bigger.json'), JSON.stringify(makePick({ audit, extra: 191 })));
-  const bigger = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', join(w.root, 'bigger.json'), '--audit', w.inputs.audit]);
+  const bigger = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', join(w.root, 'bigger.json')]);
   assert.equal(bigger.code, 2);
   assert.match(bigger.err.join('\n'), /claims: row count - 200 rows in the Claims table, 201 in the pick/);
 });
@@ -783,8 +794,8 @@ test('setup verify with a hub block reads the hub title, the order of its body, 
   await rename('Feedback Distillation MVP');
   let r = await w.run(verifyArgs(w));
   assert.equal(r.code, 2);
-  assert.match(r.err.join('\n'), /hub: title - the hub page is called "Feedback Distillation MVP" and should be called "Claim tagger"/);
-  await rename('Claim tagger');
+  assert.match(r.err.join('\n'), /hub: title - the hub page is called "Feedback Distillation MVP" and should be called "Claim tagger v2"/);
+  await rename("Claim tagger v2");
 
   // a block that is none of the hub's: reported, so verify is not ok
   await client.appendBlocks(w.parent, [{ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content: 'Stray note' } }] } }], { position: { type: 'start' } });
@@ -887,182 +898,6 @@ test('a pick that is not a Geo pick is refused with exit 2: the 50-row pick of t
 
 // ---- the seeded audit decisions -------------------------------------------------------------------------------------------------------------------
 
-test('auditProperties: the agent\'s answer from the flag, Agent slip only when it differs from the outcome, the prefix on the reasoning', () => {
-  const d = (flag, outcome, reasoning = 'because') => ({ geo_id: 'g1', claim: 'A claim', flag, outcome, reasoning });
-  const page = '3f2273e2-14eb-819a-89ae-e658e01e094b';
-  const wrongAgree = auditProperties(d('Wrong tag', 'Does not apply'), page);
-  assert.deepEqual(wrongAgree, {
-    Claim: 'A claim', Key: 'g1::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Claim link': 'https://www.notion.so/3f2273e214eb819a89aee658e01e094b',
-    'Tag outcome': 'Does not apply', 'Your reasoning': 'From the audit of 9 October: because', 'Why wrong': 'Agent slip',
-  });
-  const missingApplies = auditProperties(d('Missing tag', 'Applies'), page);
-  assert.equal(missingApplies['Agent proposal'], 'Does not apply');
-  assert.equal(missingApplies['Why wrong'], 'Agent slip');
-  const missingDisagree = auditProperties(d('Missing tag', 'Does not apply'), page);
-  assert.equal(missingDisagree['Agent proposal'], 'Does not apply');
-  assert.ok(!('Why wrong' in missingDisagree), 'the agent had no tag and the editor said it does not apply: nothing was wrong');
-  assert.ok(!('Why wrong' in auditProperties(d('Wrong tag', 'Applies'), page)), 'the agent had applied it and the editor agreed');
-  assert.equal(auditProperties(d('Missing tag', 'Applies', null), page)['Your reasoning'], `From the audit of 9 October: ${NO_REASONING}`);
-  assert.equal(NO_REASONING, 'the editor agreed with the auditor; no reasoning was recorded.');
-  for (const key of ['Agent confidence', 'Agent reason', 'Rulebook edition', 'Follow-up']) assert.ok(!(key in wrongAgree), key);
-  assert.equal(claimLink('3F2273E2-14EB-819A-89AE-E658E01E094B'), 'https://www.notion.so/3f2273e214eb819a89aee658e01e094b');
-});
-
-test('seed-audit needs the claims first, and every audited claim must have its row in the Claims table', async () => {
-  const w = await built();
-  const r = await w.run(['seed-audit', '--from', w.inputs.audit, '--claims', w.inputs.claims]);
-  assert.equal(r.code, 2);
-  assert.match(r.err[0], /claims-pages\.json does not exist: run "setup\.mjs claims" first/);
-  await w.run(['claims', '--from', w.inputs.claims]);
-  // a claim of the pick that is in the file of pages but whose row is not there would be named: the unit says so
-  assert.throws(() => auditOps(readAuditFile(), { [readAuditFile().decisions[0].geo_id]: 'p' }), (e) => e instanceof InputError && /9 audited claim\(s\) have no row in the Claims table yet/.test(e.message));
-  assert.equal(rowsOf(w, 'tag_decisions').length, 0);
-});
-
-test('seed-audit seeds only the audit claims the pick includes, names each one it left out with the pick\'s reason, and refuses an audit file that is not the one the pick was made with', async () => {
-  const audit = readAuditFile();
-  const include = audit.decisions.slice(0, 6).map((d) => d.geo_id);
-  const pick = makePick({ audit, extra: 2, include });
-  assert.equal(pick.audit.left_out.length, 4);
-  pick.audit.left_out[0].reason = 'not tagged Debate in a canonical space (tagged Debate in space b00, which is not one of the 6 pick spaces)';
-  const w = await built({ pick });
-  await w.run(['claims', '--from', w.inputs.claims]);
-
-  // another audit file (one more decision, so other bytes): refused with the digests, nothing written
-  const other = structuredClone(audit);
-  other.decisions.push({ ...audit.decisions[0], geo_id: 'f'.repeat(32) });
-  writeFileSync(join(w.root, 'audit-other.json'), `${JSON.stringify(other, null, 2)}\n`);
-  const writes = w.fake.writes().length;
-  let r = await w.run(['seed-audit', '--from', join(w.root, 'audit-other.json'), '--claims', w.inputs.claims]);
-  assert.equal(r.code, 2);
-  assert.match(r.err[0], /is not the one the pick was made with \(its sha256 is [0-9a-f]{12}…, the pick recorded [0-9a-f]{12}…\)/);
-  assert.equal(w.fake.writes().length, writes);
-  assert.equal(rowsOf(w, 'tag_decisions').length, 0);
-
-  // the file the pick was made with: six decisions, four left out and named
-  r = await w.run(['seed-audit', '--from', w.inputs.audit, '--claims', w.inputs.claims]);
-  assert.equal(r.code, 0, r.text);
-  assert.equal(r.out[0], 'seed-audit: 6 row(s) written and read back ok');
-  assert.ok(r.out.includes(`seed-audit: ${AUDIT_NOTE}`));
-  assert.ok(r.out.includes('seed-audit: 6 of the 10 audit claims are in the pick; the others:'));
-  const leftLines = r.out.filter((l) => /left out of the pick, so not seeded/.test(l));
-  assert.equal(leftLines.length, 4);
-  for (const l of pick.audit.left_out) assert.ok(leftLines.some((x) => x.includes(l.geo_id) && x.includes(l.reason)), `${l.geo_id} is named with its reason`);
-  const rows = rowsOf(w, 'tag_decisions');
-  assert.deepEqual(rows.map((x) => x.Key.split('::')[0]).sort(), [...include].sort());
-  assert.equal(readJson(join(w.root, 'setup', 'audit-decisions.json')).decisions.length, 10, 'the audit file is kept as it is');
-  const plan = readPlan(lastRun(w.root, 'seed-audit'));
-  assert.deepEqual(plan.header.plan.counts, { creates: 6, updates: 0 });
-
-  // migrate-decisions carries over the same six and no others
-  await w.run(['rulebook', '--from', w.inputs.taxonomy]);
-  const m = await w.run(['migrate-decisions', '--claims', w.inputs.claims]);
-  assert.equal(m.code, 0, m.text);
-  assert.match(m.out[0], /^migrate-decisions: 6 claim\(s\) carried over,/);
-  assert.equal(rowsOf(w, 'claims').filter((c) => c['Review status'] === 'Reviewed').length, 6);
-});
-
-test('seed-audit with a pick that includes no audit claim seeds nothing and says so, and the left-out claims are still named', async () => {
-  const audit = readAuditFile();
-  const pick = makePick({ audit, extra: 3, include: [] });
-  assert.deepEqual(pick.audit.included, []);
-  const w = await built({ pick });
-  await w.run(['claims', '--from', w.inputs.claims]);
-  const writes = w.fake.writes().length;
-  const r = await w.run(['seed-audit', '--from', w.inputs.audit, '--claims', w.inputs.claims]);
-  assert.equal(r.code, 0, r.text);
-  assert.equal(r.out[0], 'seed-audit: the pick includes none of the 10 audit claims, so no decision was seeded');
-  assert.equal(r.out.filter((l) => /left out of the pick/.test(l)).length, 10);
-  assert.equal(w.fake.writes().length, writes);
-  assert.equal(rowsOf(w, 'tag_decisions').length, 0);
-  const m = await w.run(['migrate-decisions', '--claims', w.inputs.claims]);
-  assert.equal(m.code, 0, m.text);
-  assert.match(m.out[0], /nothing to carry over/);
-});
-
-test('auditForPick: the decisions the pick includes in the audit file\'s order, the others with the pick\'s reason (or the missing one), and the digest checked only when a file is given', () => {
-  const audit = readAuditFile();
-  const pick = makePick({ audit, extra: 0, include: [audit.decisions[3].geo_id, audit.decisions[1].geo_id] });
-  const r = auditForPick(audit, pick);
-  assert.deepEqual(r.decisions.map((d) => d.geo_id), [audit.decisions[1].geo_id, audit.decisions[3].geo_id]);
-  assert.equal(r.left.length, 8);
-  assert.equal(r.left[0].reason, 'not tagged Debate in a canonical space');
-  assert.equal(auditForPick(audit, { ...pick, audit: { ...pick.audit, left_out: [] } }).left[0].reason, 'the pick lists it neither as included nor as left out');
-  assert.throws(() => auditForPick({ decisions: audit.decisions.slice(0, 2) }, pick), /includes 1 audit claim\(s\) that the audit file does not hold/);
-  assert.throws(() => auditForPick(audit, pick, AUDIT_FILE), /is not the one the pick was made with/, 'a file whose bytes are other than the ones the pick recorded (the evidence copy is formatted differently)');
-});
-
-test('seed-audit: ten decided rows of the ledger through a setup plan; the ledger has no editor column, so the plan needs no exception', async () => {
-  const w = await built();
-  await w.run(['claims', '--from', w.inputs.claims]);
-  const r = await w.run(['seed-audit', '--from', w.inputs.audit]);
-  assert.equal(r.code, 0, r.text);
-  assert.deepEqual(r.out, ['seed-audit: 10 row(s) written and read back ok', `seed-audit: ${AUDIT_NOTE}`, 'seed-audit: 10 of the 10 audit claims are in the pick']);
-  assert.equal(AUDIT_NOTE, 'seeded from the audit of 9 October');
-  const dir = lastRun(w.root, 'seed-audit');
-  assert.equal(readJson(join(dir, 'run.json')).note, 'seeded from the audit of 9 October');
-  const plan = readPlan(dir);
-  assert.deepEqual(plan.header.plan.counts, { creates: 10, updates: 0 });
-
-  // Tag outcome, Why wrong and Your reasoning are the agent's columns of the ledger now: the plan passes as a setup plan and as a plain one
-  assert.equal(checkPlan(plan, w.config, { setup: true, root: w.root }).ok, true);
-  assert.equal(checkPlan(plan, w.config, { setup: false, root: w.root }).ok, true);
-  for (const op of plan.ops) {
-    assert.ok(op.properties['Your reasoning'].startsWith(AUDIT_PREFIX));
-    assert.ok(!('Agent confidence' in op.properties) && !('Agent reason' in op.properties) && !('Rulebook edition' in op.properties) && !('Follow-up' in op.properties));
-    // decision 73: on the live copy the audit's disagreements are read later, by distill; the seeding writes no reading, no rule, no note on a reading and no Read under
-    for (const column of READING_COLUMNS) assert.ok(!(column in op.properties), `the seeding does not write ${column}`);
-  }
-
-  // what was read back
-  const audit = readAuditFile();
-  const claimPages = readJson(join(w.root, 'setup', 'claims-pages.json'));
-  const rows = rowsOf(w, 'tag_decisions');
-  assert.equal(rows.length, 10);
-  for (const d of audit.decisions) {
-    const row = rows.find((x) => x.Key === `${d.geo_id}::Context-dependent`);
-    assert.ok(row, d.geo_id);
-    assert.equal(row.Claim, d.claim);
-    assert.equal(row.Tag, 'Context-dependent');
-    assert.equal(row['Agent proposal'], d.flag === 'Wrong tag' ? 'Applies' : 'Does not apply');
-    assert.equal(row['Tag outcome'], d.outcome);
-    assert.equal(row['Claim link'], `https://www.notion.so/${normId(claimPages[d.geo_id])}`, 'the link points at the Claims copy row');
-    assert.equal(row['Your reasoning'], `From the audit of 9 October: ${d.reasoning ?? 'the editor agreed with the auditor; no reasoning was recorded.'}`);
-    const agentWasRight = row['Agent proposal'] === d.outcome;
-    assert.equal(row['Why wrong'], agentWasRight ? null : 'Agent slip');
-    assert.equal(row['Agent confidence'], null);
-    assert.equal(row['Agent reason'], '');
-    assert.equal(row['Rulebook edition'], '');
-    assert.equal(row['Follow-up'], null);
-    assert.deepEqual([row['Agent reading'], row.Rule, row['Reading note'], row['Read under']], [null, '', '', ''], 'unread: the model reads the audit disagreements later');
-  }
-  const disagree = ['8f9c833b41e54eee9ca78e9c2f4ffb58', '78dd775028795b65bb5c4945eda1c3bb'].map((id) => rows.find((x) => x.Key.startsWith(id)));
-  assert.deepEqual(disagree.map((x) => [x['Agent proposal'], x['Tag outcome'], x['Why wrong']]), [['Does not apply', 'Does not apply', null], ['Does not apply', 'Does not apply', null]]);
-  assert.equal(rows.filter((x) => x['Why wrong'] === 'Agent slip').length, 8);
-  assert.equal(rows.find((x) => x.Key.startsWith('fc0cb0da'))['Why wrong'], 'Agent slip');
-  assert.equal(readJson(join(w.root, 'setup', 'audit-decisions.json')).decisions.length, 10);
-
-  const writes = w.fake.writes().length;
-  const again = await w.run(['seed-audit', '--from', w.inputs.audit]);
-  assert.equal(again.code, 0);
-  assert.match(again.out[0], /all 10 rows are in the table already/);
-  assert.equal(w.fake.writes().length, writes);
-});
-
-test('no other path writes the editor columns: a plan that is not a setup plan, or a claim without the prefix, is refused', async () => {
-  const w = await built();
-  const { newPlan } = await import('../../agents/claim-tagger-mvp/scripts/lib/plan.mjs');
-  const plan = newPlan({ runId: 'r', script: 'propose.mjs', rubricEdition: EDITION, config: w.config, now: NOW });
-  plan.update('claims', 'g', 'a-page', { 'Review status': 'Reviewed', 'Challenged tags notes': 'From the audit of 9 October: sneaky' });
-  assert.equal(checkPlan(plan, w.config, { root: w.root }).ok, false, 'not a setup plan');
-  const second = newPlan({ runId: 'r', script: 'setup.mjs', rubricEdition: null, config: w.config, now: NOW });
-  second.update('claims', 'g', 'a-page', { 'Review status': 'Reviewed', 'Challenged tags notes': 'a reason' });
-  assert.equal(checkPlan(second, w.config, { setup: true, root: w.root }).ok, false, 'a setup plan without the prefix');
-  const third = newPlan({ runId: 'r', script: 'setup.mjs', rubricEdition: null, config: w.config, now: NOW });
-  third.create('agent_settings', 'Claim tagger', { Name: 'Claim tagger', Paused: false });
-  assert.equal(checkPlan(third, w.config, { setup: true, root: w.root }).ok, false, 'Paused belongs to a person even at setup');
-});
-
 // ---- migrate-decisions ----------------------------------------------------------------------------------------------------------------------------
 
 async function seeded() {
@@ -1074,164 +909,6 @@ async function seeded() {
   return w;
 }
 const claimOf = (w, geoId) => rowsOf(w, 'claims').find((c) => c['Geo ID'] === geoId);
-
-test('claims: the editor columns of the Claims table and the agent\'s stay empty on a new row', async () => {
-  const w = await built();
-  await w.run(['claims', '--from', w.inputs.claims]);
-  for (const c of rowsOf(w, 'claims')) {
-    assert.deepEqual([c['Verified tags'], c['Review status'], c['Challenged tags notes'], c['Agent confidence'], c['Agent reading']], [[], null, '', null, ''], c['Geo ID']);
-    assert.ok(!('Why wrong' in c) && !('Why wrong (old)' in c), 'the Claims table has no Why wrong column to fill, and a new table makes no retired one');
-  }
-});
-
-test('migrate-decisions: the ten audit decisions move from the ledger to their claims, once, through a setup plan that is read back', async () => {
-  const w = await seeded();
-  const audit = readAuditFile();
-  const r = await w.run(['migrate-decisions']);
-  assert.equal(r.code, 0, r.text);
-  assert.match(r.out[0], /^migrate-decisions: 10 claim\(s\) carried over, 0 ledger row\(s\) got Decided under, 0 claim\(s\) got Agent confidence; read back ok$/);
-  assert.equal(r.out[1], `migrate-decisions: ${AUDIT_NOTE}`);
-  const dir = lastRun(w.root, 'migrate-decisions');
-  assert.equal(readJson(join(dir, 'run.json')).note, AUDIT_NOTE);
-  assert.equal(readJson(join(dir, 'run.json')).exit_code, 0);
-  const plan = readPlan(dir);
-  assert.deepEqual(plan.header.plan.counts, { creates: 0, updates: 10 });
-  assert.ok(plan.ops.every((op) => op.table === 'claims' && op.op === 'update' && op.properties['Review status'] === 'Reviewed' && op.properties['Challenged tags notes'].startsWith(AUDIT_PREFIX)));
-  assert.ok(plan.ops.every((op) => JSON.stringify(op.expect) === JSON.stringify({ 'Review status': null })), 'an editor who got there first is not overwritten');
-  // the editor fills three columns now: the migration writes the verified tags, Review status and the notes, no Why wrong (the column is gone) and no reading
-  assert.ok(plan.ops.every((op) => JSON.stringify(Object.keys(op.properties).sort()) === JSON.stringify(['Challenged tags notes', 'Review status', 'Verified tags'])), 'three columns, nothing else');
-  for (const op of plan.ops) for (const column of ['Why wrong', 'Why wrong (old)', 'Agent reading']) assert.ok(!(column in op.properties), column);
-  assert.equal(checkPlan(plan, w.config, { setup: true, root: w.root }).ok, true);
-  assert.equal(checkPlan(plan, w.config, { setup: false, root: w.root }).ok, false, 'only a setup plan may write the editor columns, and only with the prefix');
-  assert.ok(existsSync(join(dir, 'ledger.jsonl')) && existsSync(join(dir, 'requests.jsonl')));
-
-  const tagPage = new Map(rowsOf(w, 'rulebook').map((t) => [t.Name, t.page_id]));
-  for (const d of audit.decisions) {
-    const c = claimOf(w, d.geo_id);
-    assert.deepEqual(c['Verified tags'], d.outcome === 'Applies' ? [tagPage.get('Context-dependent')] : [], d.geo_id);
-    assert.equal(c['Review status'], 'Reviewed');
-    assert.equal(c['Challenged tags notes'], `${AUDIT_PREFIX}: ${d.reasoning ?? NO_REASONING}`);
-  }
-  assert.equal(rowsOf(w, 'claims').filter((c) => c['Review status'] === 'Reviewed').length, 10);
-  assert.equal(rowsOf(w, 'claims').filter((c) => c['Agent reading'] !== '').length, 0, 'no claim has an Agent reading: distill writes it');
-  assert.equal(rowsOf(w, 'tag_decisions').length, 10, 'the ledger rows are still there');
-  assert.equal(rowsOf(w, 'tag_decisions').filter((x) => x['Agent reading'] !== null || x['Read under'] !== '').length, 0, 'and unread');
-
-  // a second run finds everything done and writes nothing
-  const writes = w.fake.writes().length;
-  const again = await w.run(['migrate-decisions']);
-  assert.equal(again.code, 0);
-  assert.deepEqual(again.out, ['migrate-decisions: nothing to carry over; 10 were carried over already']);
-  assert.equal(w.fake.writes().length, writes);
-});
-
-test('migrate-decisions: an open ledger row gives its claim the Agent confidence, a recorded edition becomes Decided under, and an editor\'s own work is left alone', async () => {
-  const w = await seeded();
-  const audit = readAuditFile();
-  const entries = tableEntries(w.root);
-  const [first, second] = audit.decisions;
-  const decided = (d) => rowsOf(w, 'tag_decisions').find((x) => x.Key === `${d.geo_id}::Context-dependent`);
-  // the ledger rows of two decisions record the edition their proposal was made under; the second claim was already worked on by an editor
-  w.fake.editRow(decided(first).page_id, { 'Rulebook edition': '2026-10-15.1' });
-  w.fake.editRow(decided(second).page_id, { 'Rulebook edition': '2026-10-15.1' });
-  w.fake.editRow(claimOf(w, second.geo_id).page_id, { 'Review status': 'To review', 'Challenged tags notes': 'Context-dependent: my own note' });
-  // two open rows of the ledger, one on a claim with a decision of its own and one on an extra claim
-  const extra = rowsOf(w, 'claims').find((c) => c['Geo ID'].startsWith('ee'));
-  w.fake.addRow(entries.tag_decisions.database_id, { Claim: 'An extra claim', Key: `${extra['Geo ID']}::Context-dependent`, Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.65, 'Rulebook edition': '2026-10-15.1' });
-  // a decided row that is not from the audit: a person decides on the claim, never a script
-  const other = rowsOf(w, 'claims').filter((c) => c['Geo ID'].startsWith('ee'))[1];
-  w.fake.addRow(entries.tag_decisions.database_id, { Claim: 'Another claim', Key: `${other['Geo ID']}::Context-dependent`, Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Tag outcome': 'Does not apply', 'Your reasoning': 'My words.' });
-
-  // an open ledger row on one of the audit claims gives that claim its Agent confidence
-  const audited = audit.decisions[4];
-  w.fake.addRow(entries.tag_decisions.database_id, { Claim: 'An audited claim, open again', Key: `${audited.geo_id}::Exact duplicate`, Tag: 'Exact duplicate', 'Agent proposal': "Can't tell", 'Agent confidence': 0.58 });
-
-  const r = await w.run(['migrate-decisions']);
-  assert.equal(r.code, 0, r.text);
-  assert.match(r.out[0], /^migrate-decisions: 9 claim\(s\) carried over, 1 ledger row\(s\) got Decided under, 1 claim\(s\) got Agent confidence; read back ok; 1 were carried over already; 2 ledger row\(s\) are for claims the pick does not include and were left/);
-  assert.equal(decided(first)['Decided under'], '2026-10-15.1');
-  assert.equal(decided(second)['Decided under'], '', 'the claim was not carried over, so its ledger row is not touched');
-  assert.equal(claimOf(w, second.geo_id)['Review status'], 'To review', 'the editor\'s own work stays');
-  assert.equal(claimOf(w, second.geo_id)['Challenged tags notes'], 'Context-dependent: my own note');
-  // only the audit claims the pick includes are migrated: the ledger rows of the other two claims are left, whatever they hold
-  assert.equal(claimOf(w, extra['Geo ID'])['Agent confidence'], null);
-  assert.equal(claimOf(w, extra['Geo ID'])['Review status'], null, 'an open claim is not Reviewed by a script');
-  assert.equal(claimOf(w, other['Geo ID'])['Review status'], null);
-  assert.deepEqual(claimOf(w, other['Geo ID'])['Verified tags'], []);
-  assert.equal(claimOf(w, audited.geo_id)['Review status'], 'Reviewed');
-  assert.equal(claimOf(w, audited.geo_id)['Agent confidence'], 0.58, 'an open ledger row of an audit claim still gives the claim its confidence');
-  const plan = readPlan(lastRun(w.root, 'migrate-decisions'));
-  assert.deepEqual(plan.header.plan.counts, { creates: 0, updates: 10 }, 'nine claims with a decision, one ledger row');
-  assert.ok(plan.ops.every((op) => op.table === 'tag_decisions' || 'Review status' in op.properties), 'no claim got a confidence alone');
-});
-
-test('migrate-decisions needs the Rulebook for the tags the audit says apply: without it nothing is written and the exit is 2', async () => {
-  const w = await built();
-  await w.run(['claims', '--from', w.inputs.claims]);
-  await w.run(['seed-audit', '--from', w.inputs.audit]);
-  const noTag = await w.run(['migrate-decisions']);
-  assert.equal(noTag.code, 2, 'no Rulebook row for Context-dependent yet');
-  assert.match(noTag.err.join('\n'), /was decided Applies for Context-dependent, which has no row in the Rulebook/);
-  assert.equal(rowsOf(w, 'claims').filter((c) => c['Review status']).length, 0, 'nothing was written');
-  await w.run(['rulebook', '--from', w.inputs.taxonomy]);
-  const fixed = await w.run(['migrate-decisions']);
-  assert.equal(fixed.code, 0, fixed.text);
-});
-
-test('migrate-decisions waits for a builder session like the other row steps', async () => {
-  const w = newWorld({ structure: true });
-  const r = await w.run(['migrate-decisions']);
-  assert.equal(r.code, 2);
-  assert.match(r.err[0], /no builder session is open/);
-});
-
-test('migrationOps: the plan from the rows, without a request', () => {
-  const claim = (geo, over = {}) => ({ geo_id: geo, page_id: `p-${geo}`, agent_confidence: null, verified_tags: [], review_status: null, why_wrong: null, challenged_notes: '', ...over });
-  const row = (geo, over = {}) => ({ Key: `${geo}::Context-dependent`, Tag: 'Context-dependent', page_id: `l-${geo}`, decided: false, 'Agent confidence': null, 'Rulebook edition': null, 'Decided under': null, ...over });
-  const audit = (geo, outcome, over = {}) => row(geo, { decided: true, 'Tag outcome': outcome, 'Your reasoning': `${AUDIT_PREFIX}: why`, 'Why wrong': 'Agent slip', ...over });
-  const columns = { verified: 'V', review_status: 'R', notes: 'N', confidence: 'C' };
-  const ops = migrationOps(
-    [claim('a'), claim('b'), claim('c', { review_status: 'Reviewed' }), claim('d'), claim('e', { agent_confidence: 0.7 })],
-    [audit('a', 'Applies', { 'Rulebook edition': '2026-10-15.1' }), audit('b', 'Does not apply'), audit('c', 'Applies'), row('d', { 'Agent confidence': 0.61 }), row('e', { 'Agent confidence': 0.55 }), row('zzz')],
-    { 'Context-dependent': 'tag-page' },
-    columns,
-  );
-  assert.deepEqual(ops.claimOps, [
-    { key: 'a', page_id: 'p-a', properties: { V: ['tag-page'], R: 'Reviewed', N: `${AUDIT_PREFIX}: why` }, expect: { R: null } },
-    { key: 'b', page_id: 'p-b', properties: { V: [], R: 'Reviewed', N: `${AUDIT_PREFIX}: why` }, expect: { R: null } },
-    { key: 'd', page_id: 'p-d', properties: { C: 0.61 } },
-  ]);
-  assert.deepEqual(ops.ledgerOps, [{ key: 'a::Context-dependent', page_id: 'l-a', properties: { 'Decided under': '2026-10-15.1' } }]);
-  assert.deepEqual(ops.summary, { carried: 2, alreadyCarried: 1, notFromAudit: 0, noClaim: 1, decidedUnder: 1, confidence: 1, notIncluded: 0 });
-  // with `only` (the audit claims the pick includes) a ledger row for any other claim is left alone, confidence rows included
-  const some = migrationOps(
-    [claim('a'), claim('b'), claim('d')],
-    [audit('a', 'Applies'), audit('b', 'Does not apply'), row('d', { 'Agent confidence': 0.61 })],
-    { 'Context-dependent': 'tag-page' },
-    columns,
-    { only: new Set(['a']) },
-  );
-  assert.deepEqual(some.claimOps.map((o) => o.key), ['a']);
-  assert.deepEqual(some.summary, { carried: 1, alreadyCarried: 0, notFromAudit: 0, noClaim: 0, decidedUnder: 0, confidence: 0, notIncluded: 2 });
-  assert.throws(() => migrationOps([claim('a')], [audit('a', 'Applies')], {}, columns), (e) => e instanceof InputError && /no row in the Rulebook/.test(e.message));
-});
-
-test('verify finds an audit decision that was not carried over to its claim, and one whose claim says something else', async () => {
-  const w = await seeded();
-  const before = await w.run(verifyArgs(w));
-  assert.equal(before.code, 2);
-  assert.match(before.text, /claims: migrated decision - [0-9a-f]+: Review status is null, not "Reviewed"; run "setup\.mjs migrate-decisions"/);
-  await w.run(['migrate-decisions']);
-  const clean = await w.run(verifyArgs(w));
-  assert.doesNotMatch(clean.text, /migrated decision/, 'only the steps that were not run here (the rubric and the settings) are still missing');
-  const audit = readAuditFile();
-  const d = audit.decisions.find((x) => x.outcome === 'Applies') ?? audit.decisions[0];
-  w.fake.editRow(claimOf(w, d.geo_id).page_id, { 'Verified tags': [], 'Challenged tags notes': 'Rewritten.' });
-  const after = await w.run(verifyArgs(w));
-  assert.equal(after.code, 2);
-  assert.match(after.text, /migrated decision - .*Verified tags holds \[\], the audit decided \["Context-dependent"\]/);
-  assert.match(after.text, /migrated decision - .*Challenged tags notes does not start with "From the audit of 9 October"/);
-});
 
 // ---- the rubric edition ------------------------------------------------------------------------------------------------------------------------------
 
@@ -1341,7 +1018,7 @@ test('canaries: six example claims of Context-dependent expected to apply, five 
   assert.ok(rows.every((x) => x.tag === 'Context-dependent'));
   assert.deepEqual(rows.slice(0, 6).map((x) => [x.claim, x.expected, x.source]), CONTEXT_DEPENDENT_EXAMPLES.map((c) => [c, 'apply', 'example claims of Context-dependent']));
   assert.deepEqual(rows.slice(6).map((x) => [x.claim, x.expected, x.source]), SELF_CONTAINED_EXAMPLES.map((c) => [c, 'do_not_apply', 'example claims of Self-contained']));
-  assert.equal(w.fake.writes().length, 14, 'no Notion request: the file is local (the 14 writes are the build of the structure)');
+  assert.equal(w.fake.writes().length, 12, "no Notion request: the file is local (the 12 writes are the build of the structure)");
 
   const again = await w.run(['canaries', '--from', w.inputs.taxonomy]);
   assert.equal(again.code, 0, 'the same file again is fine');
@@ -1423,12 +1100,11 @@ test('all: every step in order, each with its own run folder, the table counts r
   assert.match(r.out.at(-1), /^setup all: every step finished/);
   assert.equal(rowsOf(w, 'rulebook').length, 2);
   assert.equal(rowsOf(w, 'claims').length, 13);
-  assert.equal(rowsOf(w, 'tag_decisions').length, 10);
+  assert.equal(rowsOf(w, 'tag_decisions').length, 0, 'nothing is seeded on v2 (P48)');
   assert.equal(rowsOf(w, 'rule_changes').length, 0);
   assert.equal(rowsOf(w, 'agent_settings').length, 1);
-  assert.equal(rowsOf(w, 'claims').filter((c) => c['Review status'] === 'Reviewed').length, 10, 'the ten audit decisions were carried over to their claims');
   const overall = readJson(join(lastRun(w.root, 'all'), 'run.json'));
-  assert.deepEqual(overall.steps.map((s) => s.step), ['api-check', 'databases', 'pages', 'views', 'hub', 'rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'rubric', 'canaries', 'settings', 'verify'], 'with a hub block the tables come before the pages, and the hub part follows the views');
+  assert.deepEqual(overall.steps.map((s) => s.step), ['api-check', 'databases', 'pages', 'views', 'hub', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'verify'], 'with a hub block the tables come before the pages, and the hub part follows the views');
   assert.ok(overall.steps.every((s) => s.exit_code === 0));
   assert.equal(overall.exit_code, 0);
   assert.equal(overall.rubric_edition, EDITION);
@@ -1439,15 +1115,27 @@ test('all: every step in order, each with its own run folder, the table counts r
     assert.match(run.resume, /^node agents\/claim-tagger-mvp\/scripts\/setup\.mjs /);
   }
   assert.match(readJson(join(w.root, 'runs', overall.steps.find((x) => x.step === 'rulebook').run_id, 'run.json')).resume, /rulebook --from .*taxonomy-issue\.json$/);
-  for (const step of ['rulebook', 'claims', 'seed-audit', 'migrate-decisions', 'settings']) {
+  for (const step of ['rulebook', 'claims', 'settings']) {
     assert.ok(existsSync(join(lastRun(w.root, step), 'plan.jsonl')) && existsSync(join(lastRun(w.root, step), 'ledger.jsonl')) && existsSync(join(lastRun(w.root, step), 'requests.jsonl')), step);
   }
-  assert.equal(w.fake.writes().length, 2 + 5 + 1 + 6 + 2 + 13 + 10 + 10 + 1, 'the structure, then the rows and the ten migrated decisions: nothing else was written');
+  assert.equal(w.fake.writes().length, 12 + 2 + 13 + 1, 'the structure (12 writes), then the rows: nothing else was written');
   assert.ok(w.fake.requests.every((x) => x.method !== 'DELETE'));
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.deepEqual(verify.differences, []);
-  assert.deepEqual(verify.counts, { rulebook: 2, claims: 13, tag_decisions: 10, rule_changes: 0, agent_settings: 1 });
+  assert.deepEqual(verify.counts, { rulebook: 2, claims: 13, tag_decisions: 0, rule_changes: 0, agent_settings: 1 });
   assert.equal(verify.requests.writes, 0, 'verify only read');
+});
+
+test('verify on v2 needs no audit file, and with --audit it compares only Claim, Tag and Tag outcome of the seeded rows and skips the migrated-decision block (P48)', async () => {
+  const w = await filled();
+  const plain = await w.run(verifyArgs(w));
+  assert.equal(plain.code, 0, plain.text);
+  assert.doesNotMatch(plain.text, /audit file/);
+  const named = await w.run([...verifyArgs(w), '--audit', w.inputs.audit]);
+  assert.equal(named.code, 2, 'the audit rows are not in Tag decisions, which nothing seeds on v2');
+  const text = named.err.join('\n');
+  assert.match(text, /tag_decisions: seeded row - .* is not in Tag decisions/);
+  assert.doesNotMatch(text, /migrated decision/);
 });
 
 test('all run again is idempotent: it reads, finds everything, writes nothing and verifies', async () => {
@@ -1473,7 +1161,7 @@ for (const applied of [false, true]) {
     assert.match(first.err.join('\n'), /uncertain/);
     const second = await w.run(allArgs(w));
     assert.equal(second.code, 0, second.text);
-    for (const [table, n] of [['rulebook', 2], ['claims', 13], ['tag_decisions', 10], ['agent_settings', 1]]) {
+    for (const [table, n] of [['rulebook', 2], ['claims', 13], ['agent_settings', 1]]) {
       const rows = rowsOf(w, table);
       assert.equal(rows.length, n, table);
       assert.equal(new Set(rows.map((x) => x.Name ?? x['Geo ID'] ?? x.Key)).size, n, `${table}: no key twice`);
@@ -1482,19 +1170,17 @@ for (const applied of [false, true]) {
   });
 }
 
-test('verify finds an edited Rulebook row, an edited claim, an edited seeded row, an edited settings row and an extra row', async () => {
+test('verify finds an edited Rulebook row, an edited claim, an edited settings row and an extra row', async () => {
   const w = await filled();
   const v0 = await w.run(verifyArgs(w));
   assert.equal(v0.code, 0, v0.text);
   assert.match(v0.out.join('\n'), /verify: no differences/);
-  assert.match(v0.out[0], /verify: rows rulebook 2, claims 13, tag_decisions 10, rule_changes 0, agent_settings 1; \d+ request\(s\), 0 write\(s\)/);
+  assert.match(v0.out[0], /verify: rows rulebook 2, claims 13, tag_decisions 0, rule_changes 0, agent_settings 1; \d+ request\(s\), 0 write\(s\)/);
 
   const cd = rowsOf(w, 'rulebook').find((x) => x.Name === 'Context-dependent');
   w.fake.editRow(cd.page_id, { 'When to use': '1. A rule an editor rewrote by hand.' });
   const claim = rowsOf(w, 'claims')[4];
   w.fake.editRow(claim.page_id, { 'Geo Name': 'A claim somebody retitled', 'Geo Topics': 'Topics an editor typed' });
-  const seeded = rowsOf(w, 'tag_decisions')[2];
-  w.fake.editRow(seeded.page_id, { 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear' });
   const settings = rowsOf(w, 'agent_settings')[0];
   w.fake.editRow(settings.page_id, { 'Rulebook edition': '2099-01-01.7' });
   w.fake.addRow(tableEntries(w.root).claims.database_id, { 'Geo Name': 'An extra claim', 'Geo ID': 'extra-1' });
@@ -1509,12 +1195,10 @@ test('verify finds an edited Rulebook row, an edited claim, an edited seeded row
   assert.match(text, /claims: row count - 14 rows in the Claims table, 13 in the pick/, 'a key that is not a Geo ID was not added by /claim-tagger add: it is still a difference');
   assert.match(text, /claims: extra row - the claim extra-1 is in the Claims table but not in the pick/);
   assert.doesNotMatch(r.out.join('\n'), /added after setup/);
-  assert.match(text, /tag_decisions: seeded row - .*Tag outcome differs/);
-  assert.match(text, /tag_decisions: seeded row - .*Why wrong differs/);
   assert.match(text, /agent_settings: settings - Rulebook edition is "2099-01-01\.7", the edition in force is /);
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.equal(verify.ok, false);
-  assert.ok(verify.differences.length >= 8);
+  assert.ok(verify.differences.length >= 6);
   assert.equal(verify.added_after_setup, undefined);
   assert.equal(verify.requests.writes, 0);
   assert.ok(r.err.length <= 22, 'a short list');
@@ -1632,13 +1316,13 @@ test('verify says it cannot compare the Rulebook with the edition before there i
 
 test('verify names a column added to a table, a missing row and a file it cannot read', async () => {
   const w = await filled();
-  await w.run(['verify', '--taxonomy', join(w.root, 'gone.json'), '--claims', w.inputs.claims, '--audit', w.inputs.audit]).then((r) => {
+  await w.run(['verify', '--taxonomy', join(w.root, 'gone.json'), '--claims', w.inputs.claims]).then((r) => {
     assert.equal(r.code, 2);
     assert.match(r.err.join('\n'), /rulebook: input - the taxonomy file: the taxonomy file does not exist/);
   });
   const bigger = makePick({ audit: readAuditFile(), extra: 4 });
   writeFileSync(join(w.root, 'bigger.json'), JSON.stringify(bigger));
-  const r = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', join(w.root, 'bigger.json'), '--audit', w.inputs.audit]);
+  const r = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', join(w.root, 'bigger.json')]);
   assert.equal(r.code, 2);
   assert.match(r.err.join('\n'), /claims: row count - 13 rows in the Claims table, 14 in the pick/);
   assert.match(r.err.join('\n'), /claims: missing row - the claim ee030+ is not in the Claims table/);
@@ -1664,12 +1348,12 @@ test('the real inputs (13 taxonomy rows, the committed Geo pick, the audit) buil
   assert.equal(options.code, 0, options.text);
   assert.equal((await w.run(['build'])).code, 0);
   const pick = readJson(REAL_GEO_PICK);
-  const args = ['all', '--taxonomy', REAL_TAXONOMY, '--claims', REAL_GEO_PICK, '--audit', REAL_AUDIT];
+  const args = ['all', '--taxonomy', REAL_TAXONOMY, '--claims', REAL_GEO_PICK];
   const r = await w.run(args);
   assert.equal(r.code, 0, r.text);
   assert.equal(rowsOf(w, 'rulebook').length, 13);
   assert.equal(rowsOf(w, 'claims').length, pick.rows.length);
-  assert.equal(rowsOf(w, 'tag_decisions').length, pick.audit.included.length);
+  assert.equal(rowsOf(w, 'tag_decisions').length, 0);
   assert.equal(rowsOf(w, 'agent_settings').length, 1);
   const canaries = readLines(join(w.root, 'evals', 'canaries.jsonl'));
   assert.deepEqual([canaries.filter((x) => x.expected === 'apply').length, canaries.filter((x) => x.expected === 'do_not_apply').length], [6, 5]);
@@ -1678,7 +1362,7 @@ test('the real inputs (13 taxonomy rows, the committed Geo pick, the audit) buil
   assert.equal(rubric.tags.length, 13);
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.deepEqual(verify.differences, []);
-  assert.deepEqual(verify.counts, { rulebook: 13, claims: pick.rows.length, tag_decisions: pick.audit.included.length, rule_changes: 0, agent_settings: 1 });
+  assert.deepEqual(verify.counts, { rulebook: 13, claims: pick.rows.length, tag_decisions: 0, rule_changes: 0, agent_settings: 1 });
   assert.ok(w.fake.requests.every((x) => x.status !== 404));
 });
 

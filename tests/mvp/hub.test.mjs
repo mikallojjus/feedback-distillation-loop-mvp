@@ -7,10 +7,11 @@ import { TABLES, tableEntry } from '../../agents/claim-tagger-mvp/scripts/lib/co
 import {
   HUB_LINK_TEXT, StructureError, defaultViewPlan, hubDifferences, hubPlan, ownViewName, parseViewFilter, planStructure, readHub, runStructure, validateStructure, verifyStructure, withGeoOptions,
 } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
-import { claimWaits } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
+// status.mjs counted these rows on the first page: Waits for you and not Reviewed (an empty Review status being not Reviewed)
+const claimWaits = (c) => c.agent_status === 'Waits for you' && c.review_status !== 'Reviewed';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
-import { builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, newWorld, readAuditFile, readJson, revisedStructure, makePick, writeInputs, SPACE_NAMES, ALLOWED_SPACE_NAMES, tmp } from './helpers/setup-world.mjs';
+import { builderClient, cleanTmp, forFake, freshStructureV1, freshStructureV1BeforeOptions, newWorld, readAuditFile, readJson, revisedStructure, makePick, writeInputs, SPACE_NAMES, ALLOWED_SPACE_NAMES, tmp } from './helpers/setup-world.mjs';
 
 // The hub (decisions P9 to P11): the structure's hub block, the tables built as full-page tables in the order of the hub, the pages after them, the link lines at the top of the hub page, and
 // the report of what else is on the page. Everything runs against the fake that keeps child pages and tables among a page's blocks.
@@ -26,8 +27,8 @@ const TABLE_TITLES = ['Claims', 'Rulebook', 'Rule changes', 'Tag decisions', 'Ag
 
 /** A fresh world (the hub page called Claim tagger), the plan from the fresh structure, a builder client. */
 function world(fakeOptions = {}) {
-  const w = newWorld({ structure: 'fresh', fakeOptions });
-  const structure = forFake(freshStructure());
+  const w = newWorld({ structure: 'fresh-v1', fakeOptions });
+  const structure = forFake(freshStructureV1());
   const plan = planStructure(structure, w.config);
   return { ...w, structure, plan, client: builderClient(w.fake) };
 }
@@ -45,8 +46,8 @@ const sequence = (w) => w.fake.requests.filter((q) => q.method !== 'GET' && !/\/
 
 // ---- the structure's hub block ---------------------------------------------------------------------------------------------------------------
 
-test('the fresh structure file is valid: made from the specification, Onboarding the only page, no retired column and no rename anywhere, the hub block as specified', () => {
-  const s = readJson(join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'structure.json'));
+test('the fresh structure of the first page (fixture) is valid: made from the specification, Onboarding the only page, no retired column and no rename anywhere, the hub block as specified', () => {
+  const s = readJson(join(import.meta.dirname, 'fixtures', 'structure.fresh-v1.json')); // the first page's fresh structure; setup/structure.json is the v2 one since P48
   assert.equal(validateStructure(s), s);
   assert.equal(s.made_from, 'docs/mvp-2026-11/HUB-AND-GEO-CLAIMS.md (P10-P12)');
   assert.deepEqual(s.pages, ['Onboarding']);
@@ -110,7 +111,7 @@ test('a structure without a hub block stays valid and builds as it did: the fixt
 
 test('validateStructure checks the hub block and made_from', () => {
   const bad = (change, re) => {
-    const s = freshStructure();
+    const s = freshStructureV1();
     change(s);
     assert.throws(() => validateStructure(s), (e) => e instanceof StructureError && re.test(e.message), re.source);
   };
@@ -149,7 +150,7 @@ test('validateStructure checks the hub block and made_from', () => {
 });
 
 test('defaultViewPlan: default_view shows exactly its columns and hides the rest; arrange_default_view shows every live column; neither leaves the view alone; ownViewName picks its view', () => {
-  const s = freshStructure();
+  const s = freshStructureV1();
   const claims = defaultViewPlan(s, 'claims');
   assert.equal(claims.name, 'All claims');
   assert.deepEqual(claims.shown, ['Geo Name', 'Geo Space', 'Agent tags', 'Agent status', 'Verified tags', 'Review status', 'Geo URL']);
@@ -165,7 +166,7 @@ test('defaultViewPlan: default_view shows exactly its columns and hides the rest
   assert.deepEqual(arranged.shown, old.tables.claims.columns.filter((c) => !c.retired).map((c) => c.name));
   assert.deepEqual(arranged.hidden, old.tables.claims.columns.filter((c) => c.retired).map((c) => c.name));
   assert.equal(defaultViewPlan(old, 'rulebook'), null);
-  assert.equal(planStructure(forFake(freshStructure()), newWorld().config).arrange.agent_settings.shown.length, 4);
+  assert.equal(planStructure(forFake(freshStructureV1()), newWorld().config).arrange.agent_settings.shown.length, 4);
   assert.equal(ownViewName(['Table', 'My filter'], 'All claims'), 'Table');
   assert.equal(ownViewName(['My filter', 'All claims'], 'All claims'), 'All claims', 'the view that was renamed already');
   assert.equal(ownViewName(['Default'], null), 'Default', 'without a Table, the first');
@@ -173,7 +174,7 @@ test('defaultViewPlan: default_view shows exactly its columns and hides the rest
 });
 
 test('hubPlan: the warning line, the three link lines with their words, the tables and pages by their titles; Archive is not a page of the structure', () => {
-  const plan = hubPlan(freshStructure());
+  const plan = hubPlan(freshStructureV1());
   assert.equal(plan.note, NOTE);
   assert.deepEqual(plan.view_links.map((l) => l.text), LINKS);
   assert.deepEqual(LINKS, [
@@ -433,13 +434,13 @@ test('hubDifferences, pure: a missing table, a page not built yet, a block in th
 // ---- verify: the hub, the full-page tables and the archive ------------------------------------------------------------------------------------------
 
 async function builtHub() {
-  const w = newWorld({ structure: 'fresh' });
+  const w = newWorld({ structure: 'fresh-v1' });
   assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
   const r = await w.run(['build']);
   assert.equal(r.code, 0, r.text);
   return w;
 }
-const structureVerify = (w) => verifyStructure({ client: builderClient(w.fake), config: readJson(join(w.root, 'config.json')), structure: forFake(freshStructure()) });
+const structureVerify = (w) => verifyStructure({ client: builderClient(w.fake), config: readJson(join(w.root, 'config.json')), structure: forFake(freshStructureV1()) });
 
 test('verifyStructure with a hub block is clean for a page in order, and names the hub title when it is not "Claim tagger"', async () => {
   const w = await builtHub();
@@ -471,7 +472,7 @@ test('verify is ok only when the hub page is in order: the archive page above th
 });
 
 test('verifyStructure names a table that is inline instead of full-page', async () => {
-  const w = newWorld({ structure: 'fresh' });
+  const w = newWorld({ structure: 'fresh-v1' });
   assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
   // a table of the right title made inline before the build is adopted by its title; verify says it should be a full-page table
   const client = builderClient(w.fake);
@@ -486,7 +487,7 @@ test('verifyStructure names a table that is inline instead of full-page', async 
 
 // verify's archive checks (the Archive page, what it holds, the protected ids), read from setup/archive.json
 function archiveWorld() {
-  const w = newWorld({ structure: 'fresh' });
+  const w = newWorld({ structure: 'fresh-v1' });
   const client = builderClient(w.fake);
   return { w, client };
 }
@@ -548,7 +549,7 @@ test('verifyArchive: nothing applies without setup/archive.json; with it done, t
 // ---- the options of the Geo columns ----------------------------------------------------------------------------------------------------------------
 
 test('withGeoOptions: Geo Tags from the pick (sorted), Geo Space from the spaces; the structure is not changed; applying it twice changes nothing; empty or repeated lists are refused', () => {
-  const s = freshStructureBeforeOptions();
+  const s = freshStructureV1BeforeOptions();
   const r = withGeoOptions(s, { tagNames: ['Politics', 'Debate', 'Economy'], spaceNames: SPACE_NAMES });
   assert.equal(r.changed, true);
   assert.deepEqual(s.tables.claims.columns.find((c) => c.name === 'Geo Tags').options, ['Debate'], 'the original is not changed');
@@ -565,7 +566,7 @@ test('withGeoOptions: Geo Tags from the pick (sorted), Geo Space from the spaces
 });
 
 test('options set after the build: the table keeps the options it has, and verify names the ones it lacks (set the options before the first build)', async () => {
-  const w = newWorld({ structure: 'fresh' });
+  const w = newWorld({ structure: 'fresh-v1' });
   assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
   assert.equal((await w.run(['build'])).code, 0);
   const inputs = writeInputs(join(tmp('hubpick'), 'in'), { pick: makePick({ audit: readAuditFile(), extra: 3 }) });
@@ -583,18 +584,18 @@ test('options set after the build: the table keeps the options it has, and verif
 const REVIEWED_OPEN = (column) => ({ or: [{ property: column, select: { does_not_equal: 'Reviewed' } }, { property: column, select: { is_empty: true } }] });
 
 test('parseViewFilter reads an AND of two conditions on selects, the second with "is not": the filter of Your queue (P13); "is not X" is sent as "is not X, or is empty"', () => {
-  const claims = freshStructure().tables.claims;
+  const claims = freshStructureV1().tables.claims;
   const waits = { property: 'Agent status', select: { equals: 'Waits for you' } };
   const open = REVIEWED_OPEN('Review status');
   assert.deepEqual(parseViewFilter('Agent status is Waits for you and Review status is not Reviewed', claims), { and: [waits, open] });
   assert.deepEqual(parseViewFilter('Review status is not Reviewed and Agent status is Waits for you', claims), { and: [open, waits] }, 'in the other order too');
   assert.deepEqual(parseViewFilter('Review status is not Reviewed', claims), open, 'alone it is the or itself');
   assert.throws(() => parseViewFilter('Agent status is Waits for you and Review status is not Done', claims), (e) => e instanceof StructureError && /"Done" is not a value of "Review status"/.test(e.message));
-  const plan = planStructure(forFake(freshStructure()), newWorld().config);
+  const plan = planStructure(forFake(freshStructureV1()), newWorld().config);
   assert.deepEqual(plan.views.find((v) => v.name === 'Your queue').body.filter, { and: [waits, open] }, 'the plan sends one AND with the or inside it: two levels, which the views API allows');
   assert.deepEqual(plan.views.find((v) => v.name === 'Needs your note').body.filter, { property: 'Agent reading', rich_text: { contains: 'without your note' } }, 'the other two views are as they were');
   // the words in structure.json, which the frozen walkthrough manifest repeats, are the same as before
-  assert.equal(freshStructure().views.find((v) => v.name === 'Your queue').filter, 'Agent status is Waits for you and Review status is not Reviewed');
+  assert.equal(freshStructureV1().views.find((v) => v.name === 'Your queue').filter, 'Agent status is Waits for you and Review status is not Reviewed');
 });
 
 test('the filter of Your queue at work on the rows of the built table, on either reading of an empty select: a claim with no Review status that waits is listed, a Reviewed one is not; the bare filter of before would lose the new claims on the strict reading', async () => {
@@ -807,7 +808,7 @@ test('a view that Notion will not place after the own view is made without a pla
 
 test('a table without a default_view keeps the named views in front of its own view, as before: the practice page\'s Claims (arrange_default_view)', async () => {
   const w = world({ ownView: 'Table' });
-  const structure = forFake(freshStructure());
+  const structure = forFake(freshStructureV1());
   structure.tables.claims = { ...structure.tables.claims, arrange_default_view: true };
   delete structure.tables.claims.default_view;
   const plan = planStructure(structure, w.config);

@@ -250,6 +250,10 @@ async function show() {
   return 0;
 }
 
+// Parked (P48): the practice pages are not ported to the v2 layout; every subcommand refuses.
+console.log('demo-mocks: the practice pages are parked: this branch works on the v2 layout only (P48). The demo runs on the git tag claim-tagger-v1 (git worktree add ../geo-agents-v1 claim-tagger-v1).');
+process.exit(2);
+
 const [cmd, flag] = process.argv.slice(2);
 const run = cmd === 'setup' ? () => setup(flag === '--again') : cmd === 'reset' ? reset : cmd === 'status' ? show : null;
 if (!run) {

@@ -81,12 +81,26 @@ export function forFake(structure) {
   return copy;
 }
 
+/** The shared fake keeps relations one-sided, so a two-way pair (the v2 structure's Open claim) is built and verified as a one-way relation in the setup tests; two-way.test.mjs has the fake that knows dual relations. */
+export function oneWay(structure) {
+  const copy = structuredClone(structure);
+  for (const t of Object.values(copy.tables)) for (const c of t.columns) delete c.two_way;
+  return copy;
+}
+
 export const realStructure = () => structureFromProposal(readFileSync(STRUCTURE_MD, 'utf8'));
 // The structure of the first build (22 Oct 2026), kept as a fixture when the fresh structure of P10 to P12 replaced setup/structure.json: Rulebook copy and Claims copy, the retired
 // "(old)" columns and the renames, two sub-pages, no hub block. Most of the builder's tests exercise a build, a rename or a repair on it.
 export const revisedStructure = () => JSON.parse(readFileSync(join(REPO_ROOT, 'tests', 'mvp', 'fixtures', 'structure.22-oct.json'), 'utf8'));
 // The structure the build uses now: agents/claim-tagger-mvp/setup/structure.json (Claims and Rulebook as full-page tables, the lean Geo columns, Onboarding, the hub block).
 export const freshStructure = () => JSON.parse(readFileSync(join(REPO_ROOT, 'agents', 'claim-tagger-mvp', 'setup', 'structure.json'), 'utf8'));
+// The fresh structure of the first page (the per-claim layout, hub of three links), kept as a fixture: the hub tests exercise the hub mechanism on it.
+export const freshStructureV1 = () => JSON.parse(readFileSync(join(REPO_ROOT, 'tests', 'mvp', 'fixtures', 'structure.fresh-v1.json'), 'utf8'));
+export const freshStructureV1BeforeOptions = () => {
+  const s = freshStructureV1();
+  s.tables.claims.columns.find((c) => c.name === 'Geo Tags').options = ['Debate'];
+  return s;
+};
 // The fresh structure as it is before `setup.mjs structure --options-from` has run: Geo Tags holds the option Debate only. The committed file holds the
 // tag names of the committed Geo pick, so a test of what --options-from does starts from this one, not from the file as it stands.
 export const freshStructureBeforeOptions = () => {
@@ -113,14 +127,15 @@ export function testConfig({ parent }) {
 export function newWorld({ structure = false, protectedIds = null, fakeOptions = {} } = {}) {
   const root = tmp('setup');
   const probe = placeholderConfig();
-  const make = structure === 'fresh' ? createPagesFake : createFakeNotion;
+  const fresh = structure === 'fresh' || structure === 'fresh-v1'; // 'fresh-v1': the first page's fresh structure (fixtures/structure.fresh-v1.json), for the tests of the hub mechanism
+  const make = fresh ? createPagesFake : createFakeNotion;
   const fake = make({ protected: protectedIds ?? [...probe.notion.protected_database_ids, ...probe.notion.protected_page_ids], ...fakeOptions });
-  const parent = fake.addPage({ title: structure === 'fresh' ? 'Claim tagger' : 'Feedback Distillation MVP' }); // the hub page is renamed by setup.mjs archive before a fresh build
+  const parent = fake.addPage({ title: structure === 'fresh' ? 'Claim tagger v2' : structure === 'fresh-v1' ? 'Claim tagger' : 'Feedback Distillation MVP' }); // the hub page is renamed by setup.mjs archive before a fresh build
   const config = testConfig({ parent });
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
   if (structure) {
     mkdirSync(join(root, 'setup'), { recursive: true });
-    writeFileSync(join(root, 'setup', 'structure.json'), `${JSON.stringify(forFake(structure === 'fresh' ? freshStructure() : revisedStructure()), null, 2)}\n`);
+    writeFileSync(join(root, 'setup', 'structure.json'), `${JSON.stringify(forFake(structure === 'fresh' ? oneWay(freshStructure()) : structure === 'fresh-v1' ? freshStructureV1() : revisedStructure()), null, 2)}\n`);
   }
   const env = { root, fetchImpl: fake.fetchImpl, token: fake.token, sleep: noSleep, now: NOW, repoRoot: root };
   const w = { root, config, fake, parent, env };

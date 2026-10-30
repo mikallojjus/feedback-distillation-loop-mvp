@@ -38,8 +38,11 @@ import { blockText, parseInline, renderPreview, splitAtMarkers, toBlocks } from 
 import { AUTOMATIC_TYPES, validateStructure, viewKey } from './notion-build.mjs';
 import { normId } from './notion-values.mjs';
 import { stampOf } from './editor-words.mjs';
-import { READINGS, decisionsFor } from './decisions.mjs';
-import { claimReadingCell, classifyRows, readingCells } from './readings.mjs';
+// The practice-page code below is parked (P48) and still calls the per-claim helpers (decisionsFor, classifyRows, claimReadingCell, readingCells) that
+// the v2 rewrite removed. Namespace imports keep this module loadable; those calls fail only if somebody runs the parked code.
+import { READINGS } from './decisions.mjs';
+import * as decisionsMod from './decisions.mjs';
+import * as readingsMod from './readings.mjs';
 import { buildRubric } from './rubric.mjs';
 
 // ---- names -------------------------------------------------------------------------------------------------------------------------
@@ -532,11 +535,11 @@ function seedOf(manifest, claim, rubric) {
   if (!d) return null;
   const row = { Key: queueKey(claim, tag), Tag: tag, 'Agent proposal': d['Agent proposal'], 'Rulebook edition': rubric?.edition ?? null };
   const reviewed = { geo_id: claim['Geo ID'], review_status: d[C.review_status], verified_tags: d[C.verified], challenged_notes: d[C.notes] };
-  const [decision] = decisionsFor(reviewed, [row], { tagNames: [tag] });
+  const [decision] = decisionsMod.decisionsFor(reviewed, [row], { tagNames: [tag] });
   const differs = decision.outcome !== row['Agent proposal'];
   let item = null;
   if (rubric) {
-    const classes = classifyRows({ claims: [reviewed], ledgerRows: [row], rubric });
+    const classes = readingsMod.classifyRows({ claims: [reviewed], ledgerRows: [row], rubric });
     item = Object.values(classes).flat().find((i) => i?.key === row.Key) ?? null;
   }
   return { d, row, reviewed, decision, differs, item };
@@ -547,7 +550,7 @@ function seedOf(manifest, claim, rubric) {
 function seededCells(seed, rubric) {
   if (!seed.differs || !seed.item) return null;
   const rule = seed.item.citedRule === null ? null : `${seed.item.tag} rule ${seed.item.citedRule}`;
-  return readingCells(seed.item, { reading: 'Agent slip', rule, note: SEEDED_NOTE }, rubric.edition);
+  return readingsMod.readingCells(seed.item, { reading: 'Agent slip', rule, note: SEEDED_NOTE }, rubric.edition);
 }
 
 /**
@@ -576,7 +579,7 @@ export function claimAgentCells(manifest, claim, { rubric, column = AGENT_READIN
   if (!seed || !seed.item) return {};
   const cells = seededCells(seed, rubric);
   const item = { ...seed.item, row: { ...seed.row, ...(cells ?? {}) } };
-  const cell = claimReadingCell({ claim: seed.reviewed, items: [item], readings: undefined, unjudged: [] });
+  const cell = readingsMod.claimReadingCell({ claim: seed.reviewed, items: [item], readings: undefined, unjudged: [] });
   return cell === null ? {} : { [column]: cell };
 }
 

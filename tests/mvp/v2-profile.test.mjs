@@ -1,28 +1,15 @@
-// The v2 profile (a second Notion page with its own five tables, beside the live one): its config builder, its config shape, the protected lists, the root step of setup.mjs, and the
-// refusal of every loop script on a v2 root until the loop is ported (checkpoint 3). No network: Notion is the in-memory fake.
+// The v2 page: its config shape, the root step of setup.mjs, the structure completed from STRUCTURE-V2.md, the v2-profile command, and the parked practice pages (P48). No network: Notion is the in-memory fake.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { V2_REFUSAL, isProtected, isV2, loadConfig, validateConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
-import { buildV2Config, completeStructure, liveIds } from '../../agents/claim-tagger-mvp/scripts/lib/v2-profile.mjs';
+import { isProtected, isV2, validateConfig } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
+import { completeStructure } from '../../agents/claim-tagger-mvp/scripts/lib/v2-profile.mjs';
 import { HUB_LINK_TEXT, hubPlan, optionColor, validateStructure } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
-import { main as v2Main } from '../../agents/claim-tagger-mvp/scripts/v2-profile.mjs';
-import { checkPlan, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
-import { buildDemoConfig } from '../../agents/claim-tagger-mvp/scripts/lib/demo-profile.mjs';
-import { main as statusMain } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
-import { main as decideMain } from '../../agents/claim-tagger-mvp/scripts/decide.mjs';
-import { main as addMain } from '../../agents/claim-tagger-mvp/scripts/add.mjs';
-import { main as proposeMain } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
-import { main as distillMain } from '../../agents/claim-tagger-mvp/scripts/distill.mjs';
-import { main as promoteMain } from '../../agents/claim-tagger-mvp/scripts/promote.mjs';
-import { main as followupMain } from '../../agents/claim-tagger-mvp/scripts/followup.mjs';
-import { main as rollbackMain } from '../../agents/claim-tagger-mvp/scripts/rollback.mjs';
-import { main as restoreMain } from '../../agents/claim-tagger-mvp/scripts/restore.mjs';
-import { main as pullMain, pull } from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
-import { main as judgeMain } from '../../agents/claim-tagger-mvp/scripts/judge.mjs';
+import { main as v2Main } from '../../agents/claim-tagger-mvp/scripts/v2-profile.mjs';
 import { main as walkthroughMain } from '../../agents/claim-tagger-mvp/scripts/walkthrough.mjs';
 import { builtConfig, placeholderConfig } from './helpers/config-fixture.mjs';
 import { NOW, builderClient, cleanTmp, noSleep, tmp } from './helpers/setup-world.mjs';
@@ -30,97 +17,34 @@ import { main as setupMain } from '../../agents/claim-tagger-mvp/scripts/setup.m
 import { createFakeNotion } from './fixtures/fake-notion.mjs';
 import { createPagesFake } from './fixtures/fake-notion-pages.mjs';
 
-after(cleanTmp);
-
 const HUB = '3fa273e2-14eb-8051-99f3-d12ef01db453';
 
-/** The live config as the tests know it: the committed fixture with every placeholder replaced by an id, a hub, two live pages and the live views. */
-function production() {
+/** The config as it is after setup: the committed fixture (v2 since P48) with an id in every placeholder. */
+function built() {
   const c = builtConfig();
-  c.notion.parent_page_id = HUB;
-  c.notion.pages.onboarding = '406273e214eb81a881dcd1480c5d015e';
-  c.notion.pages.archive = '406273e214eb81a78c2def55287e4b67';
-  c.notion.views = {
-    your_queue: { id: '406273e214eb81a3993c000c78850705', url: 'https://www.notion.so/x?v=406273e214eb81a3993c000c78850705' },
-    lessons_waiting: { id: '406273e214eb81fa8c8d000c20b953ba', url: 'https://www.notion.so/y?v=406273e214eb81fa8c8d000c20b953ba' },
-  };
+  c.notion.root_parent_page_id = HUB;
   return c;
 }
-const v2 = () => buildV2Config(production());
-const problems = (c) => validateConfig(c).errors;
-
-// ---- buildV2Config ---------------------------------------------------------------------------------------------------------------
-
-test('buildV2Config: the profile marker, the live hub as root parent, placeholders for the new page and tables', () => {
-  const c = v2();
-  assert.equal(c.profile, 'v2');
-  assert.equal(isV2(c), true);
-  assert.equal(c.notion.root_parent_page_id, HUB);
-  assert.equal(c.notion.parent_page_id, '<setup>');
-  assert.deepEqual(c.notion.setup_page_parents, ['<setup>']);
+/** The v2 config before `setup.mjs root` has run: the live hub as root parent, placeholders for the v2 page and the tables. */
+function v2() {
+  const c = built();
+  c.notion.parent_page_id = '<setup>';
+  c.notion.setup_page_parents = ['<setup>'];
   for (const t of [c.notion.rulebook, c.notion.claims, ...Object.values(c.notion.databases)]) {
-    assert.equal(t.database_id, '<setup>');
-    assert.equal(t.data_source_id, '<setup>');
+    t.database_id = '<setup>';
+    t.data_source_id = '<setup>';
   }
-  assert.deepEqual(c.notion.views, {});
-  assert.deepEqual(Object.keys(c.notion.pages).sort(), ['archive', 'demo_tests', 'demos', 'onboarding', 'proposal']);
-  assert.ok(Object.values(c.notion.pages).every((p) => p.startsWith('<')));
-  assert.deepEqual(problems(c), []);
-});
-
-test('buildV2Config: every live id is protected (five tables, both ids; views; Onboarding; Archive) and the live hub is not', () => {
-  const p = production();
-  const c = buildV2Config(p);
-  const live = liveIds(p);
-  assert.equal(live.tables.length, 10);
-  assert.equal(live.views.length, 2);
-  assert.equal(live.pages.length, 2);
-  for (const id of [...live.tables, ...live.views, ...live.pages]) assert.equal(isProtected(c, id), true, id);
-  assert.equal(isProtected(c, HUB), false);
-  // production's own lists are still there
-  for (const id of [...p.notion.protected_database_ids, ...p.notion.protected_page_ids]) assert.equal(isProtected(c, id), true, id);
-  // a hub that production had in its lists is taken out again
-  const withHub = production();
-  withHub.notion.protected_page_ids.push(HUB.replace(/-/g, '').toUpperCase());
-  assert.equal(isProtected(buildV2Config(withHub), HUB), false);
-  // no id twice
-  const all = [...c.notion.protected_database_ids, ...c.notion.protected_page_ids].map(normId);
-  assert.equal(new Set(c.notion.protected_database_ids.map(normId)).size, c.notion.protected_database_ids.length);
-  assert.ok(all.length > 0);
-});
-
-test('buildV2Config: Claims has no editor column; Tag decisions has Agent is right, Tag outcome and Your note; the other editor columns stay', () => {
-  const p = production();
-  const c = buildV2Config(p);
-  assert.deepEqual(c.editor_columns.claims, []);
-  assert.deepEqual(c.editor_columns.tag_decisions, ['Agent is right', 'Tag outcome', 'Your note']);
-  assert.deepEqual(c.editor_columns.rule_changes, p.editor_columns.rule_changes);
-  assert.deepEqual(c.editor_columns.rule_changes_status_editor_values, p.editor_columns.rule_changes_status_editor_values);
-  assert.deepEqual(c.editor_columns.agent_settings, p.editor_columns.agent_settings);
-  for (const k of ['verified', 'review_status', 'notes']) assert.equal(Object.hasOwn(c.notion.claims.columns, k), false);
-  assert.deepEqual(Object.keys(c.notion.claims.columns).sort(), ['claim', 'is_factual', 'link', 'sources']);
-  assert.deepEqual(c.notion.claims.write_columns, p.notion.claims.write_columns);
-  assert.equal(c.notion.claims.key, p.notion.claims.key);
-});
-
-test('buildV2Config does not change production, and refuses a demo or a v2 config as its input', () => {
-  const p = production();
-  const before = JSON.stringify(p);
-  buildV2Config(p);
-  assert.equal(JSON.stringify(p), before);
-  assert.throws(() => buildV2Config(v2()), /production config/);
-  const demo = buildDemoConfig(p, { demoId: 'x', title: 'T', parentId: '5e7a0000-0000-4000-8000-0000000000ff', tag: 'Context-dependent' });
-  assert.throws(() => buildV2Config(demo), /production config/);
-});
+  c.notion.views = {};
+  return c;
+}
+const problems = (c) => validateConfig(c).errors;
 
 // ---- validateConfig ----------------------------------------------------------------------------------------------------------------
 
-test('validateConfig accepts v2, production and a demo config', () => {
+test('validateConfig accepts the v2 config before and after the root step', () => {
   assert.deepEqual(problems(v2()), []);
-  assert.deepEqual(problems(production()), []);
-  const demo = buildDemoConfig(production(), { demoId: 'x', title: 'T', parentId: '5e7a0000-0000-4000-8000-0000000000ff', tag: 'Context-dependent' });
-  assert.deepEqual(problems(demo), []);
-  // once the root step has run
+  assert.deepEqual(problems(built()), []);
+  assert.equal(isV2(v2()), true);
   const done = v2();
   done.notion.parent_page_id = '5e7a0000-0000-4000-8000-0000000000aa';
   done.notion.setup_page_parents = [done.notion.parent_page_id];
@@ -160,65 +84,17 @@ test('validateConfig rejects a v2 config with an editor column on Claims, withou
   assert.ok(problems(e).some((m) => m.startsWith('profile')));
 });
 
-test('a production config still needs its three Claims editor columns and a real parent page (the v2 allowances do not leak)', () => {
-  const a = production();
-  delete a.notion.claims.columns.verified;
-  assert.ok(problems(a).some((m) => m.startsWith('notion.claims.columns.verified')));
-  const b = production();
-  b.notion.parent_page_id = '<setup>';
-  assert.ok(problems(b).some((m) => m.startsWith('notion.parent_page_id')));
-  const c = production();
-  c.notion.setup_page_parents = ['<setup>'];
-  assert.ok(problems(c).some((m) => m.startsWith('notion.setup_page_parents')));
-});
 
-// ---- the plan check ----------------------------------------------------------------------------------------------------------------
+// ---- the CLI --------------------------------------------------------------------------------------------------------------------------
 
-test('checkPlan with a v2 config refuses a write to any live table, data source, view or page id (in a value, a key or a page id), and passes an ordinary plan', () => {
-  const p = production();
-  const c = buildV2Config(p);
-  const live = liveIds(p);
-  const root = tmp('plan');
-  const fresh = () => newPlan({ runId: 'r1', script: 'propose', config: c });
-  const PAGE = '5e7a0000-0000-4000-8000-000000000999';
-  const clean = fresh();
-  clean.update('tag_decisions', 'K', PAGE, { 'Agent reason': 'fine' });
-  assert.deepEqual(checkPlan(clean, c, { root }).problems, []);
-  const ids = [...live.tables, ...live.views, ...live.pages];
-  assert.ok(ids.length >= 14);
-  for (const id of ids) {
-    const inValue = fresh();
-    inValue.update('tag_decisions', 'K', PAGE, { 'Agent reason': `see ${id}` });
-    assert.ok(checkPlan(inValue, c, { root }).problems.some((m) => /protected id/.test(m)), `value ${id}`);
-    const asPage = fresh();
-    asPage.update('tag_decisions', 'K', id, { 'Agent reason': 'x' });
-    assert.ok(checkPlan(asPage, c, { root }).problems.some((m) => /protected id/.test(m)), `page ${id}`);
-  }
-  // a live table can never be one of v2's own tables
-  const own = structuredClone(c);
-  own.notion.databases.tag_decisions.database_id = live.tables[0];
-  assert.ok(checkPlan(clean, own, { root }).problems.some((m) => /protected lists of config.json/.test(m)));
-});
-
-// ---- the CLI that writes the config ------------------------------------------------------------------------------------------------
-
-test('v2-profile init writes a valid config, refuses to overwrite it without --replace, and --replace writes it again', () => {
+test('v2-profile init is gone: it refuses with exit 2 and names the tag, and writes nothing', () => {
   const root = tmp('v2cli');
-  const out = [];
   const err = [];
-  const io = { out: (s) => out.push(s), err: (s) => err.push(s) };
-  const env = { root: join(root, 'profiles', 'v2'), production: production() };
-  assert.equal(v2Main(['init'], io, env), 0, err.join('\n'));
-  const file = join(root, 'profiles', 'v2', 'config.json');
-  assert.ok(existsSync(file));
-  assert.equal(loadConfig(join(root, 'profiles', 'v2')).profile, 'v2');
-  writeFileSync(file, readFileSync(file, 'utf8').replace('"profile": "v2"', '"profile": "v2", "marker": 1'));
-  assert.equal(v2Main(['init'], io, env), 2);
-  assert.match(err.join('\n'), /exists/);
-  assert.match(readFileSync(file, 'utf8'), /"marker": 1/);
-  assert.equal(v2Main(['init', '--replace'], io, env), 0);
-  assert.doesNotMatch(readFileSync(file, 'utf8'), /"marker"/);
-  assert.equal(v2Main(['bogus'], io, env), 2);
+  assert.equal(v2Main(['init'], { out: () => {}, err: (s) => err.push(s) }, { root }), 2);
+  assert.match(err.join('\n'), /init is gone.*claim-tagger-v1/);
+  assert.equal(existsSync(join(root, 'config.json')), false);
+  assert.equal(existsSync(join(root, 'profiles')), false);
+  assert.equal(v2Main(['bogus'], { out: () => {}, err: () => {} }, { root }), 2);
 });
 
 // ---- setup.mjs root ----------------------------------------------------------------------------------------------------------------
@@ -228,10 +104,9 @@ function v2World({ hubTitle = 'Claim tagger', structure = true } = {}) {
   const root = tmp('v2root');
   const fake = createPagesFake({ protected: [] });
   const hub = fake.addPage({ title: hubTitle });
-  const prod = production();
-  prod.notion.parent_page_id = hub;
-  prod.notion.requests_per_second = 1000;
-  const config = buildV2Config(prod);
+  const config = v2();
+  config.notion.root_parent_page_id = hub;
+  config.notion.requests_per_second = 1000;
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
   if (structure) {
     mkdirSync(join(root, 'setup'), { recursive: true });
@@ -333,23 +208,7 @@ test('root: refuses a config that already names another v2 page, without writing
   assert.equal(w.read().notion.parent_page_id, other);
 });
 
-test('root: refuses a non-v2 profile, a missing builder session and a protected root parent; two pages of the title stop it', async () => {
-  // not v2: the config as it was before setup (no profile)
-  const root = tmp('v2prod');
-  const fake = createPagesFake({ protected: [] });
-  const hub = fake.addPage({ title: 'Claim tagger' });
-  const prod = placeholderConfig();
-  prod.notion.parent_page_id = hub;
-  prod.notion.requests_per_second = 1000;
-  writeFileSync(join(root, 'config.json'), `${JSON.stringify(prod, null, 2)}\n`);
-  const env = { root, fetchImpl: fake.fetchImpl, token: fake.token, sleep: noSleep, now: NOW, repoRoot: root };
-  const out = [];
-  const io = { out: (s) => out.push(s), err: (s) => out.push(s) };
-  assert.equal((await setupMain(['builder', 'open', '--reason', 'x'], io, env)), 0);
-  assert.equal(await setupMain(['root', '--title', 'T'], io, env), 2);
-  assert.match(out.join('\n'), /v2 profile only/);
-  assert.equal(fake.entries(hub).length, 0);
-
+test('root: refuses a missing builder session and a protected root parent; two pages of the title stop it', async () => {
   // no builder session
   const w = v2World();
   const none = await w.run(['root']);
@@ -394,62 +253,20 @@ test('root is a command of its own: it is not one of the steps of "all"', async 
   assert.match(r.out.join('\n'), /setup\.mjs root/);
 });
 
-// ---- the loop refuses a v2 root ----------------------------------------------------------------------------------------------------
 
-function v2Folder() {
-  const root = tmp('v2loop');
-  writeFileSync(join(root, 'config.json'), `${JSON.stringify(v2(), null, 2)}\n`);
-  return root;
-}
-const collect = () => {
+// ---- the parked practice pages (P48) ---------------------------------------------------------------------------------------------
+
+test('the walkthrough and the demo mocks refuse with exit 2 and name the tag claim-tagger-v1', async () => {
   const lines = [];
-  return { lines, io: { out: (s) => lines.push(String(s)), err: (s) => lines.push(String(s)) } };
-};
-
-const LOOP = [
-  ['status', statusMain, []],
-  ['propose', proposeMain, []],
-  ['distill', distillMain, []],
-  ['promote', promoteMain, ['--lesson', 'x']],
-  ['followup', followupMain, []],
-  ['rollback', rollbackMain, ['--lesson', 'x']],
-  ['restore', restoreMain, ['--edition', '2026-10-29.1']],
-  ['decide', decideMain, ['list', '--all']],
-  ['add', addMain, ['--claims', '11111111-1111-4111-8111-111111111111']],
-];
-for (const [name, main, args] of LOOP) {
-  test(`${name} refuses a v2 root with exit 2 and the v2 sentence, and writes nothing to Notion`, async () => {
-    const root = v2Folder();
-    const { lines, io } = collect();
-    const fake = createFakeNotion({ protected: [] });
-    const code = await main(args, io, { root, fetchImpl: fake.fetchImpl, token: fake.token, sleep: noSleep, now: NOW, repoRoot: root });
-    assert.equal(code, 2, lines.join('\n'));
-    assert.match(lines.join('\n'), new RegExp(V2_REFUSAL.replace(/[()]/g, '\\$&')));
-    assert.equal(fake.writes().length, 0);
-  });
-}
-
-test('pull, judge and the walkthrough refuse a v2 root too', async () => {
-  const root = v2Folder();
-  const { lines, io } = collect();
-  assert.equal(await pullMain(['--all'], io, { root }), 2);
-  assert.match(lines.join('\n'), /v2 profile/);
-  await assert.rejects(() => pull({ root, tables: 'all', client: null }), /v2 profile/);
-  const j = collect();
-  const saved = process.env.CLAIM_TAGGER_MVP_ROOT;
-  process.env.CLAIM_TAGGER_MVP_ROOT = root;
-  try {
-    const code = await judgeMain(['--pull', 'nope'], j.io, {});
-    assert.equal(code, 2, j.lines.join('\n'));
-    assert.match(j.lines.join('\n'), /v2 profile/);
-    const w = collect();
-    const wc = await walkthroughMain(['start', '--dry-run'], w.io, { root });
-    assert.equal(wc, 2, w.lines.join('\n'));
-    assert.match(w.lines.join('\n'), /v2 profile/);
-  } finally {
-    if (saved === undefined) delete process.env.CLAIM_TAGGER_MVP_ROOT;
-    else process.env.CLAIM_TAGGER_MVP_ROOT = saved;
+  const io = { out: (s) => lines.push(String(s)), err: (s) => lines.push(String(s)) };
+  for (const argv of [['start', '--dry-run'], ['list'], ['help'], []]) {
+    lines.length = 0;
+    assert.equal(await walkthroughMain(argv, io, {}), 2, argv.join(' '));
+    assert.match(lines.join('\n'), /parked.*claim-tagger-v1/);
   }
+  const r = spawnSync(process.execPath, [join(process.cwd(), 'agents', 'claim-tagger-mvp', 'scripts', 'demo-mocks.mjs'), 'status'], { encoding: 'utf8' });
+  assert.equal(r.status, 2);
+  assert.match(r.stdout, /parked.*claim-tagger-v1/);
 });
 
 // ---- the v2 structure (STRUCTURE-V2.md and its completion block) -----------------------------------------------------------------------------------------------------------------

@@ -8,9 +8,9 @@ import {
   viewPlan,
 } from '../../agents/claim-tagger-mvp/scripts/lib/notion-build.mjs';
 import { NotionError } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
-import { V2_TAG_DECISIONS_EDITOR_COLUMNS, buildV2Config, completeStructure } from '../../agents/claim-tagger-mvp/scripts/lib/v2-profile.mjs';
+import { completeStructure } from '../../agents/claim-tagger-mvp/scripts/lib/v2-profile.mjs';
 import { builtConfig } from './helpers/config-fixture.mjs';
-import { builderClient, cleanTmp, forFake, freshStructure, newWorld, readJson, tmp } from './helpers/setup-world.mjs';
+import { builderClient, cleanTmp, forFake, freshStructureV1, newWorld, readJson, tmp } from './helpers/setup-world.mjs';
 
 // What the v2 page asks of the builder (STRUCTURE-V2.md, P45 and P46): several sorts in a view, checkbox filters and a bracketed "or" group, two-way relations (a pair made once,
 // converted in place), one hint line under each hub link, and the editor column Agent is right. Pure checks, then the builder against a small in-memory Notion that knows
@@ -176,7 +176,7 @@ test('planStructure: a two-way column carries its partner and role and is planne
     assert.equal(Object.hasOwn(c, 'two_way_role'), false);
   }
   // the structure the live page is built from has no two_way anywhere
-  const live = planStructure(forFake(freshStructure()), { notion: { parent_page_id: '5e7a0000-0000-4000-8000-0000000000aa' } });
+  const live = planStructure(forFake(freshStructureV1()), { notion: { parent_page_id: '5e7a0000-0000-4000-8000-0000000000aa' } });
   const relations = live.columns.filter((c) => c.type === 'relation');
   assert.ok(relations.length >= 3);
   for (const c of relations) assert.deepEqual(c.body.relation, { single_property: {} }, c.name);
@@ -479,7 +479,7 @@ const HINT_YQ = 'Tick the box or set the outcome.';
 const HINT_LW = 'Set Approved or Rejected.';
 
 function hinted() {
-  const s = forFake(freshStructure());
+  const s = forFake(freshStructureV1());
   s.hub.view_hints = { your_queue: HINT_YQ, lessons_waiting: HINT_LW };
   return s;
 }
@@ -503,7 +503,7 @@ test('hubPlan: a hint is part of its link line\'s plan; a hub without view_hints
   const lines = hubPlan(hinted()).view_links;
   assert.equal(lines.find((l) => l.key === 'your_queue').hint, HINT_YQ);
   assert.equal(Object.hasOwn(lines.find((l) => l.key === 'needs_your_note'), 'hint'), false);
-  for (const l of hubPlan(forFake(freshStructure())).view_links) assert.deepEqual(Object.keys(l), ['key', 'name', 'text']);
+  for (const l of hubPlan(forFake(freshStructureV1())).view_links) assert.deepEqual(Object.keys(l), ['key', 'name', 'text']);
 });
 
 const CHILD = (i, text) => ({ id: `b${i}`, type: 'paragraph', paragraph: { rich_text: [{ plain_text: text }] } });
@@ -525,13 +525,13 @@ test('hubDifferences: a missing hint is "missing", a misplaced one an order diff
   assert.deepEqual(only(twice.differences).map((d) => d.kind), ['leftover']);
   assert.match(twice.differences.find((d) => d.kind === 'leftover').detail, /^a second copy of a hint line is on the hub page and was left as it is/);
   // without hints in the plan, a block that reads like a hint is just a block that belongs to none of them
-  const plain = hubPlan(forFake(freshStructure()));
+  const plain = hubPlan(forFake(freshStructureV1()));
   const none = hubDifferences({ hub: plain, config: { notion: {} }, children: [plain.note, ...plain.view_links.map((l) => l.text), HINT_YQ].map((t, i) => CHILD(i, t)) });
   assert.deepEqual(only(none.differences).map((d) => d.kind), ['leftover']);
 });
 
 function hubWorld() {
-  const w = newWorld({ structure: 'fresh' });
+  const w = newWorld({ structure: 'fresh-v1' });
   const structure = hinted();
   return { ...w, structure, client: builderClient(w.fake), plan: planStructure(structure, w.config) };
 }
@@ -560,7 +560,7 @@ test('a fresh hub with hints: the warning, then each link line followed by its h
 
 test('hints added to a hub that has its link lines: each goes right after its link line (after_block), nothing is moved or edited, and a second run adds nothing', async () => {
   const w = hubWorld();
-  const production = planStructure(forFake(freshStructure()), w.config);
+  const production = planStructure(forFake(freshStructureV1()), w.config);
   const first = await runStructure({ plan: production, client: w.client, root: w.root, config: w.config });
   assert.equal(first.ok, true);
   assert.equal(Object.hasOwn(first.created, 'hub_hints'), false, 'a hub without hints keeps its result as it was');
@@ -587,7 +587,7 @@ test('hints added to a hub that has its link lines: each goes right after its li
 test('a link line that is missing is added together with its hint, in order, while a link that is there only gets its hint', async () => {
   const w = hubWorld();
   const lines = hubPlan(w.structure).view_links.map((l) => l.text);
-  const production = planStructure(forFake(freshStructure()), w.config);
+  const production = planStructure(forFake(freshStructureV1()), w.config);
   await runStructure({ plan: production, client: w.client, root: w.root, config: w.config, parts: ['pages', 'databases', 'views'] });
   const views = w.config.notion.views;
   // the page has only the link line of Lessons waiting, typed by hand with its address
@@ -638,24 +638,15 @@ test('the renamed columns of Tag decisions keep their option colours under the v
 
 // ---- Agent is right: the editor column ---------------------------------------------------------------------------------------------------------------
 
-test('Agent is right is an editor column of Tag decisions on v2; Tag outcome and Your note stay required and the committed v2 config validates', () => {
-  assert.deepEqual([...V2_TAG_DECISIONS_EDITOR_COLUMNS], ['Agent is right', 'Tag outcome', 'Your note']);
-  const production = builtConfig();
-  production.notion.parent_page_id = '3fa273e2-14eb-8051-99f3-d12ef01db453';
-  const c = buildV2Config(production);
+test('the three editor columns of Tag decisions are exactly Agent is right, Tag outcome and Your note, and the committed config.json validates', () => {
+  const c = readJson(join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'config.json'));
   assert.deepEqual(c.editor_columns.tag_decisions, ['Agent is right', 'Tag outcome', 'Your note']);
   assert.deepEqual(validateConfig(c).errors, []);
-  for (const name of ['Tag outcome', 'Your note']) {
+  for (const name of ['Agent is right', 'Tag outcome', 'Your note']) {
     const d = structuredClone(c);
     d.editor_columns.tag_decisions = d.editor_columns.tag_decisions.filter((x) => x !== name);
-    assert.ok(validateConfig(d).errors.some((m) => m.includes(`"${name}"`)), name);
+    assert.ok(validateConfig(d).errors.some((m) => m.startsWith('editor_columns.tag_decisions') && m.includes('expected exactly')), name);
   }
-  const without = structuredClone(c);
-  without.editor_columns.tag_decisions = ['Tag outcome', 'Your note'];
-  assert.deepEqual(validateConfig(without).errors, [], 'the tick is not required by the validator');
-  const committed = readJson(join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'profiles', 'v2', 'config.json'));
-  assert.deepEqual(committed.editor_columns.tag_decisions, ['Agent is right', 'Tag outcome', 'Your note']);
-  assert.deepEqual(validateConfig(committed).errors, []);
 });
 
 // ---- the description sync (sync_descriptions) ------------------------------------------------------------------------------------------------------

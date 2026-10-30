@@ -58,7 +58,7 @@ import { spawn } from 'node:child_process';
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, V2_REFUSAL, editorColumns, isProtected, isV2, loadConfig, tableEntry } from './lib/config.mjs';
+import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, isProtected, isV2, loadConfig, tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { notionUrl, plural, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
@@ -74,6 +74,9 @@ import { buildRubric, compareEditions, nextEdition, readEdition, readRubric, ver
 import { InputError, SETTINGS_NAME, claimLink, claimOps, protectedInLinks, rulebookOps, unknownOptions, withLinkedSources } from './lib/setup-steps.mjs';
 import { loadPull, latestPullId, pull, readOnlyFetch, richTextPieces } from './pull.mjs';
 import * as dp from './lib/demo-profile.mjs';
+
+// Parked (P48): the practice pages are not ported to the v2 layout. main refuses before it parses anything; the code below is kept whole for the port.
+export const PARKED = 'walkthrough: the practice pages are parked: this branch works on the v2 layout only (P48). The walkthrough runs on the git tag claim-tagger-v1 (git worktree add ../geo-agents-v1 claim-tagger-v1).';
 
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/walkthrough.mjs start --parent <link or id> [--dry-run] [--resume <id>] [--manifest <path>] [--title <text>]',
@@ -233,7 +236,7 @@ function loadProduction(root, env) {
   } catch (e) {
     throw stop(EXIT.INVALID, e.message);
   }
-  if (isV2(config)) throw stop(EXIT.INVALID, V2_REFUSAL); // the loop does not run on the v2 profile yet (checkpoint 3)
+  if (isV2(config)) throw stop(EXIT.INVALID, PARKED); // the loop does not run on the v2 profile yet (checkpoint 3)
   return config;
 }
 
@@ -1869,6 +1872,12 @@ function classify(e, io) {
 
 /** Run one command. `env` carries the hooks of the other scripts: root, config, fetchImpl, token, sleep, now, repoRoot; and random, scriptsDir, childEnv, wrapClients. */
 export async function main(argv = process.argv.slice(2), io = defaultIo, env = {}) {
+  io.err(PARKED);
+  return EXIT.INVALID;
+}
+
+// The per-claim entry point, unreachable while parked.
+export async function parkedMain(argv = process.argv.slice(2), io = defaultIo, env = {}) {
   const [command, ...rest] = argv;
   try {
     switch (command) {

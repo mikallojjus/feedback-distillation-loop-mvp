@@ -4,7 +4,7 @@
 //   node agents/claim-tagger-mvp/scripts/geo-pick.mjs --seed <string> --audit <audit json> [--replace] [--out <file>]
 //
 //   --seed     any text; the same seed and the same Geo data give the same pick, byte for byte
-//   --audit    the audit decisions file (setup/audit-decisions.json): its geo_id values are forced into the pick when Geo tags them Debate
+//   --audit    the audit decisions file (setup/v1/audit-decisions.json, the first page's): its geo_id values are forced into the pick when Geo tags them Debate
 //   --replace  overwrite an existing pick file (without it an existing file is never touched)
 //   --out      write the pick here instead of setup/geo-claims-pick.json
 //

@@ -1106,8 +1106,11 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
   }
 
   // The audit's decisions that were seeded are the pick's audit.included, from the audit file the pick was made with (its sha256). The others are named by the seed step and are not checked.
-  const auditPath = auditFile ?? (existsSync(defaultPath(root, 'audit-decisions.json')) ? defaultPath(root, 'audit-decisions.json') : null);
-  const audit = loadChecked(add, 'tag_decisions', 'the audit file', () => readAudit(auditPath));
+  // On v2 (P48) nothing is seeded from the audit: the copy filled the tables, and setup/audit-decisions.json lives in setup/v1/. The seeded-row check runs only when an audit file is named
+  // with --audit; it then compares Claim, Tag and Tag outcome (the per-claim columns are gone). A missing audit file is not a difference.
+  const v2 = isV2(config);
+  const auditPath = auditFile ?? (!v2 && existsSync(defaultPath(root, 'audit-decisions.json')) ? defaultPath(root, 'audit-decisions.json') : null);
+  const audit = v2 && auditPath === null ? null : loadChecked(add, 'tag_decisions', 'the audit file', () => readAudit(auditPath));
   let seeded = null;
   if (audit && pick) seeded = loadChecked(add, 'tag_decisions', 'the audit file against the pick', () => auditForPick(audit, pick, auditPath));
   else if (audit) add('tag_decisions', 'input', 'the seeded decisions are not checked: they follow the pick (audit.included), and the pick could not be read');
@@ -1125,16 +1128,16 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
       }
       const want = auditProperties(d, claimPages?.[d.geo_id] ?? '0'.repeat(32));
       if (!claimPages?.[d.geo_id]) delete want['Claim link'];
-      for (const column of ['Claim', 'Tag', 'Agent proposal', 'Claim link', 'Tag outcome', 'Why wrong', 'Your reasoning']) {
+      for (const column of v2 ? ['Claim', 'Tag', 'Tag outcome'] : ['Claim', 'Tag', 'Agent proposal', 'Claim link', 'Tag outcome', 'Why wrong', 'Your reasoning']) {
         if (!sameField(ds, column, want[column] ?? null, got.props[column])) add('tag_decisions', 'seeded row', `${key}: ${column} differs (expected ${short(want[column] ?? null)}, Notion ${short(got.props[column] ?? null)})`);
       }
-      if (!text(got.props['Your reasoning']).startsWith(AUDIT_PREFIX)) add('tag_decisions', 'seeded row', `${key}: Your reasoning does not start with "${AUDIT_PREFIX}"`);
+      if (!v2 && !text(got.props['Your reasoning']).startsWith(AUDIT_PREFIX)) add('tag_decisions', 'seeded row', `${key}: Your reasoning does not start with "${AUDIT_PREFIX}"`);
     }
     if (rows.length < decisions.length) add('tag_decisions', 'row count', `${rows.length} rows in Tag decisions, at least ${decisions.length} seeded decisions expected`);
   }
 
   // the audit's decisions on the claims themselves (migrate-decisions): Reviewed, the Applies tags in the relation, the audit prefix in the notes
-  if (seeded && data.claims) {
+  if (seeded && data.claims && !v2) {
     const entry = tableEntry(config, 'claims');
     const rulebookKey = tableEntry(config, 'rulebook').key;
     const names = new Map((data.rulebook?.rows ?? []).map((r) => [normId(r.page_id), text(r.props[rulebookKey]).trim()]));
