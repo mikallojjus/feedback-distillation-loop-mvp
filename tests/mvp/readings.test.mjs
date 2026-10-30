@@ -453,7 +453,7 @@ test('ledgerAsRead: the decisions are recorded, a row that stopped being a disag
     decided('w', { 'Your note': 'Agent slip. The rule settles it.', ...stale }), // a note with words that look like a reason: plain text, the model has to read it, the row keeps the stale reading
     decided('x', { 'Tag outcome': 'Applies', ...stale }), // the editor took the agent's side: the reading goes
     ledger('y', { 'Agent is right': true, ...stale }), // a tick: recorded in Decided under, and it agrees
-    ledger('z', stale), // not decided: untouched
+    ledger('z', stale), // not decided: a stale reading is cleared
   ];
   const before = JSON.stringify(rows);
   const { rows: read, classes } = ledgerAsRead({ claims: claimsOf(rows), ledgerRows: rows, rubric, config });
@@ -462,7 +462,7 @@ test('ledgerAsRead: the decisions are recorded, a row that stopped being a disag
   assert.equal(by.w[VIEW], 'Rule unclear', 'a note the model has still to read keeps the reading it holds');
   assert.deepEqual([by.x[VIEW], by.x.Rule, by.x[WHY], by.x['Read under']], [null, null, null, null], 'the agent agreed: no reading');
   assert.deepEqual([by.y['Decided under'], by.y.decided, by.y[VIEW]], [`${PROPOSAL_EDITION} · agreed Applies`, true, null], 'the tick is recorded before the row is classified');
-  assert.equal(by.z[VIEW], 'Rule unclear', 'a row with no decision is left alone');
+  assert.deepEqual([by.z[VIEW], by.z.Rule, by.z[WHY], by.z['Read under']], [null, null, null, null], 'a row with no decision holds no reading');
   assert.deepEqual([keysOf(classes.toRead), keysOf(classes.agree)], [[`w::${CD}`], [`x::${CD}`, `y::${CD}`]]);
   assert.deepEqual(classes.verbatim, []);
   assert.equal(ledgerAsRead({ claims: [], ledgerRows: rows, rubric: null, config }).classes, null, 'without a rulebook there is nothing to read');

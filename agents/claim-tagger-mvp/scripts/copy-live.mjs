@@ -14,10 +14,12 @@
 //           names, Geo IDs); the stage turns them into the page ids of the v2 pages made by the stages before it.
 //   check   Read only. Reads the target tables and confirms every value of the plan (exit 0, or 2 when something differs).
 //
-// Keys. Claims by Geo ID, Tag decisions by Key, Rulebook by Name, Rule changes by Lesson, Agent settings by Name. A missing target row is created; a target row whose values differ from the source is
-// updated. The source wins, with one exception: a non-empty editor value of the target (Tag outcome and Your note on Tag decisions; Editor wording and a Status of Approved or Rejected on Rule changes;
-// Paused on Agent settings) that differs from what the source would write is a conflict: it is kept, reported, and written only when `plan` is given --overwrite-editor-values. Agent is right is never
-// written. Nothing is deleted: rows of the target that the source does not have are left alone.
+// Keys. Claims by Geo ID, Tag decisions by Key, Rulebook by Name, Rule changes by Lesson, Agent settings by Name.
+// A re-run is a re-sync: it brings over what editors decided on the first page since the last copy, and the rows that are new there. A missing target row is created in full. For a row v2 already has,
+// the copy updates ONLY the editor columns, because the loop owns everything else on v2 (proposals, editions, Agent status, readings, the Rulebook): Tag decisions: Tag outcome and Your note, and Decided
+// under only when it sets a decision the v2 row does not have yet; Rule changes: Editor wording, and Status when the first page says Approved or Rejected; Agent settings: Paused. Existing Rulebook and
+// Claims rows, and every agent column, are never updated. A non-empty editor value of v2 that differs from what the source would write is a conflict: it is kept, reported, and written only when `plan` is given --overwrite-editor-values.
+// Agent is right is never written. Nothing is deleted: rows of the target that the source does not have are left alone.
 //
 // Mapping (the task of 30 Oct). Rulebook: the columns of the Rulebook copy. Claims: the nine Geo columns and the agent's eight (Agent tags and Tags waiting as relations to the v2 Rulebook pages with the
 // same Name; Agent reading becomes Agent's view of your decision); never Verified tags, Review status, Challenged tags notes or the columns editors added. Tag decisions: one row per row of the first
@@ -67,6 +69,13 @@ const GUARDS = Object.freeze({
   tag_decisions: { columns: ['Tag outcome', 'Your note'], owned: (col, v) => text(v).trim() !== '' },
   rule_changes: { columns: ['Editor wording', 'Status'], owned: (col, v) => (col === 'Editor wording' ? text(v).trim() !== '' : ['Approved', 'Rejected'].includes(v)) },
   agent_settings: { columns: ['Paused'], owned: (col, v) => v === true },
+});
+// what a re-sync may change on a row that v2 already has: the editor columns only (never agent columns, the Rulebook, editions or Claims)
+const DECIDED_STATUS = Object.freeze(['Approved', 'Rejected']);
+const EDITOR_UPDATES = Object.freeze({
+  tag_decisions: Object.freeze(['Tag outcome', 'Your note', 'Decided under']),
+  rule_changes: Object.freeze(['Editor wording', 'Status']),
+  agent_settings: Object.freeze(['Paused']),
 });
 const TAG_DECISIONS_SOURCE = Object.freeze([
   'Claim', 'Key', 'Tag', 'Agent proposal', 'Agent confidence', 'Agent reason', 'Rulebook edition', 'Decided under', 'Rule', 'Read under', 'Agent reading', 'Reading note', 'Follow-up',
@@ -232,9 +241,18 @@ export function buildPlan({ config, firstPage, source, target, overwrite = false
     for (const [column, map] of Object.entries(relationMaps)) {
       comparable[column] = (existing.props[column] ?? []).map((id) => map.get(normId(id)) ?? `unknown:${id}`).sort();
     }
+    // a re-sync of an existing row: only the editor columns can change, and only to carry what a person decided on the first page
+    const carried = {};
+    for (const column of EDITOR_UPDATES[table] ?? []) {
+      if (!Object.hasOwn(desired, column)) continue;
+      const held = existing.props[column] ?? null;
+      if (table === 'tag_decisions' && column === 'Decided under' && !(empty(held) && !empty(desired[column]) && !empty(desired['Tag outcome']))) continue; // sets a decision the row does not have yet, never moves one
+      if (table === 'rule_changes' && column === 'Status' && !DECIDED_STATUS.includes(desired[column])) continue; // only Approved or Rejected is an editor's word
+      carried[column] = desired[column];
+    }
     const props = {};
     const expect = {};
-    for (const { column } of compareWritten(desired, comparable, target[table].schema)) {
+    for (const { column } of compareWritten(carried, comparable, target[table].schema)) {
       const held = existing.props[column] ?? null;
       if (guard?.columns.includes(column) && guard.owned(column, held)) {
         // a person's value is overwritten only on request, and only by a value: the flag never blanks what an editor wrote

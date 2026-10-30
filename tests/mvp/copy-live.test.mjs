@@ -410,20 +410,57 @@ test('a re-run sends no write: the second plan has nothing to create or update, 
   assert.deepEqual(rows, EXPECTED, 'no row was created twice');
 });
 
-test('the source wins: a changed first-page value is updated on v2, only the differing columns, and a new first-page row is created', async () => {
+test('a re-run after the loop changed agent columns plans nothing for them; a new first-page row is still created', async () => {
   const w = makeWorld();
   await copyAll(w);
+  // the loop works on v2: agent columns, editions and Decided under move on v2 rows
+  const td = (key) => w.row('tgt', 'tag_decisions', 'Key', key);
+  w.fake.editRow(td('g1::Wordy').page_id, { 'Agent proposal': 'Applies', 'Rulebook edition': '2026-10-30.1', 'Agent status': 'Done', 'Decided under': '2026-10-30.1 · agreed Applies' });
+  w.fake.editRow(w.row('tgt', 'rulebook', 'Name', 'Wordy').page_id, { 'When to use': 'a promoted rule' });
+  w.fake.editRow(w.row('tgt', 'agent_settings', 'Name', 'Claim tagger').page_id, { 'Rulebook edition': '2026-10-30.1' });
+  w.fake.editRow(w.row('tgt', 'claims', 'Geo ID', 'g1').page_id, { 'Agent edition': '2026-10-30.1', 'Agent status': 'Waits for you' });
+  // the first page moved too, in the agent columns: none of it is carried
   w.fake.editRow(w.claim.g1, { 'Agent reasons': 'a newer reason', 'Agent confidence': 0.91 });
   w.fake.addRow(SRC.rule_changes.db, { Lesson: 'Third lesson', Tag: 'Wordy', Status: 'Proposed' });
   const planned = await w.run(['plan', '--run-id', 'run-b']);
   assert.equal(planned.code, 0, planned.err);
-  const ops = w.planOps('run-b');
-  assert.deepEqual(ops.map((o) => `${o.op} ${o.table} ${o.key}`).sort(), ['create rule_changes Third lesson', 'update claims g1']);
-  assert.deepEqual(Object.keys(ops.find((o) => o.op === 'update').properties).sort(), ['Agent confidence', 'Agent reasons']);
+  assert.deepEqual(w.planOps('run-b').map((o) => `${o.op} ${o.table} ${o.key}`), ['create rule_changes Third lesson']);
+  assert.match(planned.out, /claims\s+source\s+5\s+create\s+0\s+update\s+0\s+same\s+5/);
   const applied = await w.run(['apply', '--run', 'run-b']);
   assert.equal(applied.code, 0, applied.err);
-  assert.equal(w.row('tgt', 'claims', 'Geo ID', 'g1')['Agent reasons'], 'a newer reason');
   assert.equal(w.rows('tgt', 'rule_changes').length, 3);
+  assert.equal(w.row('tgt', 'claims', 'Geo ID', 'g1')['Agent reasons'], 'Context-dependent: pronoun · rule 2 · 3 of 3 runs agree');
+  assert.equal(td('g1::Wordy')['Rulebook edition'], '2026-10-30.1');
+  assert.equal(td('g1::Wordy')['Decided under'], '2026-10-30.1 · agreed Applies');
+  assert.equal(w.row('tgt', 'rulebook', 'Name', 'Wordy')['When to use'], 'a promoted rule');
+});
+
+test('a new first-page decision is carried to the v2 row that has none; only editor columns are written; a decided row is not moved again', async () => {
+  const w = makeWorld();
+  await copyAll(w);
+  const td = (key) => w.row('tgt', 'tag_decisions', 'Key', key);
+  assert.equal(td('g4::Context-dependent')['Tag outcome'], null);
+  w.fake.editRow(w.claim.g4, { 'Review status': 'Reviewed', 'Verified tags': [w.tag['Context-dependent']], 'Challenged tags notes': 'Context-dependent: needs the antecedent.', 'Agent status': 'Done' });
+  const planned = await w.run(['plan', '--run-id', 'run-b']);
+  assert.equal(planned.code, 0, planned.err);
+  const ops = w.planOps('run-b');
+  const op = ops.find((o) => o.key === 'g4::Context-dependent');
+  assert.ok(op, JSON.stringify(ops.map((o) => o.key)));
+  assert.equal(op.op, 'update');
+  assert.equal(op.properties['Tag outcome'], 'Applies');
+  for (const o of ops.filter((x) => x.op === 'update')) {
+    assert.ok(Object.keys(o.properties).every((c) => ['Tag outcome', 'Your note', 'Decided under'].includes(c)), `${o.key}: ${Object.keys(o.properties)}`);
+  }
+  const applied = await w.run(['apply', '--run', 'run-b']);
+  assert.equal(applied.code, 0, applied.err);
+  assert.equal(td('g4::Context-dependent')['Tag outcome'], 'Applies');
+  const checked = await w.run(['check', '--run', 'run-b']);
+  assert.equal(checked.code, 0, checked.err);
+  // the loop restamps Decided under; a later re-run leaves it
+  w.fake.editRow(td('g4::Context-dependent').page_id, { 'Decided under': '2026-10-30.1 · agreed Applies' });
+  const again = await w.run(['plan', '--run-id', 'run-c']);
+  assert.equal(again.code, 0, again.err);
+  assert.deepEqual(w.planOps('run-c').filter((o) => o.key === 'g4::Context-dependent'), []);
 });
 
 // ---- editor values ----------------------------------------------------------------------------------------------------------------------------
@@ -435,8 +472,6 @@ test('a non-empty editor value of v2 that differs from the source is a conflict:
   w.fake.editRow(td('g1::Context-dependent').page_id, { 'Tag outcome': 'Does not apply', 'Your note': 'my own words', 'Agent is right': true });
   w.fake.editRow(td('g3::Context-dependent').page_id, { 'Tag outcome': 'Applies' }); // decided on v2, undecided on the first page
   w.fake.editRow(td('g1::Wordy').page_id, { 'Agent is right': true });
-  w.fake.editRow(w.claim.g1, { 'Agent reasons': 'a newer reason' });
-  w.fake.editRow(w.row('src', 'tag_decisions', 'Key', 'g1::Context-dependent').page_id, { 'Agent reason': 'a newer row reason' });
 
   const planned = await w.run(['plan', '--run-id', 'run-b']);
   assert.equal(planned.code, 0, planned.err);
@@ -447,20 +482,15 @@ test('a non-empty editor value of v2 that differs from the source is a conflict:
   assert.deepEqual(summary.conflicts.map((c) => `${c.key} ${c.column}`).sort(), ['g1::Context-dependent Tag outcome', 'g1::Context-dependent Your note', 'g3::Context-dependent Tag outcome']);
 
   const ops = w.planOps('run-b');
-  const row = ops.find((o) => o.table === 'tag_decisions');
-  assert.deepEqual(Object.keys(row.properties), ['Agent reason'], 'the agent\'s column updates, the editor\'s are left');
-  assert.equal(row.expect, undefined);
-  assert.ok(ops.some((o) => o.table === 'claims' && o.key === 'g1'));
+  assert.deepEqual(ops, [], 'the editor values are kept and nothing else is carried');
 
   const applied = await w.run(['apply', '--run', 'run-b']);
   assert.equal(applied.code, 0, applied.err);
   assert.equal(td('g1::Context-dependent')['Tag outcome'], 'Does not apply');
   assert.equal(td('g1::Context-dependent')['Your note'], 'my own words');
   assert.equal(td('g1::Context-dependent')['Agent is right'], true);
-  assert.equal(td('g1::Context-dependent')['Agent reason'], 'a newer row reason');
   assert.equal(td('g3::Context-dependent')['Tag outcome'], 'Applies');
   assert.equal(td('g1::Wordy')['Agent is right'], true);
-  assert.equal(w.row('tgt', 'claims', 'Geo ID', 'g1')['Agent reasons'], 'a newer reason');
 });
 
 test('--overwrite-editor-values forces a differing value, with expect on it, and still never blanks an editor\'s value', async () => {
@@ -516,8 +546,8 @@ test('Editor wording, an Approved or Rejected Status and Paused on v2 are editor
   const planned = await w.run(['plan', '--run-id', 'run-c']);
   assert.equal(planned.code, 0, planned.err);
   const summary = JSON.parse(readFileSync(join(w.root, 'runs', 'copy-live', 'run-c', 'summary.json'), 'utf8'));
-  assert.deepEqual(summary.conflicts.map((c) => `${c.key} ${c.column}`).sort(), ['Say what a pronoun needs Editor wording', 'Say what a pronoun needs Status', 'Second lesson Status']);
-  assert.equal(w.planOps('run-c').length, 0, 'every differing column was an editor value');
+  assert.deepEqual(summary.conflicts.map((c) => `${c.key} ${c.column}`).sort(), ['Say what a pronoun needs Editor wording']);
+  assert.equal(w.planOps('run-c').length, 0, 'a first-page Status other than Approved or Rejected is not an editor word, so it carries nothing');
 });
 
 // ---- refusals ---------------------------------------------------------------------------------------------------------------------------------

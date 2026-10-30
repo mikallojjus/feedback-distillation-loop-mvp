@@ -475,6 +475,8 @@ export async function distill(opts = {}) {
       setCells(item.row, readingCells(item, reading, rubric.edition));
     }
     for (const item of classes.agree) if (READING_COLUMNS.some((c) => text(item.row[c]).trim() !== '')) setCells(item.row, clearedReadingCells());
+    // a row with no decision has nothing to read: a reading it still carries (from an older build, or a decision that was withdrawn) is cleared
+    for (const row of queue) if (!isDecided(row) && READING_COLUMNS.some((c) => text(row[c]).trim() !== '')) setCells(row, clearedReadingCells());
 
     // the claims' Agent's view of your decision: one cell per claim with a decided row, when its disagreements all have a reading after this run
     const claimOps = [];
@@ -487,7 +489,10 @@ export async function distill(opts = {}) {
       for (const u of classes.unjudged) unjudgedOf.set(u.claim.geo_id, [...(unjudgedOf.get(u.claim.geo_id) ?? []), u]);
       const decidedClaims = new Set(queue.filter((r) => isDecided(r)).map((r) => keyParts(r.Key)?.geo_id));
       for (const claim of claims) {
-        if (!decidedClaims.has(claim.geo_id)) continue;
+        if (!decidedClaims.has(claim.geo_id)) {
+          if (text(claim.agent_reading).trim() !== '') claimOps.push({ geo_id: claim.geo_id, page_id: claim.page_id, cell: null }); // no decision on any of its tags: no reading
+          continue;
+        }
         const cell = claimReadingCell({ claim, items: itemsOf.get(claim.geo_id) ?? [], readings: made.fresh, unjudged: unjudgedOf.get(claim.geo_id) ?? [] });
         if (cell !== null && !sameCell(claim.agent_reading, cell)) claimOps.push({ geo_id: claim.geo_id, page_id: claim.page_id, cell });
       }

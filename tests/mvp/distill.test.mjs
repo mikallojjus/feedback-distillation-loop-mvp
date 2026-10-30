@@ -653,6 +653,31 @@ test('distill: a row that holds no decision gives none (a tick on Can\'t tell, a
   assert.equal(w.ledgerRow(keyOf(3))['Decided under'] ?? '', '', 'a row that is not decided any more has no record');
 });
 
+test('distill: a row with no decision, and a claim none of whose rows is decided, lose the reading they still carry; decided rows are not touched by that rule', async () => {
+  const stale = { "Agent's view of your decision": 'Agent slip', Rule: 'Context-dependent rule 2', 'Why the agent thinks so': 'Your note says so.', 'Read under': `${EDITION} · abcd1234` };
+  const w = await makeWorld({ claims: 4, queue: [openRow(1, stale), openRow(2, stale), openRow(3)] });
+  w.readings({ [keyOf(2)]: READ_RULE4 });
+  w.decideRow(keyOf(2), { outcome: 'Does not apply', note: 'Rule 4 should let general references pass.' });
+  const stale4 = "Context-dependent: Agent slip · Your note says so.";
+  w.fake.editRow(w.claim(claimId(1)).page_id, { "Agent's view of your decision": stale4 });
+  w.fake.editRow(w.claim(claimId(3)).page_id, { "Agent's view of your decision": stale4 });
+  const h = w.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 0, h.io.errs.join(' | '));
+  const one = w.row('tag_decisions', keyOf(1));
+  assert.deepEqual([one["Agent's view of your decision"] ?? '', one.Rule ?? '', one['Why the agent thinks so'] ?? '', one['Read under'] ?? ''], ['', '', '', ''], 'an undecided row holds no reading');
+  assert.equal(w.claim(claimId(1))["Agent's view of your decision"] ?? '', '', 'and its claim shows none');
+  assert.equal(w.claim(claimId(3))["Agent's view of your decision"] ?? '', '');
+  const two = w.row('tag_decisions', keyOf(2));
+  assert.equal(two["Agent's view of your decision"], 'Rule unclear', 'a decided row is read, not cleared');
+  assert.match(w.claim(claimId(2))["Agent's view of your decision"], /Rule unclear/);
+  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  assert.ok(plan.filter((op) => op.table === 'tag_decisions' && [keyOf(1)].includes(op.key)).every((op) => Object.values(op.properties).every((v) => v === null)), 'clearing is a write of empty values to agent columns only');
+  const again = await distill(w.hooks({ planOnly: true }));
+  const second = readJsonl(join(again.runDir, 'plan.jsonl')).rows.slice(1);
+  assert.equal(second.some((op) => op.key === keyOf(1) || op.key === claimId(1)), false, 'a second run has nothing left to clear');
+});
+
 test('distill --plan-only records nothing: the plan holds the ledger updates and the report says so', async () => {
   const w = await makeWorld({ claims: 4, queue: [openRow(1), openRow(2)] });
   for (const i of [1, 2]) w.decideRow(keyOf(i), { outcome: 'Does not apply', note: 'Rule 4 should let general references pass.' });

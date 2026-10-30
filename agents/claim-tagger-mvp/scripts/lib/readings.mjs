@@ -329,6 +329,7 @@ export function ledgerAsRead({ claims, ledgerRows, rubric, config }) {
   const { rows } = recordDecisions(ledgerRows);
   const classes = classifyRows({ claims, ledgerRows: rows, rubric, config });
   for (const item of classes.agree) if (READING_COLUMNS.some((c) => text(item.row[c]).trim() !== '')) Object.assign(item.row, clearedReadingCells());
+  for (const row of rows) if (!isDecided(row) && READING_COLUMNS.some((c) => text(row[c]).trim() !== '')) Object.assign(row, clearedReadingCells()); // no decision, no reading
   return { rows, classes };
 }
 
