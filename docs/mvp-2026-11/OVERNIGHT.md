@@ -22,7 +22,7 @@
 4. **Pending file.** `agents/claim-tagger-mvp/evals/cases.jsonl` was already uncommitted before tonight, and every pull rewrites it. Commit it or discard it on purpose.
 
 **For you to decide:**
-- **Your queue holds only Can't tell rows (29),** because confident answers are marked Done. So the "Agent is right" tick can't be shown from Your queue: on Can't tell it decides nothing. Should confident answers also wait for an editor on v2, perhaps below a confidence line? The first page had the same rule; P46 assumed waiting rows carry an answer.
+- ~~**Your queue holds only Can't tell rows (29)**~~ Decided 30 Oct (P50): keep as is. Confident answers stay Done; only Can't tell rows wait.
 - **Still open:** the expected weekly row volume.
 
 **Not done or follow-ups:**
