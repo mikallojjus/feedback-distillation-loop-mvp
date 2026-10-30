@@ -38,7 +38,7 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - [x] 3. PORT-V2.md (30cc9cd): WP1 core, WP2 tag/status/followup/promote/add, WP3 distill/decide/guard, WP4 parking/setup/skills/docs; runs/ -> runs-v1/ fresh start (carry judgments/), rubric next edition via writeEdition with v2 page ids (NOT setup.mjs rubric), config swap per its section 4
 - [x] 4. CP2 copy DONE: apply created 1219 rows (13/600/602/3/1), check read every value back (exit 0), a second plan is all same; copy writes named no first-page id (2560 requests, 1219 writes). Re-run later: copy-live.mjs plan / apply --run / check --run (default root now)
 - [x] 5. v2 default DONE (7cfaa84 swap; runs/ -> runs-v1/, fresh runs/ with judgments, builder, copy-live, setup-* runs; rubric edition 2026-10-30.1 = same rules, v2 page ids, setup/rulebook-pages.json); retitle done (a1a2e80)
-- [ ] 6. CP3 loop
+- [x] 6. CP3 loop DONE: WP1 c4b9f6b, WP2 c72d161, WP3 433948a, loop fix a5ecfc7, WP4 code 9d3ed22, WP4 docs 1cbe1a0; npm test 2355/2356 (only M1, the settings edit)
 - [ ] 7. Proof on v2
 - [ ] 8. Opus check, morning summary
 
@@ -55,3 +55,4 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - WP2 committed: its 225 tests green; loop.test 2 red until WP3 distill. WP2 notes: status --json table is now the Tag decisions link; loop test compares decided rows on Key, editor columns and Decided under only (proposals move on decided rows, PORT-V2 1.7).
 - WP4 split: WP4-code (Sonnet: parking walkthrough/demo, v2-profile, setup verify for v2, setup/hub/two-way/... tests) launched in parallel with WP3 (disjoint files). WP4-docs (Opus: .claude/skills/claim-tagger SKILL.md + references, walkthrough SKILL.md, AGENT.md, README.md) runs after WP3.
 - WP3 committed (433948a): 303/304 green (M1 only). Tick value "__YES__" confirmed from the connector schema. loop.test 2 red (read 3 vs 10 audit decisions; rule 1 vs 4): a Sonnet debugger is on it (scope loop.test/loop-world + minimal code fixes). WP4-docs (Opus) launched: skills, AGENT.md, README. WP4-code still running. Three agents in flight, disjoint files.
+- Step 6 done. Open small items (not blocking): verifyHub still advises "setup.mjs archive renames it" on a wrong title; stale comments in distill.mjs/promote.mjs headers; dead ctx.demo branches in promote/followup; CONTRACTS.md, walkthrough references/*.md and .claude/agents/editor-persona.md still per-claim; AGENT.md add paragraph still mentions the 50 cap.
