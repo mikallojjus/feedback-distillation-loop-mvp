@@ -27,7 +27,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import {
-  ADD_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, addableProperties, editorColumns, tableEntry, writableProperties,
+  ADD_SCRIPT, COPY_LIVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, addableProperties, copyLiveProperties, editorColumns, isV2, tableEntry, writableProperties,
 } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { appendJsonl, readJson, readJsonl, writeTextAtomic } from './jsonl.mjs';
@@ -243,6 +243,9 @@ const SCHEMA_WORDS = new Map([
  *   The add script (header script "add", decision P35) has one narrow allowance: its plan may only CREATE rows of the claims table, with the key column and the Geo columns
  *   (addableProperties) and no page content; an update, another table, an agent column or an editor column in it is refused, also with `setup: true` (the flag opens nothing more
  *   to it). No other plan creates a claims row except a setup plan.
+ *   The copy-live script (header script "copy-live", decision P47, checkpoint 2 of the v2 page) has the other narrow allowance: on a config with "profile": "v2" its plan may CREATE and UPDATE rows of
+ *   any of the five tables with the columns of copyLiveProperties, the editor columns Tag outcome, Your note, Editor wording and Paused included (it copies the decisions made on the first page), and
+ *   Status values of any kind on rule_changes. Agent is right, any other column, page content, a protected table or id and, as for every plan, a delete or archive (a plan has no such op) stay refused.
  *
  * No plan ever writes an editor column on an UPDATE, on a practice page or anywhere else (decision P7: no agent acts as the editor); a practice
  * page's decided rows are written only by a create, under its runs/SETUP marker.
@@ -258,6 +261,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
   }
   const demoOpen = config?.demo === true && existsSync(join(root, 'runs', 'SETUP'));
   const addPlan = header?.plan?.script === ADD_SCRIPT;
+  const copyPlan = header?.plan?.script === COPY_LIVE_SCRIPT;
   const needles = protectedNeedles(config);
   const seen = new Set();
   const named = (i, op) => `op ${i + 1} (${typeof op?.table === 'string' ? op.table : 'no table'}${nonEmpty(op?.key) ? ` "${short(op.key, 40)}"` : ''})`;
@@ -265,6 +269,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
   if (header === null) problems.push('header: the plan has no header line');
   else {
     problems.push(...headerProblems(header).map((p) => `header: ${p}`));
+    if (copyPlan && !isV2(config)) problems.push('header: a plan of the copy-live script may only be checked against the v2 profile (config.json has no "profile": "v2")');
     const counts = header.plan?.counts;
     if (isPlain(counts) && Number.isInteger(counts.creates) && Number.isInteger(counts.updates) && !isDeepStrictEqual(counts, countOps(ops))) {
       const real = countOps(ops);
@@ -305,14 +310,15 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
       return;
     }
     if (addPlan && op.children !== undefined) add('a plan of the add script writes no page content (children): a new claims row carries its Geo columns only');
-    if (!addPlan && !setup && op.op === 'create' && op.table === 'claims') {
+    if (!addPlan && !copyPlan && !setup && op.op === 'create' && op.table === 'claims') {
       add('a row of the claims table is created only by setup or by the add script, from claims read from Geo'); // the checks below say more about the columns
     }
+    if (copyPlan && op.children !== undefined) add('a plan of the copy-live script writes no page content (children)');
 
     // which columns, which values
     let writable;
     try {
-      writable = addPlan ? addableProperties(config) : writableProperties(config, op.table, { setup: setup && op.op === 'create' });
+      writable = addPlan ? addableProperties(config) : copyPlan ? copyLiveProperties(config, op.table) : writableProperties(config, op.table, { setup: setup && op.op === 'create' });
     } catch (e) {
       add(`the writable columns cannot be worked out (${e.message})`);
       return;
@@ -324,13 +330,14 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     const mayWriteEditor = !addPlan && (seeded || (demoOpen && op.op === 'create')); // a plan of the add script never writes an editor column, whatever the folder it runs in
     for (const name of Object.keys(op.properties)) {
       const base = name.endsWith(':end') ? name.slice(0, -4) : name; // the end of a date goes with its start
-      if (editor.has(base)) {
+      // a copy-live plan has its own list (copyLiveProperties), which names the editor columns it may write; Agent is right is not on it
+      if (!copyPlan && editor.has(base)) {
         if (!mayWriteEditor) add(`"${name}" is a column only an editor writes; no script may (the exceptions are the setup seeding the audit's decisions on the claims, and a practice page's build when it creates the row)`);
         continue;
       }
       if (!writable.has(base)) add(`"${name}" is not a column this plan may write to ${op.table}`);
     }
-    if (op.table === 'rule_changes' && Object.hasOwn(op.properties, 'Status') && !RULE_CHANGES_AGENT_STATUS.includes(op.properties.Status)) {
+    if (!copyPlan && op.table === 'rule_changes' && Object.hasOwn(op.properties, 'Status') && !RULE_CHANGES_AGENT_STATUS.includes(op.properties.Status)) {
       add(`Status ${JSON.stringify(op.properties.Status)} is not one a script may write (only ${RULE_CHANGES_AGENT_STATUS.join(', ')}; Approved and Rejected are the editor's)`);
     }
     const kc = keyColumn(config, op.table);

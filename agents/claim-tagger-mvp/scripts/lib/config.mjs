@@ -14,6 +14,7 @@
 //   writableProperties(config, table, { setup }) -> Set of the column names a plan may write to that table (CONTRACTS section 8); with
 //                                                  setup: true also what a create made by the one-time setup may fill
 //   addableProperties(config)                   -> Set of the columns a plan of the add script (ADD_SCRIPT) may write to a NEW claims row: the key and CLAIMS_GEO_COLUMNS (P35)
+//   copyLiveProperties(config, table)           -> Set of the columns a plan of the copy-live script (COPY_LIVE_SCRIPT, v2 only) may write to a table, editor columns included (P47)
 //   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the two exceptions of hard rule 1):
 //                                                  three on claims (Verified tags, Review status, Challenged tags notes), Editor wording on rule_changes,
 //                                                  Paused on agent_settings; [] for the others
@@ -443,6 +444,40 @@ export const ADD_SCRIPT = 'add';
 /** The columns a plan of the add script may write to a new claims row (P35): the table's key (Geo ID) and the nine Geo columns, nothing else: no agent column, no editor column. */
 export function addableProperties(config) {
   return new Set([tableEntry(config, 'claims').key, ...CLAIMS_GEO_COLUMNS]);
+}
+
+/**
+ * The script whose plans may CREATE and UPDATE rows of all five tables of the v2 profile, editor columns included (decision P47, the data copy of checkpoint 2): scripts/copy-live.mjs. checkPlan
+ * gives a plan with this script name (and only that) the columns of copyLiveProperties, and only on a config with "profile": "v2". It never writes Agent is right, a protected table or id, and a plan has no way to delete.
+ */
+export const COPY_LIVE_SCRIPT = 'copy-live';
+
+/** The name of the column that holds the agent's view of a decision on v2 (STRUCTURE-V2.md, P45): "Agent reading" on the first page. */
+export const V2_VIEW_COLUMN = "Agent's view of your decision";
+
+/**
+ * The columns a copy-live plan may write, per table, under the names they have on the v2 page (not read from the config: the config of the loop may name the agent's columns otherwise).
+ * Tag outcome, Your note, Editor wording and Paused are the editors' columns; the copy writes them from the decisions made on the first page. Agent is right is not here: the copy never sets it.
+ */
+export const COPY_LIVE_COLUMNS = Object.freeze({
+  rulebook: RULEBOOK_COLUMNS,
+  claims: Object.freeze([
+    ...CLAIMS_GEO_COLUMNS, 'Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', V2_VIEW_COLUMN,
+  ]),
+  tag_decisions: Object.freeze([
+    'Claim', 'Key', 'Tag', 'Agent proposal', 'Agent confidence', 'Agent reason', 'Rulebook edition', 'Decided under', 'Rule', 'Read under', V2_VIEW_COLUMN,
+    'Why the agent thinks so', 'After the rule change', 'Open claim', 'Agent status', 'Tag outcome', 'Your note',
+  ]),
+  rule_changes: Object.freeze([
+    'Lesson', 'Tag', 'Rule', 'Kind', 'Current text', 'Proposed text', 'Safety check result', 'Supporting rows', 'Editor wording', 'Status',
+  ]),
+  agent_settings: Object.freeze(['Name', 'Paused', 'Rulebook edition', 'Last run summary']),
+});
+
+/** The columns a plan of the copy-live script may write to a table: COPY_LIVE_COLUMNS and the table's key. */
+export function copyLiveProperties(config, table) {
+  if (!TABLES.includes(table)) throw new Error(`copyLiveProperties: unknown table "${table}" (expected one of ${TABLES.join(', ')})`);
+  return new Set([...COPY_LIVE_COLUMNS[table], tableEntry(config, table).key]);
 }
 
 /** The columns of a table that only an editor writes (config.editor_columns): [] for the tables that have none (the ledger has none). */
