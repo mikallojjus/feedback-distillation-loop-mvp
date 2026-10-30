@@ -36,8 +36,8 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - [x] 1. Tag `claim-tagger-v1` made at 3406cec; permissions checked (setup/rollback/restore allowed, uncommitted).
 - [x] 2. CLAUDE.md hard rules 1 and 10 and the agents table rewritten; DECISIONS P47 to P49
 - [x] 3. PORT-V2.md (30cc9cd): WP1 core, WP2 tag/status/followup/promote/add, WP3 distill/decide/guard, WP4 parking/setup/skills/docs; runs/ -> runs-v1/ fresh start (carry judgments/), rubric next edition via writeEdition with v2 page ids (NOT setup.mjs rubric), config swap per its section 4
-- [ ] 4. CP2 copy
-- [ ] 5. v2 default, retitle (retitle DONE: page is "Claim tagger v2", note line rewritten in place, a1a2e80; v2 verify clean but the 6 data inputs)
+- [x] 4. CP2 copy DONE: apply created 1219 rows (13/600/602/3/1), check read every value back (exit 0), a second plan is all same; copy writes named no first-page id (2560 requests, 1219 writes). Re-run later: copy-live.mjs plan / apply --run / check --run (default root now)
+- [x] 5. v2 default DONE (7cfaa84 swap; runs/ -> runs-v1/, fresh runs/ with judgments, builder, copy-live, setup-* runs; rubric edition 2026-10-30.1 = same rules, v2 page ids, setup/rulebook-pages.json); retitle done (a1a2e80)
 - [ ] 6. CP3 loop
 - [ ] 7. Proof on v2
 - [ ] 8. Opus check, morning summary
@@ -49,3 +49,4 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - a1a2e80: builder renames the v2 page (root) and rewrites its note line (hub.note_was); applied in Notion, verify 0 writes. Test M1 in guard-decide.test.mjs fails ONLY because of the owner's uncommitted overnight .claude/settings.json edit (he moved the ask block to allow by hand); it passes after git checkout .claude/settings.json. Never commit settings.json tonight.
 - 30cc9cd: PORT-V2.md committed. Accepted its risk answers: Agent is right stored in Decided under as "<edition> · agreed <Outcome>"; fresh runs/; run one full tag after the port (cached judgments, no model calls). Order from here: copy agent done -> run copy (with CLAIM_TAGGER_MVP_ROOT=v2) -> step 5 swap -> WP1..WP4 sequential Sonnet -> step 7.
 - 5ddf9ab: copy-live committed (35 tests). Plan 20261030T010012Z-copy-live (in profiles/v2/runs/copy-live/): create 13/600/602/3/1, 8 decided rows from the first page, 28 rows waiting, 2 ledger rows without a claim. Apply started in the background (~15-20 min); if interrupted, rerun: CLAIM_TAGGER_MVP_ROOT=profiles/v2 copy-live.mjs apply --run 20261030T010012Z-copy-live (resumable), then check --run. WP1 (Sonnet) launched in parallel, told NOT to do the config swap (I do it after the copy).
+- 7cfaa84 config swap; rubric 2026-10-30.1 written (v2 Rulebook page ids, rubric hash unchanged). v2 Agent settings still says 2026-10-29.1 until the first loop run. WP1 running.

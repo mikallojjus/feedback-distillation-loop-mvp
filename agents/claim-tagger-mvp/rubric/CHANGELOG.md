@@ -5,3 +5,4 @@
 - 2026-10-28 · edition 2026-10-28.2 · lesson Named institutions resolve; a bare 'the ruling' does not PASS
 - 2026-10-28 · edition 2026-10-28.3 · rolled back Named institutions resolve; a bare 'the ruling' does not
 - 2026-10-29 · edition 2026-10-29.1 · lesson Bare 'the ruling' needs an antecedent; named bodies don't PASS
+- 2026-10-30 · edition 2026-10-30.1 · Claim tagger v2 (P48): the v2 Rulebook, same rules, new page ids

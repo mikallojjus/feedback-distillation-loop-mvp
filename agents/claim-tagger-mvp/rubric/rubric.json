@@ -1,16 +1,16 @@
 {
-  "edition": "2026-10-29.1",
-  "built_at": "2026-10-29T11:16:44.332Z",
+  "edition": "2026-10-30.1",
+  "built_at": "2026-10-30T01:18:34.043Z",
   "source": {
-    "database_id": "dba96ff240e64832b48798386abaff01",
-    "data_source_id": "9b8cef6c20934d44829ea3417858754a",
+    "database_id": "12aa438db42c4d5b8b6752b2a26680f1",
+    "data_source_id": "ad02bfbd4408492fb843256fc5002eed",
     "read_via": "rest",
-    "read_at": "2026-10-29T11:16:44.332Z"
+    "read_at": "2026-10-30T01:18:34.043Z"
   },
   "tags": [
     {
       "name": "Context-dependent",
-      "page_id": "406273e2-14eb-81b8-9334-e309cdb8eaef",
+      "page_id": "409273e2-14eb-81d5-8749-d5306bc4cf18",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Verified",
@@ -61,7 +61,7 @@
     },
     {
       "name": "Exact duplicate",
-      "page_id": "406273e2-14eb-8156-ac80-d0946f5cf5c9",
+      "page_id": "409273e2-14eb-81ae-a343-fc7164623f68",
       "category": null,
       "polarity": null,
       "status": null,
@@ -83,7 +83,7 @@
     },
     {
       "name": "Factually challenged",
-      "page_id": "406273e2-14eb-814d-ae73-c329a560c393",
+      "page_id": "409273e2-14eb-8128-9e11-c0194585cd21",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Proposed",
@@ -122,7 +122,7 @@
     },
     {
       "name": "Improper capitalization",
-      "page_id": "406273e2-14eb-8106-899a-e1f7dca983d5",
+      "page_id": "409273e2-14eb-81d8-af8c-fa42ec7b1005",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Proposed",
@@ -148,7 +148,7 @@
     },
     {
       "name": "Improperly sourced",
-      "page_id": "406273e2-14eb-815c-a60e-d85c6c12840b",
+      "page_id": "409273e2-14eb-8110-a091-db72577124ce",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Verified",
@@ -191,7 +191,7 @@
     },
     {
       "name": "Incorrect grammar",
-      "page_id": "406273e2-14eb-814a-a8eb-e6a7896ce754",
+      "page_id": "409273e2-14eb-81c8-93b0-edde69352345",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Proposed",
@@ -213,7 +213,7 @@
     },
     {
       "name": "Multi-sentence",
-      "page_id": "406273e2-14eb-81b1-9524-d9b79e75ebd7",
+      "page_id": "409273e2-14eb-810c-907c-fab28aa2d876",
       "category": "Format",
       "polarity": "Classification",
       "status": "Proposed",
@@ -239,7 +239,7 @@
     },
     {
       "name": "Poor wording",
-      "page_id": "406273e2-14eb-81bd-90b4-f5b1d8eb9a22",
+      "page_id": "409273e2-14eb-81a2-819a-f32d65c4a599",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Proposed",
@@ -261,7 +261,7 @@
     },
     {
       "name": "Semantically duplicated",
-      "page_id": "406273e2-14eb-81c1-856b-c4a7665e8ebc",
+      "page_id": "409273e2-14eb-816b-adbd-ce0c4bc24393",
       "category": null,
       "polarity": null,
       "status": null,
@@ -283,7 +283,7 @@
     },
     {
       "name": "Source inaccessible",
-      "page_id": "406273e2-14eb-813e-a388-ceadf97cd9f4",
+      "page_id": "409273e2-14eb-812c-8cb4-cb526a026a50",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Verified",
@@ -331,7 +331,7 @@
     },
     {
       "name": "Trailing period",
-      "page_id": "406273e2-14eb-8165-ba3b-d239d894e4e6",
+      "page_id": "409273e2-14eb-81f4-96e1-e62223fb472e",
       "category": "Format",
       "polarity": "Issue",
       "status": "Proposed",
@@ -353,7 +353,7 @@
     },
     {
       "name": "Unsourced",
-      "page_id": "406273e2-14eb-8197-91b3-e1f84f6fae05",
+      "page_id": "409273e2-14eb-8172-bf48-ee1639198093",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Verified",
@@ -392,7 +392,7 @@
     },
     {
       "name": "Wordy",
-      "page_id": "406273e2-14eb-811c-8741-caf54fdb7f91",
+      "page_id": "409273e2-14eb-81ba-b07e-f10262c19158",
       "category": "Quality",
       "polarity": "Issue",
       "status": "Proposed",
