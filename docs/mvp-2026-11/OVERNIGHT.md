@@ -34,7 +34,7 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 ## Progress
 
 - [x] 1. Tag `claim-tagger-v1` made at 3406cec; permissions checked (setup/rollback/restore allowed, uncommitted).
-- [ ] 2. CLAUDE.md and decisions
+- [x] 2. CLAUDE.md hard rules 1 and 10 and the agents table rewritten; DECISIONS P47 to P49
 - [ ] 3. PORT-V2.md
 - [ ] 4. CP2 copy
 - [ ] 5. v2 default, retitle
