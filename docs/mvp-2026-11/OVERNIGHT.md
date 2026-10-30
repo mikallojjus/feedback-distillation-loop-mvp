@@ -1,8 +1,8 @@
-# Overnight run, 30 to 31 October 2026: checkpoints 2 and 3 of the v2 page
+# Overnight run, 29 to 30 October 2026: checkpoints 2 and 3 of the v2 page
 
-**If you are a Claude session picking this up after a context compaction or a crash, read this file first and continue from the first unticked step. Update the Progress list and commit after every step.** The owner (Mika) is asleep. He introduces v2 to the team on the afternoon of 31 Oct, and expects both versions to be available in the morning.
+**If you are a Claude session picking this up after a context compaction or a crash, read this file first and continue from the first unticked step. Update the Progress list and commit after every step.** The owner (Mika) is asleep. He introduces v2 to the team on the afternoon of 30 Oct, and expects both versions to be available in the morning.
 
-## What the owner decided (chat, 30 Oct, late evening)
+## What the owner decided (chat, 29 Oct, late evening)
 
 - **Do checkpoints 2 (the data copy) and 3 (the loop on v2) overnight**, on branch `v2-page`. Commit per step; never push, never merge.
 - **Old version:** the git tag `claim-tagger-v1` (= 3406cec, made at the start of the night). The live Notion page "Claim tagger" stays in Notion as it is. **No backwards compatibility in the code**: after tonight the code works on v2 only.
@@ -36,7 +36,7 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - [x] 1. Tag `claim-tagger-v1` made at 3406cec; permissions checked (setup/rollback/restore allowed, uncommitted).
 - [x] 2. CLAUDE.md hard rules 1 and 10 and the agents table rewritten; DECISIONS P47 to P49
 - [x] 3. PORT-V2.md (30cc9cd): WP1 core, WP2 tag/status/followup/promote/add, WP3 distill/decide/guard, WP4 parking/setup/skills/docs; runs/ -> runs-v1/ fresh start (carry judgments/), rubric next edition via writeEdition with v2 page ids (NOT setup.mjs rubric), config swap per its section 4
-- [x] 4. CP2 copy DONE: apply created 1219 rows (13/600/602/3/1), check read every value back (exit 0), a second plan is all same; copy writes named no first-page id (2560 requests, 1219 writes). Re-run later: copy-live.mjs plan / apply --run / check --run (default root now)
+- [x] 4. CP2 copy DONE: apply created 1219 rows (13/600/602/3/1), check read every value back (exit 0), a second plan is all same; copy writes named no first-page id (2560 requests, 1219 writes). DO NOT re-run copy-live until the re-sync fix is in (verifier finding 2: a re-run would undo the loop's work)
 - [x] 5. v2 default DONE (7cfaa84 swap; runs/ -> runs-v1/, fresh runs/ with judgments, builder, copy-live, setup-* runs; rubric edition 2026-10-30.1 = same rules, v2 page ids, setup/rulebook-pages.json); retitle done (a1a2e80)
 - [x] 6. CP3 loop DONE: WP1 c4b9f6b, WP2 c72d161, WP3 433948a, loop fix a5ecfc7, WP4 code 9d3ed22, WP4 docs 1cbe1a0; npm test 2355/2356 (only M1, the settings edit)
 - [x] 7. Proof on v2 DONE: full tag (600 claims, 0 model calls: judge store reused), a second run settled 3 Decided under, a third plan is empty; status: 29 rows in Your queue, edition 2026-10-30.1; verify 1 expected diff (When to use vs the old taxonomy file); decide list OK; distill --plan-only: 0 lessons (7 of the 8 copied decisions now agree with the current rules; the 1 disagreement was read before)
@@ -44,7 +44,7 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 
 ## Log (newest last; one line per event, with the commit)
 
-- 30 Oct, night: started. Tag claim-tagger-v1 = 3406cec.
+- 29 to 30 Oct, night: started. Tag claim-tagger-v1 = 3406cec.
 - Step 2 committed (24c0057). Steps 3 and 4 launched in parallel: an Opus agent writes PORT-V2.md (read-only), a Sonnet agent writes copy-live.mjs + lib/first-page.mjs + setup/first-page.json + tests (no Notion). If a compaction lost them: check whether PORT-V2.md and scripts/copy-live.mjs exist and are complete before relaunching.
 - a1a2e80: builder renames the v2 page (root) and rewrites its note line (hub.note_was); applied in Notion, verify 0 writes. Test M1 in guard-decide.test.mjs fails ONLY because of the owner's uncommitted overnight .claude/settings.json edit (he moved the ask block to allow by hand); it passes after git checkout .claude/settings.json. Never commit settings.json tonight.
 - 30cc9cd: PORT-V2.md committed. Accepted its risk answers: Agent is right stored in Decided under as "<edition> · agreed <Outcome>"; fresh runs/; run one full tag after the port (cached judgments, no model calls). Order from here: copy agent done -> run copy (with CLAIM_TAGGER_MVP_ROOT=v2) -> step 5 swap -> WP1..WP4 sequential Sonnet -> step 7.
@@ -58,3 +58,4 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - Step 6 done. Open small items (not blocking): verifyHub still advises "setup.mjs archive renames it" on a wrong title; stale comments in distill.mjs/promote.mjs headers; dead ctx.demo branches in promote/followup; CONTRACTS.md, walkthrough references/*.md and .claude/agents/editor-persona.md still per-claim; AGENT.md add paragraph still mentions the 50 cap.
 - Step 7 in progress: v2 verify = 2 expected diffs (Context-dependent When to use differs from the old taxonomy file because of the promotes; Agent settings edition 29.1 vs 30.1 until a loop run). pull 0 drift. judge --limit 10: 0 model calls (store reused). propose --plan-only: 602 row + 600 claim updates, 0 editor-column writes; 591 rows only get the edition stamp 29.1->30.1 (same rules), the 9 frozen first-page rows (27.1/28.3/empty) get current proposals; 2 orphan rows de000...01/02 (demo leftovers in the first-page ledger) get Decided under cleared. propose apply running in the background (log in scratchpad propose.log); if lost: rerun node agents/claim-tagger-mvp/scripts/propose.mjs (resumable per its ledger).
 - 11a606c: verify advice fix. Step 7 done (see the progress line). Opus verifier launched (read-only Notion, first-page last_edited check, v2 consistency, config safety, tests, log claims, demo text).
+- Opus verifier (independent): first page NOT written tonight (every row/view edited before 23:50Z), v2 counts and the 8 decisions right, checkPlan and guard hold, 2355/2356 tests (M1 = settings). Findings: (1 high) the first page still says Claims is the real table and to practise in Onboarding: owner edits by hand; (2 high) copy-live re-run would undo the loop: Sonnet fixing (editor columns only on existing rows); (3 med) stale readings on undecided rows incl. Your note says so.: same Sonnet; (4 med) 2 orphan rows de000...01/02: owner removes by hand or leaves; (5 med latent) applyPlan does not check a page_id belongs to the table; (6 low) 3 audit rows show Decided under 2026-10-30.1; evals/cases.jsonl rewritten by pull (pre-existing uncommitted change); (7 low, product) Your queue holds only Can't tell rows, so the tick cannot be shown there; (8 low) dates fixed to 29-30 Oct.

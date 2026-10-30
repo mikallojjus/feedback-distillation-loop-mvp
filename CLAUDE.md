@@ -6,7 +6,7 @@ Geo content-team agents, one folder per agent under `agents/`. Everything an age
 
 | Agent | Folder | Entry point |
 |---|---|---|
-| claim-tagger-mvp (editor feedback loop, the live build, on the page "Claim tagger v2" since 31 Oct 2026) | `agents/claim-tagger-mvp/` | `/claim-tagger status | tag | add | import | decide | distill | promote | rollback | follow-up | setup`; `/claim-tagger-walkthrough` is parked until it is ported to v2 (the per-claim version is the git tag `claim-tagger-v1`) |
+| claim-tagger-mvp (editor feedback loop, the live build, on the page "Claim tagger v2" since 30 Oct 2026) | `agents/claim-tagger-mvp/` | `/claim-tagger status | tag | add | import | decide | distill | promote | rollback | follow-up | setup`; `/claim-tagger-walkthrough` is parked until it is ported to v2 (the per-claim version is the git tag `claim-tagger-v1`) |
 | claim-tagger (the previous build, read-only history) | `agents/claim-tagger/` | none; kept for orientation and never run against Notion again |
 
 ## Hard rules (every agent, every session)
