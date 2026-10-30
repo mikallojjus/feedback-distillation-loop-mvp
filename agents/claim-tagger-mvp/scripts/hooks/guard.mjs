@@ -8,13 +8,14 @@
 // Always denied: delete-pages, delete-databases, delete-comment, move-pages, duplicate-page, restore-pages (hard rule 8: nothing is
 // deleted, archived or moved); any call that mentions a protected database or page id anywhere in its input (hard rule 10); any
 // page write that names an editor-owned property or sets Status to Approved or Rejected (hard rule 1).
-// One exception to the editor-column rule (decisions P18 to P20 and 114): an editor's Claude may decide claims. A notion-update-page call is allowed when
+// One exception to the editor-column rule (decisions P18 to P20, 114 and P42 to P46): an editor's Claude may decide rows of Tag decisions. A notion-update-page call is allowed when
 //   - command is update_properties, and the input holds only page_id, command, properties and allow_async (no icon, cover, content or skill field);
-//   - the properties are only some of the three Claims editor columns (Verified tags, Review status, Challenged tags notes), and Review status, when given, is
-//     Reviewed (P24: a decision always closes the claim; "To review" is refused);
+//   - the properties are only some of the three Tag decisions editor columns (Agent is right, Tag outcome, Your note), and each value is of the form decide.mjs open prints:
+//     Agent is right "__YES__" (the connector's form for a ticked box; unticking is not a decision), Tag outcome Applies or Does not apply, Your note a string (no null: a
+//     decision never clears a cell);
 //   - every page id found in page_id (a 32-hex id, a dashed id or a notion.so address; there must be one) is listed in page_ids of a live marker runs/DECIDING (a regular
-//     file written by decide.mjs open, younger than two hours), in this folder or in a practice page's folder runs/demos/<id>/;
-//   - the agent is not paused: no runs/PAUSED in this folder, or in the practice page's folder for its own marker (the Paused box in Notion is for decide.mjs, which has the network);
+//     file written by decide.mjs open, younger than two hours) in this folder;
+//   - the agent is not paused: no runs/PAUSED in this folder (the Paused box in Notion is for decide.mjs, which has the network);
 //   - and no protected id appears anywhere in the input (that check comes first, as for every call).
 // The page list is what keeps the protected real tables safe: their columns may share these names, their page ids are never in a marker.
 // This hook is the gate of the decide step, and the only one: .claude/settings.json has NO permission rule (neither allow nor ask) for notion-update-page, so the hook's
@@ -34,7 +35,7 @@
 // The hook reads config.json and the marker files directly (no library imports) so that it cannot fail because the library is
 // mid-change, and so that it has no way to reach the network or the token.
 
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -45,15 +46,15 @@ const GUARDED = /notion-(create-pages|update-page|create-database|update-data-so
 const ALWAYS_DENIED = new Set(['move-pages', 'duplicate-page', 'delete-pages', 'delete-databases', 'delete-comment', 'restore-pages', 'update-folder', 'create-folder']);
 const SCHEMA_TOOLS = new Set(['create-database', 'update-data-source', 'create-view', 'update-view']);
 const UUID = /[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/gi;
-// used when the config names none: the editor's three columns of the Claims copy (Why wrong left the editor's work with the reading of 22 October, and Agent reading is the agent's),
-// Editor wording and Paused (the list of the shipped config.json)
-const DEFAULT_EDITOR_NAMES = ['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
+// used when the config names none: the editor's three columns of Tag decisions, Editor wording and Paused (the list of the shipped config.json)
+const DEFAULT_EDITOR_NAMES = ['Agent is right', 'Tag outcome', 'Your note', 'Editor wording', 'Paused'];
 const DEFAULT_EDITOR_STATUS = ['Approved', 'Rejected'];
-// the decide step (P18 to P20): the three columns of Claims that an editor's Claude may write, the keys a decision write may carry, the values of Review status it may set,
-// and how long a runs/DECIDING marker counts (the same two hours as the other markers of the loop)
-const DEFAULT_CLAIMS_COLUMNS = ['Verified tags', 'Review status', 'Challenged tags notes'];
+// the decide step (P18 to P20, v2): the three columns of Tag decisions that an editor's Claude may write, the keys a decision write may carry, the values it may set (the
+// connector takes a checkbox as "__YES__" or "__NO__"; only "__YES__" is a decision), and how long a runs/DECIDING marker counts (the same two hours as the other markers of the loop)
+const DEFAULT_DECIDE_COLUMNS = ['Agent is right', 'Tag outcome', 'Your note'];
 const DECIDE_KEYS = new Set(['page_id', 'command', 'properties', 'allow_async']);
-const DECIDE_REVIEW_VALUES = ['Reviewed'];
+const DECIDE_TICK = '__YES__';
+const DECIDE_OUTCOMES = ['Applies', 'Does not apply'];
 const DECIDING_STALE_MS = 2 * 60 * 60 * 1000;
 
 const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -122,22 +123,12 @@ function isRegularFile(file) {
 }
 
 /**
- * The page ids that the live runs/DECIDING markers list: this folder's and those of the practice pages under runs/demos/. A marker counts only as a regular file, younger than two
- * hours and not dated in the future, and not while the agent is paused (runs/PAUSED in this folder, or in the practice page's folder for its own marker). Returns { ids, paused }:
- * `paused` is true when a marker was left out because of the pause. The Paused box in Notion is for decide.mjs to read; this hook has no network.
+ * The page ids that the live runs/DECIDING marker lists. A marker counts only as a regular file, younger than two hours and not dated in the future, and not while the agent is
+ * paused (runs/PAUSED). Practice pages are parked (P48): their markers open no write window. Returns { ids, paused }: `paused` is true when the marker was left out because of the
+ * pause. The Paused box in Notion is for decide.mjs to read; this hook has no network.
  */
 function decidingPageIds(root, now) {
-  const rootPaused = existsSync(join(root, 'runs', 'PAUSED'));
-  const markers = [{ file: join(root, 'runs', 'DECIDING'), paused: rootPaused }];
-  try {
-    for (const entry of readdirSync(join(root, 'runs', 'demos'), { withFileTypes: true })) {
-      if (!entry.isDirectory()) continue;
-      const runs = join(root, 'runs', 'demos', entry.name, 'runs');
-      markers.push({ file: join(runs, 'DECIDING'), paused: rootPaused || existsSync(join(runs, 'PAUSED')) });
-    }
-  } catch {
-    // no practice pages
-  }
+  const markers = [{ file: join(root, 'runs', 'DECIDING'), paused: existsSync(join(root, 'runs', 'PAUSED')) }];
   const ids = new Set();
   let paused = false;
   for (const marker of markers) {
@@ -162,9 +153,10 @@ function decidingPageIds(root, now) {
 /** May this update-page call write a decision? { ok: true, reason } or { ok: false, why }. Only called for an update-page call whose properties name an editor column, so `properties` is an object with a key in it. */
 function decideWrite(toolInput, config, root, now) {
   const no = (why) => ({ ok: false, why });
-  const columns = Array.isArray(config.editor_columns?.claims) && config.editor_columns.claims.length ? config.editor_columns.claims.filter((n) => typeof n === 'string') : DEFAULT_CLAIMS_COLUMNS;
+  // the columns come from editor_columns.tag_decisions; the per-claim list (editor_columns.claims, empty on v2) is never a fallback
+  const named = Array.isArray(config.editor_columns?.tag_decisions) ? config.editor_columns.tag_decisions.filter((n) => typeof n === 'string') : [];
+  const columns = named.length ? named : DEFAULT_DECIDE_COLUMNS;
   const lower = new Set(columns.map((n) => n.toLowerCase()));
-  const reviewColumn = String(config.notion?.claims?.columns?.review_status ?? 'Review status').toLowerCase();
   if (toolInput.command !== 'update_properties') return no(`a decision is written with update_properties; got "${toolInput.command ?? 'none'}"`);
   const extra = Object.keys(toolInput).filter((k) => !DECIDE_KEYS.has(k));
   if (extra.length) return no(`a decision write carries only page_id, command, properties and allow_async; got ${extra.join(', ')}`);
@@ -172,7 +164,10 @@ function decideWrite(toolInput, config, root, now) {
   const others = Object.keys(toolInput.properties).filter((k) => !lower.has(k.trim().toLowerCase()));
   if (others.length) return no(`a decision write may name only ${columns.join(', ')}; got ${others.join(', ')}`);
   for (const [key, value] of Object.entries(toolInput.properties)) {
-    if (key.trim().toLowerCase() === reviewColumn && !DECIDE_REVIEW_VALUES.includes(value)) return no(`${key} may be set to ${DECIDE_REVIEW_VALUES.join(' or ')} only`);
+    const column = key.trim().toLowerCase();
+    if (column === 'agent is right' && value !== DECIDE_TICK) return no(`${key} may be set to ${DECIDE_TICK} only (a tick; a decision never unticks)`);
+    if (column === 'tag outcome' && !DECIDE_OUTCOMES.includes(value)) return no(`${key} may be set to ${DECIDE_OUTCOMES.join(' or ')} only`);
+    if (column === 'your note' && typeof value !== 'string') return no(`${key} must be text`);
   }
   // every page id found anywhere in page_id must be a listed one, and there must be one: an address that carries a second id is not taken for the first
   const found = pageIdsIn(toolInput.page_id);
@@ -183,7 +178,7 @@ function decideWrite(toolInput, config, root, now) {
   if (unlisted.length && paused) return no('the agent is paused (runs/PAUSED exists), so no decision is written');
   if (listed.size === 0) return no('no decide run is open (runs/DECIDING is missing, not a file or older than two hours)');
   if (unlisted.length) return no(`the page ${unlisted[0]} is not listed by an open decide run`);
-  return { ok: true, reason: `a decision on a page that an open decide run lists (runs/DECIDING), writing only ${columns.join(', ')}` };
+  return { ok: true, reason: `a decision on a Tag decisions row that an open decide run lists (runs/DECIDING), writing only ${columns.join(', ')}` };
 }
 
 /** The decision for one hook input. Exported for the tests; `root` is the agent folder (config.json, runs/); options.now is the time the markers are measured against (milliseconds). */

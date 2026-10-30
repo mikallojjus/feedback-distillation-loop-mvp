@@ -2,7 +2,7 @@
 // headless-check.mjs: start the Claude Code CLI headless with the Explanatory output style on, save the transcript and grade it
 // (MVP-PROMPT section 8, item 7: the final message of each run has the three parts, and after the Next line at most one checklist of five numbered lines, no insight block, no JSON, no time words, no
 // dollars, and the transcript shows no write to an editor column). The grading is transcript-check.mjs; this script is the runner. A prompt that starts with "/claim-tagger decide"
-// or "/claim-tagger demo decide" is graded in decide mode (decision 115): its connector writes of the three Claims columns are not a problem, any other write of an editor column still is.
+// or "/claim-tagger demo decide" is graded in decide mode (decision 115): its connector writes of the three Tag decisions editor columns (Agent is right, Tag outcome, Your note) are not a problem, any other write of an editor column still is.
 // A prompt that starts with "/claim-tagger promote" or "/claim-tagger demo promote" may end in the FAIL report with its suggestion (a fenced block); no other final message may.
 //
 //   node agents/claim-tagger-mvp/scripts/headless-check.mjs --prompt "/claim-tagger status" --out <dir>

@@ -5,11 +5,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  DEFAULT_ALLOWED_SCRIPTS, DEFAULT_DECIDE_COLUMNS, checkTranscript, classifyBash, isDecideWrite, loadDecideColumns, loadReviewColumn, main as checkMain,
+  DEFAULT_ALLOWED_SCRIPTS, DEFAULT_DECIDE_COLUMNS, checkTranscript, classifyBash, isDecideWrite, loadDecideColumns, main as checkMain,
 } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
 import { isDecidePrompt, main as headlessMain } from '../../agents/claim-tagger-mvp/scripts/headless-check.mjs';
 
-// The transcript check in decide mode (decision 115): the connector writes of the step /claim-tagger decide (or demo decide) are not a problem, the same write anywhere else is, and a
+// The transcript check in decide mode (decision 115; v2: the three columns of Tag decisions): the connector writes of the step /claim-tagger decide are not a problem, the same write anywhere else is, and a
 // decide transcript that writes another column fails. The CLI is never started except the fake stand-in of the other transcript tests; nothing here reads .env.
 
 const FIXTURES = fileURLToPath(new URL('./fixtures/transcripts/', import.meta.url));
@@ -39,11 +39,11 @@ const bash = (command) => ev.tool('Bash', { command });
 const CONNECTOR = 'mcp__16f81eb6-6eb4-423e-9e64-a5cb678b0953__notion-update-page';
 const write = (properties = {}, over = {}) => ev.tool(CONNECTOR, {
   page_id: '0a9e00000000400080000000000000d1', command: 'update_properties', allow_async: false,
-  properties: { 'Verified tags': ['0a9e00000000400080000000000000a1'], 'Challenged tags notes': 'Context-dependent: Agent slip. Review status is not mine to guess.', 'Review status': 'Reviewed', ...properties }, ...over,
+  properties: { 'Agent is right': '__YES__', 'Tag outcome': 'Does not apply', 'Your note': 'Agent slip. Tag outcome is not mine to guess.', ...properties }, ...over,
 });
 
 const REPORT = [
-  'Decide: 2 claims decided and read back; 1 differs from the agent.',
+  'Decide: 2 rows decided and read back; 1 differs from the agent.',
   '',
   '| What | Result |',
   '|---|---|',
@@ -53,7 +53,7 @@ const REPORT = [
   '',
   'Next: type /claim-tagger distill to read the decisions.',
 ].join('\n');
-const OPEN = `node agents/claim-tagger-mvp/scripts/decide.mjs open --decisions '[{"claim":"c01","verified_tags":["Context-dependent"],"note":"Context-dependent: Agent slip. The Review status is set last."}]'`;
+const OPEN = `node agents/claim-tagger-mvp/scripts/decide.mjs open --decisions '[{"row":"c01::Context-dependent","seen":"0123456789ab","agent_is_right":true,"note":"The agent slipped. The Tag outcome is set last."}]'`;
 
 /** The transcript of a decide step: pull, list, open, two connector writes, check, then the report. */
 const decideRun = (middle = [write(), write()]) => jsonl([
@@ -79,11 +79,11 @@ test('the same transcript is a failure in any other mode: the writes and the col
   const r = checkTranscript(decideRun(), {});
   assert.equal(r.ok, false);
   assert.ok(has(r.problems, 'writes to Notion through the connector'));
-  assert.ok(has(r.problems, 'names the editor column "Verified tags"'));
-  assert.ok(has(r.problems, 'names the editor column "Review status"'));
+  assert.ok(has(r.problems, 'names the editor column "Agent is right"'));
+  assert.ok(has(r.problems, 'names the editor column "Tag outcome"'));
   // and the call of decide.mjs open, whose JSON names the columns, is a problem outside a decide step too
   const onlyOpen = checkTranscript(jsonl([ev.init(), bash(OPEN), ev.text(REPORT), ev.result(REPORT)]), {});
-  assert.ok(has(onlyOpen.problems, 'names the editor column "Verified tags"'), 'verified_tags is the column spelled with an underscore');
+  assert.ok(has(onlyOpen.problems, 'names the editor column "Agent is right"'), 'agent_is_right is the column spelled with underscores');
   assert.equal(onlyOpen.problems.length >= 1, true);
 });
 
@@ -99,19 +99,23 @@ test('a status transcript with the same connector write fails, whatever the mode
 
 test('a decide transcript that writes another column, another command or another field still fails', () => {
   for (const [name, middle, expected] of [
-    ['an agent column next to the decision', [write({ 'Agent tags': [] })], 'writes to Notion through the connector'],
+    ['an agent column next to the decision', [write({ 'Agent proposal': 'Applies' })], 'writes to Notion through the connector'],
+    ['the old per-claim columns', [write({ 'Verified tags': [] })], 'writes to Notion through the connector'],
+    ['a tick that is a boolean', [write({ 'Agent is right': true })], 'writes to Notion through the connector'],
+    ['an unticked box', [write({ 'Agent is right': '__NO__' })], 'writes to Notion through the connector'],
+    ['a note that is not text', [write({ 'Your note': null })], 'writes to Notion through the connector'],
     ['an agent column only', [write({ 'Agent status': 'Done' })], 'writes to Notion through the connector'],
     ['Editor wording', [ev.tool(CONNECTOR, { page_id: 'p', command: 'update_properties', properties: { 'Editor wording': 'x' } })], 'names the editor column "Editor wording"'],
     ['Paused', [ev.tool(CONNECTOR, { page_id: 'p', command: 'update_properties', properties: { Paused: '__YES__' } })], 'names the editor column "Paused"'],
     ['a rule change Status Approved', [ev.tool(CONNECTOR, { page_id: 'p', command: 'update_properties', properties: { Status: 'Approved' } })], 'writes to Notion through the connector'],
-    ['Review status with another value', [write({ 'Review status': 'Approved' })], 'writes to Notion through the connector'],
+    ['Tag outcome with another value', [write({ 'Tag outcome': 'Reviewed' })], 'writes to Notion through the connector'],
     ['a content command', [ev.tool(CONNECTOR, { page_id: 'p', command: 'replace_content', new_str: 'x' })], 'writes to Notion through the connector'],
     ['an icon', [write({}, { icon: '🚀' })], 'writes to Notion through the connector'],
     ['a cover', [write({}, { cover: 'none' })], 'writes to Notion through the connector'],
-    ['a created page', [ev.tool('mcp__x__notion-create-pages', { parent: { page_id: 'p' }, pages: [{ properties: { 'Verified tags': [] } }] })], 'writes to Notion through the connector'],
+    ['a created page', [ev.tool('mcp__x__notion-create-pages', { parent: { page_id: 'p' }, pages: [{ properties: { 'Your note': 'x' } }] })], 'writes to Notion through the connector'],
     ['a deleted page', [ev.tool('mcp__x__notion-delete-pages', { page_ids: ['p'] })], 'writes to Notion through the connector'],
-    ['a column written by a script file', [ev.tool('Write', { file_path: 'plan.json', content: '{"Verified tags":[]}' })], 'names the editor column "Verified tags"'],
-    ['a column in a script other than decide.mjs', [bash('node agents/claim-tagger-mvp/scripts/status.mjs --note "Review status"')], 'names the editor column "Review status"'],
+    ['a column written by a script file', [ev.tool('Write', { file_path: 'plan.json', content: '{"Tag outcome":"Applies"}' })], 'names the editor column "Tag outcome"'],
+    ['a column in a script other than decide.mjs', [bash('node agents/claim-tagger-mvp/scripts/status.mjs --note "Tag outcome"')], 'names the editor column "Tag outcome"'],
   ]) {
     const r = checkTranscript(decideRun(middle), { decide: true });
     assert.equal(r.ok, false, name);
@@ -127,51 +131,42 @@ test('decide mode does not widen the other rules: the report, the script list an
   assert.ok(has(r.problems, 'final message'));
   assert.ok(has(checkTranscript(jsonl([ev.init(), bash('node agents/claim-tagger-mvp/scripts/setup.mjs'), ev.text(REPORT), ev.result(REPORT)]), { decide: true }).problems, 'not in the allowed list'));
   assert.ok(DEFAULT_ALLOWED_SCRIPTS.includes('decide'), 'decide.mjs joins the scripts the check allows');
-  for (const c of ['node agents/claim-tagger-mvp/scripts/decide.mjs list', 'node agents/claim-tagger-mvp/scripts/decide.mjs check', OPEN,
-    'node agents/claim-tagger-mvp/scripts/walkthrough.mjs run decide check', 'node agents/claim-tagger-mvp/scripts/walkthrough.mjs run --demo practice-1 decide list']) {
+  for (const c of ['node agents/claim-tagger-mvp/scripts/decide.mjs list', 'node agents/claim-tagger-mvp/scripts/decide.mjs check', OPEN]) {
     assert.deepEqual(classifyBash(c), { ok: true }, c);
   }
 });
 
-test('a demo decide transcript passes in decide mode: the commands go through the walkthrough runner', () => {
-  const W = 'node agents/claim-tagger-mvp/scripts/walkthrough.mjs run';
-  const demo = jsonl([
-    ev.init(), bash(`${W} pull --all`), bash(`${W} decide list`),
-    bash(`${W} decide open --decisions '[{"claim":"c01","verified_tags":["Context-dependent"],"note":""}]'`), write(),
-    bash(`${W} decide check`), ev.text(`Demo · ${REPORT.replace('Next: type /claim-tagger distill', 'Next: type /claim-tagger demo distill')}`), ev.result(REPORT),
-  ]);
-  const r = checkTranscript(demo, { decide: true });
-  assert.deepEqual(r.problems, []);
-  // the walkthrough runner for another script gets no such leave
-  const other = jsonl([ev.init(), bash(`${W} status --note "Review status"`), ev.text(REPORT), ev.result(REPORT)]);
-  assert.ok(has(checkTranscript(other, { decide: true }).problems, 'names the editor column "Review status"'));
-});
-
-test('isDecideWrite: the shape of a decision write, in the columns it is given', () => {
+test('isDecideWrite: the shape of a decision write, in the columns it is given, with the values decide.mjs open prints', () => {
   const tool = (input, name = CONNECTOR) => ({ name, input });
-  const base = { page_id: 'p', command: 'update_properties', properties: { 'Review status': 'Reviewed' } };
+  const base = { page_id: 'p', command: 'update_properties', properties: { 'Tag outcome': 'Applies' } };
   assert.equal(isDecideWrite(tool(base)), true);
   assert.equal(isDecideWrite(tool({ ...base, allow_async: true })), true);
   assert.equal(isDecideWrite(tool(base, 'mcp__claude_ai_notion__notion-update-page')), true, 'under any server prefix');
-  assert.equal(isDecideWrite(tool({ ...base, properties: { 'Review status': 'To review', 'Verified tags': [] } })), true);
-  for (const input of [{ ...base, command: 'insert_content' }, { ...base, icon: 'x' }, { ...base, allow_async: 'yes' }, { ...base, properties: {} }, { ...base, properties: null }, { ...base, properties: { 'Agent tags': [] } },
-    { ...base, properties: { 'Review status': 'Approved' } }, { page_id: 'p', command: 'update_properties' }]) {
+  assert.equal(isDecideWrite(tool({ ...base, properties: { 'Agent is right': '__YES__', 'Your note': '' } })), true);
+  assert.equal(isDecideWrite(tool({ ...base, properties: { 'Tag outcome': 'Does not apply', 'Your note': 'Why.' } })), true);
+  for (const input of [{ ...base, command: 'insert_content' }, { ...base, icon: 'x' }, { ...base, allow_async: 'yes' }, { ...base, properties: {} }, { ...base, properties: null }, { ...base, properties: { 'Agent proposal': 'Applies' } },
+    { ...base, properties: { 'Tag outcome': 'Reviewed' } }, { ...base, properties: { 'Tag outcome': "Can't tell" } }, { ...base, properties: { 'Tag outcome': null } },
+    { ...base, properties: { 'Agent is right': true } }, { ...base, properties: { 'Agent is right': '__NO__' } }, { ...base, properties: { 'Your note': 3 } }, { ...base, properties: { 'Your note': null } },
+    { ...base, properties: { 'Review status': 'Reviewed' } }, { ...base, properties: { 'Verified tags': [] } }, { page_id: 'p', command: 'update_properties' }]) {
     assert.equal(isDecideWrite(tool(input)), false, JSON.stringify(input));
   }
   assert.equal(isDecideWrite(tool(base, 'mcp__x__notion-create-pages')), false);
   assert.equal(isDecideWrite(tool(base, 'Bash')), false);
   assert.equal(isDecideWrite(tool({ ...base, properties: { Mine: 'x' } }), ['Mine']), true, 'the columns come from the config');
-  assert.deepEqual([...DEFAULT_DECIDE_COLUMNS], ['Verified tags', 'Review status', 'Challenged tags notes']);
+  assert.deepEqual([...DEFAULT_DECIDE_COLUMNS], ['Agent is right', 'Tag outcome', 'Your note']);
 });
 
-test('loadDecideColumns reads editor_columns.claims of the config, and the default list when it cannot', () => {
+test('loadDecideColumns reads editor_columns.tag_decisions of the config, and the default list when it cannot; the per-claim list is never read', () => {
   const dir = tmp();
-  writeFileSync(join(dir, 'config.json'), JSON.stringify({ editor_columns: { claims: ['A', 'B'], agent_settings: ['Paused'] } }));
+  const three = ['Agent is right', 'Tag outcome', 'Your note'];
+  writeFileSync(join(dir, 'config.json'), JSON.stringify({ editor_columns: { tag_decisions: ['A', 'B'], claims: ['Verified tags'], agent_settings: ['Paused'] } }));
   assert.deepEqual(loadDecideColumns(dir), ['A', 'B']);
-  assert.deepEqual(loadDecideColumns(join(dir, 'nowhere')), ['Verified tags', 'Review status', 'Challenged tags notes']);
+  assert.deepEqual(loadDecideColumns(join(dir, 'nowhere')), three);
+  writeFileSync(join(dir, 'config.json'), JSON.stringify({ editor_columns: { claims: ['Verified tags', 'Review status', 'Challenged tags notes'] } }));
+  assert.deepEqual(loadDecideColumns(dir), three, 'a list on claims is no fallback');
   writeFileSync(join(dir, 'config.json'), JSON.stringify({ editor_columns: {} }));
-  assert.deepEqual(loadDecideColumns(dir), ['Verified tags', 'Review status', 'Challenged tags notes']);
-  assert.deepEqual(loadDecideColumns(), ['Verified tags', 'Review status', 'Challenged tags notes'], 'the shipped config lists the same three');
+  assert.deepEqual(loadDecideColumns(dir), three);
+  assert.deepEqual(loadDecideColumns(), three, 'the shipped config lists the same three');
 });
 
 test('the command line takes --decide', () => {
@@ -194,7 +189,7 @@ test('the command line takes --decide', () => {
 });
 
 test('S7: a decide transcript whose note carries an apostrophe written as \\u0027 followed by a semicolon passes: the whole command is one script call', () => {
-  const open = `node agents/claim-tagger-mvp/scripts/decide.mjs open --decisions '[{"claim":"c01","verified_tags":["Context-dependent"],"note":"Context-dependent: Agent slip. It\\u0027s settled; the title names it."}]'`;
+  const open = `node agents/claim-tagger-mvp/scripts/decide.mjs open --decisions '[{"row":"c01::Context-dependent","seen":"0123456789ab","outcome":"Applies","note":"It\\u0027s settled; the title names it."}]'`;
   assert.ok(open.includes('\\u0027s settled;'), 'the command holds the escape, not a quote');
   assert.deepEqual(classifyBash(open), { ok: true });
   const text = jsonl([ev.init(), bash('node agents/claim-tagger-mvp/scripts/pull.mjs --all'), bash(open), write(), bash('node agents/claim-tagger-mvp/scripts/decide.mjs check'), ev.text(REPORT), ev.result(REPORT)]);
@@ -203,25 +198,6 @@ test('S7: a decide transcript whose note carries an apostrophe written as \\u002
   // the old way of writing an apostrophe, closing the quote and opening it again, is a command the check refuses to read as one call when it carries a semicolon
   const quoted = open.replace('\\u0027', "'\\''");
   assert.equal(classifyBash(quoted).ok, false, 'the \'\\\'\' form is not accepted when the note has a semicolon');
-});
-
-test('the Review status column is the one the config names, not a hard-coded string', () => {
-  const tool = (properties) => ({ name: CONNECTOR, input: { page_id: 'p', command: 'update_properties', properties } });
-  const columns = ['Verdict', 'Marks', 'Words'];
-  assert.equal(isDecideWrite(tool({ Marks: 'Reviewed', Verdict: [] }), columns, 'Marks'), true);
-  assert.equal(isDecideWrite(tool({ Marks: 'Approved' }), columns, 'Marks'), false, 'the named column is held to Reviewed or To review');
-  assert.equal(isDecideWrite(tool({ Marks: 'Approved' }), columns), true, 'with the default name, Marks is not the Review status column and is free text here');
-  assert.equal(isDecideWrite(tool({ 'Review status': 'Approved' }), ['Review status', 'Verified tags']), false, 'the default still holds');
-  const dir = tmp();
-  writeFileSync(join(dir, 'config.json'), JSON.stringify({ notion: { claims: { columns: { review_status: 'Marks' } } } }));
-  assert.equal(loadReviewColumn(dir), 'Marks');
-  assert.equal(loadReviewColumn(join(dir, 'nowhere')), 'Review status');
-  assert.equal(loadReviewColumn(), 'Review status', 'the shipped config names Review status');
-  // through the whole check
-  const custom = jsonl([ev.init(), bash('node agents/claim-tagger-mvp/scripts/decide.mjs list'), ev.tool(CONNECTOR, { page_id: 'p', command: 'update_properties', properties: { Marks: 'Approved' } }), ev.text(REPORT), ev.result(REPORT)]);
-  assert.equal(checkTranscript(custom, { decide: true, decideColumns: columns, reviewColumn: 'Marks' }).ok, false);
-  const fine = jsonl([ev.init(), bash('node agents/claim-tagger-mvp/scripts/decide.mjs list'), ev.tool(CONNECTOR, { page_id: 'p', command: 'update_properties', properties: { Marks: 'Reviewed' } }), ev.text(REPORT), ev.result(REPORT)]);
-  assert.deepEqual(checkTranscript(fine, { decide: true, decideColumns: columns, reviewColumn: 'Marks' }).problems, []);
 });
 
 // ---- the runner sets the mode from the prompt -------------------------------------------------------------------------------------------

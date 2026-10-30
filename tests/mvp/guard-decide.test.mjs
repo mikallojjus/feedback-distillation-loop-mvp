@@ -7,9 +7,9 @@ import { decide } from '../../agents/claim-tagger-mvp/scripts/hooks/guard.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { placeholderConfig } from './helpers/config-fixture.mjs';
 
-// The one exception to the editor-column rule of the connector guard (decisions P18 to P20 and 114): an editor's Claude may decide claims. A notion-update-page call that sets only
-// some of the three Claims editor columns is allowed when a live runs/DECIDING (written by decide.mjs open, younger than two hours) lists the page. The rest of the hook is tested in
-// guard.test.mjs and stays as it was.
+// The one exception to the editor-column rule of the connector guard (decisions P18 to P20, 114 and P42 to P46): an editor's Claude may decide rows of Tag decisions. A
+// notion-update-page call that sets only some of the three editor columns (Agent is right, Tag outcome, Your note) is allowed when a live runs/DECIDING (written by decide.mjs
+// open, younger than two hours) lists the page. The rest of the hook is tested in guard.test.mjs and stays as it was.
 
 const dirs = [];
 after(() => {
@@ -26,7 +26,7 @@ function rootWith(config) {
 const NOW = Date.parse('2026-10-27T12:00:00.000Z');
 const PAGE = '0a9e0000-0000-4000-8000-0000000000d1';
 const hexOf = (id) => id.replace(/-/g, '');
-const THREE = { 'Verified tags': [hexOf('0a9e0000-0000-4000-8000-0000000000a1')], 'Challenged tags notes': 'Context-dependent: Agent slip. The title names it.', 'Review status': 'Reviewed' };
+const THREE = { 'Agent is right': '__YES__', 'Tag outcome': 'Does not apply', 'Your note': 'The title names it.' };
 const decision = (properties = THREE, extra = {}, page = PAGE) => ({ tool_name: 'mcp__notion__notion-update-page', tool_input: { page_id: page, command: 'update_properties', properties, ...extra } });
 function open(root, { pages = [PAGE], at = NOW - 10 * 60e3, where = join(root, 'runs'), content } = {}) {
   mkdirSync(where, { recursive: true });
@@ -34,37 +34,43 @@ function open(root, { pages = [PAGE], at = NOW - 10 * 60e3, where = join(root, '
 }
 const verdict = (input, root) => decide(input, root, { now: NOW });
 
-test('the three Claims columns, or some of them, on a page that a live marker lists, are allowed', () => {
+test('the three Tag decisions columns, or some of them, on a page that a live marker lists, are allowed, each with the value decide.mjs open prints', () => {
   const root = rootWith(placeholderConfig());
   open(root);
   assert.equal(verdict(decision(), root).permissionDecision, 'allow');
   assert.match(verdict(decision(), root).permissionDecisionReason, /open decide run/);
-  assert.equal(verdict(decision({ 'Review status': 'Reviewed' }), root).permissionDecision, 'allow');
-  const toReview = verdict(decision({ 'Review status': 'To review' }), root);
-  assert.equal(toReview.permissionDecision, 'deny', 'a decision always closes the claim (P24): To review is refused');
-  assert.match(toReview.permissionDecisionReason, /may be set to Reviewed only/);
-  assert.equal(verdict(decision({ 'Challenged tags notes': 'x', 'Review status': 'To review' }), root).permissionDecision, 'deny');
-  assert.equal(verdict(decision({ 'Verified tags': [] }), root).permissionDecision, 'allow', 'a decision with no verified tag');
+  for (const properties of [{ 'Agent is right': '__YES__' }, { 'Tag outcome': 'Applies' }, { 'Tag outcome': 'Does not apply' }, { 'Your note': 'x' }, { 'Your note': '' }, { 'Tag outcome': 'Applies', 'Your note': 'Rule 4 should say it.' }]) {
+    assert.equal(verdict(decision(properties), root).permissionDecision, 'allow', JSON.stringify(properties));
+  }
   assert.equal(verdict(decision(THREE, { allow_async: false }), root).permissionDecision, 'allow', 'allow_async is the one flag the connector call may carry');
-  assert.equal(verdict(decision({ 'verified tags': [], 'REVIEW STATUS': 'Reviewed' }), root).permissionDecision, 'allow', 'letter case does not matter');
+  assert.equal(verdict(decision({ 'agent is right': '__YES__', 'TAG OUTCOME': 'Applies' }), root).permissionDecision, 'allow', 'letter case does not matter');
+  // the values: only the printed forms; Tag outcome is one of the two outcomes, the tick is "__YES__", and nothing is cleared
+  const reviewed = verdict(decision({ 'Tag outcome': 'Reviewed' }), root);
+  assert.equal(reviewed.permissionDecision, 'deny', 'a value outside the two outcomes');
+  assert.match(reviewed.permissionDecisionReason, /may be set to Applies or Does not apply only/);
+  for (const value of ['__NO__', true, false, 'Yes', '', null, 1]) {
+    const d = verdict(decision({ 'Agent is right': value }), root);
+    assert.equal(d.permissionDecision, 'deny', String(value));
+    assert.match(d.permissionDecisionReason, /may be set to __YES__ only/);
+  }
+  for (const value of [null, 1, ['x']]) assert.match(verdict(decision({ 'Your note': value }), root).permissionDecisionReason, /must be text/, JSON.stringify(value));
+  assert.equal(verdict(decision({ 'Tag outcome': null }), root).permissionDecision, 'deny', 'a decision never clears a cell');
 });
 
-test('a note-only write and a tags-only write, each with Review status (P24), on a page that a live marker lists, are allowed; the note alone too', () => {
+test('a note-only write, an outcome-only write and a tick-only write are each allowed alone, and none is a way round the other rules', () => {
   const root = rootWith(placeholderConfig());
   open(root);
-  const note = 'Context-dependent: Agent slip. The title names it.';
-  const noteOnly = { 'Challenged tags notes': note, 'Review status': 'Reviewed' };
-  const tagsOnly = { 'Verified tags': [hexOf('0a9e0000-0000-4000-8000-0000000000a1')], 'Review status': 'Reviewed' };
-  for (const properties of [noteOnly, tagsOnly, { 'Challenged tags notes': note }, { 'Challenged tags notes': '', 'Review status': 'Reviewed' }]) {
+  const note = 'Rule 4 should say it.';
+  for (const properties of [{ 'Your note': note }, { 'Tag outcome': 'Applies' }, { 'Agent is right': '__YES__' }]) {
     const d = verdict(decision(properties), root);
     assert.equal(d.permissionDecision, 'allow', JSON.stringify(properties));
     assert.match(d.permissionDecisionReason, /open decide run/);
   }
-  assert.equal(verdict(decision(noteOnly, { allow_async: false }), root).permissionDecision, 'allow', 'with the one flag the printed call carries');
-  // the page still has to be the one the marker lists, and the note is no way round the other rules
-  assert.equal(verdict(decision(noteOnly, {}, '0a9e0000-0000-4000-8000-0000000000e1'), root).permissionDecision, 'deny');
-  assert.equal(verdict(decision({ ...noteOnly, 'Agent reading': 'x' }), root).permissionDecision, 'deny');
-  assert.equal(verdict(decision({ 'Challenged tags notes': note, 'Review status': 'Approved' }), root).permissionDecision, 'deny');
+  assert.equal(verdict(decision({ 'Your note': note }, { allow_async: false }), root).permissionDecision, 'allow', 'with the one flag the printed call carries');
+  // the page still has to be the one the marker lists
+  assert.equal(verdict(decision({ 'Your note': note }, {}, '0a9e0000-0000-4000-8000-0000000000e1'), root).permissionDecision, 'deny');
+  assert.equal(verdict(decision({ 'Your note': note, "Agent's view of your decision": 'x' }), root).permissionDecision, 'deny');
+  assert.equal(verdict(decision({ 'Your note': note, Status: 'Approved' }), root).permissionDecision, 'deny');
 });
 
 test('the page_id may be 32 hex digits, a dashed id or a notion.so address', () => {
@@ -114,9 +120,6 @@ test('S5: a folder named like a marker is not a marker: the decide allowance and
   mkdirSync(join(root, 'runs', 'DECIDING'), { recursive: true });
   writeFileSync(join(root, 'runs', 'DECIDING', 'x'), 'x');
   assert.equal(verdict(decision(), root).permissionDecision, 'deny', 'DECIDING as a folder');
-  const demo = rootWith(placeholderConfig());
-  mkdirSync(join(demo, 'runs', 'demos', 'p1', 'runs', 'DECIDING'), { recursive: true });
-  assert.equal(verdict(decision(), demo).permissionDecision, 'deny', 'DECIDING as a folder in a practice page');
 
   const setup = rootWith(placeholderConfig());
   const content = { tool_name: 'mcp__notion__notion-update-page', tool_input: { page_id: '0a9e0000-0000-4000-8000-000000000001', command: 'replace_content', new_str: 'x' } };
@@ -137,7 +140,7 @@ test('S5: a folder named like a marker is not a marker: the decide allowance and
   assert.match(builder.permissionDecisionReason, /registered setup page while runs\/SETUP exists/);
 });
 
-test('S6: no decision is written while runs/PAUSED exists, in the agent folder or in the practice page\'s folder for its own marker', () => {
+test('S6: no decision is written while runs/PAUSED exists', () => {
   const root = rootWith(placeholderConfig());
   open(root);
   assert.equal(verdict(decision(), root).permissionDecision, 'allow');
@@ -145,20 +148,6 @@ test('S6: no decision is written while runs/PAUSED exists, in the agent folder o
   const d = verdict(decision(), root);
   assert.equal(d.permissionDecision, 'deny');
   assert.match(d.permissionDecisionReason, /the agent is paused \(runs\/PAUSED exists\)/);
-
-  // the pause of the agent folder covers the practice pages, the pause of one practice page covers its own marker only
-  const demos = rootWith(placeholderConfig());
-  const one = join(demos, 'runs', 'demos', 'p1', 'runs');
-  const two = join(demos, 'runs', 'demos', 'p2', 'runs');
-  open(demos, { where: one, pages: ['0a9e0000-0000-4000-8000-0000000000d4'] });
-  open(demos, { where: two, pages: ['0a9e0000-0000-4000-8000-0000000000d5'] });
-  const at = (page) => verdict(decision(THREE, {}, page), demos).permissionDecision;
-  assert.equal(at('0a9e0000-0000-4000-8000-0000000000d4'), 'allow');
-  writeFileSync(join(one, 'PAUSED'), 'paused\n');
-  assert.equal(at('0a9e0000-0000-4000-8000-0000000000d4'), 'deny', 'the practice page that is paused');
-  assert.equal(at('0a9e0000-0000-4000-8000-0000000000d5'), 'allow', 'another practice page is not');
-  writeFileSync(join(demos, 'runs', 'PAUSED'), 'paused\n');
-  assert.equal(at('0a9e0000-0000-4000-8000-0000000000d5'), 'deny', 'the agent folder\'s pause covers every practice page');
   // a stale marker under a pause is just stale, and says so as before
   const stale = rootWith(placeholderConfig());
   open(stale, { at: NOW - 3 * 3600e3 });
@@ -182,31 +171,29 @@ test('G13: a create-pages call is never a decision, even when it carries the top
 test('G7: a decision whose properties name no editor column never reaches the decide rules; the refusal is the setup rule\'s', () => {
   const root = rootWith(placeholderConfig());
   open(root);
-  for (const properties of [{}, null, 'Verified tags']) {
+  for (const properties of [{}, null, 'Your note']) {
     const d = verdict(decision(properties), root);
     assert.equal(d.permissionDecision, 'deny', JSON.stringify(properties));
     assert.match(d.permissionDecisionReason, /no builder session is open/);
   }
 });
 
-test('a practice page\'s marker under runs/demos/<id>/runs/DECIDING counts, for the pages it lists', () => {
+test('a practice page\'s marker under runs/demos/<id>/runs/DECIDING opens nothing: practice pages are parked, and only the agent folder\'s marker counts', () => {
   const root = rootWith(placeholderConfig());
   open(root, { where: join(root, 'runs', 'demos', 'practice-1', 'runs'), pages: ['0a9e0000-0000-4000-8000-0000000000d9'] });
-  open(root, { where: join(root, 'runs', 'demos', 'practice-2', 'runs') });
+  assert.equal(verdict(decision(THREE, {}, '0a9e0000-0000-4000-8000-0000000000d9'), root).permissionDecision, 'deny');
+  assert.equal(verdict(decision(), root).permissionDecision, 'deny');
+  // the marker of the agent folder opens its own pages only
+  open(root);
   assert.equal(verdict(decision(), root).permissionDecision, 'allow');
-  assert.equal(verdict(decision(THREE, {}, '0a9e0000-0000-4000-8000-0000000000d9'), root).permissionDecision, 'allow');
-  assert.equal(verdict(decision(THREE, {}, '0a9e0000-0000-4000-8000-0000000000d8'), root).permissionDecision, 'deny');
-  // a stale marker of a practice page shelters nothing
-  const other = rootWith(placeholderConfig());
-  open(other, { where: join(other, 'runs', 'demos', 'practice-1', 'runs'), at: NOW - 3 * 3600e3 });
-  assert.equal(verdict(decision(), other).permissionDecision, 'deny');
+  assert.equal(verdict(decision(THREE, {}, '0a9e0000-0000-4000-8000-0000000000d9'), root).permissionDecision, 'deny');
 });
 
 test('without a live marker nothing is allowed, and the refusal still says the column belongs to the editor (hard rule 1)', () => {
   const none = rootWith(placeholderConfig());
   const d = verdict(decision(), none);
   assert.equal(d.permissionDecision, 'deny');
-  assert.match(d.permissionDecisionReason, /the property "Verified tags" belongs to the editor \(hard rule 1\)/);
+  assert.match(d.permissionDecisionReason, /the property "Agent is right" belongs to the editor \(hard rule 1\)/);
   assert.match(d.permissionDecisionReason, /no decide run is open/);
   for (const [name, at, content] of [
     ['a marker from three hours ago', NOW - 3 * 3600e3, undefined],
@@ -234,20 +221,17 @@ test('a page that the marker does not list is refused', () => {
   assert.match(d.permissionDecisionReason, /is not listed by an open decide run/);
 });
 
-test('one property more, an agent column, or another value of Review status is refused', () => {
+test('one property more, or an agent column, is refused', () => {
   const root = rootWith(placeholderConfig());
   open(root);
   for (const properties of [
-    { ...THREE, Name: 'x' }, { ...THREE, 'Agent tags': [] }, { 'Agent status': 'Done' }, { ...THREE, 'Agent reading': 'x' }, { ...THREE, 'Editor wording': 'x' }, { ...THREE, Paused: '__YES__' }, { ...THREE, Status: 'Approved' },
-    { ...THREE, 'date:Review status:start': '2026-10-27' }, { 'Tag outcome': 'Applies' }, {}, null, 'Verified tags',
+    { ...THREE, Name: 'x' }, { ...THREE, 'Agent tags': [] }, { 'Agent status': 'Done' }, { ...THREE, "Agent's view of your decision": 'x' }, { ...THREE, 'Agent proposal': 'Applies' }, { ...THREE, 'Decided under': 'x' },
+    { ...THREE, 'Editor wording': 'x' }, { ...THREE, Paused: '__YES__' }, { ...THREE, Status: 'Approved' }, { ...THREE, 'date:Tag outcome:start': '2026-10-27' },
+    { 'Verified tags': [] }, { 'Review status': 'Reviewed' }, { 'Challenged tags notes': 'x' }, {}, null, 'Your note',
   ]) {
     assert.equal(verdict(decision(properties), root).permissionDecision, 'deny', JSON.stringify(properties));
   }
-  for (const value of ['Approved', 'Rejected', 'Done', 'To review', 'reviewed', '', null, 1, ['Reviewed']]) {
-    const d = verdict(decision({ ...THREE, 'Review status': value }), root);
-    assert.equal(d.permissionDecision, 'deny', String(value));
-    assert.match(d.permissionDecisionReason, /may be set to Reviewed only/);
-  }
+  assert.match(verdict(decision({ ...THREE, Name: 'x' }), root).permissionDecisionReason, /a decision write may name only Agent is right, Tag outcome, Your note; got Name/);
 });
 
 test('any other command, and an icon, a cover, content or a skill field, are refused', () => {
@@ -275,7 +259,7 @@ test('a protected id anywhere in the call is refused first, even on a page the m
   const [protectedPage] = config.notion.protected_page_ids;
   open(root, { pages: [PAGE, protectedPage, protectedDb] });
   assert.equal(verdict(decision(), root).permissionDecision, 'allow');
-  for (const input of [decision(THREE, {}, protectedPage), decision(THREE, {}, protectedDb), decision({ ...THREE, 'Challenged tags notes': `see ${protectedDb}` }), decision({ ...THREE, 'Verified tags': [protectedPage] }), decision(THREE, { note: protectedDb })]) {
+  for (const input of [decision(THREE, {}, protectedPage), decision(THREE, {}, protectedDb), decision({ ...THREE, 'Your note': `see ${protectedDb}` }), decision({ ...THREE, 'Your note': protectedPage }), decision(THREE, { note: protectedDb })]) {
     const d = verdict(input, root);
     assert.equal(d.permissionDecision, 'deny');
     assert.match(d.permissionDecisionReason, /protected id/);
@@ -304,16 +288,39 @@ test('the marker does not open the setup rules: a content change on that page is
   assert.match(content.permissionDecisionReason, /no builder session is open/);
 });
 
-test('the claims columns come from config.editor_columns.claims when it names them, else the shipped three', () => {
+test('the columns come from config.editor_columns.tag_decisions when it names them, else the three of Tag decisions; the per-claim list is never a fallback', () => {
   const custom = placeholderConfig();
-  custom.editor_columns.claims = ['My verdict', 'My review', 'My note'];
+  custom.editor_columns.tag_decisions = ['My verdict', 'My review', 'My note'];
   const root = rootWith(custom);
   open(root);
-  assert.equal(verdict(decision({ 'My verdict': [], 'My note': 'x' }), root).permissionDecision, 'allow');
-  assert.equal(verdict(decision({ 'Verified tags': [] }), root).permissionDecision, 'deny', 'a name the config does not list');
+  assert.equal(verdict(decision({ 'My verdict': 'x', 'My note': 'x' }), root).permissionDecision, 'allow');
+  assert.equal(verdict(decision({ 'Tag outcome': 'Applies' }), root).permissionDecision, 'deny', 'a name the config does not list');
   const bare = rootWith({ notion: {} });
   open(bare);
   assert.equal(verdict(decision(), bare).permissionDecision, 'allow');
+
+  // editor_columns.claims is empty on v2, and an empty list sends nothing back to the per-claim columns
+  const v2 = rootWith(placeholderConfig());
+  open(v2);
+  assert.deepEqual(placeholderConfig().editor_columns.claims, []);
+  for (const name of ['Verified tags', 'Review status', 'Challenged tags notes']) {
+    const d = verdict(decision({ [name]: 'Reviewed' }), v2);
+    assert.equal(d.permissionDecision, 'deny', name);
+    assert.doesNotMatch(d.permissionDecisionReason, /open decide run/, name);
+  }
+  const noTagDecisions = placeholderConfig();
+  delete noTagDecisions.editor_columns.tag_decisions;
+  const rest = rootWith(noTagDecisions);
+  open(rest);
+  assert.equal(verdict(decision({ 'Review status': 'Reviewed' }), rest).permissionDecision, 'deny', 'no per-claim default');
+  assert.equal(verdict(decision(), rest).permissionDecision, 'deny', 'with no list for Tag decisions the three are not named as the editor columns, so no decide window opens');
+  // a list on claims is ignored for the decide step as well
+  const old = placeholderConfig();
+  old.editor_columns.claims = ['Verified tags'];
+  const oldRoot = rootWith(old);
+  open(oldRoot);
+  assert.equal(verdict(decision({ 'Verified tags': 'x' }), oldRoot).permissionDecision, 'deny');
+  assert.equal(verdict(decision(), oldRoot).permissionDecision, 'allow');
 });
 
 test('a builder session is asked, not waved through: create-pages, a content update and the schema tools answer "ask" while runs/SETUP exists, and every refusal is still a deny', () => {

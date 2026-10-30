@@ -14,12 +14,13 @@
 //        allowedScripts default DEFAULT_ALLOWED_SCRIPTS (names without .mjs)
 //        expectStyle    default null (not checked); the headless runner passes "Explanatory" and the check then needs the init event to say so
 //        decide         default false; true for the transcript of /claim-tagger decide or /claim-tagger demo decide (the headless runner sets it from the prompt, decision 115): a connector
-//                       notion-update-page with command update_properties whose properties are only the three Claims editor columns is then not a problem (problems d and e), and the
-//                       Bash calls of decide.mjs may carry the column names in their JSON; any other connector write, and any other write of an editor column, still is
+//                       notion-update-page with command update_properties whose properties are only the three editor columns of Tag decisions (Agent is right "__YES__", Tag outcome
+//                       Applies or Does not apply, Your note text) is then not a problem (problems d and e), and the Bash calls of decide.mjs may carry the column names in their
+//                       JSON; any other connector write, and any other write of an editor column, still is
 //        promote        default false; true for the transcript of /claim-tagger promote or /claim-tagger demo promote (the headless runner sets it from the prompt): only then may the final
 //                       message hold the suggestion of a FAIL report, its one fenced block included; in any other transcript that part is a problem
-//        decideColumns  default DEFAULT_DECIDE_COLUMNS; the CLI reads config.json editor_columns.claims
-//        reviewColumn   default "Review status"; the CLI reads config.json notion.claims.columns.review_status (the column whose value must be Reviewed or To review)
+//        decideColumns  default DEFAULT_DECIDE_COLUMNS; the CLI reads config.json editor_columns.tag_decisions
+//        reviewColumn   ignored: the per-claim Review status is gone on v2 (the value rules are the guard's, see isDecideWrite); the option stays so that headless-check.mjs, which still passes it, works
 //        final          the final assistant text (see extractFinalText)
 //        tools          [{ name, summary, denied? }] in call order; stats { turns, tool_calls, bash_calls, notion_reads, notion_writes }
 //        info           { events, skipped_lines, results, style, model, cli_version, denials, notes }: facts for the evidence file, never failures
@@ -45,7 +46,7 @@
 //     any server prefix. The writes the brief names (create-pages, update-page, create-database, update-data-source, create-view, update-view,
 //     delete-*, move-pages, duplicate-page, restore-pages) are all in that family. Notion is written only by applying a plan a script produced,
 //     except for the decide step (P18 to P20): see the option decide.
-//  e  An editor column (Verified tags, Review status, Challenged tags notes, Editor wording, Paused; spelled with spaces, _ or -, any case) named in the input
+//  e  An editor column (Agent is right, Tag outcome, Your note, Editor wording, Paused; spelled with spaces, _ or -, any case) named in the input
 //     of a tool that can write (Bash, PowerShell, Write, Edit, MultiEdit, NotebookEdit, a Notion write); Bash text holding --unpause, --bare,
 //     --fallback-model, git push or curl.
 //  f  A Bash call that is not exactly `node agents/claim-tagger-mvp/scripts/<name>.mjs ...` with <name> allowed, or `git status|log|diff ...`:
@@ -67,9 +68,9 @@ import { agentRoot, isMain } from './lib/paths.mjs';
 import { lintReport, lintWords, splitExtra } from './lib/report.mjs';
 
 export const DEFAULT_ALLOWED_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status', 'decide', 'walkthrough', 'add']);
-export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Verified tags', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused']);
-/** The three columns of Claims that a decide step may write through the connector (decision 115); the CLI reads config.json editor_columns.claims. */
-export const DEFAULT_DECIDE_COLUMNS = Object.freeze(['Verified tags', 'Review status', 'Challenged tags notes']);
+export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Editor wording', 'Paused', 'Agent is right', 'Tag outcome', 'Your note']);
+/** The three columns of Tag decisions that a decide step may write through the connector (decision 115, v2); the CLI reads config.json editor_columns.tag_decisions. */
+export const DEFAULT_DECIDE_COLUMNS = Object.freeze(['Agent is right', 'Tag outcome', 'Your note']);
 export const MAX_TABLE_ROWS = 5;
 export const MAX_TABLE_COLUMNS = 3;
 export const MAX_CHECKLIST_LINES = 5;
@@ -102,8 +103,9 @@ const FORBIDDEN_BASH = Object.freeze([
 const NOTION_UPDATE_PAGE = /(?:^|__)notion-update-page$/;
 // the keys a decision write may carry, as in the guard hook: the page, the command, the properties and the flag that makes the write finish before the call returns
 const DECIDE_KEYS = new Set(['page_id', 'command', 'properties', 'allow_async']);
-const DECIDE_REVIEW_VALUES = ['Reviewed', 'To review'];
-const DEFAULT_REVIEW_COLUMN = 'Review status';
+// the values a decision write may set, as in the guard hook (decide.mjs open prints exactly these): the connector's form of a ticked box, and the two outcomes
+const DECIDE_TICK = '__YES__';
+const DECIDE_OUTCOMES = ['Applies', 'Does not apply'];
 // a call of decide.mjs, directly or through the walkthrough runner for a practice page: its --decisions JSON names the columns the connector will write
 const DECIDE_CALL = /^node\s+["']?(?:\.[\\/])?agents[\\/]claim-tagger-mvp[\\/]scripts[\\/](?:decide\.mjs["']?|walkthrough\.mjs["']?\s+run(?:\s+--demo(?:=|\s+)[A-Za-z0-9._-]+)?\s+decide)(?:\s|$)/;
 const SCRIPT_CALL = /^node\s+["']?(?:\.[\\/])?agents[\\/]claim-tagger-mvp[\\/]scripts[\\/]([A-Za-z0-9_-]+)\.mjs["']?(?:\s|$)/;
@@ -202,24 +204,19 @@ export function loadEditorColumns(root = agentRoot()) {
   }
 }
 
-/** The three Claims columns of the decide step from the agent's config.json (editor_columns.claims); the default list when it cannot be read. */
+/** The three Tag decisions columns of the decide step from the agent's config.json (editor_columns.tag_decisions); the default list when it cannot be read or names none. */
 export function loadDecideColumns(root = agentRoot()) {
   try {
-    const list = JSON.parse(readFileSync(join(root, 'config.json'), 'utf8'))?.editor_columns?.claims;
+    const list = JSON.parse(readFileSync(join(root, 'config.json'), 'utf8'))?.editor_columns?.tag_decisions;
     return Array.isArray(list) && list.length ? list.filter((n) => typeof n === 'string') : [...DEFAULT_DECIDE_COLUMNS];
   } catch {
     return [...DEFAULT_DECIDE_COLUMNS];
   }
 }
 
-/** The name of the Review status column of Claims from the agent's config.json (notion.claims.columns.review_status); "Review status" when it cannot be read. */
-export function loadReviewColumn(root = agentRoot()) {
-  try {
-    const name = JSON.parse(readFileSync(join(root, 'config.json'), 'utf8'))?.notion?.claims?.columns?.review_status;
-    return typeof name === 'string' && name.trim() !== '' ? name : DEFAULT_REVIEW_COLUMN;
-  } catch {
-    return DEFAULT_REVIEW_COLUMN;
-  }
+/** Kept for headless-check.mjs, which still loads and passes it: there is no Review status on v2, so there is no column to name, and checkTranscript ignores the value. Always null. */
+export function loadReviewColumn() {
+  return null;
 }
 
 const columnPattern = (name) => new RegExp(`(?<![A-Za-z0-9])${String(name).trim().split(/[\s_-]+/).map(escapeRe).join('[\\s_-]+')}(?![A-Za-z0-9])`, 'i');
@@ -461,10 +458,10 @@ const isObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v)
 
 /**
  * Is this tool call a decision write of the decide step (decision 115)? A connector notion-update-page, command update_properties, with no key but page_id, command, properties and
- * allow_async, whose properties are only some of the Claims editor columns (`decideColumns`), Review status set to Reviewed or To review. Which page it names is the guard hook's
- * business (it checks the page against the open decide run); the transcript cannot know the list.
+ * allow_async, whose properties are only some of the Tag decisions editor columns (`decideColumns`) with the values decide.mjs open prints: Agent is right "__YES__", Tag outcome Applies or
+ * Does not apply, Your note text. Which page it names is the guard hook's business (it checks the page against the open decide run); the transcript cannot know the list.
  */
-export function isDecideWrite(tool, decideColumns = DEFAULT_DECIDE_COLUMNS, reviewColumn = DEFAULT_REVIEW_COLUMN) {
+export function isDecideWrite(tool, decideColumns = DEFAULT_DECIDE_COLUMNS) {
   if (!NOTION_UPDATE_PAGE.test(tool?.name ?? '')) return false;
   const input = tool.input;
   if (!isObject(input) || input.command !== 'update_properties' || Object.keys(input).some((k) => !DECIDE_KEYS.has(k))) return false;
@@ -474,13 +471,15 @@ export function isDecideWrite(tool, decideColumns = DEFAULT_DECIDE_COLUMNS, revi
   for (const [key, value] of Object.entries(input.properties)) {
     const name = key.trim().toLowerCase();
     if (!allowed.has(name)) return false;
-    if (name === String(reviewColumn).trim().toLowerCase() && !DECIDE_REVIEW_VALUES.includes(value)) return false;
+    if (name === 'agent is right' && value !== DECIDE_TICK) return false;
+    if (name === 'tag outcome' && !DECIDE_OUTCOMES.includes(value)) return false;
+    if (name === 'your note' && typeof value !== 'string') return false;
   }
   return true;
 }
 
 function toolProblems(tools, {
-  editorColumns, allowedScripts, decide = false, decideColumns = DEFAULT_DECIDE_COLUMNS, reviewColumn = DEFAULT_REVIEW_COLUMN,
+  editorColumns, allowedScripts, decide = false, decideColumns = DEFAULT_DECIDE_COLUMNS,
 }) {
   const out = [];
   const columns = editorColumns.map((name) => ({ name, re: columnPattern(name) }));
@@ -488,9 +487,9 @@ function toolProblems(tools, {
     const at = `tool call ${index + 1} (${tool.name}${tool.denied ? ', denied' : ''})`;
     const notionWrite = NOTION_WRITE.test(tool.name);
     // in the transcript of a decide step only: the three-column connector write, and the call of decide.mjs whose JSON names the columns the connector is about to write
-    const decision = decide && isDecideWrite(tool, decideColumns, reviewColumn);
+    const decision = decide && isDecideWrite(tool, decideColumns);
     const decideScript = decide && SHELL_TOOLS.has(tool.name) && DECIDE_CALL.test(String(tool.input?.command ?? '').trim());
-    if (notionWrite && !decision) out.push(`${at}: writes to Notion through the connector; Notion is written only by applying a plan a script produced${decide ? ', and the decide step writes only the three Claims columns with update_properties' : ''}`);
+    if (notionWrite && !decision) out.push(`${at}: writes to Notion through the connector; Notion is written only by applying a plan a script produced${decide ? ', and the decide step writes only the three Tag decisions columns with update_properties' : ''}`);
     const strings = [...stringsIn(tool.input)];
     if ((SHELL_TOOLS.has(tool.name) || FILE_WRITE_TOOLS.has(tool.name) || notionWrite) && !decision && !decideScript) {
       for (const c of columns) if (strings.some((s) => c.re.test(s))) out.push(`${at}: names the editor column "${c.name}"; the agent never writes an editor column`);
@@ -519,7 +518,7 @@ function toolProblems(tools, {
 /** Grade a transcript. See the header for the rules; `ok` is true exactly when `problems` is empty. */
 export function checkTranscript(input, options = {}) {
   const {
-    editorColumns = DEFAULT_EDITOR_COLUMNS, allowedScripts = DEFAULT_ALLOWED_SCRIPTS, expectStyle = null, decide = false, promote = false, decideColumns = DEFAULT_DECIDE_COLUMNS, reviewColumn = DEFAULT_REVIEW_COLUMN,
+    editorColumns = DEFAULT_EDITOR_COLUMNS, allowedScripts = DEFAULT_ALLOWED_SCRIPTS, expectStyle = null, decide = false, promote = false, decideColumns = DEFAULT_DECIDE_COLUMNS,
   } = options;
   const parsed = Array.isArray(input) ? { events: input, skipped: 0, skippedLines: [] } : parseStreamJson(input);
   const { events, skippedLines } = parsed;
@@ -552,7 +551,7 @@ export function checkTranscript(input, options = {}) {
 
   // d, e, f, h: the tool calls
   problems.push(...toolProblems(tools, {
-    editorColumns, allowedScripts, decide: decide === true, decideColumns, reviewColumn,
+    editorColumns, allowedScripts, decide: decide === true, decideColumns,
   }));
   for (const [kind, re] of TOKEN_KINDS) if (re.test(raw)) problems.push(`the transcript holds a string that looks like a ${kind} (its value is not shown)`);
 
@@ -637,7 +636,7 @@ export function main(argv, io = defaultIo, env = {}) {
     return EXIT.INVALID;
   }
   const result = checkTranscript(text, {
-    editorColumns: env.editorColumns ?? loadEditorColumns(), expectStyle: parsed.values.style ?? null, decide: parsed.values.decide === true, promote: parsed.values.promote === true, decideColumns: env.decideColumns ?? loadDecideColumns(), reviewColumn: env.reviewColumn ?? loadReviewColumn(),
+    editorColumns: env.editorColumns ?? loadEditorColumns(), expectStyle: parsed.values.style ?? null, decide: parsed.values.decide === true, promote: parsed.values.promote === true, decideColumns: env.decideColumns ?? loadDecideColumns(),
   });
   if (parsed.values.json) io.out(JSON.stringify(result, null, 2));
   else if (result.ok) io.out(`transcript-check: no problems in ${file} (${statsLine(result.stats)})`);

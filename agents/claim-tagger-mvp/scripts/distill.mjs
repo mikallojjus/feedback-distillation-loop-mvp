@@ -1,23 +1,25 @@
 #!/usr/bin/env node
 // Distill: first reads the editors' decisions, then turns the "the rule is the problem" readings into proposed rule changes (READ-DECISIONS.md, decisions P4 and 64 to 76).
 //
-// Step 1, read the decisions. Where an editor decided a tag differently from the agent's proposal, the agent reads the disagreement itself (lib/readings.mjs): Agent slip, Rule unclear or
-// Rule should change, the rule it points at, one line of why. A note line that opens with a reason word (Agent slip., Rule unclear., Rule should change.) is taken as it stands, no model
-// call. Any other disagreement goes to the model in batches of distill.reading_batch rows (prompt prompts/reading.md, model models.distill, effort distill.reading_effort, two attempts per
-// batch, refused replies kept under the run's rejected/); a batch that fails twice leaves its rows unread this run, and the next run tries again. A row is read again only when its
-// "Read under" (edition and a hash of the outcome, the proposal, the note line, the reason word and the edition the proposal was made under) differs from the current one; a row marked Fixed is never read.
-// The readings go to the ledger (Agent reading, Rule, Reading note, Read under) and, as one line per tag, to the claim's Agent reading, in the same plan as the rest. Every reading
-// of the run is one line of readings.jsonl in the run folder; --readings <run-id> reuses the lines of an earlier run for the rows whose hash is unchanged (the live step after a --plan-only).
+// Step 1, read the decisions. A decision is a row of Tag decisions that holds one (lib/decisions.mjs rowDecision: Tag outcome, or a tick on Agent is right over a sure proposal). Where it differs
+// from the agent's proposal, the agent reads the disagreement itself (lib/readings.mjs): Agent slip, Rule unclear or Rule should change, the rule it points at, one line of why. No word
+// in an editor's note is taken as the answer (P45): every disagreement goes to the model in batches of distill.reading_batch rows (prompt prompts/reading.md, model models.distill,
+// effort distill.reading_effort, two attempts per batch, refused replies kept under the run's rejected/); a batch that fails twice leaves its rows unread this run, and the next run tries
+// again. A row is read again only when its "Read under" (edition and a hash of the outcome, the proposal, the note and the edition the proposal was made under) differs from the current
+// one; a row marked Fixed is never read.
+// The readings go to the row (Agent's view of your decision, Rule, Why the agent thinks so, Read under) and, as one line per tag, to the claim's Agent's view of your decision, in the same plan
+// as the rest. Every reading of the run is one line of readings.jsonl in the run folder; --readings <run-id> reuses the lines of an earlier run for the rows whose hash is unchanged
+// (the live step after a --plan-only).
 //
 // Step 2, the lessons. The decided rows of Tag decisions read Rule unclear or Rule should change are grouped by (tag, the rule the reading points at, else the rule the agent cited; a row whose
-// Follow-up is Fixed is left out: a rule change that rests on it went live and the agent now agrees; Still wrong stays in; a reading of a decision without a note, "without your note", is left
+// After the rule change is Fixed is left out: a rule change that rests on it went live and the agent now agrees; Still wrong stays in; a reading of a decision without a note, "without your note", is left
 // out too and is no counter-evidence either: it is the agent's guess about an unexplained decision and supports no draft until the editor writes a note, decision 78), the distill model is asked once per group for at most three patterns,
 // every reply is checked, and a Rule changes row (Status Proposed) is written per kept lesson. It never changes a rule: a rule changes only through an Approved lesson, a safety check PASS and
 // the promote step. The lesson's Kind is derived: Change the rule when any row of its group reads Rule should change, else Clarify wording.
 //
-// The copy of a decision is made by the tag step; a claim an editor Reviewed since the last tag step has none yet. So distill first brings the ledger up to date:
-// for every Reviewed claim, the ledger rows of its judged tags get the copy (Tag outcome, Why wrong (the reason word only), Your reasoning, Decided under; lib/decisions.mjs), in the same
-// plan, and the readings and the groups are made from the rows as they will be then. No column an editor writes is touched.
+// The record of a decision (Decided under) is made by the tag step; a decision an editor made since the last tag step has none yet. So distill first brings the ledger up to date:
+// the agent records Decided under on every row that holds a decision and has no record (lib/decisions.mjs recordDecisions), in the same plan, and the readings and the groups are made
+// from the rows as they will be then. No column an editor writes is touched.
 //
 //   node agents/claim-tagger-mvp/scripts/distill.mjs [--pull <pull-id>] [--plan-only] [--readings <run-id>] [--driver cli|fake] [--run-id <id>] [--rows <n>]
 //
@@ -46,7 +48,7 @@
 // drafted one rule change from M of them", and ends "; K of your decisions have no note and wait in Needs your note" while some decision has none. Next, the first that applies: reject a recanted rule
 // change / Lessons waiting for the one drafted now / approve or reject one that is Proposed (status's words) / promote for one that is Approved / Needs your note / status.
 //
-// Run files: plan.jsonl, ledger.jsonl, report.md, run.json, calls.jsonl (one line per model call, purpose reading or distill), readings.jsonl ({ key, hash, edition, source: "model" | "verbatim",
+// Run files: plan.jsonl, ledger.jsonl, report.md, run.json, calls.jsonl (one line per model call, purpose reading or distill), readings.jsonl ({ key, hash, edition, source: "model",
 // reading, rule, note, no_note } per reading made or reused this run) and rejected/reading-batch-<n>-attempt-<k>.md (a reply the checks refused, as it came, with the problems).
 //
 // Exit codes: 0 ok (also when nothing qualifies, when some rows could not be read, and when a rule change was drafted from earlier readings although no row could be read this time),
@@ -57,8 +59,8 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
-import { groupOf, readingSettings, tableEntry } from './lib/config.mjs';
-import { READINGS, RULE_WHY, isFollowedUp, isReviewed, syncDecisions } from './lib/decisions.mjs';
+import { TD, groupOf, readingSettings, tableEntry } from './lib/config.mjs';
+import { READINGS, RULE_WHY, isDecided, isFollowedUp, keyParts, recordDecisions, rowDecision } from './lib/decisions.mjs';
 import { approveNext, cutText, listNames, plural, quoted, recantedNext, stampOf, viewLink } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
 import {
@@ -71,7 +73,7 @@ import { newPlan } from './lib/plan.mjs';
 import { resumeFor } from './lib/resume.mjs';
 import {
   READING_COLUMNS, agentCitedRule, batchesOf, buildReadingMessage, checkReadings, citedRule, claimReadingCell, classifyRows, clearedReadingCells, pointsAtRule, readingCells, readingOfRow, readingRecord,
-  recantedAmong, recantedPhrase, renderTag, reusableReading, verbatimReading, xmlAttr, xmlText,
+  recantedAmong, recantedPhrase, renderTag, reusableReading, xmlAttr, xmlText,
 } from './lib/readings.mjs';
 import { oneLineRule, ruleNumberOf } from './lib/rulebook-edit.mjs';
 import { validate } from './lib/validate.mjs';
@@ -91,7 +93,7 @@ const TITLE_MAX = 60;
 const REJECTED_MAX_CHARS = 20000;
 
 const text = (v) => (typeof v === 'string' ? v : v === null || v === undefined ? '' : String(v));
-const outcomeOf = (row) => row['Tag outcome'];
+const outcomeOf = (row) => rowDecision(row).outcome;
 const sameCell = (a, b) => text(a).replace(/\s+/g, ' ').trim() === text(b).replace(/\s+/g, ' ').trim();
 
 // ---- the groups ---------------------------------------------------------------------------------------------------------------------
@@ -100,12 +102,12 @@ const sameCell = (a, b) => text(a).replace(/\s+/g, ' ').trim() === text(b).repla
 function rowOf(r, rubric) {
   const tag = rubric.tags.find((t) => t.name === r.Tag);
   const valid = (n) => n !== null && Boolean(tag?.rules.some((x) => x.n === n));
-  const fromReading = ruleNumberOf(r.Rule);
+  const fromReading = ruleNumberOf(r[TD.rule]);
   const fromAgent = agentCitedRule(r);
   return {
-    key: r.Key, page_id: r.page_id, tag: r.Tag, claim: text(r.Claim), outcome: outcomeOf(r), reading: READINGS.includes(r['Agent reading']) ? r['Agent reading'] : null,
-    readingNote: text(r['Reading note']).trim(), reasoning: text(r['Your reasoning']).trim(),
-    agentReason: text(r['Agent reason']).trim(), proposal: r['Agent proposal'] ?? null, confidence: r['Agent confidence'] ?? null, edited: text(r.last_edited),
+    key: r.Key, page_id: r.page_id, tag: r.Tag, claim: text(r[TD.claim]), outcome: outcomeOf(r), reading: READINGS.includes(r[TD.view]) ? r[TD.view] : null,
+    readingNote: text(r[TD.why]).trim(), reasoning: rowDecision(r).note ?? '',
+    agentReason: text(r[TD.reason]).trim(), proposal: r[TD.proposal] ?? null, confidence: r[TD.confidence] ?? null, edited: text(r.last_edited),
     n: valid(fromReading) ? fromReading : (valid(fromAgent) ? fromAgent : null), followedUp: isFollowedUp(r),
     // a reading whose note opens "without your note" is the agent's guess about an unexplained decision: it supports no draft and is no counter-evidence (decision 78)
     noNote: readingOfRow(r)?.noNote === true, points: pointsAtRule(r),
@@ -136,9 +138,9 @@ function chooseShown(rows, cap) {
  * The groups of decided rows to ask the model about. `queue` is the pull's Tag decisions rows (as they will be once the readings are written), `rubric` the rulebook in force, `openLessons` the
  * lessons with Status Proposed or Approved ({ Tag, Rule }). Returns { groups, counts, waiting } with counts { decided, ruleRows, ruleRowsFollowed, ruleRowsNotJudged, groupsTooSmall, groupsOpen }
  * and waiting, the groups left out because their rule already has an open lesson: [{ tag, n, rows }] with the number of decisions in each (the words of openRuleReason).
- * Only rows that point at a rule build groups (pointsAtRule: the Agent reading is Rule unclear or Rule should change, and the editor wrote a note): a row read Agent slip, a row not read and a
+ * Only rows that point at a rule build groups (pointsAtRule: the reading is Rule unclear or Rule should change, and the editor wrote a note): a row read Agent slip, a row not read and a
  * reading of a decision without a note (its Reading note opens "without your note", decision 78) build none. A decision without a note is no counter-evidence either; it still counts in `decided`.
- * A row whose Follow-up is Fixed is counted in ruleRows and ruleRowsFollowed and builds no group: a rule change that rests on it went live and the agent agrees. A row marked Still wrong
+ * A row whose After the rule change is Fixed is counted in ruleRows and ruleRowsFollowed and builds no group: a rule change that rests on it went live and the agent agrees. A row marked Still wrong
  * builds groups as before (the editor adds a note and distills again). A Fixed row still counts as a
  * decided row and may serve as counter-evidence, and so may a row read Agent slip.
  * A group: { tag, n (the rule number or null), rows (all), shown, counter, current (the rule's text or null) }.
@@ -357,14 +359,14 @@ function keepRejected(ctx, n, attempt, batch, reply, why) {
 }
 
 /**
- * Step 1: make the readings the classification calls for. Verbatim rows are read at once, rows whose hash a --readings run holds are taken from it, and the rest go to the model in
+ * Step 1: make the readings the classification calls for. Rows whose hash a --readings run holds are taken from it, and the rest go to the model in
  * batches. Returns { fresh: Map(key -> reading), items: Map(key -> item), unread: [items], kinds }. A usage window, repeated errors or another model end the run (the LoopExit of modelStop).
  */
 async function readTheDecisions(ctx, { classes, rubric, rs, cfg, attempts }) {
   const fresh = new Map();
   const items = new Map();
   const unread = [];
-  const kinds = { verbatim: 0, reused: 0, model: 0 };
+  const kinds = { verbatim: 0, reused: 0, model: 0 }; // verbatim stays 0 on v2 (no reason words, P45); the key keeps the shape of run.json
   const file = join(ctx.runDir, 'readings.jsonl');
   writeTextAtomic(file, ''); // always there, empty when nothing is read, so that --readings <this run> can follow any run
   const add = (item, reading, source) => {
@@ -372,10 +374,6 @@ async function readTheDecisions(ctx, { classes, rubric, rs, cfg, attempts }) {
     items.set(item.key, item);
     appendJsonl(file, readingRecord(item, reading, source));
   };
-  for (const item of classes.verbatim) {
-    add(item, verbatimReading(item), 'verbatim');
-    kinds.verbatim += 1;
-  }
   const earlier = ctx.opts.readings ? earlierReadings(ctx, ctx.opts.readings) : new Map();
   const pending = [];
   for (const item of classes.toRead) {
@@ -446,11 +444,11 @@ export async function distill(opts = {}) {
     if (!Number.isInteger(rowCap) || rowCap < 1) throw new LoopExit(EXIT.INVALID, `--rows needs a whole number from 1, got ${rowCap}`, { sentence: 'Distill: nothing was done, because --rows needs a whole number.', next: 'Next: ask the engineer to look at the message the script printed.' });
     const attempts = jc.judge.attempts_per_batch;
 
-    // step 1: the decisions are copied to the ledger rows, and the disagreements are read
+    // step 1: the decisions are recorded on the ledger rows (Decided under), and the disagreements are read
     const claims = ctx.pull.claims() ?? [];
     const claimsEntry = ctx.pull.covers('claims') ? tableEntry(ctx.config, 'claims') : null;
     const readingColumn = claimsEntry?.write_columns?.reading ?? null;
-    const { changes: copies, rows: queue } = syncDecisions(claims, ctx.pull.queue() ?? [], { tagNames: rubric.tags.map((t) => t.name) });
+    const { changes: copies, rows: queue } = recordDecisions(ctx.pull.queue() ?? []);
     const classes = classifyRows({ claims, ledgerRows: queue, rubric, config: ctx.config });
     const made = await readTheDecisions(ctx, { classes, rubric, rs, cfg, attempts });
     const toReadN = classes.verbatim.length + classes.toRead.length;
@@ -462,7 +460,7 @@ export async function distill(opts = {}) {
     if (classes.unjudged.length) ctx.record.unjudged = classes.unjudged.map((u) => ({ claim: u.claim.geo_id, tag: u.tag }));
     if (classes.orphans.length) ctx.record.not_read_tag_not_judged = classes.orphans.map((i) => i.key);
 
-    // the ledger rows as the plan will leave them: the copies of the decisions, the fresh readings, and no reading on a row that stopped being a disagreement
+    // the ledger rows as the plan will leave them: the records of the decisions, the fresh readings, and no reading on a row that stopped being a disagreement
     const ledgerOps = new Map(copies.map((c) => [c.key, { page_id: c.page_id, changes: { ...c.changes } }]));
     const setCells = (row, cells) => {
       const diff = {};
@@ -478,7 +476,7 @@ export async function distill(opts = {}) {
     }
     for (const item of classes.agree) if (READING_COLUMNS.some((c) => text(item.row[c]).trim() !== '')) setCells(item.row, clearedReadingCells());
 
-    // the claims' Agent reading: one cell per Reviewed claim whose disagreements all have a reading after this run
+    // the claims' Agent's view of your decision: one cell per claim with a decided row, when its disagreements all have a reading after this run
     const claimOps = [];
     if (readingColumn) {
       const itemsOf = new Map();
@@ -487,21 +485,22 @@ export async function distill(opts = {}) {
       }
       const unjudgedOf = new Map();
       for (const u of classes.unjudged) unjudgedOf.set(u.claim.geo_id, [...(unjudgedOf.get(u.claim.geo_id) ?? []), u]);
+      const decidedClaims = new Set(queue.filter((r) => isDecided(r)).map((r) => keyParts(r.Key)?.geo_id));
       for (const claim of claims) {
-        if (!isReviewed(claim)) continue;
+        if (!decidedClaims.has(claim.geo_id)) continue;
         const cell = claimReadingCell({ claim, items: itemsOf.get(claim.geo_id) ?? [], readings: made.fresh, unjudged: unjudgedOf.get(claim.geo_id) ?? [] });
         if (cell !== null && !sameCell(claim.agent_reading, cell)) claimOps.push({ geo_id: claim.geo_id, page_id: claim.page_id, cell });
       }
     }
 
     // step 2: the lessons, from the rows as the plan leaves them (a row whose batch could not be read has no usable reading this run)
-    const groupQueue = queue.map((r) => (unreadKeys.has(r.Key) ? { ...r, 'Agent reading': null, Rule: null, 'Reading note': null } : r));
+    const groupQueue = queue.map((r) => (unreadKeys.has(r.Key) ? { ...r, [TD.view]: null, [TD.rule]: null, [TD.why]: null } : r));
     const lessons = ctx.pull.lessons() ?? [];
     const openLessons = lessons.filter((l) => l.Status === 'Proposed' || l.Status === 'Approved');
     const { groups, counts, waiting } = buildGroups({ queue: groupQueue, rubric, config: ctx.config, minClaims: cfg.min_claims, rowCap, openLessons });
     ctx.record.groups = groups.map((g) => ({ tag: g.tag, rule: g.n, rows: g.rows.length, shown: g.shown.map((r) => r.key), counter: g.counter.map((r) => r.key) }));
 
-    // a rule change that is Proposed or Approved and rests on a decision whose reading no longer points at a rule (re-read as Agent slip after a reason word or a changed note, or no longer a
+    // a rule change that is Proposed or Approved and rests on a decision whose reading no longer points at a rule (re-read as Agent slip after a changed note, or no longer a
     // disagreement) is recanted (decision 79): nothing new is drafted for its tag and rule while it is open (the groups above skip it), and the report asks the editor to reject it. The rows are
     // the ones the plan leaves; a row whose batch could not be read this time says nothing either way.
     const withKeys = [];
@@ -597,9 +596,9 @@ export async function distill(opts = {}) {
       slips: [...made.fresh.values()].filter((r) => r.reading === 'Agent slip').length,
       noNote: [...made.fresh.keys()].filter(noNoteKey).length,
     };
-    // the decisions of Reviewed claims that still have no note after this run (read or not): K, and the claims they belong to for the Next line
+    // the decisions that still have no note after this run (read or not): K, and the rows for the Next line
     const differing = [...classes.verbatim, ...classes.toRead, ...classes.current].filter((i) => i.reasonWord === null && text(i.noteLine).trim() === '');
-    const needNote = new Set(differing.map((i) => i.claim.geo_id)).size;
+    const needNote = differing.length;
     const noNoteDecisions = differing.length;
     const noNoteRuleRows = groupQueue.filter((r) => r.decided && r.Key && r.Tag).filter((r) => {
       const x = readingOfRow(r);
@@ -699,7 +698,7 @@ export async function distill(opts = {}) {
 }
 
 const ruleChangeCell = (kept) => (kept.length === 0 ? 'none' : kept.length === 1 ? `${quoted(kept[0].title)}, ${kept[0].rule}` : `${kept.length} drafted`);
-const needNoteNext = (n, link) => `Next: add a note on ${plural(n, 'claim')} in Needs your note (${link}), then type /claim-tagger distill again.`;
+const needNoteNext = (n, link) => `Next: add a note on ${plural(n, 'row')} in Needs your note (${link}), then type /claim-tagger distill again.`;
 
 // ---- the command line -----------------------------------------------------------------------------------------------------------------
 
