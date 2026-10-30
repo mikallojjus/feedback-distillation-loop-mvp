@@ -45,3 +45,4 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 ## Log (newest last; one line per event, with the commit)
 
 - 30 Oct, night: started. Tag claim-tagger-v1 = 3406cec.
+- Step 2 committed (24c0057). Steps 3 and 4 launched in parallel: an Opus agent writes PORT-V2.md (read-only), a Sonnet agent writes copy-live.mjs + lib/first-page.mjs + setup/first-page.json + tests (no Notion). If a compaction lost them: check whether PORT-V2.md and scripts/copy-live.mjs exist and are complete before relaunching.
