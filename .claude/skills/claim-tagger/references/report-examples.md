@@ -1,8 +1,8 @@
 # Report examples for the claim tagger skills
 
-Each example is the whole report as the scripts print it today (the shape after the reading round of 22 October, where the editor fills Verified tags, Challenged tags notes and Review status, and the agent reads each decision itself and writes eight columns of its own); the skills relay it verbatim. When a report's Next line sends the editor to Notion, the skill adds the matching checklist of `guide.md` under it, after one blank line; one example below shows that (the demo tag report). The other examples leave the checklist out to stay short, but the rule is the same for each of them. The shape was agreed in the design review (`docs/analysis-2026-10/debate/inputs/report-examples.md`).
+Each example is the whole report as the scripts print it on the page "Claim tagger v2" (one row per claim and tag on Tag decisions, where the editor ticks Agent is right or sets Tag outcome and may write Your note, and the agent reads each decision itself and writes its view in Agent's view of your decision, with the Rule and Why the agent thinks so); the skills relay it verbatim. When a report's Next line sends the editor to Notion, the skill adds the matching checklist of `guide.md` under it, after one blank line; one example below shows that (the tag report). The other examples leave the checklist out to stay short, but the rule is the same for each of them. The shape was agreed in the design review (`docs/analysis-2026-10/debate/inputs/report-examples.md`).
 
-On a practice page the first sentence names the page: a status report starts "Status of the practice page <title>:", and the other reports end their first sentence with "(practice page <title>)". The commands are the demo ones (`/claim-tagger demo promote`).
+The practice pages are parked (P48): their reports, which start "Demo · ", are in the version tagged claim-tagger-v1.
 
 ## Examples
 
@@ -21,75 +21,25 @@ Status: nothing is paused; 46 rows and 1 rule change wait for you, more than fit
 
 Next: start at the top of Your queue (link).
 
-### status (demo, step 1)
+### status (nothing left to decide, decisions to read)
 
-Nothing waits yet: Your queue lists a claim only once the agent has read it. The five earlier decisions already carry a reading, put there when the page was made, so there is nothing to read and no Your decisions row.
+The editor has decided every row in Your queue. A row leaves Your queue as soon as it has a Tag outcome, or a tick on a row whose proposal is not Can't tell, so the row Your queue counts only what the view lists and says "nothing waits"; the rows still read Waits for you in Agent status until the next tag run, but the view does not show them. Nothing is left to decide, and the agent has not read the decisions yet, so the sentence says what the agent has to do (it does not say that nothing waits for you), and a Your decisions row counts the decided rows, in up to three parts that are left out while they are zero: the decisions still to read ("3 to read"), the decisions that point at a rule, once read and with a note ("2 point at a rule"), and the decisions without a note ("1 without a note"). When only decisions without a note are left, the sentence reads "...; 1 of your decisions has no note." The reading is made by distill, so the Next line is the distill step, which reads the decisions and turns the ones that blame the rule into a draft rule. After a promote nothing is to read (the key of a reading holds the edition the proposal was made under), so the status after it has no Your decisions row.
 
-Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused and nothing waits for you.
-
-| Where | Now |
-|---|---|
-| Rulebook | 1 tag, edition 2026-10-15.1 |
-| Your queue | nothing waits |
-| Lessons waiting | none |
-| Last run | none yet |
-
-Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).
-
-### status (demo, after the tag step)
-
-All four claims of the editor are To review, so after the tag step all four wait in Your queue.
-
-Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; 4 rows wait for you.
+Status: nothing is paused; the agent has 3 of your decisions to read.
 
 | Where | Now |
 |---|---|
-| Rulebook | 1 tag, edition 2026-10-15.1 |
-| Your queue | 4 rows, lowest confidence first |
-| Lessons waiting | none |
-| Last run | Tag · 15 Oct 10:50 · 9 claims |
-
-Next: decide your four claims in Your queue (link).
-
-### status (demo, midway: all four claims decided)
-
-The editor has decided all four claims. A claim leaves Your queue as soon as its Review status is Reviewed, so the row Your queue counts only what the view lists and says "nothing waits"; the claims still read Waits for you in Agent status until the next tag run, but the view does not show them. Nothing is left to decide, and the agent has not read the decisions yet, so the sentence says what the agent has to do (it does not say that nothing waits for you), and a Your decisions row counts the decisions, in up to three parts that are left out while they are zero: the decisions still to read ("3 to read"), the decisions that point at a rule, once read and with a note ("2 point at a rule"), and the decisions without a note ("1 without a note"); here the USPS claim was decided without a note. When only decisions without a note are left, the sentence reads "...; 1 of your decisions has no note." The reading is made by distill, so the Next line is the distill step, which reads the decisions and turns the ones that blame the rule into a draft rule. After the follow-up of step 7 has marked the rows the draft rests on Fixed, those claims no longer ask for distill. After a promote nothing is to read (the key of a reading holds the edition the proposal was made under), so the status of step 7 has no Your decisions row.
-
-Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; the agent has 3 of your decisions to read.
-
-| Where | Now |
-|---|---|
-| Rulebook | 1 tag, edition 2026-10-15.1 |
+| Rulebook | 13 tags, edition 2026-10-30.1 |
 | Your queue | nothing waits |
 | Your decisions | 3 to read, 1 without a note |
 | Lessons waiting | none |
-| Last run | Tag · 15 Oct 10:50 · 9 claims |
+| Last run | Tag · 30 Oct 10:50 · 600 claims |
 
-Next: type /claim-tagger demo distill to draft a rule change from your decisions.
+Next: type /claim-tagger distill to draft a rule change from your decisions.
 
-### tag (demo), the report followed by its checklist
+### tag (the first run: Context-dependent only), the report followed by its checklist
 
-All four claims of the editor are To review, so no tag is written on them and all four wait; the other five are Reviewed and keep the editor's tags. The Next line sends the editor to Notion, so the checklist "Decide in Your queue" (Demo form, from `guide.md`) follows the report, after one blank line, and nothing follows it. The sentence, the table and the Next line are the report; the numbered list under it is the checklist.
-
-Demo · Tag: the agent read 9 claims for Context-dependent; 4 wait for you (practice page Claim tagger demo · 15 Oct 10:42).
-
-| What | Result |
-|---|---|
-| Claims read | 9 |
-| Carrying Context-dependent | 2 claims (earlier decisions included) |
-| New rows in Your queue | 4, lowest confidence first |
-
-Next: decide your four claims in Your queue (link).
-
-1. Open Your queue (the link in the Next line): your four claims wait there.
-2. On each of your four claims fill in, in this order: Verified tags, Challenged tags notes, Review status; step 3 of the practice page gives the values.
-3. Paste the words between the quotes that the page gives for Challenged tags notes (the Georgia claim's note stays empty: an empty note is a decision too), and set Review status to Reviewed last.
-4. A claim leaves Your queue as soon as you set Review status to Reviewed.
-5. When all four claims are Reviewed, type /claim-tagger demo distill.
-
-### tag (Claims, the first run: Context-dependent only)
-
-The real training table, Claims, holds 200 Geo claims; the decided audit claims among them keep the editor's tags.
+The agent read every claim of Claims for the one tag that has rules; the rows decided earlier count as the editor decided them. The Next line sends the editor to Notion, so the checklist "Decide in Your queue" (from `guide.md`) follows the report, after one blank line, and nothing follows it. The sentence, the table and the Next line are the report; the numbered list under it is the checklist. When a later run answers otherwise than a decided row, the table adds a row "Agent disagreed" with the count; claims the judge could not read this time are counted in "Not read yet".
 
 Tag: the agent read 200 claims for Context-dependent; 9 wait for you.
 
@@ -99,28 +49,34 @@ Tag: the agent read 200 claims for Context-dependent; 9 wait for you.
 | Carrying Context-dependent | 31 claims (earlier decisions included) |
 | New rows in Your queue | 9, lowest confidence first |
 
-Next: decide your nine claims in Your queue (link).
+Next: decide your nine rows in Your queue (link).
 
-### status (demo, a rule change that rests on a decision the editor now calls the agent's slip)
+1. Open Your queue (the link in the Next line): the rows, a claim and one tag, that wait for you; a claim's rows stand together.
+2. Read Agent proposal and Agent reason. Open claim opens the claim, with its sources and its Geo link.
+3. Agree with the agent? Tick Agent is right. Disagree, or it says Can't tell? Set Tag outcome. The row then leaves Your queue.
+4. Your note is optional. When you overrule the agent, say why in your own words: without a note the agent drafts no rule change. You need not name a rule or a reason.
+5. When your rows are decided, type /claim-tagger distill.
 
-The editor opened the note of a decision the draft rests on with "Agent slip." after the draft was made. The draft's text was written with that decision in mind, so the row of Lessons waiting says to reject it, and the Next line comes before "approve or reject". Only the editor sets Rejected; the agent never withdraws a draft.
+### status (a rule change that rests on a decision the agent now reads as its own slip)
 
-Demo · Status of the practice page Claim tagger demo · 15 Oct 10:42: nothing is paused; 1 rule change waits for you.
+The editor changed the note of a decision the draft rests on after the draft was made, and the agent now reads that decision as its own slip. The draft's text was written with that decision in mind, so the row of Lessons waiting says to reject it, and the Next line comes before "approve or reject". Only the editor sets Rejected; the agent never withdraws a draft.
+
+Status: nothing is paused; 1 rule change waits for you.
 
 | Where | Now |
 |---|---|
-| Rulebook | 1 tag, edition 2026-10-15.1 |
+| Rulebook | 13 tags, edition 2026-10-30.1 |
 | Your queue | nothing waits |
-| Lessons waiting | 1 rule change to reject (rests on a decision you now call a slip) |
-| Last run | Distill · 15 Oct 11:02 · 1 rule change |
+| Lessons waiting | 1 rule change to reject (rests on a decision the agent now reads as a slip) |
+| Last run | Distill · 30 Oct 11:02 · 1 rule change |
 
-Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger demo distill again.
+Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger distill again.
 
-### distill (demo)
+### distill
 
-The agent read three decisions (the press pool and the AI Force claim through its model, the USPS claim from the reason word in the editor's note), found nothing to read on the Georgia claim, and drafted one rule change from the two decisions that blame the rule. The sentence counts decisions, not notes.
+The agent read three decisions through its model and drafted one rule change from the two that blame the rule. The sentence counts decisions, not notes. Every decision is read by the model: a note that names a reason ("Agent slip") is evidence of what the editor saw, never taken as it stands (P45).
 
-Demo · Distill: read 3 of your decisions and drafted one rule change from 2 of them (practice page Claim tagger demo · 15 Oct 10:42).
+Distill: read 3 of your decisions and drafted one rule change from 2 of them.
 
 | What | Result |
 |---|---|
@@ -132,11 +88,11 @@ Demo · Distill: read 3 of your decisions and drafted one rule change from 2 of 
 
 Next: read it in Lessons waiting (link), where the current and the proposed text sit side by side, and approve it or write your own wording.
 
-### distill (demo), a decision without a note
+### distill, a decision without a note
 
-A decision that differs from the agent's tag and has no note is read all the same, carefully and from the claim and the rule alone, and flagged "without your note" on the claim. The agent's reading of a decision nobody explained is a guess, so it never goes into a draft: it is counted under Without a note, listed in Needs your note, and the sentence says how many decisions wait for a note. Here a rule change was drafted from the two decisions that have a note, so the Next line opens Lessons waiting.
+A decision that differs from the agent's proposal and has no note is read all the same, carefully and from the claim and the rule alone, and Why the agent thinks so opens with "without your note" on its row. The agent's reading of a decision nobody explained is a guess, so it never goes into a draft: it is counted under Without a note, listed in Needs your note, and the sentence says how many decisions wait for a note. Here a rule change was drafted from the two decisions that have a note, so the Next line opens Lessons waiting.
 
-Demo · Distill: read 3 of your decisions and drafted one rule change from 2 of them; 1 of your decisions has no note and waits in Needs your note (practice page Claim tagger demo · 15 Oct 10:42).
+Distill: read 3 of your decisions and drafted one rule change from 2 of them; 1 of your decisions has no note and waits in Needs your note.
 
 | What | Result |
 |---|---|
@@ -148,11 +104,11 @@ Demo · Distill: read 3 of your decisions and drafted one rule change from 2 of 
 
 Next: read it in Lessons waiting (link), where the current and the proposed text sit side by side, and approve it or write your own wording.
 
-### distill (demo), no rule change while a decision has no note
+### distill, no rule change while a decision has no note
 
 When no rule change is drafted and none waits, the Next line sends the editor to Needs your note. Once the note is there the row is read again and may support a draft.
 
-Demo · Distill: read 1 of your decisions; no rule change to draft; 6 decided rows name no rule problem; 1 of your decisions has no note and waits in Needs your note (practice page Claim tagger demo · 15 Oct 10:42).
+Distill: read 1 of your decisions; no rule change to draft; 6 decided rows name no rule problem; 1 of your decisions has no note and waits in Needs your note.
 
 | What | Result |
 |---|---|
@@ -162,13 +118,13 @@ Demo · Distill: read 1 of your decisions; no rule change to draft; 6 decided ro
 | Without a note | 1 decision |
 | Rule change | none |
 
-Next: add a note on 1 claim in Needs your note (link), then type /claim-tagger demo distill again.
+Next: add a note on 1 row in Needs your note (link), then type /claim-tagger distill again.
 
-### distill (demo), a rule change that rests on a decision the editor now calls the agent's slip
+### distill, a rule change that rests on a decision the agent now reads as its own slip
 
-The editor opened a note with "Agent slip." after the draft was made. The agent takes the word at once and asks nothing, but the draft's text was written with that decision in mind, so the sentence says so and the Next line asks the editor to reject the draft before anything else. Nothing new is drafted for that rule while the old draft is open; after the rejection, typing distill again drafts from the decisions that remain.
+The editor changed the note of a decision after the draft was made, and the agent now reads it as its own slip. The draft's text was written with that decision in mind, so the sentence says so and the Next line asks the editor to reject the draft before anything else. Nothing new is drafted for that rule while the old draft is open; after the rejection, typing distill again drafts from the decisions that remain.
 
-Demo · Distill: read 1 of your decisions; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you; the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent's slip (practice page Claim tagger demo · 15 Oct 10:42).
+Distill: read 1 of your decisions; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you; the rule change "Known groups count as identified, unknown names do not" rests on a decision the agent now reads as its own slip.
 
 | What | Result |
 |---|---|
@@ -178,35 +134,37 @@ Demo · Distill: read 1 of your decisions; no rule change to draft; the 2 decisi
 | Without a note | none |
 | Rule change | none |
 
-Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger demo distill again.
+Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger distill again.
 
-### distill (demo), nothing new to read
+### distill, nothing new to read
 
 When a rule change already waits, the Next line is the one status gives: approve or reject it (or, for an approved one, type the promote command).
 
-Demo · Distill: nothing new to read; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you (practice page Claim tagger demo · 15 Oct 10:42).
+Distill: nothing new to read; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you.
 
 Next: approve or reject the rule change in Lessons waiting (link).
 
-### distill (demo), nothing new to read and nothing waiting
+### distill, nothing new to read and nothing waiting
 
-Demo · Distill: nothing new to read; no rule change to draft; 6 decided rows name no rule problem (practice page Claim tagger demo · 15 Oct 10:42).
+Distill: nothing new to read; no rule change to draft; 6 decided rows name no rule problem.
 
-Next: type /claim-tagger demo status to see what is open.
+Next: type /claim-tagger status to see what is open.
 
-### promote, when it passes (demo)
+### promote, when it passes
 
-Demo · Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-15.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger demo · 15 Oct 10:42).
+The follow-up runs by itself after a PASS: it checks the rows the change rests on once more and writes Fixed or Still wrong in their After the rule change column. "Your 2 rows" counts those rows.
+
+Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-28.2), and the follow-up marked both of your rows Fixed.
 
 | Check | Result |
 |---|---|
 | Example claims | 10 of 10 right |
-| Earlier decisions | 6 of 6 still right |
+| Earlier decisions | 5 of 5 still right |
 | Your 2 rows | 2 of 2 now right, marked Fixed |
 
-Next: look at step 7 on the practice page (link); the demo is then complete.
+Next: nothing waits; type /claim-tagger status to see what is open.
 
-### promote, when it passes with an example that was wrong before (Claims)
+### promote, when it passes with an example that was wrong before
 
 The safety check counts example claims the way it counts earlier decisions: the ones the rulebook in force gets right, and a change fails only by turning one of those wrong. So "Example claims" reads like "Earlier decisions". An example that is wrong under both rulebooks is shown in its own row, "Wrong before the change", and not counted; the row is in the table of a FAIL too. The result written in Rule changes then reads "PASS: examples 10/10 (1 more wrong before, not counted), earlier 5/5, yours 2/2", and with no such example it reads as it always did. An old miss that the change puts right is not in the row; the engineer's card lists it as fixed by the change. An example or an earlier decision that comes out wrong under both rulebooks is read again on both sides before it is called an old miss, so one unlucky read cannot hide a real break. The engineer may recalibrate the example in the examples file; the editor needs to do nothing.
 
@@ -221,17 +179,9 @@ Promote: PASS, rule 3 now uses your approved wording (edition 2026-10-28.2), and
 
 Next: nothing waits; type /claim-tagger status to see what is open.
 
-### promote, held because a decision was recanted (demo)
+### promote, when it does not pass
 
-The editor approved a draft that rests on a decision they have since called the agent's slip. Promote holds before the safety check and writes nothing; the rule change stays Approved until the editor rejects it.
-
-Demo · Promote: held: the rule change "Known groups count as identified, unknown names do not" rests on a decision you now call the agent's slip, so the safety check did not run (practice page Claim tagger demo · 15 Oct 10:42).
-
-Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger demo distill again.
-
-### promote, when it does not pass (Claims)
-
-Editor wording is the whole rule, so a FAIL report has a fourth part between the table and the Next line, the suggestion: one sentence written from the claim that came out wrong, the reason for it (the Why line), and the rule as it was tested with the sentence added, one sentence per line, in a block to copy. The sentence of the report says which answer the claim came out with and which one is right. The claim can be an example claim that was right under the rule in force (an example that is wrong under both rulebooks is shown in its own row and never named here), an earlier decision or one of the editor's own claims. The block holds only the rule, so what is pasted into Editor wording is what was tested and the sentence; the editor may also write the whole rule as wanted. The suggested sentence uses the rule's own words and does not repeat what the rule already says, and the Why line has two halves: what the claim needs to get its answer, and what in the tested wording let it go the other way. When no sentence could be written the report has its three parts and the Next line asks for the whole rule.
+Editor wording is the whole rule, so a FAIL report has a fourth part between the table and the Next line, the suggestion: one sentence written from the claim that came out wrong, the reason for it (the Why line), and the rule as it was tested with the sentence added, one sentence per line, in a block to copy. The sentence of the report says which answer the claim came out with and which one is right. The claim can be an example claim that was right under the rule in force (an example that is wrong under both rulebooks is shown in its own row and never named here), an earlier decision or one of the rows the change rests on. The block holds only the rule, so what is pasted into Editor wording is what was tested and the sentence; the editor may also write the whole rule as wanted. The suggested sentence uses the rule's own words and does not repeat what the rule already says, and the Why line has two halves: what the claim needs to get its answer, and what in the tested wording let it go the other way. When no sentence could be written the report has its three parts and the Next line asks for the whole rule.
 
 Promote: FAIL, rule 3 is unchanged: the new wording turns "The infrastructure plan won approval from the council." to Does not apply; the right answer is Applies.
 
@@ -257,60 +207,43 @@ A plan named only by its subject, such as 'the infrastructure plan', fits more t
 
 Next: in Lessons waiting (link), paste the block above into Editor wording in place of what is there, or write all of rule 3 as you want it; then type /claim-tagger promote again.
 
-### promote, when it does not pass (demo)
+### promote, held because a decision now reads as the agent's slip
 
-The same shape on a practice page: the command is the demo one and the first sentence names the page. Here the claim is an earlier decision that the new wording broke. Double quotes in the sentence and the Why line are printed as single ones; the rule in the block keeps its own, so the practice rule's double quotes stay.
+The editor approved a draft that rests on a decision the agent has since read as its own slip (the editor changed the note after the draft was made). Promote holds before the safety check and writes nothing; the rule change stays Approved until the editor rejects it.
 
-Demo · Promote: FAIL, rule 3 is unchanged: the new wording turns "The Dallas convention is the unofficial launch of JD Vanc..." to Does not apply; the right answer is Applies (practice page Claim tagger demo · 15 Oct 10:42).
+Promote: held: the rule change "Known groups count as identified, unknown names do not" rests on a decision the agent now reads as its own slip, so the safety check did not run.
 
-| Check | Result |
-|---|---|
-| Example claims | 10 of 10 right |
-| Earlier decisions | 5 of 6 still right |
-| Your 2 rows | 2 of 2 now right |
+Next: reject the rule change "Known groups count as identified, unknown names do not" in Lessons waiting (link), then type /claim-tagger distill again.
 
-Suggested sentence for rule 3:
-> A one-off event named only by its place or kind, such as a convention, still makes the claim Context-dependent.
+### follow-up, repeated by hand (only after a promote that stopped before its last step)
 
-Why: The claim names a convention only by its city, so readers cannot tell which one is meant. The new wording lets a group readers know count as identified, and the convention was read as one.
+The table names each row the rule change rests on by its claim, and what the follow-up wrote in its After the rule change column. When a row is still wrong the sentence says how many, and the Next line is "say why in Your note on the rows in Agent disagreed (link)", which takes the checklist "Agent disagreed".
 
-Rule 3 with the sentence, to copy into Editor wording:
-```
-A descriptive definite that names a kind of thing but not which one ("the Bitcoin ETF", "the major-bank stablecoin consortium", "the open-access version", "the infrastructure", "the new model") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant.
-Applies to countable things, not to abstract or mass nouns ("the regulatory clearance", "the market").
-A group readers know by its standing role, such as a press corps, counts as identified; a capitalised phrase that names no body readers know does not.
-A one-off event named only by its place or kind, such as a convention, still makes the claim Context-dependent.
-```
+Follow-up, repeated by hand: the agent now agrees with both of your decisions.
 
-Next: in Lessons waiting (link), paste the block above into Editor wording in place of what is there, or write all of rule 3 as you want it; then type /claim-tagger demo promote again.
-
-### follow-up, repeated by hand (demo, only after a promote that stopped before its last step)
-
-Demo · Follow-up, repeated by hand: the agent now agrees with both of your decisions (practice page Claim tagger demo · 15 Oct 10:42).
-
-| Your row | Follow-up |
+| Your row | After the rule change |
 |---|---|
 | "The press pool was justified in suspendi..." | Fixed |
 | "The AI Force should enforce binding s..." | Fixed |
 
-Next: nothing; the demo is complete.
+Next: type /claim-tagger status to see what is open.
 
-### decide (Claims)
+### decide
 
-The editor and Claude went through six claims in a conversation: Claude showed a draft, the editor changed it, and Claude wrote the three Claims columns through the connector only after the editor said to write. `decide.mjs check` then read every claim back, so this is the report of `check`; the draft, and what `list` and `open` print, are for the conversation and are not part of the report. The rows count the decisions: the ones that equal the agent's proposal, and the ones that differ, with how many of those carry a note. A note, as the code counts it, is a reason word (Agent slip, Rule unclear or Rule should change) or the editor's own words for each tag that differs; a decision with neither has no note, and distill drafts nothing from it. The row "Changed an earlier review" comes only when some of the claims were Reviewed before the run and the decision changes their tags or their note (a Reviewed claim may be decided again), and counts them; the table has five rows at most (Decided, Same as the agent, Different from the agent, Not read by the agent yet and Changed an earlier review). A decision may change only the tags or only the note, and the read-back compares only what was written. The Next line only names a command, so no checklist follows. On a practice page the report starts "Demo · " and the command is `/claim-tagger demo distill`. When a claim does not read back, the sentence says how many did not ("were not written" when none of them was written at all), the table names each claim and the column that differs ("not written" for a claim that still holds what it held before, "not found" for one that is gone), and the Next line asks for `/claim-tagger decide` again with those claims (with "; ... is no longer in the Claims table" added for a claim that is gone, and the editor sent to All claims only when every claim that differs is gone). When Notion could not be read, the sentence says that the decisions were sent but could not be read back, and the Next line is `/claim-tagger decide check`.
+The editor and Claude went through six rows in a conversation: Claude showed a draft, the editor changed it, and Claude wrote the three Tag decisions columns (Agent is right, Tag outcome, Your note) through the connector only after the editor said to write. `decide.mjs check` then read every row back, so this is the report of `check`; the draft, and what `list` and `open` print, are for the conversation and are not part of the report. The rows count the decisions: the ones that equal the agent's proposal (a tick always does), and the ones that differ, with how many of those carry a note. A note is the editor's own words on the row; a decision that differs and has none has no note, and distill drafts nothing from it. The row "Not compared with the agent" comes only when a decision gave only a note on a row that holds no decision, or the row has no proposal, and counts them. The row "Changed an earlier decision" comes only when some of the rows were decided before the run and the decision changes their outcome or their note (a decided row may be decided again), and counts them; the table has five rows at most (Decided, Same as the agent, Different from the agent, Not compared with the agent and Changed an earlier decision). A decision may give only the tick, only Tag outcome, only the note, or Tag outcome and the note, and the read-back compares only what was written. The Next line only names a command, so no checklist follows. When a row does not read back, the sentence says how many did not ("were not written" when none of them was written at all), the table names each row by its Key and the column that differs ("not written" for a row that still holds what it held before, "not found" for one that is gone), and the Next line asks for `/claim-tagger decide` again with those rows (with "; ... is no longer in the Tag decisions table" added for a row that is gone, and the editor sent to Tag decisions only when every row that differs is gone). When Notion could not be read, the sentence says that the decisions were sent but could not be read back, and the Next line is `/claim-tagger decide check`.
 
-Decide: 6 claims decided and read back; 2 differ from the agent.
+Decide: 6 rows decided and read back; 2 differ from the agent.
 
 | What | Result |
 |---|---|
 | Decided | 6 |
 | Same as the agent | 4 |
 | Different from the agent | 2, both with a note |
-| Changed an earlier review | 1 |
+| Changed an earlier decision | 1 |
 
 Next: type /claim-tagger distill to read the decisions.
 
-### add (Claims), all claims added
+### add, all claims added
 
 The editor gave three Geo links. The script read the claims from Geo, created three new rows in Claims with the Geo columns only (name, address, space, date, sources, whether Geo marks it factual, Geo's tags and topics) and read every row back, then looked once more that none of them is in Claims twice. Nothing is marked and nothing is tagged: the Next line sends the editor to the tag command and says where the new claims are (the table's own address, where All claims is the first view). The sentence names at most three of the claims (cut like the other reports); with one claim added the Next line says "the new claim" and "it is in All claims". Over three, the sentence ends the list with "and more". The Next line only names a command, so no checklist follows.
 
@@ -322,7 +255,7 @@ Add: 3 claims added to Claims from Geo ("The mayor said the budget grew by half.
 
 Next: type /claim-tagger tag to read the 3 new claims; they are in All claims (link).
 
-### add (Claims), some claims refused
+### add, some claims refused
 
 Seven items: one claim was added and six were not. The table has a row for each kind of reason that is present, in this order: Added (the count), Already in Claims, Not found in Geo, Not a claim, Not in the six spaces of Claims, Same text as a claim in Claims, Not a Geo link or ID, No name in Geo, A source links to a protected Notion page. Every row but Added names its items, at most three and then "and n more": the claim's text when Geo or Claims has it, else "link ending" (when the editor gave a link) or "ID ending" (when the editor gave the ID) and the last eight characters of its Geo ID. An item that is not a link or ID is echoed as it was typed, cut at 40 characters, only when it is harmless text (no brace, bracket, angle bracket or quote mark, no folder or script name, drive path or run id); otherwise it is named "an item that is not a link". The same-text row names the claim that is there already (or, for a claim earlier in the same list, says "earlier in your list"). With more than five kinds the table would be too long: the first four kinds present in the fixed order Added, Already in Claims, Same text as a claim in Claims, Not found in Geo, Not a claim, Not in the six spaces of Claims, Not a Geo link or ID, No name in Geo, A source links to a protected Notion page keep their row (in the order above), and the rest are one row, "Other reasons", which names its kinds (here the item that is not a claim, the one in a space Claims does not use and the one that is not a Geo link or ID). The Geo IDs, the reason for each item, the existing claims and the page ids are in the run record, not in the report.
 
@@ -338,9 +271,9 @@ Add: 1 claim added to Claims from Geo ("The new tax will cost families about..."
 
 Next: type /claim-tagger tag to read the new claim; it is in All claims (link).
 
-### add (Claims), nothing added
+### add, nothing added
 
-Nothing was written, and the run ends with exit 2. When every claim was in Claims already, the sentence names them (up to three) and the Next line depends on the claims: when one of them has no Agent status and is not Reviewed (the agent has not read it), it is "type /claim-tagger tag to read them." (here the Agent status of both is empty); when the agent has read or the editor has decided all of them, it says there is nothing new to read and where they are.
+Nothing was written, and the run ends with exit 2. When every claim was in Claims already, the sentence names them (up to three) and the Next line depends on the claims: when one of them has no Agent status (the agent has not read it), it is "type /claim-tagger tag to read them." (here the Agent status of both is empty); when the agent has read all of them, it says there is nothing new to read and where they are.
 
 Add: nothing was added; both claims are already in Claims ("The senator voted against it twice." and "Rents rose.").
 
@@ -370,13 +303,13 @@ Add: nothing was added to Claims: 1 not found in Geo, 1 not a claim and 1 not a 
 
 Next: check the links and type /claim-tagger add again.
 
-### add (Claims), from a selection file
+### add, from a selection file
 
 `/claim-tagger import` ends with `add.mjs --claims-file <selection file>` (decision P38). One command takes any number of claims; the report has the same sentence, table and Next line as for links. A stop says to run the same file again, not to type links:
 
 Next: run the same selection file again; the ones added are skipped.
 
-### add (Claims), stopped
+### add, stopped
 
 Every stop that can be put right by typing the command again says to give the same links again: typed without them the command gives nothing useful. When Geo or Notion could not be read, nothing was written:
 
@@ -404,7 +337,7 @@ Next: type /claim-tagger add again with the same links; the ones added are skipp
 
 When no claim was written or may have been, the sentence is "Add: it stopped before any claim was added." and the Next line is "type /claim-tagger add again with the same links in a while."
 
-### add (Claims), a claim found twice
+### add, a claim found twice
 
 Two editors added the same claim at the same moment, and Claims now holds it twice. The run that made its row finds it after the read-back and says so (exit 2). No script removes a row: the engineer removes the row the run record names (the two rows are identical), and every command stops on the repeated key until then. Both page ids and the one to remove are in the run record.
 
@@ -414,54 +347,6 @@ Next: ask the engineer to remove the row named in the run record (the two rows a
 
 ### A stopped run
 
-Demo · Tag stopped: your Claude allowance ran out; nothing was written to Notion (practice page Claim tagger demo · 15 Oct 10:42).
+Distill stopped: your Claude allowance ran out; nothing was written to Notion.
 
-Next: when your Claude allowance is back, type /claim-tagger demo tag again; it continues where it stopped.
-
-### Walkthrough: start
-
-If the request has no link, the skill first asks one question and does nothing else: "Under which Notion page should the demo go? Paste a link, or say Onboarding to use the Onboarding page of the hub (link)." Practice pages are for onboarding, and they go under Onboarding.
-
-Walkthrough: your practice page is ready under Onboarding.
-
-| Table | Now |
-|---|---|
-| Rulebook | 1 tag |
-| Claims | 9: 5 reviewed earlier, 4 for you |
-| Rule changes | empty |
-
-Next: open Claim tagger practice · 15 Oct 10:42 (link) and follow step 1.
-
-### Walkthrough: start, when the page cannot be reached
-
-Walkthrough: no demo was created, because the claim tagger cannot reach that Notion page.
-
-Next: in Notion, open that page, choose the connections menu and add the claim tagger connection, or pick another page.
-
-### Walkthrough: where
-
-Without the linked view (Notion refused it) the line links the Claims table instead.
-
-Walkthrough: you are at step 3, Decide your four claims.
-
-Next: open Your queue (link) and decide your four claims.
-
-### Walkthrough: where, on a page where no command has written yet
-
-`status` writes nothing, so a page stays at step 1 until the tag step has run.
-
-Walkthrough: you are at step 1, Meet the demo.
-
-Next: type /claim-tagger demo status.
-
-### Walkthrough: where, after the first of the four claims
-
-Walkthrough: you are at step 3, Decide your four claims.
-
-Next: open Your queue (link) and decide your remaining claims.
-
-### Walkthrough: where, when a follow-up marked a claim Still wrong
-
-Walkthrough: you are at step 7, The agent re-checks your claims.
-
-Next: add a note in Challenged tags notes on the claims in Agent disagreed (link).
+Next: when your Claude allowance is back, type /claim-tagger distill again; it continues where it stopped.

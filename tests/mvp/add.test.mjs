@@ -1304,8 +1304,8 @@ test('the places that name the script: the allow list of the project settings, t
   // the words the editor and the skill share
   const skill = readFileSync(new URL('.claude/skills/claim-tagger/SKILL.md', root), 'utf8');
   const handover = readFileSync(new URL('docs/mvp-2026-11/EDITOR-HANDOVER.md', root), 'utf8');
-  const practice = 'Add: nothing was done, because adding claims works only on the real Claims table; the practice page has its own claims.';
-  assert.equal(skill.split(practice).length - 1, 2, 'the one wording of the practice page, in the Adding claims section and in Demo mode');
+  const parked = 'Demo: nothing was done, because the practice pages are parked; they run on the version tagged claim-tagger-v1.';
+  assert.equal(skill.split(parked).length - 1, 1, 'the one answer for every demo command, demo add included: the practice pages are parked (P48)');
   assert.match(skill, /a Geo ID is 32 characters: digits and the letters a to f/);
   assert.match(skill, /whether Geo marks it factual/);
   assert.match(skill, /relay the report and stop; the editor types the command again with the same links/);

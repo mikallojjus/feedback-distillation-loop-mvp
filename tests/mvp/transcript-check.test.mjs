@@ -1368,7 +1368,7 @@ test('the checklists of the skill\'s guide (references/guide.md) pass the checke
     }
   }
   if (current) groups.push(current);
-  assert.ok(groups.length >= 7, `the guide holds several checklists (found ${groups.length})`);
+  assert.ok(groups.length >= 5, `the guide holds several checklists (found ${groups.length})`); // five since the practice forms were parked (P48)
   for (const group of groups) {
     assert.ok(group.length >= 1 && group.length <= MAX_CHECKLIST_LINES, group[0]);
     assert.deepEqual(grade({ final: withList(group) }).problems, [], group.join('\n'));

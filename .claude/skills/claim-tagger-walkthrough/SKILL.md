@@ -1,77 +1,30 @@
 ---
 name: claim-tagger-walkthrough
 description: >-
-  Set up a fresh practice copy of the claim tagger's editor feedback loop in Notion and guide an editor through it, for onboarding:
-  one command creates a new page under the Onboarding page of the hub "Claim tagger" (or another page the editor picks), with its own one-tag rulebook (Context-dependent),
-  nine real claims (four that the editor decides on a Claims table like the real one, five decided earlier), a rule-changes table and seven
-  numbered steps, then says where the editor is and what to type next. Use this skill whenever someone wants to try, learn, practise, demo or teach the claim
-  tagger or the editorial feedback loop, onboard a new editor, make a training or practice page, or asks "where am I
-  in the walkthrough/demo", even if they never say "walkthrough". It never touches real claims or the real rulebook;
-  for real tagging, distilling or promoting use /claim-tagger.
+  PARKED (decision P48): the claim tagger's practice pages for onboarding do not run on this version; they run only on the
+  earlier version, the git tag claim-tagger-v1. This skill builds nothing and runs nothing: when someone asks to try, learn,
+  practise, demo or teach the claim tagger, onboard a new editor, make a training or practice page, or asks "where am I in the
+  walkthrough/demo", it answers in one short report that the walkthrough is parked and names the tag. For real tagging,
+  deciding, distilling or promoting on the page "Claim tagger v2" use /claim-tagger.
 ---
 
 # Claim tagger walkthrough
 
-**Output style.** For as long as this skill runs, its report format (section "Reporting style") replaces your output style. Do not write Insight blocks, tips or other educational notes before, between or after the commands, and do not explain the scripts, the code or your choices: the editor asked for a result, and will ask if they want the why.
+**Parked.** The walkthrough is parked (decision P48). This version of the claim tagger works on the page "Claim tagger v2" only, where editors decide one row per claim and tag. The practice pages were built for the earlier layout, where editors decided a whole claim on Claims, and they were not ported. They still run on the earlier version, the git tag `claim-tagger-v1`. The script refuses here too: `walkthrough.mjs` on this branch stops with a message that names the tag.
 
-`W` below stands for `node agents/claim-tagger-mvp/scripts/walkthrough.mjs`, run with the Bash tool from the repository root, one command at a time, each waited for.
-
-The walkthrough is for onboarding new editors only. Practice pages go under the hub's Onboarding page; the pages made before 27 October 2026 are in the hub's archive and are read only. Real decisions, the ones the rulebook learns from, are made on Claims with `/claim-tagger`, never here.
+**Output style.** For as long as this skill runs, its report format replaces your output style. Do not write Insight blocks, tips or other educational notes, and do not explain the scripts, the code or your choices.
 
 ## What it does and never does
 
-- Every Notion write comes from `W`, which builds the practice page from a plan it writes first and reads every row back. You never write Notion through the connector, never create, move, archive or delete a page, never fill an editor column (on the Claims table Verified tags, Review status and Challenged tags notes; on Rule changes Editor wording and the Status values Approved and Rejected; on Agent settings Paused), and never read or write the production tables or `agents/claim-tagger-mvp/runs/`. The one exception is not this skill's: when the editor asks for step 3 with `/claim-tagger demo decide`, the claim-tagger skill (section "Deciding") writes the three Claims columns of the practice page on the editor's instruction, and nothing else. The five claims a new practice page starts Reviewed, with their Agent reading, and the ledger rows that go with them (already read as Agent slip, with the note "Seeded from the audit of 9 October."), are written by the script's own setup plan, not by you.
-- You never pass `--confirm`, `--bare`, `--fallback-model` or `--unpause`.
-- The last thing `W` prints is a report in the shape of "Reporting style". Your final message is that report, verbatim and complete, and nothing else, except that after a demo command or `W where` a checklist follows the report when its Next line sends the editor to Notion (section "Running the steps").
+- It runs nothing: no script, no connector call, no file read. It never builds, changes or reads a practice page, and never touches Notion.
+- Whatever the request (start a practice page, where am I, list the pages, a demo step), the whole answer is this report, as it stands:
 
-## Start a practice page
+Walkthrough: nothing was done, because the practice pages are parked; they run on the version tagged claim-tagger-v1.
 
-1. If the request contains a Notion link or page id, use it as the parent; if it names the Onboarding page, use the Onboarding page (below). Otherwise read the one value `notion.pages.onboarding` in `agents/claim-tagger-mvp/config.json` (that value and nothing else) and ask exactly once, as your whole message: "Under which Notion page should the demo go? Paste a link, or say Onboarding to use the Onboarding page of the hub (https://www.notion.so/<that id>)." When the value is not a page id yet (it reads `<setup>` until setup has built the hub), ask "Under which Notion page should the demo go? Paste a link." instead. When the editor says Onboarding, the parent is that id. Do not guess any other page and do not reuse an earlier parent unless the editor says so. Nothing runs until the parent is known.
-2. Run `W start --parent <link or id>`. Say once "Building the page." and nothing more until the report. A dry run, when the editor asks to see the page before anything is created, is `W start --parent <link> --dry-run`: it writes a preview and sends no write.
-3. Exit codes: 2 with "cannot reach" means the page is not shared with the claim tagger: relay "In Notion, open that page, choose the connections menu and add the claim tagger connection, or pick another page." 2 with "protected" means the parent is a real table, the hub itself or a page in the hub's archive: ask for another page (the Onboarding page is the usual one). 1 means a stop halfway: run `W start --resume <id>` once, with the id the report names; never start a second page to retry.
+Next: ask the engineer for the practice version.
 
-## Where am I
+- Nothing follows the report: no checklist, no other words.
 
-Run `W where` and relay its sentence and its "Next:" line (when that line sends the editor to Notion, with the checklist of "Running the steps" below it). `W where` and the demo commands act on the newest practice page under Onboarding (the newest finished page under the Onboarding page that the script can read); a page of an older shape is never the one they reach, and a page in the hub's archive is read only: `W where` and the demo commands refuse it, and the editor gets a new page under Onboarding. `W list` names every practice page with its step when the editor asks which pages exist, marks the pages in the archive "archived", and marks the one the demo commands use.
+## For the engineer
 
-## Running the steps
-
-The steps of the page are `/claim-tagger demo status`, `demo tag`, `demo distill` and `demo promote`; run them exactly as the claim-tagger skill's "Demo mode" says (`W run <script> ...`, against the newest practice page under Onboarding). Step 5 happens in Notion and is the editor's alone: no command fills Status or Editor wording, and neither do you; link the view instead. Step 3 happens in Notion too, and the editor can also ask Claude to do it: `/claim-tagger demo decide <instruction>` decides the practice page's claims as the claim-tagger skill's section "Deciding" says, and ends with `demo distill` as the next step. The practice page's text is not changed for it (decision 116) and still says the editor fills the columns in Notion; none of the `W` commands fills them. Step 3 is Your queue, a view of the Claims table (the claims whose Agent status is Waits for you and whose Review status is not Reviewed): the four claims of the editor are To review, so after the tag step all four wait there (the press pool, USPS and Georgia claims although the agent is fairly sure of them), and `W where` links it. The editor fills in three columns on each claim, in the order of the page: Verified tags, Challenged tags notes, Review status (the Georgia claim's note stays empty: an empty note is a decision too); the editor never says why the agent was wrong, because the agent reads each decision itself in step 4 (a note that opens with Agent slip., Rule unclear. or Rule should change. is taken as it stands). A claim leaves Your queue as soon as the editor sets Review status to Reviewed (the page says so); its Agent status stays Waits for you until the agent reads it again, which the follow-up of step 7 does for the two claims the rule change rests on, while the USPS and Georgia claims keep Waits for you until the next tag run, and `W where` says step 7 is complete all the same. Step 4, `demo distill`, first reads each of the editor's decisions (the agent writes its reading in the Agent reading column of the Claims table) and then drafts one rule change from the two decisions that blame rule 3 (the press pool and the AI Force claim); the USPS claim is an Agent slip taken from its note, so it drafts nothing, and the Georgia claim has nothing to read. Step 5 is Lessons waiting. Step 7 needs no command: the follow-up runs by itself at the end of a passed safety check, and the promote report's Next line points at step 7; `/claim-tagger demo follow-up` only repeats it after a run that stopped early, and `W where` says when.
-
-After a demo command, and after `W where`, the message is the report relayed verbatim and, when its Next line sends the editor to Notion, one checklist below it and nothing else. The checklist is the Demo form of the matching one in `.claude/skills/claim-tagger/references/guide.md` (Decide in Your queue, Needs your note, Approve in Lessons waiting, After a FAIL, Agent disagreed), copied as it stands: a numbered list of at most five lines under the report, after one blank line, with no heading and no words of your own. Its words are the page's, so step 3 of the page and the checklist name the same columns in the same order. A `W where` report starts with "Walkthrough:", not "Demo · ", and takes the Demo form all the same; the guide's table lists the Next lines of `W where` that send the editor to Notion (open Your queue and decide your four claims or the remaining ones, open Lessons waiting and set Status to Approved, open Lessons waiting and write the rule in Editor wording, add a note in Agent disagreed). `W start`, `W list`, `W verify` and a report whose Next line only names a command get no checklist; the practice page has the steps.
-
-## Reporting style
-
-Editors read these reports between other tasks. Every report, errors included, has exactly three parts and nothing else:
-
-1. **One sentence**: what ran and what came out, in plain words. Start with "Demo · " when the demo ran.
-2. **One table**, at most five rows and three columns, with the figures that matter for this subcommand (see the examples in `references/report-examples.md`). Leave it out when there is nothing to count.
-3. **One line starting "Next:"** with exactly one thing to do: a command to type, or a Notion link and the action to take there. When more rows wait than fit one sitting (a setting, default 20), the sentence gives the count and the line says "start at the top of Your queue (link)", not "decide your N claims".
-
-One report has a fourth part: a demo `promote` that ended in FAIL and could write a suggestion has it between the table and the Next line ("Suggested sentence for rule 3:", the sentence as a quote, a "Why:" line, and the rule to copy in a fenced block). Relay it verbatim like the rest; it is the only fenced block a report has.
-
-Leave out everything else: headings, how the scripts work, the commands you ran, retries and incidents (if one changed the result, say so in a few words inside the sentence), file paths, run ids, JSON, and any duration, dollar amount or model-call count (they stay in the run record). For a stopped run, "Next:" is the same request again; the script resumes the run itself. While a step takes a while, say once what is happening, with no duration ("Building the page."), then nothing until the report.
-
-Two examples:
-
-Walkthrough: your practice page is ready under Onboarding.
-
-| Table | Now |
-|---|---|
-| Rulebook | 1 tag |
-| Claims | 9: 5 reviewed earlier, 4 for you |
-| Rule changes | empty |
-
-Next: open Claim tagger practice · 15 Oct 10:42 (link) and follow step 1.
-
-Walkthrough: you are at step 3, Decide your four claims.
-
-Next: open Your queue (link) and decide your four claims.
-
-## References, read only when needed
-
-- `references/manifest.md`: the practice page's content (the nine claims, the five claims Reviewed earlier, the four claims the editor decides, the example claims), how to change it, and the calibration, frozen at 2026-10-22.1 (a recalibration needs a person to decide).
-- `references/page-design.md`: the page template, the fixed format of the seven steps, the table limits, the banned words, the tables and views of the page, and what `W verify` checks.
-- `references/troubleshooting.md`: a stop halfway, a stop when the allowance ran out, a stop when some answers could not be read, a run that stopped before step 7, a FAIL at step 6, a paused agent, a hand edit to the rulebook, a page in the archive.
-- `references/report-examples.md`: every report, as the editor sees it, and one report followed by its checklist.
-- `.claude/skills/claim-tagger/references/guide.md`: the checklists that follow a report whose Next line sends the editor to Notion (shared with the claim-tagger skill, in the words of the page).
+The walkthrough as it was, with its page, its seven steps and its reports, is in the tag: `git show claim-tagger-v1:.claude/skills/claim-tagger-walkthrough/SKILL.md`. To run it, check the tag out in a worktree of its own (`git worktree add ../geo-agents-v1 claim-tagger-v1`) and work there; its practice pages go under the Onboarding page of the first page, "Claim tagger", and use that page's per-claim layout. The files under `references/` describe that version and are kept as history.
