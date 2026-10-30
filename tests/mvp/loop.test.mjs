@@ -45,7 +45,9 @@ async function productionWorld({ flipExample = false, wrongBoth = true, configur
   const w = await makeWorld({ claims: 'pick', audit: true, configure });
   const table = {};
   for (const c of taxonomyCanaries()) table[c.claim] = c.expected === 'apply' ? yes : no;
-  for (const d of AUDIT.decisions) table[normalizeClaim(d.claim)] = d.outcome === 'Applies' ? yes : no;
+  // v2 (PORT-V2 1.7): the tag run moves the proposal on a decided row, so a judge that answers as the audit decided would make all of these rows agree and nothing would be read.
+  // The judge here repeats the agent's answer of 9 October (the proposal the world seeds), so the eight disagreements of the audit stay disagreements and decision 73 is exercised.
+  for (const d of AUDIT.decisions) table[normalizeClaim(d.claim)] = d.agent_tags?.includes('Context-dependent') ? yes : no;
   if (wrongBoth) {
     const slip = AUDIT.decisions.find((d) => d.outcome === 'Does not apply');
     table[normalizeClaim(slip.claim)] = yes; // the agent is wrong about this earlier decision both before and after the change
@@ -56,8 +58,14 @@ async function productionWorld({ flipExample = false, wrongBoth = true, configur
   table[U4] = { decision: 'apply', p: 0.6 };
   table[A1] = yes;
   w.table(table);
+  // once the readings are made the gate re-judges the audit claims: the answers the audit decided (but for the one slip, which stays wrong), so that the earlier decisions are mostly right
+  w.laterTable = { ...table, ...Object.fromEntries(AUDIT.decisions.map((d) => [normalizeClaim(d.claim), d.outcome === 'Applies' ? yes : no])) };
+  if (wrongBoth) w.laterTable[normalizeClaim(AUDIT.decisions.find((d) => d.outcome === 'Does not apply').claim)] = yes;
   // the eight audit disagreements are read once by the model (decision 73); the fake reads them the way the audit decided: Agent slip
   w.readings(Object.fromEntries(AUDIT.decisions.map((d) => [`${d.geo_id}::Context-dependent`, { reading: 'Agent slip', rule: null, note: 'The audit found that the agent slipped.' }])));
+  // v2 (P45): the editor's note says "Rule 4" in plain words and no reason word; it is the model that works out the reading and the rule. The fake does not parse notes (it would read these
+  // rows Rule unclear with the rule the agent cited, none, and the lesson would fall back to rule 1), so it is told what a model would answer: the rule the lesson rests on is rule 4.
+  w.readings({ ...JSON.parse(readFileSync(w.env.FAKE_CLAUDE_READINGS, 'utf8')), ...Object.fromEntries([U1, U2].map((t) => [keyOf(t), { reading: 'Rule unclear', rule: 'Context-dependent rule 4', note: 'Rule 4 does not let general references pass.' }])) });
   w.setEnv('FAKE_LOOP_DEFAULT', JSON.stringify(no));
   w.overrides([{ when: MARK, table: { [U1]: no, [U2]: no, ...(flipExample ? { [EXAMPLE_1]: no } : {}) } }]);
   w.distillReply({ patterns: [{ lesson: TITLE, kind: 'Clarify wording', proposed_text: NEW_TEXT, keys: 'all' }] });
@@ -147,7 +155,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(drafted.report.sentence, 'Distill: read 10 of your decisions and drafted one rule change from 2 of them.', 'the eight audit disagreements and the two decisions are read once, by the model');
   assert.equal(drafted.report.rows[0][1], '10 decisions');
   assert.deepEqual(drafted.report.rows.slice(1, 4), [['Point at a rule', '2 decisions', ''], ['Agent slips', '8 decisions', ''], ['Without a note', 'none', '']], 'the audit says Agent slip for the eight, and so does the fake model: the comparison that decision 73 asks for');
-  assert.equal(w.callsWith('# Reading').length, 2, 'two reading calls: the eight audit rows, and the two decisions of the editor (ten rows to a call would be one; the fake batches by the config)');
+  assert.equal(w.callsWith('# Reading').length, 1, 'one reading call: on v2 the eight audit rows and the two decisions of the editor are all unread at the same distill, and ten rows fit in a batch (the old build read the audit rows in a step of their own)');
   for (const text of [U1, U2]) {
     const row = w.row('tag_decisions', keyOf(text));
     assert.deepEqual([row['Tag outcome'], row['Your note'], row['Decided under']], ['Does not apply', 'Rule 4 should let general references pass.', '2026-10-16.1'], 'the editor\'s columns are as the editor left them; the agent recorded the edition');
@@ -158,6 +166,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'].startsWith('Distill · '), true);
 
   // the editor approves it; promote checks it and makes it live; follow-up runs inside
+  w.table(w.laterTable); // the tag run needed the audit rows to stay disagreements (see productionWorld); from here the agent answers them as the audit decided
   w.fake.editRow(lesson.page_id, { Status: 'Approved' });
   const h3 = w.hooks();
   const passed = await promote(h3);
@@ -166,7 +175,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.deepEqual(passed.report.rows, [
     ['Example claims', '11 of 11 right', ''],
     ['Earlier decisions', '9 of 9 still right', ''],
-    ['Your 2 rows', '2 of 2 now right, marked Fixed in After the rule change', ''],
+    ['Your 2 rows', '2 of 2 now right, marked Fixed', ''],
   ]);
   assert.equal(passed.report.next, `Next: decide your two rows in Your queue (https://www.notion.so/${w.DB.tag_decisions}?v=e3000000000000000000000000000001).`);
   assert.equal(w.row('rule_changes', TITLE).Status, 'Live');
@@ -203,9 +212,10 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(st.exit, 0);
   assert.equal(st.report.sentence, 'Status: nothing is paused; 2 rows wait for you.');
   assert.match(st.report.rows[0][1], /^13 tags, edition 2026-10-16\.2$/);
-  // the promote changed the rules, but the eight readings belong to proposals made under the old edition and stay current until the agent proposes again (decision 66): nothing is to read
-  assert.ok(!st.report.rows.some((r) => r[0] === 'Your decisions'), 'no Your decisions row after a promote alone');
-  assert.deepEqual(st.report.rows[2], ['Lessons waiting', 'none', '']);
+  // the readings stay current until the agent proposes again (decision 66), and it has just proposed again under the new edition (PORT-V2 1.7): the seven audit rows whose answer now
+  // matches the audit agree and need no reading; the one slip the agent keeps is a proposal of the new edition, so its reading is stale and waits to be read once more
+  assert.deepEqual(st.report.rows[2], ['Your decisions', '1 to read', '']);
+  assert.deepEqual(st.report.rows[3], ['Lessons waiting', 'none', '']);
   assert.match(st.report.next, /^Next: decide your two rows in Your queue \(/, 'deciding comes before reading');
 
   // rollback and restore
