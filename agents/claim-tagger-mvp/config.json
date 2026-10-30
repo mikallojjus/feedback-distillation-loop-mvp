@@ -3,36 +3,33 @@
   "notion": {
     "api_version": "2022-06-28",
     "builder_api_version": "2026-03-11",
-    "parent_page_id": "3fa273e214eb805199f3d12ef01db453",
+    "parent_page_id": "408273e214eb81d78f78ecfe4885d1ab",
     "setup_page_parents": [
-      "3fa273e214eb805199f3d12ef01db453"
+      "408273e214eb81d78f78ecfe4885d1ab"
     ],
     "pages": {
-      "onboarding": "406273e214eb81a881dcd1480c5d015e",
-      "archive": "406273e214eb81a78c2def55287e4b67",
-      "proposal": "<archived>",
-      "demos": "<archived>",
-      "demo_tests": "<archived>"
+      "proposal": "<none>",
+      "demos": "<none>",
+      "demo_tests": "<none>",
+      "onboarding": "<none>",
+      "archive": "<none>"
     },
     "rulebook": {
-      "database_id": "dba96ff240e64832b48798386abaff01",
-      "data_source_id": "9b8cef6c20934d44829ea3417858754a",
+      "database_id": "12aa438db42c4d5b8b6752b2a26680f1",
+      "data_source_id": "ad02bfbd4408492fb843256fc5002eed",
       "key": "Name",
       "work_tag": "Issue"
     },
     "claims": {
       "label": "Claims",
-      "database_id": "c838378afca148d498a1fdec96e9d7cb",
-      "data_source_id": "4eca85dd551d48ed863b4da13f01d4e9",
+      "database_id": "ac6e6e695d0641328a395a1cec11c7c4",
+      "data_source_id": "0a4f5ccf01ac42889258a0926a71e749",
       "key": "Geo ID",
       "columns": {
         "claim": "Geo Name",
         "link": "Geo URL",
         "sources": "Geo Sources",
-        "is_factual": "Geo Is factual",
-        "verified": "Verified tags",
-        "review_status": "Review status",
-        "notes": "Challenged tags notes"
+        "is_factual": "Geo Is factual"
       },
       "write_columns": {
         "tags": "Agent tags",
@@ -42,23 +39,23 @@
         "waiting": "Tags waiting",
         "edition": "Agent edition",
         "remarks": "Agent remarks",
-        "reading": "Agent reading"
+        "reading": "Agent's view of your decision"
       }
     },
     "databases": {
       "tag_decisions": {
-        "database_id": "379870f3d8b1423f900a02e6be165b9d",
-        "data_source_id": "795d3f6651fb41c681d6b360b65f5df8",
+        "database_id": "077f52fd4b22429faad8d050b561ab31",
+        "data_source_id": "a9b311e6184642a7abd0fd6a77cd8f02",
         "key": "Key"
       },
       "rule_changes": {
-        "database_id": "9be13cb2f6f74546910462acb3420500",
-        "data_source_id": "ad5b86516555496cbd9c6b81e11300d0",
+        "database_id": "3212d8d1c1144e5c8c6e4f1b69667005",
+        "data_source_id": "7b45e52acda54598846743c838a64ed3",
         "key": "Lesson"
       },
       "agent_settings": {
-        "database_id": "e15d27cefc774e20956d48170c662b5c",
-        "data_source_id": "d0512451f0024f48a675b6c3ac5aa47e",
+        "database_id": "902ab8fa9ebb4e73a558f5fb58c0a64f",
+        "data_source_id": "e0223deff56245f98b56fe2eb30ec51f",
         "key": "Name"
       }
     },
@@ -372,7 +369,23 @@
       "80a248a8068c4d56840eca8aae6c0030",
       "9c625e578c2b4c25b5bbddba1d30e928",
       "7378adbbcef14e7a83faeed31bcf0d55",
-      "60c60df670db4399ae56b22ffaf92d8b"
+      "60c60df670db4399ae56b22ffaf92d8b",
+      "dba96ff240e64832b48798386abaff01",
+      "9b8cef6c20934d44829ea3417858754a",
+      "c838378afca148d498a1fdec96e9d7cb",
+      "4eca85dd551d48ed863b4da13f01d4e9",
+      "379870f3d8b1423f900a02e6be165b9d",
+      "795d3f6651fb41c681d6b360b65f5df8",
+      "9be13cb2f6f74546910462acb3420500",
+      "ad5b86516555496cbd9c6b81e11300d0",
+      "e15d27cefc774e20956d48170c662b5c",
+      "d0512451f0024f48a675b6c3ac5aa47e",
+      "406273e214eb81a3993c000c78850705",
+      "406273e214eb81418b6e000c49a0b3c6",
+      "406273e214eb819e8d97000c49b71f37",
+      "406273e214eb81efbefa000cc8b646d1",
+      "406273e214eb81a3a8bc000c7cea3533",
+      "406273e214eb81fa8c8d000c20b953ba"
     ],
     "protected_page_ids": [
       "3da273e214eb80c180d5fd0894bc2db8",
@@ -403,44 +416,34 @@
       "400273e214eb8139bcc3dadbbe38a305",
       "400273e214eb8156b0ade202aeebfd8f",
       "400273e214eb81beac86ce8c86ba1346",
-      "400273e214eb81a9beb6e7f7899530d6"
+      "400273e214eb81a9beb6e7f7899530d6",
+      "406273e214eb81a881dcd1480c5d015e"
     ],
     "requests_per_second": 3,
     "page_size": 100,
     "max_text": 1900,
     "views": {
       "your_queue": {
-        "id": "406273e214eb81a3993c000c78850705",
-        "url": "https://www.notion.so/c838378afca148d498a1fdec96e9d7cb?v=406273e214eb81a3993c000c78850705"
+        "id": "408273e214eb810ea21b000cd703697f",
+        "url": "https://www.notion.so/077f52fd4b22429faad8d050b561ab31?v=408273e214eb810ea21b000cd703697f"
       },
       "needs_your_note": {
-        "id": "406273e214eb81418b6e000c49a0b3c6",
-        "url": "https://www.notion.so/c838378afca148d498a1fdec96e9d7cb?v=406273e214eb81418b6e000c49a0b3c6"
+        "id": "408273e214eb81bf943d000cb0f50431",
+        "url": "https://www.notion.so/077f52fd4b22429faad8d050b561ab31?v=408273e214eb81bf943d000cb0f50431"
       },
       "agent_disagreed": {
-        "id": "406273e214eb819e8d97000c49b71f37",
-        "url": "https://www.notion.so/c838378afca148d498a1fdec96e9d7cb?v=406273e214eb819e8d97000c49b71f37"
-      },
-      "your_queue_ledger": {
-        "id": "406273e214eb81efbefa000cc8b646d1",
-        "url": "https://www.notion.so/379870f3d8b1423f900a02e6be165b9d?v=406273e214eb81efbefa000cc8b646d1"
-      },
-      "needs_your_note_ledger": {
-        "id": "406273e214eb81a3a8bc000c7cea3533",
-        "url": "https://www.notion.so/379870f3d8b1423f900a02e6be165b9d?v=406273e214eb81a3a8bc000c7cea3533"
+        "id": "408273e214eb8131a3b5000c8473f11f",
+        "url": "https://www.notion.so/077f52fd4b22429faad8d050b561ab31?v=408273e214eb8131a3b5000c8473f11f"
       },
       "lessons_waiting": {
-        "id": "406273e214eb81fa8c8d000c20b953ba",
-        "url": "https://www.notion.so/9be13cb2f6f74546910462acb3420500?v=406273e214eb81fa8c8d000c20b953ba"
+        "id": "408273e214eb81e18120000cabf0053f",
+        "url": "https://www.notion.so/3212d8d1c1144e5c8c6e4f1b69667005?v=408273e214eb81e18120000cabf0053f"
       }
-    }
+    },
+    "root_parent_page_id": "3fa273e214eb805199f3d12ef01db453"
   },
   "editor_columns": {
-    "claims": [
-      "Verified tags",
-      "Review status",
-      "Challenged tags notes"
-    ],
+    "claims": [],
     "rule_changes": [
       "Editor wording"
     ],
@@ -450,6 +453,11 @@
     ],
     "agent_settings": [
       "Paused"
+    ],
+    "tag_decisions": [
+      "Agent is right",
+      "Tag outcome",
+      "Your note"
     ]
   },
   "models": {
@@ -624,5 +632,6 @@
     "total": 200,
     "page_size": 500,
     "detail_batch": 25
-  }
+  },
+  "profile": "v2"
 }

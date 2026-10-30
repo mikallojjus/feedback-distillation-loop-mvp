@@ -6,3 +6,4 @@ node_modules/
 *.log
 .claude/worktrees/
 agents/*/profiles/*/runs/
+agents/*/runs-v1/
