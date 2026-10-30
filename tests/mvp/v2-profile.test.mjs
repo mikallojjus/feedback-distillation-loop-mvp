@@ -89,11 +89,11 @@ test('buildV2Config: every live id is protected (five tables, both ids; views; O
   assert.ok(all.length > 0);
 });
 
-test('buildV2Config: Claims has no editor column; Tag decisions has Tag outcome and Your note; the other editor columns stay', () => {
+test('buildV2Config: Claims has no editor column; Tag decisions has Agent is right, Tag outcome and Your note; the other editor columns stay', () => {
   const p = production();
   const c = buildV2Config(p);
   assert.deepEqual(c.editor_columns.claims, []);
-  assert.deepEqual(c.editor_columns.tag_decisions, ['Tag outcome', 'Your note']);
+  assert.deepEqual(c.editor_columns.tag_decisions, ['Agent is right', 'Tag outcome', 'Your note']);
   assert.deepEqual(c.editor_columns.rule_changes, p.editor_columns.rule_changes);
   assert.deepEqual(c.editor_columns.rule_changes_status_editor_values, p.editor_columns.rule_changes_status_editor_values);
   assert.deepEqual(c.editor_columns.agent_settings, p.editor_columns.agent_settings);
@@ -445,17 +445,18 @@ test('completeStructure: the spec gives a valid structure with relations, the pe
   const claimCols = s.tables.claims.columns.map((c) => c.name);
   for (const gone of ['Verified tags', 'Review status', 'Challenged tags notes']) assert.ok(!claimCols.includes(gone), gone);
   const td = s.tables.tag_decisions.columns;
-  assert.equal(td.find((c) => c.name === 'Claim page')?.relation_to, 'claims');
-  assert.equal(td[td.findIndex((c) => c.name === 'Claim') + 1].name, 'Claim page');
-  for (const name of ['Agent status', 'Tag outcome', 'Your note']) assert.ok(td.some((c) => c.name === name), name);
+  assert.equal(td.find((c) => c.name === 'Open claim')?.relation_to, 'claims');
+  assert.equal(td[td.findIndex((c) => c.name === 'Claim') + 1].name, 'Open claim');
+  assert.ok(!td.some((c) => c.name === 'Claim page'), 'the earlier name is renamed_from, not a column');
+  for (const name of ['Agent status', 'Agent is right', 'Tag outcome', 'Your note']) assert.ok(td.some((c) => c.name === name), name);
   for (const gone of ['Why wrong', 'Your reasoning', 'Claim link']) assert.ok(!td.some((c) => c.name === gone), gone);
-  assert.deepEqual(s.views.find((v) => v.name === 'Your queue').columns.slice(0, 2), ['Claim', 'Claim page']);
+  assert.deepEqual(s.views.find((v) => v.name === 'Your queue').columns.slice(0, 2), ['Claim', 'Open claim']);
 });
 
 test('completeStructure refuses a spec without a completion block, or one that inserts after a missing column', () => {
   const [head] = V2_SPEC.split('## Completion for setup/structure.json');
   assert.throws(() => completeStructure(head), /no "Completion/);
-  assert.throws(() => completeStructure(V2_SPEC.replace('"after": "Claim", "name": "Claim page"', '"after": "Nope", "name": "Claim page"')), /after "Nope"/);
+  assert.throws(() => completeStructure(V2_SPEC.replace('"after": "Claim", "name": "Open claim"','"after": "Nope", "name": "Open claim"')), /after "Nope"/);
 });
 
 test('hub link_text replaces the words of a link line, and must name a linked view', () => {

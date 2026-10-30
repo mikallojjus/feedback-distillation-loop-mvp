@@ -47,6 +47,14 @@
 // columns, which need the table they point at, are added this way too. A column that is there is never changed or removed. A `retired` column (the "(old)" ones) is never made on a new
 // table: it exists only where a rename made it, and every view hides it.
 //
+// Two-way relations (the v2 page). A relation column with `two_way` names the column on its relation_to table that is the other side of the same Notion relation (dual_property); both
+// columns name each other, and twoWayPairs says which side makes the pair (the side with renamed_from, else the first table in TABLES). The build sends `relation: { data_source_id,
+// dual_property: {} }` from that side only, reads the other table back and renames the column Notion made there to the partner's name; the partner is never added as a relation of its own.
+// A builder column that exists as a one-way relation is PATCHed to dual_property in place; if Notion refuses or still reports one-way, the run stops (never removing or making a column again).
+// A relation without two_way is made single_property, as always. verify expects the pair; a one-way relation where a pair is expected is a difference that setup.mjs build converts.
+// A structure with `sync_descriptions: true` also keeps the descriptions of its columns and tables in step with Notion's (buildDescriptions); without the key nothing of that is done or checked.
+// A hub with `view_hints` has one plain paragraph right after each hinted view's link line; the hub part adds a missing hint after its link line (position after_block) and nothing else.
+//
 // Views. A view the table has already is not left as it was: its filter, its sorts, its shown columns and their order, and whether cells wrap are compared with the structure and
 // patched where they differ (updateView), so that a table built by an earlier revision gets the new filter of Your queue and the new column order. The views of a table that sets
 // `arrange_default_view` (the practice page's Claims) include the views the structure does not name, Notion's own default view: they get the column order of the structure, every column
@@ -135,6 +143,8 @@ export const OPTION_COLORS = Object.freeze({
     'Why wrong': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
     'Agent reading': { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' },
     'Follow-up': { Fixed: 'green', 'Still wrong': 'red' },
+    "Agent's view of your decision": { 'Agent slip': 'gray', 'Rule unclear': 'yellow', 'Rule should change': 'orange' }, // the v2 names of Agent reading and Follow-up (STRUCTURE-V2.md, P45)
+    'After the rule change': { Fixed: 'green', 'Still wrong': 'red' },
     'Agent status': { 'Waits for you': 'yellow', Done: 'green', 'Disagrees with your decision': 'red', 'Could not read': 'gray' }, // per row, on the v2 page
   },
   rule_changes: {
@@ -314,19 +324,38 @@ const leaf = (column, condition) => ({ property: column.name, [column.type]: con
 /**
  * The data-source query filter for a view's "Rows shown" text, or null for "all rows". The words it reads: "<Column> is empty", "<Column> is not empty",
  * "<Column> is <A> or <B>", "<Column> is not <A>" (a select; sent as "is not A, or is empty", so a row with no value is kept), "<Column> contains <text>" and
- * "<Column> does not contain <text>" (a text column), clauses joined by ", and ". Values of a select must be options of the column.
+ * "<Column> does not contain <text>" (a text column), "<Column> is ticked" and "<Column> is not ticked" (a checkbox), clauses joined by ", and ". Values of a select must be options
+ * of the column. A clause may also be a group in brackets, "(<clause>, or <clause>)", which is sent as one `or` inside the view's `and`. Notion allows two levels of nesting under the
+ * top level, and a group is already one, so the clauses inside a group must be plain: "is not <A>" and "is <A> or <B>" are `or`s themselves and are refused there.
  */
 export function parseViewFilter(text, table, where = 'view') {
   const source = String(text ?? '').trim();
   if (source === '' || /^(all rows|none|no filter)$/i.test(source)) return null;
   const columns = table.columns;
   const names = columns.map((c) => c.name).sort(byLengthDesc);
-  const split = new RegExp(`,?\\s+and\\s+(?=(?:${names.map(escapeRe).join('|')})\\s+(?:is|contains|does not contain)\\s)`, 'i');
+  const nameRe = names.map(escapeRe).join('|');
+  const split = new RegExp(`,?\\s+and\\s+(?=\\(?(?:${nameRe})\\s+(?:is|contains|does not contain)\\s)`, 'i');
+  const splitGroup = new RegExp(`,\\s+or\\s+(?=\\(?(?:${nameRe})\\s+(?:is|contains|does not contain)\\s)`, 'i');
   const parts = source.split(split).map((c) => c.trim()).filter(Boolean);
-  const clauses = parts.map((clause) => {
+  const readClause = (clause, inGroup) => {
+    if (clause.startsWith('(')) {
+      if (inGroup) throw new StructureError(`${where}: a group in brackets cannot hold another group ("${clause}"); Notion allows two levels of nesting`);
+      if (!clause.endsWith(')')) throw new StructureError(`${where}: the group "${clause}" is not closed with a bracket`);
+      const inner = clause.slice(1, -1).trim().split(splitGroup).map((c) => c.trim()).filter(Boolean);
+      if (inner.length === 0) throw new StructureError(`${where}: the group "${clause}" holds no clause`);
+      const leaves = inner.map((c) => readClause(c, true));
+      return leaves.length === 1 ? leaves[0] : { or: leaves };
+    }
+    const out = readSingle(clause);
+    if (inGroup && (out.or || out.and)) {
+      throw new StructureError(`${where}: "${clause}" cannot stand inside a group in brackets: it is an "or" itself, and Notion allows two levels of nesting under the top level (put it outside the group)`);
+    }
+    return out;
+  };
+  const readSingle = (clause) => {
     const name = names.find((n) => clause.startsWith(`${n} is `) || clause.startsWith(`${n} contains `) || clause.startsWith(`${n} does not contain `));
     if (!name) {
-      throw new StructureError(`${where}: cannot read the filter "${clause}"; it should read "<column> is empty", "<column> is <value> or <value>", "<column> is not <value>", "<column> contains <text>" or "<column> does not contain <text>"`);
+      throw new StructureError(`${where}: cannot read the filter "${clause}"; it should read "<column> is empty", "<column> is <value> or <value>", "<column> is not <value>", "<column> is ticked", "<column> is not ticked", "<column> contains <text>" or "<column> does not contain <text>", or a group "(<clause>, or <clause>)"`);
     }
     const column = columns.find((c) => c.name === name);
     const textual = column.type === 'rich_text' || column.type === 'title' || column.type === 'url';
@@ -340,6 +369,10 @@ export function parseViewFilter(text, table, where = 'view') {
     const rest = clause.slice(name.length + 4).trim();
     if (/^empty$/i.test(rest)) return leaf(column, { is_empty: true });
     if (/^not empty$/i.test(rest)) return leaf(column, { is_not_empty: true });
+    if (/^(not\s+)?ticked$/i.test(rest)) {
+      if (column.type !== 'checkbox') throw new StructureError(`${where}: "ticked" needs a checkbox column, and "${name}" is a ${column.type}`);
+      return leaf(column, { equals: !/^not/i.test(rest) });
+    }
     if (column.type === 'select' && /^not\s/i.test(rest)) {
       const value = rest.slice(4).trim();
       if (!column.options.includes(value)) throw new StructureError(`${where}: "${value}" is not a value of "${name}" (values: ${column.options.join(', ')})`);
@@ -360,12 +393,13 @@ export function parseViewFilter(text, table, where = 'view') {
     } else if (textual) {
       values = [rest];
     } else {
-      throw new StructureError(`${where}: a filter on a ${column.type} column ("${name}") cannot be read from words`);
+      throw new StructureError(`${where}: a filter on a ${column.type} column ("${name}") cannot be read from words${column.type === 'checkbox' ? '; it should read "<column> is ticked" or "<column> is not ticked"' : ''}`);
     }
     const condition = (value) => (column.type === 'multi_select' ? { contains: value } : { equals: value });
     const leaves = values.map((v) => leaf(column, condition(v)));
     return leaves.length === 1 ? leaves[0] : { or: leaves };
-  });
+  };
+  const clauses = parts.map((clause) => readClause(clause, false));
   return clauses.length === 1 ? clauses[0] : { and: clauses };
 }
 
@@ -374,16 +408,20 @@ const DIRECTIONS = Object.freeze({
   'highest first': 'descending', 'largest first': 'descending', 'newest first': 'descending', 'z to a': 'descending',
 });
 
-/** The sorts for a view's "Sorted by" text: "<Column>, lowest first" or "none" (no sorts). */
+/** The sorts for a view's "Sorted by" text: "<Column>, lowest first" or "none" (no sorts); several sorts are joined by "; then ", the first one is the main sort ("Claim, A to Z; then Agent confidence, lowest first"). */
 export function parseViewSort(text, table, where = 'view') {
   const source = String(text ?? '').trim();
   if (source === '' || /^(none|no sort)$/i.test(source)) return [];
-  for (const name of table.columns.map((c) => c.name).sort(byLengthDesc)) {
-    if (!source.startsWith(name)) continue;
-    const direction = DIRECTIONS[source.slice(name.length).replace(/^\s*,\s*/, '').trim().toLowerCase()];
-    if (direction) return [{ property: name, direction }];
-  }
-  throw new StructureError(`${where}: cannot read the sort "${source}"; it should read "<column>, lowest first", "<column>, highest first" or "none"`);
+  const names = table.columns.map((c) => c.name).sort(byLengthDesc);
+  return source.split(/\s*;\s*then\s+/i).map((clause) => {
+    const one = clause.trim();
+    for (const name of names) {
+      if (!one.startsWith(name)) continue;
+      const direction = DIRECTIONS[one.slice(name.length).replace(/^\s*,\s*/, '').trim().toLowerCase()];
+      if (direction) return { property: name, direction };
+    }
+    throw new StructureError(`${where}: cannot read the sort "${one}"; it should read "<column>, lowest first" or "<column>, highest first" (several joined by "; then "), or "none"`);
+  });
 }
 
 function parseViews(section, tables) {
@@ -480,6 +518,10 @@ export function validateStructure(structure) {
       if (c.type === 'relation') {
         if (!TABLES.includes(c.relation_to) || c.relation_to === key) bad(`table "${t.title}", column "${c.name}": a relation names another of the five tables in relation_to`);
       } else if (c.relation_to !== undefined) bad(`table "${t.title}", column "${c.name}": only a relation has relation_to`);
+      if (c.two_way !== undefined) {
+        if (c.type !== 'relation') bad(`table "${t.title}", column "${c.name}": only a relation has two_way`);
+        if (typeof c.two_way !== 'string' || c.two_way === '') bad(`table "${t.title}", column "${c.name}": two_way must be the name of the column on the other table that is the other side of the same relation`);
+      }
       if (c.renamed_from !== undefined && (typeof c.renamed_from !== 'string' || c.renamed_from === '' || c.renamed_from === c.name)) {
         bad(`table "${t.title}", column "${c.name}": renamed_from must be another name that a column of the table had in an earlier build`);
       }
@@ -512,6 +554,22 @@ export function validateStructure(structure) {
       if (Array.isArray(structure.views) && structure.views.some((v) => isPlain(v) && v.table === key && v.name === dv.name)) bad(`table "${t.title}": default_view is called "${dv.name}", the name of one of its other views`);
     }
   }
+  // a two-way relation is one relation with two columns: both exist, both are relations, each points at the other's table and each names the other
+  for (const key of TABLES) {
+    const t = structure.tables[key];
+    for (const c of t.columns) {
+      if (c.two_way === undefined) continue;
+      const here = `table "${t.title}", column "${c.name}"`;
+      const other = structure.tables[c.relation_to];
+      const partner = other.columns.find((x) => x.name === c.two_way);
+      if (!partner) bad(`${here}: two_way names "${c.two_way}", which the table "${other.title}" does not have`);
+      if (partner.type !== 'relation') bad(`${here}: two_way names "${c.two_way}" of "${other.title}", which is a ${partner.type}, not a relation`);
+      if (partner.relation_to !== key) bad(`${here}: its other side "${c.two_way}" of "${other.title}" points at ${structure.tables[partner.relation_to].title}, not back at "${t.title}"`);
+      if (partner.two_way !== c.name) bad(`${here}: its other side "${c.two_way}" of "${other.title}" does not name "${c.name}" in two_way; both sides of a pair name each other`);
+      if (c.retired === true || partner.retired === true) bad(`${here}: a retired column cannot be one side of a two-way relation`);
+      if (c.renamed_from !== undefined && partner.renamed_from !== undefined) bad(`${here}: both sides of the pair have renamed_from; the pair is made from the side that already exists, so only one may`);
+    }
+  }
   if (!Array.isArray(structure.views)) bad('views must be a list');
   const viewKeys = new Set();
   for (const v of structure.views) {
@@ -533,11 +591,12 @@ export function validateStructure(structure) {
   }
   if (!Array.isArray(structure.pages) || structure.pages.some((p) => typeof p !== 'string' || p === '')) bad('pages must be a list of page titles');
   if (structure.made_from !== undefined && (typeof structure.made_from !== 'string' || structure.made_from.trim() === '')) bad('made_from must be text naming the document the structure was made from');
+  if (structure.sync_descriptions !== undefined && typeof structure.sync_descriptions !== 'boolean') bad('sync_descriptions must be true or false');
   if (structure.hub !== undefined) validateHub(structure, bad);
   return structure;
 }
 
-const HUB_KEYS = Object.freeze(['title', 'note', 'view_links', 'table_order', 'pages_after', 'link_text']);
+const HUB_KEYS = Object.freeze(['title', 'note', 'view_links', 'table_order', 'pages_after', 'link_text', 'view_hints']);
 
 // The hub block (P11, P14): what the hub page holds besides its title, in order: the one line of warning (the note), the link lines to some views, the five tables, then some pages. A
 // structure without one (the earlier builds) is valid and builds as before.
@@ -568,6 +627,16 @@ function validateHub(structure, bad) {
       if (!hub.view_links.includes(k)) bad(`hub: link_text names "${k}", which is not one of view_links`);
       if (typeof v !== 'string' || v.trim() === '' || /[\r\n]/.test(v) || [...v].length > 200) bad(`hub: link_text of "${k}" must be one line of at most 200 characters`);
     }
+  }
+  // view_hints (optional, the v2 page): one plain paragraph right after a view's link line, saying what to do there. Blocks are found by their text, so no two may read alike.
+  if (hub.view_hints !== undefined) {
+    if (!isPlain(hub.view_hints)) bad('hub: view_hints must be an object of view key -> text');
+    for (const [k, v] of Object.entries(hub.view_hints)) {
+      if (!hub.view_links.includes(k)) bad(`hub: view_hints names "${k}", which is not one of view_links`);
+      if (typeof v !== 'string' || v.trim() === '' || /[\r\n]/.test(v) || [...v].length > 200) bad(`hub: view_hints of "${k}" must be one line of at most 200 characters`);
+    }
+    const texts = Object.values(hub.view_hints);
+    if (new Set(texts).size !== texts.length) bad('hub: two views have the same hint; a hint is found on the page by its text');
   }
 }
 
@@ -627,6 +696,32 @@ export function countStructure(structure) {
 /** The columns of a table that are in use: every column of the structure but the retired ones (the "(old)" columns of an earlier build, which are only ever renamed, never made). */
 export const liveColumns = (structure, table) => structure.tables[table].columns.filter((c) => c.retired !== true);
 
+/**
+ * The two-way relations of a structure, one entry per pair: { builder: { table, column }, partner: { table, column } }. A column's `two_way` names the column on its relation_to table that
+ * is the other side of the same Notion relation (`dual_property`); the pair is made once, from one side only, and Notion makes the other column by itself. Which side makes it is
+ * fixed by this rule, so that a run and the next run agree: the side that has `renamed_from` (it exists on a page built earlier as a one-way relation, and the build turns it into
+ * the pair in place); else the side on the table that comes first in TABLES. Pure; the structure must be valid (validateStructure checks that the sides name each other).
+ */
+export function twoWayPairs(structure) {
+  const pairs = [];
+  const done = new Set();
+  for (const table of TABLES) {
+    for (const c of structure.tables[table].columns) {
+      if (c.two_way === undefined) continue;
+      const mine = { table, column: c.name };
+      const theirs = { table: c.relation_to, column: c.two_way };
+      const id = [`${mine.table}/${mine.column}`, `${theirs.table}/${theirs.column}`].sort().join('|');
+      if (done.has(id)) continue;
+      done.add(id);
+      const other = structure.tables[theirs.table].columns.find((x) => x.name === theirs.column);
+      // `mine` is on the table that comes first in TABLES order (the loop meets it first), so it builds unless only the other side has renamed_from
+      const otherBuilds = c.renamed_from === undefined && other?.renamed_from !== undefined;
+      pairs.push(otherBuilds ? { builder: theirs, partner: mine } : { builder: mine, partner: theirs });
+    }
+  }
+  return pairs;
+}
+
 export const pageKey = (title) => String(title).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
 
 /** The key of a view in config.json notion.views: its name in lower case with underscores ("Your queue" -> "your_queue"). */
@@ -637,7 +732,7 @@ export const viewUrl = (databaseId, viewId) => `https://www.notion.so/${normId(d
 
 function propertyConfig(table, column) {
   const body = {};
-  if (column.type === 'relation') body.relation = { single_property: {} }; // the data source id of the table it points at is added with the column, once that table exists
+  if (column.type === 'relation') body.relation = column.two_way === undefined ? { single_property: {} } : { dual_property: {} }; // the data source id of the table it points at is added with the column, once that table exists
   else if (column.type === 'number') body.number = { format: 'number' };
   else if (column.type === 'select' || column.type === 'multi_select') {
     body[column.type] = { options: column.options.map((name) => ({ name, color: optionColor(table, column.name, name) })) };
@@ -695,7 +790,8 @@ export function hubPlan(structure) {
     pages: Object.fromEntries(structure.pages.map((title) => [pageKey(title), title])),
     view_links: hub.view_links.map((key) => {
       const view = structure.views.find((v) => viewKey(v.name) === key);
-      return { key, name: view.name, text: `${view.name}: ${hub.link_text?.[key] ?? HUB_LINK_TEXT[key] ?? `the view "${view.name}"`}` };
+      const hint = hub.view_hints?.[key];
+      return { key, name: view.name, text: `${view.name}: ${hub.link_text?.[key] ?? HUB_LINK_TEXT[key] ?? `the view "${view.name}"`}`, ...(hint ? { hint } : {}) };
     }),
   };
 }
@@ -710,8 +806,10 @@ export function planStructure(structure, config, { inline = false } = {}) {
   const parent = config?.notion?.parent_page_id;
   if (!realId(parent)) throw new StructureError('config.json has no notion.parent_page_id');
   const order = structure.hub ? structure.hub.table_order : TABLES;
+  const pairs = twoWayPairs(structure);
   return {
     parent_page_id: parent,
+    ...(structure.sync_descriptions === true ? { sync_descriptions: true } : {}),
     pages: structure.pages.map((title) => {
       const key = pageKey(title);
       return { key, title, text: PAGE_TEXT[key] ?? `${title}.` };
@@ -734,10 +832,12 @@ export function planStructure(structure, config, { inline = false } = {}) {
         },
       };
     }),
+    // a two-way column also carries `two_way` (the other side's name) and `two_way_role`: 'builder' (the side the pair is made from, twoWayPairs) or 'partner' (made by Notion, never added)
     columns: TABLES.flatMap((table) => structure.tables[table].columns
       .filter((c) => c.type !== 'title')
       .map((c) => ({
         table, name: c.name, type: c.type, relation_to: c.relation_to ?? null, renamed_from: c.renamed_from ?? null, retired: c.retired === true, body: propertyConfig(table, c),
+        ...(c.two_way === undefined ? {} : { two_way: c.two_way, two_way_role: pairs.some((p) => p.builder.table === table && p.builder.column === c.name) ? 'builder' : 'partner' }),
       }))),
     views: structure.views.map((v) => viewPlan(structure, v)),
     // the table's own view (Notion's default view, which the structure does not name) is arranged too: see defaultViewPlan
@@ -845,7 +945,7 @@ function recordTable(ctx, table, databaseId, dataSourceId) {
 }
 
 // What went wrong with a create, as the result of the run.
-function stopWith(ctx, what, e) {
+function stopWith(ctx, what, e, next = null) {
   const { result } = ctx;
   result.ok = false;
   if (e?.code === 'create_uncertain') {
@@ -866,10 +966,182 @@ function stopWith(ctx, what, e) {
     reason: refused ? 'refused' : 'error',
     what,
     message,
-    next: users
+    next: next ?? (users
       ? 'Notion may not take the Created by and Last edited by columns through the API. Nothing was made twice. If so, remove those two columns from setup/structure.json (the approved proposal lists them, so say so in the log) and run the same command again.'
-      : 'Fix what the message names and run the same command again; what was made is recorded and is not made twice.',
+      : 'Fix what the message names and run the same command again; what was made is recorded and is not made twice.'),
   };
+}
+
+// ---- two-way relations ---------------------------------------------------------------------------------------------------------------------------
+
+// The id and name Notion gives the other side of a dual_property relation, as the column's own definition reports them.
+const dualInfo = (def) => (def?.relation?.type === 'dual_property' || isPlain(def?.relation?.dual_property) ? { dual: true, ...(def.relation.dual_property ?? {}) } : { dual: false });
+
+// The column of `dataSource` that is the other side of the relation `def` (a dual_property relation column of the other table): by the synced property id Notion reports, else by
+// the synced name, else (a reply that names neither) the column called `fallbackName` when it is a relation. null when none is there.
+function syncedColumn(dataSource, def, fallbackName) {
+  const props = Object.values(dataSource?.properties ?? {});
+  const info = dualInfo(def);
+  const byId = info.synced_property_id ? props.find((p) => p.id === info.synced_property_id || safeDecode(p.id ?? '') === safeDecode(info.synced_property_id)) : null;
+  if (byId) return byId;
+  const byName = info.synced_property_name ? props.find((p) => p.name === info.synced_property_name && p.type === 'relation') : null;
+  if (byName) return byName;
+  if (!info.synced_property_id && !info.synced_property_name) return props.find((p) => p.name === fallbackName && p.type === 'relation') ?? null;
+  return null;
+}
+
+// The description sync (structure `sync_descriptions: true`; off without it, so a structure that does not ask for it builds and verifies exactly as before). The build writes a column's
+// description only when it makes the column and a table's only when it makes the table; a column or table that was renamed or kept from an earlier build keeps its old words. With
+// the flag on, every live column that has a description in the structure is compared with the one Notion reports and PATCHed where they differ (one updateDataSource call per table,
+// { properties: { <name>: { description } } }), and then the table's own description is compared and written with updateDatabase (PATCH /databases/{id}, { description }). A column whose
+// structure description is empty is left alone (nothing is cleared), so the Notion-made other side of a two-way relation keeps what it has unless the structure gives it a description.
+// Nothing is removed. Counted in result.created.descriptions and listed in result.descriptions: { <table>: { columns: [names], table: true? } }.
+// Notion refuses a property update that carries only a description (400: "<type> should be defined"), so the column's type goes with it, configured as Notion reports it: a select keeps
+// its options (sent with their ids), a relation its table and its one- or two-way form, a number its format. Nothing of the column changes but the description.
+export function sameTypeConfig(property) {
+  const type = property?.type;
+  const config = property?.[type] ?? {};
+  if (type === 'select' || type === 'multi_select' || type === 'status') {
+    return { [type]: { options: (config.options ?? []).map(({ id, name, color }) => ({ id, name, color })) } };
+  }
+  if (type === 'relation') {
+    const form = config.type === 'dual_property' ? 'dual_property' : 'single_property';
+    return { relation: { data_source_id: config.data_source_id, [form]: {} } };
+  }
+  if (type === 'number') return { number: config.format ? { format: config.format } : {} };
+  return { [type]: {} };
+}
+
+async function buildDescriptions(ctx) {
+  const { plan, client, config, log, result } = ctx;
+  if (plan.sync_descriptions !== true) return;
+  result.created.descriptions = 0;
+  result.descriptions = {};
+  for (const table of TABLES) {
+    const entry = tableEntry(config, table);
+    if (!realId(entry.database_id) || !realId(entry.data_source_id)) continue; // buildDatabases stopped the run already
+    const done = { columns: [], table: false };
+    try {
+      const dataSource = await client.retrieveDataSource(entry.data_source_id);
+      const changes = {};
+      for (const c of (plan.columns ?? []).filter((x) => x.table === table && x.retired !== true && x.body?.description)) {
+        const have = dataSource.properties?.[c.name];
+        if (have && (have.description ?? '') !== c.body.description) changes[c.name] = { ...sameTypeConfig(have), description: c.body.description };
+      }
+      if (Object.keys(changes).length) {
+        await client.updateDataSource(entry.data_source_id, { properties: changes });
+        done.columns = Object.keys(changes);
+        for (const name of done.columns) log(`table "${table}": the description of "${name}" written`);
+      }
+    } catch (e) {
+      stopWith(ctx, `the column descriptions of "${table}"`, e);
+      return;
+    }
+    const wanted = plan.databases.find((d) => d.table === table)?.description;
+    if (wanted !== undefined) {
+      try {
+        const has = plainText((await client.retrieveDatabase(entry.database_id))?.description);
+        if (has !== wanted) {
+          await client.updateDatabase(entry.database_id, { description: wanted });
+          done.table = true;
+          log(`table "${table}": its description written`);
+        }
+      } catch (e) {
+        stopWith(ctx, `the description of the table "${table}"`, e);
+        return;
+      }
+    }
+    if (done.columns.length || done.table) {
+      result.descriptions[table] = { columns: done.columns, ...(done.table ? { table: true } : {}) };
+      result.created.descriptions += done.columns.length + (done.table ? 1 : 0);
+    }
+  }
+}
+
+// Make or finish one two-way relation, from its builder column `c` on `table` (the column exists under its new name already: the renames of this table ran first). Steps:
+//   1. the column is not there: it was added with `dual_property` by the caller (buildColumns), so the pair exists;
+//   2. the column is there as a one-way relation (`single_property`) to the right table: PATCH it to `dual_property` and read it back; if Notion refuses, or still reports one-way, the run
+//      stops. The column is never removed or made again;
+//   3. read the other table: the synced column Notion made there is renamed to the partner's name (c.two_way) when it has another name. A column of that name that is not the synced one stops
+//      the run. Everything is read back; a second run finds the pair in order and sends nothing.
+async function buildTwoWay(ctx, table, c, { made = false } = {}) {
+  const { client, config, log, result } = ctx;
+  const entry = tableEntry(config, table);
+  const target = tableEntry(config, c.relation_to);
+  const where = `the two-way relation "${c.name}" of "${table}"`;
+  if (!realId(target.data_source_id)) {
+    stopWith(ctx, where, new Error(`the table "${c.relation_to}" it points at is not created yet`));
+    return;
+  }
+  const note = { table, column: c.name, partner_table: c.relation_to, partner: c.two_way, made, converted: false, renamed: null };
+  let own;
+  let other;
+  try {
+    own = (await client.retrieveDataSource(entry.data_source_id)).properties?.[c.name];
+    if (!own) {
+      stopWith(ctx, where, new Error('the column is not in the table after it was added'));
+      return;
+    }
+    if (own.type !== 'relation') {
+      stopWith(ctx, where, new Error(`the column is a ${own.type} in Notion, not a relation, so it cannot be made two-way; the build never changes a column's type or removes one`));
+      return;
+    }
+    if (normId(own.relation?.data_source_id ?? '') !== normId(target.data_source_id)) {
+      stopWith(ctx, where, new Error(`the column points at ${own.relation?.data_source_id ? normId(own.relation.data_source_id) : 'no table'}, not at the ${c.relation_to} table (${normId(target.data_source_id)})`));
+      return;
+    }
+  } catch (e) {
+    stopWith(ctx, where, e);
+    return;
+  }
+  if (!dualInfo(own).dual) {
+    const body = { properties: { [c.name]: { relation: { data_source_id: normId(target.data_source_id), dual_property: {} } } } };
+    const stuck = (why) => `The one-way relation "${c.name}" of "${table}" could not be made two-way (${why}). It was left as it is and nothing was removed or made again. Make the relation two-way by hand in Notion (in the column's settings, show it on the "${c.relation_to}" table), or tell the owner; then run the same command again, which names the other side "${c.two_way}".`;
+    try {
+      await client.updateDataSource(entry.data_source_id, body);
+      own = (await client.retrieveDataSource(entry.data_source_id)).properties?.[c.name];
+    } catch (e) {
+      stopWith(ctx, where, e, stuck(`Notion answered: ${e.message}`));
+      return;
+    }
+    if (!dualInfo(own).dual) {
+      stopWith(ctx, where, new Error('Notion accepted the change but the column still reads as a one-way relation'), stuck('Notion still reports it as one-way after the change'));
+      return;
+    }
+    note.converted = true;
+    log(`table "${table}": the one-way relation "${c.name}" was made two-way`);
+  }
+  try {
+    other = await client.retrieveDataSource(target.data_source_id);
+  } catch (e) {
+    stopWith(ctx, where, e);
+    return;
+  }
+  const synced = syncedColumn(other, own, c.two_way);
+  if (!synced) {
+    stopWith(ctx, where, new Error(`Notion reports the relation as two-way, but its other side cannot be found in the "${c.relation_to}" table; nothing was changed there`));
+    return;
+  }
+  if (synced.name !== c.two_way) {
+    const taken = other.properties?.[c.two_way];
+    if (taken) {
+      stopWith(ctx, where, new Error(`the "${c.relation_to}" table has a column "${c.two_way}" (a ${taken.type}) that is not the other side of this relation (that is "${synced.name}"); the build never removes or renames it for you. Rename or remove it by hand, then run the same command again`));
+      return;
+    }
+    try {
+      await client.updateDataSource(target.data_source_id, { properties: { [synced.id ?? synced.name]: { name: c.two_way } } });
+      const back = (await client.retrieveDataSource(target.data_source_id)).properties?.[c.two_way];
+      if (!back || back.type !== 'relation') throw new Error(`after the rename "${c.two_way}" is not a relation of the "${c.relation_to}" table`);
+    } catch (e) {
+      stopWith(ctx, `the other side of ${where} (its name)`, e);
+      return;
+    }
+    note.renamed = { from: synced.name, to: c.two_way };
+    (result.columnsRenamed[c.relation_to] ??= []).push({ from: synced.name, to: c.two_way });
+    result.created.columns_renamed += 1;
+    log(`table "${c.relation_to}": the other side of "${c.name}" renamed (${synced.name} -> ${c.two_way})`);
+  }
+  (result.twoWay ??= []).push(note);
 }
 
 // The child pages or databases of the parent page (listed once per run): a thing made by an earlier run that stopped before it was recorded is found here.
@@ -1028,28 +1300,34 @@ async function buildColumns(ctx) {
       log(`table "${table}": ${renames.length} column(s) renamed (${renames.map((c) => `${c.renamed_from} -> ${c.name}`).join(', ')})`);
     }
 
-    const missing = wanted.filter((c) => c.retired !== true && !have[c.name]);
-    if (missing.length === 0) continue;
-    const properties = {};
-    for (const c of missing) {
-      if (c.relation_to) {
-        const target = tableEntry(config, c.relation_to);
-        if (!realId(target.data_source_id)) {
-          stopWith(ctx, `the column "${c.name}" of "${table}"`, new Error(`the table "${c.relation_to}" it points at is not created yet`));
-          return;
-        }
-        properties[c.name] = { ...c.body, relation: { data_source_id: normId(target.data_source_id), single_property: {} } };
-      } else properties[c.name] = c.body;
+    // the partner side of a two-way relation is never added: Notion makes it with the builder side, and the pair step below names it
+    const missing = wanted.filter((c) => c.retired !== true && c.two_way_role !== 'partner' && !have[c.name]);
+    if (missing.length) {
+      const properties = {};
+      for (const c of missing) {
+        if (c.relation_to) {
+          const target = tableEntry(config, c.relation_to);
+          if (!realId(target.data_source_id)) {
+            stopWith(ctx, `the column "${c.name}" of "${table}"`, new Error(`the table "${c.relation_to}" it points at is not created yet`));
+            return;
+          }
+          properties[c.name] = { ...c.body, relation: { data_source_id: normId(target.data_source_id), ...(c.two_way_role === 'builder' ? { dual_property: {} } : { single_property: {} }) } };
+        } else properties[c.name] = c.body;
+      }
+      try {
+        await client.updateDataSource(entry.data_source_id, { properties });
+      } catch (e) {
+        stopWith(ctx, `the columns of "${table}"`, e);
+        return;
+      }
+      result.columns[table] = missing.map((c) => c.name);
+      result.created.columns += missing.length;
+      log(`table "${table}": ${missing.length} column(s) added (${missing.map((c) => c.name).join(', ')})`);
     }
-    try {
-      await client.updateDataSource(entry.data_source_id, { properties });
-    } catch (e) {
-      stopWith(ctx, `the columns of "${table}"`, e);
-      return;
+    for (const c of wanted.filter((x) => x.two_way_role === 'builder' && x.retired !== true)) {
+      await buildTwoWay(ctx, table, c, { made: missing.includes(c) });
+      if (!result.ok) return;
     }
-    result.columns[table] = missing.map((c) => c.name);
-    result.created.columns += missing.length;
-    log(`table "${table}": ${missing.length} column(s) added (${missing.map((c) => c.name).join(', ')})`);
   }
 }
 
@@ -1368,6 +1646,8 @@ function hubExpected(hub, config) {
   if (hub.note) items.push({ id: 'note', label: 'the warning line at the top', short: 'the warning line', match: (b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === hub.note });
   for (const l of hub.view_links) {
     items.push({ id: `link:${l.key}`, label: `the link line "${l.name}"`, short: `link "${l.name}"`, match: (b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === l.text });
+    // a hint line (v2) stands right after its link line
+    if (l.hint) items.push({ id: `hint:${l.key}`, label: `the hint line under "${l.name}"`, short: `hint "${l.name}"`, match: (b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === l.hint });
   }
   for (const key of hub.table_order) {
     let id = null;
@@ -1413,7 +1693,7 @@ export function hubDifferences({ hub, config, children }) {
       found.set(item.id, b);
       actual.push(item.id);
     } else {
-      leftovers.push({ id: normId(b.id), type: b.type ?? 'unknown', text: blockWords(b), duplicate: Boolean(item), of: item?.id === 'note' ? 'the warning line' : 'a link line' });
+      leftovers.push({ id: normId(b.id), type: b.type ?? 'unknown', text: blockWords(b), duplicate: Boolean(item), of: item?.id === 'note' ? 'the warning line' : item?.id.startsWith('hint:') ? 'a hint line' : 'a link line' });
     }
   }
   for (const item of items) if (!found.has(item.id)) differences.push({ kind: 'missing', detail: `${item.label} is not on the hub page` });
@@ -1479,28 +1759,45 @@ async function buildHub(ctx) {
   try {
     children = await client.retrieveBlockChildren(rootId);
     const views = config.notion?.views ?? {};
-    const blocks = [];
+    const isText = (text) => (b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === text;
+    const blocks = []; // the new lines that go together at the top, in order: a link line, then its hint line when the view has one
+    const hintsUnder = []; // the hint lines to add under a link line that is on the page already
+    if (hub.view_links.some((l) => l.hint)) result.created.hub_hints = 0; // counted only for a hub that has hints, so the production result keeps its shape
     for (const line of hub.view_links) {
-      if (children.some((b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === line.text)) continue;
+      const linkAt = children.find(isText(line.text));
+      const hintThere = !line.hint || children.some(isText(line.hint));
+      if (linkAt) {
+        if (!hintThere) hintsUnder.push({ line, after: linkAt.id });
+        continue;
+      }
       const url = views[line.key]?.url;
       if (typeof url !== 'string' || url === '') {
         missing.push({ kind: 'link', line: line.name, detail: `the link line "${line.name}" cannot be added: config.json has no address for the view (notion.views.${line.key}); run setup.mjs views` });
         continue;
       }
-      blocks.push({ line, block: linkBlock(line, url) });
+      blocks.push({ kind: 'link', text: line.text, name: line.name, block: linkBlock(line, url) });
+      if (!hintThere) blocks.push({ kind: 'hint', text: line.hint, name: `the hint under "${line.name}"`, block: noteBlock(line.hint) });
     }
     // the warning line (P14) goes first, in the same request as the link lines when both are missing; with the warning there already, the link lines go right after it
-    const noteAt = hub.note ? children.find((b) => b?.type === 'paragraph' && plainText(b.paragraph?.rich_text) === hub.note) : null;
+    const noteAt = hub.note ? children.find(isText(hub.note)) : null;
     const fresh = [
-      ...(hub.note && !noteAt ? [{ text: hub.note, name: 'the warning line', block: noteBlock(hub.note) }] : []),
-      ...blocks.map((b) => ({ text: b.line.text, name: b.line.name, block: b.block })),
+      ...(hub.note && !noteAt ? [{ kind: 'note', text: hub.note, name: 'the warning line', block: noteBlock(hub.note) }] : []),
+      ...blocks,
     ];
     if (fresh.length) {
       await client.appendBlocks(rootId, fresh.map((b) => b.block), { position: noteAt ? { type: 'after_block', after_block: { id: noteAt.id } } : { type: 'start' } });
       added.push(...fresh.map((b) => b.text));
-      result.created.hub_links += blocks.length;
-      result.created.hub_note = fresh.length - blocks.length;
+      result.created.hub_links += fresh.filter((b) => b.kind === 'link').length;
+      result.created.hub_note = fresh.filter((b) => b.kind === 'note').length;
+      if (result.created.hub_hints !== undefined) result.created.hub_hints += fresh.filter((b) => b.kind === 'hint').length;
       log(`hub page: ${fresh.length} line(s) added at the top (${fresh.map((b) => b.name).join(', ')})`);
+    }
+    // a hint whose link line is there already goes right after that line (one request each; nothing is moved)
+    for (const { line, after } of hintsUnder) {
+      await client.appendBlocks(rootId, [noteBlock(line.hint)], { position: { type: 'after_block', after_block: { id: after } } });
+      added.push(line.hint);
+      result.created.hub_hints += 1;
+      log(`hub page: the hint under "${line.name}" added`);
     }
   } catch (e) {
     stopWith(ctx, 'the link lines on the hub page', e);
@@ -1563,6 +1860,7 @@ export async function runStructure({ plan, client, root = agentRoot(), config, l
     if (parts.includes('databases')) {
       await buildDatabases(ctx);
       if (result.ok) await buildColumns(ctx);
+      if (result.ok) await buildDescriptions(ctx);
     }
   };
   try {
@@ -1626,15 +1924,52 @@ const canonSorts = (sorts, nameOf) => (Array.isArray(sorts) ? sorts : []).map((s
 // ("extra"); it does not find an option that the structure lists and the table has not been given yet ("missing"), so it is clean before the first claim of a new space and after it.
 const GROWING_OPTIONS = Object.freeze({ claims: Object.freeze(['Geo Space']) });
 
-function compareColumns(add, key, t, dataSource, config) {
+// How a two-way pair stands in Notion, from the data sources already read (`peer(table)` gives one or null): { state, synced? }. 'unknown' when a side cannot be judged (the builder column is
+// missing or not a relation, which compareColumns reports itself, or a table could not be read); 'one-way' for a builder column that is still single_property; 'no-partner' when Notion
+// reports a pair but the other table has no such column; 'misnamed' when the synced column has another name than the partner's; 'ok'.
+function pairState(pair, peer) {
+  const own = peer(pair.builder.table)?.properties?.[pair.builder.column];
+  const there = peer(pair.partner.table);
+  if (!own || own.type !== 'relation' || !there) return { state: 'unknown' };
+  if (!dualInfo(own).dual) return { state: 'one-way' };
+  const synced = syncedColumn(there, own, pair.partner.column);
+  if (!synced) return { state: 'no-partner' };
+  return { state: synced.name === pair.partner.column ? 'ok' : 'misnamed', synced };
+}
+
+function compareColumns(add, key, t, dataSource, config, { structure, peer } = {}) {
   const actual = dataSource?.properties ?? {};
+  const pairs = structure ? twoWayPairs(structure) : [];
+  const partnerNames = new Set(pairs.filter((p) => p.partner.table === key).map((p) => p.partner.column));
+  const explained = new Set(); // the default-named synced columns that a pair's difference already explains: they are not "extra" as well
+  for (const pair of pairs) {
+    const state = pairState(pair, peer);
+    const title = (k) => structure.tables[k].title;
+    if (pair.partner.table === key && state.state === 'misnamed') explained.add(state.synced.name);
+    if (pair.builder.table !== key) continue;
+    const here = `"${pair.builder.column}"`;
+    const there = `the ${title(pair.partner.table)} table`;
+    if (state.state === 'one-way') add(key, 'relation', `${here} is a one-way relation in Notion, but the structure wants it two-way with "${pair.partner.column}" on ${there}; setup.mjs build converts it`);
+    else if (state.state === 'no-partner') add(key, 'relation', `${here} is two-way in Notion, but its other side cannot be found on ${there} (the structure calls it "${pair.partner.column}")`);
+    else if (state.state === 'misnamed') {
+      const taken = peer(pair.partner.table)?.properties?.[pair.partner.column];
+      add(key, 'relation', taken
+        ? `the other side of ${here} on ${there} is "${state.synced.name}", and "${pair.partner.column}" there is another column; the build stops until one of them is renamed by hand`
+        : `the other side of ${here} on ${there} is called "${state.synced.name}" and the structure calls it "${pair.partner.column}"; setup.mjs build renames it`);
+    }
+  }
   for (const c of t.columns) {
     const def = actual[c.name];
     if (!def) {
       if (c.retired === true) continue; // a retired column exists only where a rename made it
+      if (partnerNames.has(c.name)) continue; // the other side of a two-way relation: the pair's own difference says what is wrong with it
       const old = c.renamed_from && actual[c.renamed_from] ? ` ("${c.renamed_from}" is there under its old name; setup.mjs build renames it)` : '';
       add(key, 'missing column', `"${c.name}" (${c.type}) is not in the table${old}`);
       continue;
+    }
+    // with the description sync on, a column's description is part of the structure (an empty one is not compared: nothing is cleared)
+    if (structure?.sync_descriptions === true && c.retired !== true && c.description && (def.description ?? '') !== c.description) {
+      add(key, 'column description', `"${c.name}" has the description ${JSON.stringify(short(def.description ?? '', 80))}, the structure says ${JSON.stringify(short(c.description, 80))}; setup.mjs build writes it`);
     }
     if (def.type !== c.type) {
       const successor = t.columns.find((o) => o.renamed_from === c.name && o.type === def.type);
@@ -1652,6 +1987,10 @@ function compareColumns(add, key, t, dataSource, config) {
       if (realId(target) && (found === null || normId(found) !== normId(target))) {
         add(key, 'relation', `"${c.name}" points at ${found ? normId(found) : 'no table'} in Notion, not at the ${c.relation_to} table (${normId(target)})`);
       }
+      const pair = pairs.find((p) => p.partner.table === key && p.partner.column === c.name);
+      if (pair && !dualInfo(def).dual && pairState(pair, peer).state !== 'one-way') {
+        add(key, 'relation', `"${c.name}" is a one-way relation in Notion, but the structure wants it as the other side of "${pair.builder.column}" on the ${structure.tables[pair.builder.table].title} table`);
+      }
     }
     if (c.type === 'select' || c.type === 'multi_select') {
       const have = new Set((def[c.type]?.options ?? []).map((o) => o.name));
@@ -1665,7 +2004,7 @@ function compareColumns(add, key, t, dataSource, config) {
     }
   }
   for (const [name, def] of Object.entries(actual)) {
-    if (!t.columns.some((c) => c.name === name)) add(key, 'extra column', `"${name}" (${def.type}) is in the table but not in the structure`);
+    if (!t.columns.some((c) => c.name === name) && !explained.has(name)) add(key, 'extra column', `"${name}" (${def.type}) is in the table but not in the structure`);
   }
 }
 
@@ -1730,6 +2069,30 @@ export async function verifyStructure({ client, config, structure } = {}) {
   const differences = [];
   const seen = {}; // table -> { view name -> view id } for the views that were found
   const add = (table, kind, detail) => differences.push({ table, kind, detail });
+  // each table's data source is read once (a table with a two-way relation is read early, when the table on the other side is compared); a failure is kept, to be reported when the table's turn comes
+  const sources = new Map();
+  const readSource = async (key) => {
+    if (!sources.has(key)) {
+      try {
+        sources.set(key, { dataSource: await client.retrieveDataSource(tableEntry(config, key).data_source_id) });
+      } catch (e) {
+        sources.set(key, { error: e });
+      }
+    }
+    return sources.get(key);
+  };
+  const readable = (key) => {
+    const entry = (() => {
+      try {
+        return tableEntry(config, key);
+      } catch {
+        return null;
+      }
+    })();
+    return Boolean(entry && realId(entry.database_id) && realId(entry.data_source_id));
+  };
+  const peer = (key) => sources.get(key)?.dataSource ?? null;
+  const pairs = twoWayPairs(structure);
   for (const key of TABLES) {
     const t = structure.tables[key];
     let entry = null;
@@ -1742,17 +2105,20 @@ export async function verifyStructure({ client, config, structure } = {}) {
       add(key, 'missing table', `config.json has no ids for "${t.title}" yet`);
       continue;
     }
-    let dataSource;
-    try {
-      dataSource = await client.retrieveDataSource(entry.data_source_id);
-    } catch (e) {
-      add(key, 'missing table', `"${t.title}" cannot be read (${e.message})`);
+    const mine = await readSource(key);
+    if (mine.error) {
+      add(key, 'missing table', `"${t.title}" cannot be read (${mine.error.message})`);
       continue;
     }
-    compareColumns(add, key, t, dataSource, config);
+    const dataSource = mine.dataSource;
+    for (const p of pairs) {
+      const otherKey = p.builder.table === key ? p.partner.table : p.partner.table === key ? p.builder.table : null;
+      if (otherKey && readable(otherKey)) await readSource(otherKey);
+    }
+    compareColumns(add, key, t, dataSource, config, { structure, peer });
     const wanted = structure.views.filter((v) => v.table === key);
     if (wanted.length || defaultViewPlan(structure, key)) await compareViews(add, key, structure, wanted, entry, client, dataSource, seen);
-    if (structure.hub || t.description !== undefined) await compareDatabase(add, key, t, entry, client, { fullPage: Boolean(structure.hub) });
+    if (structure.hub || t.description !== undefined) await compareDatabase(add, key, t, entry, client, { fullPage: Boolean(structure.hub), sync: structure.sync_descriptions === true });
   }
   if (structure.hub) {
     // the hub page: its title, the order of its body and its leftovers, as the hub part of the build reports them (an order difference is a difference here, so verify is ok only when the page is in order)
@@ -1764,12 +2130,12 @@ export async function verifyStructure({ client, config, structure } = {}) {
 
 // The table itself, read once: a production table is a full-page table (P10, is_inline false; an inline table would sit inside the hub page's body instead of being a page of its own), and
 // the one line under its name is the structure's description (ED-8).
-async function compareDatabase(add, key, t, entry, client, { fullPage }) {
+async function compareDatabase(add, key, t, entry, client, { fullPage, sync = false }) {
   try {
     const db = await client.retrieveDatabase(entry.database_id);
     if (t.description !== undefined) {
       const has = (Array.isArray(db?.description) ? db.description : []).map((x) => x?.plain_text ?? x?.text?.content ?? '').join('');
-      if (has !== t.description) add(key, 'description', `"${t.title}" has the description ${JSON.stringify(has)}, the structure says ${JSON.stringify(t.description)}; write it in Notion under the table's name (the build writes it only when it makes the table)`);
+      if (has !== t.description) add(key, 'description', `"${t.title}" has the description ${JSON.stringify(has)}, the structure says ${JSON.stringify(t.description)}; ${sync ? 'setup.mjs build writes it (the structure asks for the descriptions to be kept in step)' : "write it in Notion under the table's name (the build writes it only when it makes the table)"}`);
     }
     if (fullPage && db?.is_inline !== false) add(key, 'inline', `"${t.title}" ${db?.is_inline === true ? 'is an inline table' : `reads is_inline ${JSON.stringify(db?.is_inline ?? null)}`}, but the structure builds full-page tables; turn it into a full-page table in Notion`);
   } catch (e) {
@@ -1791,11 +2157,14 @@ export function renderPreview(structure) {
   for (const title of structure.pages) lines.push(`- ${title}: ${PAGE_TEXT[pageKey(title)] ?? `${title}.`}`);
   lines.push('');
   const hub = hubPlan(structure);
+  const pairs = twoWayPairs(structure);
   if (hub) {
     lines.push(`## Hub page "${hub.title}"`, '');
     lines.push('The hub page holds only links, in this order (nothing on it is moved, edited or removed by a later run; what is out of place is reported):', '');
     lines.push(`1. the warning line at the very top: ${hub.note}`);
     lines.push(`2. ${hub.view_links.length} link lines at the top: ${hub.view_links.map((l) => l.text).join('; ')}`);
+    const hinted = hub.view_links.filter((l) => l.hint);
+    if (hinted.length) lines.push(`   each of ${hinted.map((l) => `"${l.name}"`).join(', ')} is followed by one plain hint line: ${hinted.map((l) => l.hint).join(' / ')}`);
     lines.push(`3. the ${hub.table_order.length} tables as full-page tables, in this order: ${hub.table_order.map((t) => hub.tables[t]).join(', ')}`);
     lines.push(`4. then: ${hub.pages_after.map((k) => (k === 'archive' ? `the archive page "${ARCHIVE_TITLE}" (made by setup.mjs archive; it sits above the tables until a person drags it down)` : hub.pages[k])).join(', ')}`);
     lines.push('');
@@ -1807,7 +2176,11 @@ export function renderPreview(structure) {
     lines.push('| Column | Type | Options | Meaning |', '|---|---|---|---|');
     for (const c of t.columns) {
       const options = c.relation_to ? `points at the ${structure.tables[c.relation_to].title}` : c.options.join(', ');
-      const note = [c.renamed_from ? `the column "${c.renamed_from}" of an earlier build is renamed to this` : null, c.retired ? 'retired: never made on a new table, hidden in every view' : null].filter(Boolean).join('; ');
+      const pair = c.two_way === undefined ? null : pairs.find((p) => (p.builder.table === key && p.builder.column === c.name) || (p.partner.table === key && p.partner.column === c.name));
+      const twoWay = pair ? (pair.builder.table === key && pair.builder.column === c.name
+        ? `two-way: the pair is made from this side, and Notion's other side on the ${structure.tables[pair.partner.table].title} table is named "${pair.partner.column}"${c.renamed_from ? ' (the one-way column of the earlier build is turned into the pair in place)' : ''}`
+        : `two-way: the other side of "${pair.builder.column}" on the ${structure.tables[pair.builder.table].title} table; Notion makes it with that column, it is never added alone`) : null;
+      const note = [c.renamed_from ? `the column "${c.renamed_from}" of an earlier build is renamed to this` : null, twoWay, c.retired ? 'retired: never made on a new table, hidden in every view' : null].filter(Boolean).join('; ');
       lines.push(`| ${cell(c.name)} | ${c.type} | ${cell(options)} | ${cell(c.description)}${note ? ` (${cell(note)})` : ''} |`);
     }
     const views = structure.views.filter((v) => v.table === key);

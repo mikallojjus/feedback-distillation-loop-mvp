@@ -1,6 +1,6 @@
 # Structure of Claim tagger v2 (in preparation)
 
-Draft of 29 October 2026, for the product owner's checkpoint 1. This page describes a second, separate Notion page, "Claim tagger v2 (in preparation)", made under the live hub "Claim tagger" and empty at first. Editors decide per claim and tag on it, one row each, instead of per claim. The live page and its tables are not touched; claims are still decided there until the product owner says otherwise.
+Draft of 29 October 2026, for the product owner's checkpoint 1; revised 30 October with the owner's answers (P45, P46). This page describes a second, separate Notion page, "Claim tagger v2 (in preparation)", made under the live hub "Claim tagger" and empty at first. Editors decide per claim and tag on it, one row each, instead of per claim. The live page and its tables are not touched; claims are still decided there until the product owner says otherwise.
 
 `setup.mjs structure --from-proposal docs/mvp-2026-11/STRUCTURE-V2.md` reads the five table sections, the Views section and the Sub-pages list below. What the proposal format cannot say (the relation columns, the tables' names and one-line descriptions, each table's own first tab, the page body) is in the last section, "Completion for setup/structure.json", as a block to merge in by hand, as was done for the live page.
 
@@ -12,9 +12,12 @@ Today an editor decides a claim as a whole on the Claims table: Verified tags, R
 
 - **One row per claim and tag is where you decide.** Tag decisions is no longer a read-only copy: you set Tag outcome (Applies or Does not apply) and, if you want, Your note on each row. The agent still writes every other column of it.
 - **Claims has no decision columns.** Verified tags, Review status and Challenged tags notes are gone; Claims keeps the Geo columns and the agent's eight summary columns, and is read, not filled in.
-- **Your queue, Needs your note and Agent disagreed move to Tag decisions** and list rows (a claim and one tag), not claims. A decided row leaves Your queue at once.
+- **Your queue, Needs your note and Agent disagreed move to Tag decisions** and list rows (a claim and one tag), not claims, with a claim's rows together. A decided row leaves Your queue at once.
+- **Agent is right**: a tick on a row says the agent's answer is your decision, so a row you agree with takes one click.
 - **Agent status is on every row** of Tag decisions as well as on the claim: Waits for you, Done, Disagrees with your decision, Could not read.
-- **No Why wrong select, no Your reasoning, no Claim link.** The reason word (Agent slip, Rule unclear, Rule should change) opens Your note, as it opens a note line today; the relation Claim page replaces the link.
+- **You never name a reason or a rule.** Your note is plain language; the agent works out what went wrong (Agent slip, Rule unclear, Rule should change) and which rule it concerns. There is no Why wrong select, no reason word, no Your reasoning.
+- **A claim and its rows link both ways**: Open claim on a row, Tag decisions on the claim. No Claim link column.
+- **Not carried from the live page**: QA's To review, and the columns Proposed fix, Reviewer and Filter tags that were added to live Claims.
 - **A new tag starts empty.** A claim decided on Context-dependent has no decision on the next tag until someone makes one; P16's "left out means Does not apply" no longer applies.
 - **The page holds no Onboarding and no archive.** Its body is one line saying it is in preparation, then the links and the five tables.
 - **Rulebook, Rule changes and Agent settings are the same as live**, column for column.
@@ -56,7 +59,7 @@ The rows of the taxonomy table "Claim Tags — verified" whose Work tags contain
 
 The claims read from Geo, with the agent's summary of each claim. Nobody decides here: the decisions are on Tag decisions, one row per claim and tag.
 
-**Who fills what:** setup and `add` write the Geo columns (P12, P35); the agent writes its eight columns; nobody else writes anything. The relation columns Agent tags and Tags waiting (to the Rulebook) are as live and are in the completion below; the way back to a claim's rows in Tag decisions is discussed there too.
+**Who fills what:** setup and `add` write the Geo columns (P12, P35); the agent writes its eight columns; nobody else writes anything. The relation columns Agent tags and Tags waiting (to the Rulebook) are as live and are in the completion below, as is Tag decisions, the claim's rows: the other side of the two-way relation Open claim, kept by Notion.
 
 ### Columns
 
@@ -68,7 +71,7 @@ The claims read from Geo, with the agent's summary of each claim. Nobody decides
 | Agent status | select | the agent | What the agent says about the claim as a whole: Waits for you (one of its tags waits in Your queue), Done, Disagrees with your decision (on one of its tags), or Could not read. You decide in Tag decisions, not here. Values: Waits for you, Done, Disagrees with your decision, Could not read |
 | Agent edition | text | the agent | The rulebook edition the agent wrote this row under. |
 | Agent remarks | text | the agent | What the agent could not check, such as "not checked: 6 tags without rules"; empty when it checked everything. |
-| Agent reading | text | the agent | What the agent made of your decisions, one line per tag where you differed from it: Agent slip, Rule unclear or Rule should change, the rule, and why. The same reading is on the tag's row in Tag decisions. |
+| Agent's view of your decision | text | the agent | One line per tag where you differed from the agent: what it made of it (Agent slip, Rule unclear, Rule should change), the rule and why. More on the tag's row. |
 | Geo ID | text | setup | The claim's identity in Geo; the Key of its rows in Tag decisions starts with it. |
 | Geo URL | link | setup | The claim's page in Geo. |
 | Geo Space | select | setup | The Geo space the claim was read from. Values: U.S. Politics, World affairs, AI, Health, Crypto, Technology, Pharma, Industries, Education, Software, Places, Documentation |
@@ -82,9 +85,9 @@ The order of the agent's columns is the live one once the two relations are put 
 
 ## Tag decisions
 
-One row per claim and tag the agent judged: the agent's answer, and your decision next to it. The agent makes the row and writes its columns; you write two, Tag outcome and Your note, and nothing else. A row with an empty Tag outcome is undecided, whatever the agent proposed.
+One row per claim and tag the agent judged: the agent's answer, and your decision next to it. The agent makes the row and writes its columns; you write three, Agent is right, Tag outcome and Your note, and nothing else. A row with an empty Tag outcome and no tick is undecided, whatever the agent proposed.
 
-**Who fills what:** the agent writes every column but two and never writes those two. You set Tag outcome; Your note is optional. An editor's Claude may set them when the editor asks, as on Claims today (P18 to P20, moved to these two columns).
+**Who fills what:** the agent writes every column but three and never writes those three. You tick Agent is right or set Tag outcome; Your note is optional. An editor's Claude may set them when the editor asks, as on Claims today (P18 to P20, moved to these columns).
 
 ### Columns
 
@@ -95,19 +98,20 @@ One row per claim and tag the agent judged: the agent's answer, and your decisio
 | Agent proposal | select | the agent | The agent's answer for this claim and tag. Values: Applies, Does not apply, Can't tell |
 | Agent confidence | number | the agent | How sure the agent is of its answer, from 0.5 (a coin flip) to 1 (certain); Your queue is sorted by it, lowest first. |
 | Agent reason | text | the agent | At most 40 words, then the rule cited and how many runs agreed. |
-| Tag outcome | select | you | Your decision on this claim and tag; it always wins over the agent's answer. Empty means the row waits in Your queue. Values: Applies, Does not apply |
-| Your note | text | you | Your words, when you want to say something. Open with Agent slip, Rule unclear or Rule should change and a full stop to say what went wrong; otherwise the agent reads it. "rule 4" names the rule. |
+| Agent is right | checkbox | you | Tick when you agree with the agent's answer; that is your decision and Tag outcome stays empty. On Can't tell, don't tick: set Tag outcome. Tag outcome wins if both are set. |
+| Tag outcome | select | you | Your decision on this claim and tag; it always wins over the agent's answer. Empty, with Agent is right not ticked, means the row waits in Your queue. Values: Applies, Does not apply |
+| Your note | text | you | Your words, when you want to say something, such as why the agent's answer is wrong. Plain language; you don't need to name a rule or a reason, the agent works that out. |
 | Agent status | select | the agent | What the agent says about this row: Waits for you (it needs your decision), Done, Disagrees with your decision (a later run answered otherwise), or Could not read. Values: Waits for you, Done, Disagrees with your decision, Could not read |
-| Agent reading | select | the agent | What the agent made of your decision where you differed from it: Agent slip (the rule settles it your way), Rule unclear (it reads both ways) or Rule should change (it decides against you). Values: Agent slip, Rule unclear, Rule should change |
-| Rule | text | the agent | The rule the reading points at, for example "Context-dependent rule 3". |
-| Reading note | text | the agent | One line of why. It opens with "without your note" when you wrote nothing, and reads "Your note says so." when your note opened with a reason word. |
-| Follow-up | select | the agent | Set after a safety check PASS, on the rows the change rests on. Values: Fixed, Still wrong |
+| Agent's view of your decision | select | the agent | What the agent made of your decision where you differed from it: Agent slip (the rules already settle it your way), Rule unclear (they read both ways) or Rule should change (they decide against you). The agent works this out from your decision, your note and the rulebook. Values: Agent slip, Rule unclear, Rule should change |
+| Rule | text | the agent | The rule the agent's view points at, for example "Context-dependent rule 3". |
+| Why the agent thinks so | text | the agent | One line of why. It opens with "without your note" when you wrote nothing. |
+| After the rule change | select | the agent | Empty until a rule change goes live. Then Fixed if the new rule gives your decision on this row, Still wrong if it doesn't. Values: Fixed, Still wrong |
 | Key | text | the agent | The claim's Geo ID, two colons, the tag; one row per claim and tag. |
 | Rulebook edition | text | the agent | The edition the proposal was made under. |
 | Decided under | text | the agent | The edition the proposal you decided on was made under; the agent records it when it first finds your Tag outcome. |
 | Read under | text | the agent | The edition and a short mark of what the reading rests on: your decision, your note and the proposal the agent made. The agent reads a row again only when one of those changes. |
 
-The relation Claim page (to Claims) is in the completion below, after Claim. Left out on purpose: Why wrong (the reason word opens Your note instead), Your reasoning (Your note is your own words, not a copy), Claim link (the relation replaces it).
+The relation Open claim (to Claims, two-way: the claim's side is Tag decisions) is in the completion below, after Claim. The completion also names each renamed column's name on the page built at checkpoint 1 (Claim page, Agent reading, Reading note, Follow-up), so the builder renames those columns instead of adding new ones. Left out on purpose: Why wrong and reason words (the agent works out the reason), Your reasoning (Your note is your own words, not a copy), Claim link (the relation replaces it).
 
 ## Rule changes
 
@@ -151,12 +155,12 @@ Every editor view is on Tag decisions and lists rows, a claim and one tag. Cells
 
 | View | Table | Rows shown | Sorted by | Columns shown |
 |---|---|---|---|---|
-| Your queue | Tag decisions | Agent status is Waits for you, and Tag outcome is empty | Agent confidence, lowest first | Claim, Tag, Agent proposal, Agent reason, Tag outcome, Your note; cells wrap |
-| Needs your note | Tag decisions | Reading note contains "without your note" | Agent confidence, lowest first | Claim, Tag, Agent proposal, Tag outcome, Agent reading, Reading note, Your note; cells wrap |
-| Agent disagreed | Tag decisions | Agent status is Disagrees with your decision | Agent confidence, lowest first | Claim, Tag, Tag outcome, Agent proposal, Agent reason, Your note, Rulebook edition; cells wrap |
+| Your queue | Tag decisions | Agent status is Waits for you, and Tag outcome is empty, and (Agent is right is not ticked, or Agent proposal is Can't tell) | Claim, A to Z; then Agent confidence, lowest first | Claim, Tag, Agent proposal, Agent reason, Agent is right, Tag outcome, Your note; cells wrap |
+| Needs your note | Tag decisions | Why the agent thinks so contains "without your note" | Claim, A to Z; then Agent confidence, lowest first | Claim, Tag, Agent proposal, Tag outcome, Agent's view of your decision, Why the agent thinks so, Your note; cells wrap |
+| Agent disagreed | Tag decisions | Agent status is Disagrees with your decision | Claim, A to Z; then Agent confidence, lowest first | Claim, Tag, Agent is right, Tag outcome, Agent proposal, Agent reason, Your note, Rulebook edition; cells wrap |
 | Lessons waiting | Rule changes | Status is Proposed or Approved | none | Lesson, Tag, Rule, Current text, Proposed text, Editor wording, Safety check result, Status; cells wrap |
 
-**Your queue** shows Claim page right after Claim; the table above leaves it out because the relation is added by the completion below, which also sets this view's columns. It keeps the suggested order. It reads left to right as the decision is made: the claim, a link to its row in Claims (its sources and Geo link are one click away; editor review ED-1), which tag, what the agent says and why, then your two columns at the right end, so nothing to fill sits between things to read. Agent confidence is left out because the view is already sorted by it. A row leaves the view as soon as Tag outcome is set; Agent status alone would keep it until the agent's next run.
+**Your queue** shows Open claim right after Claim; the table above leaves it out because the relation is added by the completion below, which also sets this view's columns. It reads left to right as the decision is made: the claim, a link to its row in Claims (its sources and Geo link are one click away; editor review ED-1), which tag, what the agent says and why, then your three columns at the right end, so nothing to fill sits between things to read. The three editor views are sorted by claim, so a claim's rows stand together, and within a claim by Agent confidence, lowest first; Agent confidence is not shown. A row leaves Your queue as soon as Tag outcome is set or Agent is right is ticked; Agent status alone would keep it until the agent's next run. A tick on a Can't tell row decides nothing, so that row stays (editor review of 30 Oct). Agent disagreed shows Agent is right, so a row you accepted with a tick does not look undecided there.
 
 **Needs your note** shows what the agent read next to your note, so a missing note can be written with the reading in view. **Agent disagreed** puts your outcome before the agent's new answer, with the edition that answer was made under.
 
@@ -164,12 +168,25 @@ Every editor view is on Tag decisions and lists rows, a claim and one tag. Cells
 
 - **Row**: one claim and one tag on Tag decisions. You decide rows, not claims.
 - **Tag outcome**: your decision on a row, Applies or Does not apply; it always wins over the agent's answer. Empty means undecided, even when the agent proposed something.
-- **Your note**: your words on a row. A reason word (Agent slip, Rule unclear, Rule should change) and a full stop at the start are taken as they stand; otherwise the agent reads the note.
+- **Agent is right**: your tick on a row, saying the agent's answer is your decision.
+- **Your note**: your words on a row, in plain language. The agent reads it, with your decision and the rulebook, to work out what went wrong and which rule it concerns.
 - **Agent status**: on a row, what the agent says about that row; on Claims, the same for the claim as a whole.
 
 ## Open questions
 
-Not decided here; each is for the product owner.
+The product owner answered these on 30 October (decisions P45 and P46); the page was changed to match:
+
+- 1: not carried. 2: dropped. 3: a select. 4: the title stays.
+- 5: no reason words at all. The editor writes plain language, and the agent works out the reason and the rule.
+- 6: two-way, with Tag decisions on Claims.
+- 7: by claim, then confidence, on all three editor views.
+- 8: renamed as suggested.
+- 9: a line under each link.
+- 10: a checkbox, Agent is right. It is read as the decision, and the agent never copies it into Tag outcome (P46).
+
+Still open: how many rows a week an editor should expect once more tags are judged.
+
+The questions as they were put:
 
 1. **The three columns people added to live Claims** (Proposed fix, text; Reviewer, select; Filter tags, multi-select) and the widened All claims and Lessons waiting views. They look like the editor's own review practice.
    - Options: (a) on v2 Claims, as on live; (b) on Tag decisions, per row; (c) Proposed fix and Reviewer on Tag decisions, Filter tags on Claims; (d) not carried, until the editor says what they are for.
@@ -195,14 +212,19 @@ From the editor review of this draft (editor persona, 29 Oct; ED-1, ED-2 and ED-
 
 ## Completion for setup/structure.json
 
-The proposal format has no relation column, no name for a table other than its section title, no one-line table description, no table's own first tab and no hub block. The block below adds them. Merge rule: `made_from`, `pages` and `hub` replace the parsed values; for each table, `title`, `description` and `default_view` are set, and each entry of `insert_columns` is added as a column (its `options` empty) right after the column named in `after`; then each entry of `view_columns` replaces the columns of the view it names (the parser checks a view's columns before the relation columns exist, so a view that shows a relation gets its columns here). The result must pass `validateStructure`.
+The proposal format has no relation column, no name for a table other than its section title, no one-line table description, no table's own first tab and no hub block. The block below adds them. Merge rule: `made_from`, `pages`, `sync_descriptions` and `hub` replace the parsed values (`sync_descriptions: true` has the build bring the descriptions of existing tables and columns to the structure's, which the live page's build never does); for each table, `title`, `description` and `default_view` are set, and each entry of `insert_columns` is added as a column (its `options` empty) right after the column named in `after`, keeping its `renamed_from` and `two_way` (the name of the column on the other table that the same two-way relation shows there); then each entry of `renamed_from` gives a column its name on the page built at checkpoint 1; then each entry of `view_columns` replaces the columns of the view it names (the parser checks a view's columns before the relation columns exist, so a view that shows a relation gets its columns here). The result must pass `validateStructure`.
 
 ```json
 {
   "made_from": "docs/mvp-2026-11/STRUCTURE-V2.md (the v2 page, draft of 29 Oct 2026)",
   "pages": [],
+  "sync_descriptions": true,
   "view_columns": {
-    "Your queue": ["Claim", "Claim page", "Tag", "Agent proposal", "Agent reason", "Tag outcome", "Your note"]
+    "Your queue": ["Claim", "Open claim", "Tag", "Agent proposal", "Agent reason", "Agent is right", "Tag outcome", "Your note"]
+  },
+  "renamed_from": {
+    "tag_decisions": { "Agent's view of your decision": "Agent reading", "Why the agent thinks so": "Reading note", "After the rule change": "Follow-up" },
+    "claims": { "Agent's view of your decision": "Agent reading" }
   },
   "hub": {
     "title": "Claim tagger v2 (in preparation)",
@@ -214,29 +236,36 @@ The proposal format has no relation column, no name for a table other than its s
       "your_queue": "the rows, a claim and one tag, that wait for your decision",
       "needs_your_note": "rows where you overruled the agent and left no note",
       "agent_disagreed": "rows where the agent's newest answer differs from your decision"
+    },
+    "view_hints": {
+      "your_queue": "Agree with the agent? Tick Agent is right. Disagree, or it says Can't tell? Set Tag outcome. The row then leaves this list.",
+      "needs_your_note": "You overruled the agent without a note. Say why in Your note, in plain words. The row leaves this list after the agent next reads your notes.",
+      "agent_disagreed": "The agent now answers otherwise. If it is right, set Tag outcome to match. If not, say why in Your note.",
+      "lessons_waiting": "Rule changes the agent proposes. Set Status to Approved or Rejected. To word the rule yourself, fill Editor wording first."
     }
   },
   "tables": {
     "rulebook": {
       "title": "Rulebook",
-      "description": "One row per tag; When to use holds the rules. Change rules through Lessons waiting.",
+      "description": "One row per tag; When to use holds the rules the agent applies. Rules change when you approve a change in Lessons waiting.",
       "default_view": { "name": "Rulebook", "columns": ["Name", "Category", "Status", "When to use", "Example Claims"] }
     },
     "claims": {
       "title": "Claims",
       "description": "Claims read from Geo, with the agent's summary of each. Read only: you decide each claim and tag in Tag decisions.",
-      "default_view": { "name": "All claims", "columns": ["Geo Name", "Geo Space", "Agent status", "Agent tags", "Tags waiting", "Agent reasons", "Agent reading", "Geo URL"] },
+      "default_view": { "name": "All claims", "columns": ["Geo Name", "Geo Space", "Agent status", "Agent tags", "Tags waiting", "Tag decisions", "Agent reasons", "Agent's view of your decision", "Geo URL"] },
       "insert_columns": [
         { "after": "Geo Name", "name": "Agent tags", "type": "relation", "relation_to": "rulebook", "description": "The tags that apply, from the Rulebook: the ones you decided Applies in Tag decisions, and the ones the agent applies where nothing waits for you. Tags that wait for you are in Tags waiting instead." },
-        { "after": "Agent status", "name": "Tags waiting", "type": "relation", "relation_to": "rulebook", "description": "The tags of this claim that wait for your decision in Your queue, from the Rulebook. Empty when nothing waits." }
+        { "after": "Agent status", "name": "Tags waiting", "type": "relation", "relation_to": "rulebook", "description": "The tags of this claim that wait for your decision in Your queue, from the Rulebook. Empty when nothing waits." },
+        { "after": "Agent's view of your decision", "name": "Tag decisions", "type": "relation", "relation_to": "tag_decisions", "two_way": "Open claim", "description": "This claim's rows in Tag decisions, one per tag the agent judged. Click one to decide it." }
       ]
     },
     "tag_decisions": {
       "title": "Tag decisions",
-      "description": "One row per claim and tag the agent judged. Decide here: set Tag outcome, and add Your note when you have something to say.",
-      "default_view": { "columns": ["Claim", "Tag", "Agent proposal", "Agent status", "Tag outcome", "Your note", "Agent reading", "Follow-up"] },
+      "description": "One row per claim and tag the agent judged. Decide here: tick Agent is right or set Tag outcome; add Your note when you have something to say.",
+      "default_view": { "columns": ["Claim", "Tag", "Agent proposal", "Agent status", "Agent is right", "Tag outcome", "Your note", "Agent's view of your decision", "After the rule change"] },
       "insert_columns": [
-        { "after": "Claim", "name": "Claim page", "type": "relation", "relation_to": "claims", "description": "The claim's row in Claims; open it for the claim's sources and its Geo link." }
+        { "after": "Claim", "name": "Open claim", "type": "relation", "relation_to": "claims", "renamed_from": "Claim page", "two_way": "Tag decisions", "description": "The claim's row in Claims; open it for the claim's sources and its Geo link." }
       ]
     },
     "rule_changes": {
@@ -253,7 +282,7 @@ The proposal format has no relation column, no name for a table other than its s
 }
 ```
 
-**The relation form.** Claim page is a one-way relation from Tag decisions to Claims: the builder makes every relation one-way today (`single_property` in `propertyConfig`, `notion-build.mjs`), and the structure has no way to name the column a two-way relation would add on the other table. So v2 Claims has no column listing its rows in Tag decisions; an editor reaches them by the claim text or the Key, which starts with the claim's Geo ID. A two-way relation (Notion's `dual_property`, with the partner column on Claims called, say, "Tag decisions") needs a builder change: a way to name the partner column in the structure, `dual_property` in the request, and verify expecting the partner column on Claims instead of reporting it as extra. Adding the back column as a second relation of its own would not do: it would be one more column the agent writes on Claims, kept in step by hand.
+**The relation form.** Open claim and Tag decisions are the two sides of one two-way relation (Notion's `dual_property`): the agent writes Open claim on a row, and Notion fills Tag decisions on the claim. Both columns name each other in `two_way`. The builder makes the pair from the Tag decisions side, gives the Claims side its name, and turns the one-way Claim page of checkpoint 1 into the pair in place; verify expects the two sides to point at each other. A second relation of its own on Claims would not do: it would be one more column the agent writes on Claims, kept in step by hand.
 
 **Other things the format and the builder do not carry yet** (for the coding step, not for the product owner):
 

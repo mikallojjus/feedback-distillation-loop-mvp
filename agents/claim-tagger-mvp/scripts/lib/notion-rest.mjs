@@ -16,7 +16,8 @@
 //   reads    retrievePage, retrieveDatabase, retrievePropertyItem, retrieveBlockChildren (new), retrieveDataSource (new), retrieveView (new),
 //            listViews (new), queryDatabase / queryAll, queryDataSource / queryDataSourceAll (new; all pages of a query, following the cursor)
 //   writes   createPage (a row), createPageUnderPage (new), createDatabase (new), createView (new), updatePage, updateDataSource (new), updateView (new:
-//            rename a view, or change its filter, sorts or configuration), appendBlocks (new: with a position), movePage (new), moveDatabase (new)
+//            rename a view, or change its filter, sorts or configuration), appendBlocks (new: with a position), movePage (new), moveDatabase (new),
+//            updateDatabase (new: a table's description only)
 //
 // Moves. movePage (POST /pages/{id}/move) and moveDatabase (PATCH /databases/{id}) change the parent page of a page or a table that exists; each sends
 // the new parent and nothing else, and both need the builder API version. They exist for one job only: the archive step of setup (setup.mjs archive,
@@ -516,10 +517,22 @@ export function createClient({
     return request('PATCH', `/databases/${enc(databaseId)}`, { parent: { type: 'page_id', page_id: parentPageId } });
   }
 
+  /**
+   * New. Give a table another description (the one line under its name): PATCH /databases/{id} with exactly { description } and no other field. `description` is a string
+   * (split into rich-text chunks) or a rich-text array, as in createDatabase. Used by the build's description sync only (structure `sync_descriptions`); it is the same value
+   * createDatabase writes and retrieveDatabase reads back. Safe to send again (the same text), so it is retried like a read. Needs BUILDER_API_VERSION.
+   */
+  async function updateDatabase(databaseId, { description } = {}) {
+    needsBuilder('updateDatabase');
+    requireId('updateDatabase: databaseId', databaseId);
+    if (typeof description !== 'string' && !Array.isArray(description)) throw new TypeError('updateDatabase: give the description (text or rich text)');
+    return request('PATCH', `/databases/${enc(databaseId)}`, { description: richText(description) });
+  }
+
   return {
     queryDatabase, queryAll, retrieveDatabase, retrievePage, retrievePropertyItem, createPage, updatePage, appendBlocks,
     createDatabase, createPageUnderPage, createView, retrieveView, listViews, retrieveDataSource, queryDataSource, queryDataSourceAll,
-    updateDataSource, updateView, retrieveBlockChildren, movePage, moveDatabase,
+    updateDataSource, updateDatabase, updateView, retrieveBlockChildren, movePage, moveDatabase,
   };
 }
 

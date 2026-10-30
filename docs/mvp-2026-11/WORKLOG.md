@@ -810,3 +810,30 @@ The owner chose per-tag decisions (P42). The move happens gradually, on a separa
 - Nothing is committed.
 
 **Next.** Checkpoint 1: the owner clicks through the v2 page and answers the open questions. Then plan checkpoint 2, the keyed data copy.
+
+### 57. The v2 page after the owner's answers (30 Oct, P45 and P46)
+
+Checkpoint 1 was committed as 1690803. The owner answered open questions 1 to 10 in chat (P45). I decided how Agent is right works within hard rule 1 (P46). The editor persona reviewed the new editor-facing words, and its fixes are in the spec. One fix was a design gap: a tick on a Can't tell row would have left the row in no view, so Your queue now keeps such rows.
+
+**Builder.** Sonnet, plus one fix of mine:
+- several sorts per view ("; then ");
+- checkbox filters and a bracketed "or" group;
+- two-way relations (`two_way`), converted in place from one-way;
+- hint lines under the hub links (`hub.view_hints`);
+- a description sync that only a structure with `sync_descriptions: true` turns on (v2 only);
+- `updateDatabase` in notion-rest;
+- my fix: Notion refuses a description-only property update (400 "<type> should be defined"), so the update now carries the column's type as Notion reports it (`sameTypeConfig`).
+
+Tests: 2,479 pass.
+
+**Applied to v2** (builder session opened and closed):
+- six columns renamed: Claim page to Open claim, Agent reading (twice), Reading note, Follow-up, and Notion's synced column to Tag decisions;
+- Agent is right added;
+- Open claim made two-way, which Notion accepted on the existing one-way relation;
+- three views updated (filter, sorts, columns);
+- four hint lines added;
+- eight column descriptions and two table descriptions written.
+
+v2 verify: 0 writes, and only the 6 expected missing-data notes. Production verify: 0 writes, rows 13 / 600 / 602 / 3 / 1, and the same 8 differences as after checkpoint 1.
+
+**Not done.** Nothing of this entry is committed. The expected weekly row volume is still open. Next is planning checkpoint 2, the keyed data copy, with the owner.

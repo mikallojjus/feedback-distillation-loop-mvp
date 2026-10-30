@@ -85,7 +85,7 @@ test('the client offers exactly the old calls and the new ones, and nothing that
   const client = createClient({ token: TOKEN, fetchImpl: async () => json({}) });
   assert.deepEqual(Object.keys(client).sort(), [
     'appendBlocks', 'createDatabase', 'createPage', 'createPageUnderPage', 'createView', 'listViews', 'moveDatabase', 'movePage', 'queryAll', 'queryDataSource', 'queryDataSourceAll',
-    'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'updateDataSource', 'updatePage', 'updateView',
+    'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'updateDataSource', 'updateDatabase', 'updatePage', 'updateView',
   ]);
   for (const name of Object.keys(client)) assert.doesNotMatch(name, /delete|remove|archive|trash|restore/i, name);
 });
@@ -685,6 +685,25 @@ test('moveDatabase: PATCH /databases/{id} with exactly { parent: { type: "page_i
   assert.deepEqual(c.body, { parent: { type: 'page_id', page_id: 'new-parent' } });
   assert.deepEqual(Object.keys(c.body), ['parent']);
   assert.deepEqual(Object.keys(c.body.parent), ['type', 'page_id']);
+});
+
+test('updateDatabase: PATCH /databases/{id} with exactly { description } as rich text; it needs the builder version and a description', async () => {
+  const r = rig([json({ object: 'database', id: 'db-1' })], { apiVersion: BUILDER_API_VERSION });
+  await r.client.updateDatabase('db-1', { description: 'One line.' });
+  const c = r.calls[0];
+  assert.equal(c.method, 'PATCH');
+  assert.equal(c.url, `${API_BASE}/databases/db-1`);
+  assert.equal(c.headers['Notion-Version'], '2026-03-11');
+  assert.deepEqual(Object.keys(c.body), ['description']);
+  assert.equal(c.body.description[0].text.content, 'One line.');
+  for (const apiVersion of [undefined, '2025-09-03']) {
+    const other = rig([json({})], { apiVersion });
+    await assert.rejects(() => other.client.updateDatabase('d', { description: 'x' }), /updateDatabase needs Notion-Version 2026-03-11 or later/);
+    assert.equal(other.calls.length, 0);
+  }
+  await assert.rejects(() => r.client.updateDatabase('d', {}), /give the description/);
+  await assert.rejects(() => r.client.updateDatabase(' ', { description: 'x' }), /updateDatabase: databaseId is required/);
+  assert.equal(r.calls.length, 1);
 });
 
 test('movePage and moveDatabase need the builder version: another client throws a clear error before anything is sent; ids are required', async () => {
