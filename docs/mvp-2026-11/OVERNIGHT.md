@@ -37,7 +37,7 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - [x] 2. CLAUDE.md hard rules 1 and 10 and the agents table rewritten; DECISIONS P47 to P49
 - [ ] 3. PORT-V2.md
 - [ ] 4. CP2 copy
-- [ ] 5. v2 default, retitle
+- [ ] 5. v2 default, retitle (retitle DONE: page is "Claim tagger v2", note line rewritten in place, a1a2e80; v2 verify clean but the 6 data inputs)
 - [ ] 6. CP3 loop
 - [ ] 7. Proof on v2
 - [ ] 8. Opus check, morning summary
@@ -46,3 +46,4 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 
 - 30 Oct, night: started. Tag claim-tagger-v1 = 3406cec.
 - Step 2 committed (24c0057). Steps 3 and 4 launched in parallel: an Opus agent writes PORT-V2.md (read-only), a Sonnet agent writes copy-live.mjs + lib/first-page.mjs + setup/first-page.json + tests (no Notion). If a compaction lost them: check whether PORT-V2.md and scripts/copy-live.mjs exist and are complete before relaunching.
+- a1a2e80: builder renames the v2 page (root) and rewrites its note line (hub.note_was); applied in Notion, verify 0 writes. Test M1 in guard-decide.test.mjs fails ONLY because of the owner's uncommitted overnight .claude/settings.json edit (he moved the ask block to allow by hand); it passes after git checkout .claude/settings.json. Never commit settings.json tonight.
