@@ -35,7 +35,7 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 
 - [x] 1. Tag `claim-tagger-v1` made at 3406cec; permissions checked (setup/rollback/restore allowed, uncommitted).
 - [x] 2. CLAUDE.md hard rules 1 and 10 and the agents table rewritten; DECISIONS P47 to P49
-- [ ] 3. PORT-V2.md
+- [x] 3. PORT-V2.md (30cc9cd): WP1 core, WP2 tag/status/followup/promote/add, WP3 distill/decide/guard, WP4 parking/setup/skills/docs; runs/ -> runs-v1/ fresh start (carry judgments/), rubric next edition via writeEdition with v2 page ids (NOT setup.mjs rubric), config swap per its section 4
 - [ ] 4. CP2 copy
 - [ ] 5. v2 default, retitle (retitle DONE: page is "Claim tagger v2", note line rewritten in place, a1a2e80; v2 verify clean but the 6 data inputs)
 - [ ] 6. CP3 loop
@@ -47,3 +47,4 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - 30 Oct, night: started. Tag claim-tagger-v1 = 3406cec.
 - Step 2 committed (24c0057). Steps 3 and 4 launched in parallel: an Opus agent writes PORT-V2.md (read-only), a Sonnet agent writes copy-live.mjs + lib/first-page.mjs + setup/first-page.json + tests (no Notion). If a compaction lost them: check whether PORT-V2.md and scripts/copy-live.mjs exist and are complete before relaunching.
 - a1a2e80: builder renames the v2 page (root) and rewrites its note line (hub.note_was); applied in Notion, verify 0 writes. Test M1 in guard-decide.test.mjs fails ONLY because of the owner's uncommitted overnight .claude/settings.json edit (he moved the ask block to allow by hand); it passes after git checkout .claude/settings.json. Never commit settings.json tonight.
+- 30cc9cd: PORT-V2.md committed. Accepted its risk answers: Agent is right stored in Decided under as "<edition> · agreed <Outcome>"; fresh runs/; run one full tag after the port (cached judgments, no model calls). Order from here: copy agent done -> run copy (with CLAIM_TAGGER_MVP_ROOT=v2) -> step 5 swap -> WP1..WP4 sequential Sonnet -> step 7.
