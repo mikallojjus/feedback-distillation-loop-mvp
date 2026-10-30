@@ -1737,7 +1737,7 @@ export async function readHub({ client, config, hub }) {
   try {
     const page = await client.retrievePage(rootId);
     title = plainText(page?.properties?.title?.title);
-    if (title !== hub.title) differences.push({ kind: 'title', detail: `the hub page is called "${title}" and should be called "${hub.title}": setup.mjs archive renames it, or rename it in Notion` });
+    if (title !== hub.title) differences.push({ kind: 'title', detail: `the hub page is called "${title}" and should be called "${hub.title}": setup.mjs root renames it (in a builder session), or rename it in Notion` });
   } catch (e) {
     differences.push({ kind: 'unreadable', detail: `the hub page cannot be read (${e.message})` });
     return { title, children, differences, leftovers: [] };
