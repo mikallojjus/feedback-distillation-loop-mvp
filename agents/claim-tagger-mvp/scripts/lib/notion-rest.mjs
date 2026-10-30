@@ -529,10 +529,18 @@ export function createClient({
     return request('PATCH', `/databases/${enc(databaseId)}`, { description: richText(description) });
   }
 
+  /** New. PATCH /blocks/{id}: the text of one paragraph block, replaced (the hub's note line, P49). Nothing else of the block changes, and no block is removed. */
+  async function updateParagraph(blockId, text) {
+    needsBuilder('updateParagraph');
+    requireId('updateParagraph: blockId', blockId);
+    if (typeof text !== 'string' || text === '') throw new TypeError('updateParagraph: give the new text');
+    return request('PATCH', `/blocks/${enc(blockId)}`, { paragraph: { rich_text: richText(text) } });
+  }
+
   return {
     queryDatabase, queryAll, retrieveDatabase, retrievePage, retrievePropertyItem, createPage, updatePage, appendBlocks,
     createDatabase, createPageUnderPage, createView, retrieveView, listViews, retrieveDataSource, queryDataSource, queryDataSourceAll,
-    updateDataSource, updateDatabase, updateView, retrieveBlockChildren, movePage, moveDatabase,
+    updateDataSource, updateDatabase, updateParagraph, updateView, retrieveBlockChildren, movePage, moveDatabase,
   };
 }
 

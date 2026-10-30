@@ -596,7 +596,7 @@ export function validateStructure(structure) {
   return structure;
 }
 
-const HUB_KEYS = Object.freeze(['title', 'note', 'view_links', 'table_order', 'pages_after', 'link_text', 'view_hints']);
+const HUB_KEYS = Object.freeze(['title', 'note', 'note_was', 'view_links', 'table_order', 'pages_after', 'link_text', 'view_hints']);
 
 // The hub block (P11, P14): what the hub page holds besides its title, in order: the one line of warning (the note), the link lines to some views, the five tables, then some pages. A
 // structure without one (the earlier builds) is valid and builds as before.
@@ -607,6 +607,12 @@ function validateHub(structure, bad) {
   if (extra.length) bad(`hub: "${extra[0]}" is not part of the hub block (it has ${HUB_KEYS.join(', ')})`);
   if (typeof hub.title !== 'string' || hub.title.trim() === '') bad('hub: title must be the name of the hub page');
   if (typeof hub.note !== 'string' || hub.note.trim() === '' || /[\r\n]/.test(hub.note) || [...hub.note].length > 300) bad('hub: note must be the one line of text above the link lines (at most 300 characters)');
+  // note_was (optional, the v2 page, P49): earlier words of the note line; the build rewrites such a line to the note instead of adding a second one
+  if (hub.note_was !== undefined) {
+    if (!Array.isArray(hub.note_was) || hub.note_was.some((x) => typeof x !== 'string' || x.trim() === '' || /[\r\n]/.test(x) || x === hub.note)) {
+      bad('hub: note_was must be a list of earlier note lines, each one line and none the note itself');
+    }
+  }
   const list = (name, value) => {
     if (!Array.isArray(value) || value.length === 0 || value.some((x) => typeof x !== 'string' || x === '')) bad(`hub: ${name} must be a list of names`);
     if (new Set(value).size !== value.length) bad(`hub: ${name} names something twice`);
@@ -784,6 +790,7 @@ export function hubPlan(structure) {
   return {
     title: hub.title,
     note: hub.note,
+    ...(hub.note_was ? { note_was: [...hub.note_was] } : {}),
     table_order: [...hub.table_order],
     pages_after: [...hub.pages_after],
     tables: Object.fromEntries(TABLES.map((t) => [t, structure.tables[t].title])),
@@ -1778,8 +1785,18 @@ async function buildHub(ctx) {
       blocks.push({ kind: 'link', text: line.text, name: line.name, block: linkBlock(line, url) });
       if (!hintThere) blocks.push({ kind: 'hint', text: line.hint, name: `the hint under "${line.name}"`, block: noteBlock(line.hint) });
     }
-    // the warning line (P14) goes first, in the same request as the link lines when both are missing; with the warning there already, the link lines go right after it
-    const noteAt = hub.note ? children.find(isText(hub.note)) : null;
+    // the warning line (P14) goes first, in the same request as the link lines when both are missing; with the warning there already, the link lines go right after it. A line that
+    // still holds an earlier wording (hub.note_was, P49) is rewritten in place to the note: the block keeps its place and nothing is added or removed
+    let noteAt = hub.note ? children.find(isText(hub.note)) : null;
+    const oldNote = hub.note && !noteAt ? children.find((b) => (hub.note_was ?? []).some((t) => isText(t)(b))) : null;
+    if (oldNote) {
+      await client.updateParagraph(oldNote.id, hub.note);
+      noteAt = { ...oldNote, paragraph: { rich_text: [{ type: 'text', plain_text: hub.note, text: { content: hub.note } }] } };
+      children = children.map((b) => (b.id === oldNote.id ? noteAt : b));
+      result.created.hub_note_rewritten = 1;
+      added.push(hub.note);
+      log('hub page: the warning line rewritten to the new note');
+    }
     const fresh = [
       ...(hub.note && !noteAt ? [{ kind: 'note', text: hub.note, name: 'the warning line', block: noteBlock(hub.note) }] : []),
       ...blocks,

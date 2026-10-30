@@ -85,7 +85,7 @@ test('the client offers exactly the old calls and the new ones, and nothing that
   const client = createClient({ token: TOKEN, fetchImpl: async () => json({}) });
   assert.deepEqual(Object.keys(client).sort(), [
     'appendBlocks', 'createDatabase', 'createPage', 'createPageUnderPage', 'createView', 'listViews', 'moveDatabase', 'movePage', 'queryAll', 'queryDataSource', 'queryDataSourceAll',
-    'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'updateDataSource', 'updateDatabase', 'updatePage', 'updateView',
+    'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'updateDataSource', 'updateDatabase', 'updatePage', 'updateParagraph', 'updateView',
   ]);
   for (const name of Object.keys(client)) assert.doesNotMatch(name, /delete|remove|archive|trash|restore/i, name);
 });
@@ -703,6 +703,20 @@ test('updateDatabase: PATCH /databases/{id} with exactly { description } as rich
   }
   await assert.rejects(() => r.client.updateDatabase('d', {}), /give the description/);
   await assert.rejects(() => r.client.updateDatabase(' ', { description: 'x' }), /updateDatabase: databaseId is required/);
+  assert.equal(r.calls.length, 1);
+});
+
+test('updateParagraph: PATCH /blocks/{id} with exactly { paragraph: { rich_text } }; it needs the builder version, an id and text', async () => {
+  const r = rig([json({ object: 'block', id: 'b-1' })], { apiVersion: BUILDER_API_VERSION });
+  await r.client.updateParagraph('b-1', 'New line.');
+  const c = r.calls[0];
+  assert.equal(c.method, 'PATCH');
+  assert.equal(c.url, `${API_BASE}/blocks/b-1`);
+  assert.deepEqual(Object.keys(c.body), ['paragraph']);
+  assert.equal(c.body.paragraph.rich_text[0].text.content, 'New line.');
+  const other = rig([json({})], { apiVersion: '2025-09-03' });
+  await assert.rejects(() => other.client.updateParagraph('b', 'x'), /updateParagraph needs Notion-Version 2026-03-11 or later/);
+  await assert.rejects(() => r.client.updateParagraph('b', ''), /give the new text/);
   assert.equal(r.calls.length, 1);
 });
 

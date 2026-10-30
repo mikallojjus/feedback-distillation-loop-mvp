@@ -287,6 +287,25 @@ test('root: adopts a page of that title that is already under the live hub (an e
   assert.equal(normId(w.read().notion.parent_page_id), normId(made));
 });
 
+test('root: when the structure gives the recorded v2 page a new title (P49), the page is renamed in place; config.json keeps its id', async () => {
+  const w = v2World();
+  await open(w);
+  assert.equal((await w.run(['root'])).code, 0);
+  const id = w.read().notion.parent_page_id;
+  const file = join(w.root, 'setup', 'structure.json');
+  const s = JSON.parse(readFileSync(file, 'utf8'));
+  s.hub.title = 'Claim tagger v2 (renamed)';
+  writeFileSync(file, `${JSON.stringify(s, null, 2)}\n`);
+  const r = await w.run(['root']);
+  assert.equal(r.code, 0, r.text);
+  assert.match(r.text, /was renamed to this title/);
+  const kids = w.fake.entries(w.hub).filter((e) => e.kind === 'child_page');
+  assert.equal(kids.length, 1, 'no second page');
+  assert.equal(normId(w.read().notion.parent_page_id), normId(id));
+  const log = readFileSync(join(w.root, 'runs', 'builder', 'requests.jsonl'), 'utf8').trim().split('\n').map((l) => JSON.parse(l));
+  assert.ok(log.some((l) => l.method === 'PATCH' && l.path === `/pages/${normId(id)}`), 'one PATCH of the page');
+});
+
 test('root: --title stands in when there is no structure; with neither the step stops', async () => {
   const none = v2World({ structure: false });
   await open(none);
@@ -439,7 +458,7 @@ const V2_SPEC = readFileSync(new URL('../../docs/mvp-2026-11/STRUCTURE-V2.md', i
 
 test('completeStructure: the spec gives a valid structure with relations, the per-row Agent status and no per-claim editor column', () => {
   const s = completeStructure(V2_SPEC);
-  assert.equal(s.hub.title, 'Claim tagger v2 (in preparation)');
+  assert.equal(s.hub.title, 'Claim tagger v2');
   assert.deepEqual(s.pages, []);
   assert.equal(s.tables.claims.title, 'Claims');
   const claimCols = s.tables.claims.columns.map((c) => c.name);
@@ -475,7 +494,7 @@ test('v2-profile structure writes setup/structure.json under the given root', ()
     const out = [];
     const code = v2Main(['structure'], { out: (s) => out.push(s), err: (s) => out.push(s) }, { root: dir });
     assert.equal(code, 0, out.join('\n'));
-    assert.equal(JSON.parse(readFileSync(join(dir, 'setup', 'structure.json'), 'utf8')).hub.title, 'Claim tagger v2 (in preparation)');
+    assert.equal(JSON.parse(readFileSync(join(dir, 'setup', 'structure.json'), 'utf8')).hub.title, 'Claim tagger v2');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

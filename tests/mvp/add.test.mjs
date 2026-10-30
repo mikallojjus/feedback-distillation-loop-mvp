@@ -1322,7 +1322,7 @@ test('the places that name the script: the allow list of the project settings, t
   assert.ok(settings.permissions.allow.includes(rule), 'no permission prompt (P35)');
   assert.ok(!settings.permissions.ask.includes(rule) && !settings.permissions.deny.includes(rule));
   const claudeMd = readFileSync(new URL('CLAUDE.md', root), 'utf8');
-  assert.match(claudeMd, /and `add\.mjs` creates new rows of the claims table with the Geo columns only, from claims read from Geo \(P35[;)]/); // P35, and since P38 "P35; any number of them, ..."
+  assert.match(claudeMd, /`add\.mjs` creates new Claims rows with the Geo columns only, from claims read from Geo \(P35[;)]/); // P35, and since P38 "P35; any number of them, ..."; reworded for v2 (P47)
   // the words the editor and the skill share
   const skill = readFileSync(new URL('.claude/skills/claim-tagger/SKILL.md', root), 'utf8');
   const handover = readFileSync(new URL('docs/mvp-2026-11/EDITOR-HANDOVER.md', root), 'utf8');

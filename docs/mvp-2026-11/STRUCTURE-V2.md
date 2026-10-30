@@ -227,8 +227,9 @@ The proposal format has no relation column, no name for a table other than its s
     "claims": { "Agent's view of your decision": "Agent reading" }
   },
   "hub": {
-    "title": "Claim tagger v2 (in preparation)",
-    "note": "In preparation and not in use yet: claims are still decided on the Claims table of \"Claim tagger\".",
+    "title": "Claim tagger v2",
+    "note": "Decide each claim and tag in Tag decisions: tick Agent is right or set Tag outcome. The first page, \"Claim tagger\", is kept for reference.",
+    "note_was": ["In preparation and not in use yet: claims are still decided on the Claims table of \"Claim tagger\"."],
     "view_links": ["your_queue", "needs_your_note", "agent_disagreed", "lessons_waiting"],
     "table_order": ["tag_decisions", "claims", "rulebook", "rule_changes", "agent_settings"],
     "pages_after": ["archive"],

@@ -615,6 +615,12 @@ export async function stepRoot(ctx, { title: given } = {}) {
   if (hits.length === 1) {
     id = normId(hits[0].id);
     status = 'adopted';
+  } else if (!placeholderId(config.notion.parent_page_id) && listing.some((b) => b?.type === 'child_page' && normId(b.id) === normId(config.notion.parent_page_id))) {
+    // the page config.json names is under the live hub with another title: the structure's hub title changed (P49), so the page is renamed; nothing else of it changes
+    id = normId(config.notion.parent_page_id);
+    if (isProtected(config, id)) throw new InputError(`the page ${id} is on the protected lists of config.json; it is not renamed`);
+    await client.updatePage(id, { properties: { title: { title: [{ type: 'text', text: { content: title } }] } } });
+    status = 'renamed';
   } else {
     const have = config.notion.parent_page_id;
     if (!placeholderId(have)) throw new InputError(`config.json already names the v2 page (${normId(have)}) but no page titled "${title}" is under the live hub; root does not overwrite it`);
@@ -639,7 +645,7 @@ export async function stepRoot(ctx, { title: given } = {}) {
     config.notion.setup_page_parents = [id];
   }
   ctx.run.update({ v2_page: { id, title, status } });
-  return { code: EXIT.OK, lines: [`root: the page "${title}" ${status === 'created' ? 'was made' : 'was found'} under the live hub (${id})${unchanged ? '; config.json already names it, nothing changed' : '; config.json now names it as notion.parent_page_id'}`], page: { id, title, status } };
+  return { code: EXIT.OK, lines: [`root: the page "${title}" ${status === 'created' ? 'was made' : status === 'renamed' ? 'was renamed to this title' : 'was found'} under the live hub (${id})${unchanged ? '; config.json already names it, nothing changed' : '; config.json now names it as notion.parent_page_id'}`], page: { id, title, status } };
 }
 
 /** One GET of the parent page under the builder version: proof that the token and the version work. Reads only. */
