@@ -7,7 +7,7 @@
 //   --json        print the counts as JSON (for the engineer) instead of the report; the report files are written all the same
 //
 // The report. "Status: nothing is paused; N rows and M rule changes wait for you." (", more than fit one sitting" when N is above queue.sitting_rows), a table with
-// the Rulebook ("<n> tags, edition <e>"), Your queue ("<n> rows, lowest confidence first", else "nothing waits": exactly what the view lists, the rows of Tag decisions whose Agent status is
+// the Rulebook ("<n> tags, edition <e>"), Your queue ("<n> rows, by claim, lowest confidence first", else "nothing waits": exactly what the view lists, the rows of Tag decisions whose Agent status is
 // Waits for you, with no Tag outcome and no tick on Agent is right (a tick on a Can't tell row does not count); in production, when claims the agent has not read yet exist, the
 // cell ends "; <n> new claims not read yet", see below), Your decisions (what the agent still has to do with the
 // decisions made: "3 to read, 1 without a note", see below; no row when all three counts are zero), Lessons waiting and the last run (the Last run summary, else "none yet"), at
@@ -213,7 +213,7 @@ export async function status(opts = {}) {
     // Claims the agent has not read yet (no Agent status). The table can hold claims nobody has tagged (a table that was just filled), so the cell says how many, after the rest, and the Next line
     // sends the editor to the tag command.
     const newClaims = counts.queue.unread;
-    const queueCell = (n > 0 ? `${plural(n, 'row')}, lowest confidence first` : 'nothing waits')
+    const queueCell = (n > 0 ? `${plural(n, 'row')}, by claim, lowest confidence first` : 'nothing waits')
       + (newClaims > 0 ? `; ${plural(newClaims, 'new claim')} not read yet` : '');
     const rows = [
       ['Rulebook', rulebook, ''],

@@ -15,7 +15,7 @@ Status: nothing is paused; 46 rows and 1 rule change wait for you, more than fit
 | Where | Now |
 |---|---|
 | Rulebook | 13 tags, edition 2026-11-04.2 |
-| Your queue | 46 rows, lowest confidence first |
+| Your queue | 46 rows, by claim, lowest confidence first |
 | Lessons waiting | 1 rule change to approve |
 | Last run | Tag · 4 Nov 09:12 · 200 claims |
 
@@ -47,7 +47,7 @@ Tag: the agent read 200 claims for Context-dependent; 9 wait for you.
 |---|---|
 | Claims read | 200 |
 | Carrying Context-dependent | 31 claims (earlier decisions included) |
-| New rows in Your queue | 9, lowest confidence first |
+| New rows in Your queue | 9, by claim, lowest confidence first |
 
 Next: decide your nine rows in Your queue (link).
 

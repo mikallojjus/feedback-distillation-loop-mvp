@@ -327,7 +327,7 @@ export async function propose(opts = {}) {
     // read as "tagged", an editor takes it for a count of their own claims
     if (judgedList.length <= 2) for (const t of judgedList) rows.push([`Carrying ${t}`, `${plural(tagged.get(t), 'claim')} (earlier decisions included)`, '']);
     else rows.push(['Carrying tags', `${plural([...tagged.values()].reduce((a, b) => a + b, 0), 'tag')} (earlier decisions included)`, '']);
-    rows.push(['New rows in Your queue', newlyWaiting ? `${newlyWaiting}, lowest confidence first` : 'none', '']);
+    rows.push(['New rows in Your queue', newlyWaiting ? `${newlyWaiting}, by claim, lowest confidence first` : 'none', '']);
     if (disagreed > 0 && rows.length < 5) rows.push(['Agent disagreed', plural(disagreed, 'row'), '']);
     if (notRead > 0 && rows.length < 5) rows.push(['Not read yet', String(notRead), '']);
     const next = open === 0

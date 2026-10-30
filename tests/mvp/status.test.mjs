@@ -92,7 +92,7 @@ test('status, rows and a rule change wait: both counted in the sentence, Next po
   const r = await status(h);
   const report = assertReport(h, r);
   assert.equal(report.sentence, 'Status: nothing is paused; 3 rows and 1 rule change wait for you.');
-  assert.deepEqual(report.rows[1], ['Your queue', '3 rows, lowest confidence first', '']);
+  assert.deepEqual(report.rows[1], ['Your queue', '3 rows, by claim, lowest confidence first', '']);
   assert.deepEqual(report.rows[2], ['Lessons waiting', '1 rule change to approve', '']);
   assert.deepEqual(report.rows[3], ['Last run', 'none yet', '']);
   assert.match(report.next, /^Next: decide your three rows in Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/);
@@ -113,7 +113,7 @@ test('status counts a row by the view\'s own filter: Waits for you with no Tag o
   });
   const r = await status(w.hooks());
   assert.equal(r.report.sentence, 'Status: nothing is paused; 2 rows wait for you.', 'c01 and c04; c02 and c03 are decided, c05 does not wait, c07 was not read');
-  assert.deepEqual(r.report.rows[1], ['Your queue', '2 rows, lowest confidence first; 1 new claim not read yet', ''], 'c07 has no Agent status: it does not wait, it is new');
+  assert.deepEqual(r.report.rows[1], ['Your queue', '2 rows, by claim, lowest confidence first; 1 new claim not read yet', ''], 'c07 has no Agent status: it does not wait, it is new');
 });
 
 test('status, more rows wait than fit one sitting: the count is in the sentence and Next says where to start', async () => {
@@ -247,7 +247,7 @@ test('the Next line is "decide the rows" even when other claims have no Agent st
   const report = assertReport(h, r);
   assert.match(report.next, DECIDE);
   assert.ok(!/demo|step 2/.test(report.next));
-  assert.deepEqual(report.rows[1], ['Your queue', '2 rows, lowest confidence first; 1 new claim not read yet', ''], 'c03 is counted in the cell, after the rows to decide');
+  assert.deepEqual(report.rows[1], ['Your queue', '2 rows, by claim, lowest confidence first; 1 new claim not read yet', ''], 'c03 is counted in the cell, after the rows to decide');
 });
 
 // ---- the decisions made: what the agent still has to read (READ-DECISIONS.md, decision 74) ------------------------------------------------------------------------------
@@ -731,7 +731,7 @@ test('status, rows wait for the editor and claims are not read yet: the cell has
   assert.equal(report.sentence, 'Status: nothing is paused; 3 rows wait for you.', 'the claims not read yet do not wait for the editor');
   assert.deepEqual(report.rows, [
     ['Rulebook', '13 tags, edition 2026-10-16.1', ''],
-    ['Your queue', '3 rows, lowest confidence first; 4 new claims not read yet', ''],
+    ['Your queue', '3 rows, by claim, lowest confidence first; 4 new claims not read yet', ''],
     ['Lessons waiting', 'none', ''],
     ['Last run', 'none yet', ''],
   ]);
@@ -744,7 +744,7 @@ test('status, rows wait for the editor and claims are not read yet: the cell has
   const hm = many.hooks();
   const reportMany = assertFiveRowsAtMost(hm, await status(hm));
   assert.equal(reportMany.sentence, 'Status: nothing is paused; 3 rows wait for you, more than fit one sitting.');
-  assert.deepEqual(reportMany.rows[1], ['Your queue', '3 rows, lowest confidence first; 5 new claims not read yet', '']);
+  assert.deepEqual(reportMany.rows[1], ['Your queue', '3 rows, by claim, lowest confidence first; 5 new claims not read yet', '']);
   assert.match(reportMany.next, /^Next: start at the top of Your queue \(/);
 
   // a rule change waiting beside the rows and the new claims
@@ -752,7 +752,7 @@ test('status, rows wait for the editor and claims are not read yet: the cell has
   const hl = lessonToo.hooks();
   const reportLesson = assertFiveRowsAtMost(hl, await status(hl));
   assert.equal(reportLesson.sentence, 'Status: nothing is paused; 1 row and 1 rule change wait for you.');
-  assert.deepEqual(reportLesson.rows[1], ['Your queue', '1 row, lowest confidence first; 4 new claims not read yet', '']);
+  assert.deepEqual(reportLesson.rows[1], ['Your queue', '1 row, by claim, lowest confidence first; 4 new claims not read yet', '']);
   assert.match(reportLesson.next, /^Next: decide your row in Your queue \(/);
 
   // a decided row (Agent status still Waits for you) is not in Your queue and its claim is not unread: only the claims with no Agent status are counted, and Next reads them before distill
@@ -910,7 +910,7 @@ test('status, the table never has more than five rows with claims not read yet: 
   const report = assertFiveRowsAtMost(h, await status(h));
   assert.deepEqual(report.rows.map((row) => row[0]), ['Rulebook', 'Your queue', 'Your decisions', 'Lessons waiting', 'Last run']);
   assert.equal(report.rows.length, 5);
-  assert.deepEqual(report.rows[1], ['Your queue', '1 row, lowest confidence first; 5 new claims not read yet', '']);
+  assert.deepEqual(report.rows[1], ['Your queue', '1 row, by claim, lowest confidence first; 5 new claims not read yet', '']);
   assert.equal(report.sentence, 'Status: nothing is paused; 1 row and 1 rule change wait for you.');
   assert.match(report.next, /^Next: decide your row in Your queue \(/);
 

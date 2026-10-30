@@ -182,7 +182,7 @@ test('propose: every judged claim and tag gets a row (the unsure ones wait in Yo
   const report = assertReport(h, r);
   assert.equal(report.demo, false);
   assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
-  assert.deepEqual(report.rows, [['Claims read', '12', ''], ['Carrying Context-dependent', '1 claim (earlier decisions included)', ''], ['New rows in Your queue', '3, lowest confidence first', '']]);
+  assert.deepEqual(report.rows, [['Claims read', '12', ''], ['Carrying Context-dependent', '1 claim (earlier decisions included)', ''], ['New rows in Your queue', '3, by claim, lowest confidence first', '']]);
   assert.equal(report.next, `Next: decide your three rows in Your queue (https://www.notion.so/${w.DB.tag_decisions}?v=${'e3000000000000000000000000000001'}).`, 'Your queue is a view of Tag decisions');
   assert.deepEqual([r.claimsRead, r.created, r.open], [12, 12, 3], 'the result carries the counts for callers');
   assert.equal(readJson(join(r.runDir, 'run.json')).counts.decisions_recorded, 0);

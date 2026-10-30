@@ -147,7 +147,7 @@ Status: nothing is paused; 46 rows and 1 rule change wait for you, more than fit
 | Where | Now |
 |---|---|
 | Rulebook | 13 tags, edition 2026-11-04.2 |
-| Your queue | 46 rows, lowest confidence first |
+| Your queue | 46 rows, by claim, lowest confidence first |
 | Lessons waiting | 1 rule change to approve |
 | Last run | Tag · 4 Nov 09:12 · 200 claims |
 
