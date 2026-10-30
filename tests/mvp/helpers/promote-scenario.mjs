@@ -14,18 +14,20 @@ export const NEW_TEXT = 'Test: a reference that reads as general needs no answer
 export const MARK = 'every other definite reference must point at one specific thing';
 export const keyOf = (i) => `${claimId(i)}::Context-dependent`;
 
-// A decided row holds the reading the agent made of it (the ledger's Agent reading, Rule and Reading note), as distill leaves it: the rows a rule change rests on are rows that point at a rule
-// (decision 79), and promote and the follow-up look at the reading to know it.
-export const readingCells = (reading, rule = 4) => ({ 'Agent reading': reading, Rule: `Context-dependent rule ${rule}`, 'Reading note': 'The rule leaves this kind of case open.' });
+// A decided row holds the reading the agent made of it (the row's Agent's view of your decision, Rule and Why the agent thinks so), as distill leaves it: the rows a rule change rests on are rows
+// that point at a rule (decision 79), and promote and the follow-up look at the reading to know it. The editor's side of a row is a Tag outcome and a Your note (no reason word, P45).
+export const readingCells = (reading, rule = 4) => ({
+  "Agent's view of your decision": reading, Rule: `Context-dependent rule ${rule}`, 'Why the agent thinks so': 'The rule leaves this kind of case open.',
+});
 
-const decidedRow = (i, outcome, why, reasoning) => ({
+const decidedRow = (i, outcome, reading, note) => ({
   Claim: claimText(i), Key: keyOf(i), Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'Two readings. · Context-dependent rule 2 · 1/1 runs agreed',
-  'Rulebook edition': '2026-10-16.1', 'Tag outcome': outcome, 'Why wrong': why, 'Your reasoning': reasoning, ...readingCells(why),
+  'Rulebook edition': '2026-10-16.1', 'Agent status': 'Done', 'Tag outcome': outcome, 'Your note': note, 'Decided under': '2026-10-16.1', ...readingCells(reading),
 });
 
 /**
  * Options: wording (the Editor wording), status (the lesson's Status, default Approved), title, open (a number of claims that wait in Your queue: a ledger row
- * for the proposal and an Agent status that says a tag waits),
+ * for the proposal whose Agent status says it waits, and the claim's own Agent status),
  * overrides (answers of the candidate, by claim text, laid over the base ones), base (answers of the rulebook in force, by claim text, laid over the scenario's),
  * lessonRows (more Rule changes rows), mark (the text that marks the candidate, default MARK), world (options for makeWorld).
  */
@@ -43,6 +45,7 @@ export async function promoteWorld({
     claimRows[claimId(5 + k)] = { 'Agent status': 'Waits for you', 'Agent confidence': 0.5 };
     queue.push({
       Claim: claimText(5 + k), Key: keyOf(5 + k), Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'Unsure. · 2/2 runs agreed', 'Rulebook edition': '2026-10-16.1',
+      'Agent status': 'Waits for you',
     });
   }
   const lines = supporting.map((i) => `${claimText(i)} · ${keyOf(i)}`).join('\n');

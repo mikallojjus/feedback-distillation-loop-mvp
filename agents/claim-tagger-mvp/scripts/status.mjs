@@ -7,48 +7,43 @@
 //   --json        print the counts as JSON (for the engineer) instead of the report; the report files are written all the same
 //
 // The report. "Status: nothing is paused; N rows and M rule changes wait for you." (", more than fit one sitting" when N is above queue.sitting_rows), a table with
-// the Rulebook ("<n> tags, edition <e>"; "1 tag, edition <e>" on a practice page), Your queue ("<n> rows, lowest confidence first", else "nothing waits": exactly what the view lists,
-// and a claim leaves the view the moment its Review status is Reviewed, P13, so a decided claim is never counted here; in production, when claims the agent has not read yet exist, the
+// the Rulebook ("<n> tags, edition <e>"), Your queue ("<n> rows, lowest confidence first", else "nothing waits": exactly what the view lists, the rows of Tag decisions whose Agent status is
+// Waits for you, with no Tag outcome and no tick on Agent is right (a tick on a Can't tell row does not count); in production, when claims the agent has not read yet exist, the
 // cell ends "; <n> new claims not read yet", see below), Your decisions (what the agent still has to do with the
-// decisions made: "3 to read, 1 without a note", see below, which is where a decided claim that the agent has not read yet is told; no row when all three counts are zero), Lessons waiting and the last run (the Last run summary, else "none yet"), at
-// most five rows, and one Next line, the first that applies: read the claims (practice page only) / start at the top of Your queue or decide the rows / type tag to read the new claims
-// (production only: claims the agent has not read yet, see below) / type distill (something is to read, or at least distill.min_claims claims point at a rule, and no rule change
+// decisions made: "3 to read, 1 without a note", see below; no row when all three counts are zero), Lessons waiting and the last run (the Last run summary, else "none yet"), at
+// most five rows, and one Next line, the first that applies: start at the top of Your queue or decide the rows / type tag to read the new claims
+// (claims the agent has not read yet, see below) / type distill (something is to read, or at least distill.min_claims decided rows point at a rule, and no rule change
 // is Proposed or Approved: distill has something to read or draft) / reject a recanted rule change /
 // approve or reject the rule change / check the approved one / read new claims (when nothing else applies). The Rulebook row does not say that Notion agrees: a drift of the rulebook text on a judged tag is checked before the
 // report and ends the command with the drift report (exit 4, naming the tag and the column and telling the editor to ask the engineer to restore the rulebook text); only a
 // difference that does not stop the command (a tag without rules edited or added in Notion) or a drift check that could not run is said in the row. A paused agent ends with
-// the refusal report (exit 3). On a practice page the sentence starts "Status of the practice page <title>:" (loop.mjs), and while a row that waits has no Agent proposal yet
-// (step 1 of the page) the Next line is "type /claim-tagger demo tag" (step 2) instead of "decide the rows": there is nothing to decide before the agent has read the
-// claims. In production that line is never used.
+// the refusal report (exit 3).
 //
-// The rows that wait are claims of Claims (CLAIMS-REVIEW.md, section 6.2): a claim whose Agent status is "Waits for you" and whose Review status is not Reviewed, which is what the view
-// Your queue lists (its filter is "Agent status is Waits for you and Review status is not Reviewed", P13). queue.decided_listed counts the claims decided since the last tag run: Reviewed, with
-// an Agent status that still says Waits for you until the next tag run. They are no longer in the view and no longer in "Your queue" here; what is left of them to do is in "Your decisions".
+// The rows that wait are rows of Tag decisions (PORT-V2.md section 2.13): countYourQueue (lib/decisions.mjs) is the view's own filter. queue.decided counts the rows an editor has decided
+// (rowDecision: a Tag outcome, or a tick on a sure proposal); queue.decided_listed those of them whose Agent status still says Waits for you until the next tag run reads the decision. They are
+// no longer in the view; what is left of them to do is in "Your decisions".
 //
-// The claims the agent has not read yet: a claim that is not Reviewed and whose Agent status is empty (a claim it could not read says "Could not read" and is not one of them);
-// queue.unread counts them on every table, a practice page included. A practice page uses the count for step 1 only (the Next line "type /claim-tagger demo tag ...", above). In
-// production a table can be filled with claims nobody has tagged, so there the Your queue cell ends "; <n> new claims not read yet" ("; 1 new claim not read yet"), the Next line
-// "type /claim-tagger tag to read <n> new claims." comes right after the claims to decide (before distill and the rest), and, with nothing in Your queue, no rule change and no decision to
+// The claims the agent has not read yet: a claim whose Agent status is empty (a claim it could not read says "Could not read" and is not one of them); queue.unread counts them. A table
+// can be filled with claims nobody has tagged, so the Your queue cell ends "; <n> new claims not read yet" ("; 1 new claim not read yet"), the Next line
+// "type /claim-tagger tag to read <n> new claims." comes right after the rows to decide (before distill and the rest), and, with nothing in Your queue, no rule change and no decision to
 // read or without a note, the sentence is "Status: nothing is paused; the agent has <n> new claims to read." instead of "nothing waits for you". The table stays at five rows.
 //
 // The decisions made (READ-DECISIONS.md, decision 74). The agent reads each disagreement between an editor's decision and its own proposal itself (distill, lib/readings.mjs), and
-// only distill makes or writes a reading, so status counts, from the ledger as distill would bring it up to date (syncDecisions) and sorted the way distill sorts it (classifyRows),
-// the Reviewed claims with an unfixed disagreement row (a row whose Follow-up is Fixed is never read):
-//   queue.to_read                  a row is stale: the editor's decision, note or reason word changed since the agent last read it, or the agent proposed the tag again under a new edition, or it was never read (it is read by
-//                                  distill; also a note line that opens with a reason word, which distill takes as it stands without asking a model)
+// only distill makes or writes a reading, so status counts, from the rows as distill would bring them up to date (recordDecisions) and sorted the way distill sorts them (classifyRows),
+// the decided rows with an unfixed disagreement (a row whose After the rule change is Fixed is never read):
+//   queue.to_read                  a row is stale: the editor's decision or note changed since the agent last read it, or the agent proposed the tag again under a new edition, or it was never read
 //   queue.pending_rule_decisions   a row the agent has read as a rule problem (Rule unclear or Rule should change) and that stands: distill drafts a rule change from such rows when
 //                                  at least distill.min_claims claims point at the same rule
-//   queue.needs_note               a row for which the editor wrote neither a reason word nor any words for the tag, whether the agent has read it yet or not (the claim's Agent
-//                                  reading says "without your note" once it has)
-// Each is a count of claims. The row "Your decisions" shows the parts that are not zero, in this order, "<n> to read", "<n> point(s) at a rule", "<n> without a note", for example
-// "3 to read, 1 without a note"; with all three zero there is nothing to say and the row is left out (the table of step 1 of the practice page has four rows). A reading of a decision without
-// a note ("without your note" opens its Reading note) points at no rule (pointsAtRule): it counts in "without a note" only (decision 78). With nothing in Your queue and no rule change, the sentence
+//   queue.needs_note               a row for which the editor wrote no Your note, whether the agent has read it yet or not
+// Each is a count of rows. The row "Your decisions" shows the parts that are not zero, in this order, "<n> to read", "<n> point(s) at a rule", "<n> without a note", for example
+// "3 to read, 1 without a note"; with all three zero there is nothing to say and the row is left out. A reading of a decision without
+// a note ("without your note" opens its Why the agent thinks so) points at no rule (pointsAtRule): it counts in "without a note" only (decision 78). With nothing in Your queue and no rule change, the sentence
 // follows that row: "Status: nothing is paused; the agent has N of your decisions to read." / "...; N of your decisions have no note." instead of "nothing waits for you" (and, last of
-// all, "...; the agent has N new claims to read." in production, see above).
+// all, "...; the agent has N new claims to read.", see above).
 //
-// A Proposed or Approved rule change that rests on a decision the editor now calls the agent's slip (or that no longer points at a rule) is recanted (decision 79, recantedLessons over the ledger
-// as distill would leave it, a reason word the editor has just written applied already): the row Lessons waiting says "1 rule change to reject (rests on a decision you now call a slip)" and the Next
-// line, after the claims to decide, the new claims to read (production) and the distill suggestion and before "approve or reject" and "promote", is "reject the rule change "<title>" in Lessons waiting (<link>), then type /claim-tagger
+// A Proposed or Approved rule change that rests on a decision the editor now calls the agent's slip (or that no longer points at a rule) is recanted (decision 79, recantedLessons over the rows
+// as distill would leave them): the row Lessons waiting says "1 rule change to reject (rests on a decision the agent now reads as a slip)" and the Next
+// line, after the rows to decide, the new claims to read and the distill suggestion and before "approve or reject" and "promote", is "reject the rule change "<title>" in Lessons waiting (<link>), then type /claim-tagger
 // distill again."
 //
 // Exit codes: 0 ok, 2 invalid, 3 paused, 4 drift or an invalid rulebook file.
@@ -58,9 +53,9 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
-import { AGENT_STATUS } from './lib/config.mjs';
-import { claimWaits, isReviewed, syncDecisions } from './lib/decisions.mjs';
-import { approveNext, listNames, plural, quoted, recantedNext, tableLink, viewLink, yourClaims } from './lib/editor-words.mjs';
+import { AGENT_STATUS, TD } from './lib/config.mjs';
+import { countYourQueue, isDecided, recordDecisions } from './lib/decisions.mjs';
+import { approveNext, listNames, plural, quoted, recantedNext, tableLink, viewLink, yourRows } from './lib/editor-words.mjs';
 import { LOCK_STALE_MS, LoopExit, needClaimColumns, parseCli, resumeLine, supportingKeysOf, takePull, withRun } from './lib/loop.mjs';
 import { isMain } from './lib/paths.mjs';
 import { preflight, refusedReport } from './lib/preflight.mjs';
@@ -72,20 +67,19 @@ export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/status.mjs [--
 const NO_READING_COUNTS = Object.freeze({ to_read: 0, pending_rule_decisions: 0, needs_note: 0 });
 
 /**
- * The three counts of the decisions made (see the header), from the pull's claims and ledger rows (queue), the rulebook in force and the config. Each counts claims. The ledger is brought
- * up to date the way distill does it first (syncDecisions with the names of every tag of the rulebook), so that a decision an editor made since the last tag run counts at once. Without a
+ * The three counts of the decisions made (see the header), from the pull's claims and Tag decisions rows (queue), the rulebook in force and the config. Each counts rows. The rows are brought
+ * up to date the way distill does it first (recordDecisions), so that a decision an editor made since the last tag run counts at once. Without a
  * rulebook there is nothing the agent could read: all three are 0.
  */
 export function readingCounts({ claims = [], queue = [], rubric = null, config = null } = {}) {
   if (!rubric || !Array.isArray(rubric.tags)) return { ...NO_READING_COUNTS };
-  const { rows } = syncDecisions(claims, queue, { tagNames: rubric.tags.map((t) => t.name) });
+  const { rows } = recordDecisions(queue);
   const classes = classifyRows({ claims, ledgerRows: rows, rubric, config });
-  const claimsOf = (items) => new Set(items.map((i) => i.claim.geo_id)).size;
-  const noNote = (item) => item.reasonWord === null && String(item.noteLine ?? '').trim() === '';
+  const noNote = (item) => String(item.noteLine ?? '').trim() === '';
   return {
-    to_read: claimsOf([...classes.verbatim, ...classes.toRead]),
-    pending_rule_decisions: claimsOf(classes.current.filter((item) => pointsAtRule(item.row))),
-    needs_note: claimsOf([...classes.toRead, ...classes.current].filter(noNote)),
+    to_read: [...classes.verbatim, ...classes.toRead].length, // verbatim is always empty on v2 (P45)
+    pending_rule_decisions: classes.current.filter((item) => pointsAtRule(item.row)).length,
+    needs_note: [...classes.toRead, ...classes.current].filter(noNote).length,
   };
 }
 
@@ -100,12 +94,13 @@ export function decisionsCell({ to_read: toRead = 0, pending_rule_decisions: pen
 
 /** The counts the report and --json are made of, from the pull's claims, lessons, ledger rows (queue), settings, and the rulebook and config the readings are counted under. */
 export function countsOf({ claims = [], lessons = [], queue = [], settings = null, sitting = 20, rubric = null, config = null }) {
-  const open = claims.filter((c) => claimWaits(c)).length;
-  // decided since the last tag run: Reviewed, and the agent's status still says "Waits for you" until the next tag run reads the decision (CLAIMS-REVIEW.md, section 6.2); the view
-  // Your queue does not list them (P13), so they are counted for --json and for the engineer, not in the row "Your queue"
-  const decidedListed = claims.filter((c) => isReviewed(c) && String(c.agent_status ?? '').trim() === AGENT_STATUS.waits).length;
-  // not read yet: not Reviewed, and the agent has written nothing in Agent status (a claim it could not read says "Could not read" and is not unread)
-  const unread = claims.filter((c) => !isReviewed(c) && String(c.agent_status ?? '').trim() === '').length;
+  const open = countYourQueue(queue);
+  // decided since the last tag run: a decided row whose status still says "Waits for you" until the next tag run reads the decision; the view Your queue does not list them, so they are
+  // counted for --json and for the engineer, not in the row "Your queue"
+  const decidedRows = queue.filter((r) => isDecided(r));
+  const decidedListed = decidedRows.filter((r) => String(r[TD.status] ?? '').trim() === AGENT_STATUS.waits).length;
+  // not read yet: the agent has written nothing in the claim's Agent status (a claim it could not read says "Could not read" and is not unread)
+  const unread = claims.filter((c) => String(c.agent_status ?? '').trim() === '').length;
   const byStatus = { Proposed: 0, Approved: 0, Rejected: 0, Live: 0, 'Rolled back': 0 };
   for (const l of lessons) byStatus[l.Status] = (byStatus[l.Status] ?? 0) + 1;
   const readings = readingCounts({ claims, queue, rubric, config });
@@ -114,7 +109,7 @@ export function countsOf({ claims = [], lessons = [], queue = [], settings = nul
   return {
     queue: {
       open,
-      decided: claims.filter((c) => isReviewed(c)).length,
+      decided: decidedRows.length,
       decided_listed: decidedListed,
       to_read: readings.to_read,
       pending_rule_decisions: readings.pending_rule_decisions,
@@ -212,13 +207,12 @@ export async function status(opts = {}) {
       toReject > 0 ? rejectCell : null,
       ready > 0 ? `${ready} approved, ready to check` : null,
     ].filter(Boolean).join(', ');
-    // Your queue lists what is still to decide and nothing else: a claim leaves it as soon as its Review status is Reviewed (P13). A decided claim that the agent has not read yet is told in
+    // Your queue lists what is still to decide and nothing else: a row leaves it as soon as it has a Tag outcome or a tick on a sure proposal. A decided row that the agent has not read yet is told in
     // the row "Your decisions" ("<n> to read"), not here.
     //
-    // Claims the agent has not read yet (no Agent status, not Reviewed). On a practice page they are step 1 and the Next line sends the editor to the demo tag command; the cell stays as it was.
-    // In production the table can hold claims nobody has tagged (a table that was just filled), so the cell says how many, after the rest, and the Next line sends the editor to the tag command.
-    const demoUnread = ctx.demo ? counts.queue.unread : 0;
-    const newClaims = ctx.demo ? 0 : counts.queue.unread;
+    // Claims the agent has not read yet (no Agent status). The table can hold claims nobody has tagged (a table that was just filled), so the cell says how many, after the rest, and the Next line
+    // sends the editor to the tag command.
+    const newClaims = counts.queue.unread;
     const queueCell = (n > 0 ? `${plural(n, 'row')}, lowest confidence first` : 'nothing waits')
       + (newClaims > 0 ? `; ${plural(newClaims, 'new claim')} not read yet` : '');
     const rows = [
@@ -244,13 +238,10 @@ export async function status(opts = {}) {
     else if (noNote > 0) sentence = `Status: nothing is paused; ${noNote} of your decisions ${noNote === 1 ? 'has' : 'have'} no note.`;
     else if (newClaims > 0) sentence = `Status: nothing is paused; the agent has ${plural(newClaims, 'new claim')} to read.`;
     else sentence = 'Status: nothing is paused and nothing waits for you.';
-    // On a practice page the two claims that are still open are seeded without the agent's side (step 1); the agent fills its columns (Agent status, Agent tags, Agent confidence ...) when
-    // the editor types the demo tag command (step 2). Until it has, there is nothing to decide yet, so the Next line sends the editor to step 2. In production the claims the agent has
-    // not read (a table just filled) are counted in the Your queue cell and send the editor to the tag command, but only after the claims that wait for the editor have been decided.
+    // The claims the agent has not read (a table just filled) are counted in the Your queue cell and send the editor to the tag command, but only after the rows that wait for the editor have been decided.
     let next;
-    if (demoUnread > 0) next = 'Next: type /claim-tagger demo tag so that the agent reads the claims first (step 2 of the practice page).';
-    else if (counts.queue.more_than_a_sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
-    else if (n > 0) next = `Next: decide ${yourClaims(n)} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
+    if (counts.queue.more_than_a_sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
+    else if (n > 0) next = `Next: decide ${yourRows(n)} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
     else if (newClaims > 0) next = `Next: type /claim-tagger tag to read ${plural(newClaims, 'new claim')}.`;
     // distill has something to do while a decision is still to read (the reading is made only by distill, so even one row is enough), or while enough decisions point at a rule for it to
     // draft from, and no rule change is open (Proposed or Approved)
@@ -271,7 +262,7 @@ export async function status(opts = {}) {
       recanted_lessons: recanted.map((x) => x.title),
       last_run: counts.last_run,
       promoting,
-      table: tableLink(ctx.config, 'claims'),
+      table: tableLink(ctx.config, 'tag_decisions'),
     };
     return {
       exit: EXIT.OK, sentence, header: ['Where', 'Now', ''], rows, next, details: { counts, json }, ...(ctx.opts.json ? { print: JSON.stringify(json, null, 2) } : {}),

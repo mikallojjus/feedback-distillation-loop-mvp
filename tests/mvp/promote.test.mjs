@@ -24,7 +24,7 @@ function assertReport(h, r) {
   return r.report;
 }
 const lockFile = (w) => join(w.root, 'runs', 'PROMOTING.json');
-const forbidden = ['Tag outcome', 'Why wrong', 'Your reasoning', 'Editor wording', 'Paused'];
+const forbidden = ['Tag outcome', 'Agent is right', 'Your note', 'Editor wording', 'Paused'];
 const storeDirs = (w) => {
   const base = join(w.root, 'runs', 'judgments');
   return readdirSync(base).filter((d) => /^[0-9a-f]{16}$/.test(d)).map((d) => join(base, d));
@@ -156,8 +156,8 @@ test('promote PASS: the new text goes live in the Rulebook copy and in a new edi
   assert.deepEqual([drift.judged.length, drift.adopted.length, drift.missing.length], [0, 0, 0], 'the next pull sees no drift');
 
   // the follow-up: both rows Fixed, nothing else on decided rows
-  for (const i of [1, 2]) assert.equal(w.row('tag_decisions', keyOf(i))['Follow-up'], 'Fixed');
-  for (const i of [3, 4]) assert.equal(w.row('tag_decisions', keyOf(i))['Follow-up'], null);
+  for (const i of [1, 2]) assert.equal(w.row('tag_decisions', keyOf(i))['After the rule change'], 'Fixed');
+  for (const i of [3, 4]) assert.equal(w.row('tag_decisions', keyOf(i))['After the rule change'], null);
   assert.equal(w.claim('c01')['Agent edition'], '2026-10-16.2');
   assert.deepEqual(w.claim('c01')['Agent tags'], [], 'the editor decided Does not apply');
   assert.deepEqual([w.claim('c03')['Agent tags'], w.claim('c03')['Agent edition']], [[], ''], 'claim 3 is not part of the lesson, so its columns were not touched');
@@ -166,7 +166,7 @@ test('promote PASS: the new text goes live in the Rulebook copy and in a new edi
   const report = assertReport(h, r);
   assert.equal(report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed.');
   assert.deepEqual(report.rows, [['Example claims', '11 of 11 right', ''], ['Earlier decisions', '2 of 2 still right', ''], ['Your 2 rows', '2 of 2 now right, marked Fixed', '']]);
-  assert.equal(report.next, `Next: decide your claim in Your queue (https://www.notion.so/${w.DB.claims}?v=e3000000000000000000000000000001).`);
+  assert.equal(report.next, `Next: decide your row in Your queue (https://www.notion.so/${w.DB.tag_decisions}?v=e3000000000000000000000000000001).`);
 
   // the card
   const card = readJson(join(r.runDir, 'card.json'));
@@ -493,11 +493,9 @@ test('promote PASS: in production the rubric folder is committed with the editio
   gitCalls.length = 0;
   const w2 = await promoteWorld();
   assert.equal((await promote(w2.hooks({ git, noCommit: true }))).exit, 0);
-  const w3 = await promoteWorld({ world: { demo: true } });
-  assert.equal((await promote(w3.hooks({ git, noCommit: false }))).exit, 0);
   const w4 = await promoteWorld({ overrides: flipExample });
   assert.equal((await promote(w4.hooks({ git, noCommit: false }))).exit, 11);
-  assert.deepEqual(gitCalls, [], 'no commit with --no-commit, in a practice profile, or after a FAIL');
+  assert.deepEqual(gitCalls, [], 'no commit with --no-commit or after a FAIL');
 
   const w5 = await promoteWorld();
   const failing = (args) => (args[0] === 'commit' ? { status: 1, stdout: 'nothing to commit', stderr: '' } : { status: 0, stdout: '', stderr: '' });
@@ -508,17 +506,6 @@ test('promote PASS: in production the rubric folder is committed with the editio
 
   const w6 = await promoteWorld();
   assert.equal((await promote(w6.hooks({ noCommit: false }))).exit, 0, 'a test folder is never committed, with no git given');
-});
-
-test('promote PASS: in a practice profile Next points at step 7 of the practice page, the sentence starts with "Demo · " and ends with the practice page', async () => {
-  const w = await promoteWorld({ world: { demo: true, configure: (c) => { c.notion.page_id = 'a1b2c3d4e5f60718293a4b5c6d7e8f90'; c.demo_title = 'Claim tagger demo · 15 Oct 10:42'; } } });
-  const h = w.hooks();
-  const r = await promote(h);
-  assert.equal(r.exit, 0, h.io.errs.join('\n'));
-  assert.ok(r.markdown.startsWith('Demo · Promote: PASS, rule 4'), r.markdown);
-  assert.equal(r.report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed (practice page Claim tagger demo · 15 Oct 10:42).');
-  assert.equal(r.report.next, 'Next: look at step 7 on the practice page (https://app.notion.com/p/Claim-tagger-demo-15-Oct-10-42-a1b2c3d4e5f60718293a4b5c6d7e8f90); the demo is then complete.', 'the link has the form of the one every other report shows');
-  assert.deepEqual(lintReport(r.markdown), []);
 });
 
 test('promote PASS: with no row left in Your queue Next says nothing waits; with more than fit one sitting it says where to start', async () => {
@@ -547,7 +534,7 @@ test('promote FAIL: an example that flips leaves the rulebook alone, writes only
   assert.equal(lesson['Safety check result'], `FAIL: '${cut}' now Does not apply`);
   assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'], `Promote · ${stampOf(NOW)} · FAIL`);
   assert.equal(w.row('agent_settings', 'Claim tagger')['Rulebook edition'], '2026-10-16.1');
-  for (const i of [1, 2]) assert.equal(w.row('tag_decisions', keyOf(i))['Follow-up'], null, 'no follow-up after a FAIL');
+  for (const i of [1, 2]) assert.equal(w.row('tag_decisions', keyOf(i))['After the rule change'], null, 'no follow-up after a FAIL');
 
   // the plan holds the two writes and nothing else; no request names an editor column or puts a sentence in Notion
   const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
@@ -794,21 +781,6 @@ test('promote FAIL: the wording call runs for an earlier decision that broke and
   assert.ok(readFileSync(join(ry.runDir, 'card.md'), 'utf8').includes(`Whole text for Editor wording (the rule as it was tested, a space, the sentence): "${NEW_TEXT} ${SENTENCE}"`));
 });
 
-test('promote FAIL on a practice page: the command is the demo one, and the first sentence names the practice page', async () => {
-  const title = 'Claim tagger demo · 15 Oct 10:42';
-  const w = await promoteWorld({ overrides: flipExample, world: { demo: true, configure: (c) => { c.demo_title = title; } } });
-  const h = w.hooks();
-  const r = await promote(h);
-  assert.equal(r.exit, 11, h.io.errs.join('\n'));
-  const report = assertReport(h, r);
-  const cut = EXAMPLE_1.length > 60 ? `${EXAMPLE_1.slice(0, 57)}...` : EXAMPLE_1;
-  assert.equal(report.sentence, `Promote: FAIL, rule 4 is unchanged: the new wording turns "${cut}" to Does not apply; the right answer is Applies (practice page ${title}).`);
-  assert.ok(r.markdown.startsWith('Demo · Promote: FAIL, rule 4 is unchanged'), r.markdown);
-  assert.equal(report.extra, suggestion('rule 4', SENTENCE, WHY, [NEW_TEXT, SENTENCE]), 'the suggestion is the same on a practice page');
-  assert.equal(report.next, nextAfterFail(w, 'rule 4', '/claim-tagger demo promote'));
-  assert.equal(readJson(join(r.runDir, 'run.json')).exit_code, 11);
-});
-
 test('promote FAIL: an earlier decision that was right and breaks is named, and counts against "still right"', async () => {
   const w = await promoteWorld({ overrides: { [claimText(3)]: { decision: 'do_not_apply', p: 0.1 } } });
   const h = w.hooks();
@@ -841,7 +813,7 @@ test('promote: an earlier decision that was already wrong before is not counted 
 test('promote: a decision on another tag is not part of the check', async () => {
   const other = await promoteWorld({ open: 0 });
   other.fake.addRow(other.DB.tag_decisions, {
-    Claim: 'A wordy claim that goes on.', Key: 'c09::Wordy', Tag: 'Wordy', 'Tag outcome': 'Applies', 'Why wrong': 'Agent slip', 'Your reasoning': 'Too wordy.',
+    Claim: 'A wordy claim that goes on.', Key: 'c09::Wordy', Tag: 'Wordy', 'Tag outcome': 'Applies', 'Your note': 'Too wordy.',
   });
   const r = await promote(other.hooks());
   assert.equal(r.exit, 0);
@@ -900,7 +872,7 @@ test('promote: when the rule change cannot be marked Live after the rulebook tex
   assert.equal(w.row('rule_changes', TITLE)['Safety check result'], 'PASS: examples 11/11, earlier 2/2, yours 2/2');
   assert.equal(w.row('agent_settings', 'Claim tagger')['Rulebook edition'], '2026-10-16.2');
   assert.equal(again.report.sentence, 'Promote: PASS, rule 4 now uses the new wording (edition 2026-10-16.2), and the follow-up marked both of your rows Fixed.');
-  for (const i of [1, 2]) assert.equal(w.row('tag_decisions', keyOf(i))['Follow-up'], 'Fixed');
+  for (const i of [1, 2]) assert.equal(w.row('tag_decisions', keyOf(i))['After the rule change'], 'Fixed');
   const history = readdirSync(join(w.root, 'rubric', 'history'));
   assert.deepEqual(history.sort(), ['2026-10-16.1.json', '2026-10-16.2.json']);
 });
@@ -926,15 +898,15 @@ test('promote HOLD: with nothing to check the change against, exit 10, the two r
   assert.equal(existsSync(lockFile(w)), false);
 });
 
-// the report check of assertReport, but for the words of decision 79 ("a decision you now call the agent's slip"): assertReport keeps the word call out of a report, because for an engineer it means a model call
+// the report check of assertReport, but for the words of decision 79 ("a decision the agent now reads as its own slip"; the phrase is lib/readings.mjs recantedPhrase)
 function assertHeldReport(h, r) {
   assert.deepEqual(lintReport(r.markdown), [], r.markdown);
   assert.equal(h.io.outs.join('\n').trimEnd(), r.markdown.trimEnd());
-  assert.ok(!/token|duration|\$|\.mjs|--[a-z]|runs\//i.test(r.markdown) && !/\bcalls\b/i.test(r.markdown) && !/\bcall\b(?! the agent's slip)/i.test(r.markdown), r.markdown);
+  assert.ok(!/token|duration|\$|\.mjs|--[a-z]|runs\//i.test(r.markdown) && !/\bcalls?\b/i.test(r.markdown), r.markdown);
   return r.report;
 }
 
-test('promote HOLD, a rule change that rests on a decision the editor now calls the agent\'s slip: exit 10 before anything is asked or written, the report says why and asks to reject it and distill again, and the lesson stays Approved', async () => {
+test('promote HOLD, a rule change that rests on a decision the agent now reads as its own slip: exit 10 before anything is asked or written, the report says why and asks to reject it and distill again, and the lesson stays Approved', async () => {
   const w = await promoteWorld();
   w.fake.editRow(w.ids.queue[keyOf(2)], readingCells('Agent slip')); // distill re-read the row of claim 2 as Agent slip after the editor's note
   const writes = w.writes().length;
@@ -942,7 +914,7 @@ test('promote HOLD, a rule change that rests on a decision the editor now calls 
   const r = await promote(h);
   assert.equal(r.exit, 10, h.io.errs.join('\n'));
   const report = assertHeldReport(h, r);
-  assert.equal(report.sentence, `Promote: held: the rule change "${TITLE}" rests on a decision you now call the agent's slip, so the safety check did not run.`);
+  assert.equal(report.sentence, `Promote: held: the rule change "${TITLE}" rests on a decision the agent now reads as its own slip, so the safety check did not run.`);
   assert.equal(report.next, `Next: reject the rule change "${TITLE}" in Lessons waiting (${lessonsLink(w)}), then type /claim-tagger distill again.`);
   assert.equal(report.rows, undefined, 'a sentence and a Next line');
   assert.equal(w.writes().length, writes, 'nothing is written: not the lesson, not Agent settings, not the rulebook');
@@ -954,39 +926,28 @@ test('promote HOLD, a rule change that rests on a decision the editor now calls 
   const run = readJson(join(r.runDir, 'run.json'));
   assert.deepEqual([run.exit_code, run.status, run.recanted], [10, 'done', { keys: [keyOf(2)], why: 'slip' }]);
 
-  // the demo form of the command
-  const demo = await promoteWorld({ world: { demo: true } });
-  demo.fake.editRow(demo.ids.queue[keyOf(2)], readingCells('Agent slip'));
-  const hd = demo.hooks();
-  const rd = await promote(hd);
-  assert.equal(rd.exit, 10);
-  assert.ok(rd.markdown.startsWith('Demo · Promote: held: '), rd.markdown);
-  assert.match(assertHeldReport(hd, rd).next, /, then type \/claim-tagger demo distill again\.$/);
-
   // the editor rejects it, distill drafts again from the row that remains: nothing of this is promote's to do
   w.fake.editRow(w.ids.lesson[TITLE], { Status: 'Rejected' });
   assert.equal((await promote(w.hooks())).exit, 2, 'a rejected rule change is not Approved: the usual refusal');
 });
 
-test('promote HOLD, the editor\'s reason word counts before distill has written it: a note that opens with "Agent slip." holds the rule change although the ledger still holds the old reading', async () => {
+test('promote: a note that opens with "Agent slip." is plain text (P45): it holds nothing, the reading of the row is the agent\'s alone', async () => {
   const w = await promoteWorld();
-  w.review('c02', { tags: [], why: 'Agent slip', notes: 'Rule 5 settles it.' }); // the claim is Reviewed again with the reason word; the ledger row of claim 2 still reads Rule unclear
-  assert.equal(w.row('tag_decisions', keyOf(2))['Agent reading'], 'Rule unclear');
+  w.decideRow(keyOf(2), { note: 'Agent slip. Rule 5 settles it.' });
+  assert.equal(w.row('tag_decisions', keyOf(2))["Agent's view of your decision"], 'Rule unclear');
   const h = w.hooks();
   const r = await promote(h);
-  assert.equal(r.exit, 10, h.io.errs.join('\n'));
-  assert.equal(assertHeldReport(h, r).sentence, `Promote: held: the rule change "${TITLE}" rests on a decision you now call the agent's slip, so the safety check did not run.`);
-  assert.equal(w.calls().length, 0);
-  assert.equal(w.row('rule_changes', TITLE).Status, 'Approved');
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(w.row('rule_changes', TITLE).Status, 'Live');
 });
 
 test('promote HOLD, a row that is no longer a disagreement, was marked Fixed or holds only a guess without a note: "a decision that no longer points at a rule"; a Still wrong row stays checkable', async () => {
   const phrase = 'a decision that no longer points at a rule';
   const cases = {
-    'no longer a disagreement': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Tag outcome': "Can't tell" }),
-    'marked Fixed': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Follow-up': 'Fixed' }),
-    'a guess without a note': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Reading note': 'without your note · The rule leaves this kind of case open.' }),
-    'no reading': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Agent reading': null, Rule: '', 'Reading note': '' }),
+    'no longer a disagreement': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Agent proposal': 'Does not apply' }), // the agent already says what the editor decided
+    'marked Fixed': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'After the rule change': 'Fixed' }),
+    'a guess without a note': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { 'Why the agent thinks so': 'without your note · The rule leaves this kind of case open.' }),
+    'no reading': (w) => w.fake.editRow(w.ids.queue[keyOf(1)], { "Agent's view of your decision": null, Rule: '', 'Why the agent thinks so': '' }),
   };
   for (const [name, change] of Object.entries(cases)) {
     const w = await promoteWorld();
@@ -997,14 +958,14 @@ test('promote HOLD, a row that is no longer a disagreement, was marked Fixed or 
     assert.equal(assertHeldReport(h, r).sentence, `Promote: held: the rule change "${TITLE}" rests on ${phrase}, so the safety check did not run.`, name);
   }
   const still = await promoteWorld();
-  still.fake.editRow(still.ids.queue[keyOf(1)], { 'Follow-up': 'Still wrong' });
+  still.fake.editRow(still.ids.queue[keyOf(1)], { 'After the rule change': 'Still wrong' });
   assert.equal((await promote(still.hooks())).exit, 0, 'Still wrong stays open: the rule change is checked as always');
   // two recanted rows
   const both = await promoteWorld();
   for (const i of [1, 2]) both.fake.editRow(both.ids.queue[keyOf(i)], readingCells('Agent slip'));
   const rb = await promote(both.hooks());
   assert.equal(rb.exit, 10);
-  assert.equal(rb.report.sentence, `Promote: held: the rule change "${TITLE}" rests on 2 decisions you now call the agent's slips, so the safety check did not run.`);
+  assert.equal(rb.report.sentence, `Promote: held: the rule change "${TITLE}" rests on 2 decisions the agent now reads as its own slips, so the safety check did not run.`);
 });
 
 // ---- the lock --------------------------------------------------------------------------------------------------------------------------------

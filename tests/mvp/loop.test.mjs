@@ -111,7 +111,9 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(w.rows('tag_decisions').length, 10, 'the audit decisions are seeded as decided ledger rows');
   assert.equal(w.rows('tag_decisions').filter((r) => r['Open claim'].length === 1).length, 10, 'each joined to its claim');
   assert.equal(w.rows('agent_settings').length, 1);
-  const auditBefore = w.rows('tag_decisions').map((r) => JSON.stringify(r)).sort();
+  // what the tag step must leave as it is on a decided row: the editor's three columns and the record of the decision (the proposal columns move with the rulebook, PORT-V2 1.7)
+  const decisionOf = (r) => JSON.stringify([r.Key, r['Agent is right'], r['Tag outcome'], r['Your note'], r['Decided under']]);
+  const auditBefore = w.rows('tag_decisions').map(decisionOf).sort();
 
   // tag: judge, then propose
   assert.equal((await w.judge()).exit, 0);
@@ -122,7 +124,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(w.rows('tag_decisions').length, 50, 'a ledger row for every claim the agent judged');
   assert.deepEqual(w.rows('tag_decisions').filter((r) => !r['Tag outcome'] && r['Agent proposal'] === "Can't tell").map((r) => r.Key).sort(), [U1, U2, U3, U4].map(keyOf).sort(), 'every unsure cell waits in Your queue');
   assert.equal(w.rows('tag_decisions').filter((r) => r['Tag outcome']).length, 10, 'only the audit rows hold a decision');
-  assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome']).map((r) => JSON.stringify(r)).sort(), auditBefore, 'the decided rows are untouched');
+  assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome']).map(decisionOf).sort(), auditBefore, 'the decisions of the decided rows are untouched');
   assert.deepEqual(w.claim(idOf(A1))['Agent tags'], ['Context-dependent']);
   assert.deepEqual([w.claim(idOf(U1))['Agent tags'], w.claim(idOf(U1))['Tags waiting'], w.claim(idOf(U1))['Agent status']], [[], ['Context-dependent'], 'Waits for you']);
   assert.match(w.claim(idOf(U1))['Agent remarks'], /^not checked: /);

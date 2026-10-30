@@ -143,7 +143,7 @@ test('two judged tags in two groups: each has its own cells, its own row for an 
   assert.deepEqual([w.claim('c01')['Tags waiting'], w.claim('c01')['Agent status'], w.claim('c01')['Agent edition']], [[], 'Done', '2026-10-16.1']);
   assert.equal(w.claim('c01')['Agent remarks'], 'not checked: 4 source tags, 2 duplicate tags, 5 tags without rules');
   assert.deepEqual([w.claim('c03')['Tags waiting'], w.claim('c03')['Agent status']], [['Context-dependent', 'Wordy'], 'Waits for you'], 'two tags wait on the same claim');
-  assert.equal(r.report.sentence, 'Tag: the agent read 4 claims for Context-dependent and Wordy; 1 waits for you.', 'Your queue lists claims: c03 waits once, for two tags');
+  assert.equal(r.report.sentence, 'Tag: the agent read 4 claims for Context-dependent and Wordy; 2 wait for you.', 'Your queue lists rows: c03 waits once for each of its two tags');
   assert.deepEqual(r.report.rows.slice(0, 3).map((x) => x[0]), ['Claims read', 'Carrying Context-dependent', 'Carrying Wordy']);
   clean(h, r);
 });
@@ -164,42 +164,37 @@ test('two judged tags: Agent reasons has one line per tag, in tag order, each th
   clean(h, r);
 });
 
-// ---- several tags on one claim: the note convention of CLAIMS-REVIEW.md section 6.3 -------------------------------------------------------------------------
+// ---- several tags on one claim: a row per tag, the claim sums them up -----------------------------------------------------------------------------------------
 
-test('two judged tags and one Reviewed claim: a line per tag in the notes, a reason word on the line is that tag\'s Why wrong in the ledger, a tag the editor agrees with needs no line', async () => {
+test('two judged tags and decided rows: each row has its own status, and the claim sums them up (the decided Applies rows, and Disagrees with your decision)', async () => {
   const { default: taxonomy } = await import('../../agents/claim-tagger-mvp/setup/taxonomy-issue.json', { with: { type: 'json' } });
   const rows = taxonomy.rows.map((r) => (r.Name === 'Wordy' ? { ...r, 'When to use': '1. A sentence that says the same thing twice is Wordy.\n2. A sentence with filler words that add nothing is Wordy.' } : r));
   const w = await makeWorld({ claims: 3, rulebook: rows, configure: (c) => { c.judge.groups.G2 = ['Wordy']; } });
   w.table({ ...sure(3), [claimText(1)]: { decision: 'apply', p: 0.9 } }); // the fake answers every tag of a claim alike: both tags Apply on claim 1, neither does on the others
   assert.equal((await w.judge()).exit, 0);
-  // claim 1: the editor agrees on Context-dependent, disagrees on Wordy and says why on its line; the claim's Why wrong is Agent slip
-  w.review('c01', { tags: ['Context-dependent'], why: 'Agent slip', notes: 'Wordy: Rule unclear. It repeats itself, and rule 2 does not say so.' });
-  // claim 2: both tags are wrong, one note for both: both rows take the claim's Why wrong and the whole text
-  w.review('c02', { tags: ['Context-dependent', 'Wordy'], why: 'Rule should change', notes: 'Both apply here.' });
-  // claim 3: two lines, each with its own reason
-  w.review('c03', { tags: ['Context-dependent', 'Wordy'], why: 'Agent slip', notes: 'Context-dependent: Rule should change. A new rule is needed.\nWordy: Rule unclear. Rule 1.' });
+  assert.equal((await propose(w.hooks())).exit, 0);
+  // claim 1: the editor ticks Agent is right on Context-dependent and decides Does not apply on Wordy; claim 2: both rows decided Applies against the agent
+  w.decideRow('c01::Context-dependent', { right: true });
+  w.decideRow('c01::Wordy', { outcome: 'Does not apply', note: 'It repeats itself, and rule 2 does not say so.' });
+  w.decideRow('c02::Context-dependent', { outcome: 'Applies' });
+  w.decideRow('c02::Wordy', { outcome: 'Applies', note: 'Both apply here.' });
   const h = w.hooks();
   const r = await propose(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   const row = (id, tag) => w.row('tag_decisions', `${id}::${tag}`);
-  const copy = (x) => [x['Tag outcome'], x['Why wrong'], x['Your reasoning']];
-  assert.deepEqual(copy(row('c01', 'Context-dependent')), ['Applies', null, ''], 'the agent got it right: no Why wrong and no words');
-  assert.deepEqual(copy(row('c01', 'Wordy')), ['Does not apply', 'Rule unclear', 'It repeats itself, and rule 2 does not say so.'], 'the reason word on the line overrides the claim\'s Why wrong; it is not part of the words');
-  assert.deepEqual(copy(row('c02', 'Context-dependent')), ['Applies', 'Rule should change', 'Both apply here.'], 'a note with no tag name applies to every tag the agent got wrong');
-  assert.deepEqual(copy(row('c02', 'Wordy')), ['Applies', 'Rule should change', 'Both apply here.']);
-  assert.deepEqual(copy(row('c03', 'Context-dependent')), ['Applies', 'Rule should change', 'A new rule is needed.']);
-  assert.deepEqual(copy(row('c03', 'Wordy')), ['Applies', 'Rule unclear', 'Rule 1.']);
-  // the claim itself: the editor's columns are as they were left, and the agent says it differs on the tags it got wrong
-  assert.equal(w.row('claims', 'c01')['Challenged tags notes'], 'Wordy: Rule unclear. It repeats itself, and rule 2 does not say so.', 'the editor\'s columns are never written by the agent');
-  assert.deepEqual([w.claim('c01')['Agent tags'], w.claim('c01')['Agent status']], [['Context-dependent'], 'Disagrees with your decision'], "the editor's set is written, and the status says the agent still differs on Wordy");
-  assert.deepEqual(w.claim('c01')['Tags waiting'], []);
+  assert.deepEqual(['Context-dependent', 'Wordy'].map((t) => row('c01', t)['Agent status']), ['Done', 'Disagrees with your decision']);
+  assert.deepEqual(['Context-dependent', 'Wordy'].map((t) => row('c02', t)['Agent status']), ['Disagrees with your decision', 'Disagrees with your decision']);
+  assert.equal(row('c01', 'Context-dependent')['Decided under'], '2026-10-16.1 · agreed Applies');
+  assert.deepEqual([w.claim('c01')['Agent tags'], w.claim('c01')['Agent status'], w.claim('c01')['Tags waiting']], [['Context-dependent'], 'Disagrees with your decision', []], 'the decided set, and the status says the agent still differs on Wordy');
+  assert.deepEqual([w.claim('c02')['Agent tags'], w.claim('c02')['Agent status']], [['Context-dependent', 'Wordy'], 'Disagrees with your decision']);
+  assert.deepEqual([w.claim('c03')['Agent tags'], w.claim('c03')['Agent status']], [[], 'Done']);
+  assert.equal(r.report.rows.find((x) => x[0] === 'Agent disagreed')?.[1], '3 rows');
 });
 
-test('a Claims table that setup build has not rebuilt stops every script that would read a decision from it or write the agent\'s columns to it, and nothing is changed', async () => {
-  const { 'Verified tags': _verified, ...rest } = TABLE_SPECS.claims;
-  const old = { ...rest, 'Agent tags': 'rich_text', 'Claim quality tags — verified': { type: 'relation' } }; // the text column Agent tags, and the relation under its old name
-  const decided = { Claim: claimText(1), Key: 'c01::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Tag outcome': 'Applies', 'Why wrong': 'Agent slip', 'Your reasoning': 'The reference is clear.', 'Rulebook edition': '2026-10-16.1' };
-  const w = await makeWorld({ claims: 3, tableSpecs: { claims: old }, queue: [decided], claimRows: { c01: { 'Review status': 'Reviewed', 'Why wrong': 'Agent slip', 'Challenged tags notes': 'The reference is clear.' } } });
+test('a table that setup build has not rebuilt stops every script that would read a decision from it or write the agent\'s columns to it, and nothing is changed', async () => {
+  const old = { ...TABLE_SPECS.claims, 'Agent tags': 'rich_text' }; // the text column Agent tags
+  const decided = { Claim: claimText(1), Key: 'c01::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Tag outcome': 'Applies', 'Your note': 'The reference is clear.', 'Rulebook edition': '2026-10-16.1' };
+  const w = await makeWorld({ claims: 3, tableSpecs: { claims: old }, queue: [decided] });
   w.table(sure(3));
   assert.equal((await w.judge()).exit, 0);
   const before = w.writes().length;
@@ -208,11 +203,11 @@ test('a Claims table that setup build has not rebuilt stops every script that wo
     const h = w.hooks();
     const r = await run(h);
     assert.equal(r.exit, 2, name);
-    assert.equal(r.report.sentence, `${name}: nothing was done, because the Claims table does not have the agent's new columns yet.`, name);
+    assert.equal(r.report.sentence, `${name}: nothing was done, because the tables do not have the v2 columns yet.`, name);
     assert.equal(r.report.next, 'Next: ask the engineer to run the setup build, then type the same command again.', name);
-    assert.match(h.io.errs.join('\n'), /Agent tags \(rich_text, not relation\).*Verified tags \(missing\)/, name);
+    assert.match(h.io.errs.join('\n'), /Claims: Agent tags \(rich_text, not relation\)/, name);
     clean(h, r);
   }
   assert.equal(w.writes().length, before, 'not one write');
-  assert.deepEqual(w.rows('tag_decisions'), ledgerBefore, 'the ledger copy of the decision is as it was: Applies');
+  assert.deepEqual(w.rows('tag_decisions'), ledgerBefore, 'the ledger is as it was');
 });

@@ -2,10 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { cellVerdict, claimColumns, claimProps, main, notCheckedParts, openClaimCount, propose, reasonsOfCell } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
+import { cellVerdict, claimProps, main, notCheckedParts, propose, reasonsOfCell } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
 import { status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
-import { loadPull } from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
-import { syncDecisions } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
+import { claimSummary } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
@@ -51,14 +50,15 @@ async function judged(opts = {}) {
 }
 
 const statusOf = (w) => status(w.hooks());
-const writesTo = (w, table) => w.writes().filter((r) => r.path.includes(w.DB[table]) || (r.method === 'PATCH' && r.path.startsWith('/pages/')));
 const CD = 'Context-dependent';
-/** The claims an editor Reviewed in the tests below: c05 (the agent could not tell) decided Applies, c08 (could not tell) Does not apply, c10 (the agent applies it) Does not apply. */
-function reviewScenario(w) {
-  w.review('c05', { tags: [CD], why: 'Rule unclear', notes: `${CD}: rule 3 does not say so.` });
-  w.review('c08', { tags: [], why: 'Rule should change', notes: 'The phrase names a body readers know.' });
-  w.review('c10', { tags: [], why: 'Agent slip', notes: '' });
-}
+const key = (id) => `${id}::${CD}`;
+const s = (v) => String(v ?? '');
+/** A ledger row as an earlier tag run left it (the claim's number, then values over the defaults). */
+const seed = (i, over = {}) => ({
+  Claim: claimText(i), Key: key(claimId(i)), Tag: CD, 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'old', 'Rulebook edition': '2026-10-01.1', ...over,
+});
+const planOps = (r) => readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+const EDITOR = ['Agent is right', 'Tag outcome', 'Your note'];
 
 // ---- the verdict of one cell ------------------------------------------------------------------------------------------------------
 
@@ -88,24 +88,9 @@ test('cellVerdict: ask_editor, a p inside the band, reads that disagree and a fa
   assert.equal(later.unsure, true, 'a later read that failed makes the cell unsure');
 });
 
-test('cellVerdict: the practice page shows the Agent reason in the form propose writes ("<k> of <n> runs agree")', () => {
+test('cellVerdict: the Agent reason has the form propose writes ("<k> of <n> runs agree")', () => {
   const unanimous = cellVerdict([line('apply', 0.85), line('apply', 0.85), line('apply', 0.85)], 'Context-dependent', { rerun: RERUN });
   assert.match(unanimous.reason, / · Context-dependent rule 2 · 3 of 3 runs agree$/);
-  const page = readFileSync(new URL('../../agents/claim-tagger-mvp/walkthrough/page.md', import.meta.url), 'utf8');
-  const manifest = JSON.parse(readFileSync(new URL('../../agents/claim-tagger-mvp/walkthrough/manifest.json', import.meta.url), 'utf8'));
-  const rule = manifest.expect.lesson_rule; // the rule the story is about ("Context-dependent rule 3"); the page's Step 2 rows cite it
-  // the rows of Step 2's Agent reasons table: the form propose writes, "<reason> · <rule, when one is cited> · <k> of <n> runs agree"
-  const cells = page.split('\n').filter((l) => l.startsWith('|') && l.includes('runs agree'));
-  assert.equal(cells.length, 4, 'the four rows of Step 2: the claims of the editor');
-  for (const cell of cells) assert.match(cell, new RegExp(` · (?:${rule} · )?\\d of \\d runs agree \\|$`));
-  assert.match(cells[0], new RegExp(` · ${rule} · 1 of 1 runs agree \\|$`), 'a claim the agent is sure of is read once: its line ends with one of one');
-  // no figure the tag step cannot produce: three readings are never made at once (a second one only for an unsure claim, a third only when the first two disagree)
-  assert.ok(!/\b[23] of 3 runs agree\b/.test(page), 'no "2 of 3" or "3 of 3" on the page');
-  assert.ok(!/three readings/.test(page));
-  for (const cell of cells) {
-    const [, k, n] = /(\d) of (\d) runs agree/.exec(cell);
-    assert.ok(Number(k) <= Number(n) && Number(n) <= 2, `${k} of ${n}: a count the tag step can write on the first and second reading`);
-  }
 });
 
 test('cellVerdict: the reason is cut to reason_max_words words', () => {
@@ -114,7 +99,7 @@ test('cellVerdict: the reason is cut to reason_max_words words', () => {
   assert.ok(v.reason.startsWith('w0 w1 w2 w3 w4 w5 w6 w7 w8 w9... · Context-dependent rule 2'), v.reason);
 });
 
-// ---- the seven columns of a claim ---------------------------------------------------------------------------------------------------------
+// ---- the columns of a claim ---------------------------------------------------------------------------------------------------------------
 
 test('notCheckedParts counts the tags no group judges by kind: source tags (Unsourced with them), duplicate tags, tags without rules', async () => {
   const w = await makeWorld({ claims: 1 });
@@ -124,104 +109,83 @@ test('notCheckedParts counts the tags no group judges by kind: source tags (Unso
   assert.equal(notCheckedParts({ tags: [{ name: 'A', capability: 'source' }, { name: 'B', capability: 'corpus' }] }, new Set()), '1 source tag, 1 duplicate tag');
 });
 
-test('claimColumns: the tags that apply, the tags that wait, Agent status, the edition and the remark about what was not checked', () => {
-  const base = { judgedNames: [CD], edition: '2026-10-16.2' };
-  const sure = claimColumns({ ...base, verdicts: new Map([[CD, 'Applies']]), notChecked: '3 source tags, 2 duplicate tags' });
-  assert.deepEqual([sure.tags, sure.waiting, sure.status, sure.waits], [[CD], [], 'Done', 0]);
-  assert.deepEqual([sure.agent_edition, sure.agent_remarks], ['2026-10-16.2', 'not checked: 3 source tags, 2 duplicate tags']);
-  const none = claimColumns({ ...base, verdicts: new Map([[CD, 'Does not apply']]) });
-  assert.deepEqual([none.tags, none.waiting, none.status, none.agent_remarks], [[], [], 'Done', ''], 'nothing was left unchecked: no remark');
-  const waits = claimColumns({ ...base, verdicts: new Map([[CD, "Can't tell"]]) });
-  assert.deepEqual([waits.tags, waits.waiting, waits.status, waits.waits], [[], [CD], 'Waits for you', 1], 'a tag that waits in Your queue is in Tags waiting and not in Agent tags');
-  const two = claimColumns({ judgedNames: ['A', 'B', 'C'], verdicts: new Map([['A', "Can't tell"], ['B', "Can't tell"], ['C', 'Applies']]), edition: 'e' });
-  assert.deepEqual([two.tags, two.waiting, two.status, two.waits], [['C'], ['A', 'B'], 'Waits for you', 2]);
-  assert.equal('agent_notes' in two, false, 'Agent notes is retired');
-});
-
-test('claimColumns: a Reviewed claim gets the editor\'s set, nothing waits, and a sure proposal that differs from it makes the status "Disagrees with your decision"', () => {
-  const base = { judgedNames: [CD, 'Wordy'], edition: 'e', reviewed: true };
-  const agrees = claimColumns({ ...base, verifiedTags: [CD], verdicts: new Map([[CD, 'Applies'], ['Wordy', 'Does not apply']]) });
-  assert.deepEqual([agrees.tags, agrees.waiting, agrees.status, agrees.disagrees], [[CD], [], 'Done', []]);
-  const differs = claimColumns({ ...base, verifiedTags: [], verdicts: new Map([[CD, 'Applies'], ['Wordy', 'Does not apply']]), notChecked: '1 source tag' });
-  assert.deepEqual([differs.tags, differs.status, differs.disagrees, differs.agent_remarks], [[], 'Disagrees with your decision', [CD], 'not checked: 1 source tag'], 'the proposal is never applied');
-  const both = claimColumns({ ...base, verifiedTags: ['Wordy'], verdicts: new Map([[CD, 'Applies'], ['Wordy', 'Does not apply']]) });
-  assert.deepEqual([both.tags, both.status, both.disagrees], [['Wordy'], 'Disagrees with your decision', [CD, 'Wordy']]);
-  const unsure = claimColumns({ ...base, verifiedTags: [], verdicts: new Map([[CD, "Can't tell"]]) });
-  assert.deepEqual([unsure.disagrees, unsure.waits, unsure.status], [[], 0, 'Done'], 'an agent that cannot tell does not disagree, and a Reviewed claim does not wait');
-  const extra = claimColumns({ ...base, verifiedTags: ['Poor wording', CD], verdicts: new Map() });
-  assert.deepEqual(extra.tags, [CD, 'Poor wording'], 'a tag the judge does not cover counts when the editor verified it');
-  const kept = claimColumns({ ...base, verifiedTags: [], verdicts: new Map(), previouslyDisagreed: true });
-  assert.equal(kept.status, 'Disagrees with your decision', 'a tag that was not read again keeps the status, because the status does not say which tag');
-  const settled = claimColumns({ ...base, verifiedTags: [], verdicts: new Map([[CD, 'Does not apply'], ['Wordy', 'Does not apply']]), previouslyDisagreed: true });
-  assert.equal(settled.status, 'Done', 'every tag read again and none differs: the disagreement is over');
-});
-
-test('claimColumns: a tag without a verdict keeps its place from the pulled Agent tags and Tags waiting', () => {
-  const kept = claimColumns({ judgedNames: ['A', 'B', 'C'], verdicts: new Map([['A', 'Applies']]), currentTags: ['B', 'Z'], currentWaiting: ['C', 'Y'], edition: 'e' });
-  assert.deepEqual([kept.tags, kept.waiting, kept.status], [['A', 'B'], ['C'], 'Waits for you'], 'a tag without a proposal keeps its place; a tag nobody judges is dropped');
-});
-
-test('claimColumns: Could not read when the judge has no answer for the claim, and it does not wait; an editor\'s To review still waits', () => {
-  const base = { judgedNames: [CD], edition: 'e', verdicts: new Map([[CD, "Can't tell"]]) };
-  const unread = claimColumns({ ...base, unreadable: true });
-  assert.deepEqual([unread.status, unread.waiting, unread.tags, unread.waits], ['Could not read', [], [], 0]);
-  const reviewed = claimColumns({ ...base, unreadable: true, reviewed: true, verifiedTags: [CD] });
-  assert.deepEqual([reviewed.status, reviewed.tags], ['Could not read', [CD]], 'the editor has decided; the agent could not check');
-  const marked = claimColumns({ ...base, unreadable: true, toReview: true });
-  assert.deepEqual([marked.status, marked.waiting], ['Waits for you', [CD]], 'a claim marked To review is in Your queue whatever the agent could read');
-});
-
 test('claimProps: only the columns that differ from the pulled claim, the two relations as page ids of the Rulebook copy', () => {
-  const columns = claimColumns({ judgedNames: [CD, 'Wordy'], verdicts: new Map([[CD, "Can't tell"], ['Wordy', 'Applies']]), edition: 'e1', notChecked: '1 source tag', reasons: new Map([[CD, 'R. · 1 of 1 runs agree']]) });
+  const rows = [
+    { Key: key('c01'), Tag: CD, 'Agent proposal': "Can't tell", 'Agent status': 'Waits for you', 'Agent reason': 'R. · 1 of 1 runs agree', 'Agent confidence': 0.5 },
+    { Key: 'c01::Wordy', Tag: 'Wordy', 'Agent proposal': 'Applies', 'Agent status': 'Done', 'Agent reason': 'Fine. · 1 of 1 runs agree', 'Agent confidence': 0.9 },
+  ];
+  const columns = claimSummary(rows, { judgedNames: [CD, 'Wordy'], edition: 'e1', notChecked: '1 source tag' });
   const writeColumns = { tags: 'T', waiting: 'W', status: 'S', edition: 'E', remarks: 'M', reasons: 'R', confidence: 'C' };
   const tagPages = new Map([[CD, 'page-cd'], ['Wordy', 'page-wordy']]);
   const fresh = { agent_tags: [], tags_waiting: [], agent_status: null, agent_edition: '', agent_remarks: '', agent_reasons: '' };
   assert.deepEqual(claimProps({ claim: fresh, columns, writeColumns, tagPages }), {
-    R: `${CD}: R. · 1 of 1 runs agree`, T: ['page-wordy'], W: ['page-cd'], S: 'Waits for you', E: 'e1', M: 'not checked: 1 source tag',
+    R: `${CD}: R. · 1 of 1 runs agree\nWordy: Fine. · 1 of 1 runs agree`, T: ['page-wordy'], W: ['page-cd'], S: 'Waits for you', E: 'e1', M: 'not checked: 1 source tag',
   });
-  const same = { agent_tags: ['Wordy'], tags_waiting: [CD], agent_status: 'Waits for you', agent_edition: 'e1', agent_remarks: 'not checked: 1 source tag', agent_reasons: `${CD}: R. · 1 of 1 runs agree` };
+  const same = {
+    agent_tags: ['Wordy'], tags_waiting: [CD], agent_status: 'Waits for you', agent_edition: 'e1', agent_remarks: 'not checked: 1 source tag', agent_reasons: `${CD}: R. · 1 of 1 runs agree\nWordy: Fine. · 1 of 1 runs agree`,
+  };
   assert.deepEqual(claimProps({ claim: same, columns, writeColumns, tagPages }), {}, 'nothing differs: nothing is written');
   assert.deepEqual(claimProps({ claim: { ...same, tags_waiting: [] }, columns, writeColumns, tagPages }), { W: ['page-cd'] });
   assert.deepEqual(claimProps({ claim: { ...same, agent_tags: ['Wordy', CD] }, columns, writeColumns, tagPages }), { T: ['page-wordy'] });
-  assert.deepEqual(claimProps({ claim: { ...same, agent_remarks: 'x' }, columns: claimColumns({ judgedNames: [CD], edition: 'e1', verdicts: new Map() }), writeColumns, tagPages }).M, '', 'an empty remark is written over an old one');
+  assert.deepEqual(claimProps({ claim: { ...same, agent_remarks: 'x' }, columns: claimSummary([], { judgedNames: [CD], edition: 'e1' }), writeColumns, tagPages }).M, '', 'an empty remark is written over an old one');
   assert.throws(() => claimProps({ claim: fresh, columns, writeColumns, tagPages: new Map([[CD, 'page-cd']]) }), /the tag "Wordy" has no row in the Rulebook/);
 });
 
-test('openClaimCount counts the claims whose Agent status is Waits for you and that are not Reviewed', () => {
-  const claim = (agent_status, review_status = null) => ({ agent_status, review_status });
-  assert.equal(openClaimCount([
-    claim('Waits for you'), claim('Waits for you', 'To review'), claim('Done'), claim('Waits for you', 'Reviewed'), claim(null), claim('Disagrees with your decision'), claim('Could not read'),
-  ]), 2);
+test('claimProps never names the claim\'s Agent\'s view of your decision, whatever the claim holds', () => {
+  const writeColumns = {
+    tags: 'Agent tags', confidence: 'Agent confidence', reasons: 'Agent reasons', status: 'Agent status', waiting: 'Tags waiting', edition: 'Agent edition', remarks: 'Agent remarks', reading: "Agent's view of your decision",
+  };
+  const claim = {
+    agent_tags: [], tags_waiting: [], agent_status: 'Done', agent_reasons: 'old', agent_edition: 'old', agent_remarks: 'old', agent_reading: 'Context-dependent: Agent slip · x',
+  };
+  const columns = {
+    tags: [CD], waiting: [], status: 'Waits for you', agent_reasons: 'new', agent_edition: '2026-10-16.1', agent_remarks: 'not checked: 6 tags without rules', waits: 0, disagrees: [],
+  };
+  const props = claimProps({ claim, columns, writeColumns, tagPages: new Map([[CD, 'page-cd']]) });
+  assert.deepEqual(Object.keys(props).sort(), ['Agent edition', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags']);
+});
+
+test('reasonsOfCell reads the lines back: only lines that start with a known tag and a colon, the text after it', () => {
+  assert.deepEqual([...reasonsOfCell(`${CD}: A reason: with a colon · 1 of 1 runs agree\nWordy: Another.\nstray line\nUnknown: x`, [CD, 'Wordy'])], [[CD, 'A reason: with a colon · 1 of 1 runs agree'], ['Wordy', 'Another.']]);
+  assert.deepEqual([...reasonsOfCell('', [CD])], []);
+  assert.deepEqual([...reasonsOfCell(null, [CD])], []);
+  assert.deepEqual([...reasonsOfCell(`${CD}: a\r\nWordy: b`, [CD, 'Wordy'])], [[CD, 'a'], ['Wordy', 'b']], 'Windows line ends');
+});
+
+test('reasonLine builds the text of an Agent reason: the reason in at most the given words, the rule, and how many runs agree', () => {
+  assert.equal(reasonLine({ reason: 'One two three.', rule_ref: 'Context-dependent rule 2' }, 2, 3), 'One two three. · Context-dependent rule 2 · 2 of 3 runs agree');
+  assert.equal(reasonLine({ reason: 'One two three four.', rule_ref: null }, 1, 1, 2), 'One two... · 1 of 1 runs agree');
 });
 
 // ---- the run ------------------------------------------------------------------------------------------------------------------------------
 
-test('propose: every judged claim and tag gets a ledger row (the unsure ones wait in Your queue); the row holds the proposal, confidence, reason, claim link and edition', async () => {
+test('propose: every judged claim and tag gets a row (the unsure ones wait in Your queue) with the proposal, confidence, reason, edition, status and Open claim', async () => {
   const w = await judged();
   const h = w.hooks();
   const r = await propose(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
   const rows = w.rows('tag_decisions');
-  assert.deepEqual(rows.map((x) => x.Key).sort(), Array.from({ length: 12 }, (_, i) => `${claimId(i + 1)}::${CD}`), 'one row per claim and tag the agent judged');
-  const c03 = w.row('tag_decisions', 'c03::Context-dependent');
+  assert.deepEqual(rows.map((x) => x.Key).sort(), Array.from({ length: 12 }, (_, i) => key(claimId(i + 1))), 'one row per claim and tag the agent judged');
+  const c03 = w.row('tag_decisions', key('c03'));
   assert.deepEqual(
-    [c03.Claim, c03.Tag, c03['Agent proposal'], c03['Agent confidence'], c03['Rulebook edition'], c03['Tag outcome'], c03['Why wrong'], c03['Your reasoning'], c03['Decided under']],
-    [claimText(3), 'Context-dependent', "Can't tell", 0.5, '2026-10-16.1', null, null, '', ''],
+    [c03.Claim, c03.Tag, c03['Agent proposal'], c03['Agent confidence'], c03['Rulebook edition'], c03['Agent status'], c03['Tag outcome'], c03['Agent is right'], s(c03['Your note']), s(c03['Decided under'])],
+    [claimText(3), 'Context-dependent', "Can't tell", 0.5, '2026-10-16.1', 'Waits for you', null, false, '', ''],
   );
   assert.equal(c03['Agent reason'], 'Two rules pull apart. · 2 of 2 runs agree');
-  assert.match(c03['Claim link'], /^https:\/\/www\.notion\.so\//, 'the link is the claim row in the Claims copy');
-  const c05 = w.row('tag_decisions', 'c05::Context-dependent');
-  assert.deepEqual([c05['Agent proposal'], c05['Agent confidence']], ["Can't tell", 0.55]);
+  assert.deepEqual((c03['Open claim'] ?? []).map(normId), [normId(w.ids.claim.c03)], 'Open claim is the row of the claim on Claims');
+  const c05 = w.row('tag_decisions', key('c05'));
+  assert.deepEqual([c05['Agent proposal'], c05['Agent confidence'], c05['Agent status']], ["Can't tell", 0.55, 'Waits for you']);
   assert.match(c05['Agent reason'], / · Context-dependent rule 1 · 2 of 3 runs agree$/);
-  const c01 = w.row('tag_decisions', 'c01::Context-dependent');
-  assert.deepEqual([c01['Agent proposal'], c01['Agent confidence']], ['Does not apply', 0.9], 'a sure answer has a ledger row too');
-  assert.equal(w.row('tag_decisions', 'c10::Context-dependent')['Agent proposal'], 'Applies');
+  const c01 = w.row('tag_decisions', key('c01'));
+  assert.deepEqual([c01['Agent proposal'], c01['Agent confidence'], c01['Agent status']], ['Does not apply', 0.9, 'Done'], 'a sure answer has a row too');
+  assert.equal(w.row('tag_decisions', key('c10'))['Agent proposal'], 'Applies');
   const report = assertReport(h, r);
   assert.equal(report.demo, false);
   assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
   assert.deepEqual(report.rows, [['Claims read', '12', ''], ['Carrying Context-dependent', '1 claim (earlier decisions included)', ''], ['New rows in Your queue', '3, lowest confidence first', '']]);
-  assert.equal(report.next, `Next: decide your three claims in Your queue (https://www.notion.so/${w.DB.claims}?v=${'e3000000000000000000000000000001'}).`, 'Your queue is a view of the Claims copy');
+  assert.equal(report.next, `Next: decide your three rows in Your queue (https://www.notion.so/${w.DB.tag_decisions}?v=${'e3000000000000000000000000000001'}).`, 'Your queue is a view of Tag decisions');
   assert.deepEqual([r.claimsRead, r.created, r.open], [12, 12, 3], 'the result carries the counts for callers');
+  assert.equal(readJson(join(r.runDir, 'run.json')).counts.decisions_recorded, 0);
 });
 
 const WRITE_COLUMNS = ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks'];
@@ -237,22 +201,20 @@ test('propose: the Claims copy gets the seven agent columns, the two relations a
   const c03 = w.claim('c03');
   assert.deepEqual([c03['Agent tags'], c03['Tags waiting'], c03['Agent status'], c03['Agent edition'], c03['Agent remarks']], [[], [CD], 'Waits for you', '2026-10-16.1', REMARK]);
   assert.equal(c03['Agent confidence'], 0.5, 'a coin flip');
-  assert.equal(c03['Agent reasons'], 'Context-dependent: Two rules pull apart. · 2 of 2 runs agree', 'one line: the tag, a colon, the reason the ledger holds');
-  assert.equal('Agent notes' in c03, false, 'a table with the new shape has no Agent notes');
+  assert.equal(c03['Agent reasons'], 'Context-dependent: Two rules pull apart. · 2 of 2 runs agree', 'one line: the tag, a colon, the reason the row holds');
   for (let i = 1; i <= 12; i++) {
-    assert.equal(w.claim(claimId(i))['Agent reasons'], `Context-dependent: ${w.row('tag_decisions', `${claimId(i)}::Context-dependent`)['Agent reason']}`, claimId(i));
+    assert.equal(w.claim(claimId(i))['Agent reasons'], `Context-dependent: ${w.row('tag_decisions', key(claimId(i)))['Agent reason']}`, claimId(i));
     assert.equal(w.claim(claimId(i))['Agent edition'], '2026-10-16.1');
     assert.ok(w.claim(claimId(i))['Agent confidence'] >= 0.5);
   }
-  assert.match(w.claim('c10')['Agent reasons'], /^Context-dependent: .+ · \d of \d runs agree$/);
   assert.equal(w.claim('c05')['Agent confidence'], 0.55);
   assert.deepEqual([w.claim('c05')['Agent status'], w.claim('c05')['Tags waiting']], ['Waits for you', [CD]], 'a read that flips waits');
   assert.deepEqual(['c01', 'c02', 'c04', 'c06', 'c07', 'c09', 'c11', 'c12'].map((id) => w.claim(id)['Agent status']), Array(8).fill('Done'));
 
-  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
+  const plan = planOps(r);
   const claimOps = plan.filter((op) => op.table === 'claims');
   assert.equal(claimOps.length, 12, 'every claim read got its columns');
-  assert.ok(claimOps.every((op) => op.op === 'update' && Object.keys(op.properties).every((k) => WRITE_COLUMNS.includes(k))), 'only the seven write columns, never one of the editor\'s four');
+  assert.ok(claimOps.every((op) => op.op === 'update' && Object.keys(op.properties).every((k) => WRITE_COLUMNS.includes(k))), 'only the seven write columns');
   assert.ok(claimOps.every((op) => ['Agent confidence', 'Agent reasons', 'Agent status', 'Agent edition', 'Agent remarks'].every((k) => k in op.properties)), 'a first run writes the five plain columns of every claim');
   assert.ok(claimOps.every((op) => ['Agent tags', 'Tags waiting'].every((k) => !(k in op.properties) || Array.isArray(op.properties[k]))), 'the relations go as lists of page ids');
   assert.deepEqual(claimOps.find((op) => op.key === 'c10').properties['Agent tags'], [w.ids.tag[CD]]);
@@ -272,80 +234,128 @@ test('propose: a table that still has the text column Agent tags is not written;
   const h = w.hooks();
   const r = await propose(h);
   assert.equal(r.exit, 2);
-  assert.equal(r.report.sentence, "Tag: nothing was done, because the Claims table does not have the agent's new columns yet.");
+  assert.equal(r.report.sentence, 'Tag: nothing was done, because the tables do not have the v2 columns yet.');
   assert.equal(r.report.next, 'Next: ask the engineer to run the setup build, then type the same command again.');
   assert.match(h.io.errs.join('\n'), /Agent tags \(rich_text, not relation\)/);
   assert.equal(w.writes().length, before);
 });
 
-test('propose: a claim an editor Reviewed gets the copy of the decision in the ledger, keeps the editor\'s set in Agent tags, and the proposal the editor saw is not rewritten', async () => {
+test('propose: a Tag outcome is recorded in Decided under, the status of the row says whether the agent disagrees, and the editor\'s columns are as the editor left them', async () => {
   const w = await judged({
     queue: [
-      { Claim: claimText(5), Key: 'c05::Context-dependent', Tag: CD, 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Agent reason': 'old', 'Rulebook edition': '2026-10-01.1' },
-      { Claim: claimText(8), Key: 'c08::Context-dependent', Tag: CD, 'Agent proposal': 'Applies', 'Agent confidence': 0.99, 'Agent reason': 'stale', 'Rulebook edition': '2026-10-01.1' },
+      seed(5, { 'Tag outcome': 'Applies', 'Your note': 'Rule 3 does not say so.' }),
+      seed(8, { 'Agent proposal': 'Applies', 'Agent confidence': 0.99, 'Agent reason': 'stale', 'Tag outcome': 'Does not apply' }),
     ],
   });
-  reviewScenario(w);
+  await propose(w.hooks()); // first run: the rows exist, the decisions are recorded
+  w.decideRow(key('c10'), { outcome: 'Does not apply', note: 'The phrase names a body readers know.' });
   const h = w.hooks();
   const r = await propose(h);
   assert.equal(r.exit, 0, h.io.errs.join('\n'));
 
-  // c05: the editor verified the tag; the agent could not tell, so Why wrong and the editor's words (the line for the tag) are copied
-  const c05 = w.row('tag_decisions', 'c05::Context-dependent');
-  assert.deepEqual([c05['Tag outcome'], c05['Why wrong'], c05['Your reasoning'], c05['Decided under']], ['Applies', 'Rule unclear', 'rule 3 does not say so.', '2026-10-01.1'], 'Decided under is the edition of the proposal the editor saw');
-  assert.deepEqual([c05['Agent proposal'], c05['Agent confidence'], c05['Agent reason'], c05['Rulebook edition']], ["Can't tell", 0.5, 'old', '2026-10-01.1'], 'what the editor saw stays');
-  // c08: the agent now applies it (0.6 is inside the band, so it cannot tell); the editor said Does not apply
-  const c08 = w.row('tag_decisions', 'c08::Context-dependent');
-  assert.deepEqual([c08['Tag outcome'], c08['Why wrong'], c08['Your reasoning'], c08['Decided under']], ['Does not apply', 'Rule should change', 'The phrase names a body readers know.', '2026-10-01.1']);
-  assert.deepEqual([c08['Agent proposal'], c08['Agent confidence'], c08['Rulebook edition']], ['Applies', 0.99, '2026-10-01.1'], 'a row of a Reviewed claim is not brought up to date');
-  // c10: no row yet; it is created with the proposal now and the decision, which differs from the agent
-  const c10 = w.row('tag_decisions', 'c10::Context-dependent');
-  assert.deepEqual([c10['Agent proposal'], c10['Agent confidence'], c10['Tag outcome'], c10['Why wrong'], c10['Your reasoning'], c10['Decided under']], ['Applies', 0.9, 'Does not apply', 'Agent slip', '', '2026-10-16.1']);
-  // an unreviewed claim's ledger row has no decision
-  assert.deepEqual([w.row('tag_decisions', 'c03::Context-dependent')['Tag outcome'], w.row('tag_decisions', 'c03::Context-dependent')['Decided under']], [null, '']);
+  const c05 = w.row('tag_decisions', key('c05'));
+  assert.deepEqual([c05['Tag outcome'], c05['Your note'], c05['Decided under'], c05['Agent status']], ['Applies', 'Rule 3 does not say so.', '2026-10-01.1', 'Done'], 'Decided under is the edition the row held when the decision was first seen');
+  assert.deepEqual([c05['Agent proposal'], c05['Rulebook edition']], ["Can't tell", '2026-10-16.1'], 'the proposal moves with the rulebook; the decision does not');
+  const c08 = w.row('tag_decisions', key('c08'));
+  assert.deepEqual([c08['Tag outcome'], c08['Decided under'], c08['Agent proposal'], c08['Agent confidence']], ['Does not apply', '2026-10-01.1', "Can't tell", 0.6]);
+  assert.equal(c08['Agent status'], 'Done', 'the agent cannot tell now, so it does not disagree');
+  const c10 = w.row('tag_decisions', key('c10'));
+  assert.deepEqual([c10['Tag outcome'], c10['Decided under'], c10['Agent proposal'], c10['Agent status']], ['Does not apply', '2026-10-16.1', 'Applies', 'Disagrees with your decision'], 'the agent applies the tag, the editor did not');
+  assert.equal(w.row('tag_decisions', key('c03'))['Decided under'], '', 'an undecided row records nothing');
 
-  // Agent tags are the editor's set; a proposal that differs is never applied, and the status says so
-  assert.deepEqual([w.claim('c05')['Agent tags'], w.claim('c05')['Tags waiting'], w.claim('c05')['Agent status']], [[CD], [], 'Done'], 'the agent could not tell: no disagreement, and a Reviewed claim does not wait');
-  assert.deepEqual([w.claim('c08')['Agent tags'], w.claim('c08')['Agent status']], [[], 'Done']);
-  assert.deepEqual([w.claim('c10')['Agent tags'], w.claim('c10')['Tags waiting'], w.claim('c10')['Agent status']], [[], [], 'Disagrees with your decision'], 'the agent applied the tag, the editor did not: the editor wins');
+  // the claim: the decided Applies row is in Agent tags, the disagreement is its status
+  assert.deepEqual([w.claim('c05')['Agent tags'], w.claim('c05')['Tags waiting'], w.claim('c05')['Agent status']], [[CD], [], 'Done'], 'a decided row does not wait');
+  assert.deepEqual([w.claim('c08')['Agent tags'], w.claim('c08')['Tags waiting'], w.claim('c08')['Agent status']], [[], [], 'Done']);
+  assert.deepEqual([w.claim('c10')['Agent tags'], w.claim('c10')['Tags waiting'], w.claim('c10')['Agent status']], [[], [], 'Disagrees with your decision'], 'the editor wins');
   assert.equal(w.claim('c10')['Agent remarks'], REMARK);
-  assert.equal(w.claim('c10')['Agent confidence'], 0.9);
 
-  // the editor's four columns are as the editor left them
-  assert.deepEqual([w.row('claims', 'c05')['Review status'], w.row('claims', 'c05')['Challenged tags notes']], ['Reviewed', 'Context-dependent: Rule unclear. rule 3 does not say so.'], 'the claims table has no Why wrong: the reason word is in the line');
-  for (const req of w.writes()) {
-    const claimIds = Object.values(w.ids.claim).map((id) => normId(id));
-    if (req.method === 'PATCH' && claimIds.includes(normId(req.path.split('/').at(-1)))) {
-      assert.ok(Object.keys(req.body.properties).every((k) => WRITE_COLUMNS.includes(k)), `a write to a claim names ${Object.keys(req.body.properties)}`);
-    }
-  }
+  // no write names an editor column
+  for (const op of planOps(r)) assert.ok(!Object.keys(op.properties).some((k) => EDITOR.includes(k)), `${op.table} ${op.key} names an editor column`);
 
-  // the report: the claims that wait, and the ones the agent disagrees on
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 1 waits for you.', 'c05 and c08 are Reviewed, so only c03 waits');
-  assert.deepEqual(report.rows.at(-1), ['Agent disagreed', '1 claim', '']);
-  assert.deepEqual([r.copied, r.disagreed, r.open], [3, 1, 1]);
+  assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 1 waits for you.', 'c03 waits; c05, c08 and c10 are decided');
+  assert.deepEqual(report.rows.at(-1), ['Agent disagreed', '1 row', '']);
+  assert.deepEqual([r.disagreed, r.open, r.recorded], [1, 1, 1], 'recorded: the c10 decision of this run (the other two were recorded by the first run)');
 });
 
-test('propose: a decided claim keeps Waits for you until the next tag run reads the decision, and then it leaves Your queue', async () => {
+test('propose: a decided row keeps the edition it was decided under while its proposal moves on, and the move is written under the new edition', async () => {
+  const w = await judged({ queue: [seed(10, { 'Agent proposal': 'Does not apply', 'Agent confidence': 0.8, 'Tag outcome': 'Does not apply', 'Decided under': '2026-09-01.1' })] });
+  const r = await propose(w.hooks());
+  assert.equal(r.exit, 0);
+  const row = w.row('tag_decisions', key('c10'));
+  assert.deepEqual([row['Agent proposal'], row['Agent confidence'], row['Rulebook edition'], row['Decided under'], row['Agent status']], ['Applies', 0.9, '2026-10-16.1', '2026-09-01.1', 'Disagrees with your decision']);
+  const op = planOps(r).find((o) => o.table === 'tag_decisions' && o.key === key('c10'));
+  assert.deepEqual(Object.keys(op.properties).sort(), ['Agent confidence', 'Agent proposal', 'Agent reason', 'Agent status', 'Open claim', 'Rulebook edition'], 'Decided under is not written again');
+});
+
+test('propose: a tick on a sure proposal is recorded as "<edition> · agreed <Outcome>", and the decision stays when the proposal moves', async () => {
+  // c10: the row showed Does not apply under the old edition; the editor ticked Agent is right; the agent now applies the tag
+  const w = await judged({ queue: [seed(10, { 'Agent proposal': 'Does not apply', 'Agent confidence': 0.8, 'Agent is right': true, 'Agent status': 'Done' })] });
+  const h = w.hooks();
+  const r = await propose(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const row = w.row('tag_decisions', key('c10'));
+  assert.equal(row['Decided under'], '2026-10-01.1 · agreed Does not apply');
+  assert.deepEqual([row['Agent proposal'], row['Agent status'], row['Agent is right'], row['Tag outcome']], ['Applies', 'Disagrees with your decision', true, null], 'the proposal moved; the tick and the outcome column are the editor\'s');
+  assert.deepEqual([w.claim('c10')['Agent tags'], w.claim('c10')['Agent status']], [[], 'Disagrees with your decision'], 'the claim counts the agreed outcome, not the new proposal');
+  assert.equal(r.recorded, 1);
+  // nothing changes on the next run
+  const again = await propose(w.hooks());
+  assert.deepEqual(readJsonl(join(again.runDir, 'plan.jsonl')).rows[0].plan.counts, { creates: 0, updates: 1 });
+  assert.equal(w.row('tag_decisions', key('c10'))['Decided under'], '2026-10-01.1 · agreed Does not apply');
+});
+
+test('propose: a tick on a row the agent has not recorded yet takes the proposal it showed, with that row\'s edition, and is read from a row the run has just created', async () => {
+  const w = await judged();
+  await propose(w.hooks());
+  w.decideRow(key('c01'), { right: true }); // Does not apply, 0.9
+  w.decideRow(key('c10'), { right: true }); // Applies
+  const r = await propose(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.equal(w.row('tag_decisions', key('c01'))['Decided under'], '2026-10-16.1 · agreed Does not apply');
+  assert.equal(w.row('tag_decisions', key('c10'))['Decided under'], '2026-10-16.1 · agreed Applies');
+  assert.deepEqual([w.claim('c10')['Agent tags'], w.claim('c10')['Agent status']], [[CD], 'Done']);
+  assert.equal(w.row('tag_decisions', key('c01'))['Tag outcome'], null, 'the agent never writes Tag outcome');
+});
+
+test('propose: a tick on a Can\'t tell row decides nothing: the row still waits, stays in Your queue and records nothing', async () => {
+  const w = await judged();
+  await propose(w.hooks());
+  w.decideRow(key('c03'), { right: true });
+  const h = w.hooks();
+  const r = await propose(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const row = w.row('tag_decisions', key('c03'));
+  assert.deepEqual([row['Agent status'], s(row['Decided under']), row['Agent is right']], ['Waits for you', '', true]);
+  assert.deepEqual([w.claim('c03')['Agent status'], w.claim('c03')['Tags waiting']], ['Waits for you', [CD]]);
+  assert.equal(r.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.', 'a ticked Can\'t tell row is still counted');
+});
+
+test('propose: removing a tick clears the record, and a Tag outcome after a tick drops the "agreed" suffix and keeps the edition', async () => {
+  const w = await judged();
+  await propose(w.hooks());
+  w.decideRow(key('c01'), { right: true });
+  w.decideRow(key('c10'), { right: true });
+  await propose(w.hooks());
+  assert.equal(w.row('tag_decisions', key('c01'))['Decided under'], '2026-10-16.1 · agreed Does not apply');
+  w.decideRow(key('c01'), { right: false });
+  w.decideRow(key('c10'), { outcome: 'Does not apply' }); // the tick stays; the outcome wins
+  const r = await propose(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.equal(s(w.row('tag_decisions', key('c01'))['Decided under']), '', 'no longer decided: the record is cleared');
+  assert.equal(w.row('tag_decisions', key('c10'))['Decided under'], '2026-10-16.1', 'the outcome replaces the agreement; the edition stays');
+  assert.equal(w.row('tag_decisions', key('c10'))['Agent status'], 'Disagrees with your decision', 'Tag outcome wins over the tick');
+});
+
+test('propose: a decided claim leaves Your queue at the next run, and a second run changes nothing in the rows or the Claims copy', async () => {
   const w = await judged();
   const first = await propose(w.hooks());
-  assert.equal(w.claim('c03')['Agent status'], 'Waits for you');
   assert.equal(first.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
-  w.review('c03', { tags: [CD], why: 'Rule unclear', notes: 'Decided.' });
-  assert.equal(w.claim('c03')['Agent status'], 'Waits for you', 'nothing has run since the editor decided: the row is still in Your queue');
-  const status = await statusOf(w);
-  assert.equal(status.report.sentence, 'Status: nothing is paused; 2 rows wait for you.', 'what is still to decide: the decided claim is not counted');
+  w.decideRow(key('c03'), { outcome: 'Applies' });
+  assert.equal(w.row('tag_decisions', key('c03'))['Agent status'], 'Waits for you', 'nothing has run since the editor decided: the row is still in the view');
   const second = await propose(w.hooks());
   assert.equal(second.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 2 wait for you.');
-  assert.deepEqual([w.claim('c03')['Agent status'], w.claim('c03')['Tags waiting'], w.claim('c03')['Agent tags']], ['Done', [], [CD]]);
-});
-
-test('propose: a second run changes nothing in the ledger or the Claims copy, also after claims were Reviewed', async () => {
-  const w = await judged();
-  reviewScenario(w);
-  const first = await propose(w.hooks());
-  assert.equal(first.exit, 0);
+  assert.deepEqual([w.row('tag_decisions', key('c03'))['Agent status'], w.claim('c03')['Agent status'], w.claim('c03')['Tags waiting'], w.claim('c03')['Agent tags']], ['Done', 'Done', [], [CD]]);
   const rowsBefore = structuredClone(w.rows('tag_decisions'));
   const claimsBefore = structuredClone(w.rows('claims'));
   const h = w.hooks();
@@ -357,53 +367,40 @@ test('propose: a second run changes nothing in the ledger or the Claims copy, al
   assert.deepEqual(plan[0].plan.counts, { creates: 0, updates: 1 }, 'only the Agent settings summary is sent again');
   assert.equal(plan[1].table, 'agent_settings');
   assert.equal(again.report.rows[2][1], 'none', 'no new rows');
-  assert.equal(again.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 1 waits for you.', 'the claim from before still waits');
+  assert.equal(again.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 2 wait for you.');
 });
 
-test('propose: an editor who changes a decision gets the new copy, with the edition the proposal was made under kept; a row the setup carried over is not rewritten', async () => {
+test('propose: status counts the rows of Your queue the way the view lists them', async () => {
   const w = await judged();
-  reviewScenario(w);
   await propose(w.hooks());
-  assert.equal(w.row('tag_decisions', 'c05::Context-dependent')['Tag outcome'], 'Applies');
-  w.review('c05', { tags: [], why: 'Agent slip', notes: 'Not after all.' }); // the editor changes their mind: the tag comes out of the relation
-  const r = await propose(w.hooks());
-  assert.equal(r.exit, 0);
-  const c05 = w.row('tag_decisions', 'c05::Context-dependent');
-  assert.deepEqual([c05['Tag outcome'], c05['Why wrong'], c05['Your reasoning'], c05['Decided under']], ['Does not apply', 'Agent slip', 'Not after all.', '2026-10-16.1']);
-  assert.equal(c05['Agent proposal'], "Can't tell", 'what the editor saw stays');
-  assert.deepEqual(w.claim('c05')['Agent tags'], []);
-  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
-  assert.deepEqual(plan.filter((op) => op.table === 'tag_decisions').map((op) => [op.op, op.key, Object.keys(op.properties).sort()]), [
-    ['update', 'c05::Context-dependent', ['Tag outcome', 'Why wrong', 'Your reasoning'].sort()],
-  ], 'Decided under is not written again');
+  w.decideRow(key('c03'), { outcome: 'Applies' });
+  const st = await statusOf(w);
+  assert.equal(st.report.sentence, 'Status: nothing is paused; 2 rows wait for you.', 'the decided row is not counted');
 });
 
-test('propose: a tag of a Reviewed claim whose reasoning has no line of its own takes the whole note only where the outcome differs from the proposal', async () => {
-  const w = await judged();
-  w.review('c10', { tags: [CD], why: 'Rule unclear', notes: 'This reads on its own.' }); // the agent applies it too: nothing to explain
-  w.review('c01', { tags: [CD], why: 'Rule unclear', notes: 'The reference is clear.' }); // the agent does not apply it: the note explains the difference
-  const r = await propose(w.hooks());
-  assert.equal(r.exit, 0);
-  const c10 = w.row('tag_decisions', 'c10::Context-dependent');
-  assert.deepEqual([c10['Tag outcome'], c10['Why wrong'], c10['Your reasoning']], ['Applies', null, ''], 'the agent got it right: no Why wrong and no words');
-  const c01 = w.row('tag_decisions', 'c01::Context-dependent');
-  assert.deepEqual([c01['Tag outcome'], c01['Why wrong'], c01['Your reasoning']], ['Applies', 'Rule unclear', 'The reference is clear.']);
-  assert.equal(w.claim('c01')['Agent status'], 'Disagrees with your decision', 'the agent said Does not apply (0.9), the editor Applies');
-  assert.deepEqual(w.claim('c01')['Agent tags'], [CD]);
-});
-
-test('propose: decided rows of the ledger whose claim is not Reviewed (the setup has not carried them over) are said in a warning and change nothing', async () => {
-  const w = await judged({
-    queue: [{ Claim: claimText(5), Key: 'c05::Context-dependent', Tag: CD, 'Agent proposal': "Can't tell", 'Agent confidence': 0.5, 'Tag outcome': 'Applies', 'Why wrong': 'Agent slip', 'Your reasoning': 'From the audit of 9 October: yes.' }],
+test('propose: Open claim is written on a row that lacks it or points elsewhere, and a row of a claim the judge did not read gets its record and nothing else', async () => {
+  const w = await makeWorld({
+    claims: 6,
+    queue: [
+      seed(1, { 'Agent proposal': 'Does not apply', 'Agent confidence': 0.9, 'Agent reason': 'old', 'Open claim': [] }),
+      seed(2, { 'Agent proposal': 'Does not apply', 'Agent confidence': 0.9, 'Agent is right': true }), // claim 2 is read; claim 5 is not
+      seed(5, { 'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Agent is right': true, 'Agent status': 'Done', 'Agent reason': 'kept' }),
+      { ...seed(7), Key: 'c07::Context-dependent', Claim: 'A claim that is not on Claims' },
+    ],
   });
-  const before = structuredClone(w.row('tag_decisions', 'c05::Context-dependent'));
-  const h = w.hooks();
-  const r = await propose(h);
-  assert.equal(r.exit, 0, h.io.errs.join('\n'));
-  assert.deepEqual(w.row('tag_decisions', 'c05::Context-dependent'), before, 'the decided row is as it was');
-  assert.match(h.io.errs.join('\n'), /1 decided row of the ledger belongs to claims that are not Reviewed.*migrate-decisions/);
-  assert.match(readJson(join(r.runDir, 'run.json')).warnings.join(' '), /migrate-decisions/);
-  assert.equal(w.row('claims', 'c05')['Review status'], null, 'no script Reviews a claim');
+  w.table(Object.fromEntries([1, 2, 3].map((i) => [claimText(i), { decision: 'do_not_apply', p: 0.1 }])));
+  await w.judge({ limit: 3 });
+  const r = await propose(w.hooks());
+  assert.equal(r.exit, 0);
+  assert.deepEqual((w.row('tag_decisions', key('c01'))['Open claim'] ?? []).map(normId), [normId(w.ids.claim.c01)]);
+  assert.deepEqual((w.row('tag_decisions', key('c02'))['Open claim'] ?? []).map(normId), [normId(w.ids.claim.c02)]);
+  const unread = w.row('tag_decisions', key('c05'));
+  assert.deepEqual([unread['Decided under'], unread['Agent proposal'], unread['Agent reason'], unread['Rulebook edition'], unread['Agent status']], ['2026-10-01.1 · agreed Applies', 'Applies', 'kept', '2026-10-01.1', 'Done'], 'only Decided under changed');
+  const op = planOps(r).find((o) => o.table === 'tag_decisions' && o.key === key('c05'));
+  assert.deepEqual(Object.keys(op.properties), ['Decided under']);
+  assert.equal(w.row('tag_decisions', 'c07::Context-dependent')['Decided under'] ?? '', '', 'a row without a claim is left alone');
+  assert.deepEqual([w.claim('c05')['Agent status'], w.claim('c05')['Agent edition']], [null, ''], 'an unread claim keeps its columns');
+  assert.deepEqual(r.report.rows.at(-1), ['Not read yet', '3', '']);
 });
 
 test('propose: when more rows wait than fit one sitting the sentence says so and Next starts at the top of Your queue', async () => {
@@ -414,7 +411,7 @@ test('propose: when more rows wait than fit one sitting the sentence says so and
   const report = assertReport(h, r);
   assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you, more than fit one sitting.');
   assert.match(report.next, /^Next: start at the top of Your queue \(https:\/\/www\.notion\.so\/[0-9a-f]{32}\?v=[0-9a-f]{32}\)\.$/);
-  assert.ok(report.next.includes(w.DB.claims), 'the link is the Claims copy\'s');
+  assert.ok(report.next.includes(w.DB.tag_decisions), 'the link is Tag decisions\'');
   assert.ok(!/decide your/.test(report.next));
 });
 
@@ -427,7 +424,7 @@ test('propose: one open row says "waits", and with nothing open the sentence and
   await w.judge();
   const one = await propose(w.hooks());
   assert.equal(one.report.sentence, 'Tag: the agent read 4 claims for Context-dependent; 1 waits for you.');
-  assert.match(one.report.next, /^Next: decide your claim in Your queue \(/);
+  assert.match(one.report.next, /^Next: decide your row in Your queue \(/);
 
   const w2 = await makeWorld({ claims: 3 });
   w2.table(Object.fromEntries([1, 2, 3].map((i) => [claimText(i), { decision: 'do_not_apply', p: 0.1 }])));
@@ -438,31 +435,6 @@ test('propose: one open row says "waits", and with nothing open the sentence and
   assert.equal(report.sentence, 'Tag: the agent read 3 claims for Context-dependent; nothing waits for you.');
   assert.equal(report.next, 'Next: nothing waits for you; type /claim-tagger tag when new claims arrive.');
   assert.deepEqual(report.rows[2], ['New rows in Your queue', 'none', '']);
-});
-
-test('propose: in a practice profile the sentence starts with "Demo · " and report.json says so', async () => {
-  const w = await judged({ demo: true });
-  const h = w.hooks();
-  const r = await propose(h);
-  assert.equal(r.exit, 0, h.io.errs.join('\n'));
-  assert.ok(r.markdown.startsWith('Demo · Tag: the agent read 12 claims'), r.markdown);
-  assert.equal(r.report.demo, true);
-  assert.deepEqual(lintReport(r.markdown), []);
-  assert.equal(readJson(join(r.runDir, 'report.json')).demo, true);
-  assert.equal(r.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.', 'no demo_title in the profile: no page to name');
-});
-
-test('propose on a practice page: the first sentence ends with the practice page, and the commands in the report are the demo ones', async () => {
-  const title = 'Claim tagger demo · 15 Oct 10:42';
-  const w = await makeWorld({ claims: 3, demo: true, configure: (c) => { c.demo_title = title; } });
-  w.table(Object.fromEntries([1, 2, 3].map((i) => [claimText(i), { decision: 'do_not_apply', p: 0.1 }])));
-  await w.judge();
-  const h = w.hooks();
-  const r = await propose(h);
-  const report = assertReport(h, r);
-  assert.equal(report.sentence, `Tag: the agent read 3 claims for Context-dependent; nothing waits for you (practice page ${title}).`);
-  assert.ok(r.markdown.startsWith(`Demo · Tag: the agent read 3 claims for Context-dependent; nothing waits for you (practice page ${title}).\n`), r.markdown);
-  assert.equal(report.next, 'Next: nothing waits for you; type /claim-tagger demo tag when new claims arrive.');
 });
 
 test('propose --plan-only: the plan is checked and written, nothing is sent to Notion, and the report says so', async () => {
@@ -501,8 +473,8 @@ test('propose: without any judgment it stops with exit 2 and says the agent has 
   assert.equal(w.writes().length, 0);
 });
 
-test('propose: the run folder holds run.json written first and last, the plan, the ledger and the request log, and no request names a protected id', async () => {
-  const w = await judged();
+test('propose: the run folder holds run.json written first and last, the plan, the ledger and the request log, and no request names a protected id or an editor column', async () => {
+  const w = await judged({ queue: [seed(10, { 'Agent is right': true, 'Your note': 'Mine.' }), seed(5, { 'Tag outcome': 'Applies' })] });
   const r = await propose(w.hooks());
   assert.equal(r.exit, 0);
   const run = readJson(join(r.runDir, 'run.json'));
@@ -520,12 +492,60 @@ test('propose: the run folder holds run.json written first and last, the plan, t
     const text = JSON.stringify(req).replace(/-/g, '');
     for (const id of protectedIds) assert.ok(!text.includes(id), `a request names the protected id ${id}`);
   }
-  const claimPages = Object.values(w.ids.claim).map((id) => normId(id));
   for (const req of w.writes()) {
     const props = Object.keys(req.body?.properties ?? {});
-    for (const forbidden of ['Verified tags', 'Claim quality tags — verified', 'Agent notes', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused']) assert.ok(!props.includes(forbidden), `${forbidden} is an editor column`);
-    if (req.method === 'PATCH' && claimPages.includes(normId(req.path.split('/').at(-1)))) assert.ok(!props.includes('Why wrong'), 'Why wrong on a claim is the editor\'s');
+    for (const forbidden of [...EDITOR, 'Editor wording', 'Paused', 'After the rule change', "Agent's view of your decision", 'Rule', 'Why the agent thinks so', 'Read under']) assert.ok(!props.includes(forbidden), `${forbidden} is not the tag step's`);
   }
+  // the editor's columns are as the editor left them
+  assert.deepEqual([w.row('tag_decisions', key('c10'))['Agent is right'], w.row('tag_decisions', key('c10'))['Your note'], w.row('tag_decisions', key('c05'))['Tag outcome']], [true, 'Mine.', 'Applies']);
+});
+
+test('propose never writes or clears a reading: not the row\'s view, rule, why and read under, nor After the rule change, nor the claim\'s Agent\'s view of your decision', async () => {
+  const held = {
+    "Agent's view of your decision": 'Rule unclear', Rule: `${CD} rule 3`, 'Why the agent thinks so': 'The rule leaves this kind of case open.', 'Read under': '2026-10-16.1 · 0a1b2c3d', 'After the rule change': 'Still wrong',
+  };
+  const text = `${CD}: Rule unclear, rule 3 · The rule leaves this kind of case open.`;
+  const w = await judged({ queue: [seed(10, { 'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Tag outcome': 'Does not apply', ...held })] });
+  w.editClaim('c10', { "Agent's view of your decision": text, 'Agent status': 'Waits for you' });
+  const r = await propose(w.hooks());
+  assert.equal(r.exit, 0);
+  const plan = planOps(r);
+  assert.ok(plan.some((o) => o.op === 'create' && o.table === 'tag_decisions') && plan.some((o) => o.op === 'update' && o.table === 'tag_decisions') && plan.some((o) => o.table === 'claims'), 'a create, an update of a row and a claim update are in the plan');
+  for (const op of plan) {
+    for (const column of [...Object.keys(held), "Agent's view of your decision"]) assert.ok(!Object.keys(op.properties).includes(column), `${op.table} ${op.key}: the plan does not name ${column}`);
+  }
+  const row = w.row('tag_decisions', key('c10'));
+  assert.deepEqual(Object.keys(held).map((c) => row[c]), Object.values(held), 'the reading of the row stays');
+  assert.equal(row['Decided under'], '2026-10-01.1', 'the decision was recorded all the same');
+  assert.equal(w.row('claims', 'c10')["Agent's view of your decision"], text, 'and so does the claim\'s reading');
+  assert.equal(w.row('claims', 'c10')['Agent status'], 'Disagrees with your decision', 'the agent\'s other columns of the claim were written');
+  const created = w.row('tag_decisions', key('c01'));
+  assert.deepEqual([created["Agent's view of your decision"], s(created.Rule), s(created['Read under'])], [null, '', ''], 'a row propose creates is unread');
+  const before = structuredClone(w.rows('tag_decisions'));
+  const again = await propose(w.hooks());
+  assert.equal(again.exit, 0);
+  assert.deepEqual(w.rows('tag_decisions'), before);
+});
+
+test('propose: a row the judge could not read is Could not read and waits for nobody; its claim says so', async () => {
+  const w = await makeWorld({ claims: 3 });
+  w.table(Object.fromEntries([1, 2, 3].map((i) => [claimText(i), { decision: 'do_not_apply', p: 0.1 }])));
+  await w.judge();
+  // the store holds a failed read for claims 1 and 2 only
+  const store = readdirSync(join(w.root, 'runs', 'judgments')).filter((d) => existsSync(join(w.root, 'runs', 'judgments', d, 'run-1.jsonl')));
+  assert.equal(store.length, 1);
+  const file = join(w.root, 'runs', 'judgments', store[0], 'run-1.jsonl');
+  const lines = readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
+  const failed = lines.map((l) => (['c01', 'c02'].includes(l.id) ? { ...l, status: 'error', tags: [], error: 'bad reply' } : l));
+  writeFileSync(file, `${failed.map((l) => JSON.stringify(l)).join('\n')}\n`);
+  const h = w.hooks();
+  const r = await propose(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.deepEqual([w.row('tag_decisions', key('c01'))['Agent status'], w.row('tag_decisions', key('c01'))['Agent proposal']], ['Could not read', "Can't tell"]);
+  assert.deepEqual([w.claim('c01')['Agent status'], w.claim('c01')['Tags waiting'], w.claim('c01')['Agent tags']], ['Could not read', [], []]);
+  assert.match(w.claim('c01')['Agent reasons'], /^Context-dependent: The agent could not read this claim · 0 of 1 runs agree$/);
+  assert.deepEqual([w.claim('c03')['Agent status'], w.claim('c03')['Tags waiting']], ['Done', []]);
+  assert.equal(r.report.sentence, 'Tag: the agent read 3 claims for Context-dependent; nothing waits for you.');
 });
 
 test('propose: a paused agent stops with exit 3 before it reads or writes anything, and the report points at the Paused box', async () => {
@@ -567,42 +587,6 @@ test('the fixture check: the world\'s rulebook is the real thirteen rows, one ju
   assert.equal(readFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), 'utf8').trim().split('\n').length, 1);
 });
 
-// ---- Agent reasons (CLAIMS-REVIEW.md, section 1): why the agent proposed what it did, on the claim itself ------------------------------------
-
-test('claimColumns: Agent reasons is one line per judged tag, "<Tag>: <reason>", in tag order; a tag with no reason of this run keeps its line from the cell', () => {
-  const base = { judgedNames: ['Wordy', CD], edition: 'e' };
-  const both = claimColumns({ ...base, verdicts: new Map([[CD, 'Applies'], ['Wordy', 'Does not apply']]), reasons: new Map([[CD, 'A pronoun. · Context-dependent rule 1 · 2 of 2 runs agree'], ['Wordy', 'Fine. · 1 of 1 runs agree']]) });
-  assert.equal(both.agent_reasons, `${CD}: A pronoun. · Context-dependent rule 1 · 2 of 2 runs agree\nWordy: Fine. · 1 of 1 runs agree`);
-  const kept = claimColumns({ ...base, verdicts: new Map([[CD, 'Applies']]), reasons: new Map([[CD, 'New. · 1 of 1 runs agree']]), currentReasons: new Map([[CD, 'Old.'], ['Wordy', 'Kept. · 1 of 1 runs agree'], ['Poor wording', 'Not judged.']]) });
-  assert.equal(kept.agent_reasons, `${CD}: New. · 1 of 1 runs agree\nWordy: Kept. · 1 of 1 runs agree`, 'the new line replaces the old one; a tag that is not judged is dropped');
-  assert.equal(claimColumns({ ...base }).agent_reasons, '', 'no reasons, no lines');
-  const reviewed = claimColumns({ ...base, reviewed: true, verifiedTags: [], verdicts: new Map([[CD, 'Applies']]), reasons: new Map([[CD, 'R. · 1 of 1 runs agree']]) });
-  assert.equal(reviewed.agent_reasons, `${CD}: R. · 1 of 1 runs agree`, 'a Reviewed claim shows the reason of the proposal it disagrees with');
-});
-
-test('reasonsOfCell reads the lines back: only lines that start with a known tag and a colon, the text after it', () => {
-  assert.deepEqual([...reasonsOfCell(`${CD}: A reason: with a colon · 1 of 1 runs agree\nWordy: Another.\nstray line\nUnknown: x`, [CD, 'Wordy'])], [[CD, 'A reason: with a colon · 1 of 1 runs agree'], ['Wordy', 'Another.']]);
-  assert.deepEqual([...reasonsOfCell('', [CD])], []);
-  assert.deepEqual([...reasonsOfCell(null, [CD])], []);
-  assert.deepEqual([...reasonsOfCell(`${CD}: a\r\nWordy: b`, [CD, 'Wordy'])], [[CD, 'a'], ['Wordy', 'b']], 'Windows line ends');
-});
-
-test('reasonLine builds the text of an Agent reason: the reason in at most the given words, the rule, and how many runs agree', () => {
-  assert.equal(reasonLine({ reason: 'One two three.', rule_ref: 'Context-dependent rule 2' }, 2, 3), 'One two three. · Context-dependent rule 2 · 2 of 3 runs agree');
-  assert.equal(reasonLine({ reason: 'One two three four.', rule_ref: null }, 1, 1, 2), 'One two... · 1 of 1 runs agree');
-});
-
-test('propose: a Reviewed claim shows the reason of the current proposal, while its ledger row keeps the one the editor saw', async () => {
-  const w = await judged({
-    queue: [{ Claim: claimText(10), Key: 'c10::Context-dependent', Tag: CD, 'Agent proposal': 'Does not apply', 'Agent confidence': 0.8, 'Agent reason': 'The old reason. · 1 of 1 runs agree', 'Rulebook edition': '2026-10-01.1' }],
-  });
-  w.review('c10', { tags: [], why: 'Agent slip', notes: '' });
-  const r = await propose(w.hooks());
-  assert.equal(r.exit, 0);
-  assert.equal(w.row('tag_decisions', 'c10::Context-dependent')['Agent reason'], 'The old reason. · 1 of 1 runs agree', 'the ledger row is what the editor saw');
-  assert.match(w.row('claims', 'c10')['Agent reasons'], /^Context-dependent: Fake table: apply for Context-dependent\. · Context-dependent rule 1 · 1 of 1 runs agree$/, 'the claim shows what the agent proposes now');
-});
-
 test('propose: an unread claim keeps its Agent reasons, and a second run writes nothing for them', async () => {
   const w = await makeWorld({ claims: 4 });
   w.table(Object.fromEntries([1, 2].map((i) => [claimText(i), { decision: 'do_not_apply', p: 0.1 }])));
@@ -615,181 +599,4 @@ test('propose: an unread claim keeps its Agent reasons, and a second run writes 
   const again = await propose(w.hooks());
   const plan = readJsonl(join(again.runDir, 'plan.jsonl')).rows;
   assert.deepEqual(plan[0].plan.counts, { creates: 0, updates: 1 }, 'only the settings line');
-});
-
-// ---- Review status To review: every judged tag waits (CLAIMS-REVIEW.md, sections 3 and 6.2) ------------------------------------------------
-
-test('claimColumns: on a claim marked To review every judged tag waits and none is written to Agent tags; with Review status empty only Can\'t tell waits; a Reviewed claim never waits', () => {
-  const base = { judgedNames: [CD, 'Wordy'], edition: 'e', verdicts: new Map([[CD, 'Applies'], ['Wordy', 'Does not apply']]) };
-  const open = claimColumns({ ...base, toReview: true });
-  assert.deepEqual([open.tags, open.waiting, open.waits, open.status], [[], [CD, 'Wordy'], 2, 'Waits for you']);
-  const one = claimColumns({ judgedNames: [CD], edition: 'e', verdicts: new Map([[CD, 'Applies']]), toReview: true });
-  assert.deepEqual([one.waiting, one.status], [[CD], 'Waits for you']);
-  const empty = claimColumns({ ...base });
-  assert.deepEqual([empty.tags, empty.waits, empty.status], [[CD], 0, 'Done'], 'Review status empty: a sure answer does not wait');
-  const cant = claimColumns({ ...base, verdicts: new Map([[CD, "Can't tell"], ['Wordy', 'Does not apply']]) });
-  assert.deepEqual([cant.waits, cant.waiting, cant.status], [1, [CD], 'Waits for you'], 'Review status empty: Can\'t tell waits');
-  const reviewed = claimColumns({ ...base, reviewed: true, toReview: true, verifiedTags: [CD] });
-  assert.deepEqual([reviewed.waits, reviewed.tags, reviewed.waiting], [0, [CD], []], 'a Reviewed claim never waits, whatever else is said');
-});
-
-test('propose: a claim marked To review waits whatever the confidence; the same claim with Review status empty does not; a Reviewed claim never waits', async () => {
-  const w = await judged({
-    claimRows: {
-      c10: { 'Review status': 'To review' }, // the agent applies the tag with 0.9
-      c01: { 'Review status': 'To review' }, // the agent does not apply it, with 0.9
-      c08: { 'Review status': 'Reviewed', 'Challenged tags notes': 'Looked at it.' }, // the agent could not tell, but the editor has decided
-    },
-  });
-  const h = w.hooks();
-  const r = await propose(h);
-  assert.equal(r.exit, 0, h.io.errs.join('\n'));
-
-  const c10 = w.claim('c10');
-  assert.deepEqual([c10['Agent tags'], c10['Tags waiting'], c10['Agent status']], [[], [CD], 'Waits for you'], 'a claim that waits has no tag written, even one the agent is sure of');
-  assert.equal(c10['Agent confidence'], 0.9, 'confidence and reasons are written as usual');
-  assert.match(c10['Agent reasons'], /^Context-dependent: .+ · \d of \d runs agree$/);
-  assert.equal(w.row('tag_decisions', 'c10::Context-dependent')['Agent proposal'], 'Applies', 'the ledger holds the proposal as it was made');
-  const c01 = w.claim('c01');
-  assert.deepEqual([c01['Tags waiting'], c01['Agent status'], c01['Agent confidence']], [[CD], 'Waits for you', 0.9]);
-
-  // the same kind of claim with Review status empty
-  assert.deepEqual([w.claim('c02')['Agent status'], w.claim('c02')['Tags waiting']], ['Done', []]);
-  assert.equal(w.row('claims', 'c02')['Review status'], null);
-  // a Reviewed claim never waits, also where the agent could not tell
-  assert.deepEqual([w.claim('c08')['Agent status'], w.claim('c08')['Tags waiting']], ['Done', []]);
-  // c03 (ask_editor) and c05 (a read that flips) wait as before
-  for (const id of ['c03', 'c05']) assert.deepEqual([w.claim(id)['Agent status'], w.claim(id)['Tags waiting']], ['Waits for you', [CD]], id);
-
-  const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 4 wait for you.', 'c10, c01, c03 and c05');
-  assert.deepEqual(report.rows.find((x) => x[0] === 'New rows in Your queue'), ['New rows in Your queue', '4, lowest confidence first', '']);
-});
-
-test('propose: a claim that QA marks To review lands in Your queue on the next run, and leaves it when it is Reviewed and the next run has read the decision', async () => {
-  const w = await judged();
-  const first = await propose(w.hooks());
-  assert.equal(w.claim('c02')['Agent status'], 'Done');
-  assert.equal(first.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
-
-  w.editClaim('c02', { 'Review status': 'To review' });
-  const second = await propose(w.hooks());
-  assert.equal(second.exit, 0);
-  assert.deepEqual([w.claim('c02')['Agent status'], w.claim('c02')['Tags waiting']], ['Waits for you', [CD]]);
-  assert.equal(second.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 4 wait for you.');
-  assert.deepEqual(second.report.rows.find((x) => x[0] === 'New rows in Your queue'), ['New rows in Your queue', '1, lowest confidence first', ''], 'only c02 is new in the queue');
-  const status = await statusOf(w);
-  assert.equal(status.report.sentence, 'Status: nothing is paused; 4 rows wait for you.', 'status counts the claims the way Your queue lists them');
-
-  w.review('c02', { tags: [], why: 'Agent slip', notes: '' });
-  assert.equal(w.claim('c02')['Agent status'], 'Waits for you', 'the row stays in Your queue until the next tag run');
-  const third = await propose(w.hooks());
-  assert.deepEqual([w.claim('c02')['Agent status'], w.claim('c02')['Tags waiting']], ['Done', []]);
-  assert.equal(third.report.sentence, 'Tag: the agent read 12 claims for Context-dependent; 3 wait for you.');
-
-  // a second run with nothing changed writes only the settings line
-  const again = await propose(w.hooks());
-  assert.deepEqual(readJsonl(join(again.runDir, 'plan.jsonl')).rows[0].plan.counts, { creates: 0, updates: 1 });
-});
-
-test('propose: a claim the judge could not read is Could not read, waits for nobody, and a claim that is also marked To review still waits', async () => {
-  const w = await makeWorld({ claims: 3, claimRows: { c02: { 'Review status': 'To review' } } });
-  w.table(Object.fromEntries([1, 2, 3].map((i) => [claimText(i), { decision: 'do_not_apply', p: 0.1 }])));
-  await w.judge();
-  // the store holds a failed read for claims 1 and 2 only
-  const store = readdirSync(join(w.root, 'runs', 'judgments')).filter((d) => existsSync(join(w.root, 'runs', 'judgments', d, 'run-1.jsonl')));
-  assert.equal(store.length, 1);
-  const file = join(w.root, 'runs', 'judgments', store[0], 'run-1.jsonl');
-  const lines = readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l));
-  const failed = lines.map((l) => (['c01', 'c02'].includes(l.id) ? { ...l, status: 'error', tags: [], error: 'bad reply' } : l));
-  writeFileSync(file, `${failed.map((l) => JSON.stringify(l)).join('\n')}\n`);
-  const h = w.hooks();
-  const r = await propose(h);
-  assert.equal(r.exit, 0, h.io.errs.join('\n'));
-  assert.deepEqual([w.claim('c01')['Agent status'], w.claim('c01')['Tags waiting'], w.claim('c01')['Agent tags']], ['Could not read', [], []]);
-  assert.match(w.claim('c01')['Agent reasons'], /^Context-dependent: The agent could not read this claim · 0 of 1 runs agree$/);
-  assert.deepEqual([w.claim('c02')['Agent status'], w.claim('c02')['Tags waiting']], ['Waits for you', [CD]]);
-  assert.deepEqual([w.claim('c03')['Agent status'], w.claim('c03')['Tags waiting']], ['Done', []]);
-  assert.equal(r.report.sentence, 'Tag: the agent read 3 claims for Context-dependent; 1 waits for you.');
-});
-
-test('propose: a reason word at the start of the tag\'s line is that tag\'s Why wrong in the ledger, and the claim keeps the editor\'s own Why wrong', async () => {
-  const w = await judged();
-  w.review('c10', { tags: [], why: 'Agent slip', notes: `${CD}: Rule should change. The phrase names a body readers know.` });
-  const r = await propose(w.hooks());
-  assert.equal(r.exit, 0);
-  const row = w.row('tag_decisions', 'c10::Context-dependent');
-  assert.deepEqual([row['Tag outcome'], row['Why wrong'], row['Your reasoning']], ['Does not apply', 'Rule should change', 'The phrase names a body readers know.']);
-  assert.equal(w.row('claims', 'c10')['Challenged tags notes'], `${CD}: Rule should change. The phrase names a body readers know.`, 'the claim keeps the editor\'s own words');
-  // the next run copies nothing again
-  const again = await propose(w.hooks());
-  assert.deepEqual(readJsonl(join(again.runDir, 'plan.jsonl')).rows[0].plan.counts, { creates: 0, updates: 1 });
-});
-
-test('propose copies a decision with the names of every tag of the rulebook, so a note line for a tag the agent did not judge never leaks into the judged tag, and distill finds nothing left to copy', async () => {
-  const w = await judged({
-    queue: [{ Claim: claimText(8), Key: 'c08::Context-dependent', Tag: CD, 'Agent proposal': 'Applies', 'Agent confidence': 0.6, 'Agent reason': 'old', 'Rulebook edition': '2026-10-01.1' }],
-  });
-  // Wordy is a tag of the rulebook that nobody judges: its line is its own entry, and the judged tag's text stops where it begins
-  const notes = `${CD}: Rule 3 is silent here.\nWordy: Too long, but that is another tag.`;
-  w.review('c10', { tags: [], notes }); // a ledger row is created with the decision
-  w.review('c08', { tags: [], notes }); // the row exists already: the decision is copied to it
-  const r = await propose(w.hooks());
-  assert.equal(r.exit, 0);
-  for (const geo of ['c10', 'c08']) {
-    const row = w.row('tag_decisions', `${geo}::${CD}`);
-    assert.deepEqual([row['Tag outcome'], row['Your reasoning']], ['Does not apply', 'Rule 3 is silent here.'], `${geo}: the Wordy line is not part of the reasoning for ${CD}`);
-  }
-  // distill brings the ledger up to date the same way: after the tag step it has no copy left to make (the two scripts never overwrite each other)
-  const pulled = loadPull(w.root, (await w.pull()).pullId, { config: w.config });
-  const tagNames = w.rubric().tags.map((t) => t.name);
-  assert.ok(tagNames.includes('Wordy') && tagNames.length === 13);
-  assert.deepEqual(syncDecisions(pulled.claims(), pulled.queue(), { tagNames }).changes, [], 'the copies distill would make are the ones propose made');
-});
-
-const READING_LEDGER = ['Agent reading', 'Rule', 'Reading note', 'Read under'];
-
-test('propose never writes or clears a reading: not the claim\'s Agent reading, not the ledger\'s four reading columns, on a row it creates, a row it updates and a claim it writes', async () => {
-  const held = { 'Agent reading': 'Rule unclear', Rule: `${CD} rule 3`, 'Reading note': 'The rule leaves this kind of case open.', 'Read under': '2026-10-16.1 · 0a1b2c3d' };
-  const line = `${CD}: Rule unclear, rule 3 · The rule leaves this kind of case open.`;
-  const w = await judged({
-    queue: [{ Claim: claimText(10), Key: 'c10::Context-dependent', Tag: CD, 'Agent proposal': 'Applies', 'Agent confidence': 0.9, 'Agent reason': 'old', 'Rulebook edition': '2026-10-01.1', ...held }],
-  });
-  w.review('c10', { tags: [], notes: 'Rule 3 is silent here.' }); // a decision the agent read: the row exists and holds its reading
-  w.editClaim('c10', { 'Agent reading': line, 'Agent status': 'Waits for you' });
-  w.review('c01', { tags: [CD], notes: 'The reference is clear.' }); // a decision with no row yet: the row is created
-  const r = await propose(w.hooks());
-  assert.equal(r.exit, 0);
-  const plan = readJsonl(join(r.runDir, 'plan.jsonl')).rows.slice(1);
-  assert.ok(plan.some((o) => o.op === 'create' && o.table === 'tag_decisions') && plan.some((o) => o.op === 'update' && o.table === 'tag_decisions') && plan.some((o) => o.table === 'claims'), 'a create, an update of a ledger row and a claim update are in the plan');
-  for (const op of plan) {
-    const named = Object.keys(op.properties);
-    for (const column of READING_LEDGER) assert.ok(!named.includes(column), `${op.table} ${op.key}: the plan does not name ${column}`);
-  }
-  const row = w.row('tag_decisions', 'c10::Context-dependent');
-  assert.deepEqual(READING_LEDGER.map((c) => row[c]), Object.values(held), 'the reading of the row stays');
-  assert.equal(row['Tag outcome'], 'Does not apply', 'the copy of the decision was made all the same');
-  assert.equal(w.row('claims', 'c10')['Agent reading'], line, 'and so does the claim\'s Agent reading');
-  assert.equal(w.row('claims', 'c10')['Agent status'], 'Disagrees with your decision', 'the agent\'s other columns of the claim were written');
-  const created = w.row('tag_decisions', 'c01::Context-dependent');
-  assert.deepEqual([created['Agent reading'], created.Rule, created['Reading note'], created['Read under']], [null, '', '', ''], 'a row propose creates is unread');
-
-  // a second run changes nothing, readings included
-  const before = structuredClone(w.rows('tag_decisions'));
-  const again = await propose(w.hooks());
-  assert.equal(again.exit, 0);
-  assert.deepEqual(w.rows('tag_decisions'), before);
-});
-
-test('claimProps never names the claim\'s Agent reading, whatever the claim holds', () => {
-  const writeColumns = { tags: 'Agent tags', confidence: 'Agent confidence', reasons: 'Agent reasons', status: 'Agent status', waiting: 'Tags waiting', edition: 'Agent edition', remarks: 'Agent remarks', reading: 'Agent reading' };
-  const claim = {
-    agent_tags: [], tags_waiting: [], agent_status: 'Done', agent_reasons: 'old', agent_edition: 'old', agent_remarks: 'old', agent_reading: 'Context-dependent: Agent slip · x',
-  };
-  const columns = {
-    tags: [CD], waiting: [], status: 'Waits for you', agent_reasons: 'new', agent_edition: '2026-10-16.1', agent_remarks: 'not checked: 6 tags without rules', waits: 0, disagrees: false,
-  };
-  const props = claimProps({ claim, columns, writeColumns, tagPages: new Map([[CD, 'page-cd']]) });
-  assert.deepEqual(Object.keys(props).sort(), ['Agent edition', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags']);
-  assert.ok(!('Agent reading' in props));
 });

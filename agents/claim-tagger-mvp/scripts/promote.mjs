@@ -47,7 +47,7 @@ import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:f
 import { dirname, join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { groupOf } from './lib/config.mjs';
-import { answerWord, cutText, plural, practiceLink, quoted, recantedNext, stampOf, suggestionPart, viewLink, yourClaims } from './lib/editor-words.mjs';
+import { answerWord, cutText, plural, practiceLink, quoted, recantedNext, stampOf, suggestionPart, viewLink, yourRows } from './lib/editor-words.mjs';
 import { ledgerAsRead, recantedAmong, recantedPhrase } from './lib/readings.mjs';
 import { extractJson } from './lib/claude.mjs';
 import { forceRuns, readAnswers } from './lib/answers.mjs';
@@ -62,7 +62,7 @@ import { lintSuggestionText } from './lib/report.mjs';
 import { nextEdition, writeEdition } from './lib/rubric.mjs';
 import { RuleEditError, oneLineRule, ruleNumberOf, rubricWithRule } from './lib/rulebook-edit.mjs';
 import { validate } from './lib/validate.mjs';
-import { claimWaits } from './lib/decisions.mjs';
+import { countYourQueue } from './lib/decisions.mjs';
 import { followUp } from './followup.mjs';
 import { selectItems } from './judge.mjs';
 
@@ -633,13 +633,13 @@ export async function promote(opts = {}) {
       const marks = fu.stillWrong === 0
         ? `marked ${rowsWord(fu.results.length)} Fixed`
         : `marked ${fu.fixed} of your ${plural(fu.results.length, 'row')} Fixed and ${fu.stillWrong} Still wrong`;
-      const open = (ctx.pull.claims() ?? []).filter((c) => claimWaits(c)).length;
+      const open = countYourQueue(ctx.pull.queue() ?? []);
       const sitting = ctx.config.queue?.sitting_rows ?? 20;
       let next;
       if (ctx.demo) next = `Next: look at step 7 on the practice page (${practiceLink(ctx.config)}); the demo is then complete.`;
       else if (open === 0) next = 'Next: nothing waits; type /claim-tagger status to see what is open.';
       else if (open > sitting) next = `Next: start at the top of Your queue (${viewLink(ctx.config, 'your_queue')}).`;
-      else next = `Next: decide ${yourClaims(open)} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
+      else next = `Next: decide ${yourRows(open)} in Your queue (${viewLink(ctx.config, 'your_queue')}).`;
       return {
         exit: EXIT.OK,
         sentence: `${head}, and the follow-up ${marks}.`,

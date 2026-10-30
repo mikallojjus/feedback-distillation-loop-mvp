@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Propose: turns what the judge stored for each claim into the seven columns the agent fills on the Claims copy (Agent tags, Agent confidence, Agent reasons, Agent status,
-// Tags waiting, Agent edition, Agent remarks; CLAIMS-REVIEW.md section 6.1), into the agent's ledger (Tag decisions), and, for every claim an editor has Reviewed, into the copy of
-// the editor's decision. It reads the cell store the latest judge run filled and writes Notion only by applying a plan it made itself.
+// Propose: turns what the judge stored for each claim into the agent's rows on Tag decisions (one row per claim and tag) and into the seven columns the agent fills on Claims
+// (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks). It reads the cell store the latest judge run filled and writes Notion only by
+// applying a plan it made itself.
 //
 //   node agents/claim-tagger-mvp/scripts/propose.mjs [--pull <pull-id>] [--plan-only] [--driver cli|fake] [--run-id <id>]
 //
@@ -10,46 +10,41 @@
 //   --driver       cli (default) or fake: which judge's answers to read (the store key holds the driver; tests use fake)
 //   --run-id       name the run folder (default <UTC stamp>-propose)
 //
-// What a run does (CONTRACTS section 7, CLAIMS-REVIEW.md section 3). For every claim of the pull that the judge has read, for every judged tag, the verdict over
-// the claim's reads (majority; unsure when any read was ask_editor or failed, when the reads disagree, or when the mean p is inside the band):
+// What a run does (PORT-V2.md section 2.10). For every claim of the pull that the judge has read, for every judged tag, the verdict over the claim's reads (majority; unsure when any read
+// was ask_editor or failed, when the reads disagree, or when the mean p is inside the band):
 //   Agent proposal    Applies / Does not apply when sure, Can't tell when not
 //   Agent confidence  max(p, 1 - p) to two decimals (0.5 is a coin flip)
 //   Agent reason      the reason of the last read in at most queue.reason_max_words words, then " · <rule> · <k> of <n> runs agree"
-// The plan writes, on every judged claim, the seven columns, only where they differ from what the pull holds:
-//   Agent tags        a relation to the Rulebook copy: the tags whose proposal is Applies (on a Reviewed claim the editor's verified set: a proposal that differs from the editor's
-//                     decision is never applied)
-//   Agent confidence  the lowest confidence among the claim's judged tags
-//   Agent reasons     one line per judged tag, "<Tag>: <the Agent reason of the ledger>", so that an editor in Your queue sees why without opening the ledger
-//   Agent status      Waits for you when a judged tag of the claim waits and the claim is not Reviewed; Disagrees with your decision when the claim is Reviewed and the agent's sure
-//                     proposal differs from the editor's verified set; Could not read when the judge could not read the claim (and an editor has not marked it To review); else Done
-//   Tags waiting      a relation to the Rulebook copy: the judged tags that wait (empty when nothing waits)
-//   Agent edition     the rulebook edition the row was written under
-//   Agent remarks     "not checked: <counts by kind>" when a tag of the rulebook was not checked, else empty
-// A tag waits when its proposal is Can't tell, and every judged tag of a claim whose Review status is To review waits, whatever the confidence (none of them is written to Agent tags;
-// a claim that QA marks To review on the real table lands in Your queue on the next run); a Reviewed claim never waits. A claim that was decided keeps the status Waits for you until this
-// step reads the decision, by design (section 6.2); it is no longer in the view Your queue, whose filter also asks for a Review status that is not Reviewed (P13). In the ledger a row per judged claim and tag is created when missing, and
-// updated when the proposal, the confidence, the reason or the edition changed. A claim an editor has Reviewed is decided (lib/decisions.mjs): there the ledger row also gets the copy of
-// the decision (Tag outcome, Why wrong (the reason word that opens the tag's note line), Your reasoning, Decided under), made with the names of every tag of the rulebook so that it is
-// the copy distill makes, and the proposal columns of a row that is decided are never rewritten (they are what the editor saw). The plan
-// ends with the Agent settings row: the edition and "Tag · <date time> · <n> claims". Nothing here writes Review status, Verified tags or Challenged tags notes of a claim (hard rule 1),
-// and nothing here writes or clears a reading (the claim's Agent reading, the ledger's Agent reading, Rule, Reading note and Read under): only distill makes and writes those, so a
-// tag run never undoes a reading and never makes a row look unread (READ-DECISIONS.md).
+// Each judged claim and tag has a row on Tag decisions (created when missing, with its Open claim). On every row the judge read, decided or not, the plan writes the four proposal columns
+// (Agent proposal, Agent confidence, Agent reason, Rulebook edition) where they differ: the proposals move with the rulebook, and what the editor decided lives in the editor's columns and in
+// Decided under (lib/decisions.mjs), so nothing the editor did moves. It also writes
+//   Decided under     the record of a decision (recordChanges): the edition a Tag outcome was first seen under, or "<edition> · agreed <Agent proposal>" for a tick on Agent is right; cleared when a
+//                     row is no longer decided. Rows of claims the judge did not read get this and nothing else
+//   Agent status      per row (rowStatus): Disagrees with your decision, Could not read, Done, or Waits for you for an undecided Can't tell. A Can't tell row with a tick still waits
+//   Open claim        the relation to the row's claim on Claims
+// and, on the claim, the summary of its rows (claimSummary): Agent tags (the decided Applies rows and the undecided rows proposed Applies), Tags waiting (the undecided Can't tell rows),
+// Agent status (the first that holds of Waits for you, Disagrees with your decision, Could not read, else Done), Agent confidence (the lowest of its rows), Agent reasons (one line per row),
+// Agent edition and Agent remarks ("not checked: <counts by kind>" when a tag of the rulebook was not checked, else empty). The plan ends with the Agent settings row: the edition and
+// "Tag · <date time> · <n> claims". Nothing here writes Agent is right, Tag outcome or Your note (hard rule 1), and nothing writes or clears a reading (Agent's view of your decision, Rule,
+// Why the agent thinks so, Read under) or After the rule change: only distill and the follow-up do, so a tag run never undoes a reading.
 //
 // Exit codes: 0 ok, 1 stopped (the same command continues), 2 invalid (nothing read yet, a refused plan, a read-back that differed), 3 paused,
 // 4 drift of the rulebook text in Notion.
 //
-// Exports: propose, cellVerdict, claimColumns, claimProps, tagPagesOf, reasonsOfCell, notCheckedParts, openClaimCount, main, USAGE.
+// Exports: propose, cellVerdict, claimProps, tagPagesOf, reasonsOfCell, notCheckedParts, main, USAGE.
 
 import { readFileSync } from 'node:fs';
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { codeFile, isMain } from './lib/paths.mjs';
-import { normaliseText } from './lib/notion-values.mjs';
+import { normId, normaliseText } from './lib/notion-values.mjs';
 import { newPlan } from './lib/plan.mjs';
 import { openStore } from './lib/cells.mjs';
-import { AGENT_STATUS, tableEntry } from './lib/config.mjs';
+import { AGENT_STATUS, TD, tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
-import { claimDisagrees, claimWaits, decisionChanges, decisionProps, decisionsFor, isReviewed, isToReview } from './lib/decisions.mjs';
-import { listNames, plural, reasonLine, stampOf, viewLink, yourClaims } from './lib/editor-words.mjs';
+import {
+  claimSummary, countYourQueue, recordChanges, rowDecision, rowStatus,
+} from './lib/decisions.mjs';
+import { listNames, plural, reasonLine, stampOf, viewLink, yourRows } from './lib/editor-words.mjs';
 import {
   LoopExit, addSettingsOp, applyStep, assertApplied, judgeSettings, liveRubric, needClaimColumns, needTables, parseCli, resumeLine, runPreflight, takePull, withRun,
 } from './lib/loop.mjs';
@@ -60,8 +55,8 @@ import {
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/propose.mjs [--pull <pull-id>] [--plan-only] [--driver cli|fake] [--run-id <id>]';
 
 const round2 = (x) => Math.round(x * 100) / 100;
-const AGENT_COLUMNS = ['Agent proposal', 'Agent confidence', 'Agent reason', 'Rulebook edition'];
-const SURE = new Set(['Applies', 'Does not apply']);
+const AGENT_COLUMNS = [TD.proposal, TD.confidence, TD.reason, TD.edition];
+const trimmed = (v) => String(v ?? '').trim();
 
 // ---- one cell: the verdict over a claim's reads -------------------------------------------------------------------------------------
 
@@ -84,7 +79,7 @@ export function cellVerdict(runLines, tagName, { rerun, reasonMaxWords = 40 } = 
   return { proposal, confidence, reason, unsure: v.unsure, decision: v.decision, runs: v.runs, agreed: v.agreed, rule_ref: last?.rule_ref ?? null };
 }
 
-// ---- the seven columns of a claim ---------------------------------------------------------------------------------------------------
+// ---- the columns of a claim ---------------------------------------------------------------------------------------------------
 
 /**
  * "not checked" for a rulebook, as the text after "not checked: " and the count: tags that no judge group covers, by kind. Source tags (and Unsourced,
@@ -107,60 +102,6 @@ export function notCheckedParts(rubric, judgedNames) {
   ].filter(Boolean).join(', ');
 }
 
-/**
- * The agent's columns of one claim (CLAIMS-REVIEW.md sections 6.1 and 6.2). `verdicts` maps a judged tag to the agent's current proposal (Applies, Does not apply or Can't tell);
- * a judged tag with no entry was not read in this run and keeps its place in `currentTags` and `currentWaiting` (the pulled Agent tags and Tags waiting), and on a Reviewed claim
- * `previouslyDisagreed` (the pulled Agent status was Disagrees with your decision) keeps the status while some judged tag was not read again, because the status does not say which tag.
- *   not Reviewed   Agent tags are the tags whose proposal is Applies, Tags waiting the tags whose proposal is Can't tell; Agent status is Waits for you when a tag waits, else Done
- *   To review      (`toReview`: the editor's, or QA's, mark) every judged tag waits, whatever the proposal, and none is written to Agent tags; Agent status is Waits for you
- *   Reviewed       Agent tags are the editor's set, `verifiedTags`; nothing waits; Agent status is Disagrees with your decision when a sure proposal differs from the editor's decision
- *   unreadable     (`unreadable`: the judge has no usable answer for the claim) Agent status is Could not read and nothing waits, unless the claim is To review, which waits
- * `notChecked` is notCheckedParts' text, written to Agent remarks as "not checked: ...". `reasons` maps a tag to the text of its Agent reason in this run; a judged tag without one
- * keeps its line from `currentReasons` (the pulled Agent reasons, read by reasonsOfCell).
- * Returns { tags: [names], waiting: [names], status, agent_reasons, agent_edition, agent_remarks, waits (how many tags wait), disagrees: [names] }.
- */
-export function claimColumns({
-  judgedNames, verdicts = new Map(), reviewed = false, toReview = false, unreadable = false, verifiedTags = [], currentTags = [], currentWaiting = [], previouslyDisagreed = false,
-  notChecked = '', edition, reasons = new Map(), currentReasons = new Map(),
-}) {
-  const names = [...new Set(judgedNames)].sort(compareCodePoints);
-  const tags = [];
-  const waiting = [];
-  const disagrees = [];
-  let status = AGENT_STATUS.done;
-  if (reviewed) {
-    tags.push(...[...new Set(verifiedTags)].sort(compareCodePoints));
-    let notReadAgain = false;
-    for (const tag of names) {
-      const proposal = verdicts.get(tag);
-      if (SURE.has(proposal)) {
-        if ((proposal === 'Applies') !== verifiedTags.includes(tag)) disagrees.push(tag);
-      } else if (proposal === undefined) notReadAgain = true;
-    }
-    if (disagrees.length || (notReadAgain && previouslyDisagreed)) status = AGENT_STATUS.disagrees;
-    else if (unreadable) status = AGENT_STATUS.unread;
-  } else if (toReview) {
-    waiting.push(...names);
-    status = AGENT_STATUS.waits;
-  } else if (unreadable) {
-    status = AGENT_STATUS.unread;
-  } else {
-    for (const tag of names) {
-      const proposal = verdicts.get(tag);
-      if (proposal === 'Applies') tags.push(tag);
-      else if (proposal === undefined) {
-        if (currentTags.includes(tag)) tags.push(tag);
-        if (currentWaiting.includes(tag)) waiting.push(tag);
-      } else if (proposal === "Can't tell") waiting.push(tag);
-    }
-    if (waiting.length) status = AGENT_STATUS.waits;
-  }
-  const lines = names.map((tag) => [tag, reasons.get(tag) ?? currentReasons.get(tag)]).filter(([, text]) => text).map(([tag, text]) => `${tag}: ${text}`);
-  return {
-    tags, waiting, status, agent_reasons: lines.join('\n'), agent_edition: edition, agent_remarks: notChecked ? `not checked: ${notChecked}` : '', waits: waiting.length, disagrees,
-  };
-}
-
 /** Tag name -> page id of its row in the Rulebook copy: the rows of the pull, else the page ids of the rulebook edition in force (the same sources pull.mjs resolves a relation with). */
 export function tagPagesOf(ctx, rubric = null) {
   const map = new Map();
@@ -176,7 +117,7 @@ export function tagPagesOf(ctx, rubric = null) {
 const sameNames = (a, b) => JSON.stringify([...new Set(a)].sort(compareCodePoints)) === JSON.stringify([...new Set(b)].sort(compareCodePoints));
 
 /**
- * The properties of a claims update: the columns of `columns` (claimColumns' answer) that differ from the pulled `claim`, under the config's column names `writeColumns`. The two
+ * The properties of a claims update: the columns of `columns` (claimSummary's answer) that differ from the pulled `claim`, under the config's column names `writeColumns`. The two
  * relations go as lists of page ids of the Rulebook copy (`tagPages`, tagPagesOf); a tag without a row there is an error naming it. Agent confidence is not here (propose and the
  * follow-up work it out differently).
  */
@@ -211,9 +152,6 @@ export function reasonsOfCell(text, tagNames) {
 }
 
 const sameText = (a, b) => normaliseText(a ?? '') === normaliseText(b ?? '');
-
-/** How many claims wait in Your queue: the pull's claims whose Agent status is Waits for you and that are not Reviewed (what is still to decide). */
-export const openClaimCount = (claims) => claims.filter((c) => claimWaits(c)).length;
 
 // ---- the run -------------------------------------------------------------------------------------------------------------------------
 
@@ -251,32 +189,22 @@ export async function propose(opts = {}) {
     const edition = rubric.edition;
 
     const ledger = ctx.pull.queue() ?? [];
-    const ledgerByKey = new Map(ledger.filter((r) => r.Key).map((r) => [r.Key, r]));
+    const ledgerByKey = new Map(ledger.filter((r) => r[TD.key]).map((r) => [r[TD.key], r]));
     const writeColumns = tableEntry(ctx.config, 'claims').write_columns;
     const tagPages = tagPagesOf(ctx, rubric);
     const claims = ctx.pull.claims() ?? [];
 
-    // ledger decisions whose claim an editor has not Reviewed: the setup has not carried them over yet (or the editor reopened the claim)
-    const claimById = new Map(claims.map((c) => [c.geo_id, c]));
-    const orphans = ledger.filter((r) => r.decided && !isReviewed(claimById.get(String(r.Key ?? '').slice(0, String(r.Key ?? '').lastIndexOf('::')))));
-    if (orphans.length) {
-      ctx.warnings.push(`${plural(orphans.length, 'decided row')} of the ledger belong${orphans.length === 1 ? 's' : ''} to claims that are not Reviewed, so ${orphans.length === 1 ? 'it does' : 'they do'} not count as decisions here (run setup.mjs migrate-decisions once to carry earlier decisions over)`);
-    }
-
-    // the names of every tag of the rulebook: a note line that starts with one of them is that tag's own entry, so the copy of a decision made here is the one distill makes (same Your reasoning)
-    const tagNames = rubric.tags.map((t) => t.name);
     const plan = newPlan({ runId: ctx.runId, script: 'propose', rubricEdition: edition, config: ctx.config, now: ctx.now });
     const rerun = jc.judge.rerun;
     const tagged = new Map(judgedList.map((t) => [t, 0]));
+    // every Tag decisions row as it will be once the plan is written (the pulled row merged with the plan's changes, or the row the plan creates), by Key
+    const after = new Map(ledger.filter((r) => r[TD.key]).map((r) => [r[TD.key], r]));
+    const touched = new Set(); // keys of the rows of claims the judge read
     let read = 0;
     let created = 0;
     let updated = 0;
-    let copied = 0;
     let claimUpdates = 0;
     let notRead = 0;
-    let open = 0;
-    let newlyWaiting = 0;
-    let disagreed = 0;
 
     for (const claim of claims) {
       const hash = itemHash(claim.claim);
@@ -295,75 +223,75 @@ export async function propose(opts = {}) {
       }
       if (!covered) {
         notRead += 1;
-        if (claimWaits(claim)) open += 1;
-        if (claimDisagrees(claim)) disagreed += 1;
         continue;
       }
       read += 1;
-      const reviewed = isReviewed(claim);
 
+      const mine = [];
       for (const [tag, v] of verdicts) {
         const key = `${claim.geo_id}::${tag}`;
+        touched.add(key);
         const existing = ledgerByKey.get(key);
-        const values = { 'Agent proposal': v.proposal, 'Agent confidence': v.confidence, 'Agent reason': v.reason, 'Rulebook edition': edition };
+        const values = {
+          [TD.proposal]: v.proposal, [TD.confidence]: v.confidence, [TD.reason]: v.reason, [TD.edition]: edition,
+        };
+        const unreadable = v.runs === 0;
         if (!existing) {
-          const props = { Claim: claim.claim, Key: key, Tag: tag, ...values, 'Claim link': claim.notion_url ?? null };
-          if (reviewed) {
-            const [d] = decisionsFor(claim, [{ Key: key, Tag: tag, ...values }], { tagNames });
-            Object.assign(props, decisionProps(d));
-            copied += 1;
-          }
+          const props = {
+            [TD.claim]: claim.claim, [TD.key]: key, [TD.tag]: tag, ...values, [TD.status]: rowStatus({ outcome: null, proposal: v.proposal, unreadable }), [TD.open]: [claim.page_id],
+          };
           plan.create('tag_decisions', key, props);
           created += 1;
-        } else if (reviewed) {
-          // the row holds what the editor saw: only the copy of the decision is written (and only where it differs)
-          const [d] = decisionsFor(claim, [existing], { tagNames });
-          const changes = decisionChanges(existing, d, claim);
-          if (Object.keys(changes).length) {
-            plan.update('tag_decisions', key, existing.page_id, changes);
-            copied += 1;
-          }
-        } else if (!existing.decided) {
-          const same = AGENT_COLUMNS.every((c) => (c === 'Agent confidence'
-            ? round2(Number(existing[c] ?? Number.NaN)) === values[c]
-            : sameText(existing[c], values[c])));
-          if (!same) {
-            plan.update('tag_decisions', key, existing.page_id, values);
-            updated += 1;
-          }
+          mine.push(props);
+          after.set(key, props);
+          continue;
         }
+        // an existing row: the proposal columns where they differ (decided or not), the record of a decision (worked out on the pulled row), the row's status and its Open claim
+        const changes = {};
+        for (const c of AGENT_COLUMNS) {
+          const same = c === TD.confidence ? round2(Number(existing[c] ?? Number.NaN)) === values[c] : sameText(existing[c], values[c]);
+          if (!same) changes[c] = values[c];
+        }
+        Object.assign(changes, recordChanges(existing));
+        const status = rowStatus({ outcome: rowDecision(existing).outcome, proposal: v.proposal, unreadable });
+        if (trimmed(existing[TD.status]) !== status) changes[TD.status] = status;
+        const rel = (existing[TD.open] ?? []).map(normId);
+        if (rel.length !== 1 || rel[0] !== normId(claim.page_id)) changes[TD.open] = [claim.page_id];
+        const merged = { ...existing, ...changes };
+        if (Object.keys(changes).length) {
+          plan.update('tag_decisions', key, existing.page_id, changes);
+          updated += 1;
+          after.set(key, merged);
+        }
+        mine.push(merged);
       }
 
-      const proposals = new Map([...verdicts].map(([tag, v]) => [tag, v.proposal]));
-      const columns = claimColumns({
-        judgedNames: judgedList,
-        verdicts: proposals,
-        reviewed,
-        toReview: isToReview(claim),
-        verifiedTags: claim.verified_tags ?? [],
-        unreadable: [...verdicts.values()].every((v) => v.runs === 0),
-        currentTags: claim.agent_tags ?? [],
-        currentWaiting: claim.tags_waiting ?? [],
-        previouslyDisagreed: claimDisagrees(claim),
-        notChecked,
-        edition,
-        reasons: new Map([...verdicts].map(([tag, v]) => [tag, v.reason])),
-      });
+      const columns = claimSummary(mine, { judgedNames: judgedList, edition, notChecked });
       for (const t of columns.tags) if (tagged.has(t)) tagged.set(t, tagged.get(t) + 1);
-      if (!reviewed && columns.status === AGENT_STATUS.waits) {
-        open += 1;
-        if (!claimWaits(claim)) newlyWaiting += 1;
-      }
-      if (columns.status === AGENT_STATUS.disagrees) disagreed += 1;
-
-      const confidence = round2(Math.min(...[...verdicts.values()].map((v) => v.confidence)));
       const props = claimProps({ claim, columns, writeColumns, tagPages });
-      if (claim.agent_confidence === null || round2(claim.agent_confidence) !== confidence) props[writeColumns.confidence] = confidence;
+      if (columns.confidence !== null && (claim.agent_confidence === null || round2(claim.agent_confidence) !== columns.confidence)) props[writeColumns.confidence] = columns.confidence;
       if (Object.keys(props).length) {
         plan.update('claims', claim.geo_id, claim.page_id, props);
         claimUpdates += 1;
       }
     }
+
+    // the rows of claims the judge did not read keep every column but Decided under: a tick is recorded, and a cleared decision is cleared
+    for (const row of ledger) {
+      const key = row[TD.key];
+      if (!key || touched.has(key)) continue;
+      const changes = recordChanges(row);
+      if (Object.keys(changes).length) {
+        plan.update('tag_decisions', key, row.page_id, changes);
+        updated += 1;
+        after.set(key, { ...row, ...changes });
+      }
+    }
+    const recorded = [...after.keys()].filter((key) => trimmed(after.get(key)[TD.decidedUnder]) !== trimmed(ledgerByKey.get(key)?.[TD.decidedUnder])).length;
+    const afterRows = [...after.values()];
+    const open = countYourQueue(afterRows);
+    const newlyWaiting = afterRows.filter((r) => trimmed(r[TD.status]) === AGENT_STATUS.waits && trimmed(ledgerByKey.get(r[TD.key])?.[TD.status]) !== AGENT_STATUS.waits).length;
+    const disagreed = afterRows.filter((r) => trimmed(r[TD.status]) === AGENT_STATUS.disagrees).length;
 
     if (read === 0) {
       throw new LoopExit(EXIT.INVALID, `none of the ${claims.length} claims has an answer in the store of the current rulebook`, {
@@ -376,16 +304,16 @@ export async function propose(opts = {}) {
     const { result } = await applyStep(ctx, plan);
     const sitting = ctx.config.queue?.sitting_rows ?? 20;
     const link = viewLink(ctx.config, 'your_queue');
-    const details = { claimsRead: read, notRead, created, updated, copied, claimUpdates, open, newlyWaiting, disagreed, tagged: Object.fromEntries(tagged), result };
+    const details = { claimsRead: read, notRead, created, updated, recorded, claimUpdates, open, newlyWaiting, disagreed, tagged: Object.fromEntries(tagged), result };
     const counts = {
-      claims_read: read, not_read: notRead, rows_created: created, rows_updated: updated, decisions_copied: copied, claims_updated: claimUpdates, open_rows: open, disagreed,
+      claims_read: read, not_read: notRead, rows_created: created, rows_updated: updated, decisions_recorded: recorded, claims_updated: claimUpdates, open_rows: open, disagreed,
     };
 
     if (ctx.opts.planOnly) {
       return {
         exit: EXIT.OK,
-        sentence: `Tag: the plan is ready (${plural(created, 'new ledger row')}, ${plural(updated + copied, 'ledger row update')}, ${plural(claimUpdates, 'claim update')}) and nothing was written to Notion.`,
-        rows: [['Ledger rows to create', String(created), ''], ['Ledger rows to update', String(updated + copied), ''], ['Claims to update', String(claimUpdates), '']],
+        sentence: `Tag: the plan is ready (${plural(created, 'new ledger row')}, ${plural(updated, 'ledger row update')}, ${plural(claimUpdates, 'claim update')}) and nothing was written to Notion.`,
+        rows: [['Ledger rows to create', String(created), ''], ['Ledger rows to update', String(updated), ''], ['Claims to update', String(claimUpdates), '']],
         next: 'Next: type /claim-tagger tag to write it.',
         details,
         counts,
@@ -395,16 +323,16 @@ export async function propose(opts = {}) {
 
     const waiting = open === 0 ? 'nothing waits for you' : (open > sitting ? `${open} wait for you, more than fit one sitting` : (open === 1 ? '1 waits for you' : `${open} wait for you`));
     const rows = [['Claims read', String(read), '']];
-    // the count is of the claims that carry the tag in Agent tags, and that includes the earlier decisions (a Reviewed claim carries the editor's verified set), so the row says so:
+    // the count is of the claims that carry the tag in Agent tags, and that includes the earlier decisions (a decided row of the tag counts as the editor decided it), so the row says so:
     // read as "tagged", an editor takes it for a count of their own claims
     if (judgedList.length <= 2) for (const t of judgedList) rows.push([`Carrying ${t}`, `${plural(tagged.get(t), 'claim')} (earlier decisions included)`, '']);
     else rows.push(['Carrying tags', `${plural([...tagged.values()].reduce((a, b) => a + b, 0), 'tag')} (earlier decisions included)`, '']);
     rows.push(['New rows in Your queue', newlyWaiting ? `${newlyWaiting}, lowest confidence first` : 'none', '']);
-    if (disagreed > 0 && rows.length < 5) rows.push(['Agent disagreed', plural(disagreed, 'claim'), '']);
+    if (disagreed > 0 && rows.length < 5) rows.push(['Agent disagreed', plural(disagreed, 'row'), '']);
     if (notRead > 0 && rows.length < 5) rows.push(['Not read yet', String(notRead), '']);
     const next = open === 0
       ? 'Next: nothing waits for you; type /claim-tagger tag when new claims arrive.'
-      : (open > sitting ? `Next: start at the top of Your queue (${link}).` : `Next: decide ${yourClaims(open)} in Your queue (${link}).`);
+      : (open > sitting ? `Next: start at the top of Your queue (${link}).` : `Next: decide ${yourRows(open)} in Your queue (${link}).`);
     return {
       exit: EXIT.OK,
       sentence: `Tag: the agent read ${plural(read, 'claim')} for ${tagLine(judgedList)}; ${waiting}.`,

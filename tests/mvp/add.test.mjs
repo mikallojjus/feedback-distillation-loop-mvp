@@ -12,7 +12,6 @@ import { readJson } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { LoopExit, applyStep, withRun } from '../../agents/claim-tagger-mvp/scripts/lib/loop.mjs';
 import { AUDIT_PREFIX, PlanError, applyPlan, checkPlan, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
-import { RUN_SCRIPTS } from '../../agents/claim-tagger-mvp/scripts/walkthrough.mjs';
 import { DEFAULT_ALLOWED_SCRIPTS, checkTranscript } from '../../agents/claim-tagger-mvp/scripts/transcript-check.mjs';
 import { createFakeGeo, hexId } from './fixtures/fake-geo.mjs';
 import { builtConfig } from './helpers/config-fixture.mjs';
@@ -139,11 +138,11 @@ test('add by link, by ID and mixed: three claims are added with the nine Geo col
   assert.equal(row['Geo Sources'], 'The Daily');
   assert.equal(w.row('claims', gid(12))['Geo Space'], AI);
   assert.equal(w.row('claims', gid(13))['Geo URL'], linkOf(13, HEALTH));
-  // the agent's and the editor's columns of a new row stay empty: nothing is marked, nothing is tagged
+  // the agent's columns of a new row stay empty: nothing is tagged
   for (const id of [gid(11), gid(12), gid(13)]) {
     const c = w.claim(id);
-    assert.deepEqual([c['Agent tags'], c['Verified tags'], c['Tags waiting']], [[], [], []]);
-    assert.ok(!c['Review status'] && !c['Agent status'] && !c['Challenged tags notes'] && !c['Agent reasons'] && c['Agent confidence'] == null, JSON.stringify(c));
+    assert.deepEqual([c['Agent tags'], c['Tags waiting']], [[], []]);
+    assert.ok(!c['Agent status'] && !c['Agent reasons'] && c['Agent confidence'] == null, JSON.stringify(c));
   }
   // the link of the source is in the cell
   const page = w.fake.page(w.row('claims', gid(11)).page_id);
@@ -432,7 +431,7 @@ test('add: a rulebook text edited by hand is exit 4, before Geo is asked anythin
   assert.equal(w.writes().length, 0);
 });
 
-test('add: a practice page refuses it (P37: production only), and the walkthrough runner does not list it', async () => {
+test('add: a practice profile still refuses it (P37: production only; the practice pages are parked, P48)', async () => {
   for (const world of [{ demo: true }, { demoId: 'practice-1' }]) {
     const { w, geo, run, claim } = await setup(world);
     claim(11);
@@ -445,7 +444,6 @@ test('add: a practice page refuses it (P37: production only), and the walkthroug
     assert.equal(w.requests().length, before);
     assert.equal(geo.requests.length, 0);
   }
-  assert.equal(RUN_SCRIPTS.includes('add'), false);
   assert.equal(DEFAULT_ALLOWED_SCRIPTS.includes('add'), true, 'the transcript check allows the script the skill runs');
 });
 
@@ -786,10 +784,10 @@ test('add: a claim that is in Claims twice after the write (added from two place
   assert.match(again.report.sentence, /two rows with the same key/);
 });
 
-test('add: when every claim is already in Claims the Next line depends on whether the agent has anything to read (no Agent status and not Reviewed)', async () => {
+test('add: when every claim is already in Claims the Next line depends on whether the agent has anything to read (no Agent status)', async () => {
   const names = (...ns) => ns.map((n) => `"${text(n)}"`);
   // all read or decided: nothing new to read
-  const read = await setup({ inClaims: [[1], [2], [3], [4]], claimRows: { [gid(1)]: { 'Agent status': 'Done' }, [gid(2)]: { 'Agent status': 'Done' }, [gid(3)]: { 'Review status': 'Reviewed' }, [gid(4)]: { 'Agent status': 'Could not read' } } });
+  const read = await setup({ inClaims: [[1], [2], [3], [4]], claimRows: { [gid(1)]: { 'Agent status': 'Done' }, [gid(2)]: { 'Agent status': 'Done' }, [gid(3)]: { 'Agent status': 'Waits for you' }, [gid(4)]: { 'Agent status': 'Could not read' } } });
   const a = await read.run(`${gid(1)} ${gid(2)}`);
   assert.equal(a.r.exit, 2);
   assertReport(a.h, a.r);
@@ -920,8 +918,8 @@ test('add --claims-file: the claims of a selection file are added like the same 
   assert.deepEqual(geo.requests.map((q) => [q.op, q.aliases]), [['ClaimDetails', 4]], 'claim 1 is in Claims and is not read from Geo');
   // the agent\'s and the editor\'s columns of a new row stay empty
   const c = w.claim(gid(12));
-  assert.deepEqual([c['Agent tags'], c['Verified tags'], c['Tags waiting']], [[], [], []]);
-  assert.ok(!c['Review status'] && !c['Agent status']);
+  assert.deepEqual([c['Agent tags'], c['Tags waiting']], [[], []]);
+  assert.ok(!c['Agent status']);
 });
 
 test('add --claims-file: the same refusals as for links: not found, not a claim, a Podcasts-only claim, the same text, with the item named by its ID ending', async () => {
@@ -1126,12 +1124,12 @@ test('checkPlan: a plan of the add script may create claims rows with the key an
     assert.equal(checked.ok, false);
     assert.match(checked.problems.join('\n'), pattern);
   };
-  // an agent column, each of the eight, and each of the editor's three
-  for (const column of ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', 'Agent reading']) {
+  // an agent column, each of the eight (the editor's columns are on Tag decisions now, and a claims row has none)
+  for (const column of ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', "Agent's view of your decision"]) {
     refuse((pl) => pl.create('claims', gid(3), { ...geoProps(3), [column]: column === 'Agent confidence' ? 0.5 : 'x' }), new RegExp(`"${column}" is not a column this plan may write to claims`));
   }
   for (const column of ['Verified tags', 'Review status', 'Challenged tags notes']) {
-    refuse((pl) => pl.create('claims', gid(3), { ...geoProps(3), [column]: column === 'Verified tags' ? [] : 'Reviewed' }), /only an editor writes/);
+    refuse((pl) => pl.create('claims', gid(3), { ...geoProps(3), [column]: column === 'Verified tags' ? [] : 'Reviewed' }), new RegExp(`"${column}" is not a column this plan may write to claims`));
   }
   // an update of anything, a Geo column included
   refuse((pl) => pl.update('claims', gid(4), 'p'.repeat(32), { 'Geo Name': 'changed' }), /may only create rows of the claims table/);
@@ -1144,7 +1142,7 @@ test('checkPlan: a plan of the add script may create claims rows with the key an
   refuse((pl) => pl.create('claims', gid(6), { ...geoProps(6), 'Something else': 'x' }), /"Something else" is not a column this plan may write to claims/);
 });
 
-test('checkPlan: no other script may create a claims row, and the add allowance does not open the practice page\'s editor columns', () => {
+test('checkPlan: no other script may create a claims row, and the add allowance does not open any column but the Geo ones', () => {
   for (const script of ['propose', 'followup', 'distill', 'promote', 'rollback', 'restore', 'decide', 'adder', 'ADD', 'add ']) {
     const { config, plan } = planOver(script);
     plan.create('claims', gid(1), geoProps(1));
@@ -1160,26 +1158,6 @@ test('checkPlan: no other script may create a claims row, and the add allowance 
   const setupPlan = planOver('setup.mjs');
   setupPlan.plan.create('claims', gid(1), geoProps(1));
   assert.deepEqual(checkPlan(setupPlan.plan, setupPlan.config, { setup: true }).problems, []);
-  // a demo profile with its setup open: the add script still writes no editor column
-  const demoConfig = builtConfig();
-  demoConfig.demo = true;
-  demoConfig.demo_id = 'practice-1';
-  const demoRoot = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-add-plan-'));
-  try {
-    mkdirSync(join(demoRoot, 'runs'), { recursive: true });
-    writeFileSync(join(demoRoot, 'runs', 'SETUP'), '{}\n');
-    const { plan } = planOver(ADD_SCRIPT, demoConfig);
-    plan.create('claims', gid(1), { ...geoProps(1), 'Review status': 'Reviewed' });
-    // the marker of a practice page's build is open: another plan may create a row with an editor column under it, the add plan may not
-    const other = planOver('walkthrough', demoConfig);
-    other.plan.create('claims', gid(1), { 'Review status': 'Reviewed' });
-    assert.ok(checkPlan(other.plan, demoConfig, { root: demoRoot, setup: true }).problems.every((p) => !/only an editor writes/.test(p)), 'the marker lets a practice page build create editor columns');
-    const checked = checkPlan(plan, demoConfig, { root: demoRoot });
-    assert.equal(checked.ok, false);
-    assert.match(checked.problems.join('\n'), /"Review status" is a column only an editor writes/);
-  } finally {
-    rmSync(demoRoot, { recursive: true, force: true });
-  }
 });
 
 test('checkPlan: a plan of the add script writes no page content, and the setup flag opens nothing more to it', () => {
@@ -1203,12 +1181,12 @@ test('checkPlan: a plan of the add script writes no page content, and the setup 
     assert.equal(checked.ok, false);
     assert.match(checked.problems.join('\n'), pattern);
   };
-  for (const column of ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', 'Agent reading']) {
+  for (const column of ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', "Agent's view of your decision"]) {
     refuse((pl) => pl.create('claims', gid(2), { ...geoProps(2), [column]: column === 'Agent confidence' ? 0.5 : 'x' }), new RegExp(`"${column}" is not a column this plan may write to claims`));
   }
-  refuse((pl) => pl.create('claims', gid(2), { ...geoProps(2), 'Verified tags': [] }), /"Verified tags" is a column only an editor writes/);
-  // the audit seed (setup's one exception for the editor's columns) is not available to it either
-  refuse((pl) => pl.create('claims', gid(2), { ...geoProps(2), 'Review status': 'Reviewed', 'Challenged tags notes': `${AUDIT_PREFIX}: the claim is fine.` }), /"Review status" is a column only an editor writes/);
+  refuse((pl) => pl.create('claims', gid(2), { ...geoProps(2), 'Verified tags': [] }), /"Verified tags" is not a column this plan may write to claims/);
+  // the audit seed (setup's one exception, now on Tag decisions) is not available to it either
+  refuse((pl) => pl.create('tag_decisions', `${gid(2)}::Context-dependent`, { Claim: 'x', Key: `${gid(2)}::Context-dependent`, Tag: 'Context-dependent', 'Tag outcome': 'Applies', 'Your note': `${AUDIT_PREFIX}: the claim is fine.` }), /may only create rows of the claims table/);
   refuse((pl) => pl.update('claims', gid(2), 'p'.repeat(32), { 'Geo Name': 'changed' }), /may only create rows of the claims table/);
   refuse((pl) => pl.create('rulebook', 'New tag', { Name: 'New tag', 'When to use': 'x', Category: 'Quality' }), /may only create rows of the claims table/);
   refuse((pl) => pl.create('agent_settings', 'Claim tagger', { Name: 'Claim tagger', 'Rulebook edition': 'x' }), /may only create rows of the claims table/);

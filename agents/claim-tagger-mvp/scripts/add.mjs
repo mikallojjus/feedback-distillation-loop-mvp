@@ -41,7 +41,6 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
 import { ADD_SCRIPT, CLAIMS_GEO_COLUMNS, tableEntry } from './lib/config.mjs';
-import { isReviewed } from './lib/decisions.mjs';
 import { cutText, listNames, plural, quoted, tableLink } from './lib/editor-words.mjs';
 import { MAX_ROWS, hardRefusals } from './lib/report.mjs';
 import {
@@ -352,7 +351,7 @@ async function body(ctx, claimsText, claimsFile) {
     if (!item.ok) return;
     if (inClaims.has(item.id)) {
       const held = inClaims.get(item.id);
-      Object.assign(results[i], { outcome: 'already', claim: held.claim, label: nameOf(held.claim, item.id, item.isLink), unread: !isReviewed(held) && String(held.agent_status ?? '').trim() === '' });
+      Object.assign(results[i], { outcome: 'already', claim: held.claim, label: nameOf(held.claim, item.id, item.isLink), unread: String(held.agent_status ?? '').trim() === '' });
     } else toRead.push(i);
   });
   const unknownTags = [];

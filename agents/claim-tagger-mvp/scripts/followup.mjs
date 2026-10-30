@@ -11,16 +11,15 @@
 // What it does. The supporting rows of the lesson are rows of the ledger (Tag decisions) that hold a decision, so each is one of the earlier decisions the
 // safety check keeps in evals/cases.jsonl (item case-<key>). They are judged under the rulebook in force: right after a PASS that rulebook is the candidate the check judged, so every answer is
 // already in the store and nothing is asked. A row whose answer is what the editor decided is Fixed, any other Still wrong. The plan writes
-//   Tag decisions    Follow-up on the supporting rows (the only column a decided row accepts), where it differs from the pulled value
-//   Claims copy      the agent's columns of the claims of those rows, worked out again the way propose works them (CLAIMS-REVIEW.md sections 6.1 and 6.2): Agent tags (a relation to the Rulebook
-//                    copy), Agent reasons (the line of each tag that was checked again, the others kept), Agent status (Done or Disagrees with your decision, Waits for you while a tag waits), Tags waiting
-//                    (empty when nothing waits), Agent edition and Agent remarks, and Agent confidence. A claim an editor has Reviewed gets the editor's verified set (an editor
-//                    always wins) and the status Disagrees with your decision where the agent's answer under the rule now in force still differs from it. Agent confidence is
+//   Tag decisions    After the rule change on the supporting rows (Fixed / Still wrong) and their Agent status (Done / Disagrees with your decision), where they differ from the pulled values.
+//                    The proposal columns are not written: the next tag run writes them under the new edition
+//   Claims copy      the agent's columns of the claims of those rows, from the claim's rows as they will be (claimSummary, lib/decisions.mjs): Agent tags, Agent reasons, Agent status (the first that
+//                    holds of Waits for you, Disagrees with your decision, Could not read, Done), Tags waiting, Agent edition and Agent remarks, and Agent confidence. Agent confidence is
 //                    the propose rule (the lowest of max(p, 1 - p) over the claim's judged tags) over the answers this step has, so a claim whose answer changed does not keep the
 //                    confidence of the answer it had; it is written only when every judged tag of the claim was checked again here (with one judged tag, always), else left as it is
 //   Agent settings   the edition and "Follow-up · <date time> · n Fixed, m Still wrong" (left out when promote runs the follow-up)
-// It never writes or clears a reading: the claim's Agent reading and the ledger's Agent reading, Rule, Reading note and Read under belong to distill (READ-DECISIONS.md). A row marked
-// Fixed keeps the reading it has, and distill does not read it again.
+// It never writes Agent is right, Tag outcome or Your note, and never writes or clears a reading: the claim's and the row's Agent's view of your decision, Rule, Why the agent thinks so and Read under
+// belong to distill (READ-DECISIONS.md). A row marked Fixed keeps the reading it has, and distill does not read it again.
 // Only the supporting rows whose reading still points at a rule are marked and judged again (decision 79): a row the editor has since called the agent's slip, or that is no longer a
 // disagreement, is left as it is (run.json names it, left_alone), its claim is not rewritten, and the report counts the marked rows only. A key with no ledger row stays in the list, so that the
 // check for a row that is not decided any more is unchanged.
@@ -30,17 +29,17 @@
 // Exports: followUp, main, USAGE.
 
 import { EXIT } from './lib/exit-codes.mjs';
-import { answerWord, plural, quoted, stampOf, viewLink } from './lib/editor-words.mjs';
-import { claimDisagrees, isReviewed, isToReview } from './lib/decisions.mjs';
+import { plural, quoted, stampOf, viewLink } from './lib/editor-words.mjs';
+import { claimSummary, keyParts } from './lib/decisions.mjs';
 import { readAnswers } from './lib/answers.mjs';
-import { tableEntry } from './lib/config.mjs';
+import { AGENT_STATUS, TD, tableEntry } from './lib/config.mjs';
 import { isDisagreement, ledgerAsRead, pointsAtRule } from './lib/readings.mjs';
 import {
   LoopExit, addSettingsOp, applyStep, assertApplied, judgeSettings, liveRubric, needClaimColumns, needTables, parseCli, pickLesson, readEvals, resumeLine, runJudge, runPreflight, supportingKeysOf, takePull, withRun,
 } from './lib/loop.mjs';
 import { isMain } from './lib/paths.mjs';
 import { newPlan } from './lib/plan.mjs';
-import { claimColumns, claimProps, notCheckedParts, reasonsOfCell, tagPagesOf } from './propose.mjs';
+import { claimProps, notCheckedParts, tagPagesOf } from './propose.mjs';
 import { groupsFor, selectItems } from './judge.mjs';
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/followup.mjs [--lesson "<title>"] [--pull <pull-id>] [--driver cli|fake] [--run-id <id>] [--runs-max <n>] [--plan-only]';
@@ -57,7 +56,7 @@ export async function followUp(ctx, { tag, keys: allKeys, rubric, summary = true
   // only the rows whose reading still points at a rule are marked and judged again (decision 79): a row the editor has since called the agent's slip, or that is no longer a disagreement, is left
   // as it is, and the rule change's figures count the marked rows only
   const { rows: asRead } = ledgerAsRead({ claims: ctx.pull.claims() ?? [], ledgerRows: ctx.pull.queue() ?? [], rubric, config: ctx.config });
-  const readOf = new Map(asRead.map((r) => [r.Key, r]));
+  const readOf = new Map(asRead.map((r) => [r[TD.key], r]));
   // a key with no ledger row at all stays in the list: the check below stops on a row that is not decided any more, as it always did
   const keys = allKeys.filter((k) => !readOf.has(k) || (isDisagreement(readOf.get(k)) && pointsAtRule(readOf.get(k))));
   const leftAlone = allKeys.filter((k) => !keys.includes(k));
@@ -92,10 +91,19 @@ export async function followUp(ctx, { tag, keys: allKeys, rubric, summary = true
 
   const plan = newPlan({ runId: ctx.runId, script: 'followup', rubricEdition: rubric.edition, config: ctx.config, now: ctx.now });
   const queue = ctx.pull.queue() ?? [];
-  const byRow = new Map(queue.map((r) => [r.Key, r]));
+  const byRow = new Map(queue.map((r) => [r[TD.key], r]));
+  const after = new Map(); // key -> the row once the plan is written
   for (const r of results) {
     const row = byRow.get(r.key);
-    if (row && row['Follow-up'] !== r.status) plan.update('tag_decisions', r.key, row.page_id, { 'Follow-up': r.status });
+    if (!row) continue;
+    const changes = {};
+    if (row[TD.after] !== r.status) changes[TD.after] = r.status;
+    const rowState = r.status === 'Fixed' ? AGENT_STATUS.done : AGENT_STATUS.disagrees;
+    if (row[TD.status] !== rowState) changes[TD.status] = rowState;
+    if (Object.keys(changes).length) {
+      plan.update('tag_decisions', r.key, row.page_id, changes);
+      after.set(r.key, { ...row, ...changes });
+    }
   }
 
   // the claims of those rows: the agent's columns again, with the editor's decisions
@@ -106,37 +114,24 @@ export async function followUp(ctx, { tag, keys: allKeys, rubric, summary = true
   const tagPages = tagPagesOf(ctx, rubric);
   const claims = new Map((ctx.pull.claims() ?? []).map((c) => [c.geo_id, c]));
   let claimUpdates = 0;
-  for (const id of [...new Set(keys.map((k) => k.slice(0, k.lastIndexOf('::'))))]) {
+  for (const id of [...new Set(keys.map((k) => keyParts(k).geo_id))]) {
     const claim = claims.get(id);
     if (!claim) continue;
-    // the answers under the rule now in force, for the tags of this claim that were checked again (the others keep what Agent tags and Tags waiting say)
-    const verdicts = new Map();
-    const reasons = new Map();
+    // the claim's rows as they will be: the pulled rows of its judged tags, the supporting ones with this plan's changes
+    const mine = queue.filter((row) => keyParts(row[TD.key])?.geo_id === id).map((row) => after.get(row[TD.key]) ?? row);
+    // the answers under the rule now in force, for the tags of this claim that were checked again
+    const checked = new Set();
     const confidences = [];
     for (const r of results) {
-      const at = r.key.lastIndexOf('::');
-      if (r.key.slice(0, at) !== id || r.got === null) continue;
-      verdicts.set(r.key.slice(at + 2), answerWord(r.got));
-      if (r.reason) reasons.set(r.key.slice(at + 2), r.reason);
+      const parts = keyParts(r.key);
+      if (parts.geo_id !== id || r.got === null) continue;
+      checked.add(parts.tag);
       if (typeof r.p === 'number') confidences.push(round2(Math.max(r.p, 1 - r.p)));
     }
-    const cols = claimColumns({
-      judgedNames,
-      verdicts,
-      reviewed: isReviewed(claim),
-      toReview: isToReview(claim),
-      verifiedTags: claim.verified_tags ?? [],
-      currentTags: claim.agent_tags ?? [],
-      currentWaiting: claim.tags_waiting ?? [],
-      previouslyDisagreed: claimDisagrees(claim),
-      notChecked,
-      edition: rubric.edition,
-      reasons,
-      currentReasons: reasonsOfCell(claim.agent_reasons, judgedNames),
-    });
+    const cols = claimSummary(mine, { judgedNames, edition: rubric.edition, notChecked });
     const props = claimProps({ claim, columns: cols, writeColumns, tagPages, label: ctx.label });
     // the confidence of the answers just read (propose's rule), when they are all the claim's judged tags: a claim that was re-tagged does not keep the confidence of its old answer
-    if (judgedNames.length > 0 && verdicts.size === judgedNames.length && confidences.length === verdicts.size) {
+    if (judgedNames.length > 0 && checked.size === judgedNames.length && confidences.length === checked.size) {
       const confidence = Math.min(...confidences);
       if (claim.agent_confidence === null || claim.agent_confidence === undefined || round2(claim.agent_confidence) !== confidence) props[writeColumns.confidence] = confidence;
     }
@@ -181,14 +176,14 @@ export async function followup(opts = {}) {
         exit: EXIT.OK, sentence: `Follow-up: the plan is ready (${out.fixed} Fixed, ${out.stillWrong} Still wrong) and nothing was written to Notion.`, rows: [], next: 'Next: type /claim-tagger follow-up to write it.', details: { results: out.results },
       };
     }
-    const header = ['Your row', 'Follow-up', ''];
+    const header = ['Your row', 'After the rule change', ''];
     const shown = out.results.slice(0, n > 5 ? 4 : 5).map((r) => [quoted(r.claim, 40), r.status, '']);
     if (n > 5) shown.push([`and ${n - 4} more`, `${out.results.slice(4).filter((r) => r.status === 'Fixed').length} Fixed`, '']);
     const sentence = out.stillWrong === 0
       ? `Follow-up, repeated by hand: the agent now agrees with ${decisionWords(n)}.`
       : `Follow-up, repeated by hand: the agent agrees with ${out.fixed} of your ${plural(n, 'decision')}; ${out.stillWrong} still ${out.stillWrong === 1 ? 'comes' : 'come'} out wrong.`;
     const next = out.stillWrong > 0
-      ? `Next: add a note in Challenged tags notes on the claims in Agent disagreed (${viewLink(ctx.config, 'agent_disagreed')}).`
+      ? `Next: say why in Your note on the rows in Agent disagreed (${viewLink(ctx.config, 'agent_disagreed')}).`
       : (ctx.demo ? 'Next: nothing; the demo is complete.' : 'Next: type /claim-tagger status to see what is open.');
     return {
       exit: EXIT.OK, sentence, header, rows: shown, next, details: { results: out.results, fixed: out.fixed, stillWrong: out.stillWrong, lesson: lesson.Lesson },
