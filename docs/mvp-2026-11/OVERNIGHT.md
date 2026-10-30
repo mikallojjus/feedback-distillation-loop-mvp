@@ -1,5 +1,38 @@
 # Overnight run, 29 to 30 October 2026: checkpoints 2 and 3 of the v2 page
 
+## Morning summary (written 30 Oct, 02:50 UTC)
+
+**Both checkpoints are done and verified. Both versions are available:**
+- **New:** the Notion page "Claim tagger v2" (https://www.notion.so/408273e214eb81d78f78ecfe4885d1ab) holds every row of the first page. The code on `v2-page` works on it only.
+- **Old:** the first page "Claim tagger" is in Notion exactly as it was; nothing wrote to it tonight. Its code is the git tag `claim-tagger-v1`.
+
+**What works on v2** (each was run against the real page):
+- **The copy:** 1,219 rows, 13 / 600 / 602 / 3 / 1, every value read back. The 8 decisions made on the first page are now Tag outcome and Your note on their rows. A re-run brings over only new first-page rows and new editor decisions, and never undoes the loop's work.
+- **tag:** 600 claims read with 0 model calls (the judge's saved answers were reused). 29 rows wait in Your queue. Rulebook edition 2026-10-30.1: the same rules, pointing at the v2 Rulebook pages.
+- **status, decide list and distill:** they run. Distill drafts 0 rule changes, because 7 of the 8 copied decisions now agree with the current rules.
+- **Settled:** a second run of tag, distill and the copy plans nothing.
+- **verify:** 1 known difference. When to use differs from the old taxonomy file, because of the promotes of 28 and 29 Oct. That is expected, not a fault.
+- **Tests:** 2,357 of 2,358 pass. M1 fails only because of your overnight permissions edit, and passes again after the first item below.
+- **Independent check:** an Opus check confirmed all of this read-only, including that no first-page row, view or table was edited after 23:50 UTC.
+
+**Before the demo (yours, by hand):**
+1. `git checkout .claude/settings.json` puts the permissions back; the tonight-only script is `docs/mvp-2026-11/overnight-permissions.cjs`, untracked.
+2. **The first page's own text.** It still says "Claims is the real table: every decision you make there trains the rulebook. To practise, open Onboarding." Both are now false. The link to v2 is at the bottom, below the archive. Scripts may not write that page, so edit the line by hand and move the v2 link up if you like.
+3. **Optional cleanup.** Two leftover demo rows (keys starting `de0000`) are in v2 Tag decisions, with no claim. They came over from the first page's ledger. Delete them by hand, or leave them.
+4. **Pending file.** `agents/claim-tagger-mvp/evals/cases.jsonl` was already uncommitted before tonight, and every pull rewrites it. Commit it or discard it on purpose.
+
+**For you to decide:**
+- **Your queue holds only Can't tell rows (29),** because confident answers are marked Done. So the "Agent is right" tick can't be shown from Your queue: on Can't tell it decides nothing. Should confident answers also wait for an editor on v2, perhaps below a confidence line? The first page had the same rule; P46 assumed waiting rows carry an answer.
+- **Still open:** the expected weekly row volume.
+
+**Not done or follow-ups:**
+- **The walkthrough is parked.** It refuses and names the tag (P48).
+- **A latent safety gap** (verifier finding 5). `applyPlan` doesn't check that an update's page id belongs to the table in the plan; checkPlan does refuse every protected table id. Plans now come only from v2 pulls (fresh `runs/`, and the pull refuses other tables), so nothing reaches it today. Worth a check in apply.
+- **Three audit rows** show Decided under 2026-10-30.1, although the first page recorded no edition for them.
+- **Still per-claim** (developer docs only): `CONTRACTS.md`, the walkthrough's `references/*.md`, `.claude/agents/editor-persona.md`, the dead demo branches in promote and follow-up, and the 50-claim cap still mentioned in AGENT.md's paragraph on adding claims.
+- **Nothing is pushed or merged.** 30 commits on `v2-page` since `claim-tagger-v1`.
+
+
 **If you are a Claude session picking this up after a context compaction or a crash, read this file first and continue from the first unticked step. Update the Progress list and commit after every step.** The owner (Mika) is asleep. He introduces v2 to the team on the afternoon of 30 Oct, and expects both versions to be available in the morning.
 
 ## What the owner decided (chat, 29 Oct, late evening)
@@ -40,7 +73,7 @@ Earlier decisions that bind this work: P42 to P46 in `DECISIONS.md` (per-tag row
 - [x] 5. v2 default DONE (7cfaa84 swap; runs/ -> runs-v1/, fresh runs/ with judgments, builder, copy-live, setup-* runs; rubric edition 2026-10-30.1 = same rules, v2 page ids, setup/rulebook-pages.json); retitle done (a1a2e80)
 - [x] 6. CP3 loop DONE: WP1 c4b9f6b, WP2 c72d161, WP3 433948a, loop fix a5ecfc7, WP4 code 9d3ed22, WP4 docs 1cbe1a0; npm test 2355/2356 (only M1, the settings edit)
 - [x] 7. Proof on v2 DONE: full tag (600 claims, 0 model calls: judge store reused), a second run settled 3 Decided under, a third plan is empty; status: 29 rows in Your queue, edition 2026-10-30.1; verify 1 expected diff (When to use vs the old taxonomy file); decide list OK; distill --plan-only: 0 lessons (7 of the 8 copied decisions now agree with the current rules; the 1 disagreement was read before)
-- [ ] 8. Opus check, morning summary
+- [x] 8. Opus check (all PASS but the findings, fixed or listed) and morning summary at the top
 
 ## Log (newest last; one line per event, with the commit)
 

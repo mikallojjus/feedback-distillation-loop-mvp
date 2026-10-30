@@ -837,3 +837,29 @@ Tests: 2,479 pass.
 v2 verify: 0 writes, and only the 6 expected missing-data notes. Production verify: 0 writes, rows 13 / 600 / 602 / 3 / 1, and the same 8 differences as after checkpoint 1.
 
 **Not done.** Nothing of this entry is committed. The expected weekly row volume is still open. Next is planning checkpoint 2, the keyed data copy, with the owner.
+
+### 58. Checkpoints 2 and 3 overnight: v2 holds the data and the loop runs on it (29 to 30 Oct, P47 to P49)
+
+The full account is in `OVERNIGHT.md`: its morning summary, plan, progress list and a log line per step with the commit.
+
+**Checkpoint 2.** `copy-live.mjs` (plan, apply, check) copied the first page into v2: 1,219 rows, with the 8 first-page decisions as Tag outcome and Your note. It was read back in full, and no first-page id was written. A re-sync now touches only editor columns on existing rows.
+
+**The swap (P48).**
+- `config.json` is the v2 config, `setup/structure.json` the v2 structure, and the per-claim setup files are in `setup/v1/`.
+- `runs/` was restarted; the old one is `runs-v1/`, and only the judge store was carried over.
+- The rulebook edition is 2026-10-30.1: the same rules, with v2 Rulebook page ids.
+- The page is retitled "Claim tagger v2" (P49).
+
+**Checkpoint 3.** The loop was ported per `PORT-V2.md` (Opus design) in four Sonnet packages: decisions per row, ticks recorded in Decided under, no reason words, the guard and decide on the three Tag decisions columns, and the walkthrough parked. Skills and AGENT.md were rewritten by Opus.
+
+**On the real page:** tag read 600 claims with 0 model calls; Your queue holds 29 rows; status, decide list and distill run; tag, distill and copy all re-plan empty.
+
+**Tests:** 2,357 of 2,358 pass. M1 fails only because of the owner's overnight .claude/settings.json edit.
+
+**Independent Opus check:** the first page was not written tonight. Its findings were fixed or listed in the morning summary.
+
+**Not done.**
+- The walkthrough port.
+- The page-id check in applyPlan.
+- The product question on Your queue holding only Can't tell rows.
+- The owner's manual steps: revert settings.json, fix the first page's text, and the two orphan rows.
