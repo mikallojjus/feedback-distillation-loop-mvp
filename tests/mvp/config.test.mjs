@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  CAPABILITIES, CLAIMS_GEO_COLUMNS, READING_DEFAULTS, RULE_CHANGES_AGENT_STATUS, RULEBOOK_COLUMNS, TABLES,
+  CAPABILITIES, CLAIMS_GEO_COLUMNS, READING_DEFAULTS, RULE_CHANGES_AGENT_STATUS, RULEBOOK_COLUMNS, TABLES, TAG_DECISIONS_WRITABLE, TD, TD_EDITOR,
   capabilityOf, editorColumns, groupOf, isDemo, isProtected, loadConfig, readingSettings, tableEntry, validateConfig, writableProperties,
 } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
@@ -35,7 +35,10 @@ const PLACEHOLDER_OR_ID = /^(<.*>|[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f
 test('the config.json in the agent folder is valid, before and after setup has filled in its ids', () => {
   const config = loadConfig(codeRoot());
   assert.equal(config.agent, 'claim-tagger-mvp');
-  assert.equal(config.demo, false);
+  assert.equal(config.profile, 'v2', 'the v2 layout is the only one (P48)');
+  assert.deepEqual(config.editor_columns.claims, [], 'no editor column on Claims');
+  assert.deepEqual(config.editor_columns.tag_decisions, [...TD_EDITOR]);
+  assert.equal(config.notion.claims.write_columns.reading, TD.view);
   assert.equal(isDemo(config), false);
   assert.match(config.notion.rulebook.database_id, /^(<|[0-9a-f]{8}-?[0-9a-f]{4})/, 'a placeholder until setup has run, then a Notion id');
   assert.equal(config.notion.rulebook.key, 'Name');
@@ -49,6 +52,8 @@ test('the config.json in the agent folder is valid, before and after setup has f
     assert.match(entry.data_source_id, PLACEHOLDER_OR_ID, `${table}: data_source_id`);
   }
   for (const page of ['demos', 'demo_tests', 'onboarding', 'archive']) assert.match(config.notion.pages[page], PLACEHOLDER_OR_ID, `pages.${page}`);
+  assert.match(config.notion.root_parent_page_id, PLACEHOLDER_OR_ID, 'the hub the page hangs under');
+  assert.equal(config.notion.protected_database_ids.concat(config.notion.protected_page_ids).some((id) => id.replace(/-/g, '') === config.notion.root_parent_page_id.replace(/-/g, '')), false, 'and it is not protected');
   for (const [name, view] of Object.entries(config.notion.views ?? {})) {
     assert.match(String(view?.id ?? view), PLACEHOLDER_OR_ID, `views.${name}: the id of a view that setup made`);
   }
@@ -65,7 +70,8 @@ test('the fixture the tests start from is the config before setup: valid, every 
   assert.match(config.notion.pages.demos, /^</);
   assert.match(config.notion.pages.demo_tests, /^</);
   assert.equal(config.notion.views, undefined, 'setup adds the views');
-  assert.equal(config.demo, false);
+  assert.equal(config.profile, 'v2');
+  assert.equal(isDemo(config), false);
   config.notion.rulebook.key = 'changed by a test';
   config.notion.protected_database_ids.length = 0;
   assert.equal(placeholderConfig().notion.rulebook.key, 'Name', 'what a test does to its copy never reaches the next copy');
@@ -76,7 +82,7 @@ test('the fixture the tests start from is the config before setup: valid, every 
   const ids = TABLES.flatMap((table) => [tableEntry(built, table).database_id, tableEntry(built, table).data_source_id]).concat(built.notion.pages.demos, built.notion.pages.demo_tests);
   assert.equal(new Set(ids).size, ids.length, 'every id setup fills is different');
   assert.ok(ids.every((id) => PLACEHOLDER_OR_ID.test(id) && !id.startsWith('<')), 'and a real one');
-  assert.equal(built.notion.pages.proposal, config.notion.pages.proposal, 'an id that was already known is kept');
+  assert.equal(built.notion.root_parent_page_id, config.notion.root_parent_page_id, 'an id that was already known is kept');
 });
 
 test('the live config.json still has every key of the fixture (setup adds ids and views and removes nothing): a renamed or removed key means the fixture is stale', () => {
@@ -149,10 +155,13 @@ test('validateConfig: the agent name, API versions and real ids are checked', ()
   assert.ok(mentions(b, 'notion.api_version'));
   assert.ok(mentions(b, 'notion.builder_api_version'));
   const c = shipped();
-  c.notion.parent_page_id = '<setup>';
+  c.notion.root_parent_page_id = '<setup>';
   c.notion.protected_page_ids.push('not-an-id');
   c.notion.setup_page_parents = [];
-  assert.ok(mentions(c, 'notion.parent_page_id: expected a Notion id (32 hex'), 'a placeholder is not allowed where the id is already known');
+  assert.ok(mentions(c, 'notion.root_parent_page_id: expected a Notion id (32 hex'), 'a placeholder is not allowed where the id is already known');
+  const parent = shipped();
+  parent.notion.parent_page_id = '<setup>';
+  assert.deepEqual(problems(parent), [], 'the page the tables hang under is made by setup, so it may be a placeholder');
   assert.ok(mentions(c, 'notion.protected_page_ids[3]'));
   assert.ok(mentions(c, 'notion.setup_page_parents: expected at least 1 item'));
 });
@@ -301,25 +310,51 @@ test('the reading settings of distill: the shipped config names them, a missing 
   assert.ok(mentions(bad, 'distill.reading_prompt: expected a path inside the agent folder'));
 });
 
-test('a demo profile needs a demo_id that is safe as a folder name', () => {
+test('a practice page config is refused: the practice pages are parked (P48)', () => {
   const demo = shipped();
   demo.demo = true;
-  assert.ok(mentions(demo, 'demo_id'));
-  demo.demo_id = '../escape';
-  assert.ok(mentions(demo, 'demo_id'));
-  demo.demo_id = '..';
-  assert.ok(mentions(demo, 'demo_id'));
   demo.demo_id = '2026-10-15-practice';
-  assert.deepEqual(problems(demo), []);
-  assert.equal(isDemo(demo), true);
+  assert.ok(mentions(demo, 'demo: practice pages are parked (P48); use the git tag claim-tagger-v1'));
+  assert.equal(validateConfig(demo).ok, false);
+  assert.equal(isDemo(demo), true, 'isDemo still reads the flag, for the dead branches of the loop scripts');
+  const off = shipped();
+  off.demo = false;
+  assert.equal(validateConfig(off).ok, true);
   const flag = shipped();
   flag.demo = 'yes';
   assert.ok(mentions(flag, 'demo: expected true or false'));
   const absent = shipped();
   delete absent.demo;
-  assert.equal(validateConfig(absent).ok, true, 'a missing flag means a production config');
+  assert.equal(validateConfig(absent).ok, true, 'a missing flag means no practice page');
   assert.equal(isDemo(absent), false);
   assert.equal(isDemo(undefined), false);
+});
+
+test('only the v2 layout validates: a config without the profile, or the per-claim one, is refused with the way back', () => {
+  const none = shipped();
+  delete none.profile;
+  assert.ok(mentions(none, 'profile: expected "v2": this code works on the v2 layout only (P48); the per-claim version is the git tag claim-tagger-v1'));
+  const other = shipped();
+  other.profile = 'v3';
+  assert.ok(mentions(other, 'the git tag claim-tagger-v1'));
+  // the per-claim config as the tag had it: no profile, the editor columns on Claims, the old reading column
+  const perClaim = shipped();
+  delete perClaim.profile;
+  delete perClaim.notion.root_parent_page_id;
+  Object.assign(perClaim.notion.claims.columns, { verified: 'Verified tags', review_status: 'Review status', notes: 'Challenged tags notes' });
+  perClaim.notion.claims.write_columns.reading = 'Agent reading';
+  perClaim.editor_columns.claims = ['Verified tags', 'Review status', 'Challenged tags notes'];
+  delete perClaim.editor_columns.tag_decisions;
+  const errors = problems(perClaim);
+  assert.ok(errors.some((e) => e.includes('claim-tagger-v1')));
+  for (const wanted of ['notion.root_parent_page_id', 'notion.claims.columns.verified', 'notion.claims.columns.review_status', 'notion.claims.columns.notes', 'editor_columns.claims', 'editor_columns.tag_decisions', 'notion.claims.write_columns.reading']) {
+    assert.ok(errors.some((e) => e.includes(wanted)), wanted);
+  }
+  assert.throws(() => {
+    const root = tmp();
+    writeFileSync(join(root, 'config.json'), JSON.stringify(perClaim));
+    loadConfig(root);
+  }, /claim-tagger-v1/);
 });
 
 // ---- tableEntry ----------------------------------------------------------------------------------------------------------------
@@ -376,14 +411,15 @@ test('isProtected is false for anything that is not an id string, and for a conf
 test('writableProperties: the sets of CONTRACTS section 8', () => {
   const config = shipped();
   assert.deepEqual([...writableProperties(config, 'tag_decisions')].sort(),
-    ['Agent confidence', 'Agent proposal', 'Agent reading', 'Agent reason', 'Claim', 'Claim link', 'Decided under', 'Follow-up', 'Key', 'Read under', 'Reading note', 'Rule', 'Rulebook edition', 'Tag', 'Tag outcome', 'Why wrong', 'Your reasoning'].sort(),
-    'the ledger: the proposal, the copies of a decision, and the four columns of the agent\'s reading');
+    ['Agent confidence', 'Agent proposal', 'Agent reason', 'Agent status', "Agent's view of your decision", 'After the rule change', 'Claim', 'Decided under', 'Key', 'Open claim', 'Read under', 'Rule', 'Rulebook edition', 'Tag', 'Why the agent thinks so'].sort(),
+    'Tag decisions: the proposal, the status, the record of a decision, and the agent\'s reading; never Agent is right, Tag outcome or Your note');
+  assert.deepEqual([...writableProperties(config, 'tag_decisions')].sort(), [...TAG_DECISIONS_WRITABLE].sort());
   assert.deepEqual([...writableProperties(config, 'rule_changes')].sort(),
     ['Current text', 'Kind', 'Lesson', 'Proposed text', 'Rule', 'Safety check result', 'Status', 'Supporting rows', 'Tag'].sort());
   assert.deepEqual([...writableProperties(config, 'agent_settings')].sort(), ['Last run summary', 'Rulebook edition']);
   assert.deepEqual([...writableProperties(config, 'rulebook')], ['When to use']);
   assert.deepEqual([...writableProperties(config, 'claims')].sort(),
-    ['Agent confidence', 'Agent edition', 'Agent reading', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'], 'the agent writes eight columns; Agent notes is not one of them');
+    ['Agent confidence', 'Agent edition', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', "Agent's view of your decision", 'Tags waiting'], 'the agent writes eight columns; Agent notes is not one of them');
 });
 
 test('writableProperties: a setup create may fill more', () => {
@@ -393,8 +429,8 @@ test('writableProperties: a setup create may fill more', () => {
   assert.deepEqual([...rulebook].sort(), [...RULEBOOK_COLUMNS].sort());
   assert.equal(rulebook.size, 13);
   const claims = writableProperties(config, 'claims', { setup: true });
-  assert.deepEqual([...claims].sort(), [...CLAIMS_GEO_COLUMNS, 'Agent confidence', 'Agent edition', 'Agent reading', 'Agent reasons', 'Agent remarks', 'Agent status', 'Agent tags', 'Tags waiting'].sort());
-  assert.equal(claims.size, 17, 'the lean nine Geo columns and the eight agent columns; the three editor columns of the claims are not among them');
+  assert.deepEqual([...claims].sort(), [...CLAIMS_GEO_COLUMNS, 'Agent confidence', 'Agent edition', 'Agent reasons', 'Agent remarks', 'Agent status', "Agent's view of your decision", 'Agent tags', 'Tags waiting'].sort());
+  assert.equal(claims.size, 17, 'the lean nine Geo columns and the eight agent columns; Claims has no editor column');
   assert.ok(['Geo Space', 'Geo Created'].every((c) => claims.has(c)));
   for (const gone of ['Geo Score', 'Geo Supporting arguments', 'Geo Opposing arguments', 'Geo Related people', 'Geo Related projects', 'Geo Name source']) assert.ok(!claims.has(gone), gone);
   assert.equal(CLAIMS_GEO_COLUMNS.length, 9);
@@ -419,8 +455,8 @@ test('writableProperties follows the configured column names and key columns', (
 test('writableProperties gives a new Set every time and refuses an unknown table', () => {
   const config = shipped();
   const a = writableProperties(config, 'tag_decisions');
-  a.add('Tag outcome copy');
-  assert.ok(!writableProperties(config, 'tag_decisions').has('Tag outcome copy'), 'changing one result never changes the next');
+  a.add('Tag outcome');
+  assert.ok(!writableProperties(config, 'tag_decisions').has('Tag outcome'), 'changing one result never changes the next');
   assert.throws(() => writableProperties(config, 'runs'), /unknown table "runs"/);
   assert.throws(() => writableProperties(config, undefined), /unknown table/);
 });
@@ -429,11 +465,12 @@ test('writableProperties gives a new Set every time and refuses an unknown table
 
 test('editorColumns lists what only an editor writes', () => {
   const config = shipped();
-  assert.deepEqual(editorColumns(config, 'claims'), ['Verified tags', 'Review status', 'Challenged tags notes'], 'three: Why wrong left the editor\'s work (decision P4)');
+  assert.deepEqual(editorColumns(config, 'claims'), [], 'Claims has none on v2: the editors decide on Tag decisions');
+  assert.deepEqual(editorColumns(config, 'tag_decisions'), ['Agent is right', 'Tag outcome', 'Your note'], 'the three of TD_EDITOR');
+  assert.deepEqual(editorColumns(config, 'tag_decisions'), [...TD_EDITOR]);
   assert.deepEqual(editorColumns(config, 'rule_changes'), ['Editor wording']);
   assert.deepEqual(editorColumns(config, 'agent_settings'), ['Paused']);
   assert.deepEqual(editorColumns(config, 'rulebook'), []);
-  assert.deepEqual(editorColumns(config, 'tag_decisions'), [], 'the ledger has none: its copies of a decision belong to the agent');
   editorColumns(config, 'rule_changes').push('Status');
   assert.deepEqual(editorColumns(config, 'rule_changes'), ['Editor wording'], 'a copy, not the config array');
   assert.throws(() => editorColumns(config, 'runs'), /unknown table "runs"/);
@@ -465,20 +502,19 @@ test('groupOf finds the judge group of a tag', () => {
   assert.equal(groupOf({}, 'Wordy'), null);
 });
 
-// ---- the claims table's own columns (CLAIMS-REVIEW.md, section 1) -----------------------------------------------------------------
+// ---- the Claims table's own columns and the editor columns of Tag decisions ------------------------------------------------------------
 
-test('the claims entry names the three editor columns and the eight agent columns, and a config that lacks one is refused with its name', () => {
+test('the claims entry names the four Geo columns and the eight agent columns, and a config that lacks one is refused with its name', () => {
   const config = shipped();
   const claims = config.notion.claims;
   assert.deepEqual(claims.write_columns, {
-    tags: 'Agent tags', confidence: 'Agent confidence', reasons: 'Agent reasons', status: 'Agent status', waiting: 'Tags waiting', edition: 'Agent edition', remarks: 'Agent remarks', reading: 'Agent reading',
+    tags: 'Agent tags', confidence: 'Agent confidence', reasons: 'Agent reasons', status: 'Agent status', waiting: 'Tags waiting', edition: 'Agent edition', remarks: 'Agent remarks', reading: "Agent's view of your decision",
   });
-  assert.deepEqual([claims.columns.verified, claims.columns.review_status, claims.columns.notes], ['Verified tags', 'Review status', 'Challenged tags notes']);
-  assert.equal(claims.columns.why_wrong, undefined, 'the claims table has no Why wrong column in the config any more');
-  assert.deepEqual(config.editor_columns.claims, ['Verified tags', 'Review status', 'Challenged tags notes']);
-  assert.equal(config.editor_columns.tag_decisions, undefined, 'the ledger has no editor column');
+  assert.deepEqual(claims.columns, { claim: 'Geo Name', link: 'Geo URL', sources: 'Geo Sources', is_factual: 'Geo Is factual' }, 'no editor column on Claims');
+  assert.deepEqual(config.editor_columns.claims, []);
+  assert.deepEqual(config.editor_columns.tag_decisions, ['Agent is right', 'Tag outcome', 'Your note']);
 
-  for (const key of ['verified', 'review_status', 'notes']) {
+  for (const key of ['claim', 'link', 'sources', 'is_factual']) {
     const bad = shipped();
     delete bad.notion.claims.columns[key];
     assert.ok(mentions(bad, `notion.claims.columns.${key}: expected a non-empty string`), key);
@@ -488,39 +524,63 @@ test('the claims entry names the three editor columns and the eight agent column
     delete bad.notion.claims.write_columns[key];
     assert.ok(mentions(bad, `notion.claims.write_columns.${key}: expected a non-empty string`), key);
   }
+  for (const [key, name] of [['verified', 'Verified tags'], ['review_status', 'Review status'], ['notes', 'Challenged tags notes']]) {
+    const bad = shipped();
+    bad.notion.claims.columns[key] = name;
+    assert.ok(mentions(bad, `notion.claims.columns.${key}: there is no editor column on Claims in v2`), `${key} is refused`);
+  }
+  const listed = shipped();
+  listed.editor_columns.claims = ['Review status'];
+  assert.ok(mentions(listed, 'editor_columns.claims: there is no editor column on Claims in v2'));
+  const noList = shipped();
+  delete noList.editor_columns.claims;
+  assert.ok(mentions(noList, 'editor_columns.claims: expected an array'));
   const retired = shipped();
   retired.notion.claims.write_columns.notes = 'Agent notes';
   assert.ok(mentions(retired, 'notion.claims.write_columns.notes: Agent notes is retired'), 'Agent notes is no longer a column the agent writes, so a config that names it is refused');
   const twice = shipped();
   twice.notion.claims.write_columns.remarks = 'Agent edition';
   assert.ok(mentions(twice, 'notion.claims.write_columns: two keys name the same column'));
-  const noList = shipped();
-  delete noList.editor_columns.claims;
-  assert.ok(mentions(noList, 'editor_columns.claims: expected an array'));
+  const oldReading = shipped();
+  oldReading.notion.claims.write_columns.reading = 'Agent reading';
+  assert.ok(mentions(oldReading, `notion.claims.write_columns.reading: expected "${TD.view}"`), 'the old column name fails loudly');
 });
 
-test('an editor column of the claims must be listed in editor_columns, and an agent column must not be', () => {
-  const unlisted = shipped();
-  unlisted.editor_columns.claims = unlisted.editor_columns.claims.filter((c) => c !== 'Review status');
-  assert.ok(mentions(unlisted, 'notion.claims.columns.review_status: "Review status" is not listed in editor_columns.claims'));
+test('the editor columns of Tag decisions are exactly the three of TD_EDITOR, and none of them is a column the agent writes', () => {
+  assert.deepEqual([...TD_EDITOR], ['Agent is right', 'Tag outcome', 'Your note']);
+  assert.deepEqual(TD_EDITOR, [TD.right, TD.outcome, TD.note]);
+  assert.equal(Object.isFrozen(TD), true);
+  assert.equal(Object.keys(TD).length, 18, 'the eighteen columns of Tag decisions');
+  const missing = shipped();
+  delete missing.editor_columns.tag_decisions;
+  assert.ok(mentions(missing, 'editor_columns.tag_decisions: expected the three editor columns of Tag decisions'));
+  const fewer = shipped();
+  fewer.editor_columns.tag_decisions = ['Tag outcome', 'Your note'];
+  assert.ok(mentions(fewer, 'editor_columns.tag_decisions: expected exactly Agent is right, Tag outcome, Your note'));
+  const more = shipped();
+  more.editor_columns.tag_decisions.push('Agent proposal');
+  assert.ok(mentions(more, 'editor_columns.tag_decisions: expected exactly'));
+  assert.ok(mentions(more, '"Agent proposal" is a column the agent writes'));
+  const string = shipped();
+  string.editor_columns.tag_decisions = 'Tag outcome';
+  assert.ok(mentions(string, 'editor_columns.tag_decisions: expected the three editor columns'));
   const writable = shipped();
-  writable.editor_columns.claims.push('Agent confidence');
-  assert.ok(mentions(writable, 'notion.claims.write_columns.confidence: "Agent confidence" is an editor column'));
-  const old = shipped();
-  old.editor_columns.tag_decisions = ['Tag outcome'];
-  assert.deepEqual(problems(old), [], 'an older config that still lists the ledger columns is only checked for its shape');
-  old.editor_columns.tag_decisions = 'Tag outcome';
-  assert.ok(mentions(old, 'editor_columns.tag_decisions: expected an array'));
+  writable.notion.claims.write_columns.remarks = 'Your note';
+  assert.ok(mentions(writable, 'notion.claims.write_columns.remarks: "Your note" is an editor column'));
+  for (const name of TD_EDITOR) assert.ok(!TAG_DECISIONS_WRITABLE.includes(name), `${name} is not writable`);
 });
 
-test('the claims\' editor columns are never writable, with setup or without; the ledger\'s copies of a decision are', () => {
+test('the editor columns are never writable, with setup or without; the agent\'s columns of Tag decisions are', () => {
   const config = shipped();
   for (const setup of [false, true]) {
     const claims = writableProperties(config, 'claims', { setup });
-    for (const column of ['Verified tags', 'Claim quality tags — verified', 'Agent notes', 'Review status', 'Why wrong', 'Challenged tags notes']) assert.ok(!claims.has(column), `${column} (setup ${setup})`);
-    assert.ok(claims.has('Agent reading'), `the agent's own reading column (setup ${setup})`);
+    for (const column of ['Verified tags', 'Claim quality tags — verified', 'Agent notes', 'Review status', 'Why wrong', 'Challenged tags notes', 'Agent reading']) assert.ok(!claims.has(column), `${column} (setup ${setup})`);
+    assert.ok(claims.has(TD.view), `the agent's own reading column (setup ${setup})`);
     const ledger = writableProperties(config, 'tag_decisions', { setup });
-    for (const column of ['Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under', 'Agent reading', 'Rule', 'Reading note', 'Read under']) assert.ok(ledger.has(column), `${column} (setup ${setup})`);
+    for (const column of ['Agent proposal', 'Agent status', 'Open claim', 'Decided under', "Agent's view of your decision", 'Rule', 'Why the agent thinks so', 'After the rule change', 'Read under', 'Rulebook edition']) {
+      assert.ok(ledger.has(column), `${column} (setup ${setup})`);
+    }
+    for (const column of [...TD_EDITOR, 'Why wrong', 'Your reasoning', 'Follow-up', 'Agent reading', 'Reading note', 'Claim link']) assert.ok(!ledger.has(column), `${column} (setup ${setup})`);
   }
 });
 

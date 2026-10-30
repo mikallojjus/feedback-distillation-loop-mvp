@@ -1,5 +1,6 @@
 {
   "agent": "claim-tagger-mvp",
+  "profile": "v2",
   "notion": {
     "api_version": "2022-06-28",
     "builder_api_version": "2026-03-11",
@@ -8,11 +9,11 @@
       "3fa273e214eb805199f3d12ef01db453"
     ],
     "pages": {
-      "proposal": "3fa273e214eb81ef8504cb40e3bd7052",
-      "demos": "<set by setup>",
-      "demo_tests": "<set by setup>",
-      "onboarding": "<set by setup>",
-      "archive": "<set by setup>"
+      "proposal": "<none>",
+      "demos": "<none>",
+      "demo_tests": "<none>",
+      "onboarding": "<none>",
+      "archive": "<none>"
     },
     "rulebook": {
       "database_id": "<setup>",
@@ -21,7 +22,7 @@
       "work_tag": "Issue"
     },
     "claims": {
-      "label": "Claims copy",
+      "label": "Claims",
       "database_id": "<setup>",
       "data_source_id": "<setup>",
       "key": "Geo ID",
@@ -29,10 +30,7 @@
         "claim": "Geo Name",
         "link": "Geo URL",
         "sources": "Geo Sources",
-        "is_factual": "Geo Is factual",
-        "verified": "Verified tags",
-        "review_status": "Review status",
-        "notes": "Challenged tags notes"
+        "is_factual": "Geo Is factual"
       },
       "write_columns": {
         "tags": "Agent tags",
@@ -42,7 +40,7 @@
         "waiting": "Tags waiting",
         "edition": "Agent edition",
         "remarks": "Agent remarks",
-        "reading": "Agent reading"
+        "reading": "Agent's view of your decision"
       }
     },
     "databases": {
@@ -107,14 +105,11 @@
     ],
     "requests_per_second": 3,
     "page_size": 100,
-    "max_text": 1900
+    "max_text": 1900,
+    "root_parent_page_id": "3fa273e214eb805199f3d12ef01db453"
   },
   "editor_columns": {
-    "claims": [
-      "Verified tags",
-      "Review status",
-      "Challenged tags notes"
-    ],
+    "claims": [],
     "rule_changes": [
       "Editor wording"
     ],
@@ -124,6 +119,11 @@
     ],
     "agent_settings": [
       "Paused"
+    ],
+    "tag_decisions": [
+      "Agent is right",
+      "Tag outcome",
+      "Your note"
     ]
   },
   "models": {
@@ -190,6 +190,5 @@
     "default": {
       "flip_rejudge_runs": 2
     }
-  },
-  "demo": false
+  }
 }

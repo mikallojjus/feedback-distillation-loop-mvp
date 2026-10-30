@@ -16,8 +16,8 @@
 //   class LoopExit(code, message, { sentence, header, rows, next })   end the run with an exit code and the words of its report
 //   takePull(ctx, { pullId })          pull every table (or load --pull <id>), set ctx.pull (loadPull) and put its id into run.json
 //   needTables(ctx, ...tables)         LoopExit(2) unless the pull holds those tables
-//   needClaimColumns(ctx)              LoopExit(2) unless the Claims table of the pull has the agent's columns (the seven of 21 October and Agent reading) and the editor's three, and the Tag decisions table the four columns of the
-//                                      reading of 22 October (Agent reading, Rule, Reading note, Read under), with the types the scripts use (a table that setup.mjs build has not rebuilt does not)
+//   needClaimColumns(ctx)              LoopExit(2) unless the Claims table of the pull has the agent's eight columns and the Tag decisions table the v2 columns (Open claim, Agent is right, Tag outcome, Your note,
+//                                      Agent status, Agent's view of your decision, Rule, Why the agent thinks so, After the rule change, Decided under, Read under), with the types the scripts use
 //   runPreflight(ctx, { adopt })       lib/preflight.mjs; a refusal ends the run with its report; sets ctx.edition
 //   confirmUnchanged(ctx, { lesson, copy, tag, status })   read the Rulebook copy row and the rule change again right before they are written
 //   pickLesson(ctx, title, { status, command })   the Rule changes row to work on, or a LoopExit with a report that says why not
@@ -44,7 +44,7 @@ import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { cutText, demoCommands, listNames, namePracticePage, quoted, viewLink } from './editor-words.mjs';
 import { claudeVersion, findClaudeBin, runClaude, withTransientRetry } from './claude.mjs';
-import { ADD_SCRIPT, V2_REFUSAL, isDemo, isV2, loadConfig, tableEntry } from './config.mjs';
+import { ADD_SCRIPT, TD, isDemo, loadConfig, tableEntry } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic } from './jsonl.mjs';
 import { clientFromConfig, requestLogger } from './notion-rest.mjs';
@@ -258,8 +258,6 @@ export async function withRun({ script, label, again = '/claim-tagger', opts = {
     } catch (e) {
       throw new LoopExit(EXIT.INVALID, e.message, { sentence: `${label}: nothing was done, because config.json is not valid.`, next: ENGINEER });
     }
-    // the v2 profile is built by setup.mjs only until the loop is ported (checkpoint 3): every loop script ends here, before it reads or writes anything
-    if (isV2(ctx.config)) throw new LoopExit(EXIT.INVALID, V2_REFUSAL, { sentence: `${label}: nothing was done, because this is the v2 profile and the loop does not run on it yet.`, next: ENGINEER });
     ctx.demo = isDemo(ctx.config);
     out = await body(ctx);
   } catch (e) {
@@ -335,52 +333,42 @@ export function needTables(ctx, ...tables) {
   }
 }
 
-/** The type each agent column of the Claims copy must have (CLAIMS-REVIEW.md section 6.1), by its key in the config's write_columns. */
+/** The type each agent column of the Claims table must have, by its key in the config's write_columns. */
 const CLAIM_COLUMN_TYPES = Object.freeze({
   tags: 'relation', confidence: 'number', reasons: 'rich_text', status: 'select', waiting: 'relation', edition: 'rich_text', remarks: 'rich_text', reading: 'rich_text',
 });
-/** The type each editor column of the Claims copy must have, by its key in the config's columns. Why wrong left the editor's work (READ-DECISIONS.md, decision P4). */
-const EDITOR_COLUMN_TYPES = Object.freeze({ verified: 'relation', review_status: 'select', notes: 'rich_text' });
-/** The agent's columns of the reading of 22 October on Tag decisions (the ledger), by column name. */
-const LEDGER_READING_TYPES = Object.freeze({ 'Agent reading': 'select', Rule: 'rich_text', 'Reading note': 'rich_text', 'Read under': 'rich_text' });
+/** The type each column of Tag decisions the scripts read or write beyond the first ones must have, by its short name in TD. */
+const TD_COLUMN_TYPES = Object.freeze({
+  open: 'relation', right: 'checkbox', outcome: 'select', note: 'rich_text', status: 'select', view: 'select', rule: 'rich_text', why: 'rich_text', after: 'select',
+  decidedUnder: 'rich_text', readUnder: 'rich_text',
+});
 
 /**
- * Stop with exit 2 unless the Claims table of the pull has the agent's columns (the seven of the revision of 21 October and Agent reading) and the editor's three, and the Tag decisions
- * table the four columns of the reading of 22 October (Agent reading, Rule, Reading note, Read under), with the types the scripts read and write (Agent tags and Tags waiting
- * are relations since the revision of 21 October, and the editor's relation is Verified tags; a table that setup.mjs build has not rebuilt still has the text column Agent tags and
- * the relation under its old name). A script that reads the claims' decisions or writes the claims calls this first: without it a decision would be read from a column that is not
- * there, and every Reviewed claim would look decided as "Does not apply". The message names the columns of the revision of 21 October, or those of the reading of 22 October, or both.
+ * Stop with exit 2 unless the Claims table of the pull has the agent's eight columns and Tag decisions the v2 columns (Open claim, the three editor columns, Agent status, the agent's
+ * view of your decision with Rule, Why the agent thinks so and Read under, After the rule change, Decided under), with the types the scripts read and write. Claims has no editor column
+ * on v2. A script that reads decisions or writes the rows calls this first: without it a decision would be read from a column that is not there, and every row would look undecided. One
+ * message lists every column that is missing or has another type.
  */
 export function needClaimColumns(ctx) {
   const schema = ctx.pull.schema('claims');
   const ledger = ctx.pull.schema('tag_decisions');
-  const entry = schema?.properties || ledger?.properties ? tableEntry(ctx.config, 'claims') : null;
+  const entry = schema?.properties ? tableEntry(ctx.config, 'claims') : null;
   const found = (props, name, type) => (props[name] ? `${name} (${props[name].type}, not ${type})` : `${name} (missing)`);
   const wrong = [];
-  const reading = [];
   if (schema?.properties) {
-    const props = schema.properties;
     for (const [key, type] of Object.entries(CLAIM_COLUMN_TYPES)) {
-      if (props[entry.write_columns?.[key]]?.type !== type) (key === 'reading' ? reading : wrong).push(found(props, entry.write_columns?.[key], type));
-    }
-    for (const [key, type] of Object.entries(EDITOR_COLUMN_TYPES)) {
-      if (props[entry.columns?.[key]]?.type !== type) wrong.push(found(props, entry.columns?.[key], type));
+      const name = entry.write_columns?.[key];
+      if (schema.properties[name]?.type !== type) wrong.push(`Claims: ${found(schema.properties, name, type)}`);
     }
   }
   if (ledger?.properties) {
-    for (const [name, type] of Object.entries(LEDGER_READING_TYPES)) {
-      if (ledger.properties[name]?.type !== type) reading.push(`Tag decisions: ${found(ledger.properties, name, type)}`);
+    for (const [key, type] of Object.entries(TD_COLUMN_TYPES)) {
+      if (ledger.properties[TD[key]]?.type !== type) wrong.push(`Tag decisions: ${found(ledger.properties, TD[key], type)}`);
     }
   }
   if (wrong.length) {
-    throw new LoopExit(EXIT.INVALID, `the Claims table lacks columns of the revision of 21 October: ${wrong.join(', ')}${reading.length ? `; and the columns of the reading of 22 October: ${reading.join(', ')}` : ''}; run setup.mjs build`, {
-      sentence: `${ctx.label}: nothing was done, because the Claims table does not have the agent's new columns yet.`,
-      next: 'Next: ask the engineer to run the setup build, then type the same command again.',
-    });
-  }
-  if (reading.length) {
-    throw new LoopExit(EXIT.INVALID, `the tables lack the columns of the reading of 22 October: ${reading.join(', ')}; run setup.mjs build`, {
-      sentence: `${ctx.label}: nothing was done, because the tables do not have the agent's reading columns yet.`,
+    throw new LoopExit(EXIT.INVALID, `the tables lack columns of the v2 layout: ${wrong.join(', ')}; run setup.mjs build`, {
+      sentence: `${ctx.label}: nothing was done, because the tables do not have the v2 columns yet.`,
       next: 'Next: ask the engineer to run the setup build, then type the same command again.',
     });
   }

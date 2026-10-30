@@ -1,225 +1,225 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { AGENT_STATUS } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
+import * as decisions from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
 import {
-  READINGS, RULE_WHY, claimDisagrees, claimWaits, decisionChanges, decisionProps, decisionsFor, isReviewed, isToReview, leadingReason, parseTagLines, parseTagNotes, syncDecisions,
+  CANT_TELL, OUTCOMES, READINGS, RULE_WHY, claimSummary, countYourQueue, decidedUnderText, inYourQueue, isDecided, isFollowedUp, isTicked, keyParts, parseDecidedUnder,
+  recordChanges, recordDecisions, rowDecision, rowDisagrees, rowStatus,
 } from '../../agents/claim-tagger-mvp/scripts/lib/decisions.mjs';
-import * as pull from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
 
-// How an editor's decision on a claim is read (CLAIMS-REVIEW.md, section 2, as READ-DECISIONS.md revises it): pure functions on the rows a pull writes.
+// How an editor's decision on a Tag decisions row is read (PORT-V2.md section 1; P42 to P46): pure functions on the rows a pull writes.
 
 const CD = 'Context-dependent';
-const claim = (over = {}) => ({
-  geo_id: 'g1', page_id: 'p-g1', agent_tags: [], agent_status: null, tags_waiting: [], agent_confidence: 0.65, verified_tags: [], review_status: 'Reviewed', agent_reading: '', challenged_notes: '', ...over,
-});
+const ED = '2026-10-29.1';
 const row = (tag = CD, over = {}) => ({
-  Key: `g1::${tag}`, Tag: tag, page_id: `l-${tag}`, 'Agent proposal': "Can't tell", 'Rulebook edition': '2026-10-16.1', 'Tag outcome': null, 'Why wrong': null, 'Your reasoning': null, 'Decided under': null, decided: false, ...over,
+  Key: `g1::${tag}`, Tag: tag, page_id: `l-${tag}`, 'Agent proposal': 'Applies', 'Agent confidence': 0.8, 'Agent reason': `reason ${tag}`, 'Rulebook edition': ED,
+  'Agent is right': false, 'Tag outcome': null, 'Your note': null, 'Decided under': null, 'Agent status': AGENT_STATUS.done, ...over,
 });
 
-test('a claim is decided when Review status is Reviewed, and in no other state', () => {
-  assert.equal(isReviewed(claim()), true);
-  for (const status of [null, '', 'To review', 'reviewed', undefined]) assert.equal(isReviewed(claim({ review_status: status })), false, String(status));
-  assert.deepEqual(decisionsFor(claim({ review_status: 'To review' }), [row()]), []);
-  assert.deepEqual(decisionsFor(claim({ review_status: null, verified_tags: [CD] }), [row()]), [], 'a verified tag without Reviewed is still open');
+test('the old per-claim readers are gone, so a stale import fails at load time', () => {
+  for (const name of ['REVIEWED', 'TO_REVIEW', 'isReviewed', 'isToReview', 'claimWaits', 'claimDisagrees', 'parseTagLines', 'parseTagNotes', 'leadingReason', 'decisionsFor', 'decisionProps', 'decisionChanges', 'syncDecisions']) {
+    assert.equal(decisions[name], undefined, name);
+  }
 });
 
-test('the outcome is Applies when the tag is in Verified tags, else Does not apply', () => {
-  const [yes] = decisionsFor(claim({ verified_tags: [CD] }), [row()]);
-  assert.deepEqual([yes.key, yes.tag, yes.outcome], [`g1::${CD}`, CD, 'Applies']);
-  const [no] = decisionsFor(claim({ verified_tags: ['Wordy'] }), [row()]);
-  assert.equal(no.outcome, 'Does not apply');
-  const both = decisionsFor(claim({ verified_tags: ['Wordy'] }), [row('Wordy'), row()]);
-  assert.deepEqual(both.map((d) => [d.tag, d.outcome]), [[CD, 'Does not apply'], ['Wordy', 'Applies']], 'one decision per judged tag, sorted by tag');
-});
-
-test('Why wrong of a decision is the reason word that opens the tag\'s note line, for a tag whose outcome differs from the proposal; there is no other source, and a tag the agent got right carries none', () => {
-  const c = claim({
-    verified_tags: [CD, 'Wordy'], challenged_notes: `${CD}: Rule should change. It is too strict.\nWordy: Agent slip. It says so.\nPoor wording: Rule unclear. Both readings work.`,
-  });
-  const rows = [row(CD, { 'Agent proposal': 'Applies' }), row('Wordy', { 'Agent proposal': 'Does not apply' }), row('Poor wording', { 'Agent proposal': "Can't tell" })];
-  const d = Object.fromEntries(decisionsFor(c, rows).map((x) => [x.tag, x]));
-  assert.equal(d[CD].why_wrong, null, 'right: the line says Rule should change, but the agent agreed, so there is nothing to carry');
-  assert.equal(d.Wordy.why_wrong, 'Agent slip', 'wrong');
-  assert.equal(d['Poor wording'].why_wrong, 'Rule unclear', 'Can\'t tell differs from every outcome');
-  assert.equal(decisionsFor(claim({ verified_tags: [CD], challenged_notes: `${CD}: It is too strict.` }), [row()])[0].why_wrong, null, 'no reason word, none on the row');
-  const claimsOld = claim({ verified_tags: [CD], challenged_notes: `${CD}: It is too strict.`, why_wrong: 'Rule unclear' });
-  assert.equal(decisionsFor(claimsOld, [row()])[0].why_wrong, null, 'a claim row that still carried a Why wrong is not read for it: the column is gone');
-});
-
-test('a note with no tag name belongs to every tag the agent got wrong, and a reason word that opens it is theirs', () => {
-  const c = claim({ verified_tags: [], challenged_notes: 'Agent slip. USPS names which portal, so rule 5 already settles it.' });
-  const rows = [row(CD, { 'Agent proposal': 'Applies' }), row('Wordy', { 'Agent proposal': 'Applies' }), row('Poor wording', { 'Agent proposal': 'Does not apply' })];
-  assert.deepEqual(decisionsFor(c, rows).map((x) => [x.tag, x.why_wrong, x.reasoning]), [
-    [CD, 'Agent slip', 'USPS names which portal, so rule 5 already settles it.'], ['Poor wording', null, null], ['Wordy', 'Agent slip', 'USPS names which portal, so rule 5 already settles it.'],
-  ]);
-  const only = decisionsFor(claim({ verified_tags: [], challenged_notes: 'Rule should change.' }), [row(CD, { 'Agent proposal': 'Applies' })])[0];
-  assert.deepEqual([only.why_wrong, only.reasoning], ['Rule should change', null], 'a reason word and nothing else: no reasoning to copy');
-  const plain = decisionsFor(claim({ verified_tags: [], challenged_notes: 'Rule unclear because it reads badly.' }), [row(CD, { 'Agent proposal': 'Applies' })])[0];
-  assert.deepEqual([plain.why_wrong, plain.reasoning], [null, 'Rule unclear because it reads badly.'], 'the words need a full stop to be a reason word');
-});
-
-test('leadingReason splits a reason word and a full stop off the front of a text; READINGS is the one list of the three, RULE_WHY the two that name a rule problem', () => {
-  assert.deepEqual(READINGS, ['Agent slip', 'Rule unclear', 'Rule should change']);
+test('OUTCOMES, CANT_TELL, READINGS and RULE_WHY; keyParts splits at the last "::"', () => {
+  assert.deepEqual([...OUTCOMES], ['Applies', 'Does not apply']);
+  assert.equal(CANT_TELL, "Can't tell");
+  assert.deepEqual([...READINGS], ['Agent slip', 'Rule unclear', 'Rule should change']);
   assert.deepEqual([...RULE_WHY], ['Rule unclear', 'Rule should change']);
-  assert.deepEqual(leadingReason('  RULE UNCLEAR. The pronoun is open. '), { reason: 'Rule unclear', text: 'The pronoun is open.' });
-  assert.deepEqual(leadingReason('Agent slip.'), { reason: 'Agent slip', text: '' });
-  assert.deepEqual(leadingReason('Agent slip because I said so.'), { reason: null, text: 'Agent slip because I said so.' });
-  assert.deepEqual(leadingReason('Agent slip.Run-on'), { reason: null, text: 'Agent slip.Run-on' }, 'a full stop and then a space');
-  assert.deepEqual(leadingReason(null), { reason: null, text: '' });
+  assert.deepEqual(keyParts('abc::Context-dependent'), { geo_id: 'abc', tag: CD });
+  assert.deepEqual(keyParts('a::b::Tag'), { geo_id: 'a::b', tag: 'Tag' });
+  assert.equal(keyParts('abc'), null);
+  assert.equal(keyParts(null), null);
 });
 
-test('tagNames are the names of every tag of the rulebook: a line that starts with a tag the agent did not judge is its own entry and never leaks into the line above', () => {
-  const notes = `${CD}: Rule unclear. The reference is open.\nFactually challenged: the figure is wrong.\nand so is the year`;
-  const c = claim({ verified_tags: [], challenged_notes: notes });
-  const [without] = decisionsFor(c, [row(CD, { 'Agent proposal': 'Applies' })]);
-  assert.equal(without.reasoning, `The reference is open.\nFactually challenged: the figure is wrong.\nand so is the year`, 'without the rulebook\'s names the stray line is part of this tag\'s text (what the callers must avoid)');
-  const [named] = decisionsFor(c, [row(CD, { 'Agent proposal': 'Applies' })], { tagNames: [CD, 'Factually challenged', 'Wordy'] });
-  assert.deepEqual([named.why_wrong, named.reasoning], ['Rule unclear', 'The reference is open.'], 'with them it is its own entry');
-  const lines = parseTagLines(notes, [CD, 'Factually challenged']);
-  assert.deepEqual([...lines.keys()], [CD, 'Factually challenged']);
-  assert.equal(lines.get('Factually challenged').text, 'the figure is wrong.\nand so is the year');
-  const { rows } = syncDecisions([c], [row(CD, { 'Agent proposal': 'Applies' })], { tagNames: [CD, 'Factually challenged'] });
-  assert.equal(rows[0]['Your reasoning'], 'The reference is open.', 'syncDecisions passes them on');
+test('isFollowedUp: After the rule change is Fixed; Still wrong and empty are not', () => {
+  assert.equal(isFollowedUp({ 'After the rule change': 'Fixed' }), true);
+  assert.equal(isFollowedUp({ 'After the rule change': 'Still wrong' }), false);
+  assert.equal(isFollowedUp({ 'After the rule change': null }), false);
+  assert.equal(isFollowedUp({ 'Follow-up': 'Fixed' }), false, 'the old column name is not read');
 });
 
-test('Your reasoning is the tag\'s own line when the notes hold lines that start with a tag name and a colon, else the whole text for the tags that differ', () => {
-  const lines = claim({ verified_tags: [CD], challenged_notes: `${CD}: rule 3 does not say so.\nWordy: too long to read.\nA stray line.` });
-  const rows = [row(CD, { 'Agent proposal': 'Applies' }), row('Wordy', { 'Agent proposal': 'Does not apply' })];
-  const d = Object.fromEntries(decisionsFor(lines, rows).map((x) => [x.tag, x]));
-  assert.equal(d[CD].reasoning, 'rule 3 does not say so.', 'its own line, even where the agent was right');
-  assert.equal(d.Wordy.reasoning, 'too long to read.\nA stray line.', 'a line without a tag name belongs to the line above');
-  const whole = claim({ verified_tags: [CD], challenged_notes: 'The press pool names a body readers know.' });
-  const [one] = decisionsFor(whole, [row()]);
-  assert.equal(one.reasoning, 'The press pool names a body readers know.');
-  const right = decisionsFor(whole, [row(CD, { 'Agent proposal': 'Applies' })])[0];
-  assert.equal(right.reasoning, null, 'the agent got it right: no words copied');
-  assert.equal(decisionsFor(claim({ verified_tags: [CD], challenged_notes: '  ' }), [row()])[0].reasoning, null, 'empty notes');
-  const audit = claim({ verified_tags: [], challenged_notes: 'From the audit of 9 October: the claim reads on its own.' });
-  assert.equal(decisionsFor(audit, [row(CD, { 'Agent proposal': 'Applies' })])[0].reasoning, 'From the audit of 9 October: the claim reads on its own.', '"From the audit of 9 October" is not a tag name');
+test('Decided under: parsed as { edition, agreed } and written back; a tick keeps the outcome it agreed with', () => {
+  assert.deepEqual(parseDecidedUnder(ED), { edition: ED, agreed: null });
+  assert.deepEqual(parseDecidedUnder(`  ${ED} · agreed Applies `), { edition: ED, agreed: 'Applies' });
+  assert.deepEqual(parseDecidedUnder(`${ED} · agreed Does not apply`), { edition: ED, agreed: 'Does not apply' });
+  for (const odd of [null, '', '   ', `${ED} · agreed Maybe`, 'two words']) assert.equal(parseDecidedUnder(odd), null, String(odd));
+  assert.equal(decidedUnderText(ED), ED);
+  assert.equal(decidedUnderText(ED, 'Applies'), `${ED} · agreed Applies`);
+  assert.equal(decidedUnderText('', 'Applies'), null);
+  assert.equal(decidedUnderText(null), null);
 });
 
-test('a reason word after the tag name ("Rule unclear.") is that tag\'s Why wrong and is not part of its reasoning; without one the tag has none', () => {
-  const c = claim({
-    verified_tags: [CD], challenged_notes: `${CD}: Rule unclear. The reference is general.\nWordy: It reads fine as it is.\nPoor wording: Rule should change.`,
+test('rowDecision: a Tag outcome is the decision; first sight until Decided under holds the edition', () => {
+  const d = rowDecision(row(CD, { 'Tag outcome': 'Does not apply', 'Your note': ' Not general. ' }));
+  assert.deepEqual(d, {
+    key: `g1::${CD}`, tag: CD, geo_id: 'g1', outcome: 'Does not apply', by: 'outcome', note: 'Not general.', decided_under: ED, first_sight: true, tick_ignored: false, waits: false,
   });
-  const rows = [row(CD, { 'Agent proposal': 'Does not apply' }), row('Wordy', { 'Agent proposal': 'Applies' }), row('Poor wording', { 'Agent proposal': 'Applies' })];
-  const d = Object.fromEntries(decisionsFor(c, rows).map((x) => [x.tag, x]));
-  assert.deepEqual([d[CD].outcome, d[CD].why_wrong, d[CD].reasoning], ['Applies', 'Rule unclear', 'The reference is general.'], 'the reason word is this tag\'s only');
-  assert.deepEqual([d.Wordy.outcome, d.Wordy.why_wrong, d.Wordy.reasoning], ['Does not apply', null, 'It reads fine as it is.'], 'no reason word: none (the agent reads this one itself)');
-  assert.deepEqual([d['Poor wording'].why_wrong, d['Poor wording'].reasoning], ['Rule should change', null], 'a reason word and nothing else: no reasoning to copy');
-  const right = decisionsFor(claim({ verified_tags: [CD], challenged_notes: `${CD}: Rule unclear. Not needed.` }), [row(CD, { 'Agent proposal': 'Applies' })])[0];
-  assert.equal(right.why_wrong, null, 'a tag the agent got right carries no Why wrong, whatever the line says');
-  const whole = claim({ verified_tags: [], challenged_notes: 'The claim reads on its own.' });
-  const both = decisionsFor(whole, [row(CD, { 'Agent proposal': 'Applies' }), row('Wordy', { 'Agent proposal': 'Applies' }), row('Poor wording', { 'Agent proposal': 'Does not apply' })]);
-  assert.deepEqual(both.map((x) => [x.tag, x.why_wrong, x.reasoning]), [
-    [CD, null, 'The claim reads on its own.'], ['Poor wording', null, null], ['Wordy', null, 'The claim reads on its own.'],
-  ], 'a note with no tag name applies to every tag the agent got wrong');
+  const seen = rowDecision(row(CD, { 'Tag outcome': 'Applies', 'Decided under': '2026-10-01.1' }));
+  assert.deepEqual([seen.outcome, seen.decided_under, seen.first_sight], ['Applies', '2026-10-01.1', false], 'the edition it was decided under, not the one the proposal moved to');
+  assert.equal(isDecided(row(CD, { 'Tag outcome': 'Applies' })), true);
+  assert.equal(isDecided(row()), false);
 });
 
-test('parseTagLines: the reason word, in any letter case, needs a full stop; a text that only starts with the same words keeps them', () => {
-  const lines = parseTagLines(`${CD}: rule UNCLEAR.\nmore words\nWordy: Rule unclear because it reads badly.\nPoor wording: Agent slip.`, [CD, 'Wordy', 'Poor wording']);
-  assert.deepEqual([...lines], [
-    [CD, { text: 'more words', reason: 'Rule unclear' }],
-    ['Wordy', { text: 'Rule unclear because it reads badly.', reason: null }],
-    ['Poor wording', { text: '', reason: 'Agent slip' }],
-  ]);
-  assert.equal(parseTagLines('no tag name here: Rule unclear. x', [CD]), null);
-  assert.deepEqual([...parseTagNotes(`${CD}: Rule unclear. words`, [CD])], [[CD, 'words']], 'parseTagNotes gives the text without the reason word');
+test('rowDecision: a tick on a sure proposal decides it - first sight takes the proposal, a recorded tick keeps the outcome it agreed with whatever the proposal says now', () => {
+  const first = rowDecision(row(CD, { 'Agent is right': true }));
+  assert.deepEqual([first.outcome, first.by, first.decided_under, first.first_sight, first.tick_ignored], ['Applies', 'tick', ED, true, false]);
+  const recorded = rowDecision(row(CD, { 'Agent is right': true, 'Decided under': `${ED} · agreed Applies`, 'Agent proposal': 'Does not apply', 'Rulebook edition': '2026-11-02.1' }));
+  assert.deepEqual([recorded.outcome, recorded.by, recorded.decided_under, recorded.first_sight], ['Applies', 'tick', ED, false], 'the proposal moved; the tick still means the one it agreed with');
+  assert.equal(rowDecision(row(CD, { 'Agent is right': true, 'Agent proposal': 'Does not apply' })).outcome, 'Does not apply');
 });
 
-test('parseTagNotes: tag names are matched in any letter case, only names it knows start a line, and no tag line means no map', () => {
-  assert.deepEqual([...parseTagNotes('context-dependent :  one\ntwo', [CD])], [[CD, 'one\ntwo']]);
-  assert.equal(parseTagNotes('Rule 3: not a tag\nBecause: neither', [CD]), null);
-  assert.equal(parseTagNotes('', [CD]), null);
-  assert.equal(parseTagNotes(null, [CD]), null);
-  assert.deepEqual([...parseTagNotes('words before\nWordy: after', ['Wordy'])], [['Wordy', 'after']], 'words before the first tag line belong to no tag');
-  assert.deepEqual([...parseTagNotes(`${CD}: a\r\nWordy: b`, [CD, 'Wordy'])], [[CD, 'a'], ['Wordy', 'b']], 'Windows line ends');
+test('rowDecision: a tick on Can\'t tell (or on no proposal) decides nothing and the row keeps waiting', () => {
+  const d = rowDecision(row(CD, { 'Agent is right': true, 'Agent proposal': CANT_TELL }));
+  assert.deepEqual([d.outcome, d.by, d.tick_ignored, d.waits, d.first_sight], [null, null, true, true, false]);
+  const empty = rowDecision(row(CD, { 'Agent is right': true, 'Agent proposal': null }));
+  assert.deepEqual([empty.outcome, empty.tick_ignored, empty.waits], [null, true, false]);
+  assert.equal(isDecided(row(CD, { 'Agent is right': true, 'Agent proposal': CANT_TELL })), false);
 });
 
-test('Decided under is the edition recorded in the row when the decision is copied, and the one already there afterwards', () => {
-  const c = claim({ verified_tags: [CD] });
-  assert.equal(decisionsFor(c, [row(CD, { 'Rulebook edition': '2026-10-01.2' })])[0].decided_under, '2026-10-01.2');
-  assert.equal(decisionsFor(c, [row(CD, { 'Rulebook edition': '2026-10-16.5', 'Decided under': '2026-10-01.2' })])[0].decided_under, '2026-10-01.2');
-  assert.equal(decisionsFor(c, [row(CD, { 'Rulebook edition': null })])[0].decided_under, null, 'a row from the audit records no edition');
+test('rowDecision: Tag outcome wins over a tick, equal or different (P46)', () => {
+  const same = rowDecision(row(CD, { 'Agent is right': true, 'Tag outcome': 'Applies' }));
+  assert.deepEqual([same.outcome, same.by], ['Applies', 'outcome']);
+  const other = rowDecision(row(CD, { 'Agent is right': true, 'Tag outcome': 'Does not apply' }));
+  assert.deepEqual([other.outcome, other.by], ['Does not apply', 'outcome']);
+  const recorded = rowDecision(row(CD, { 'Agent is right': true, 'Tag outcome': 'Does not apply', 'Decided under': `${ED} · agreed Applies` }));
+  assert.deepEqual([recorded.outcome, recorded.decided_under, recorded.first_sight], ['Does not apply', ED, false], 'the edition of a recorded tick is kept');
 });
 
-test('decisionsFor takes the rows of its own claim only, and a row without a tag is no decision', () => {
-  const c = claim({ verified_tags: [CD] });
-  const rows = [row(), { ...row(), Key: `g2::${CD}` }, { ...row('Wordy'), Tag: '' }];
-  assert.deepEqual(decisionsFor(c, rows).map((d) => d.key), [`g1::${CD}`]);
+test('rowDecision: a Tag outcome outside the two counts as empty; an undecided row waits only on Can\'t tell; the note is never parsed', () => {
+  const odd = rowDecision(row(CD, { 'Tag outcome': 'Maybe', 'Agent proposal': CANT_TELL }));
+  assert.deepEqual([odd.outcome, odd.waits], [null, true]);
+  assert.equal(rowDecision(row(CD, { 'Tag outcome': 'Maybe' })).outcome, null);
+  assert.equal(rowDecision(row()).waits, false);
+  assert.equal(rowDecision(row(CD, { 'Agent proposal': CANT_TELL })).waits, true);
+  const n = rowDecision(row(CD, { 'Tag outcome': 'Applies', 'Your note': 'Agent slip. Rule 3 settles it.\r\nSecond line.' }));
+  assert.equal(n.note, 'Agent slip. Rule 3 settles it.\nSecond line.', 'a reason word is plain text now (P45)');
+  assert.equal(rowDecision(row()).note, null);
+  assert.equal(rowDecision({}).tag, null, 'a row with nothing in it');
+  assert.equal(rowDecision({ Key: 'g9::Wordy' }).tag, 'Wordy', 'the tag falls back to the Key');
+  assert.equal(isTicked(row(CD, { 'Agent is right': true })), true);
+  assert.equal(isTicked(row(CD, { 'Agent is right': 'true' })), false);
 });
 
-test('claimWaits reads Agent status: Waits for you on a claim that is not Reviewed; a decided claim leaves Your queue at the next tag run, not before', () => {
-  assert.equal(claimWaits({ agent_status: 'Waits for you', review_status: 'To review' }), true);
-  assert.equal(claimWaits({ agent_status: 'Waits for you', review_status: null }), true);
-  assert.equal(claimWaits({ agent_status: 'Waits for you', review_status: 'Reviewed' }), false, 'what is still to decide: a Reviewed claim is not counted');
-  for (const status of ['Done', 'Disagrees with your decision', 'Could not read', '', null, undefined]) assert.equal(claimWaits({ agent_status: status, review_status: 'To review' }), false, String(status));
-  assert.equal(claimDisagrees({ agent_status: 'Disagrees with your decision' }), true);
-  assert.equal(claimDisagrees({ agent_status: 'Done' }), false);
-  assert.equal(claimDisagrees({}), false);
+test('rowDisagrees: decided and different from the proposal; Can\'t tell differs from both outcomes', () => {
+  assert.equal(rowDisagrees(row(CD, { 'Tag outcome': 'Applies' })), false);
+  assert.equal(rowDisagrees(row(CD, { 'Tag outcome': 'Does not apply' })), true);
+  assert.equal(rowDisagrees(row(CD, { 'Tag outcome': 'Applies', 'Agent proposal': CANT_TELL })), true);
+  assert.equal(rowDisagrees(row(CD, { 'Agent is right': true })), false, 'a tick agrees by definition');
+  assert.equal(rowDisagrees(row(CD, { 'Agent is right': true, 'Agent proposal': CANT_TELL })), false, 'a tick on Can\'t tell is no decision');
+  assert.equal(rowDisagrees(row()), false);
 });
 
-test('decisionChanges names only the columns that differ; the edition the editor saw and the audit\'s words stay', () => {
-  const d = { outcome: 'Applies', why_wrong: 'Rule unclear', reasoning: 'Words.', decided_under: '2026-10-16.1' };
-  assert.deepEqual(decisionProps(d), { 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Words.', 'Decided under': '2026-10-16.1' });
-  assert.deepEqual(decisionChanges(row(), d), decisionProps(d), 'a row with no copy gets all four');
-  assert.deepEqual(decisionChanges(row(CD, { 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Words.', 'Decided under': '2026-10-16.1' }), d), {}, 'nothing to write');
-  assert.deepEqual(decisionChanges(row(CD, { 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Words.', 'Decided under': '2026-10-01.1' }), d), {}, 'Decided under is not overwritten');
-  assert.deepEqual(decisionChanges(row(CD, { 'Tag outcome': 'Does not apply', 'Why wrong': null, 'Your reasoning': ' Words.  ', 'Decided under': '2026-10-01.1' }), d), { 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear' }, 'text is compared after its spaces are folded');
-  assert.deepEqual(decisionChanges(row(), { ...d, why_wrong: null, reasoning: null }), { 'Tag outcome': 'Applies', 'Decided under': '2026-10-16.1' }, 'nothing to copy is nothing to write on an empty row');
-  assert.deepEqual(decisionChanges(row(CD, { 'Why wrong': 'Agent slip', 'Tag outcome': 'Applies', 'Decided under': 'x' }), { ...d, why_wrong: null }), { 'Why wrong': null, 'Your reasoning': 'Words.' }, 'a value the editor took away is taken away');
-  assert.deepEqual(decisionChanges(row(), { ...d, decided_under: null }), { 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Words.' }, 'an empty edition is never written');
-
-  const audit = row(CD, { 'Tag outcome': 'Does not apply', 'Your reasoning': 'From the audit of 9 October: it reads on its own.', 'Decided under': 'x' });
-  const none = { outcome: 'Does not apply', why_wrong: null, reasoning: null, decided_under: null };
-  assert.deepEqual(decisionChanges(audit, none, { challenged_notes: 'From the audit of 9 October: it reads on its own.' }), {}, 'the agent was right: the audit\'s words stay on the ledger row');
-  assert.deepEqual(decisionChanges(audit, none, { challenged_notes: 'Rewritten by the editor.' }), { 'Your reasoning': null }, 'but not once the editor has put other words in the claim');
-  assert.deepEqual(decisionChanges(audit, none), { 'Your reasoning': null });
+test('inYourQueue is the filter of the view: Waits for you, no Tag outcome, and no tick unless the proposal is Can\'t tell', () => {
+  const waits = { 'Agent status': AGENT_STATUS.waits };
+  assert.equal(inYourQueue(row(CD, waits)), true);
+  assert.equal(inYourQueue(row(CD, { ...waits, 'Tag outcome': 'Applies' })), false);
+  assert.equal(inYourQueue(row(CD, { ...waits, 'Agent is right': true })), false);
+  assert.equal(inYourQueue(row(CD, { ...waits, 'Agent is right': true, 'Agent proposal': CANT_TELL })), true, 'a tick on Can\'t tell keeps the row in the queue');
+  assert.equal(inYourQueue(row(CD, { 'Agent status': AGENT_STATUS.done })), false);
+  assert.equal(inYourQueue(row(CD, { ...waits, 'Tag outcome': 'Maybe' })), false, 'the view only asks whether Tag outcome is empty');
+  assert.equal(countYourQueue([row('A', waits), row('B', waits), row('C', { ...waits, 'Tag outcome': 'Applies' }), row('D')]), 2);
+  assert.equal(countYourQueue(null), 0);
 });
 
-test('decision 72: on a claim that carries the audit\'s words a missing reason word never clears the ledger\'s Why wrong; elsewhere a removed reason word clears it', () => {
-  const seeded = row(CD, { 'Tag outcome': 'Does not apply', 'Why wrong': 'Agent slip', 'Your reasoning': 'From the audit of 9 October: it reads on its own.', 'Decided under': 'x' });
-  const none = { outcome: 'Does not apply', why_wrong: null, reasoning: 'From the audit of 9 October: it reads on its own.', decided_under: null };
-  const audited = { challenged_notes: 'From the audit of 9 October: it reads on its own.' };
-  assert.deepEqual(decisionChanges(seeded, none, audited), {}, 'the audit\'s Agent slip stays');
-  assert.deepEqual(decisionChanges(seeded, none, { challenged_notes: 'Rewritten by the editor.' }), { 'Why wrong': null }, 'but not once the editor has put other words in the claim');
-  assert.deepEqual(decisionChanges(seeded, none), { 'Why wrong': null }, 'with no claim given the row follows the decision');
-  assert.deepEqual(decisionChanges(seeded, { ...none, why_wrong: 'Rule unclear' }, audited), { 'Why wrong': 'Rule unclear' }, 'a reason word the editor wrote still wins');
-  const typed = row(CD, { 'Tag outcome': 'Does not apply', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Words.', 'Decided under': 'x' });
-  assert.deepEqual(decisionChanges(typed, { outcome: 'Does not apply', why_wrong: null, reasoning: 'Words.', decided_under: null }, { challenged_notes: 'Words.' }), { 'Why wrong': null }, 'the editor took the reason word away');
-
-  const claims = [claim({ verified_tags: [], challenged_notes: 'From the audit of 9 October: it reads on its own.' })];
-  const ledger = [row(CD, { 'Agent proposal': 'Applies', 'Tag outcome': 'Does not apply', 'Why wrong': 'Agent slip', 'Your reasoning': 'From the audit of 9 October: it reads on its own.', 'Decided under': '2026-10-16.1' })];
-  assert.deepEqual(syncDecisions(claims, ledger).changes, [], 'syncDecisions leaves the audit row as it is');
+test('recordChanges: the first sight of a Tag outcome records the Rulebook edition, the first sight of a tick records the edition and the outcome agreed with', () => {
+  assert.deepEqual(recordChanges(row(CD, { 'Tag outcome': 'Applies' })), { 'Decided under': ED });
+  assert.deepEqual(recordChanges(row(CD, { 'Agent is right': true })), { 'Decided under': `${ED} · agreed Applies` });
+  assert.deepEqual(recordChanges(row(CD, { 'Agent is right': true, 'Agent proposal': 'Does not apply' })), { 'Decided under': `${ED} · agreed Does not apply` });
+  assert.deepEqual(recordChanges(row()), {}, 'nothing decided, nothing recorded');
+  assert.deepEqual(recordChanges(row(CD, { 'Agent is right': true, 'Agent proposal': CANT_TELL })), {}, 'a tick that decides nothing records nothing');
 });
 
-test('syncDecisions: the copies the ledger is missing, and the rows as they will be', () => {
-  const claims = [
-    claim({ geo_id: 'g1', verified_tags: [CD], challenged_notes: `${CD}: Rule unclear. say so.` }),
-    claim({ geo_id: 'g2', review_status: 'To review', verified_tags: [CD] }),
-    claim({ geo_id: 'g3', verified_tags: [] }),
+test('recordChanges: a recorded decision stays as it is, however the proposal and the edition move afterwards', () => {
+  assert.deepEqual(recordChanges(row(CD, { 'Tag outcome': 'Applies', 'Decided under': '2026-10-01.1', 'Rulebook edition': '2026-11-02.1' })), {});
+  assert.deepEqual(recordChanges(row(CD, { 'Agent is right': true, 'Decided under': `${ED} · agreed Applies`, 'Agent proposal': 'Does not apply', 'Rulebook edition': '2026-11-02.1' })), {});
+});
+
+test('recordChanges: removing the tick or clearing Tag outcome clears Decided under, so a later tick is recorded afresh', () => {
+  assert.deepEqual(recordChanges(row(CD, { 'Decided under': `${ED} · agreed Applies` })), { 'Decided under': null }, 'untick');
+  assert.deepEqual(recordChanges(row(CD, { 'Decided under': ED })), { 'Decided under': null }, 'Tag outcome cleared');
+  const again = recordChanges(row(CD, { 'Agent is right': true, 'Rulebook edition': '2026-11-02.1', 'Agent proposal': 'Does not apply' }));
+  assert.deepEqual(again, { 'Decided under': '2026-11-02.1 · agreed Does not apply' });
+});
+
+test('recordChanges: a tick followed by a Tag outcome drops the suffix and keeps the edition', () => {
+  assert.deepEqual(recordChanges(row(CD, { 'Agent is right': true, 'Tag outcome': 'Does not apply', 'Decided under': `${ED} · agreed Applies` })), { 'Decided under': ED });
+  assert.deepEqual(recordChanges(row(CD, { 'Tag outcome': 'Applies', 'Decided under': `${ED} · agreed Applies`, 'Rulebook edition': '2026-11-02.1' })), { 'Decided under': ED });
+});
+
+test('recordDecisions: the changes with Key and page id, copies of the rows with the changes applied, and decided on every row; nothing passed in is changed', () => {
+  const rows = [
+    row('A', { 'Tag outcome': 'Applies' }),
+    row('B', { 'Agent is right': true, 'Agent proposal': 'Does not apply' }),
+    row('C'),
+    row('D', { 'Tag outcome': 'Does not apply', 'Decided under': ED }),
+    row('E', { 'Agent is right': true, 'Agent proposal': CANT_TELL }),
   ];
-  const ledger = [row(), { ...row(), Key: `g2::${CD}`, page_id: 'l-g2' }, { ...row(), Key: `g3::${CD}`, page_id: 'l-g3', 'Agent proposal': 'Does not apply', 'Tag outcome': 'Does not apply', 'Decided under': '2026-10-01.1' }];
-  const { changes, rows } = syncDecisions(claims, ledger);
-  assert.deepEqual(changes, [{ key: `g1::${CD}`, page_id: `l-${CD}`, changes: { 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'say so.', 'Decided under': '2026-10-16.1' } }]);
-  assert.equal(rows[0].decided, true);
-  assert.equal(rows[0]['Tag outcome'], 'Applies');
-  assert.equal(rows[1]['Tag outcome'], null, 'a claim that is not Reviewed has no decision to copy');
-  assert.equal(ledger[0]['Tag outcome'], null, 'the rows it was given are not changed');
-  assert.deepEqual(syncDecisions(claims, rows).changes, [], 'a second look finds nothing to copy');
+  const before = JSON.stringify(rows);
+  const { changes, rows: after } = recordDecisions(rows);
+  assert.equal(JSON.stringify(rows), before);
+  assert.deepEqual(changes, [
+    { key: 'g1::A', page_id: 'l-A', changes: { 'Decided under': ED } },
+    { key: 'g1::B', page_id: 'l-B', changes: { 'Decided under': `${ED} · agreed Does not apply` } },
+  ]);
+  assert.deepEqual(after.map((r) => [r.Tag, r['Decided under'], r.decided]), [
+    ['A', ED, true], ['B', `${ED} · agreed Does not apply`, true], ['C', null, false], ['D', ED, true], ['E', null, false],
+  ]);
+  assert.deepEqual(recordDecisions(after).changes, [], 'recording twice changes nothing');
+  assert.deepEqual(recordDecisions(null), { changes: [], rows: [] });
 });
 
-test('pull.mjs exports the same functions, so a caller that reads a pull has them at hand', () => {
-  assert.equal(pull.decisionsFor, decisionsFor);
-  assert.equal(pull.isReviewed, isReviewed);
-  assert.equal(pull.claimWaits, claimWaits);
-  assert.equal(pull.claimDisagrees, claimDisagrees);
-  assert.equal(pull.parseTagLines, parseTagLines);
-  assert.equal(pull.parseTagNotes, parseTagNotes);
+test('rowStatus: Disagrees with your decision, Could not read, Done for a decided row, Waits for you for Can\'t tell, else Done', () => {
+  assert.equal(rowStatus({ outcome: 'Applies', proposal: 'Does not apply' }), AGENT_STATUS.disagrees);
+  assert.equal(rowStatus({ outcome: 'Applies', proposal: 'Applies' }), AGENT_STATUS.done);
+  assert.equal(rowStatus({ outcome: 'Applies', proposal: CANT_TELL }), AGENT_STATUS.done, 'Can\'t tell does not disagree');
+  assert.equal(rowStatus({ outcome: 'Applies', proposal: 'Does not apply', unreadable: true }), AGENT_STATUS.disagrees, 'a disagreement comes before unreadable');
+  assert.equal(rowStatus({ outcome: null, proposal: 'Applies', unreadable: true }), AGENT_STATUS.unread);
+  assert.equal(rowStatus({ outcome: 'Applies', proposal: 'Applies', unreadable: true }), AGENT_STATUS.unread);
+  assert.equal(rowStatus({ outcome: null, proposal: CANT_TELL }), AGENT_STATUS.waits);
+  assert.equal(rowStatus({ outcome: null, proposal: 'Does not apply' }), AGENT_STATUS.done);
 });
 
-test('isToReview: only Review status To review; empty, Reviewed and anything else are not', () => {
-  assert.equal(isToReview(claim({ review_status: 'To review' })), true);
-  for (const status of [null, '', undefined, 'Reviewed', 'to review']) assert.equal(isToReview(claim({ review_status: status })), false, String(status));
-  assert.equal(pull.isToReview, isToReview);
-  assert.equal(isReviewed(claim({ review_status: 'To review' })), false);
+test('claimSummary: tags are decided Applies rows and undecided Applies proposals; waiting is the undecided Can\'t tell rows; a tick on Can\'t tell still waits', () => {
+  const rows = [
+    row('Delta', { 'Agent proposal': 'Does not apply', 'Tag outcome': 'Applies' }),
+    row('Alpha', { 'Agent proposal': 'Applies' }),
+    row('Bravo', { 'Agent proposal': 'Applies', 'Tag outcome': 'Does not apply', 'Agent status': AGENT_STATUS.disagrees }),
+    row('Charlie', { 'Agent proposal': CANT_TELL, 'Agent status': AGENT_STATUS.waits }),
+    row('Echo', { 'Agent proposal': CANT_TELL, 'Agent status': AGENT_STATUS.waits, 'Agent is right': true }),
+    row('Foxtrot', { 'Agent proposal': 'Applies', 'Agent status': AGENT_STATUS.unread }),
+    row('Golf', { 'Agent proposal': CANT_TELL, 'Agent status': AGENT_STATUS.unread }),
+    row('Hotel', { 'Agent proposal': 'Applies', 'Agent is right': true }),
+  ];
+  const s = claimSummary(rows, { judgedNames: rows.map((r) => r.Tag), edition: ED, notChecked: '' });
+  assert.deepEqual(s.tags, ['Alpha', 'Delta', 'Hotel']);
+  assert.deepEqual(s.waiting, ['Charlie', 'Echo']);
+  assert.equal(s.waits, 2);
+  assert.deepEqual(s.disagrees, ['Bravo']);
+  assert.equal(s.agent_edition, ED);
+  assert.equal(s.agent_remarks, '');
+});
+
+test('claimSummary: the status is the first that holds of Waits for you, Disagrees, Could not read, else Done (and Done with no rows)', () => {
+  const st = (...statuses) => claimSummary(statuses.map((s, i) => row(`T${i}`, { 'Agent status': s })), { edition: ED }).status;
+  assert.equal(st(AGENT_STATUS.done, AGENT_STATUS.unread, AGENT_STATUS.disagrees, AGENT_STATUS.waits), AGENT_STATUS.waits);
+  assert.equal(st(AGENT_STATUS.done, AGENT_STATUS.unread, AGENT_STATUS.disagrees), AGENT_STATUS.disagrees);
+  assert.equal(st(AGENT_STATUS.done, AGENT_STATUS.unread), AGENT_STATUS.unread);
+  assert.equal(st(AGENT_STATUS.done, AGENT_STATUS.done), AGENT_STATUS.done);
+  assert.equal(claimSummary([], { edition: ED }).status, AGENT_STATUS.done);
+});
+
+test('claimSummary: lowest confidence to two decimals, one reason line per row (tags A to Z, empty reasons left out), the remarks, and only the judged tags count', () => {
+  const rows = [
+    row('Zed', { 'Agent confidence': 0.91, 'Agent reason': 'last' }),
+    row('Ace', { 'Agent confidence': 0.6666, 'Agent reason': 'first' }),
+    row('Mid', { 'Agent confidence': null, 'Agent reason': '' }),
+    row('Skipped', { 'Agent confidence': 0.5, 'Agent reason': 'not judged this run' }),
+  ];
+  const s = claimSummary(rows, { judgedNames: ['Zed', 'Ace', 'Mid'], edition: ED, notChecked: '2 source tags' });
+  assert.equal(s.confidence, 0.67);
+  assert.equal(s.agent_reasons, 'Ace: first\nZed: last');
+  assert.equal(s.agent_remarks, 'not checked: 2 source tags');
+  assert.equal(claimSummary([row('Mid', { 'Agent confidence': null })], { edition: ED }).confidence, null);
 });

@@ -3,10 +3,10 @@
 //
 //   loadConfig(root = agentRoot())              -> the parsed config.json of a state root; throws one Error listing every problem found
 //   validateConfig(config)                      -> { ok, errors: string[] } (messages such as "notion.rulebook.key: expected a non-empty string")
-//   isDemo(config)                              -> true for a demo profile (config.demo === true)
-//   isV2(config)                                -> true for the v2 profile (config.profile === 'v2'): a second Notion page with its own five tables, built beside the live one.
-//                                                  Its shape differs from production's in three places only (see validateConfig): notion.root_parent_page_id (the live hub it
-//                                                  hangs under, never protected), no editor columns on Claims, and the editor columns Tag outcome and Your note on Tag decisions.
+//   isDemo(config)                              -> true for a demo profile (config.demo === true); validateConfig refuses one (the practice pages are parked, P48)
+//   isV2(config)                                -> true for the v2 profile (config.profile === 'v2'), the only shape this code accepts since P48: one Notion page with five tables, hung
+//                                                  under notion.root_parent_page_id (never protected), no editor column on Claims, and the three editor columns of Tag decisions (TD_EDITOR).
+//                                                  The per-claim version is the git tag claim-tagger-v1.
 //   tableEntry(config, name)                  -> the entry of one table: rulebook, claims (notion.claims, one object: there is one claims table, P5),
 //                                                  tag_decisions, rule_changes or agent_settings. It is the entry object itself, not a copy,
 //                                                  so setup can write the ids it learns into it before it saves the file.
@@ -15,14 +15,13 @@
 //                                                  setup: true also what a create made by the one-time setup may fill
 //   addableProperties(config)                   -> Set of the columns a plan of the add script (ADD_SCRIPT) may write to a NEW claims row: the key and CLAIMS_GEO_COLUMNS (P35)
 //   copyLiveProperties(config, table)           -> Set of the columns a plan of the copy-live script (COPY_LIVE_SCRIPT, v2 only) may write to a table, editor columns included (P47)
-//   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the two exceptions of hard rule 1):
-//                                                  three on claims (Verified tags, Review status, Challenged tags notes), Editor wording on rule_changes,
-//                                                  Paused on agent_settings; [] for the others
-//                                                  (tag_decisions, the agent's ledger, has none)
+//   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the exceptions of hard rule 1):
+//                                                  Agent is right, Tag outcome and Your note on tag_decisions (TD_EDITOR), Editor wording on rule_changes,
+//                                                  Paused on agent_settings; [] for the others (claims has none on v2)
 //   capabilityOf(config, tag)                   -> text, deterministic, source or corpus (config.tags, with its default)
 //   groupOf(config, tag)                        -> the judge group the tag belongs to (config.judge.groups), or null
 //   readingSettings(config)                     -> { reading_prompt, reading_batch, reading_effort }: config.distill's three reading settings, with READING_DEFAULTS for a missing one
-//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_GEO_COLUMNS, CLAIMS_EDITOR_KEYS, CLAIMS_WRITE_KEYS, AGENT_STATUS, READING_DEFAULTS, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
+//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_GEO_COLUMNS, CLAIMS_WRITE_KEYS, AGENT_STATUS, READING_DEFAULTS, TD, TD_EDITOR, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
 //              RULE_CHANGES_AGENT_STATUS (the Status values a script may write; Approved and Rejected belong to the editor,
 //              see config.editor_columns.rule_changes_status_editor_values)
 //
@@ -36,10 +35,8 @@ import { normId } from './notion-values.mjs';
 import { agentRoot } from './paths.mjs';
 
 export const AGENT_NAME = 'claim-tagger-mvp';
-/** The value of config.profile for the v2 page (docs/mvp-2026-11/STRUCTURE-V2.md): its state root is profiles/v2/ and, for now, only setup.mjs runs on it. */
+/** The value of config.profile (docs/mvp-2026-11/STRUCTURE-V2.md): the v2 page, the only layout this code works on since P48. */
 export const V2_PROFILE = 'v2';
-/** What a loop script says when it is started on a v2 root. The loop is ported to v2 at checkpoint 3; until then nothing but setup.mjs may touch that profile. */
-export const V2_REFUSAL = 'this is the v2 profile: only setup.mjs runs on it until the loop is ported (checkpoint 3)';
 // The internal key of the claims table is `claims` (it was `claims_copy` until decision P5, 27 Oct 2026: there is one claims table, not a list).
 export const TABLES = Object.freeze(['rulebook', 'claims', 'tag_decisions', 'rule_changes', 'agent_settings']);
 export const CAPABILITIES = Object.freeze(['text', 'deterministic', 'source', 'corpus']);
@@ -59,8 +56,8 @@ export const CLAIMS_GEO_COLUMNS = Object.freeze([
   'Geo Name', 'Geo ID', 'Geo URL', 'Geo Space', 'Geo Created', 'Geo Sources', 'Geo Is factual', 'Geo Tags', 'Geo Topics',
 ]);
 
-/** The keys of notion.claims.columns that name the three columns an editor fills on the Claims copy (they must also be listed in editor_columns.claims). Why wrong left the editor's work (READ-DECISIONS.md, decision P4). */
-export const CLAIMS_EDITOR_KEYS = Object.freeze(['verified', 'review_status', 'notes']);
+/** The keys the per-claim version had in notion.claims.columns for its three editor columns; v2 has none on Claims, so a config that names one is refused. */
+const CLAIMS_RETIRED_COLUMN_KEYS = Object.freeze(['verified', 'review_status', 'notes']);
 /**
  * The keys of notion.claims.write_columns: the eight columns the agent fills on the Claims copy (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting,
  * Agent edition, Agent remarks; CLAIMS-REVIEW.md section 6.1; and Agent reading, READ-DECISIONS.md). Agent notes is retired: a config that still names it is refused.
@@ -73,11 +70,37 @@ export const AGENT_STATUS = Object.freeze({
   waits: 'Waits for you', done: 'Done', disagrees: 'Disagrees with your decision', unread: 'Could not read',
 });
 
-// Tag decisions is the agent's ledger: Tag outcome, Why wrong, Your reasoning and Decided under are copies the agent makes from the Claims copy
-// (propose, and the setup migration); no editor writes there, so they are agent columns now. Agent reading, Rule, Reading note and Read under are the agent's reading of a disagreement (distill).
+/**
+ * The columns of Tag decisions (v2, P42 to P46), by short name. The only place their Notion names are spelled: every other file asks for TD.<name>. The three editor columns are
+ * Agent is right, Tag outcome and Your note; no loop script writes them, and none reads them off a row (lib/decisions.mjs rowDecision is the one reader).
+ */
+export const TD = Object.freeze({
+  claim: 'Claim',
+  open: 'Open claim',
+  key: 'Key',
+  tag: 'Tag',
+  proposal: 'Agent proposal',
+  confidence: 'Agent confidence',
+  reason: 'Agent reason',
+  right: 'Agent is right',
+  outcome: 'Tag outcome',
+  note: 'Your note',
+  status: 'Agent status',
+  view: "Agent's view of your decision",
+  rule: 'Rule',
+  why: 'Why the agent thinks so',
+  after: 'After the rule change',
+  edition: 'Rulebook edition',
+  decidedUnder: 'Decided under',
+  readUnder: 'Read under',
+});
+/** The three columns of Tag decisions an editor writes (the same three as config.editor_columns.tag_decisions). */
+export const TD_EDITOR = Object.freeze([TD.right, TD.outcome, TD.note]);
+
+// Tag decisions is the agent's ledger plus the editor's decision. The agent writes its proposal, its status, its reading of a disagreement (distill) and the record of what an editor
+// decided under (Decided under); the three editor columns are never in this list.
 export const TAG_DECISIONS_WRITABLE = Object.freeze([
-  'Claim', 'Key', 'Tag', 'Agent proposal', 'Agent confidence', 'Agent reason', 'Claim link', 'Rulebook edition', 'Follow-up',
-  'Tag outcome', 'Why wrong', 'Your reasoning', 'Decided under', 'Agent reading', 'Rule', 'Reading note', 'Read under',
+  TD.claim, TD.open, TD.key, TD.tag, TD.proposal, TD.confidence, TD.reason, TD.status, TD.view, TD.rule, TD.why, TD.after, TD.edition, TD.decidedUnder, TD.readUnder,
 ]);
 
 /** The settings of the reading step in config.distill, and what a config that does not name them gets (READ-DECISIONS.md section 1: ten rows to a call, medium effort). */
@@ -112,7 +135,6 @@ const isPlain = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const REAL_ID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
 const VERSION = /^\d{4}-\d{2}-\d{2}$/;
 const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'];
-const SAFE_NAME = /^[A-Za-z0-9._-]+$/;
 
 /** Check the shape of a parsed config.json (CONTRACTS section 2). Never throws: { ok, errors } with a dotted path in front of each message. */
 export function validateConfig(config) {
@@ -165,18 +187,17 @@ export function validateConfig(config) {
 
   if (!obj('config', config)) return { ok: false, errors };
   if (config.agent !== AGENT_NAME) bad('agent', `expected "${AGENT_NAME}"`);
-  // profile: absent for production and the practice pages; "v2" for the second page (the one other shape, see isV2)
-  if (config.profile !== undefined && config.profile !== V2_PROFILE) bad('profile', `expected "${V2_PROFILE}" or no profile`);
-  const v2 = config.profile === V2_PROFILE;
+  // v2 is the only layout (P48): a per-claim config, or any other profile, is refused with the way back
+  if (config.profile !== V2_PROFILE) bad('profile', `expected "${V2_PROFILE}": this code works on the v2 layout only (P48); the per-claim version is the git tag claim-tagger-v1`);
 
   // notion
   const n = config.notion;
   if (obj('notion', n)) {
     version('notion.api_version', n.api_version);
     version('notion.builder_api_version', n.builder_api_version);
-    // v2: the page that holds the five tables is made by `setup.mjs root`, so until then parent_page_id is a placeholder
-    id('notion.parent_page_id', n.parent_page_id, v2);
-    if (v2) id('notion.root_parent_page_id', n.root_parent_page_id);
+    // the page that holds the five tables is made by `setup.mjs root`, so until then parent_page_id may be a placeholder
+    id('notion.parent_page_id', n.parent_page_id, true);
+    id('notion.root_parent_page_id', n.root_parent_page_id);
     if (obj('notion.pages', n.pages)) for (const k of ['proposal', 'demos', 'demo_tests', 'onboarding', 'archive']) id(`notion.pages.${k}`, n.pages[k], true);
     if (obj('notion.rulebook', n.rulebook)) {
       table('notion.rulebook', n.rulebook);
@@ -190,11 +211,12 @@ export function validateConfig(config) {
       const c = n.claims;
       text(`${path}.label`, c.label);
       table(path, c);
-      if (obj(`${path}.columns`, c.columns)) for (const k of ['claim', 'link', 'sources', 'is_factual', ...(v2 ? [] : CLAIMS_EDITOR_KEYS)]) text(`${path}.columns.${k}`, c.columns[k]);
-      // v2 has no editor column on Claims (editors decide on Tag decisions): a config that still names one is refused
-      if (v2 && isPlain(c.columns)) for (const k of CLAIMS_EDITOR_KEYS) if (c.columns[k] !== undefined) bad(`${path}.columns.${k}`, 'the v2 profile has no editor column on Claims; remove this key');
+      if (obj(`${path}.columns`, c.columns)) for (const k of ['claim', 'link', 'sources', 'is_factual']) text(`${path}.columns.${k}`, c.columns[k]);
+      // there is no editor column on Claims (editors decide on Tag decisions): a config that still names one is refused
+      if (isPlain(c.columns)) for (const k of CLAIMS_RETIRED_COLUMN_KEYS) if (c.columns[k] !== undefined) bad(`${path}.columns.${k}`, 'there is no editor column on Claims in v2 (editors decide on Tag decisions); remove this key');
       if (obj(`${path}.write_columns`, c.write_columns)) {
         for (const k of CLAIMS_WRITE_KEYS) text(`${path}.write_columns.${k}`, c.write_columns[k]);
+        if (typeof c.write_columns.reading === 'string' && c.write_columns.reading !== TD.view) bad(`${path}.write_columns.reading`, `expected "${TD.view}" (the column was renamed in v2; "${c.write_columns.reading}" is the per-claim name)`);
         for (const k of CLAIMS_RETIRED_WRITE_KEYS) if (c.write_columns[k] !== undefined) bad(`${path}.write_columns.${k}`, 'Agent notes is retired (CLAIMS-REVIEW.md section 6.1); remove this key');
         const names = CLAIMS_WRITE_KEYS.map((k) => c.write_columns[k]).filter((v) => typeof v === 'string' && v.trim() !== '');
         if (new Set(names).size !== names.length) bad(`${path}.write_columns`, 'two keys name the same column');
@@ -212,8 +234,8 @@ export function validateConfig(config) {
     }
     list('notion.protected_database_ids', n.protected_database_ids, (path, v) => id(path, v), { min: 1 });
     list('notion.protected_page_ids', n.protected_page_ids, (path, v) => id(path, v));
-    // v2: a placeholder until `setup.mjs root` makes the v2 page (the live hub is never a setup parent, so a build step run too early finds no parent and stops)
-    list('notion.setup_page_parents', n.setup_page_parents, (path, v) => id(path, v, v2), { min: 1 });
+    // a placeholder until `setup.mjs root` makes the page (the hub it hangs under is never a setup parent, so a build step run too early finds no parent and stops)
+    list('notion.setup_page_parents', n.setup_page_parents, (path, v) => id(path, v, true), { min: 1 });
     if (typeof n.requests_per_second !== 'number' || !(n.requests_per_second > 0)) bad('notion.requests_per_second', 'expected a number above 0');
     int('notion.page_size', n.page_size, 1, 100);
     int('notion.max_text', n.max_text, 1, 2000);
@@ -221,8 +243,8 @@ export function validateConfig(config) {
     // the sources are protected; the agent's own tables are not
     if (Array.isArray(n.protected_database_ids) && Array.isArray(n.protected_page_ids)) {
       const protectedIds = new Set([...n.protected_database_ids, ...n.protected_page_ids].map((p) => normId(p)));
-      // v2 hangs under the live hub, which it only ever reads children of: if the hub were protected, `setup.mjs root` could never make the v2 page under it
-      if (v2 && typeof n.root_parent_page_id === 'string' && protectedIds.has(normId(n.root_parent_page_id))) bad('notion.root_parent_page_id', 'is in the protected lists, so no page could be made under it');
+      // the page hangs under the first page's hub, which it only ever reads children of: if the hub were protected, `setup.mjs root` could never make the page under it
+      if (typeof n.root_parent_page_id === 'string' && protectedIds.has(normId(n.root_parent_page_id))) bad('notion.root_parent_page_id', 'is in the protected lists, so no page could be made under it');
       for (const [k, s] of Object.entries(isPlain(n.sources) ? n.sources : {})) {
         for (const f of ['database_id', 'data_source_id']) {
           if (isPlain(s) && typeof s[f] === 'string' && !protectedIds.has(normId(s[f]))) bad(`notion.sources.${k}.${f}`, 'must also be listed in protected_database_ids');
@@ -238,31 +260,24 @@ export function validateConfig(config) {
     }
   }
 
-  // editor_columns: three on the claims table, Editor wording and the two Status values on Rule changes, Paused on Agent settings. The ledger (Tag decisions)
-  // has none; an old config that still lists one is only checked for its shape.
+  // editor_columns: none on Claims, the three of TD_EDITOR on Tag decisions, Editor wording and the two Status values on Rule changes, Paused on Agent settings
   if (obj('editor_columns', config.editor_columns)) {
     for (const k of ['claims', 'rule_changes', 'rule_changes_status_editor_values', 'agent_settings']) {
       list(`editor_columns.${k}`, config.editor_columns[k], (path, v) => text(path, v));
     }
-    if (v2) {
-      if (Array.isArray(config.editor_columns.claims) && config.editor_columns.claims.length > 0) bad('editor_columns.claims', 'the v2 profile has no editor column on Claims: expected an empty list');
-      const td = config.editor_columns.tag_decisions;
-      if (!Array.isArray(td)) bad('editor_columns.tag_decisions', 'the v2 profile needs the editor columns of Tag decisions (Tag outcome, Your note)');
-      else for (const name of ['Tag outcome', 'Your note']) if (!td.includes(name)) bad('editor_columns.tag_decisions', `the v2 profile needs "${name}" in this list`);
-    }
-    if (config.editor_columns.tag_decisions !== undefined) list('editor_columns.tag_decisions', config.editor_columns.tag_decisions, (path, v) => text(path, v));
-    // the claims table must name every column it needs: the three editor columns are the ones editor_columns.claims lists, and none of the agent's
-    if (isPlain(n?.claims) && Array.isArray(config.editor_columns.claims)) {
-      const c = n.claims;
-      const listed = new Set(config.editor_columns.claims);
-      for (const k of CLAIMS_EDITOR_KEYS) {
-        const name = c.columns?.[k];
-        if (typeof name === 'string' && name.trim() !== '' && !listed.has(name)) bad(`notion.claims.columns.${k}`, `"${name}" is not listed in editor_columns.claims`);
+    if (Array.isArray(config.editor_columns.claims) && config.editor_columns.claims.length > 0) bad('editor_columns.claims', 'there is no editor column on Claims in v2: expected an empty list');
+    const td = config.editor_columns.tag_decisions;
+    if (!Array.isArray(td)) bad('editor_columns.tag_decisions', `expected the three editor columns of Tag decisions (${TD_EDITOR.join(', ')})`);
+    else {
+      list('editor_columns.tag_decisions', td, (path, v) => text(path, v));
+      if (td.length !== TD_EDITOR.length || !TD_EDITOR.every((name) => td.includes(name))) bad('editor_columns.tag_decisions', `expected exactly ${TD_EDITOR.join(', ')}`);
+      // none of the columns the agent writes may be one of the editor's
+      if (isPlain(n?.claims) && isPlain(n.claims.write_columns)) {
+        for (const k of CLAIMS_WRITE_KEYS) {
+          if (td.includes(n.claims.write_columns[k])) bad(`notion.claims.write_columns.${k}`, `"${n.claims.write_columns[k]}" is an editor column (editor_columns.tag_decisions), so the agent could never write it`);
+        }
       }
-      for (const k of CLAIMS_WRITE_KEYS) {
-        const name = c.write_columns?.[k];
-        if (typeof name === 'string' && listed.has(name)) bad(`notion.claims.write_columns.${k}`, `"${name}" is an editor column (editor_columns.claims), so the agent could never write it`);
-      }
+      for (const name of TAG_DECISIONS_WRITABLE) if (td.includes(name)) bad('editor_columns.tag_decisions', `"${name}" is a column the agent writes`);
     }
   }
 
@@ -336,18 +351,16 @@ export function validateConfig(config) {
   }
   if (obj('gate', config.gate) && obj('gate.default', config.gate.default)) int('gate.default.flip_rejudge_runs', config.gate.default.flip_rejudge_runs, 0);
 
-  // demo profile
+  // the practice pages are parked (P48)
   if (config.demo !== undefined) bool('demo', config.demo);
-  if (config.demo === true && (typeof config.demo_id !== 'string' || !SAFE_NAME.test(config.demo_id) || /^\.+$/.test(config.demo_id))) {
-    bad('demo_id', 'a demo profile needs a demo_id made of letters, digits, dot, dash and underscore');
-  }
+  if (config.demo === true) bad('demo', 'practice pages are parked (P48); use the git tag claim-tagger-v1');
 
   return { ok: errors.length === 0, errors };
 }
 
 // ---- questions -------------------------------------------------------------------------------------------------------------
 
-/** True for the v2 profile: a config with "profile": "v2" (the second page, built beside the live one; only setup.mjs runs on it for now). */
+/** True for the v2 profile: a config with "profile": "v2" (every valid config has it since P48; setup-steps still asks). */
 export function isV2(config) {
   return config?.profile === V2_PROFILE;
 }
@@ -394,15 +407,14 @@ export function isProtected(config, id) {
 
 /**
  * The column names a plan may write to a table (CONTRACTS section 8), as a new Set each time.
- *   tag_decisions    Claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Claim link, Rulebook edition, Follow-up, the copies of the
- *                    editor's decision (Tag outcome, Why wrong, Your reasoning, Decided under) and the agent's reading (Agent reading, Rule, Reading note, Read under)
+ *   tag_decisions    TAG_DECISIONS_WRITABLE: Claim, Open claim, Key, Tag, Agent proposal, Agent confidence, Agent reason, Agent status, the agent's reading (Agent's view of your
+ *                    decision, Rule, Why the agent thinks so, Read under), After the rule change, Rulebook edition, Decided under. Never Agent is right, Tag outcome or Your note
  *   rule_changes     Lesson, Tag, Rule, Kind, Current text, Proposed text, Safety check result, Supporting rows, Status
  *                    (the Status values are limited to RULE_CHANGES_AGENT_STATUS)
  *   agent_settings   Rulebook edition, Last run summary; with setup also the key column (Name)
  *   rulebook         When to use; with setup every column of the copy
  *   claims           the eight write columns (Agent tags, Agent confidence, Agent reasons, Agent status, Tags waiting, Agent edition, Agent remarks, Agent reading); with setup also every copied column
- * Editor columns are never in these sets. A setup plan that seeds the audit, or a demo profile's setup, is the only way one is
- * written, and that exception is checked by the plan code, not here.
+ * Editor columns are never in these sets. The one script that may write them is the copy (copyLiveProperties), and that exception is checked by the plan code, not here.
  */
 export function writableProperties(config, table, { setup = false } = {}) {
   const set = new Set();
@@ -425,8 +437,7 @@ export function writableProperties(config, table, { setup = false } = {}) {
     case 'claims': {
       const entry = tableEntry(config, 'claims');
       add(...CLAIMS_WRITE_KEYS.map((k) => entry.write_columns[k]).filter(Boolean));
-      const editor = new Set(editorColumns(config, 'claims'));
-      if (setup) add(entry.key, ...Object.values(entry.columns).filter((c) => !editor.has(c)), ...CLAIMS_GEO_COLUMNS);
+      if (setup) add(entry.key, ...Object.values(entry.columns), ...CLAIMS_GEO_COLUMNS);
       break;
     }
     default:
@@ -453,7 +464,7 @@ export function addableProperties(config) {
 export const COPY_LIVE_SCRIPT = 'copy-live';
 
 /** The name of the column that holds the agent's view of a decision on v2 (STRUCTURE-V2.md, P45): "Agent reading" on the first page. */
-export const V2_VIEW_COLUMN = "Agent's view of your decision";
+export const V2_VIEW_COLUMN = TD.view;
 
 /**
  * The columns a copy-live plan may write, per table, under the names they have on the v2 page (not read from the config: the config of the loop may name the agent's columns otherwise).
@@ -480,7 +491,7 @@ export function copyLiveProperties(config, table) {
   return new Set([...COPY_LIVE_COLUMNS[table], tableEntry(config, table).key]);
 }
 
-/** The columns of a table that only an editor writes (config.editor_columns): [] for the tables that have none (the ledger has none). */
+/** The columns of a table that only an editor writes (config.editor_columns): [] for the tables that have none (Claims has none on v2). */
 export function editorColumns(config, table) {
   if (!TABLES.includes(table)) throw new Error(`editorColumns: unknown table "${table}" (expected one of ${TABLES.join(', ')})`);
   return [...(config?.editor_columns?.[table] ?? [])];

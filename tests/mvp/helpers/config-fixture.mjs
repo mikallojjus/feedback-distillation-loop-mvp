@@ -1,4 +1,5 @@
-// The config that the tests start from. agents/claim-tagger-mvp/config.json is the live file: setup writes the ids of the tables, the two pages and the
+// The config that the tests start from. It is the v2 shape since P48 (profile "v2", no editor column on Claims, the three editor columns on Tag decisions); the per-claim shape
+// is at the git tag claim-tagger-v1. agents/claim-tagger-mvp/config.json is the live file: setup writes the ids of the tables, the two pages and the
 // views it made into it, so what it holds changes with the state of the real Notion page. The tests must not depend on that. They start from
 // fixtures/config.placeholder.json instead, the config as it was committed before setup ran (git revision 5a56502): every id that setup fills is still a
 // placeholder, and everything else (the protected lists, the sources, the tags, the judge settings) is what the shipped file says.

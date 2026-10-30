@@ -252,75 +252,82 @@ const claimRow = load('claim-row');
 const claimOf = (over = {}) => ({
   table: 'claims', geo_id: 'g1', page_id: '0a9e0000-0000-4000-8000-000000000001', notion_url: 'https://www.notion.so/x', claim: 'The AI Force should enforce binding safety standards',
   geo_url: null, sources_text: '', source_links: [], is_factual: false, agent_tags: [], agent_status: 'Waits for you', tags_waiting: ['Context-dependent'], agent_confidence: 0.65,
-  agent_reasons: "Context-dependent: Two rules pull apart. · 2 of 2 runs agree", agent_edition: '2026-10-16.1', agent_remarks: '', agent_reading: '', verified_tags: [], review_status: null,
-  challenged_notes: '', last_edited: '2026-10-16T09:00:00.000Z', ...over,
+  agent_reasons: "Context-dependent: Two rules pull apart. · 2 of 2 runs agree", agent_edition: '2026-10-16.1', agent_remarks: '', agent_reading: '',
+  last_edited: '2026-10-16T09:00:00.000Z', ...over,
 });
 
-test('claim row: an open claim, a Reviewed claim and one that has never been read', () => {
+test('claim row: an open claim, a claim the agent has read and one that has never been read', () => {
   ok(claimRow, claimOf());
   ok(claimRow, claimOf({
-    agent_tags: ['Context-dependent'], agent_status: 'Done', tags_waiting: [], agent_remarks: 'not checked: 5 tags without rules', verified_tags: ['Context-dependent'], review_status: 'Reviewed',
-    agent_reading: 'Context-dependent: Rule unclear, rule 3 · The rule leaves this kind of case open.', challenged_notes: 'Context-dependent: Rule unclear. Rule 3 is unclear.',
+    agent_tags: ['Context-dependent'], agent_status: 'Done', tags_waiting: [], agent_remarks: 'not checked: 5 tags without rules',
+    agent_reading: 'Context-dependent: Rule unclear, rule 3 · The rule leaves this kind of case open.',
   }));
-  ok(claimRow, claimOf({ agent_status: null, tags_waiting: [], agent_edition: '', agent_confidence: null, review_status: 'To review' }));
+  ok(claimRow, claimOf({ agent_status: null, tags_waiting: [], agent_edition: '', agent_confidence: null }));
   for (const status of ['Waits for you', 'Done', 'Disagrees with your decision', 'Could not read', null]) ok(claimRow, claimOf({ agent_status: status }), String(status));
-  ok(claimRow, claimOf({ review_status: 'Reviewed', agent_reading: 'Nothing to read: the agent agreed with you.' }), 'the agree line');
+  ok(claimRow, claimOf({ agent_reading: 'Nothing to read: the agent agreed with you.' }), 'the agree line');
 });
 
-test('claim row: what makes a row invalid', () => {
-  bad(claimRow, claimOf({ review_status: 'Done' }), /review_status: expected one of "To review", "Reviewed", null/);
+test('claim row: what makes a row invalid; the three editor fields of the first page are not fields of a row any more', () => {
+  for (const gone of ['verified_tags', 'review_status', 'challenged_notes']) bad(claimRow, claimOf({ [gone]: gone === 'verified_tags' ? [] : null }), new RegExp(`${gone}: unexpected property`), `Claims has no editor column on v2: ${gone}`);
   bad(claimRow, claimOf({ why_wrong: 'Rule unclear' }), /why_wrong: unexpected property/, 'the claims table has no Why wrong any more (decision P4)');
   bad(claimRow, claimOf({ agent_reading: undefined }), /agent_reading: missing required property/);
   bad(claimRow, claimOf({ agent_reading: null }), /agent_reading: expected string/);
   bad(claimRow, claimOf({ agent_confidence: 0.2 }), /agent_confidence: must be >= 0.5/);
   bad(claimRow, claimOf({ agent_confidence: 1.1 }), /agent_confidence: must be <= 1/);
-  bad(claimRow, claimOf({ verified_tags: 'Context-dependent' }), /verified_tags: expected array/);
   bad(claimRow, claimOf({ agent_tags: 'Context-dependent' }), /agent_tags: expected array/);
   bad(claimRow, claimOf({ tags_waiting: [''] }), /tags_waiting\[0\]: must be at least 1 characters/);
   bad(claimRow, claimOf({ agent_status: 'Maybe' }), /agent_status: expected one of "Waits for you", "Done", "Disagrees with your decision", "Could not read", null/);
   bad(claimRow, claimOf({ agent_status: undefined }), /agent_status: missing required property/);
   bad(claimRow, claimOf({ agent_edition: undefined }), /agent_edition: missing required property/);
   bad(claimRow, claimOf({ agent_notes: 'no tags' }), /agent_notes: unexpected property/);
-  bad(claimRow, claimOf({ verified_tags: [''] }), /verified_tags\[0\]: must be at least 1 characters/);
   bad(claimRow, claimOf({ geo_id: '' }), /geo_id: must be at least 1 characters/);
-  bad(claimRow, claimOf({ challenged_notes: undefined }), /challenged_notes: missing required property/);
   bad(claimRow, claimOf({ agent_reasons: undefined }), /agent_reasons: missing required property/);
   bad(claimRow, claimOf({ agent_reasons: null }), /agent_reasons: expected string/);
   bad(claimRow, claimOf({ decided: true }), /decided: unexpected property/);
 });
 
 const ledgerRow = load('ledger-row');
+const VIEW = "Agent's view of your decision";
 const ledgerOf = (over = {}) => ({
-  Claim: 'The AI Force should enforce binding safety standards', Key: 'g1::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': "Can't tell", 'Agent confidence': 0.65,
-  'Agent reason': 'A capitalised phrase · Context-dependent rule 3 · 2 of 2 runs agree', 'Claim link': 'https://www.notion.so/x', 'Rulebook edition': '2026-10-16.1', 'Follow-up': null,
-  'Tag outcome': null, 'Why wrong': null, 'Your reasoning': null, 'Decided under': null, 'Agent reading': null, Rule: null, 'Reading note': null, 'Read under': null,
+  Claim: 'The AI Force should enforce binding safety standards', 'Open claim': ['0a9e0000-0000-4000-8000-000000000001'], Key: 'g1::Context-dependent', Tag: 'Context-dependent', 'Agent proposal': "Can't tell",
+  'Agent confidence': 0.65, 'Agent reason': 'A capitalised phrase · Context-dependent rule 3 · 2 of 2 runs agree', 'Agent is right': false, 'Tag outcome': null, 'Your note': null, 'Agent status': 'Waits for you',
+  [VIEW]: null, Rule: null, 'Why the agent thinks so': null, 'After the rule change': null, 'Rulebook edition': '2026-10-16.1', 'Decided under': null, 'Read under': null,
   page_id: '0a9e0000-0000-4000-8000-000000000002', last_edited: null, decided: false, ...over,
 });
 
-test('ledger row: a proposal, and a proposal with the copy of the decision', () => {
+test('ledger row: a proposal, a ticked proposal and a decision with a note', () => {
   ok(ledgerRow, ledgerOf());
-  ok(ledgerRow, ledgerOf({ 'Tag outcome': 'Applies', 'Why wrong': 'Rule unclear', 'Your reasoning': 'Context-dependent: rule 3 is unclear.', 'Decided under': '2026-10-16.1', decided: true, 'Follow-up': 'Fixed' }));
-  ok(ledgerRow, ledgerOf({ 'Agent proposal': null, 'Agent confidence': null, 'Rulebook edition': null }), 'a row seeded from the audit has no proposal columns');
+  ok(ledgerRow, ledgerOf({ 'Agent proposal': 'Applies', 'Agent is right': true, 'Decided under': '2026-10-16.1 · agreed Applies', decided: true, 'Agent status': 'Done' }));
+  ok(ledgerRow, ledgerOf({
+    'Tag outcome': 'Applies', 'Your note': 'Context-dependent: rule 3 is unclear.', 'Decided under': '2026-10-16.1', decided: true, 'After the rule change': 'Fixed', 'Agent status': 'Disagrees with your decision',
+  }));
+  ok(ledgerRow, ledgerOf({ 'Agent proposal': null, 'Agent confidence': null, 'Rulebook edition': null, 'Open claim': null, 'Agent status': null }), 'a row seeded from the audit has no proposal columns');
+  ok(ledgerRow, ledgerOf({ 'Open claim': [] }), 'a row not yet joined to its claim');
 });
 
 test('ledger row: the four columns of the agent\'s reading are nullable strings, and the reading is one of the three', () => {
   ok(ledgerRow, ledgerOf({
-    'Tag outcome': 'Does not apply', decided: true, 'Agent reading': 'Rule unclear', Rule: 'Context-dependent rule 3', 'Reading note': 'without your note · The rule leaves this kind of case open.',
+    'Tag outcome': 'Does not apply', decided: true, [VIEW]: 'Rule unclear', Rule: 'Context-dependent rule 3', 'Why the agent thinks so': 'without your note · The rule leaves this kind of case open.',
     'Read under': '2026-10-16.1 · 0123abcd',
   }));
-  for (const reading of ['Agent slip', 'Rule unclear', 'Rule should change', null]) ok(ledgerRow, ledgerOf({ 'Agent reading': reading }), String(reading));
-  ok(ledgerRow, ledgerOf({ Rule: null, 'Reading note': null, 'Read under': null }), 'no single rule is the point');
-  const { 'Agent reading': _a, Rule: _r, 'Reading note': _n, 'Read under': _u, ...old } = ledgerOf();
+  for (const reading of ['Agent slip', 'Rule unclear', 'Rule should change', null]) ok(ledgerRow, ledgerOf({ [VIEW]: reading }), String(reading));
+  ok(ledgerRow, ledgerOf({ Rule: null, 'Why the agent thinks so': null, 'Read under': null }), 'no single rule is the point');
+  const { [VIEW]: _a, Rule: _r, 'Why the agent thinks so': _n, 'Read under': _u, ...old } = ledgerOf();
   ok(ledgerRow, old, 'a pull of a table that has not got the four columns yet fills them with null; a row without them still fits');
-  bad(ledgerRow, ledgerOf({ 'Agent reading': 'Maybe' }), /\["Agent reading"\]: expected one of "Agent slip", "Rule unclear", "Rule should change", null/);
+  bad(ledgerRow, ledgerOf({ [VIEW]: 'Maybe' }), /\["Agent's view of your decision"\]: expected one of "Agent slip", "Rule unclear", "Rule should change", null/);
   bad(ledgerRow, ledgerOf({ Rule: 3 }), /Rule: expected string or null/);
   bad(ledgerRow, ledgerOf({ 'Read under': { hash: 'x' } }), /\["Read under"\]: expected string or null/);
 });
 
-test('ledger row: what makes a row invalid', () => {
+test('ledger row: what makes a row invalid; the first page\'s columns are not columns of a row any more', () => {
   bad(ledgerRow, ledgerOf({ 'Tag outcome': 'Maybe' }), /\["Tag outcome"\]: expected one of "Applies", "Does not apply", null/);
   bad(ledgerRow, ledgerOf({ 'Agent proposal': 'Applies?' }), /\["Agent proposal"\]: expected one of/);
-  bad(ledgerRow, ledgerOf({ 'Follow-up': 'Done' }), /\["Follow-up"\]: expected one of/);
+  bad(ledgerRow, ledgerOf({ 'After the rule change': 'Done' }), /\["After the rule change"\]: expected one of/);
+  bad(ledgerRow, ledgerOf({ 'Agent status': 'Maybe' }), /\["Agent status"\]: expected one of/);
+  bad(ledgerRow, ledgerOf({ 'Agent is right': 'yes' }), /\["Agent is right"\]: expected boolean or null/);
+  bad(ledgerRow, ledgerOf({ 'Open claim': [''] }), /\["Open claim"\]\[0\]: must be at least 1 characters/);
+  bad(ledgerRow, ledgerOf({ 'Open claim': '0a9e' }), /\["Open claim"\]: expected array or null/);
+  for (const gone of ['Claim link', 'Why wrong', 'Your reasoning', 'Agent reading', 'Reading note', 'Follow-up']) bad(ledgerRow, ledgerOf({ [gone]: null }), new RegExp(`\\["${gone}"\\]: unexpected property`), gone);
   bad(ledgerRow, ledgerOf({ Key: '' }), /Key: must be at least 1 characters/);
   bad(ledgerRow, ledgerOf({ decided: 'yes' }), /decided: expected boolean/);
   bad(ledgerRow, ledgerOf({ 'Decided by': 'someone' }), /\["Decided by"\]: unexpected property/);

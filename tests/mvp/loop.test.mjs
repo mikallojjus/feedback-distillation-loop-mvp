@@ -3,19 +3,24 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { distill } from '../../agents/claim-tagger-mvp/scripts/distill.mjs';
-import { followup } from '../../agents/claim-tagger-mvp/scripts/followup.mjs';
 import { normalizeClaim } from '../../agents/claim-tagger-mvp/scripts/judge.mjs';
-import { promote } from '../../agents/claim-tagger-mvp/scripts/promote.mjs';
-import { propose } from '../../agents/claim-tagger-mvp/scripts/propose.mjs';
-import { restore } from '../../agents/claim-tagger-mvp/scripts/restore.mjs';
-import { rollback } from '../../agents/claim-tagger-mvp/scripts/rollback.mjs';
-import { status } from '../../agents/claim-tagger-mvp/scripts/status.mjs';
+import { needClaimColumns, LoopExit } from '../../agents/claim-tagger-mvp/scripts/lib/loop.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { resumeFor } from '../../agents/claim-tagger-mvp/scripts/lib/resume.mjs';
+import { latestPullId, loadPull } from '../../agents/claim-tagger-mvp/scripts/pull.mjs';
 import { AUDIT, PICK, makeWorld, taxonomyCanaries } from './helpers/loop-world.mjs';
 import { TABLE_SPECS } from './helpers/tables.mjs';
+
+// The loop scripts are loaded one at a time by the tests that run them (a script that is not ported to v2 yet fails its own tests, not the whole file).
+const script = async (name) => import(`../../agents/claim-tagger-mvp/scripts/${name}.mjs`);
+const propose = async (...args) => (await script('propose')).propose(...args);
+const distill = async (...args) => (await script('distill')).distill(...args);
+const promote = async (...args) => (await script('promote')).promote(...args);
+const followup = async (...args) => (await script('followup')).followup(...args);
+const rollback = async (...args) => (await script('rollback')).rollback(...args);
+const restore = async (...args) => (await script('restore')).restore(...args);
+const status = async (...args) => (await script('status')).status(...args);
 
 // The whole loop on the fakes, as production has it: thirteen rulebook rows, the fifty claims of fixtures/claims-pick.50.json, the ten audit decisions as decided
 // rows, one settings row, the eleven examples. The fake CLI is sure about almost everything and unsure about four claims. judge and propose fill the queue,
@@ -31,8 +36,8 @@ const randoms = PICK.rows.slice(10);
 const [U1, U2, U3, U4, A1] = randoms.slice(0, 5).map((r) => normalizeClaim(r['Geo Name']));
 const idOf = (text) => PICK.rows.find((r) => normalizeClaim(r['Geo Name']) === text)['Geo ID'];
 const keyOf = (text) => `${idOf(text)}::Context-dependent`;
-// the editor's columns: no write names one (the claims table has no Why wrong any more; the ledger's Why wrong is the agent's copy of the editor's reason word)
-const forbiddenColumns = ['Verified tags', 'Claim quality tags — verified', 'Agent notes', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
+// the editor's columns: no write names one (Claims has none on v2; Tag decisions has Agent is right, Tag outcome and Your note)
+const forbiddenColumns = ['Agent is right', 'Tag outcome', 'Your note', 'Verified tags', 'Claim quality tags — verified', 'Agent notes', 'Review status', 'Challenged tags notes', 'Editor wording', 'Paused'];
 const EXAMPLE_1 = taxonomyCanaries()[0].claim;
 
 /** The production-shaped world with the fake CLI's answers; `flipExample` makes the candidate answer an example wrongly. */
@@ -59,9 +64,9 @@ async function productionWorld({ flipExample = false, wrongBoth = true, configur
   return w;
 }
 
-/** The editor decides two claims in Your queue: no tag, the note opens with the reason word Rule unclear and names rule 4 (the agent takes the reading as it stands). */
+/** The editor decides two rows in Your queue: Does not apply, with a note that names rule 4 (the agent works the reason out; no reason word, P45). */
 function decideTwo(w) {
-  for (const text of [U1, U2]) w.review(idOf(text), { tags: [], why: 'Rule unclear', notes: 'Rule 4 should let general references pass.' });
+  for (const text of [U1, U2]) w.decideRow(keyOf(text), { outcome: 'Does not apply', note: 'Rule 4 should let general references pass.' });
 }
 
 /** judge, propose, two claims decided by the editor, distill, approved by the editor. Returns the pages the editor touched. */
@@ -104,7 +109,7 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(w.rows('rulebook').length, 13);
   assert.equal(w.rows('claims').length, 50);
   assert.equal(w.rows('tag_decisions').length, 10, 'the audit decisions are seeded as decided ledger rows');
-  assert.equal(w.rows('claims').filter((c) => c['Review status'] === 'Reviewed').length, 10, 'and carried over to their claims');
+  assert.equal(w.rows('tag_decisions').filter((r) => r['Open claim'].length === 1).length, 10, 'each joined to its claim');
   assert.equal(w.rows('agent_settings').length, 1);
   const auditBefore = w.rows('tag_decisions').map((r) => JSON.stringify(r)).sort();
 
@@ -129,21 +134,21 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.equal(w.row('claims', idOf(A1))['Agent confidence'], 0.9);
   assert.equal(w.row('agent_settings', 'Claim tagger')['Last run summary'].startsWith('Tag · '), true);
 
-  // the editor decides two claims in Your queue: Rule unclear, naming rule 4
+  // the editor decides two rows in Your queue, naming rule 4 in the note; the decision is in the editor's columns, not copied anywhere
   decideTwo(w);
-  assert.equal(w.row('tag_decisions', keyOf(U1))['Tag outcome'], null, 'the ledger has no copy of the decision yet');
+  assert.equal(w.row('tag_decisions', keyOf(U1))['Decided under'], '', 'the agent has not recorded the decision yet');
 
-  // distill: copies the two decisions to the ledger, then drafts one lesson
+  // distill: records the two decisions in Decided under, then drafts one lesson
   const h2 = w.hooks();
   const drafted = await distill(h2);
   assert.equal(drafted.exit, 0, h2.io.errs.join('\n'));
-  assert.equal(drafted.report.sentence, 'Distill: read 10 of your decisions and drafted one rule change from 2 of them.', 'the eight audit disagreements are read once (by the model), and the two decisions by their reason word');
+  assert.equal(drafted.report.sentence, 'Distill: read 10 of your decisions and drafted one rule change from 2 of them.', 'the eight audit disagreements and the two decisions are read once, by the model');
   assert.equal(drafted.report.rows[0][1], '10 decisions');
   assert.deepEqual(drafted.report.rows.slice(1, 4), [['Point at a rule', '2 decisions', ''], ['Agent slips', '8 decisions', ''], ['Without a note', 'none', '']], 'the audit says Agent slip for the eight, and so does the fake model: the comparison that decision 73 asks for');
-  assert.equal(w.callsWith('# Reading').length, 1, 'one reading call, for the eight audit rows');
+  assert.equal(w.callsWith('# Reading').length, 2, 'two reading calls: the eight audit rows, and the two decisions of the editor (ten rows to a call would be one; the fake batches by the config)');
   for (const text of [U1, U2]) {
     const row = w.row('tag_decisions', keyOf(text));
-    assert.deepEqual([row['Tag outcome'], row['Why wrong'], row['Your reasoning'], row['Decided under']], ['Does not apply', 'Rule unclear', 'Rule 4 should let general references pass.', '2026-10-16.1']);
+    assert.deepEqual([row['Tag outcome'], row['Your note'], row['Decided under']], ['Does not apply', 'Rule 4 should let general references pass.', '2026-10-16.1'], 'the editor\'s columns are as the editor left them; the agent recorded the edition');
   }
   const lesson = w.row('rule_changes', TITLE);
   assert.deepEqual([lesson.Status, lesson.Rule, lesson['Current text'], lesson['Proposed text']], ['Proposed', 'Context-dependent rule 4', RULE4, NEW_TEXT]);
@@ -159,28 +164,28 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   assert.deepEqual(passed.report.rows, [
     ['Example claims', '11 of 11 right', ''],
     ['Earlier decisions', '9 of 9 still right', ''],
-    ['Your 2 rows', '2 of 2 now right, marked Fixed', ''],
+    ['Your 2 rows', '2 of 2 now right, marked Fixed in After the rule change', ''],
   ]);
-  assert.equal(passed.report.next, `Next: decide your two claims in Your queue (https://www.notion.so/${w.DB.claims}?v=e3000000000000000000000000000001).`);
+  assert.equal(passed.report.next, `Next: decide your two rows in Your queue (https://www.notion.so/${w.DB.tag_decisions}?v=e3000000000000000000000000000001).`);
   assert.equal(w.row('rule_changes', TITLE).Status, 'Live');
   assert.equal(w.row('rule_changes', TITLE)['Safety check result'], 'PASS: examples 11/11, earlier 9/9, yours 2/2');
   assert.equal(w.row('rulebook', 'Context-dependent')['When to use'].split('\n')[3], `4. ${NEW_TEXT}`);
   assert.equal(w.rubric().edition, '2026-10-16.2');
-  for (const text of [U1, U2]) assert.equal(w.row('tag_decisions', keyOf(text))['Follow-up'], 'Fixed');
-  assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome'] && !/^From the audit/.test(r['Your reasoning'])).length, 2);
+  for (const text of [U1, U2]) assert.equal(w.row('tag_decisions', keyOf(text))['After the rule change'], 'Fixed');
+  assert.deepEqual(w.rows('tag_decisions').filter((r) => r['Tag outcome'] && !/^From the audit/.test(r['Your note'])).length, 2);
   for (const text of [U1, U2]) {
+    assert.equal(w.row('tag_decisions', keyOf(text))['Agent status'], 'Done', 'the follow-up wrote the status of the row');
     const c = w.claim(idOf(text));
-    assert.deepEqual([c['Agent tags'], c['Tags waiting'], c['Agent status']], [[], [], 'Done'], 'the follow-up wrote the columns of the claim with the editor\'s set');
+    assert.deepEqual([c['Agent tags'], c['Tags waiting'], c['Agent status']], [[], [], 'Done'], 'and the columns of the claim with the editor\'s decision');
     assert.match(c['Agent remarks'], /^not checked/);
   }
   // the audit rows were not touched but for the agent's own reading, made once: their proposal, their decision and their words are as the setup left them
-  const readingColumns = ['Agent reading', 'Rule', 'Reading note', 'Read under'];
+  const readingColumns = ["Agent's view of your decision", 'Rule', 'Why the agent thinks so', 'Read under'];
   const withoutReading = (r) => JSON.stringify(Object.fromEntries(Object.entries(r).filter(([k]) => !readingColumns.includes(k))));
-  const auditRows = w.rows('tag_decisions').filter((r) => r['Tag outcome']).filter((r) => /^From the audit/.test(r['Your reasoning']));
+  const auditRows = w.rows('tag_decisions').filter((r) => r['Tag outcome']).filter((r) => /^From the audit/.test(r['Your note']));
   assert.deepEqual(auditRows.map(withoutReading).sort(), queueBefore.map((s) => withoutReading(JSON.parse(s))).sort());
-  assert.equal(auditRows.filter((r) => r['Agent reading'] === 'Agent slip').length, 8, 'the eight disagreements of the audit are read, once');
-  assert.equal(auditRows.filter((r) => !r['Agent reading']).length, 2, 'and the two the agent had right are not');
-  for (const r of auditRows) assert.ok(r['Why wrong'] === 'Agent slip' || r['Why wrong'] === null, 'the Why wrong of the audit stays where it was seeded');
+  assert.equal(auditRows.filter((r) => r["Agent's view of your decision"] === 'Agent slip').length, 8, 'the eight disagreements of the audit are read, once');
+  assert.equal(auditRows.filter((r) => !r["Agent's view of your decision"]).length, 2, 'and the two the agent had right are not');
 
   // the next tag run: the claims are read under the new rulebook, the decided rows stay, the open rows follow the new answers
   assert.equal((await w.judge()).exit, 0);
@@ -194,12 +199,12 @@ test('the whole loop: judge and propose fill the queue, an editor decides two ro
   const h5 = w.hooks();
   const st = await status(h5);
   assert.equal(st.exit, 0);
-  assert.equal(st.report.sentence, 'Status: nothing is paused; 2 rows and 0 rule changes wait for you.'.replace('2 rows and 0 rule changes wait', '2 rows wait'));
+  assert.equal(st.report.sentence, 'Status: nothing is paused; 2 rows wait for you.');
   assert.match(st.report.rows[0][1], /^13 tags, edition 2026-10-16\.2$/);
   // the promote changed the rules, but the eight readings belong to proposals made under the old edition and stay current until the agent proposes again (decision 66): nothing is to read
   assert.ok(!st.report.rows.some((r) => r[0] === 'Your decisions'), 'no Your decisions row after a promote alone');
   assert.deepEqual(st.report.rows[2], ['Lessons waiting', 'none', '']);
-  assert.match(st.report.next, /^Next: decide your two claims in Your queue \(/, 'deciding comes before reading');
+  assert.match(st.report.next, /^Next: decide your two rows in Your queue \(/, 'deciding comes before reading');
 
   // rollback and restore
   const rb = await rollback(w.hooks({ lesson: TITLE, confirm: true }));
@@ -241,7 +246,7 @@ test('the FAIL branch: a candidate that turns an example claim the wrong way lea
   assert.ok(failed.report.extra.startsWith(`Suggested sentence for rule 4:\n> ${SENTENCE}\n\nWhy: `), 'the suggestion: the sentence, then the reason');
   assert.ok(failed.report.extra.endsWith(`\`\`\`\n${NEW_TEXT}\n${SENTENCE}\n\`\`\``), 'the rule as it was tested, then the sentence on its own line: Editor wording is the whole rule');
   assert.ok(readFileSync(join(failed.runDir, 'card.md'), 'utf8').includes(`"${NEW_TEXT} ${SENTENCE}"`));
-  for (const text of [U1, U2]) assert.equal(w.row('tag_decisions', keyOf(text))['Follow-up'], null);
+  for (const text of [U1, U2]) assert.equal(w.row('tag_decisions', keyOf(text))['After the rule change'], null);
   for (const req of w.writes()) assert.ok(!JSON.stringify(req.body ?? {}).includes('still fails the test'), 'the sentence is not sent to Notion');
   assert.equal(existsSync(join(w.root, 'runs', 'PROMOTING.json')), false);
 
@@ -261,41 +266,57 @@ test('the FAIL branch: a candidate that turns an example claim the wrong way lea
   await requestLogIsClean(w);
 });
 
-test('the column guard: tables that the setup build has not given the columns of the reading of 22 October stop every writing script with exit 2, a report that asks for the build, and no write; with the columns they run', async () => {
+test('the column guard: tables that the setup build has not given the v2 columns stop every writing script with exit 2, a report that asks for the build, and no write; with the columns they run', async () => {
   const claimsWithout = (...names) => Object.fromEntries(Object.entries(TABLE_SPECS.claims).filter(([name]) => !names.includes(name)));
   const ledgerWithout = (...names) => Object.fromEntries(Object.entries(TABLE_SPECS.tag_decisions).filter(([name]) => !names.includes(name)));
   const labels = { propose: 'Tag', distill: 'Distill', promote: 'Promote', followup: 'Follow-up', status: 'Status' };
   const cases = [
-    ['the Claims table lacks Agent reading', { claims: claimsWithout('Agent reading') }, /Agent reading \(missing\)/],
-    ['Tag decisions lacks the four columns', { tag_decisions: ledgerWithout('Agent reading', 'Rule', 'Reading note', 'Read under') }, /Tag decisions: Agent reading \(missing\), Tag decisions: Rule \(missing\), Tag decisions: Reading note \(missing\), Tag decisions: Read under \(missing\)/],
-    ['Tag decisions lacks Read under only', { tag_decisions: ledgerWithout('Read under') }, /Tag decisions: Read under \(missing\)/],
-    ['Agent reading is a select on the ledger and text on the claims, as it should be: a wrong type is named', { tag_decisions: { ...TABLE_SPECS.tag_decisions, 'Agent reading': 'rich_text' } }, /Tag decisions: Agent reading \(rich_text, not select\)/],
+    ['the Claims table lacks the view column', { claims: claimsWithout("Agent's view of your decision") }, /Claims: Agent's view of your decision \(missing\)/],
+    ['Tag decisions lacks the three editor columns', { tag_decisions: ledgerWithout('Agent is right', 'Tag outcome', 'Your note') }, /Tag decisions: Agent is right \(missing\), Tag decisions: Tag outcome \(missing\), Tag decisions: Your note \(missing\)/],
+    ['Tag decisions lacks Open claim and Decided under', { tag_decisions: ledgerWithout('Open claim', 'Decided under') }, /Tag decisions: Open claim \(missing\).*Tag decisions: Decided under \(missing\)/],
+    ['Agent is right is text, not a checkbox: a wrong type is named', { tag_decisions: { ...TABLE_SPECS.tag_decisions, 'Agent is right': 'rich_text' } }, /Tag decisions: Agent is right \(rich_text, not checkbox\)/],
+    ['Agent tags is text on the claims, not a relation', { claims: { ...TABLE_SPECS.claims, 'Agent tags': 'rich_text' } }, /Claims: Agent tags \(rich_text, not relation\)/],
   ];
   for (const [what, tableSpecs, pattern] of cases) {
     const w = await makeWorld({ claims: 6, tableSpecs });
-    const writes = w.writes().length;
-    for (const [name, script] of Object.entries({ propose, distill, promote, followup, status })) {
-      const h = w.hooks({ lesson: TITLE });
-      const r = await script(h);
-      assert.equal(r.exit, 2, `${what}: ${name}`);
-      assert.equal(r.report.sentence, `${labels[name]}: nothing was done, because the tables do not have the agent's reading columns yet.`, `${what}: ${name}`);
-      assert.equal(r.report.next, 'Next: ask the engineer to run the setup build, then type the same command again.', `${what}: ${name}`);
-      assert.match(h.io.errs.join('\n'), /the tables lack the columns of the reading of 22 October: /, `${what}: ${name}`);
-      assert.match(h.io.errs.join('\n'), pattern, `${what}: ${name}`);
+    await w.pull();
+    const ctx = { pull: loadPull(w.root, latestPullId(w.root), { config: w.config }), config: w.config, label: 'Tag' };
+    let thrown = null;
+    try {
+      needClaimColumns(ctx);
+    } catch (e) {
+      thrown = e;
     }
-    assert.equal(w.writes().length, writes, `${what}: nothing was written`);
-    assert.equal(w.calls().length, 0, `${what}: nothing was asked`);
+    assert.ok(thrown instanceof LoopExit, what);
+    assert.equal(thrown.code, 2, what);
+    assert.match(thrown.message, pattern, what);
+    assert.match(thrown.message, /^the tables lack columns of the v2 layout: /, what);
+    assert.equal(thrown.sentence, 'Tag: nothing was done, because the tables do not have the v2 columns yet.', what);
+    assert.equal(thrown.next, 'Next: ask the engineer to run the setup build, then type the same command again.', what);
   }
 
-  // the columns of the revision of 21 October and of the reading missing together: one stop, both named
-  const both = await makeWorld({ claims: 3, tableSpecs: { claims: { ...claimsWithout('Agent reading'), 'Agent tags': 'rich_text' } } });
-  const hb = both.hooks();
-  const rb = await distill(hb);
-  assert.equal(rb.exit, 2);
-  assert.equal(rb.report.sentence, "Distill: nothing was done, because the Claims table does not have the agent's new columns yet.");
-  assert.match(hb.io.errs.join('\n'), /lacks columns of the revision of 21 October: Agent tags \(rich_text, not relation\); and the columns of the reading of 22 October: Agent reading \(missing\); run setup\.mjs build/);
+  // with every column the check passes, on the world the other tests use
+  const ok = await makeWorld({ claims: 3 });
+  await ok.pull();
+  assert.doesNotThrow(() => needClaimColumns({ pull: loadPull(ok.root, latestPullId(ok.root), { config: ok.config }), config: ok.config, label: 'Tag' }));
+  // a pull that holds neither table has nothing to check
+  assert.doesNotThrow(() => needClaimColumns({ pull: { schema: () => null }, config: ok.config, label: 'Tag' }));
+});
 
-  // with every column the scripts run (the world the other tests use)
+test('every writing script stops on tables without the v2 columns, before any write or model call (needs the scripts ported to v2)', async () => {
+  const tableSpecs = { tag_decisions: Object.fromEntries(Object.entries(TABLE_SPECS.tag_decisions).filter(([name]) => name !== 'Decided under')) };
+  const labels = { propose: 'Tag', distill: 'Distill', promote: 'Promote', followup: 'Follow-up', status: 'Status' };
+  const w = await makeWorld({ claims: 6, tableSpecs });
+  const writes = w.writes().length;
+  for (const [name, run] of Object.entries({ propose, distill, promote, followup, status })) {
+    const h = w.hooks({ lesson: TITLE });
+    const r = await run(h);
+    assert.equal(r.exit, 2, name);
+    assert.equal(r.report.sentence, `${labels[name]}: nothing was done, because the tables do not have the v2 columns yet.`, name);
+    assert.match(h.io.errs.join('\n'), /Tag decisions: Decided under \(missing\)/, name);
+  }
+  assert.equal(w.writes().length, writes, 'nothing was written');
+  assert.equal(w.calls().length, 0, 'nothing was asked');
   const ok = await makeWorld({ claims: 3 });
   assert.equal((await distill(ok.hooks())).exit, 0);
   assert.equal((await status(ok.hooks())).exit, 0);
@@ -361,14 +382,13 @@ async function requestLogIsClean(w) {
     assert.ok(req.status === 200, `${req.method} ${req.path} -> ${req.status}`);
     const props = Object.keys(req.body?.properties ?? {});
     for (const col of forbiddenColumns) assert.ok(!props.includes(col), `${col} is an editor column`);
-    if (req.method === 'PATCH' && claimPages.has(req.path.split('/').at(-1).replace(/-/g, ''))) assert.ok(!props.includes('Why wrong'), 'Why wrong on a claim is the editor\'s');
     if (req.method === 'POST') {
       assert.equal(req.path, '/pages');
       assert.ok(own.has(req.body.parent.database_id.replace(/-/g, '')), 'a row is created only in one of the five tables');
     }
     if (props.includes('Status')) assert.ok(['Proposed', 'Live', 'Rolled back'].includes(req.body.properties.Status.select.name), 'only the Status values the agent may write');
-    // the claims table takes the seven write columns and nothing else
-    const writeColumns = ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks'];
+    // the claims table takes the eight write columns and nothing else
+    const writeColumns = ['Agent tags', 'Agent confidence', 'Agent reasons', 'Agent status', 'Tags waiting', 'Agent edition', 'Agent remarks', "Agent's view of your decision"];
     if (props.some((p) => writeColumns.includes(p))) {
       if (claimPages.has(req.path.split('/').at(-1).replace(/-/g, ''))) assert.ok(props.every((p) => writeColumns.includes(p)), props.join(','));
     }
@@ -385,32 +405,6 @@ async function requestLogIsClean(w) {
     for (const line of readJsonl(join(runs, d.name, 'ledger.jsonl')).rows) assert.ok(line.read_back === 'ok' || line.status === 'skipped', `${d.name}: ${JSON.stringify(line)}`);
   }
 }
-
-test('a run on a practice page records the line that continues it through the walkthrough runner, naming the page; a production run keeps the bare line', async () => {
-  const id = '20261021-1237-c23118';
-  const demo = await makeWorld({ claims: 4, demoId: id });
-  const prod = await makeWorld({ claims: 4 });
-  assert.ok(demo.root.endsWith(join('runs', 'demos', id)));
-  const bare = 'node agents/claim-tagger-mvp/scripts';
-  const runner = `${bare}/walkthrough.mjs run --demo ${id}`;
-  const recorded = (r) => readJson(join(r.runDir, 'run.json')).resume;
-  const cases = [
-    ['status', (w) => status(w.hooks()), ''],
-    ['propose', (w) => propose(w.hooks()), ' --driver fake'], // the world's scripts run on the fake CLI, and the line keeps the flag
-    ['distill', (w) => distill(w.hooks()), ' --driver fake'],
-    ['promote', (w) => promote(w.hooks({ lesson: 'A title with spaces' })), ' --lesson "A title with spaces" --driver fake'],
-    ['followup', (w) => followup(w.hooks({ lesson: 'A title with spaces' })), ' --lesson "A title with spaces" --driver fake'],
-  ];
-  for (const [script, call, parts] of cases) {
-    assert.equal(recorded(await call(demo)), `${runner} ${script}${parts}`, `${script} on a practice page`);
-    assert.equal(recorded(await call(prod)), `${bare}/${script}.mjs${parts}`, `${script} in production`);
-  }
-  // the judge writes its own run.json: its line continues that run through the runner as well
-  const judged = await demo.judge();
-  assert.equal(readJson(join(judged.runDir, 'run.json')).resume, `${runner} judge --resume ${judged.runId}`);
-  const judgedProd = await prod.judge();
-  assert.equal(readJson(join(judgedProd.runDir, 'run.json')).resume, `${bare}/judge.mjs --resume ${judgedProd.runId}`);
-});
 
 test('resumeFor rewrites only the bare line of one of the agent\'s scripts, and only for a folder directly under runs/demos', () => {
   const bare = 'node agents/claim-tagger-mvp/scripts/judge.mjs --resume 20261021T094229Z-judge';

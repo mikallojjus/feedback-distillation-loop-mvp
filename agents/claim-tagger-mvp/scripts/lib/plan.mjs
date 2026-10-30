@@ -27,7 +27,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import {
-  ADD_SCRIPT, COPY_LIVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, addableProperties, copyLiveProperties, editorColumns, isV2, tableEntry, writableProperties,
+  ADD_SCRIPT, COPY_LIVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, TD_EDITOR, addableProperties, copyLiveProperties, editorColumns, isV2, tableEntry, writableProperties,
 } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { appendJsonl, readJson, readJsonl, writeTextAtomic } from './jsonl.mjs';
@@ -35,7 +35,7 @@ import { decodePage, encodeProperties, normId, sameValue } from './notion-values
 import { agentRoot, codeFile } from './paths.mjs';
 import { validate } from './validate.mjs';
 
-/** The start of "Challenged tags notes" on a claim that the setup seeds from the audit: the one way a setup plan writes the editor's four claims columns. */
+/** The start of Your note on a row that the first page's audit of 9 October gave a decision (pull.mjs tells such a case from the others; the copy carries it). No plan writes it any more except the copy. */
 export const AUDIT_PREFIX = 'From the audit of 9 October';
 /** Consecutive failed ops after which applyPlan stops (a resumed run goes on from there). */
 export const MAX_CONSECUTIVE_FAILURES = 3;
@@ -234,10 +234,9 @@ const SCHEMA_WORDS = new Map([
  * Everything that can be known about a plan without a request. Returns { ok, problems, counts }; problems are sentences naming the op
  * (1-based) that broke the rule:
  *   the table is one of the five; every line fits schemas/plan.schema.json; every property is in the table's writable set
- *   (config.writableProperties, and with `setup` a create may fill what the one-time setup fills); an editor column (the four of the claims
- *   copy, Editor wording, Paused; the ledger has none) is refused, except on a setup create or update of a claim whose "Challenged tags notes"
- *   starts with AUDIT_PREFIX (the seeding of the audit's decisions, hard rule 1), or on a create when config.demo is true and
- *   <root>/runs/SETUP exists (a practice page's build); Status on rule_changes is Proposed, Live or Rolled back; no string anywhere holds a protected id (dashes
+ *   (config.writableProperties, and with `setup` a create may fill what the one-time setup fills); an editor column (Agent is right, Tag outcome and
+ *   Your note on tag_decisions, Editor wording, Paused; Claims has none) is refused in every plan, except in a plan of the copy-live script (below);
+ *   Status on rule_changes is Proposed, Live or Rolled back; no string anywhere holds a protected id (dashes
  *   ignored) and no op targets a protected table; an update has a page_id and a create has none; a create carries its key column; a key
  *   appears once per table; the header counts match the ops.
  *   The add script (header script "add", decision P35) has one narrow allowance: its plan may only CREATE rows of the claims table, with the key column and the Geo columns
@@ -247,8 +246,8 @@ const SCHEMA_WORDS = new Map([
  *   any of the five tables with the columns of copyLiveProperties, the editor columns Tag outcome, Your note, Editor wording and Paused included (it copies the decisions made on the first page), and
  *   Status values of any kind on rule_changes. Agent is right, any other column, page content, a protected table or id and, as for every plan, a delete or archive (a plan has no such op) stay refused.
  *
- * No plan ever writes an editor column on an UPDATE, on a practice page or anywhere else (decision P7: no agent acts as the editor); a practice
- * page's decided rows are written only by a create, under its runs/SETUP marker.
+ * No loop plan ever writes an editor column (decision P7: no agent acts as the editor). The copy's updates are also guarded when they are sent (applyPlan): an update of a Tag decisions
+ * row that holds Agent is right, Tag outcome or Your note is skipped when a person has set a different value in Notion since the plan was made (PORT-V2.md 2.4).
  */
 export function checkPlan(plan, config, { setup = false, root = agentRoot() } = {}) {
   const problems = [];
@@ -259,7 +258,6 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
   } catch (e) {
     return { ok: false, problems: [e.message], counts: { creates: 0, updates: 0 } };
   }
-  const demoOpen = config?.demo === true && existsSync(join(root, 'runs', 'SETUP'));
   const addPlan = header?.plan?.script === ADD_SCRIPT;
   const copyPlan = header?.plan?.script === COPY_LIVE_SCRIPT;
   const needles = protectedNeedles(config);
@@ -324,15 +322,11 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
       return;
     }
     const editor = new Set(editorColumns(config, op.table));
-    const notesColumn = tableEntryOrNull(config, 'claims')?.columns?.notes ?? 'Challenged tags notes';
-    const challenged = op.properties[notesColumn];
-    const seeded = setup && op.table === 'claims' && typeof challenged === 'string' && challenged.startsWith(AUDIT_PREFIX);
-    const mayWriteEditor = !addPlan && (seeded || (demoOpen && op.op === 'create')); // a plan of the add script never writes an editor column, whatever the folder it runs in
     for (const name of Object.keys(op.properties)) {
       const base = name.endsWith(':end') ? name.slice(0, -4) : name; // the end of a date goes with its start
       // a copy-live plan has its own list (copyLiveProperties), which names the editor columns it may write; Agent is right is not on it
       if (!copyPlan && editor.has(base)) {
-        if (!mayWriteEditor) add(`"${name}" is a column only an editor writes; no script may (the exceptions are the setup seeding the audit's decisions on the claims, and a practice page's build when it creates the row)`);
+        add(`"${name}" is a column only an editor writes; no script may (the copy of the first page, P47, is the one exception)`);
         continue;
       }
       if (!writable.has(base)) add(`"${name}" is not a column this plan may write to ${op.table}`);
@@ -441,6 +435,23 @@ const rowFor = (pulled, table, key) => {
 const pulledHas = (pulled, table) => pulled?.[table] !== undefined && pulled?.[table] !== null;
 
 // ---- applying ------------------------------------------------------------------------------------------------------------------
+
+// A cell with something in it: a ticked checkbox, a non-blank text or select, a non-empty list.
+const filled = (v) => (Array.isArray(v) ? v.length > 0 : typeof v === 'string' ? v.trim() !== '' : v === true || (typeof v === 'number' && Number.isFinite(v)));
+
+/**
+ * The name of the first editor column of Tag decisions (TD_EDITOR) in `props` that a person has filled in Notion with a value other than the planned one, or null. One GET of the page,
+ * only when `props` holds an editor column. A value the op itself names in `expect` is not a person's surprise: the plan was made knowing it and replaces it on purpose (the copy's
+ * --overwrite-editor-values). A read that fails throws: the op fails and is run again, it is never sent unchecked.
+ */
+async function personSetColumn(client, pageId, props, schema, expect = null) {
+  const columns = TD_EDITOR.filter((c) => Object.hasOwn(props, c));
+  if (columns.length === 0) return null;
+  const fresh = decodePage(await client.retrievePage(pageId), schema).props;
+  const type = (c) => schema?.properties?.[c]?.type ?? null;
+  const meant = (c) => expect !== null && Object.hasOwn(expect, c) && sameValue(type(c), expect[c], fresh[c]);
+  return columns.find((c) => filled(fresh[c]) && !sameValue(type(c), props[c], fresh[c]) && !meant(c)) ?? null;
+}
 
 // The plan file is the record of what is sent: write it when it is not there yet, and refuse a plan that differs from the one there.
 function settlePlanFile(plan, dir) {
@@ -586,9 +597,14 @@ export async function applyPlan({
     }
 
     let failure = null;
+    let taken = null;
     try {
-      const encoded = encodeProperties(sendProps, schema);
-      if (kind === 'create') {
+      // the bug guard (PORT-V2.md 2.4): an update that holds an editor column of Tag decisions is sent only if no person has set a different value there since the plan was made
+      if (kind === 'update' && op.table === 'tag_decisions' && pageId) taken = await personSetColumn(client, pageId, sendProps, schema, op.expect ?? null);
+      const encoded = taken ? {} : encodeProperties(sendProps, schema);
+      if (taken) {
+        // nothing is sent for this op
+      } else if (kind === 'create') {
         const page = await client.createPage({ parentDatabaseId: entries.get(op.table).database_id, properties: encoded, children: op.children ?? [] });
         pageId = page.id;
       } else if (Object.keys(encoded).length > 0) {
@@ -610,6 +626,10 @@ export async function applyPlan({
       continue;
     }
     consecutive = 0;
+    if (taken) {
+      record(i, { page_id: pageId, status: 'skipped', error: `skipped: a person set "${taken}"` });
+      continue;
+    }
     const sent = kind === 'create' ? 'create' : Object.keys(sendProps).length > 0 ? 'update' : null;
     record(i, { page_id: pageId, status: 'done', sent, ...(await readBack(op, pageId)) });
   }

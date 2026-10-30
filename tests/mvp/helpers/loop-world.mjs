@@ -8,11 +8,10 @@
 //   await w.pull() / await w.judge(opts)           pull every table / pull, then judge the claims (items: 'claims') under the fake CLI
 //   w.table(obj) / w.overrides(list) / w.setEnv(k, v)   the fake CLI's answers (see fixtures/fake-claude-loop.mjs)
 //   w.rows(table) / w.row(table, key)              plain rows of a table in the fake Notion (a relation is a list of page ids)
-//   w.claim(geoId)                                 a row of the Claims copy with its three relations (Agent tags, Tags waiting, Verified tags) read as lists of tag names, sorted
-//   w.editClaim(geoId, plain)                      an editor works on a claim: plain values of the Claims copy; "Verified tags" (and the agent's "Agent tags" and "Tags waiting") take tag names.
-//                                                  The claims table has no Why wrong column any more: a "Why wrong" value is written as the reason word that opens the Challenged tags notes
-//   w.review(geoId, { tags, notes, why })          an editor Reviews a claim: the verified tags, Challenged tags notes and Review status Reviewed. "why" (older tests) is the reason word the notes open with:
-//                                                  review(id, { why: 'Rule unclear', notes: 'Rule 4 ...' }) writes the notes "Rule unclear. Rule 4 ..."
+//   w.claim(geoId)                                 a row of Claims with its two relations (Agent tags, Tags waiting) read as lists of tag names, sorted
+//   w.editClaim(geoId, plain)                      plain values of a Claims row; "Agent tags" and "Tags waiting" take tag names. Claims has no editor column on v2
+//   w.decideRow(key, { right, outcome, note })     an editor works on one Tag decisions row (by Key): writes only the editor columns given (Agent is right, Tag outcome, Your note); null clears one
+//   w.ledgerRow(key)                               the plain Tag decisions row with that Key (its relation Open claim is a list of page ids), or null
 //   w.readings(table)                              the fake CLI's readings (FAKE_CLAUDE_READINGS): { "<row key>": { reading, rule, note } }; a key not in it is read Rule unclear on the rule its agent reason cites
 //   w.rubric()                                     rubric/rubric.json of the state folder
 //   w.calls() / w.callsWith(text)                  what the fake CLI was asked: all calls / the calls whose system prompt holds the text
@@ -53,8 +52,6 @@ export const VIEWS = {
   your_queue: 'e3000000000000000000000000000001',
   needs_your_note: 'e3000000000000000000000000000002',
   agent_disagreed: 'e3000000000000000000000000000005',
-  your_queue_ledger: 'e3000000000000000000000000000006',
-  needs_your_note_ledger: 'e3000000000000000000000000000007',
   lessons_waiting: 'e3000000000000000000000000000003',
   rulebook: 'e3000000000000000000000000000004',
 };
@@ -84,24 +81,6 @@ after(() => {
   rmSync(join(tmpdir(), `geo-agents-fake-claude-loop-${process.pid}`), { recursive: true, force: true }); // the merged answer tables of fixtures/fake-claude-loop.mjs
   assert.deepEqual(problems, [], 'a report written during the tests breaks the report lint');
 });
-
-/**
- * The notes with the reason word an older test gave as a claim's Why wrong (the column is gone): a line that starts with a tag name and a colon takes it after the colon unless it has
- * a reason word of its own, and notes with no such line take it at the front ("Rule unclear. The words."). This is the old rule, "the claim's Why wrong goes to every tag without a word of its own".
- */
-export function withReasonWord(notes, why, tagNames) {
-  const known = tagNames.map((n) => n.toLowerCase());
-  const own = /^\s*(Agent slip|Rule unclear|Rule should change)\./i;
-  let tagLines = false;
-  const lines = notes.split(/\r?\n/).map((line) => {
-    const m = /^(\s*)([^:\n]+?)(\s*:\s*)(.*)$/.exec(line);
-    if (!m || !known.includes(m[2].trim().toLowerCase())) return line;
-    tagLines = true;
-    return own.test(m[4]) ? line : `${m[1]}${m[2]}${m[3]}${why}.${m[4].trim() ? ` ${m[4]}` : ''}`;
-  });
-  if (tagLines) return lines.join('\n');
-  return own.test(notes) ? notes : `${why}.${notes.trim() ? ` ${notes.trim()}` : ''}`;
-}
 
 export const claimId = (i) => `c${String(i).padStart(2, '0')}`;
 export const claimText = (i) => `The speaker said claim number ${i} about the budget.`;
@@ -134,8 +113,8 @@ const jsonl = (rows) => `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`;
  * Build a world. Options:
  *   claims      a number n (claims c01.. with claimText), a list of { id, text }, or 'pick' (the 50 claims of fixtures/claims-pick.50.json)
  *   rulebook    rows of the Rulebook copy (default: the 13 Issue rows of setup/taxonomy-issue.json); false: no rows and no edition
- *   queue       rows of Tag decisions (the ledger) as plain values;  audit: true seeds the 10 audit decisions the way the setup leaves them: as decided
- *               ledger rows (Why wrong "Agent slip") and on their claims (Reviewed, the Applies tags verified, Agent slip, the audit's words in Challenged tags notes)
+ *   queue       rows of Tag decisions as plain values;  audit: true seeds the 10 audit decisions as decided rows (Tag outcome, Your note opening with the audit's words,
+ *               Decided under and Rulebook edition the world's edition, Open claim, Agent status Done or Disagrees with your decision)
  *   claimRows   { geoId: plain values } added to the claims after they are made (see w.editClaim)
  *   lessons     rows of Rule changes as plain values
  *   settings    false: no Agent settings row; an object: its values (Name, Paused, ...)
@@ -172,7 +151,7 @@ export async function makeWorld({
 
   const fake = createFakeNotion({ protected: [...config.notion.protected_database_ids, ...config.notion.protected_page_ids] });
   for (const table of Object.keys(DB)) {
-    fake.addDatabase({ id: DB[table], dataSourceId: entries[table].data_source_id, title: table, properties: restProps(tableSpecs[table] ?? TABLE_SPECS[table], entries.rulebook.data_source_id) });
+    fake.addDatabase({ id: DB[table], dataSourceId: entries[table].data_source_id, title: table, properties: restProps(tableSpecs[table] ?? TABLE_SPECS[table], entries.rulebook.data_source_id, { claims: entries.claims.data_source_id }) });
   }
   const ids = { tag: {}, claim: {}, queue: {}, lesson: {}, settings: null };
 
@@ -197,11 +176,9 @@ export async function makeWorld({
   });
   const editClaim = (geoId, plain) => {
     if (!ids.claim[geoId]) throw new Error(`makeWorld: there is no claim "${geoId}"`);
-    const { 'Verified tags': verified, 'Agent tags': agentTags, 'Tags waiting': waiting, 'Why wrong': why, ...rest } = plain;
-    if (why) rest['Challenged tags notes'] = withReasonWord(String(rest['Challenged tags notes'] ?? ''), why, Object.keys(ids.tag));
+    const { 'Agent tags': agentTags, 'Tags waiting': waiting, ...rest } = plain;
     fake.editRow(ids.claim[geoId], {
       ...rest,
-      ...(verified === undefined ? {} : { 'Verified tags': tagIds(verified) }),
       ...(agentTags === undefined ? {} : { 'Agent tags': tagIds(agentTags) }),
       ...(waiting === undefined ? {} : { 'Tags waiting': tagIds(waiting) }),
     });
@@ -211,18 +188,12 @@ export async function makeWorld({
   if (audit) {
     for (const d of AUDIT.decisions) {
       const key = `${d.geo_id}::Context-dependent`;
+      const proposal = d.agent_tags?.includes('Context-dependent') ? 'Applies' : 'Does not apply';
       ids.queue[key] = fake.addRow(DB.tag_decisions, {
-        Claim: d.claim, Key: key, Tag: 'Context-dependent', 'Agent proposal': d.agent_tags?.includes('Context-dependent') ? 'Applies' : 'Does not apply',
-        'Claim link': `https://www.notion.so/${d.claim_page}`, 'Tag outcome': d.outcome,
-        'Why wrong': (d.agent_tags?.includes('Context-dependent') ? 'Applies' : 'Does not apply') === d.outcome ? null : 'Agent slip',
-        'Your reasoning': `From the audit of 9 October: ${d.reasoning}`,
+        Claim: d.claim, Key: key, Tag: 'Context-dependent', 'Agent proposal': proposal, 'Tag outcome': d.outcome, 'Your note': `From the audit of 9 October: ${d.reasoning}`,
+        'Rulebook edition': edition, 'Decided under': edition, 'Agent status': proposal === d.outcome ? 'Done' : 'Disagrees with your decision',
+        ...(ids.claim[d.geo_id] ? { 'Open claim': [ids.claim[d.geo_id]] } : {}),
       });
-      if (ids.claim[d.geo_id]) {
-        editClaim(d.geo_id, {
-          'Verified tags': d.outcome === 'Applies' ? ['Context-dependent'] : [], 'Review status': 'Reviewed',
-          'Challenged tags notes': `From the audit of 9 October: ${d.reasoning}`,
-        });
-      }
     }
   }
   for (const q of queue) ids.queue[q.Key] = fake.addRow(DB.tag_decisions, q);
@@ -275,16 +246,23 @@ export async function makeWorld({
       else world.env[key] = value;
     },
     editClaim,
-    review: (geoId, { tags = [], why = null, notes = '' } = {}) => editClaim(geoId, {
-      'Verified tags': tags, 'Review status': 'Reviewed', 'Why wrong': why, 'Challenged tags notes': notes,
-    }),
+    decideRow(key, { right, outcome, note } = {}) {
+      const row = fake.plainRows(DB.tag_decisions).find((r) => r.Key === key);
+      if (!row) throw new Error(`makeWorld: there is no Tag decisions row "${key}"`);
+      const plain = {};
+      if (right !== undefined) plain['Agent is right'] = right;
+      if (outcome !== undefined) plain['Tag outcome'] = outcome;
+      if (note !== undefined) plain['Your note'] = note;
+      fake.editRow(row.page_id, plain);
+    },
+    ledgerRow: (key) => fake.plainRows(DB.tag_decisions).find((r) => r.Key === key) ?? null,
     rows: (table) => fake.plainRows(DB[table]),
     claim(geoId) {
       const row = fake.plainRows(DB.claims).find((r) => r['Geo ID'] === geoId);
       if (!row) return null;
       const byPage = new Map(Object.entries(ids.tag).map(([name, id]) => [String(id).replace(/-/g, '').toLowerCase(), name]));
       const named = (list) => (list ?? []).map((id) => byPage.get(String(id).replace(/-/g, '').toLowerCase()) ?? id).sort();
-      return { ...row, 'Agent tags': named(row['Agent tags']), 'Tags waiting': named(row['Tags waiting']), 'Verified tags': named(row['Verified tags']) };
+      return { ...row, 'Agent tags': named(row['Agent tags']), 'Tags waiting': named(row['Tags waiting']) };
     },
     row(table, key) {
       const keyColumn = { rulebook: 'Name', claims: 'Geo ID', tag_decisions: 'Key', rule_changes: 'Lesson', agent_settings: 'Name' }[table];

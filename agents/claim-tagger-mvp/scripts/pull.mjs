@@ -14,19 +14,18 @@
 //   schema/<table>.json   the retrieveDatabase answer          raw/<table>.jsonl   every page object, one per line
 //   norm/claims.jsonl     { table, geo_id, page_id, notion_url, claim, geo_url, sources_text, source_links [{ text, href }], is_factual, agent_tags (Agent tags as tag names),
 //                           agent_status (Waits for you, Done, Disagrees with your decision, Could not read, or null), tags_waiting (Tags waiting as tag names), agent_confidence (a number
-//                           or null), agent_reasons (text), agent_edition (text), agent_remarks (text), agent_reading (text: the agent's reading of the editor's disagreements, one line per tag),
-//                           verified_tags (Verified tags as tag names), review_status (To review, Reviewed or null), challenged_notes (text), last_edited }
-//                         The claims table has no Why wrong column any more (READ-DECISIONS.md, decision P4): a decision's reason word is the one that opens the tag's note line.
-//                         The three relations (Agent tags, Tags waiting, Verified tags) are resolved to names through the page ids of the Rulebook copy's rows (this pull's, else the
-//                         ones in rubric/rubric.json); an id that names no tag of the rulebook is left out and said in a warning. A Claims copy that still has the text column Agent tags
-//                         (setup.mjs build has not renamed it) is read the same way: its comma-separated names are the list.
+//                           or null), agent_reasons (text), agent_edition (text), agent_remarks (text), agent_reading (text: Agent's view of your decision, the agent's reading of the editor's
+//                           disagreements, one line per tag), last_edited }
+//                         Claims has no editor column on v2: the decisions are on Tag decisions rows (queue.jsonl).
+//                         The two relations (Agent tags, Tags waiting) are resolved to names through the page ids of the Rulebook's rows (this pull's, else the
+//                         ones in rubric/rubric.json); an id that names no tag of the rulebook is left out and said in a warning.
 //   norm/rulebook.json    [ { <every column by its Notion name>, page_id } ] for the rows that carry the work tag (config notion.rulebook.work_tag)
-//   norm/queue.jsonl      the seventeen columns of Tag decisions (the agent's ledger, with Agent reading, Rule, Reading note and Read under) by their Notion names + page_id, last_edited, decided (Tag outcome is set)
+//   norm/queue.jsonl      the eighteen columns of Tag decisions (TD: Open claim, the three editor columns, Agent status, the agent's reading) by their Notion names + page_id, last_edited, decided (rowDecision: Tag outcome, or a tick on a sure proposal)
 //   norm/lessons.jsonl    the ten columns of Rule changes + page_id, created, supporting_keys (the trailing <geo_id>::<tag> of each Supporting rows line)
 //   norm/settings.json    { page_id, name, paused, rulebook_edition, last_run_summary }
 //   drift.json            computeDrift(lock, rulebook rows), or { skipped: ... }        requests.jsonl   the request log       pull.json   the manifest
-// and evals/cases.jsonl is rewritten from the decided ledger rows whenever tag_decisions is pulled. The decision itself is the editor's, made on the claim
-// (CLAIMS-REVIEW.md, section 2); decisionsFor (lib/decisions.mjs, exported here too) derives it for every judged tag, and propose copies it to the ledger.
+// and evals/cases.jsonl is rewritten from the decided rows whenever tag_decisions is pulled. The decision itself is the editor's, made on the row (P42 to P46); rowDecision (lib/decisions.mjs)
+// reads it, and propose records it in Decided under. pull.json holds table_ids (the data source of each table read): loadPull(root, id, { config }) refuses a pull taken from other tables.
 //
 // runs/dry-run/<run-id>/ (--dry-run): schema.json, rows.jsonl (one plain row per page: every column by its Notion name, plus page_id, url,
 // last_edited_time, source_links, source_pieces), report.json, report.md, requests.jsonl. The client behind it cannot send a write, and the run ends
@@ -38,7 +37,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-import { TABLES, V2_REFUSAL, isProtected, isV2, loadConfig, tableEntry } from './lib/config.mjs';
+import { TABLES, TD, isProtected, loadConfig, tableEntry } from './lib/config.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import { BUILDER_API_VERSION, clientFromConfig, countRequests, requestLogger } from './lib/notion-rest.mjs';
@@ -46,10 +45,8 @@ import { decodePage, normId } from './lib/notion-values.mjs';
 import { agentRoot, codeFile, isMain, repoRoot as defaultRepoRoot, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
 import { computeDrift, readLock, readRubric } from './lib/rubric.mjs';
-import { claimDisagrees, claimWaits, decisionsFor, isReviewed, isToReview, parseTagLines, parseTagNotes } from './lib/decisions.mjs';
+import { READINGS, isDecided, rowDecision } from './lib/decisions.mjs';
 import { validate } from './lib/validate.mjs';
-
-export { claimDisagrees, claimWaits, decisionsFor, isReviewed, isToReview, parseTagLines, parseTagNotes };
 
 export const USAGE = [
   'usage: node agents/claim-tagger-mvp/scripts/pull.mjs --all | --tables <rulebook,claims,tag_decisions,rule_changes,agent_settings> [--pull-id <id>]',
@@ -67,10 +64,8 @@ const NORM_FILES = Object.freeze({
 const ALIASES = Object.freeze({
   queue: 'tag_decisions', decisions: 'tag_decisions', lessons: 'rule_changes', settings: 'agent_settings',
 });
-export const QUEUE_COLUMNS = Object.freeze([
-  'Claim', 'Key', 'Tag', 'Agent proposal', 'Agent confidence', 'Agent reason', 'Claim link', 'Rulebook edition', 'Follow-up', 'Tag outcome', 'Why wrong', 'Your reasoning',
-  'Decided under', 'Agent reading', 'Rule', 'Reading note', 'Read under',
-]);
+/** The eighteen columns of Tag decisions (TD), Open claim included. */
+export const QUEUE_COLUMNS = Object.freeze(Object.values(TD));
 export const LESSON_COLUMNS = Object.freeze([
   'Lesson', 'Tag', 'Rule', 'Kind', 'Current text', 'Proposed text', 'Safety check result', 'Supporting rows', 'Editor wording', 'Status',
 ]);
@@ -239,6 +234,12 @@ export function loadPull(root = agentRoot(), id = latestPullId(root), { config =
   const infoFile = join(dir, 'pull.json');
   if (!existsSync(infoFile)) throw new Error(`pull "${id}" does not exist (${infoFile})`);
   const info = readJson(infoFile);
+  // a pull belongs to the tables it was taken from: plans made from another set of tables would update their rows by page id (PORT-V2.md 2.7)
+  if (config) {
+    const ids = info.table_ids;
+    const other = !ids || typeof ids !== 'object' || Object.entries(ids).some(([t, ds]) => normId(String(safeEntry(config, t)?.data_source_id ?? '')) !== normId(String(ds ?? '')));
+    if (other) throw new Error(`pull "${id}" was taken from other tables than config.json names; take a new pull`);
+  }
   const cache = new Map();
   const memo = (k, fn) => {
     if (!cache.has(k)) cache.set(k, fn());
@@ -370,9 +371,6 @@ function claimsNorm(entry, table, decoded, pagesById, warnings, tagNames = new M
       agent_edition: text(p[writeCols.edition]).trim(),
       agent_remarks: text(p[writeCols.remarks]).trim(),
       agent_reading: text(p[writeCols.reading]).trim(),
-      verified_tags: namesOf(p[cols.verified], cols.verified),
-      review_status: text(p[cols.review_status]).trim() || null,
-      challenged_notes: text(p[cols.notes]),
       last_edited: row.last_edited_time ?? null,
     };
   });
@@ -386,8 +384,7 @@ function queueNorm(entry, table, decoded, warnings) {
   const out = rows.map(({ row }) => {
     const base = {};
     for (const column of QUEUE_COLUMNS) base[column] = row.props[column] ?? null;
-    const outcome = text(row.props['Tag outcome']).trim();
-    return { ...base, page_id: row.page_id, last_edited: row.last_edited_time ?? null, decided: outcome !== '' };
+    return { ...base, page_id: row.page_id, last_edited: row.last_edited_time ?? null, decided: isDecided(row.props) };
   });
   return { out, duplicates };
 }
@@ -428,21 +425,25 @@ function settingsNorm(config, entry, decoded, warnings) {
   };
 }
 
-/** The earlier decisions, from the decided queue rows: evals/cases.jsonl (CONTRACTS section 4). */
+/**
+ * The earlier decisions, from the decided queue rows (rowDecision: a Tag outcome, or a tick on a sure proposal): evals/cases.jsonl (CONTRACTS section 4). why_wrong is the agent's own reading
+ * of the row when it holds one (the field keeps its shape); decided_edition is the edition the decision was made under (Decided under), not the Rulebook edition, which moves with each tag run.
+ */
 function casesFrom(queueRows) {
   const seen = new Set();
   const out = [];
   for (const r of queueRows) {
-    if (!r.decided || text(r.Key).trim() === '' || seen.has(r.Key)) continue;
+    const d = rowDecision(r);
+    if (d.outcome === null || text(r.Key).trim() === '' || seen.has(r.Key)) continue;
     seen.add(r.Key);
     out.push({
       key: r.Key,
       tag: r.Tag,
       claim: r.Claim,
-      outcome: r['Tag outcome'],
-      why_wrong: r['Why wrong'] ?? null,
-      decided_edition: text(r['Rulebook edition']).trim() || null,
-      source: text(r['Your reasoning']).startsWith(AUDIT_PREFIX) ? 'audit of 9 October' : 'queue',
+      outcome: d.outcome,
+      why_wrong: READINGS.includes(r[TD.view]) ? r[TD.view] : null,
+      decided_edition: d.decided_under,
+      source: text(d.note).startsWith(AUDIT_PREFIX) ? 'audit of 9 October' : 'queue',
     });
   }
   return out;
@@ -511,7 +512,6 @@ export function tablesFor(names) {
 export async function pull({
   root = agentRoot(), config = loadConfig(root), client, tables = 'all', pullId, now = () => new Date(), fetchImpl, token, repoRoot, sleep,
 } = {}) {
-  if (isV2(config)) throw new UsageError(V2_REFUSAL); // the loop does not run on the v2 profile yet (checkpoint 3)
   const wanted = tablesFor(tables);
   const skipped = [];
   const targets = [];
@@ -544,6 +544,7 @@ export async function pull({
   const decoded = {};
   const pagesById = {};
   const pulledTables = [];
+  const tableIds = {};
   for (const { table, entry } of targets) {
     const schema = await notion.retrieveDatabase(entry.database_id);
     writeJsonAtomic(join(dir, 'schema', `${table}.json`), schema);
@@ -551,6 +552,7 @@ export async function pull({
     if (table === 'claims' && entry.columns?.sources) await completeLongText(notion, pages, entry.columns.sources);
     writeTextAtomic(join(dir, 'raw', `${table}.jsonl`), jsonl(pages));
     pulledTables.push(table);
+    tableIds[table] = entry.data_source_id;
     counts[table] = pages.length;
     const have = schema?.properties ?? {};
     if (!have[entry.key]) {
@@ -629,7 +631,7 @@ export async function pull({
 
   const duplicateLines = duplicates.map((d) => ({ table: d.table, key: d.key, page_ids: d.page_ids }));
   writeJsonAtomic(join(dir, 'pull.json'), {
-    pull_id: id, taken_at: takenAt, tables: pulledTables, skipped, counts, cases, duplicates: duplicateLines, problems, paused, warnings,
+    pull_id: id, taken_at: takenAt, tables: pulledTables, table_ids: tableIds, skipped, counts, cases, duplicates: duplicateLines, problems, paused, warnings,
     drift: 'skipped' in drift ? { checked: false, ...drift } : { checked: true, judged: drift.judged?.length ?? 0, adopted: drift.adopted?.length ?? 0, missing: drift.missing?.length ?? 0, added: drift.added?.length ?? 0 },
     request_log: existsSync(join(dir, 'requests.jsonl')) ? 'requests.jsonl' : null,
   });
@@ -923,10 +925,6 @@ export async function main(argv, io = defaultIo, env = {}) {
     config = env.config ?? loadConfig(root);
   } catch (e) {
     io.err(`pull: ${e.message}`);
-    return EXIT.INVALID;
-  }
-  if (isV2(config)) {
-    io.err(`pull: ${V2_REFUSAL}`);
     return EXIT.INVALID;
   }
   try {

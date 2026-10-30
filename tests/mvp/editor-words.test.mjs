@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  answerWord, capWords, cutText, demoCommands, listNames, namePracticePage, notionUrl, plural, practiceLink, practiceTitle, quoted, quotedWhole, splitSentences, stampOf, suggestionPart, tableLink, viewLink, yourClaims,
+  answerWord, capWords, cutText, demoCommands, listNames, namePracticePage, notionUrl, plural, practiceLink, practiceTitle, quoted, quotedWhole, splitSentences, stampOf, suggestionPart, tableLink, viewLink, yourClaims, yourRows,
 } from '../../agents/claim-tagger-mvp/scripts/lib/editor-words.mjs';
 import { lintReport, renderReport, splitExtra } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { oneLineRule } from '../../agents/claim-tagger-mvp/scripts/lib/rulebook-edit.mjs';
@@ -80,19 +80,24 @@ test('notionUrl with a title is the form Notion gives a page: the words of the t
   for (const none of [undefined, null, '', '   ', '·']) assert.equal(notionUrl(id, none), `https://www.notion.so/${id}`, `no words, no title: ${JSON.stringify(none)}`);
 });
 
+test('yourRows names the Tag decisions rows an editor is to decide in the words of the page: one, two or three up to ten spelled out, then the figure', () => {
+  assert.deepEqual([1, 2, 3, 10, 11, 14].map(yourRows), ['your row', 'your two rows', 'your three rows', 'your ten rows', 'your 11 rows', 'your 14 rows']);
+  assert.equal(yourRows(0), 'your no rows', 'as yourClaims says it: the callers never ask for none');
+  assert.equal(yourClaims(2), 'your two claims', 'the claims keep their own helper (add.mjs)');
+});
+
 test('viewLink: a view id gives ?v=, a link is used as it is, an object works, and without a view the table\'s own link is used', () => {
   const c = base();
-  assert.equal(viewLink(c, 'your_queue'), `https://www.notion.so/${c.notion.parent_page_id}`, 'the Claims copy is the table of Your queue; while it is not made the link goes to the page');
-  assert.equal(viewLink(c, 'your_queue_ledger'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'the old view of the ledger is a view of Tag decisions');
-  c.notion.claims.database_id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
+  assert.equal(viewLink(c, 'your_queue'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', 'Your queue, Needs your note and Agent disagreed are views of Tag decisions');
+  assert.equal(viewLink(c, 'needs_your_note'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb');
+  assert.throws(() => viewLink(c, 'your_queue_ledger'), /unknown view/, 'the two old views of the ledger are gone');
+  c.notion.databases.tag_decisions.database_id = 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee';
   assert.equal(viewLink(c, 'your_queue'), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
   assert.equal(viewLink(c, 'agent_disagreed'), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee');
   c.notion.views = {
     your_queue: '11111111-1111-1111-1111-111111111111', lessons_waiting: 'https://www.notion.so/x?v=1', rulebook: { id: '22222222222222222222222222222222' }, needs_your_note: { url: 'https://example.org/v' },
-    your_queue_ledger: '33333333-3333-3333-3333-333333333333',
   };
   assert.equal(viewLink(c, 'your_queue'), 'https://www.notion.so/eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee?v=11111111111111111111111111111111');
-  assert.equal(viewLink(c, 'your_queue_ledger'), 'https://www.notion.so/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb?v=33333333333333333333333333333333');
   assert.equal(viewLink(c, 'lessons_waiting'), 'https://www.notion.so/x?v=1');
   assert.equal(viewLink(c, 'rulebook'), 'https://www.notion.so/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa?v=22222222222222222222222222222222');
   assert.equal(viewLink(c, 'needs_your_note'), 'https://example.org/v');

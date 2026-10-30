@@ -13,7 +13,7 @@ import {
 import { normId } from '../../agents/claim-tagger-mvp/scripts/lib/notion-values.mjs';
 import { checkPlan, newPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import { builtConfig } from './helpers/config-fixture.mjs';
-import { TABLE_SPECS, restProps } from './helpers/tables.mjs';
+import { FIRST_PAGE_SPECS, TABLE_SPECS, restProps } from './helpers/tables.mjs';
 import { createFakeNotion } from './fixtures/fake-notion.mjs';
 
 const dirs = [];
@@ -182,7 +182,7 @@ function makeWorld({ seed = true, configure = null, firstPage = null, targetOver
   writeFileSync(join(root, 'setup', 'first-page.json'), `${JSON.stringify(firstPage ?? firstPageFile(), null, 2)}\n`);
 
   const fake = createFakeNotion({ protected: [...config.notion.protected_database_ids, ...config.notion.protected_page_ids] });
-  for (const t of Object.keys(SRC)) fake.addDatabase({ id: SRC[t].db, dataSourceId: SRC[t].ds, title: `first ${t}`, properties: restProps(sourceSpecs[t] ?? TABLE_SPECS[t], SRC.rulebook.ds) });
+  for (const t of Object.keys(SRC)) fake.addDatabase({ id: SRC[t].db, dataSourceId: SRC[t].ds, title: `first ${t}`, properties: restProps(sourceSpecs[t] ?? FIRST_PAGE_SPECS[t], SRC.rulebook.ds) });
   const specs = targetOverride ?? targetSpecs();
   for (const t of Object.keys(TGT)) fake.addDatabase({ id: TGT[t].db, dataSourceId: TGT[t].ds, title: `v2 ${t}`, properties: restProps(specs[t], TGT.rulebook.ds) });
 
@@ -524,11 +524,11 @@ test('Editor wording, an Approved or Rejected Status and Paused on v2 are editor
 
 test('refuses a target that is not the v2 profile, before any request', async () => {
   const w = makeWorld({ configure: (c) => { delete c.profile; delete c.notion.root_parent_page_id; c.editor_columns.claims = ['Verified tags', 'Review status', 'Challenged tags notes']; Object.assign(c.notion.claims.columns, { verified: 'Verified tags', review_status: 'Review status', notes: 'Challenged tags notes' }); } });
-  assert.deepEqual(validateConfig(loadConfig(w.root)).errors, [], 'a valid production-shaped config');
+  assert.notDeepEqual(validateConfig(JSON.parse(readFileSync(join(w.root, 'config.json'), 'utf8'))).errors, [], 'a per-claim config is not a valid config any more (P48), so the script stops on it');
   for (const command of ['plan', 'apply', 'check']) {
     const r = await w.run([command]);
     assert.equal(r.code, 2, command);
-    assert.match(r.err, /not the v2 profile/);
+    assert.match(r.err, /not the v2 profile|expected "v2"/);
   }
   assert.equal(w.fake.requests.length, 0);
 });
@@ -579,7 +579,7 @@ test('a column that is missing on either side stops the plan with its name, and 
   assert.match(noColumn.err, /v2 tag decisions table has no column "Open claim"/);
 
   // the first page lacks "Reading note"
-  const first = { ...TABLE_SPECS.tag_decisions };
+  const first = { ...FIRST_PAGE_SPECS.tag_decisions };
   delete first['Reading note'];
   const w2 = makeWorld({ seed: false, sourceSpecs: { tag_decisions: first } });
   seedFirstPage(w2, { skipLedger: true });
@@ -690,7 +690,7 @@ test('readFirstPage: the committed setup/first-page.json describes five tables a
   assert.equal(doc.tables.claims.key, 'Geo ID');
   assert.equal(doc.tables.claims.write_columns.reading, 'Agent reading');
   assert.equal(doc.tables.tag_decisions.key, 'Key');
-  const v2 = JSON.parse(readFileSync(new URL('../../agents/claim-tagger-mvp/profiles/v2/config.json', import.meta.url), 'utf8'));
+  const v2 = JSON.parse(readFileSync(new URL('../../agents/claim-tagger-mvp/config.json', import.meta.url), 'utf8'));
   const ids = new Set(Object.values(doc.tables).flatMap((t) => [t.database_id, t.data_source_id]).map(normId));
   const mine = [v2.notion.rulebook, v2.notion.claims, ...Object.values(v2.notion.databases)].flatMap((t) => [t.database_id, t.data_source_id]).map(normId);
   assert.deepEqual(mine.filter((i) => ids.has(i)), [], 'the two are disjoint');
@@ -745,6 +745,7 @@ test('plan.mjs: a copy-live plan never writes Agent is right, a column outside i
 
 test('plan.mjs: a copy-live plan is refused on a config that is not the v2 profile', () => {
   const production = builtConfig();
+  delete production.profile; // the fixture is the v2 shape now (P48); a config without the profile is the one the copy must refuse
   const p = copyPlan(production);
   p.create('rule_changes', 'L', { Lesson: 'L' });
   const r = checkPlan(p, production, { root: 'x' });

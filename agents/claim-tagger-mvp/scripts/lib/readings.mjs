@@ -1,55 +1,52 @@
-// Reading the decisions (docs/mvp-2026-11/READ-DECISIONS.md, decision P4 and decisions 64 to 76). Where an editor decided a tag differently from the agent, the agent reads the
+// Reading the decisions (docs/mvp-2026-11/READ-DECISIONS.md, decision P4 and decisions 64 to 76; v2: PORT-V2.md, P42 to P46). Where an editor decided a tag differently from the agent, the agent reads the
 // disagreement itself: Agent slip (the rule as written settles it the editor's way and the agent misread), Rule unclear (the rule can honestly be read both ways on this claim) or Rule
-// should change (the rule as written decides against the editor); the rule it points at; one line of why. Editors no longer diagnose the agent. Pure functions on the plain rows a pull
-// writes (norm/claims.jsonl and norm/queue.jsonl) and on the rubric; nothing here reads or writes Notion, calls a model or touches a run folder (distill.mjs does that; the schema of the
-// model's reply, schemas/reading-reply.schema.json, is the one file read).
+// should change (the rule as written decides against the editor); the rule it points at; one line of why. Editors do not diagnose the agent, and no reason word in their note is obeyed (P45). Pure
+// functions on the plain rows a pull writes (norm/claims.jsonl and norm/queue.jsonl) and on the rubric; nothing here reads or writes Notion, calls a model or touches a run folder (distill.mjs
+// does that; the schema of the model's reply, schemas/reading-reply.schema.json, is the one file read).
 //
-//   READINGS, READING_COLUMNS              the three readings (one definition, lib/decisions.mjs) and the four ledger columns that hold a reading: Agent reading, Rule, Reading note, Read under
-//   isDisagreement(row)                    true for a decided ledger row whose Tag outcome differs from its Agent proposal (Can't tell differs from both outcomes)
+//   READINGS, READING_COLUMNS              the three readings (one definition, lib/decisions.mjs) and the four Tag decisions columns that hold a reading: Agent's view of your decision, Rule, Why the agent thinks so, Read under
+//   isDisagreement(row)                    true for a decided row whose decision differs from its Agent proposal (rowDisagrees; Can't tell differs from both outcomes)
 //   readingHash({ outcome, proposal, noteLine, reasonWord, proposalEdition })   the first 8 hex characters of sha256 over a stable JSON of those five values (spaces in the note folded);
-//                                          proposalEdition is the row's Rulebook edition, the edition the agent's proposal was made under
-//   readUnder(edition, hash8)              "<edition> · <hash8>", the text of the ledger's Read under (the cache key of a reading)
+//                                          proposalEdition is the row's Rulebook edition, the edition the agent's proposal was made under. reasonWord is always null on v2 (it stays in the hash for shape)
+//   readUnder(edition, hash8)              "<edition> · <hash8>", the text of the row's Read under (the cache key of a reading)
 //   parseReadUnder(text)                   { edition, hash } or null. A row is current when the hash equals the current one; the edition is for people and is never compared
-//   citedRule(row), agentCitedRule(row)    the rule number a ledger row points at: in the editor's words ("rule N") first, then the agent's own citation ("<Tag> rule N"); the agent's alone
+//   citedRule(row), agentCitedRule(row)    the rule number a row points at: in the editor's words ("rule N" in Your note) first, then the agent's own citation ("<Tag> rule N"); the agent's alone
 //   classifyRows({ claims, ledgerRows, rubric, config })
-//                                          { verbatim, toRead, current, agree, fixed, unjudged, orphans }. Only Reviewed claims count (decisionsFor). Each item is
+//                                          { verbatim, toRead, current, agree, fixed, unjudged, orphans }. One item per DECIDED row (rowDecision), not per claim. Each item is
 //                                          { row, claim, key, tag, decision, hash, edition, reasonWord, noteLine, citedRule }:
-//                                            verbatim  disagreements whose note line opens with a reason word and whose Read under hash is stale: the reading is the editor's word, no model call
-//                                            toRead    stale disagreements without a reason word: the model reads them
+//                                            toRead    stale disagreements: the model reads them
 //                                            current   disagreements whose Read under hash is unchanged (and that hold a reading): nothing to do
-//                                            agree     judged tags where the outcome equals the proposal
+//                                            agree     decided rows where the decision equals the proposal
 //                                            fixed     disagreements marked Fixed (a rule change resting on them went live): never read, never read again
-//                                            unjudged  { claim, tag } for a note line that names a rulebook tag the agent did not judge on that claim
 //                                            orphans   items of a tag that is not judged under this config and rubric (no reading is made for them; the run says so)
-//   verbatimReading(item)                  { reading, rule, note } of a verbatim item: the word, the rule the note names (else the agent's), "Your note says so."
+//                                            verbatim, unjudged   always empty on v2 (there are no reason words, and a row is per tag); the keys stay so that distill and status need no branch
 //   batchesOf(items, size)                 the items in lists of at most `size`, in order
 //   buildReadingMessage(batch, rubric)     the user message of one model call: a <tag> block per tag, then <rows> with a <row> per item (claim, agent_reason, note), every text escaped
 //   checkReadings(reply, batch, rubric)    { readings: Map(key -> { reading, rule, note }), problems }: the reply must fit the schema, read every key of the batch exactly once and no other,
 //                                          point at a rule that exists for the row's tag (or null) and keep the note to 25 words. A reply with a problem is refused as a whole (readings is empty)
-//   readingCells(item, reading, edition)   the four ledger values of a reading; "without your note · " opens the note when the editor wrote none (set here, never by the model)
-//   readingOfRow(row)                      the reading a ledger row holds, { reading, rule, note, noNote }, or null
+//   readingCells(item, reading, edition)   the four row values of a reading; "without your note · " opens the note when the editor wrote none (set here, never by the model)
+//   readingOfRow(row)                      the reading a row holds, { reading, rule, note, noNote }, or null
 //   pointsAtRule(row)                      true when the row's reading blames the rule (Rule unclear or Rule should change) and the editor wrote a note: a reading whose note opens "without your note"
 //                                          is the agent's guess about an unexplained decision and never supports a draft (decision 78)
 //   ledgerAsRead({ claims, ledgerRows, rubric, config })
-//                                          { rows, classes }: the ledger rows as distill would leave them before it asks a model anything (the decisions copied, a reason word the editor wrote already applied,
-//                                          the reading of a row that stopped being a disagreement cleared), for status, promote and the follow-up
-//   recantedKeys(lesson, ledgerRows)       the keys of the rows a rule change rests on (its supporting_keys) whose ledger row does not point at a rule any more: no row, no longer a disagreement,
-//                                          marked Fixed, or a reading that is not a rule reading (re-read as Agent slip after a reason word or a changed note, or none) (decision 79)
+//                                          { rows, classes }: the rows as distill would leave them before it asks a model anything (the decisions recorded in Decided under, the reading of a row that
+//                                          stopped being a disagreement cleared), for status, promote and the follow-up
+//   recantedKeys(lesson, ledgerRows)       the keys of the rows a rule change rests on (its supporting_keys) whose row does not point at a rule any more: no row, no longer a disagreement,
+//                                          marked Fixed, or a reading that is not a rule reading (re-read as Agent slip after a changed note, or none) (decision 79)
 //   recantedAmong(lessons, ledgerRows)     [{ lesson, keys, why }] for the Proposed or Approved lessons that have recanted keys; `why` is "slip" when every one reads Agent slip, else "other"
 //   recantedLessons({ lessons, claims, ledgerRows, rubric, config })   the same over ledgerAsRead's rows (status and promote)
-//   recantedPhrase(keys, why, { short })   "a decision you now call the agent's slip" / "a decision that no longer points at a rule" (plural for several), the words of the sentences
+//   recantedPhrase(keys, why, { short })   "a decision the agent now reads as its own slip" / "a decision that no longer points at a rule" (plural for several), the words of the sentences
 //   claimReadingCell({ claim, items, readings, unjudged })
-//                                          the text of the claim's Agent reading, or null when it cannot be written yet (a disagreement has no reading); see the rules below
+//                                          the text of the claim's Agent's view of your decision, or null when it cannot be written yet (a disagreement has no reading); see the rules below
 //   readingRecord(item, reading, source), reusableReading(line, item, rubric)   a line of readings.jsonl, and the reading a line gives back for an item whose hash it matches (or null)
 //   xmlText(s), xmlAttr(s), renderTag(tag) the escaping and the tag block that distill.mjs uses for its own message too
-//   constants: YOUR_NOTE_SAYS_SO, WITHOUT_NOTE, MAX_NOTE_WORDS
+//   constants: WITHOUT_NOTE, MAX_NOTE_WORDS
 //
 // The rules.
-//  - A reading is made for a (claim, tag), only on a Reviewed claim, only where the editor's outcome differs from the proposal, and not where the row is marked Fixed.
-//  - The reason word of a note line (decisionsFor: Agent slip, Rule unclear or Rule should change, then a full stop) is applied as it stands. Removing it hands the row back to the model.
-//  - The flag "without your note" belongs to code (decision 67): a row has no note when the editor wrote neither a reason word nor any words for the tag. The model is never asked for it.
-//  - The claim's Agent reading has one line per read tag, tags in alphabetical order, then the "did not judge" line of each unjudged tag. A Reviewed claim whose judged tags all agree reads
-//    "Nothing to read: the agent agreed with you." A claim with a disagreement that has no reading yet gets no cell (null) this run. A row marked Fixed keeps the reading it has, if any.
+//  - A reading is made for a row (one claim and one tag), only where the decision (Tag outcome, or a tick on a sure proposal) differs from the proposal, and not where the row is marked Fixed.
+//  - The flag "without your note" belongs to code (decision 67): a row has no note when the editor wrote nothing in Your note. The model is never asked for it.
+//  - The claim's Agent's view of your decision has one line per read tag, tags in alphabetical order. A claim whose decided rows all agree reads "Nothing to read: the agent agreed with you."
+//    A claim with a disagreement that has no reading yet gets no cell (null) this run. A row marked Fixed keeps the reading it has, if any.
 //  - An empty cell means "not read yet"; only distill writes it (the editor columns are never touched).
 //  - The key of a reading holds the edition the proposal was made under (the row's Rulebook edition): a promote alone makes no reading stale; the next proposal under the new
 //    edition (a tag run, or the follow-up on the rows a lesson rests on) is read again.
@@ -60,8 +57,8 @@
 
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { groupOf } from './config.mjs';
-import { RULE_WHY, READINGS, decisionsFor, isFollowedUp, isReviewed, parseTagLines, syncDecisions } from './decisions.mjs';
+import { TD, groupOf } from './config.mjs';
+import { RULE_WHY, READINGS, isDecided, isFollowedUp, recordDecisions, rowDecision, rowDisagrees } from './decisions.mjs';
 import { readJson } from './jsonl.mjs';
 import { codeRoot } from './paths.mjs';
 import { ruleNumberOf } from './rulebook-edit.mjs';
@@ -70,12 +67,11 @@ import { supportingKeys } from '../pull.mjs';
 
 export { READINGS };
 
-export const READING_COLUMNS = Object.freeze(['Agent reading', 'Rule', 'Reading note', 'Read under']);
-export const YOUR_NOTE_SAYS_SO = 'Your note says so.';
+export const READING_COLUMNS = Object.freeze([TD.view, TD.rule, TD.why, TD.readUnder]);
 export const WITHOUT_NOTE = 'without your note';
 export const MAX_NOTE_WORDS = 25;
 const SEP = ' · ';
-const NO_READING_CELLS = Object.freeze({ 'Agent reading': null, Rule: null, 'Reading note': null, 'Read under': null });
+const NO_READING_CELLS = Object.freeze(Object.fromEntries(READING_COLUMNS.map((c) => [c, null])));
 
 const text = (v) => (typeof v === 'string' ? v : v === null || v === undefined ? '' : String(v));
 const squash = (s) => text(s).replace(/\s+/g, ' ').trim();
@@ -105,12 +101,8 @@ export function renderTag(tag) {
 
 // ---- disagreements and cache keys --------------------------------------------------------------------------------------------------------------
 
-/** A decided ledger row whose Tag outcome differs from its Agent proposal. A proposal of Can't tell differs from both outcomes. */
-export function isDisagreement(row) {
-  const outcome = text(row?.['Tag outcome']).trim();
-  return outcome !== '' && outcome !== text(row?.['Agent proposal']).trim();
-}
-
+/** A decided row whose decision differs from its Agent proposal. A proposal of Can't tell differs from both outcomes. */
+export const isDisagreement = (row) => rowDisagrees(row);
 
 /**
  * The first 8 hex characters of sha256 over a stable JSON of the five values that make a reading (decision 66): the editor's outcome, the agent's proposal, the note line (spaces folded),
@@ -137,15 +129,15 @@ export function parseReadUnder(value) {
 
 /** The rule number the agent itself cited in a ledger row's Agent reason ("<Tag> rule N", the last one: the rule a run cited is at the end), or null. */
 export function agentCitedRule(row) {
-  const re = new RegExp(`${escapeRe(text(row?.Tag))}\\s+rule\\s+(\\d+)`, 'gi');
+  const re = new RegExp(`${escapeRe(text(row?.[TD.tag]))}\\s+rule\\s+(\\d+)`, 'gi');
   let last = null;
-  for (const m of text(row?.['Agent reason']).matchAll(re)) last = Number(m[1]);
+  for (const m of text(row?.[TD.reason]).matchAll(re)) last = Number(m[1]);
   return last;
 }
 
-/** The rule number a decided row points at: "rule N" in Your reasoning first, then "<Tag> rule N" in Agent reason (the last one), else null. */
+/** The rule number a decided row points at: "rule N" in Your note first, then "<Tag> rule N" in Agent reason (the last one), else null. */
 export function citedRule(row) {
-  const mine = /\brule\s*#?\s*(\d+)\b/i.exec(text(row?.['Your reasoning']));
+  const mine = /\brule\s*#?\s*(\d+)\b/i.exec(text(rowDecision(row).note));
   if (mine) return Number(mine[1]);
   return agentCitedRule(row);
 }
@@ -157,7 +149,7 @@ const ruleLabel = (tagName, n) => (n === null || n === undefined ? null : `${tag
 function ruleOfItem(row, noteLine, tag) {
   const mine = /\brule\s*#?\s*(\d+)\b/i.exec(text(noteLine));
   if (mine && hasRule(tag, Number(mine[1]))) return Number(mine[1]);
-  const theirs = agentCitedRule({ Tag: tag.name, 'Agent reason': row?.['Agent reason'] });
+  const theirs = agentCitedRule({ [TD.tag]: tag.name, [TD.reason]: row?.[TD.reason] });
   return hasRule(tag, theirs) ? theirs : null;
 }
 
@@ -166,57 +158,44 @@ function ruleOfItem(row, noteLine, tag) {
 const hasNoNote = (item) => item.reasonWord === null && squash(item.noteLine) === '';
 
 /**
- * Sort the judged tags of every Reviewed claim into the ways a row can stand (see the header). `ledgerRows` are the rows of Tag decisions as they will be once the decisions are copied
- * (syncDecisions), `claims` the pulled claim rows, `rubric` the rulebook in force. The names of every tag of the rubric are what a note line may start with, so a line for a tag the agent
- * did not judge is its own entry and never becomes part of another tag's note.
+ * Sort the DECIDED rows into the ways a row can stand (see the header). `ledgerRows` are the rows of Tag decisions as they will be once the decisions are recorded (recordDecisions),
+ * `claims` the pulled claim rows (they only name the item's claim: a row whose claim is not among them gets { geo_id, claim: <the row's Claim> }), `rubric` the rulebook in force.
+ * `verbatim` and `unjudged` are always empty on v2 (no reason words, one row per tag); the keys stay so that callers need no branch.
  */
 export function classifyRows({ claims, ledgerRows, rubric, config }) {
   const out = {
     verbatim: [], toRead: [], current: [], agree: [], fixed: [], unjudged: [], orphans: [],
   };
   const edition = rubric?.edition ?? null;
-  const tagNames = (rubric?.tags ?? []).map((t) => t.name);
-  const byKey = new Map((ledgerRows ?? []).map((r) => [r.Key, r]));
-  for (const claim of claims ?? []) {
-    if (!isReviewed(claim)) continue;
-    const decisions = decisionsFor(claim, ledgerRows, { tagNames });
-    for (const d of decisions) {
-      const row = byKey.get(d.key);
-      const tag = rubric.tags.find((t) => t.name === d.tag);
-      const proposal = row['Agent proposal'] ?? null;
-      const noteLine = d.reasoning ?? '';
-      const item = {
-        row,
-        claim,
-        key: d.key,
-        tag: d.tag,
-        decision: d,
-        hash: readingHash({ outcome: d.outcome, proposal, noteLine, reasonWord: d.why_wrong ?? null, proposalEdition: row['Rulebook edition'] ?? null }),
-        edition,
-        reasonWord: d.why_wrong ?? null,
-        noteLine,
-        citedRule: tag ? ruleOfItem(row, noteLine, tag) : null,
-      };
-      if (!tag || !tag.judged || (config && groupOf(config, tag.name) === null)) {
-        out.orphans.push(item);
-        continue;
-      }
-      if (d.outcome === proposal) out.agree.push(item);
-      else if (isFollowedUp(row)) out.fixed.push(item);
-      else if (parseReadUnder(row['Read under'])?.hash === item.hash && readingOfRow(row) !== null) out.current.push(item);
-      else if (item.reasonWord !== null) out.verbatim.push(item);
-      else out.toRead.push(item);
+  const claimById = new Map((claims ?? []).map((c) => [c.geo_id, c]));
+  for (const row of ledgerRows ?? []) {
+    if (!isDecided(row)) continue;
+    const d = rowDecision(row);
+    const tag = (rubric?.tags ?? []).find((t) => t.name === d.tag);
+    const proposal = row[TD.proposal] ?? null;
+    const noteLine = d.note ?? '';
+    const item = {
+      row,
+      claim: claimById.get(d.geo_id) ?? { geo_id: d.geo_id, claim: row[TD.claim] },
+      key: d.key,
+      tag: d.tag,
+      decision: d,
+      hash: readingHash({ outcome: d.outcome, proposal, noteLine, reasonWord: null, proposalEdition: row[TD.edition] ?? null }),
+      edition,
+      reasonWord: null,
+      noteLine,
+      citedRule: tag ? ruleOfItem(row, noteLine, tag) : null,
+    };
+    if (!tag || !tag.judged || (config && groupOf(config, tag.name) === null)) {
+      out.orphans.push(item);
+      continue;
     }
-    const judged = new Set(decisions.map((d) => d.tag));
-    const lines = parseTagLines(claim.challenged_notes, tagNames);
-    for (const tag of lines ? [...lines.keys()].sort(byName) : []) if (!judged.has(tag)) out.unjudged.push({ claim, tag });
+    if (d.outcome === proposal) out.agree.push(item);
+    else if (isFollowedUp(row)) out.fixed.push(item);
+    else if (parseReadUnder(row[TD.readUnder])?.hash === item.hash && readingOfRow(row) !== null) out.current.push(item);
+    else out.toRead.push(item);
   }
   return out;
-}
-
-/** The reading of a verbatim item: the editor's reason word, the rule the note names (else the one the agent cited, else none), and "Your note says so." */
-export function verbatimReading(item) {
-  return { reading: item.reasonWord, rule: ruleLabel(item.tag, item.citedRule), note: YOUR_NOTE_SAYS_SO };
 }
 
 /** The items in lists of at most `size`, in order. */
@@ -238,12 +217,12 @@ export function buildReadingMessage(batch, rubric) {
   for (const name of [...new Set(batch.map((i) => i.tag))].sort(byName)) parts.push(renderTag(rubric.tags.find((t) => t.name === name)));
   parts.push('<rows>');
   for (const it of batch) {
-    const confidence = it.row['Agent confidence'];
+    const confidence = it.row[TD.confidence];
     const note = squash(it.noteLine) === '' ? '<note none="true"/>' : `<note>${xmlText(it.noteLine)}</note>`;
     parts.push(
-      `<row key="${xmlAttr(it.key)}" tag="${xmlAttr(it.tag)}" outcome="${xmlAttr(it.decision.outcome)}" proposal="${xmlAttr(it.row['Agent proposal'] ?? '')}" confidence="${xmlAttr(confidence ?? '')}">`,
-      `<claim>${xmlText(it.claim.claim ?? it.row.Claim)}</claim>`,
-      `<agent_reason>${xmlText(it.row['Agent reason'])}</agent_reason>`,
+      `<row key="${xmlAttr(it.key)}" tag="${xmlAttr(it.tag)}" outcome="${xmlAttr(it.decision.outcome)}" proposal="${xmlAttr(it.row[TD.proposal] ?? '')}" confidence="${xmlAttr(confidence ?? '')}">`,
+      `<claim>${xmlText(it.claim.claim ?? it.row[TD.claim])}</claim>`,
+      `<agent_reason>${xmlText(it.row[TD.reason])}</agent_reason>`,
       note,
       '</row>',
     );
@@ -307,13 +286,13 @@ export function checkReadings(reply, batch, rubric) {
 
 // ---- the cells ---------------------------------------------------------------------------------------------------------------------------------
 
-/** The four ledger values of a reading (READING_COLUMNS). The note opens with "without your note · " when the editor wrote nothing for the tag. */
+/** The four row values of a reading (READING_COLUMNS). The note opens with "without your note · " when the editor wrote nothing for the tag. */
 export function readingCells(item, reading, edition = item.edition) {
   return {
-    'Agent reading': reading.reading,
-    Rule: reading.rule ?? null,
-    'Reading note': hasNoNote(item) ? `${WITHOUT_NOTE}${SEP}${reading.note}` : reading.note,
-    'Read under': readUnder(edition, item.hash),
+    [TD.view]: reading.reading,
+    [TD.rule]: reading.rule ?? null,
+    [TD.why]: hasNoNote(item) ? `${WITHOUT_NOTE}${SEP}${reading.note}` : reading.note,
+    [TD.readUnder]: readUnder(edition, item.hash),
   };
 }
 
@@ -322,13 +301,13 @@ export const clearedReadingCells = () => ({ ...NO_READING_CELLS });
 
 /** The reading a ledger row holds as { reading, rule, note, noNote } (the note without its "without your note · " opening), or null when the row holds none. */
 export function readingOfRow(row) {
-  const reading = text(row?.['Agent reading']).trim();
+  const reading = text(row?.[TD.view]).trim();
   if (!READINGS.includes(reading)) return null;
-  let note = text(row['Reading note']).trim();
+  let note = text(row[TD.why]).trim();
   const prefix = `${WITHOUT_NOTE}${SEP}`;
   const noNote = note.startsWith(prefix);
   if (noNote) note = note.slice(prefix.length).trim();
-  return { reading, rule: text(row.Rule).trim() || null, note, noNote };
+  return { reading, rule: text(row[TD.rule]).trim() || null, note, noNote };
 }
 
 /**
@@ -341,16 +320,14 @@ export function pointsAtRule(row) {
 }
 
 /**
- * The ledger rows as they stand once the decisions are copied and the readings that need no model are made, with the classification of the Reviewed claims' rows: the editor's decisions
- * copied the way distill copies them first (syncDecisions), a reason word the editor wrote applied at once (the reading of a `verbatim` row is the word), and the reading of a row that stopped
- * being a disagreement cleared. A row the model has still to read keeps the reading it holds. `rows` are copies: nothing the caller passed is changed. For status, promote and the
- * follow-up, which look at the rows a rule change rests on without waiting for distill to write them.
+ * The rows as they stand once the decisions are recorded in Decided under (recordDecisions, the way distill records them first) and the reading of a row that stopped being a
+ * disagreement is cleared, with the classification of the decided rows. A row the model has still to read keeps the reading it holds. `rows` are copies: nothing the caller passed
+ * is changed. For status, promote and the follow-up, which look at the rows a rule change rests on without waiting for distill to write them.
  */
 export function ledgerAsRead({ claims, ledgerRows, rubric, config }) {
   if (!rubric || !Array.isArray(rubric.tags)) return { rows: (ledgerRows ?? []).map((r) => ({ ...r })), classes: null };
-  const { rows } = syncDecisions(claims, ledgerRows, { tagNames: rubric.tags.map((t) => t.name) });
+  const { rows } = recordDecisions(ledgerRows);
   const classes = classifyRows({ claims, ledgerRows: rows, rubric, config });
-  for (const item of classes.verbatim) Object.assign(item.row, readingCells(item, verbatimReading(item), rubric.edition));
   for (const item of classes.agree) if (READING_COLUMNS.some((c) => text(item.row[c]).trim() !== '')) Object.assign(item.row, clearedReadingCells());
   return { rows, classes };
 }
@@ -401,14 +378,14 @@ export function recantedLessons({ lessons, claims, ledgerRows, rubric, config })
 }
 
 /**
- * The words that say what a recanted rule change rests on: "a decision you now call the agent's slip" / "a decision that no longer points at a rule"; for several keys "3 decisions you now call the
- * agent's slips" / "3 decisions that no longer point at a rule". With `short` the slip is "a slip" (the cell of status's row).
+ * The words that say what a recanted rule change rests on: "a decision the agent now reads as its own slip" / "a decision that no longer points at a rule"; for several keys "3 decisions the
+ * agent now reads as its own slips" / "3 decisions that no longer point at a rule". With `short` the slip is "a slip" (the cell of status's row). The editor never names a reason (P45).
  */
 export function recantedPhrase(keys, why, { short = false } = {}) {
   const n = Array.isArray(keys) ? keys.length : Number(keys);
-  const slip = short ? 'a slip' : "the agent's slip";
-  const slips = short ? 'slips' : "the agent's slips";
-  if (why === 'slip') return n === 1 ? `a decision you now call ${slip}` : `${n} decisions you now call ${slips}`;
+  const slip = short ? 'a slip' : 'its own slip';
+  const slips = short ? 'slips' : 'its own slips';
+  if (why === 'slip') return n === 1 ? `a decision the agent now reads as ${slip}` : `${n} decisions the agent now reads as ${slips}`;
   return n === 1 ? 'a decision that no longer points at a rule' : `${n} decisions that no longer point at a rule`;
 }
 
@@ -418,7 +395,7 @@ function readingFor(item, readings) {
   if (fresh) return fresh;
   const held = readingOfRow(item.row);
   if (held === null) return null;
-  if (isFollowedUp(item.row) || parseReadUnder(item.row['Read under'])?.hash === item.hash) return held;
+  if (isFollowedUp(item.row) || parseReadUnder(item.row[TD.readUnder])?.hash === item.hash) return held;
   return null;
 }
 
@@ -428,8 +405,8 @@ function claimLine(tag, r, noNote) {
 }
 
 /**
- * The text of a claim's Agent reading (decision 68). `items` are every judged tag of the claim (the items of classifyRows for the claim, in any of its lists), `readings` the fresh readings
- * of this run as Map(key -> { reading, rule, note }), `unjudged` the entries ({ tag }) for the claim's note lines about tags the agent did not judge. One line per read tag, tags in
+ * The text of a claim's Agent's view of your decision (decision 68). `items` are every decided row of the claim (the items of classifyRows for the claim, in any of its lists), `readings` the fresh readings
+ * of this run as Map(key -> { reading, rule, note }), `unjudged` (always empty on v2) the entries ({ tag }) for tags the agent did not judge. One line per read tag, tags in
  * alphabetical order: "<Tag>: <reading>, rule <n> · <note>" ("<Tag>: <reading> · <note>" without a rule; ", without your note" after the rule when the editor wrote none), then
  * "<Tag>: the agent did not judge this tag, so nothing to read." per unjudged tag; "Nothing to read: the agent agreed with you." when judged tags exist and none differs. Returns null when
  * a disagreement has no reading yet (the cell is written once every one has) and when the claim has nothing to say.
@@ -437,7 +414,7 @@ function claimLine(tag, r, noNote) {
 export function claimReadingCell({ claim, items, readings, unjudged }) {
   const mine = (items ?? []).filter((i) => i.claim === claim || i.claim?.geo_id === claim?.geo_id);
   const lines = [];
-  const differing = mine.filter((i) => i.decision.outcome !== (i.row['Agent proposal'] ?? null));
+  const differing = mine.filter((i) => i.decision.outcome !== (i.row[TD.proposal] ?? null));
   for (const item of [...differing].sort((a, b) => byName(a.tag, b.tag))) {
     const r = readingFor(item, readings);
     if (r === null) {

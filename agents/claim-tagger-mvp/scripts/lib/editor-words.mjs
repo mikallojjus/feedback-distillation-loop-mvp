@@ -3,7 +3,8 @@
 // the links to the tables and views of the Notion page. Nothing here writes or reads anything.
 //
 //   plural(n, one, many?)             -> "1 row" / "3 rows" (many defaults to one + "s")
-//   yourClaims(n)                     -> "your claim" / "your two claims" / "your 14 claims": how a Next line names the claims an editor is to decide (the words of `where` and of the page)
+//   yourClaims(n)                     -> "your claim" / "your two claims" / "your 14 claims": how a Next line names the claims an editor is to decide (add.mjs names claims)
+//   yourRows(n)                       -> "your row" / "your two rows" / "your 14 rows": how a Next line names the Tag decisions rows an editor is to decide (the words of Your queue)
 //   listNames(names)                  -> "A", "A and B", "A, B and C"
 //   capWords(text, max)               -> at most `max` words in one line; a cut text ends in "..."
 //   reasonLine({ reason, rule_ref }, agreed, runs, max) -> the text of an Agent reason: the reason in at most `max` words, the rule cited, "<k> of <n> runs agree"
@@ -20,8 +21,7 @@
 //   answerWord(decision)              -> Applies / Does not apply / Can't tell for apply / do_not_apply / ask_editor
 //   notionUrl(id, title?)             -> https://www.notion.so/<the 32 hex digits>; with a title the form Notion itself gives a page: https://app.notion.com/p/<the title's words joined by dashes>-<the 32 hex digits>
 //   tableLink(config, table)          -> the link to a table of the agent (rulebook, claims, tag_decisions, rule_changes, agent_settings)
-//   viewLink(config, name)            -> the link to a view: your_queue, needs_your_note, agent_disagreed (all three on the Claims copy), your_queue_ledger,
-//                                        needs_your_note_ledger (the two old views of Tag decisions), lessons_waiting or rulebook. config.notion.views.<name>
+//   viewLink(config, name)            -> the link to a view: your_queue, needs_your_note, agent_disagreed (all three on Tag decisions), lessons_waiting or rulebook. config.notion.views.<name>
 //                                        may hold a view id, a link, or { id, url }; without it the link is the table's own
 //   practiceLink(config)              -> the link to the practice page of a demo profile, in the form of Notion's own link with the page's title (else the Lessons waiting view)
 //   practiceTitle(config)             -> the title of the practice page a demo profile acts on (config.demo_title, written by the walkthrough
@@ -45,6 +45,9 @@ const NUMBER_WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven
 
 /** "your claim", "your two claims", "your 14 claims": the claims an editor is to decide, in the words the page and `where` use (a count up to ten is spelled out). */
 export const yourClaims = (n) => (n === 1 ? 'your claim' : `your ${n >= 0 && n <= 10 ? NUMBER_WORDS[n] : n} claims`);
+
+/** "your row", "your two rows", "your 14 rows": the Tag decisions rows an editor is to decide, in the words of the page (a count up to ten is spelled out). */
+export const yourRows = (n) => (n === 1 ? 'your row' : `your ${n >= 0 && n <= 10 ? NUMBER_WORDS[n] : n} rows`);
 
 export function listNames(names) {
   const list = [...names];
@@ -183,8 +186,7 @@ export function notionUrl(id, title = null) {
 }
 
 const VIEW_TABLE = Object.freeze({
-  your_queue: 'claims', needs_your_note: 'claims', agent_disagreed: 'claims',
-  your_queue_ledger: 'tag_decisions', needs_your_note_ledger: 'tag_decisions', lessons_waiting: 'rule_changes', rulebook: 'rulebook',
+  your_queue: 'tag_decisions', needs_your_note: 'tag_decisions', agent_disagreed: 'tag_decisions', lessons_waiting: 'rule_changes', rulebook: 'rulebook',
 });
 
 function databaseIdOf(config, table) {
