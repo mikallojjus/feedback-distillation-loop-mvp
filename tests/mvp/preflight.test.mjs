@@ -1,7 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { preflight, refusedReport } from '../../agents/claim-tagger-mvp/scripts/lib/preflight.mjs';
 import { lintReport, renderReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { readJson } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
@@ -476,4 +478,39 @@ test('refusedReport: a plain sentence of why, a demo prefix, and no label all gi
   const several = refusedReport(w.config, { kind: 'drift', stops: [{ tag: 'A', column: 'When to use' }, { tag: 'B', column: 'Description' }, { tag: 'A', column: 'Counterpart' }] }, 'Tag');
   assert.match(several.next, /^Next: put the rulebook text back on A and B \(/);
   assert.deepEqual(lintReport(markdown(several)), []);
+});
+
+const SCRIPTS = fileURLToPath(new URL('../../agents/claim-tagger-mvp/scripts/', import.meta.url));
+
+/** Every relative module a file imports (static import or export ... from), followed through the tree: [path from the file to the module]. */
+function importPaths(entry) {
+  const seen = new Set();
+  const paths = new Map();
+  const walk = (file, chain) => {
+    if (seen.has(file)) return;
+    seen.add(file);
+    paths.set(file, chain);
+    const text = readFileSync(file, 'utf8');
+    for (const m of text.matchAll(/^\s*(?:import|export)\b[^'"\n]*?from\s+['"](\.[^'"]+)['"]/gm)) walk(resolve(dirname(file), m[1]), [...chain, file]);
+  };
+  walk(resolve(entry), []);
+  return paths;
+}
+
+test('lib/preflight.mjs never reaches judge.mjs through its imports: judge.mjs takes toggles over through preflight under its own top-level await, and a cycle left it unsettled (exit 13, 3 Nov)', () => {
+  const paths = importPaths(join(SCRIPTS, 'lib', 'preflight.mjs'));
+  const judge = resolve(join(SCRIPTS, 'judge.mjs'));
+  assert.equal(paths.has(judge), false, `preflight reaches judge.mjs: ${(paths.get(judge) ?? []).join(' > ')}`);
+});
+
+test('as a program, judge.mjs takes a pending toggle over and finishes: no exit 13 (the first tag run after the Judged box, 3 Nov)', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim that repeats itself is Wordy.', Judged: true });
+  await w.pull();
+  const env = { ...process.env, ...w.env, CLAIM_TAGGER_MVP_ROOT: w.root };
+  delete env.FAKE_CLAUDE_MODE;
+  const r = spawnSync(process.execPath, [join(SCRIPTS, 'judge.mjs'), '--items', 'claims', '--driver', 'fake', '--runs-max', '1'], { env, encoding: 'utf8', timeout: 120000, windowsHide: true });
+  assert.notEqual(r.status, 13, `the top-level await never settled:\n${r.stderr}`);
+  assert.equal(r.status, 0, `${r.stderr}\n${r.stdout}`);
+  assert.match(changelog(w).at(-1), /Judged on: Wordy/, 'the toggle was taken over before the run');
 });

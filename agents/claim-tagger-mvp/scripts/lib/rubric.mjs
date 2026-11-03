@@ -495,3 +495,20 @@ export function computeDrift(lock, rows, { config } = {}) {
   for (const name of [...byName.keys()].sort(compareCodePoints)) if (!Object.hasOwn(lock.tags ?? {}, name)) drift.added.push(name);
   return drift;
 }
+
+/**
+ * The entries of a pull's drift.json that stop a run: [{ tag, column }]. The file is what computeDrift (lib/rubric.mjs) returns,
+ * { judged: [{ tag, column }], adopted: [{ tag, columns }], missing: [name], added: [name] }:
+ *   judged   a judged tag whose Notion text differs from the lock: every entry stops the run
+ *   missing  a locked tag whose row is gone from the copy: stops the run when the tag is judged (judgedNames), else it is for the pull to adopt
+ *   adopted, added: tags without rules in force, or tags the lock does not know: not a stop
+ * A file that holds `skipped` (the check could not run) has no stops; the caller reports that, it does not pass it over.
+ */
+export function driftStops(drift, judgedNames = null) {
+  if (drift === null || typeof drift !== 'object' || Array.isArray(drift)) return [];
+  const stops = (Array.isArray(drift.judged) ? drift.judged : []).filter((e) => e !== null && typeof e === 'object' && !Array.isArray(e)).map((e) => ({ tag: e.tag ?? null, column: e.column ?? null }));
+  for (const name of Array.isArray(drift.missing) ? drift.missing : []) {
+    if (typeof name === 'string' && (!judgedNames || judgedNames.has(name))) stops.push({ tag: name, column: 'the row is gone from the copy' });
+  }
+  return stops;
+}

@@ -65,8 +65,10 @@ import { compareCodePoints } from './lib/pyjson.mjs';
 import { RESERVED_RUN_IDS, isReservedRunId } from './lib/reserved-run-ids.mjs';
 import { writeReport } from './lib/report.mjs';
 import { resumeFor } from './lib/resume.mjs';
-import { checkLock, readLock, toggleClauses, verifyRubric, withLockedJudged } from './lib/rubric.mjs';
+import { checkLock, readLock, toggleClauses, verifyRubric, withLockedJudged, driftStops } from './lib/rubric.mjs';
+import { preflight } from './lib/preflight.mjs'; // preflight never imports this file (a cycle left the top-level await below unsettled: exit 13, 3 Nov)
 import { validate } from './lib/validate.mjs';
+export { driftStops }; // moved to lib/rubric.mjs: preflight needs it, and preflight must not import this file (judge.mjs takes toggles over through preflight under its own top-level await)
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/judge.mjs [--tags a,b] [--items claims|eval] [--pull <pull-id>] [--ids a,b] [--limit N] [--runs-max N] [--rubric <file>] [--refresh] [--run-id <id>] [--driver cli|fake]\n'
   + '       node agents/claim-tagger-mvp/scripts/judge.mjs --resume <run-id>   (continues a stopped run with the options it was started with)';
@@ -715,23 +717,6 @@ const readOptionalJson = (file) => {
   }
 };
 
-/**
- * The entries of a pull's drift.json that stop a run: [{ tag, column }]. The file is what computeDrift (lib/rubric.mjs) returns,
- * { judged: [{ tag, column }], adopted: [{ tag, columns }], missing: [name], added: [name] }:
- *   judged   a judged tag whose Notion text differs from the lock: every entry stops the run
- *   missing  a locked tag whose row is gone from the copy: stops the run when the tag is judged (judgedNames), else it is for the pull to adopt
- *   adopted, added: tags without rules in force, or tags the lock does not know: not a stop
- * A file that holds `skipped` (the check could not run) has no stops; the caller reports that, it does not pass it over.
- */
-export function driftStops(drift, judgedNames = null) {
-  if (!isPlain(drift)) return [];
-  const stops = (Array.isArray(drift.judged) ? drift.judged : []).filter(isPlain).map((e) => ({ tag: e.tag ?? null, column: e.column ?? null }));
-  for (const name of Array.isArray(drift.missing) ? drift.missing : []) {
-    if (typeof name === 'string' && (!judgedNames || judgedNames.has(name))) stops.push({ tag: name, column: 'the row is gone from the copy' });
-  }
-  return stops;
-}
-
 // ---- one run ---------------------------------------------------------------------------------------------------------------
 
 const consoleIo = { out: (s) => console.log(s), err: (s) => console.error(s) };
@@ -887,7 +872,6 @@ async function takeOverToggles(ctx) {
   } catch {
     return;
   }
-  const { preflight } = await import('./lib/preflight.mjs'); // not at the top: preflight imports this file
   const pre = preflight({ root: ctx.root, config, pullId: basename(pullDir), now: ctx.now });
   for (const w of pre.warnings) if (!ctx.warnings.includes(w)) ctx.warnings.push(w); // what preflight said stays in the run record, an adoption that failed included
   if (pre.toggled.length) {

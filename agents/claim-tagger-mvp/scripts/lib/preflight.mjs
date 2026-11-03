@@ -20,9 +20,8 @@ import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { isJudgedTag } from './config.mjs';
 import { plural, listNames, tableLink, viewLink } from './editor-words.mjs';
-import { driftStops } from '../judge.mjs';
 import { latestPullId, loadPull } from '../pull.mjs';
-import { buildRubric, checkLock, lockOf, nextEdition, readLock, readRubric, toggleClauses, writeEdition } from './rubric.mjs';
+import { buildRubric, driftStops, checkLock, lockOf, nextEdition, readLock, readRubric, toggleClauses, writeEdition } from './rubric.mjs';
 
 const refuse = (code, kind, reason, extra = {}) => ({ ok: false, code, kind, reason, tag: null, column: null, stops: [], warnings: [], adopted: [], toggled: [], edition: null, ...extra });
 
