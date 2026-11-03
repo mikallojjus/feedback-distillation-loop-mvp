@@ -1,8 +1,10 @@
-# Importing claims from Geo (decisions P38 to P41)
+# Importing claims from Geo (decisions P38 to P41, P51, P52)
 
 `/claim-tagger import [count]` brings a batch of Geo claims into Claims, chosen by you rather than by a seeded script. The default count is 400. You choose them, the owner approves the selection, and then `add.mjs --claims-file` writes the rows: create only, Geo columns only, every row read back. This file is the workflow. It is production only; there is no `demo import`.
 
 The first run was on 29 October 2026. Its files are in `docs/mvp-2026-11/evidence/32-import-400/`: criteria, pool counts and selection.
+
+The second run, on 3 November 2026, replaced the whole set (P52): its files are in `docs/mvp-2026-11/evidence/34-replace-400/`. When the owner asks for a replacement, follow "Replacing the set" at the end, and use the owner's rules of that day: the rules below are the defaults.
 
 ## What a claim must be
 
@@ -92,3 +94,17 @@ Then wait for a yes. On yes, run `node agents/claim-tagger-mvp/scripts/add.mjs -
 - **Exit 1:** run the same command again; the claims already added are reported as already in Claims.
 - **Tagging:** do not tag unless asked, because tagging is one judge read per claim.
 - **Evidence:** copy `criteria.md`, the pool counts and `selection.json` to a new `docs/mvp-2026-11/evidence/<n>-import-<count>/` folder.
+
+## Replacing the set (P51, P52)
+
+When the owner asks to replace the claims rather than add to them:
+
+- **Votes.** Read `agrees disagrees` with the pool query (on `fromEntity`). They are Geo's agree and disagree votes, the same numbers as `votesCountsConnection` voteKind 1. The 3 November rule: at least one of each.
+- **Ranking.** Score = total votes × balance, where balance = min(agree, disagree) / max(agree, disagree). Ties, which are many at the cut line, are broken by likely-issue confidence, then by total votes. No space quotas. Every month of a space's pool keeps one claim where it can.
+- **Claims already in Claims stay in the pool.** The ones chosen again are kept and reported by `add.mjs` as already there.
+- **Order, after the owner's yes on the summary:**
+  1. `pull.mjs --all`, then `add.mjs --claims-file <selection.json>` (in the background).
+  2. `node agents/claim-tagger-mvp/scripts/remove.mjs plan --keep <selection.json>`. It asks every time. It lists the Claims rows not in the selection, with their Tag decisions rows, and never a claim with an editor decision or a row a rule change cites. Check its counts with the owner.
+  3. `remove.mjs apply --plan <file>` (in the background). It snapshots and trashes every listed row, reads each back, and writes `setup/removed-claims.json`, so `copy-live.mjs` never brings them back.
+  4. `pull.mjs --all`, then `status.mjs`. Do not tag unless asked.
+- **Undo:** `remove.mjs restore --run <run-id>` takes the rows back out of Notion's trash while Notion still holds them. A copy of the snapshot goes to the evidence folder.

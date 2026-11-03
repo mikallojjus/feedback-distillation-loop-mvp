@@ -1,0 +1,4494 @@
+{
+ "read_at": "2026-11-03T13:20:46.414Z",
+ "per_space": {
+  "U.S. Politics": {
+   "edges": 2641,
+   "not_claim": 1,
+   "no_name": 0,
+   "no_votes_both": 2431,
+   "other_space_first": 0,
+   "kept": 209,
+   "bot": 5,
+   "same_text": 1
+  },
+  "World affairs": {
+   "edges": 2592,
+   "not_claim": 2,
+   "no_name": 0,
+   "no_votes_both": 2476,
+   "other_space_first": 8,
+   "kept": 106,
+   "bot": 2,
+   "same_text": 2
+  },
+  "AI": {
+   "edges": 1414,
+   "not_claim": 1,
+   "no_name": 0,
+   "no_votes_both": 1246,
+   "other_space_first": 0,
+   "kept": 167,
+   "bot": 11
+  },
+  "Health": {
+   "edges": 445,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 397,
+   "other_space_first": 0,
+   "kept": 48,
+   "same_text": 2
+  },
+  "Crypto": {
+   "edges": 209,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 169,
+   "other_space_first": 0,
+   "kept": 40,
+   "bot": 2
+  },
+  "Technology": {
+   "edges": 74,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 71,
+   "other_space_first": 1,
+   "kept": 2
+  },
+  "Pharma": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 0,
+   "other_space_first": 0,
+   "kept": 0
+  },
+  "Industries": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 0,
+   "other_space_first": 0,
+   "kept": 0
+  },
+  "Education": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 0,
+   "other_space_first": 0,
+   "kept": 0
+  },
+  "Software": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 0,
+   "other_space_first": 0,
+   "kept": 0
+  },
+  "Places": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 0,
+   "other_space_first": 0,
+   "kept": 0
+  },
+  "Documentation": {
+   "edges": 0,
+   "not_claim": 0,
+   "no_name": 0,
+   "no_votes_both": 0,
+   "other_space_first": 0,
+   "kept": 0
+  }
+ },
+ "bot_left_out": 20,
+ "unknown_author": 0,
+ "same_text": 5,
+ "requests": {
+  "total": 32,
+  "nonQuery": 0
+ },
+ "kept": 547,
+ "pool": [
+  {
+   "geo_id": "002f8e4ba6274856b55d4226b01bc9c8",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 5,
+   "in_v2": true
+  },
+  {
+   "geo_id": "00ad164f52d4146eb7d3a332489fd052",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "02b765dcfb58f27285001dbd13553f5a",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "0677a78f87f646f9835204dc2cbb76d4",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 8,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "06f9d2d750e48aac6dd0461c694b2377",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 8,
+   "in_v2": true
+  },
+  {
+   "geo_id": "075e717d37ab9e80c69f02243ef28d02",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "07736de6dc19428f9b35004b9edbd92c",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "0b6de41f13dfa82a6b371db3112d99c9",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "0e30637ba50afa699bb17a70236a297b",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "0e8b0f33a6c54edf9d2cb05fb9f592e7",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "11b3517437f7d188a555ca94560511d7",
+   "space": "AI",
+   "month": "2026-07",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "1574df1e9a3bc4e514a90e574693fca9",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "1c0201f776d94c83817e2510d9aa253a",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "1c7a9eca49369afd266a30d16c7d6098",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 19,
+   "disagrees": 4,
+   "in_v2": true
+  },
+  {
+   "geo_id": "20f362509e0614da0b5bf358afe28084",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 11,
+   "in_v2": true
+  },
+  {
+   "geo_id": "21f8df80c714db43e849241a753b8fb7",
+   "space": "Technology",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "269127878f5d5367f4de9601be12346b",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 16,
+   "disagrees": 13,
+   "in_v2": true
+  },
+  {
+   "geo_id": "29c4ec7c990b6d9b201f37bb830e92ff",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "34d515d0812b52ce98abe6d0884293ff",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 5,
+   "in_v2": true
+  },
+  {
+   "geo_id": "3662b744173d6bf37be62feb786ad818",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "36a4408e4cbd4c6cabc15be45171a0c3",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "389e425a5cea4ad49da688ccf96f345c",
+   "space": "Crypto",
+   "month": "2026-07",
+   "agrees": 9,
+   "disagrees": 3,
+   "in_v2": true
+  },
+  {
+   "geo_id": "40d42f6e39bc4c4c9edf6940db6d3254",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "418cf07d622fd66a9305b00256ee04fe",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "4833cd02660aab63cf97f561da88263a",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "4c5da0e82518ba5c859e468180eadf80",
+   "space": "AI",
+   "month": "2026-07",
+   "agrees": 9,
+   "disagrees": 13,
+   "in_v2": true
+  },
+  {
+   "geo_id": "4cb960bdae604f3cb6b0a6f54e77996e",
+   "space": "Crypto",
+   "month": "2026-07",
+   "agrees": 5,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "592396e7360ec9fd9becb0463c8422b1",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "5a6357795a76bd7b17f772f514782a12",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "5a984d90655916258f1638e2e3db3990",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "5b20e1fb41a1465aa4191de4da7fd75f",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "5b7419af345226ee4842f815dd25df7d",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 3,
+   "in_v2": true
+  },
+  {
+   "geo_id": "5c1432e381c74f5e9a7e92db29b875f2",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 11,
+   "disagrees": 3,
+   "in_v2": true
+  },
+  {
+   "geo_id": "5d3a4241bf495e7a975a6aa76d25557d",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "653b7f04e847829a402d0242b144d4cc",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": true
+  },
+  {
+   "geo_id": "69727edb0a7848f1ad833ce6a99012db",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 5,
+   "in_v2": true
+  },
+  {
+   "geo_id": "6f7112fe2239cecdbc59d7df2d0f2315",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "6f9968519df018dfb73cc6608b5cb4af",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "7020096448f7d03f88ef135fe9636d4b",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 11,
+   "disagrees": 9,
+   "in_v2": true
+  },
+  {
+   "geo_id": "778a36c4396a46cba93e6252d378ad07",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": true
+  },
+  {
+   "geo_id": "77a0d6b518fbbde37d17dd415df7648b",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 9,
+   "in_v2": true
+  },
+  {
+   "geo_id": "7d4b41682f4447898bee854ac199d7ba",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 8,
+   "in_v2": true
+  },
+  {
+   "geo_id": "8415b303b0fc8b96fd4366150b202eee",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "851620a47b8c4e7d938e11f9ea887f9a",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "8d0937d1544ab460c99acafce48661e7",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "918c38f5a8dd168e1880d8d36d9f14aa",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 9,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "920e1b8441f34cdfac2196ad28b9ddd0",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": true
+  },
+  {
+   "geo_id": "94852d9abfe0087409f9d52134ca9d62",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": true
+  },
+  {
+   "geo_id": "97a7652f54434cf6bbbff52f2021de92",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 4,
+   "in_v2": true
+  },
+  {
+   "geo_id": "97b524e247650dda24e4dab564132da5",
+   "space": "AI",
+   "month": "2026-07",
+   "agrees": 7,
+   "disagrees": 8,
+   "in_v2": true
+  },
+  {
+   "geo_id": "a0dc06fa58b544d98080ba5a5ce95120",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "a0ead60cc4e34fb9847f0d6402185712",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "a2f9970eed724d1e84df04fd16bf52f7",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "acaf35fd8549e3b02904378ae840de8c",
+   "space": "AI",
+   "month": "2026-07",
+   "agrees": 13,
+   "disagrees": 19,
+   "in_v2": true
+  },
+  {
+   "geo_id": "ad1e95cd2f794a87a1c7dd7fae91d612",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 13,
+   "disagrees": 4,
+   "in_v2": true
+  },
+  {
+   "geo_id": "afb25451bce17eb04a7ebdb27f48b35c",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "affdcfaf93eb45009d113c7cc458ee6b",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": true
+  },
+  {
+   "geo_id": "b47cf719fb7f86b1b022cb7c084aec32",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "b64adccd29da48ef974ceaff209716ab",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 7,
+   "in_v2": true
+  },
+  {
+   "geo_id": "b72a948f22f149648bd77965a0437e9c",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 9,
+   "in_v2": true
+  },
+  {
+   "geo_id": "bf7af1834f5a46d192e61215a589127f",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 13,
+   "disagrees": 8,
+   "in_v2": true
+  },
+  {
+   "geo_id": "c51bb8e34ff8349cf88af7a04f8c2bdf",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "c69fda5397dbb3ef7922e7f46edf1b28",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "c6f1124decc347a99d90da11ebb04729",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "d2713be5920848518d409eaef1dd3758",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": true
+  },
+  {
+   "geo_id": "d564b19687374d04b8db8d1039d645e9",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "d93135c85a7c414e8bb8919b359d9754",
+   "space": "Crypto",
+   "month": "2026-07",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "dbe21d0b4c1a4a6e9fe16fa3a32a8c77",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "e28fc3c60e8b0e4e5c0a0ab813356ed8",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "e41f6a1f3afeb5dd7db8e997796fd9ad",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 8,
+   "in_v2": true
+  },
+  {
+   "geo_id": "e9c1072561c44aceab10b70d168a6450",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "efb0e1db0a0a4dbea2f5e96a1f23f848",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "f92dfa5019204b97aba5bc59781243db",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": true
+  },
+  {
+   "geo_id": "fe0a4d8330c2505fb57fa09996940436",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": true
+  },
+  {
+   "geo_id": "000931e053b6f81745f3e3894012293d",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "00e49c82ba4e4443a471180095d4a4a0",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "01118db527c46157c38f92f07d9f52bb",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0130b6db5b9d39fcfb82d301092d2f9c",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0155cb6563ec3ac1164a7c1b7fb5ab05",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "01c0081c7a17e4e9ae087359a6158fa7",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "024eda17a14c9ffa7643edf89df0892a",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0254282d7d5d0d3cb4bc3a197e6f33c5",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "033f32723abd1fe7ae503f2e519b925d",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "06e8df326f344d0526c6c697277a1f8f",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0705323efc3f426596dd62f3576640d9",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 24,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "071eb642b4f8437aa68f1f4b24f77ebe",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "079d07a77a4249b58c498db29c68994d",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "07e97799a82ee6ffd2a4c4f91e8ba788",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "084866e6d2d5c58ca37dbfb2ae410f1d",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "088639cb7fa04f38bc02b35f73fb26d4",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "094d5549908e328cd172efeef4e32a9e",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "09a1dab8e85d11e824f5e01b0cc33751",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0a2a57b45dd5c189da821d5fe801ba23",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0abccb5806c34f6694f1283320979b8a",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0adce0ad4a972f2494072a3f5eb03d5c",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0af30a95f81e4632a452ecd6aefdfc65",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0c5f0b22f30b1dd388722d7c8d322808",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0c85b1ceaef4b9079868b6b8fdfe6c2e",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0cdda86f93bd8931ab21d987f45c44e6",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0f62d8ab206f413a90e567bd069a92a4",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "0f9f4ea420eb84e3ce53f19931ea0a61",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 5,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "11108a970c8effc51ae0a961378ad5f1",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "11db03465436f5d5b54d856b273d6591",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "121d357639a54bc9a7526462c2f697d5",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "127149e06e3ba3124d3546851dd39f89",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1558e86131484c24b256b5af4f798241",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "16b9c630d512024061c696a914752a0e",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "182e2844fcb748d39ca28178adcebae1",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "18470dbafa226fa3c94b4eda9b2c5b40",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 11,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "186afaaed79f4268bbbfc49ea5a36197",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 6,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "18cd98dc09c527d6a9634e9343049ac2",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "192bde2594f78101d61aa60b6134cb6f",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1952fb5aa95244e9a813988c24a6ed46",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "19912fc512174232af6b1b56072d8452",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1a68ed91f2deade6251df6fc249f9a04",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1ab2234e06191b0b8b32a0d3b301fbfe",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1b0cf56c22a7b05e8c4cd0c4804617ca",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1be23939e831aec8bfc222346371b482",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1bf238bac9472bb85f3d0a02068eeee5",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1d4264e853ecc24552667a0c0867759b",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1d4db97ef7a489dc4b72dc35ad6cc097",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1d5e673e8801d7a55a9b3e8f6c213402",
+   "space": "AI",
+   "month": "2026-07",
+   "agrees": 10,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1df9543f0ea4444597b5fd1f99bad110",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 9,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1e0dfe54463249db9be63689efc0a787",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 8,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1e24cdbd6cd6d044941bc06656813085",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "1f4f0439561b47d0aa5680cc42c73d74",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2149f80eaa2234f108a0fc96bbf70864",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2182c91ae1be4d75a205f1046cc8a27f",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "21f5e7e7b2ecc6bb5ca3d127c31fb6f6",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "22436fe2eaf44e29a2fd69454f45384f",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 9,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "22912f72aa0dfb75055a02b5c13cf4a1",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "22bd0924740340a49db04b5c2ba4dc33",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 6,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "25b610cbcdd3f0efaeddcd82ae1fd44d",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "25d12abde80b9e6115eddc4128a0987a",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 11,
+   "disagrees": 19,
+   "in_v2": false
+  },
+  {
+   "geo_id": "265a12a6bad5722ed6940541c4a80767",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 8,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "26a0abb2baa0c27ddfd1f48b01ffd1c2",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 9,
+   "disagrees": 15,
+   "in_v2": false
+  },
+  {
+   "geo_id": "27477d2bb46944b7813c8369ed7d9705",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2772057e8317451a8a8c95637f156946",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "27733984bd744f4e91b70b12c5e76cc7",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "286fa3286f6143cd9a30f8d7ef9a17df",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2955dd8bd0c44f2285d4ca0da21014e0",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "29889f32708e4002b43a70c8b221daac",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2a5fdc205949419aa7fa667f2be8a30b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2a6d578a5e73a5223d1105c1f2a0d2d6",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 10,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2b59691d6b804952a2da2b203cf3f5b8",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2b80ea7f3d09183fd7ca84dc8bd227ab",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2c5f9d879442b62cb9a72f7dbbc3293d",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2c61cb63c07d654b9b81ae00038befb2",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 12,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2c8a6fea9bed3a1cf8c0202545ec635f",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2d7363ca387271fa53582809f42cd840",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2da703b8aeda4cafa9e7a3be2dbd75f2",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2e95c4ed6e582df4982a45926a82411f",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2f048e3273d8aa3d56af8430c20ab45e",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2f6dce22184547e486bcec5e8c68b206",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2f800124adc8546fab65ef7e0e8982da",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "2f82b607208b4098a5d62692654978cf",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "306aebc91cc84d58b91894cfdb8f4a63",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 13,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "30feb1fa9cbb408bacaa86f6ace1d1e9",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "31fc74499d814653803cfc7a164de71f",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "326380b8aecb53d7a25b779d743df033",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "32e3e33246234194b87471c6537b7c68",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "330e7987a9b4fb30fcf050a042a48845",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3363441d6fb50edb49786c1456bb3b1e",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 12,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "34b4c381e56848cbb263113c8e602d4c",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3540aec42a769a4e4af54f7592d7f328",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "36c1e82733f9d259fa4fa589d2e96142",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 11,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "37bb3d0233ed43efa475cc734ba601f1",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "37decf3113ddb3b5af9c52fa2e3291c5",
+   "space": "AI",
+   "month": "2026-11",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3878e73725a946ab9e7d8d710ebbbb3b",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 6,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "389bf10852b84d16a67765dc79adb88b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3a86111db36a2b369f22aa997691a652",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3ae21147fc06c58bfd18aa97640ef83a",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3b1146769f5e41098c9eb8b604176a25",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3bf9b841187f8c71b74f892ba4e83b75",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 14,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3c57d190ae2e50fa911e124c409865d2",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3c88554cf3894381b91c52da94b84717",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3d8a9dfc5124402d998a54a2625fd867",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3d994385b8d349e9a9d74403269202ff",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3dbd71f416082e5f27910c0e4023a750",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3e19c383a9c3b5cebb6a9ca376d62e81",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3efcb60633d643ab88c0845bcd6c6140",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "3fde09c407004106b5d02eea9d1a4303",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "404cbc81e34d2c9e3e5ea641e52b9dec",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "406b669021604795ac693cdb0e54890f",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "40874580ccc2466999fa1dc0ed12621c",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "40bcaad3c86cbaa8e6523ade99b933c4",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "40bef59ed6c863c6d9121e0432c6d2ea",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 9,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "41428209291e4beb31054c07a3c7ee4a",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "42830d0a2f4c45969d86c6338ddff6c5",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "429d262a44cad25bd1a5d072292bb9f8",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4322ef79acf34489a02065ac52283150",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "43a9f62057562c7dfee8dd8fbdf5d6e6",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4451726df3d852a09ae12121ba2608cb",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 19,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "44df919dd1b8096dab90b3e5338b6c3a",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "44e813295df24ed2a065c8077afc27c9",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "45d251f59ed7fe577120199995b7dddc",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "46c55899e868e66b794efd84a67ade8e",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4727b3392c3a48b3871cb6a92b909148",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4830e2b907c71b3cae7f160a573b6079",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4836fe486f864a828dbfb675c0711d68",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "48548a0be2940a1a9ab1d929c025def2",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "486f52cccb7748ffb9f0f6bd2002e8e0",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 10,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "491268d605734fe4ba8a6bfcd0d03b8d",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "49305f41acca799819569582c56d3b15",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "49bf3cda541746628dcc38abfa4f628e",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4b02454608e1b84121fbb5a8ace7dfa6",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4dd9e3898fb2578e8b3ef38aef7233b0",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4e2c8ece98faab575a2f6e79aa34b624",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4e5435c4509381ad48be21a50dc0df4a",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4efcc039338d16c4a08ab51da8dcd40a",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4f36d6abd3e0502da58107f73c606d7a",
+   "space": "Crypto",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4f40eabbd2633a68f7cdc4000b81063b",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4f72e9946e5bc3d32600899cff756307",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4f7e7426f7cdb73da56e290d8c09d63b",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "4fc01b3f4859833fb50b8a99806564ba",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "504a5cb160aa45cf83498a3ab9467fcb",
+   "space": "AI",
+   "month": "2026-07",
+   "agrees": 7,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "508187b098c845b78372b6051e53ce1a",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "50bed8d94c5854b6a13772faaffd5fa7",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 8,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "50e591e5c4634e3d807657d4ca727725",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "51a48768365d003dd84645271cfe4f48",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "523b37838b1541b2a0aea531ca89ae30",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5244c25540314619802340d3c6d33855",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "524d08ab9e774d15a4adebb7324ccff4",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 17,
+   "in_v2": false
+  },
+  {
+   "geo_id": "52e32d8297ec013cc8d6885f5113fe8d",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 7,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "52f4c9df7cb510e19d2db3cd6376dfb4",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 11,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "530c3b59a35cf7585a92ebabb3a9cfb5",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "53bb3b2fb8c14bcda0a83bab3de9045b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5555c3d169e5431bb1235e6f8d530eea",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "557ac0327f7c41c99cf524b01f4e1f20",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 8,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "557e48426833484a894b672edd28795c",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5582de1fcc884f41daacd22278119031",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "56626da72145424152ee41283c4c5b08",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5718bcde5f874bdbb576419229929b01",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 17,
+   "in_v2": false
+  },
+  {
+   "geo_id": "571e6a16be81d3f4277fe3f90dbc8707",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "57a5fb0b80b38a933a2a989588ec6d82",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "57d659a8a7f180501cee2be0cc4a216e",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "59513d49f89618091b7e3e6678d04d65",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5a8bf0b831834202b5d93cbccdaf1217",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5a9d2c4526a322edec4cb778ef3fd9b8",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5a9e953e046045329c08db1322789e98",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5b84c1b83b8b4d2bb06985cb8c68c4db",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5c5c73117128f7b93a2c6b9d42dc054a",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5ca52bfe65244e68b571c9613f3195c2",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5dd19a10b2194060a0d378da20336e62",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 13,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5e20071e031e98001f9bc45b98505e82",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5e387c3bb1c0cb060edd8c062d08a5c5",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5f2611a5d24e5926c7f433ecd586152d",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5fc383fe28983ff4650518f404b88662",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 12,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "5fc63bcb522c43b494871f7fdab31cb0",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "603b70b02eb3423caa04aeeda885441f",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "60d2e424a12649ed824b6353576fb2f1",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "60e34b2f28dc2c10608205b2d5f9cb9d",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "612bcdd835ca453d91941ee7e0e1db24",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "61586e5c729747c4915d6bef94023190",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "623fa164fab64d29bc2452a365b3c57d",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6246fcef9c504f8482d1109100cae4e1",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 12,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "625d93bb38d248d19d95dceb247a2a15",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 6,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "627ac3abc8b9f11d0b1f2a6d3334ea61",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "627bc074decf42f7b7bbf42822c68a3b",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6370e105d163228e060bc08663628a84",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "63ae48a3fcec768aa9ad1ece4fbe63d0",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "646ef2ed5d4734d45d60a80272f7849b",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "64c523de7f31868cc4ecc834c85a886f",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "64e91fb398e344b7908e327abc56b7cb",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "661aa390fa3748509d282e36193648d7",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "66b8cd070797916de1b8609a0cb4e6d3",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "66dac9c59985c94476748a1efe544317",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 11,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6734eee9b11f3d4f887ce247a5947d44",
+   "space": "AI",
+   "month": "2026-11",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "67410a21053e6730d3b0e544a31e0eef",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 8,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "679ce6f23c6d10ccd5720cf2d75899fe",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "67da877cea0d42a798043486b847fbe6",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "67e5dc7f176e594f882dd6993e82e68b",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 6,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "67fa9bca94a4434bb9b57b09498f4c88",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "68c03107f53ce33df2684898a44a294c",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 7,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "691a064caf6bf9fd53bbab3e6e0a8baf",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "696b428642d0438bad73e0d8844e9429",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6a151998be7b72d5506846f2ec6d2bb3",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6aafc0e61598bd1699a4dbfbdccca3fd",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6adfde907fd24dcc8392f11218305cfa",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 13,
+   "disagrees": 10,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6b35a626639b4237c781f06227c333d9",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6b9c33e6b11487ee745b4835b305af14",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6bc3148f91d939c1095533261ceb8d34",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6bcb7138969c483faa46a922c046207e",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 13,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6daa321101c4ad5de8fb6b6cca1f4133",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6dc75e12110688faeae67945cd2b277c",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 8,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6e2b4c5dcad48359a486283d74c200c0",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "6f1ff57772b24f20b5d03abaf9b737f8",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "702ab7fdaed8448ca35f03f51c7fb919",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "703e04592c455fbba2284dea3e38c4a0",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7057e7def9024b91b8b287cb41662e50",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 17,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "71e3be59c9694191b81ea0be70c78f11",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "726a82f9c19f7a4a5f0ad68b1640173b",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "72724ac66aba4695a0cca8b747b2394d",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 25,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "73255a14bc1e7467e39fdbe88d0a2970",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "73aef60360f4465ba5238f45c806aaa5",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 10,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7468174755311fbb096ea9319d41e9c8",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7487ae903cb04721a0300a360e734edd",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "74c0de2f9cd45682bdb671a6dfc6ffbd",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "74dde29c78374109a355eae294069a6b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "74f27bc422ec458eb9d664a3b885427e",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 6,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "758e5c700e5a726bd0a7c604076273fe",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 10,
+   "in_v2": false
+  },
+  {
+   "geo_id": "759520a92f324dd0936996b24dbd989b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "774731b2c3f6afbc7ffbccb82df60879",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7775d89a93d516d4b44943ab9063e072",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "77a69a9b34aff36a6d4d282af37b4cbc",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "783a28c1c6c9fcee537f20643457afd1",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "783fbb3f7ce5d834199b333f683de5cd",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7924b542940e12cd486c13a8e3ae7184",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "79451c2195cbf8475584fbce3cd8e892",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 14,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "797ca0ba983d49c6a2733b94e6e25973",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7985d6d45177d78b4b5c34c5ee141425",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "79bac2500d8b678e9029444575992b12",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 13,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7a0e5d4170535b76b3f42241363d8646",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 7,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7a88c58d9f54e0c6fd9981cf9d3b71ee",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7b7e6b6023fa6c2809dec80eb88fb4a5",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7beaa30516cb40e180e17525dbe0af42",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7c1cda98cdceee44a24214be9ec0a480",
+   "space": "AI",
+   "month": "2026-07",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7cd220e695e64ea4b8165ef58b70a69f",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7ef5b6bf629847c57c86c65c8991826b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7f04887fb325e359bd2462679c8c35ad",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "7ff5a4f01efb4c2982b30647fa719551",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "801ff85b66504df5ac92be9801fcf8d4",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 8,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "802d8a330b774853adca517e4aa16159",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 10,
+   "disagrees": 10,
+   "in_v2": false
+  },
+  {
+   "geo_id": "803dfb91ad1a0b4240d5da1463df6086",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "806ab70b9a824d492b5d021722f40194",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 16,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "80de9195d93cf79eda977fd8d35f1bdf",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "81b67f5dcd2afe27d96f6ac341d032be",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8271598b04824a4088775686c1e4cea1",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "83beff98aac0ee9c17e67bce7c53f491",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 5,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "83d223358b9ca5febfee4ce6069c1f1d",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "83d5be1b269649b88b36539e87ca45cd",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "83eca01eebc047c2b22fb4dfd4b6b98f",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "84711142bdeab4873f2a13528efcc7fe",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8487e11e088e40cab1aaa7b9e89f6b2f",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "85493cbc0550410f972181b2099a5fce",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "85d840fce393314d984f82f7dd8ccc7e",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "863491d437fa2681a4706b67748af8fe",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "87613eb66c0bb70fd344e093e7da536a",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "883db780d3c6e7e7ef37104d1c29cb0e",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "88b525b62513782be60d3f03b19a1feb",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "89c317259bc24d27889975c2035726c8",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "89fef86e9ca29d7476dac1f96c88f753",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8a427316d0f2541997db576860173691",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8a5239d388d6dcb6aa66de0230d9f707",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8ab93d50628d4c0a87b31c35d95c9224",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 11,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8ad5bd8547a548a4a6d675e1dd91c242",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8b7b3719bd5140f5ba5c9e24d6f7b8a9",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8c6af664d2d920096f4014a75e03561b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "8e56340e040f412cbb88765a530b6123",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 24,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "918fb0bddf76b7ec50487e3ff9d194a4",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "92f7d4d6b6fc48183d2f13be4ca6e953",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "93227664fed54f489e4622bd7293d665",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "93873f20b23a4de9a52eb68d6b50d279",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "93a515dfcac296b4fa883082011ea62e",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "93b2c0f8df5441d8b760df8bbd0d6c40",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "943a94e2d6e010e6d0d4173ff28b1817",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "94833ecd8d20483e8a51184af5cdb998",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "94ffd13291dae639c91440dee20ff5e5",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "957714e2a50a28e31f6c5254721d6872",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "971a6948ff790490b644f0ac926f9014",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9737aa282cc956f2bc7d66202bc94c6a",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "979592579780ddd5378e1114f604f2e4",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 6,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "97ab2b41cef0bc8067b1db17e2ecf58b",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 4,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "97fdfead23a240f483555ff48b8ece5b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "98aaee60d9af4a27b7e47e9d2c17a5a3",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "98cc888e12884d4582583bb281f8f5b0",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9a969922ff4e4b97aa9f74e82e3640d8",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9acc3686f5a74bd78c692d85ea70a1c5",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9add2203d1e04facab98a23ac839c338",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9b973303f57861cf4ffc490451eb207a",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 8,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9ba0f11f6c13cae891cb7c3aba509653",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9bc5587caab68f2ade059941c8d0ecf4",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9bf3c85e4d1798234cac92a4e3b99d24",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 8,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9d44bd2a4c49cc0a43be1acfb9f9fd6d",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9d4503412b8503878f04fafbb06336e8",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 9,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9d4d714affa0e70de3b40886b7df79bc",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9e46d07baa57c223e8f0dc20c28912e1",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9e9f1c80017fceaeb1993cb62ea1d48e",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9f04c703d3673253db0486dc09c06444",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "9fa643f9ba4eaf77024db090c044548d",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a012ac4dfcb70d71db7c7434b5659edb",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 10,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a09937661e60c793db936222f3c4b10f",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a0ade225f0c09dbac144730f6c123f23",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 5,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a19e7869bc121ed0d40aa5020bc330c8",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a1f93f0425063b9da30a42cfdcfadc6f",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 7,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a328d8213260f0ce1b856f27d6197728",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a33d4f36f9a23e4c5ef7fb73525811a7",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a341f38e6dfdf20298bc7c7c8149ba14",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a5bc4f17f3395ff8229d40fedc12545f",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a5e3f714445e4c779d88ad352207a626",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a6dfaf1504774981b7e87f15fec331b7",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 5,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a6f33c827371ed32b6e54d4654b99058",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 11,
+   "disagrees": 10,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a849f9295103464086e6d56f756dddaf",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a85121fee4876530b01a9a84f518e7c2",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 5,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a904b65c327ad49c8979ed40badcb76a",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a9300ab91ac24f488d9140b2822b08cb",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a983d0396283f9975f59dc914c1590d0",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "a9b89f371a1646e48fb4926c35976cfe",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ab44c9a1568c87e25b906f8386d21bc6",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ac7ddbc5e4b344a8a29f2ebb6880026f",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "aca018eed0bc21de7af9e7ac27976087",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ad1feddbc6d57d13842ea8b5b48e9a84",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ad398d441b0e1930e6003121126a4688",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ade85e220116e73ac0c342aef1ce3641",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ae86e42c892f1e3b518645f79766d074",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "aec09e3d8fca4d36818e9f83cae73cf2",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "af16a7b0ced041079e9c4dbf7f83ec89",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "aff4a901e6854f9e94465a0c08e06da0",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b2a8cf72b02f4baaab817fb7a5cc7b67",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b2d43328d77d4f72a9e332a134b36bc1",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b2d691d128d944c180ed9611586cf68f",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b3179ac903644531b222d9180ea26cbb",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 6,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b37d42ebc30e9f333852d2b678fb02e1",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b400b8e716f85a36abf38c438d9ba50c",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b4cb61e5dde9f88db58244479e7d41b4",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b625cadb0dec41a993bcbea436d21497",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b684a2846238dfce906a342ab12be5d0",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b69783d0eed5898005fa43f33f350a02",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b6b9b2500922099c7a800220d3f67280",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b853a9f1adb34b868358f7e708c22161",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b89ecbbcc0f1a503220a8a10cb7d530f",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 12,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b8acf3193a344add969da3d0b4ccad40",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b8b0bd4e1a9646388c09249b1d584ea8",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b8c16b7e35e546a4a3f0f6d0067cf32b",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 10,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b8c2ad1d2c0646adb086cafcc671af40",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b8f2050600bf4a428ba8b5deb09528a5",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 13,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b9e5992e94394ff3a2a181b793cdd55f",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "b9e7b83e21b44729b24d5ed29e67b621",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ba0c2e90a7d0536525e4b73e8dc77ff7",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ba1b5581fd9177df3c07417926c4c62d",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ba6a7d4ab5c65cd087428944f8c23c3c",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ba7ebc4f88614e1789aa46c3fd344f1d",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "bab6c9feb980c6aabd1c6f2101ebbf85",
+   "space": "Technology",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "bc4b5f0bffd74fb3a88cac9199bb94f8",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "bc4d43aa4c5b75e7922cf75aebbf883f",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "bc75aef54bcbd613faf370bf4b98bbdd",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "bdc4c47aa9034fe8a02e9c7af39ab033",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "be94ec0d55071a367fee57ca8d68fab0",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 11,
+   "disagrees": 22,
+   "in_v2": false
+  },
+  {
+   "geo_id": "befe099575f80bbb0bb71324a78f7806",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "bf60fd702524904678b3526b711a3251",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c002cd75b66c4872a4eef37aab7e906c",
+   "space": "Health",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c021193eab90def085aff157fe2839d4",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c14d52af4e41987532ebf4b5f89ce609",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c165562f6e6c4cc3bed576fe9b22da51",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c18ab01a76c41eca50f1fbda2742b851",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 5,
+   "disagrees": 10,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c287deb5fee1cb52aa7becaf8f317b9b",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c36715aab06a4350b1ffcff2957fd505",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c37929990d354024b22c709c266f9a0a",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c381476542ef4d8087cf2d209abdb8f8",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 6,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c3d5c129f940cf58a3c42e2d5fd09be1",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c4fe7ef0d57f4e948411a9523c1789a6",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c5efd65e648507a16f75aae4d717b46a",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c7ff945ecd55848eeac24d06226caed7",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c85b71a579ba465e9a8334f48a047421",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c8fe4cd16bc0787504ad85642d6859b2",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "c91c2b92cdd43485506155b5b678c2aa",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ca652618db65ccc93b9befd1b164b2f0",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ca7ade893d7c41c88a762340524a5805",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "cb0e79775ea52103b9a7e80891d24a36",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "cca98191a4bcbbae43649852ed71663a",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ccc035e46a5345b88ce7ed48e664ce4a",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "cddec1b234033a963873d26ac3acfc8e",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "cec5d38ba0954b0cd0b02fbf65ddf363",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "cf35dae570e2077bcf7e0ca14af0e8c0",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "cfa368639b42d031f38fad7539d0d18c",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "cffc30333710426684f33a3b7fec1b82",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d00e2c2e3ae64dc9998b5298f4062362",
+   "space": "Health",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d0c4d24dbd5f191435a4db6224a50f18",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d1ce798fab7ce134c357604cf3d5dc08",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d41c31977ade3d133f28e974bd2efa01",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 6,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d4a0fef8ded0b083d8bc26488f33271f",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d4c6ecf8c9c9d707432ff27e1d350806",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 6,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d5ef2268fe31694e1ef85ca6b63125ee",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d5f3510a800d96c578e778868a532533",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d64d3c1b4c21605635abf6c49bd78973",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d65e196c28852b54ffb694fcb5261c50",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d6807a16fcd6231ea210fdff4c74a462",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d69aae388d46019009b9a434cb09fc7d",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d6f662ab6686d1b68ce5005868089b52",
+   "space": "Crypto",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d724e70c2894854d47f8adf1d585c033",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d7f6345025bb6adc2650c43a57bc5967",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d82373a59578452eb1d146c843f10471",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d8af2f37c5f017e59796c8bad28c9944",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "d9b8f465afc84a6495ca734e95813f3b",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "db5e5676f5c4a6b741e5cc18a5f15737",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 6,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "dbf2c8daae4a4607bbadf09f5f3527de",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "dcc3d7ad467a46fab3b00da957621af3",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 2,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "dd24cfbd5d7b12ec8c34e4b8f4cd73ae",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "dd6a8afa221e051c6b0d02188ba1ecc6",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "dda501251516300d6b8f2c83566fae12",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "dfbd6b5e7978f230c287dbe7fe57b6a9",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 7,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e039ad839ef54ff697ce2935f5bef97b",
+   "space": "Crypto",
+   "month": "2026-08",
+   "agrees": 4,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e125afd175825e5c88bb90c61790cd7e",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e196d9975b1d4c1091cabcb8ce78e6a6",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e21bc14b1ccfc1203be77af0e41736fe",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e2de5f52458f5e9f390733d1d018ba82",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e2e566638400c5ca3b809040084ec791",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e2eb54c69870404fbc641dc0d7bc5808",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e32236ed5a4c95456aaac8fd22a0fe27",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e3d13b9af3264ea480f3c5ea45adc504",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e42d58bf48942eae6214b5032812be2b",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e4fe1a62d3614a098c4bc2a733e31898",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e6bad07bc446106d797310cd69587be5",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 8,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e7f500ca25064015b3e4e6b0a1ba3c52",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e835c2cfef02b2788cd63ecbabe55a71",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e83a5e8099214d66a0260992dc05cd70",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e8987fb32e08d760e814217851ae5716",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e90e0c22c713466e11af239620222911",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 7,
+   "in_v2": false
+  },
+  {
+   "geo_id": "e91449313065455e9d40533597c0cdb1",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ea0579f2eeda45a9bfd7e72cc43323fc",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ea24495eeeb13025e377e4d666334976",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 11,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "eabe39fd147f46a2a123723515b39ecd",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "eb610b66fb8d42c7943bbd82dfc729fe",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ebf0093bd11f16b52fb55016540e3a1d",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ebff7de60773f203ad3dce69830b7746",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 6,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ec0a71df06f74225bf6811508b2ca4df",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 6,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ed35b4ce4857efd7baf7d7e4daeba67f",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ee10adaee90ec20951f15a031fce2d06",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ef2486d5994cf382dc92b57b1315c64f",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "ef57dda750be4bf08264eca89981ec3d",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "efb3f1d395eb476284483f2f962c3053",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 7,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f008a200d5dac7ab55fc637b36f3bbcb",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f02956ca4898ef640447bea21cd2a3b8",
+   "space": "World affairs",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f27af28568144033895c431faeafa30b",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f44f468c7eb358881823da1ad70cf6fe",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 5,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f4f642452e819dde95487b19a989264f",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f6072dc8fe0c32331ff896db01705bc5",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 8,
+   "disagrees": 9,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f68dbae15824464c831a5bb09426f304",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f6daf8f9adf374d85b1f88bac315dfcf",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f7b9f699b9bd42e6aa6ac842b16ea103",
+   "space": "U.S. Politics",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f7bdffdd5f06e4b760247767b6989a32",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 7,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f85387c570a246359a74e6e929262800",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 10,
+   "disagrees": 6,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f976bad6826e98e43b4dcba0721d3b09",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 12,
+   "disagrees": 13,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f97f86d49b4e47b4822995726c860df4",
+   "space": "AI",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f9b7d175ce8e156924fba4456b584133",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f9d625c72b29c648f2eeec517e4f947b",
+   "space": "AI",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "f9f831ac11470f5a7ca6e14936f58c5b",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fa67087e3b4437961d0c56a6f7c3cec6",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fa68cb1ac4929920f26099812eafcae9",
+   "space": "U.S. Politics",
+   "month": "2026-10",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fa765264855443c6acf7f3e526e1b86f",
+   "space": "World affairs",
+   "month": "2026-10",
+   "agrees": 1,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fac8c752fccf4bdbb5d38277ba5e2f0a",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 4,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fae931ae36ba4d64a273199ca43ddbbf",
+   "space": "World affairs",
+   "month": "2026-09",
+   "agrees": 1,
+   "disagrees": 3,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fbc1ccff4ff14b9cb0e4daeb39fabb57",
+   "space": "Crypto",
+   "month": "2026-09",
+   "agrees": 5,
+   "disagrees": 5,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fbe50b4c1c14414aaaa641f785e4da9d",
+   "space": "AI",
+   "month": "2026-09",
+   "agrees": 3,
+   "disagrees": 2,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fc1829fcd1ed73cfe0d02eb7fdbb406a",
+   "space": "U.S. Politics",
+   "month": "2026-08",
+   "agrees": 1,
+   "disagrees": 4,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fc197bab5e39cb0cf4f7d76e45f50727",
+   "space": "AI",
+   "month": "2026-07",
+   "agrees": 2,
+   "disagrees": 1,
+   "in_v2": false
+  },
+  {
+   "geo_id": "fcd54299d3839d9ac42a52b6557d4380",
+   "space": "Health",
+   "month": "2026-10",
+   "agrees": 6,
+   "disagrees": 2,
+   "in_v2": false
+  }
+ ]
+}

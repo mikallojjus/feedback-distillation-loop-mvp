@@ -1,0 +1,2481 @@
+{
+  "run_id": "20261103-replace-400-add",
+  "script": "add",
+  "args": {
+    "claims": null,
+    "claims_file": "docs/mvp-2026-11/evidence/34-replace-400/selection.json"
+  },
+  "started_at": "2026-11-03T14:27:06.987Z",
+  "finished_at": "2026-11-03T14:32:03.158Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-11-03.1",
+  "pull_id": "20261103T142706Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/add.mjs --claims-file docs/mvp-2026-11/evidence/34-replace-400/selection.json",
+  "status": "done",
+  "geo_requests": {
+    "total": 14,
+    "nonQuery": 0
+  },
+  "add": {
+    "items": 399,
+    "added": [
+      {
+        "geo_id": "be94ec0d55071a367fee57ca8d68fab0",
+        "claim": "Vaccination was more dangerous than COVID",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-815e-b9c8-d1f7dcf1f4e0"
+      },
+      {
+        "geo_id": "25d12abde80b9e6115eddc4128a0987a",
+        "claim": "AI development should be paused as soon as possible",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81dd-95ca-dfe2b75b2962"
+      },
+      {
+        "geo_id": "4451726df3d852a09ae12121ba2608cb",
+        "claim": "Many undocumented immigrants hold jobs that American workers do not want, such as farm or trucking work",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8152-9e86-f0fc7576bdc2"
+      },
+      {
+        "geo_id": "f976bad6826e98e43b4dcba0721d3b09",
+        "claim": "Companies that replace workers with AI should be penalized",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-811d-8cbf-c7c769b1251e"
+      },
+      {
+        "geo_id": "26a0abb2baa0c27ddfd1f48b01ffd1c2",
+        "claim": "People are smarter than ever, taking judgments into their own hands more than ever",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81b5-947c-f46cb98c40a9"
+      },
+      {
+        "geo_id": "6adfde907fd24dcc8392f11218305cfa",
+        "claim": "The United States should scale back its military commitments abroad",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8123-a4bc-cc8869cae36e"
+      },
+      {
+        "geo_id": "a6f33c827371ed32b6e54d4654b99058",
+        "claim": "Social media platforms should never censor political opinions",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81b0-a389-c0f4e21d2761"
+      },
+      {
+        "geo_id": "802d8a330b774853adca517e4aa16159",
+        "claim": "Reducing ultra-processed food intake should be a first-line treatment for depression",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81c1-b5dc-d10ba63f9348"
+      },
+      {
+        "geo_id": "2c61cb63c07d654b9b81ae00038befb2",
+        "claim": "Democracies should form a global AI alliance based on shared values",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81a5-b381-dce727673c4d"
+      },
+      {
+        "geo_id": "3bf9b841187f8c71b74f892ba4e83b75",
+        "claim": "AI democracies should share computer chips while restricting adversaries",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81e0-8d3a-dbf1842b9989"
+      },
+      {
+        "geo_id": "1d5e673e8801d7a55a9b3e8f6c213402",
+        "claim": "The United States should prioritize AI competitiveness over AI regulation",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81ee-aea1-d3cd63c902a0"
+      },
+      {
+        "geo_id": "66dac9c59985c94476748a1efe544317",
+        "claim": "Your right to refuse vaccination matters more than the additional health risk you impose on others",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-812a-b1fd-dce3372adfee"
+      },
+      {
+        "geo_id": "3363441d6fb50edb49786c1456bb3b1e",
+        "claim": "The increased prevalence of AI is making people dumber",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8199-acc2-ef33c3a51d1a"
+      },
+      {
+        "geo_id": "5fc383fe28983ff4650518f404b88662",
+        "claim": "An estate should be able to authorize respectful commercial uses of a deceased person’s likeness",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8110-864f-e7f1d36f9390"
+      },
+      {
+        "geo_id": "5dd19a10b2194060a0d378da20336e62",
+        "claim": "Transgender athletes should compete based on biological sex",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e0-b74d-d197379b6901"
+      },
+      {
+        "geo_id": "f6072dc8fe0c32331ff896db01705bc5",
+        "claim": "The risk of human extinction from AI is overstated",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-817c-b576-ffc935ca1b82"
+      },
+      {
+        "geo_id": "2a6d578a5e73a5223d1105c1f2a0d2d6",
+        "claim": "AI companions are better than social isolation",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81e7-acfb-c87b2de3b601"
+      },
+      {
+        "geo_id": "40bef59ed6c863c6d9121e0432c6d2ea",
+        "claim": "Mass deportation would hurt American workers more than it would help them",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-815f-8b01-cb76710cc3ee"
+      },
+      {
+        "geo_id": "758e5c700e5a726bd0a7c604076273fe",
+        "claim": "Deporting more unauthorized immigrants strengthens the economy",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816b-8459-e264e3052f33"
+      },
+      {
+        "geo_id": "f85387c570a246359a74e6e929262800",
+        "claim": "Higher token limits are more valuable to engineers than access to a better AI model",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8131-aa71-feba115e81f3"
+      },
+      {
+        "geo_id": "3d8a9dfc5124402d998a54a2625fd867",
+        "claim": "Governments should limit the growth of AI data centers",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81fe-97f5-c83ec122e49c"
+      },
+      {
+        "geo_id": "40874580ccc2466999fa1dc0ed12621c",
+        "claim": "The United States should join the International Criminal Court",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-813c-9725-e5625c3480f5"
+      },
+      {
+        "geo_id": "83d5be1b269649b88b36539e87ca45cd",
+        "claim": "Mail voting should be available to all voters",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8174-9f1d-f4f39d4bf0c5"
+      },
+      {
+        "geo_id": "9bf3c85e4d1798234cac92a4e3b99d24",
+        "claim": "Deleting a conscious AGI should be considered murder",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81a9-8618-e8fdd4443d09"
+      },
+      {
+        "geo_id": "22436fe2eaf44e29a2fd69454f45384f",
+        "claim": "Voter ID should be required nationwide",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ec-aec6-d4b4ad4228d2"
+      },
+      {
+        "geo_id": "4f72e9946e5bc3d32600899cff756307",
+        "claim": "AI will increase workloads rather than give people more free time",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8171-8f36-c0df965a02af"
+      },
+      {
+        "geo_id": "759520a92f324dd0936996b24dbd989b",
+        "claim": "There is no such thing as an illegal person",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81b3-8067-e467f800d536"
+      },
+      {
+        "geo_id": "486f52cccb7748ffb9f0f6bd2002e8e0",
+        "claim": "Permanent UN Security Council members should be barred from vetoing resolutions on conflicts to which they are a party",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81e7-aa51-d66d45c3932e"
+      },
+      {
+        "geo_id": "a012ac4dfcb70d71db7c7434b5659edb",
+        "claim": "Artificial consciousness is possible",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81af-aca2-d4a01a8c7ef6"
+      },
+      {
+        "geo_id": "c18ab01a76c41eca50f1fbda2742b851",
+        "claim": "Parents should not use AI to raise their kids",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81d1-865b-d1c503275689"
+      },
+      {
+        "geo_id": "504a5cb160aa45cf83498a3ab9467fcb",
+        "claim": "The United States should restrict Chinese AI models",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8139-8796-e403dc2b403e"
+      },
+      {
+        "geo_id": "625d93bb38d248d19d95dceb247a2a15",
+        "claim": "Gender identity should not be taught in elementary schools",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81f6-bad0-c6267799a9b1"
+      },
+      {
+        "geo_id": "64e91fb398e344b7908e327abc56b7cb",
+        "claim": "You should be able to pay Ethereum gas fees in stablecoins",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-814f-993e-d11fd864919b"
+      },
+      {
+        "geo_id": "e6bad07bc446106d797310cd69587be5",
+        "claim": "Trump’s second term is making America more authoritarian",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e0-a72a-cd8be80777a4"
+      },
+      {
+        "geo_id": "9d4503412b8503878f04fafbb06336e8",
+        "claim": "Every worker should learn to manage AI agents",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81ce-bd1e-f69418c0884e"
+      },
+      {
+        "geo_id": "9d44bd2a4c49cc0a43be1acfb9f9fd6d",
+        "claim": "Removing Iran's government is a legitimate objective of the US–Iran war",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81a4-9e16-f5eb5bdf865c"
+      },
+      {
+        "geo_id": "50bed8d94c5854b6a13772faaffd5fa7",
+        "claim": "The AI bubble is starting to burst",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8166-b06b-fbfb500eb08f"
+      },
+      {
+        "geo_id": "67410a21053e6730d3b0e544a31e0eef",
+        "claim": "The left-right divide no longer explains politics",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8176-8dee-f95c0c4421e4"
+      },
+      {
+        "geo_id": "1df9543f0ea4444597b5fd1f99bad110",
+        "claim": "AI is the most powerful technology created to date",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8119-965c-eccba2efcc97"
+      },
+      {
+        "geo_id": "b9e7b83e21b44729b24d5ed29e67b621",
+        "claim": "A commitment to denuclearization should be required before negotiations with North Korea",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8140-964e-d65531d6b942"
+      },
+      {
+        "geo_id": "c8fe4cd16bc0787504ad85642d6859b2",
+        "claim": "Ukraine should accept territorial compromise to end the war with Russia",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81c8-80a5-ec0d8bc35cef"
+      },
+      {
+        "geo_id": "74f27bc422ec458eb9d664a3b885427e",
+        "claim": "Voter ID laws solve a problem that is too rare to justify the burden",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e8-9a1f-de97d704de05"
+      },
+      {
+        "geo_id": "d4c6ecf8c9c9d707432ff27e1d350806",
+        "claim": "Minors should be allowed abortions without parental knowledge",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-810d-9204-e88267e558eb"
+      },
+      {
+        "geo_id": "a6dfaf1504774981b7e87f15fec331b7",
+        "claim": "Diet and exercise interventions alone are not enough to reverse the rise in childhood obesity",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-814a-a512-d82a2e91803a"
+      },
+      {
+        "geo_id": "af16a7b0ced041079e9c4dbf7f83ec89",
+        "claim": "GPT-6 Astra is AGI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8120-80b5-e7ad487f9c1f"
+      },
+      {
+        "geo_id": "e2e566638400c5ca3b809040084ec791",
+        "claim": "AI-generated art is real art",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-818f-b1d5-c9c9a75bf972"
+      },
+      {
+        "geo_id": "3fde09c407004106b5d02eea9d1a4303",
+        "claim": "Zohran Mamdani should not attend the 25th anniversary September 11 commemoration",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-815c-8c99-e436768c43dd"
+      },
+      {
+        "geo_id": "59513d49f89618091b7e3e6678d04d65",
+        "claim": "Artificial superintelligence should be banned by law",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-812e-81d9-d42a72b76224"
+      },
+      {
+        "geo_id": "0f9f4ea420eb84e3ce53f19931ea0a61",
+        "claim": "Nicki Minaj would be a great White House press secretary 💅",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81c3-b86a-d6c01b7ec9ed"
+      },
+      {
+        "geo_id": "702ab7fdaed8448ca35f03f51c7fb919",
+        "claim": "Big tech companies should be broken up",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816f-acb9-f808ad7d9043"
+      },
+      {
+        "geo_id": "dfbd6b5e7978f230c287dbe7fe57b6a9",
+        "claim": "Christian nationalism is a bigger threat to democracy than America losing its religion",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8185-b95c-f271ee795d04"
+      },
+      {
+        "geo_id": "6dc75e12110688faeae67945cd2b277c",
+        "claim": "AI companies should report users' dangerous chats to the police",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81fa-b996-f5279ab6b0b9"
+      },
+      {
+        "geo_id": "9b973303f57861cf4ffc490451eb207a",
+        "claim": "European NATO members should develop a nuclear deterrent independent of the United States",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81d5-a3e7-d7b9064c8742"
+      },
+      {
+        "geo_id": "5b84c1b83b8b4d2bb06985cb8c68c4db",
+        "claim": "Big AI labs are fueling unnecessary fear about AI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8156-b99b-ffec58a4c635"
+      },
+      {
+        "geo_id": "a85121fee4876530b01a9a84f518e7c2",
+        "claim": "Humanoid robots will be common in homes within a decade",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-811e-b477-eb17cba142bc"
+      },
+      {
+        "geo_id": "c37929990d354024b22c709c266f9a0a",
+        "claim": "The mainstream media is biased against conservatives",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816f-89f5-ca3908e34684"
+      },
+      {
+        "geo_id": "fbc1ccff4ff14b9cb0e4daeb39fabb57",
+        "claim": "Catching crypto thieves is the exchanges' job more than the police's",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-8111-8c49-ffd375da7374"
+      },
+      {
+        "geo_id": "186afaaed79f4268bbbfc49ea5a36197",
+        "claim": "Voter ID laws suppress voter turnout",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8113-92a7-c64d2901635b"
+      },
+      {
+        "geo_id": "97ab2b41cef0bc8067b1db17e2ecf58b",
+        "claim": "Anthropic should call off its IPO",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81c0-b275-c72fb4464800"
+      },
+      {
+        "geo_id": "ec0a71df06f74225bf6811508b2ca4df",
+        "claim": "Voter ID laws disproportionately burden minority voters",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8148-ae0e-cce65ea1fdc3"
+      },
+      {
+        "geo_id": "7a0e5d4170535b76b3f42241363d8646",
+        "claim": "Mass deportation would increase labor costs, which in turn would drive up the prices of goods for American consumers and workers",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8102-85a1-c01b6b1db3e7"
+      },
+      {
+        "geo_id": "1f4f0439561b47d0aa5680cc42c73d74",
+        "claim": "Wall Street moving into crypto is good for crypto",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-8113-801c-e6903675c596"
+      },
+      {
+        "geo_id": "a1f93f0425063b9da30a42cfdcfadc6f",
+        "claim": "Good employers push workers to use more AI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-815a-98c8-e149bba06b4d"
+      },
+      {
+        "geo_id": "404cbc81e34d2c9e3e5ea641e52b9dec",
+        "claim": "Tyler Robinson should face the death penalty if convicted of assassinating Charlie Kirk",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ab-9caf-dd272b08f4b0"
+      },
+      {
+        "geo_id": "406b669021604795ac693cdb0e54890f",
+        "claim": "Social media companies should be required to remove misinformation",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81aa-85fd-dadefebdfb12"
+      },
+      {
+        "geo_id": "98aaee60d9af4a27b7e47e9d2c17a5a3",
+        "claim": "Solana upgrades too fast for its own good",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-81a8-8891-d1774faba91d"
+      },
+      {
+        "geo_id": "ba0c2e90a7d0536525e4b73e8dc77ff7",
+        "claim": "Blank votes should count as valid votes in elections",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8116-9db6-db795c3aac74"
+      },
+      {
+        "geo_id": "cca98191a4bcbbae43649852ed71663a",
+        "claim": "Open-weight AI will outperform closed AI ecosystems",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8191-a492-cc1f9159b4fe"
+      },
+      {
+        "geo_id": "d1ce798fab7ce134c357604cf3d5dc08",
+        "claim": "Human rights are universal, not a Western concept",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81b6-8b69-c56c6f037c3c"
+      },
+      {
+        "geo_id": "2d7363ca387271fa53582809f42cd840",
+        "claim": "Generative AI is making culture less original",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81c9-a835-f015762dd361"
+      },
+      {
+        "geo_id": "3878e73725a946ab9e7d8d710ebbbb3b",
+        "claim": "Ukraine should continue striking Russian energy infrastructure despite US pressure",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-812b-bfe0-d1d8aa4217b1"
+      },
+      {
+        "geo_id": "67e5dc7f176e594f882dd6993e82e68b",
+        "claim": "American workers would be unable to take jobs vacated by deported immigrants because the wages would not cover their cost of living",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816c-a98a-f21c67508b79"
+      },
+      {
+        "geo_id": "c381476542ef4d8087cf2d209abdb8f8",
+        "claim": "Trump's immigration crackdown makes the United States safer",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-811a-ab08-d72161ebd5a3"
+      },
+      {
+        "geo_id": "d69aae388d46019009b9a434cb09fc7d",
+        "claim": "The self-made man is a myth that justifies inequality",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e8-9be6-eea1d6644975"
+      },
+      {
+        "geo_id": "e2de5f52458f5e9f390733d1d018ba82",
+        "claim": "Universities should stay officially neutral on political and social controversies",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8142-9a9e-f3064af7a7dc"
+      },
+      {
+        "geo_id": "57a5fb0b80b38a933a2a989588ec6d82",
+        "claim": "Gen Z is less resilient than previous generations",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8147-9cd9-eb072da1c95c"
+      },
+      {
+        "geo_id": "5e387c3bb1c0cb060edd8c062d08a5c5",
+        "claim": "Ukraine should be granted full membership in NATO",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8170-9239-fe732446f6b8"
+      },
+      {
+        "geo_id": "61586e5c729747c4915d6bef94023190",
+        "claim": "Schools should screen students for anxiety and depression",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81de-9bdb-d1aa2c09d601"
+      },
+      {
+        "geo_id": "b69783d0eed5898005fa43f33f350a02",
+        "claim": "The United States should recognise Taiwan as an independent state",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-810f-a35f-cd50bd967f21"
+      },
+      {
+        "geo_id": "4322ef79acf34489a02065ac52283150",
+        "claim": "AI singularity has already started",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8139-bf76-ccf8b0f7d5df"
+      },
+      {
+        "geo_id": "60d2e424a12649ed824b6353576fb2f1",
+        "claim": "AI will dramatically reduce the cost of producing something, which will increase demand so much that employment and production will rise",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81a9-889f-d4a79f48d9ba"
+      },
+      {
+        "geo_id": "646ef2ed5d4734d45d60a80272f7849b",
+        "claim": "NATO should expand its strategic role beyond Europe to counter China",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-811b-b2c8-d8734b14961e"
+      },
+      {
+        "geo_id": "6e2b4c5dcad48359a486283d74c200c0",
+        "claim": "Most migrants come to the United States for economic opportunity, not because they are fleeing danger",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81f9-968b-dc065f2c87f0"
+      },
+      {
+        "geo_id": "83beff98aac0ee9c17e67bce7c53f491",
+        "claim": "Stronger tenant protections discourage landlords, deepening housing shortages",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-810a-9ca1-f2b012e1d276"
+      },
+      {
+        "geo_id": "a0ade225f0c09dbac144730f6c123f23",
+        "claim": "AI chatbots should not show ads",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8103-b4d3-c3c50a5f75e6"
+      },
+      {
+        "geo_id": "e83a5e8099214d66a0260992dc05cd70",
+        "claim": "The Shanghai Cooperation Organisation is becoming a credible alternative to Western-led international institutions",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8124-a0f1-ef48092a186f"
+      },
+      {
+        "geo_id": "d41c31977ade3d133f28e974bd2efa01",
+        "claim": "Governments have the power to control migration when they choose to use it",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-816a-9c8b-f07bb0454345"
+      },
+      {
+        "geo_id": "22bd0924740340a49db04b5c2ba4dc33",
+        "claim": "Antidepressants are overprescribed",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-8149-84bb-da8f924ec68d"
+      },
+      {
+        "geo_id": "3540aec42a769a4e4af54f7592d7f328",
+        "claim": "AI companies should refuse to work with the military",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-815f-8e2b-d3296120b6c4"
+      },
+      {
+        "geo_id": "a904b65c327ad49c8979ed40badcb76a",
+        "claim": "Betting on wars should be banned",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-813a-b4af-f832e37b7662"
+      },
+      {
+        "geo_id": "ca652618db65ccc93b9befd1b164b2f0",
+        "claim": "Police should be prohibited from using facial recognition",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81fe-a363-c478bc6e4743"
+      },
+      {
+        "geo_id": "ebff7de60773f203ad3dce69830b7746",
+        "claim": "Frozen Russian state assets should be used to finance Ukraine's reconstruction",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8194-a0b1-e08a56e9a0ed"
+      },
+      {
+        "geo_id": "fcd54299d3839d9ac42a52b6557d4380",
+        "claim": "Insurers should be barred from setting premiums using genetic tests",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-8128-a9b9-f2f4aa9128d6"
+      },
+      {
+        "geo_id": "e21bc14b1ccfc1203be77af0e41736fe",
+        "claim": "AI agents from big companies escaping containment is a result of sloppy work and can be fixed easily",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8176-ae0f-fdd9010595c0"
+      },
+      {
+        "geo_id": "07e97799a82ee6ffd2a4c4f91e8ba788",
+        "claim": "Election betting should be illegal",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8148-b720-d0c512fe2e23"
+      },
+      {
+        "geo_id": "0af30a95f81e4632a452ecd6aefdfc65",
+        "claim": "Billionaires should not exist",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816a-aa64-e16ce8a71480"
+      },
+      {
+        "geo_id": "3b1146769f5e41098c9eb8b604176a25",
+        "claim": "AI automation in customer service degrades the quality of consumer support",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81fc-99ff-e82046ae9d8d"
+      },
+      {
+        "geo_id": "42830d0a2f4c45969d86c6338ddff6c5",
+        "claim": "Cold plunges are a waste of time for most people",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-813f-aa53-eda70af16f19"
+      },
+      {
+        "geo_id": "5244c25540314619802340d3c6d33855",
+        "claim": "Employers should be required to offer in-office options to protect worker mental health",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-8137-ba31-d044ee9274e3"
+      },
+      {
+        "geo_id": "783a28c1c6c9fcee537f20643457afd1",
+        "claim": "There is nothing inherently wrong with pornography featuring consenting adults",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8172-bb4f-fd2132d0cd0a"
+      },
+      {
+        "geo_id": "7985d6d45177d78b4b5c34c5ee141425",
+        "claim": "Modern feminism has gone too far",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8183-8c3e-fc09b5784203"
+      },
+      {
+        "geo_id": "8c6af664d2d920096f4014a75e03561b",
+        "claim": "People think for themselves more than ever before",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81b2-9320-f2873c001718"
+      },
+      {
+        "geo_id": "d4a0fef8ded0b083d8bc26488f33271f",
+        "claim": "Employers should require workers to use AI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8194-97ac-d6c1933425f5"
+      },
+      {
+        "geo_id": "fac8c752fccf4bdbb5d38277ba5e2f0a",
+        "claim": "The global nature of generative AI threatens local cultures and contexts needed for originality",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-814f-a8f2-c5cfaeebd0ae"
+      },
+      {
+        "geo_id": "2f6dce22184547e486bcec5e8c68b206",
+        "claim": "The US should provide military aid to Israel",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e9-9a5d-dc439f6fa6bf"
+      },
+      {
+        "geo_id": "4e2c8ece98faab575a2f6e79aa34b624",
+        "claim": "Migrants can shape immigration law by fighting it in court",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8149-9cbe-cf467e3ca6df"
+      },
+      {
+        "geo_id": "508187b098c845b78372b6051e53ce1a",
+        "claim": "Childhood vaccines should be required for school attendance",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81d0-9598-c6a1e2cd67c6"
+      },
+      {
+        "geo_id": "5ca52bfe65244e68b571c9613f3195c2",
+        "claim": "Tokenized deposits are just stablecoins with a bank logo",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-81e0-8772-cc2d68fd8c16"
+      },
+      {
+        "geo_id": "74dde29c78374109a355eae294069a6b",
+        "claim": "You cannot have objective morality without God",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-812b-8786-efacb4a4cd06"
+      },
+      {
+        "geo_id": "93873f20b23a4de9a52eb68d6b50d279",
+        "claim": "AI is a creative tool",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8171-8d07-db48ac5e8de0"
+      },
+      {
+        "geo_id": "9fa643f9ba4eaf77024db090c044548d",
+        "claim": "Multiculturalism makes a country stronger",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-812e-9d52-f05eb0630228"
+      },
+      {
+        "geo_id": "e2eb54c69870404fbc641dc0d7bc5808",
+        "claim": "Generative AI may be making culture more homogenous",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-818d-a4fe-c868632e3574"
+      },
+      {
+        "geo_id": "06e8df326f344d0526c6c697277a1f8f",
+        "claim": "If bodily autonomy protects vaccine refusal, it must also protect abortion",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8152-b105-ca7c93c837ca"
+      },
+      {
+        "geo_id": "0a2a57b45dd5c189da821d5fe801ba23",
+        "claim": "Remittances do more good than harm for migrants’ countries of origin",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8196-a7e0-ed2adcb3bb9a"
+      },
+      {
+        "geo_id": "0abccb5806c34f6694f1283320979b8a",
+        "claim": "US military strikes on suspected drug-trafficking vessels are justified",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8107-9bd0-faa1fd933acd"
+      },
+      {
+        "geo_id": "43a9f62057562c7dfee8dd8fbdf5d6e6",
+        "claim": "AGI development should be paused",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8155-84eb-e9083fe022c3"
+      },
+      {
+        "geo_id": "6aafc0e61598bd1699a4dbfbdccca3fd",
+        "claim": "Anthropic is worth nowhere near $2 trillion",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-816a-9b34-c492101bdf1c"
+      },
+      {
+        "geo_id": "7a88c58d9f54e0c6fd9981cf9d3b71ee",
+        "claim": "Mandatory diversity training makes campuses more inclusive and improves students' experiences",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816d-9c00-da530511e31d"
+      },
+      {
+        "geo_id": "84711142bdeab4873f2a13528efcc7fe",
+        "claim": "Israeli control of the West Bank is a security occupation rather than annexation",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-815e-836c-f146f828ee3e"
+      },
+      {
+        "geo_id": "89c317259bc24d27889975c2035726c8",
+        "claim": "Spain should extend protections against eviction for vulnerable tenants",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8110-ac93-c331d5eccfd9"
+      },
+      {
+        "geo_id": "a5bc4f17f3395ff8229d40fedc12545f",
+        "claim": "US and Israeli military action against Iran is justified",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8141-9a3b-f25fb0c8d587"
+      },
+      {
+        "geo_id": "ba1b5581fd9177df3c07417926c4c62d",
+        "claim": "AI-generated content should receive copyright protection",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8187-b0ce-eadfdb054e12"
+      },
+      {
+        "geo_id": "ba7ebc4f88614e1789aa46c3fd344f1d",
+        "claim": "Online therapy is as effective as in-person therapy",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81ca-aee1-e8c10e00bd9c"
+      },
+      {
+        "geo_id": "d5ef2268fe31694e1ef85ca6b63125ee",
+        "claim": "Unaccountable billionaires are a bigger threat to democracy than unelected bureaucrats",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8114-b3f8-f7afa13db48f"
+      },
+      {
+        "geo_id": "033f32723abd1fe7ae503f2e519b925d",
+        "claim": "The AI Force should protect workers displaced by automation",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-819b-be4d-e0b1c800e7a7"
+      },
+      {
+        "geo_id": "11108a970c8effc51ae0a961378ad5f1",
+        "claim": "Private technology companies are a bigger threat to free speech than governments",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81c0-994b-db412f0096c2"
+      },
+      {
+        "geo_id": "1b0cf56c22a7b05e8c4cd0c4804617ca",
+        "claim": "Chinese AI models pose security risks",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81e6-82e7-fea0979717c2"
+      },
+      {
+        "geo_id": "3a86111db36a2b369f22aa997691a652",
+        "claim": "Religious beliefs should have no influence on legislation",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-812f-adf9-f9a6d46cc985"
+      },
+      {
+        "geo_id": "3dbd71f416082e5f27910c0e4023a750",
+        "claim": "Reducing inequality matters more than increasing average income",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8131-b5f5-c49598a4e77f"
+      },
+      {
+        "geo_id": "3e19c383a9c3b5cebb6a9ca376d62e81",
+        "claim": "Students learn better when courses center discussion of their own identities",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816f-918a-dc67db1239ac"
+      },
+      {
+        "geo_id": "51a48768365d003dd84645271cfe4f48",
+        "claim": "AGI should never have human rights",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81bd-924f-ddf7be25409f"
+      },
+      {
+        "geo_id": "530c3b59a35cf7585a92ebabb3a9cfb5",
+        "claim": "Doctors should be allowed to prescribe undisclosed placebos when no effective treatment exists",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-8121-8a01-e3e746d1e02a"
+      },
+      {
+        "geo_id": "5582de1fcc884f41daacd22278119031",
+        "claim": "Children should not be raised religious",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8102-bc7d-df6f5a3ef9e1"
+      },
+      {
+        "geo_id": "691a064caf6bf9fd53bbab3e6e0a8baf",
+        "claim": "Removing a model's safety guards should be a crime",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-819b-a3d1-e50428304aed"
+      },
+      {
+        "geo_id": "6a151998be7b72d5506846f2ec6d2bb3",
+        "claim": "A market economy cannot be moral",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8160-bb12-c25858ec7c70"
+      },
+      {
+        "geo_id": "93a515dfcac296b4fa883082011ea62e",
+        "claim": "Convicted prisoners should retain voting rights",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8193-bba7-e8dd376ec688"
+      },
+      {
+        "geo_id": "94ffd13291dae639c91440dee20ff5e5",
+        "claim": "Social platforms should remove provably false political claims, even when they are legal",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81df-9eef-fa83eb867bcb"
+      },
+      {
+        "geo_id": "ade85e220116e73ac0c342aef1ce3641",
+        "claim": "AI companies' doomsday warnings are just marketing",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8141-934d-cf96298db94f"
+      },
+      {
+        "geo_id": "cfa368639b42d031f38fad7539d0d18c",
+        "claim": "Current liability laws and market pressure are enough to make AI companies prioritize safety",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-817f-9b93-cc221fb33bbb"
+      },
+      {
+        "geo_id": "d64d3c1b4c21605635abf6c49bd78973",
+        "claim": "AGI is already here",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81be-a826-d85fce4bbdec"
+      },
+      {
+        "geo_id": "e039ad839ef54ff697ce2935f5bef97b",
+        "claim": "Tokenized stocks are just as legitimate as stocks bought through a traditional broker",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-816e-b2ec-f5f8fb3900bb"
+      },
+      {
+        "geo_id": "a9b89f371a1646e48fb4926c35976cfe",
+        "claim": "The drop in teen girls identifying as lesbian or bisexual is a real change, not a survey quirk",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-8177-9560-e506d57e9fe9"
+      },
+      {
+        "geo_id": "81b67f5dcd2afe27d96f6ac341d032be",
+        "claim": "The global AI development slowdown is unrealistic and should not be attempted",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-815d-9068-ece3dd5b423f"
+      },
+      {
+        "geo_id": "084866e6d2d5c58ca37dbfb2ae410f1d",
+        "claim": "Turning Point USA should pay the full security costs of its campus events",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8195-90ab-d5acfc6fe89f"
+      },
+      {
+        "geo_id": "2c8a6fea9bed3a1cf8c0202545ec635f",
+        "claim": "Public health should take priority over individual freedom",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8100-a90e-d6ab65f56866"
+      },
+      {
+        "geo_id": "2f048e3273d8aa3d56af8430c20ab45e",
+        "claim": "A leader once convicted of corruption should be allowed to run again",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8180-80c8-e5492a694acc"
+      },
+      {
+        "geo_id": "31fc74499d814653803cfc7a164de71f",
+        "claim": "Unilateral US military action against cartels in Mexico would violate Mexican sovereignty",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81d3-b96a-f87214087918"
+      },
+      {
+        "geo_id": "3ae21147fc06c58bfd18aa97640ef83a",
+        "claim": "Corporate social responsibility is mostly greenwashing",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8130-83e8-e51f02406d5c"
+      },
+      {
+        "geo_id": "3c88554cf3894381b91c52da94b84717",
+        "claim": "Stricter environmental regulations impose economic costs that outweigh their public health benefits",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81a9-905b-f35a195304c5"
+      },
+      {
+        "geo_id": "40bcaad3c86cbaa8e6523ade99b933c4",
+        "claim": "A negotiated two-state solution remains the most just and viable resolution to the Israel–Palestine conflict",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8141-a91b-ffda4f58df83"
+      },
+      {
+        "geo_id": "44df919dd1b8096dab90b3e5338b6c3a",
+        "claim": "OpenAI exaggerated its autonomous hacking capabilities for publicity",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8103-bfe6-f942fa7fe953"
+      },
+      {
+        "geo_id": "4e5435c4509381ad48be21a50dc0df4a",
+        "claim": "AI companions should become common in elderly care",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81df-a3ed-fe64b204a102"
+      },
+      {
+        "geo_id": "5c5c73117128f7b93a2c6b9d42dc054a",
+        "claim": "AI-generated music should be excluded from music charts",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81eb-a49e-ee28d14ef235"
+      },
+      {
+        "geo_id": "612bcdd835ca453d91941ee7e0e1db24",
+        "claim": "Peace should be pursued even at the cost of justice",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8115-974e-e1ba9d205f78"
+      },
+      {
+        "geo_id": "627ac3abc8b9f11d0b1f2a6d3334ea61",
+        "claim": "The world population should be reduced by 30% over 50 years through targeted family-planning measures",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-816f-9936-e3e1426a0ecb"
+      },
+      {
+        "geo_id": "6b35a626639b4237c781f06227c333d9",
+        "claim": "Consciousness is necessary for AGI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8176-9c8f-d3bf28d81823"
+      },
+      {
+        "geo_id": "6bc3148f91d939c1095533261ceb8d34",
+        "claim": "There is no meaningful definition of AGI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-810a-9532-d3347ec6dcef"
+      },
+      {
+        "geo_id": "7487ae903cb04721a0300a360e734edd",
+        "claim": "Healthcare costs will be the deciding issue in the 2026 midterm elections",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-8142-90ef-cec1ff42e3ac"
+      },
+      {
+        "geo_id": "774731b2c3f6afbc7ffbccb82df60879",
+        "claim": "Movies should not use AI-generated actors",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8163-97f6-f95e4fa0bc4b"
+      },
+      {
+        "geo_id": "797ca0ba983d49c6a2733b94e6e25973",
+        "claim": "Current corporate investment in AI infrastructure is unsustainable",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81ec-9f0c-e9a71f78cf8a"
+      },
+      {
+        "geo_id": "8a5239d388d6dcb6aa66de0230d9f707",
+        "claim": "AI has a net positive impact on human creativity",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81f3-808f-f0964ac8510e"
+      },
+      {
+        "geo_id": "971a6948ff790490b644f0ac926f9014",
+        "claim": "Private discussions between House Democratic leader Hakeem Jeffries and Trump adviser Jared Kushner represent legitimate cross-party pragmatism",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8144-9bbc-ec71719b5572"
+      },
+      {
+        "geo_id": "98cc888e12884d4582583bb281f8f5b0",
+        "claim": "Black Americans are owed reparations for slavery",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81d4-bec6-eea5ed603761"
+      },
+      {
+        "geo_id": "a19e7869bc121ed0d40aa5020bc330c8",
+        "claim": "US welfare policy incentivizes having more children and should instead incentivize fewer",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-811c-a490-d4ebae4f95de"
+      },
+      {
+        "geo_id": "a328d8213260f0ce1b856f27d6197728",
+        "claim": "President Donald Trump's restrictions on federal childhood vaccine recommendations increase the risk of preventable childhood disease outbreaks",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8154-aeaa-f2ca5da5ea5e"
+      },
+      {
+        "geo_id": "b6b9b2500922099c7a800220d3f67280",
+        "claim": "Wealthy countries should accept binding refugee-resettlement quotas",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8139-bc40-f8a62290ddb7"
+      },
+      {
+        "geo_id": "bc4d43aa4c5b75e7922cf75aebbf883f",
+        "claim": "Undocumented immigrants who work and pay taxes should have a path to citizenship",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81d9-85f5-ee23ccbfe0b9"
+      },
+      {
+        "geo_id": "c021193eab90def085aff157fe2839d4",
+        "claim": "Younger patients should receive priority when lifesaving treatment is scarce",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81ca-8987-f471e9e5b26f"
+      },
+      {
+        "geo_id": "c7ff945ecd55848eeac24d06226caed7",
+        "claim": "Ending DEI programs will reduce minority enrollment and graduation rates",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81d7-9da7-d314d3b160b5"
+      },
+      {
+        "geo_id": "d9b8f465afc84a6495ca734e95813f3b",
+        "claim": "Illegal immigration is a national security risk",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ad-affc-e363cf023d95"
+      },
+      {
+        "geo_id": "e3d13b9af3264ea480f3c5ea45adc504",
+        "claim": "Public-sector employees should be prohibited from wearing visible religious symbols at work",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81a1-a3a7-d2a1fc2b5617"
+      },
+      {
+        "geo_id": "eb610b66fb8d42c7943bbd82dfc729fe",
+        "claim": "Big companies can stop AI agents from escaping containment",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8125-afb9-e7ab24a59f1a"
+      },
+      {
+        "geo_id": "f7b9f699b9bd42e6aa6ac842b16ea103",
+        "claim": "Immigration is a net benefit for host countries",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8149-b6d7-c677229a1b4f"
+      },
+      {
+        "geo_id": "fa68cb1ac4929920f26099812eafcae9",
+        "claim": "Juvenile detention makes young offenders more likely to commit violent crimes",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81f3-83d1-d5e44bf345c8"
+      },
+      {
+        "geo_id": "fbe50b4c1c14414aaaa641f785e4da9d",
+        "claim": "The creativity produced using AI is limited by the person operating it",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81e8-9616-c5dea1ee0c3c"
+      },
+      {
+        "geo_id": "ab44c9a1568c87e25b906f8386d21bc6",
+        "claim": "The Hugging Face incident was driven more by weak containment than advanced AI capabilities",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81b3-a046-d85b76e17ef1"
+      },
+      {
+        "geo_id": "01c0081c7a17e4e9ae087359a6158fa7",
+        "claim": "Social media has made humanity less happy",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e1-8965-c4590196b06e"
+      },
+      {
+        "geo_id": "094d5549908e328cd172efeef4e32a9e",
+        "claim": "Local police should refuse to help ICE deport people with no criminal convictions",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81f7-b5aa-e4597905ef50"
+      },
+      {
+        "geo_id": "0adce0ad4a972f2494072a3f5eb03d5c",
+        "claim": "Data center construction should be slowed",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-816a-b58a-eab2d82f2182"
+      },
+      {
+        "geo_id": "19912fc512174232af6b1b56072d8452",
+        "claim": "A global AI alliance could benefit the United States by moving it away from its current path of unchecked AI development",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8109-8308-cddea07a8c91"
+      },
+      {
+        "geo_id": "1be23939e831aec8bfc222346371b482",
+        "claim": "China is a bigger threat to the West than Russia",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81d8-8463-ec41f5ee6f6e"
+      },
+      {
+        "geo_id": "2e95c4ed6e582df4982a45926a82411f",
+        "claim": "Conscious AI should have human rights",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-817b-bc4c-ffc6f5dddc00"
+      },
+      {
+        "geo_id": "37bb3d0233ed43efa475cc734ba601f1",
+        "claim": "Smart glasses pose a greater threat to public privacy than smartphones",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8155-a627-ce621688973d"
+      },
+      {
+        "geo_id": "53bb3b2fb8c14bcda0a83bab3de9045b",
+        "claim": "Modern culture is becoming hostile to Christianity",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-817c-8fd3-f2fa1631d58e"
+      },
+      {
+        "geo_id": "7924b542940e12cd486c13a8e3ae7184",
+        "claim": "AI benchmarks no longer reflect real-world capability",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8119-aabb-d9b26527bbdf"
+      },
+      {
+        "geo_id": "7beaa30516cb40e180e17525dbe0af42",
+        "claim": "Cancel culture is a threat to free expression",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8109-83ce-d616b2af4480"
+      },
+      {
+        "geo_id": "7cd220e695e64ea4b8165ef58b70a69f",
+        "claim": "Hamas must disarm before Israel withdraws its forces from Gaza",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8113-ada3-e7c57c3a8cbe"
+      },
+      {
+        "geo_id": "7ff5a4f01efb4c2982b30647fa719551",
+        "claim": "Crypto payments need Visa more than Visa needs crypto",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-814b-b9e9-dbda6011db7c"
+      },
+      {
+        "geo_id": "883db780d3c6e7e7ef37104d1c29cb0e",
+        "claim": "Websites should block AI agents acting for their users",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81d3-9ba7-e6e684d95207"
+      },
+      {
+        "geo_id": "bf60fd702524904678b3526b711a3251",
+        "claim": "AI’s greatest creative value is breaking academic tunnel vision",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8122-9b8c-ec4fa0c09843"
+      },
+      {
+        "geo_id": "c002cd75b66c4872a4eef37aab7e906c",
+        "claim": "Assisted dying should be legal for terminally ill adults",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81db-8e38-dbc64c376918"
+      },
+      {
+        "geo_id": "dcc3d7ad467a46fab3b00da957621af3",
+        "claim": "It's impossible to change one's gender",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8179-8347-cd7ffd2feb49"
+      },
+      {
+        "geo_id": "85493cbc0550410f972181b2099a5fce",
+        "claim": "U.S Economy depends on undocumented labour",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8137-a0da-ebeed05a5a49"
+      },
+      {
+        "geo_id": "8a427316d0f2541997db576860173691",
+        "claim": "Jacob Coxon's post was a coordinated PR campaign",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8149-8d5c-e3c05421c38e"
+      },
+      {
+        "geo_id": "ea0579f2eeda45a9bfd7e72cc43323fc",
+        "claim": "The United States has the right to rename Lake Ontario “Lake America” because it contributes more to its protection than Canada",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8157-a0f2-c350ba1e6cb1"
+      },
+      {
+        "geo_id": "09a1dab8e85d11e824f5e01b0cc33751",
+        "claim": "Modern Christianity has little to do with the teachings of Jesus",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8115-878d-cc99bd919f49"
+      },
+      {
+        "geo_id": "0c85b1ceaef4b9079868b6b8fdfe6c2e",
+        "claim": "Strict enforcement tactics and specialized equipment are essential for ICE agents to conduct high-risk immigration operations safely",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-814d-95ad-dd2ca39c1bf1"
+      },
+      {
+        "geo_id": "16b9c630d512024061c696a914752a0e",
+        "claim": "Universities should not require diversity statements from job applicants",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-811a-b556-c3ffa3db9042"
+      },
+      {
+        "geo_id": "18cd98dc09c527d6a9634e9343049ac2",
+        "claim": "Bioethics laws should be decided by referendum, not by Parliament alone",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81aa-97af-db40306dd46a"
+      },
+      {
+        "geo_id": "1d4264e853ecc24552667a0c0867759b",
+        "claim": "Large inheritances should be taxed more heavily than earned income",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8108-b942-d7390b9f2e6c"
+      },
+      {
+        "geo_id": "2182c91ae1be4d75a205f1046cc8a27f",
+        "claim": "Medicaid work requirements are designed to kick people off coverage, not promote employment",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-8175-8340-d98e11e47a30"
+      },
+      {
+        "geo_id": "27477d2bb46944b7813c8369ed7d9705",
+        "claim": "Trump's expansion of presidential power is unjustified",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8188-b1f4-f7873702da4b"
+      },
+      {
+        "geo_id": "2b80ea7f3d09183fd7ca84dc8bd227ab",
+        "claim": "The United States should remain NATO's principal security guarantor",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-818e-901b-e53e194e02d8"
+      },
+      {
+        "geo_id": "32e3e33246234194b87471c6537b7c68",
+        "claim": "Transgender people should use public bathrooms based on biological sex",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ab-bdde-c3ee76e181b3"
+      },
+      {
+        "geo_id": "34b4c381e56848cbb263113c8e602d4c",
+        "claim": "0xALPHA was developed in China",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81e4-b6da-f0f046e5809b"
+      },
+      {
+        "geo_id": "46c55899e868e66b794efd84a67ade8e",
+        "claim": "UN Security Council vetoes should be suspended in cases of mass atrocities",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8146-b4b5-cf27ca074b5e"
+      },
+      {
+        "geo_id": "4b02454608e1b84121fbb5a8ace7dfa6",
+        "claim": "Hamas's suppression of political opposition undermines its claim to democratic legitimacy",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81cf-a4b4-d1782a374503"
+      },
+      {
+        "geo_id": "4f7e7426f7cdb73da56e290d8c09d63b",
+        "claim": "Allegations of an affair between President Donald Trump and White House aide Natalie Harp constitute a political smear intended to distract from the administration's agenda and target a female staff member",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-812f-b765-f39e85342df0"
+      },
+      {
+        "geo_id": "603b70b02eb3423caa04aeeda885441f",
+        "claim": "The United Nations should establish a centralized global governance framework for artificial intelligence",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8116-81e0-f2ed48f362b9"
+      },
+      {
+        "geo_id": "6370e105d163228e060bc08663628a84",
+        "claim": "AI-generated hypotheses will accelerate biology more than lab automation",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-810f-9b17-c4a950575a89"
+      },
+      {
+        "geo_id": "66b8cd070797916de1b8609a0cb4e6d3",
+        "claim": "Dependence on a few AI providers is itself a systemic financial risk",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8141-b395-dd5bff3758af"
+      },
+      {
+        "geo_id": "67fa9bca94a4434bb9b57b09498f4c88",
+        "claim": "The ACA enrollment removal process lacks adequate due process protections",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-8176-86e7-f448e4f16812"
+      },
+      {
+        "geo_id": "783fbb3f7ce5d834199b333f683de5cd",
+        "claim": "Countries should grant citizenship to everyone born there regardless of parents’ immigration status",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-819f-ab3f-f238a108c250"
+      },
+      {
+        "geo_id": "7b7e6b6023fa6c2809dec80eb88fb4a5",
+        "claim": "Governments should let competing AI companies agree to slow development",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8167-8d28-c2c2f6de8e2f"
+      },
+      {
+        "geo_id": "83eca01eebc047c2b22fb4dfd4b6b98f",
+        "claim": "The US should restrict artificial food dyes",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81f9-a3ef-f7c208d07a5b"
+      },
+      {
+        "geo_id": "92f7d4d6b6fc48183d2f13be4ca6e953",
+        "claim": "The recent collapse in US border crossings proves enforcement works",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81d4-a97c-c1987abd375b"
+      },
+      {
+        "geo_id": "94833ecd8d20483e8a51184af5cdb998",
+        "claim": "Free markets will solve the climate crisis better than regulation",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81e7-b3f9-eb2bdde0699c"
+      },
+      {
+        "geo_id": "9e46d07baa57c223e8f0dc20c28912e1",
+        "claim": "China will overtake the United States as the world's leading power",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81ef-9c3b-efa8efe3b3f5"
+      },
+      {
+        "geo_id": "a983d0396283f9975f59dc914c1590d0",
+        "claim": "Downloading pirated works to train AI is theft regardless of fair use",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-818e-ab70-c5ceb3185ceb"
+      },
+      {
+        "geo_id": "b2a8cf72b02f4baaab817fb7a5cc7b67",
+        "claim": "The Bible should take precedence over modern social values",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8166-911b-ea17878c725f"
+      },
+      {
+        "geo_id": "b853a9f1adb34b868358f7e708c22161",
+        "claim": "The Electoral College should be abolished",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8127-9653-d9a02bd1bf2c"
+      },
+      {
+        "geo_id": "bc75aef54bcbd613faf370bf4b98bbdd",
+        "claim": "Humanitarian military intervention can be justified without UN Security Council approval",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81e8-bfd9-f70025ed5a07"
+      },
+      {
+        "geo_id": "bdc4c47aa9034fe8a02e9c7af39ab033",
+        "claim": "Open borders would make the world richer",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81b2-a24f-d8706d6f821f"
+      },
+      {
+        "geo_id": "ca7ade893d7c41c88a762340524a5805",
+        "claim": "European nations should deploy military troops to Ukraine",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8128-8c14-c1198eb38ef9"
+      },
+      {
+        "geo_id": "cddec1b234033a963873d26ac3acfc8e",
+        "claim": "An AI relationship can be valuable even if the AI feels nothing",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81fb-8f97-ed95580e433a"
+      },
+      {
+        "geo_id": "d0c4d24dbd5f191435a4db6224a50f18",
+        "claim": "Hamas bears greater responsibility for Palestinian civilian deaths in the Gaza war",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81ac-b244-de938c78975e"
+      },
+      {
+        "geo_id": "e91449313065455e9d40533597c0cdb1",
+        "claim": "Automatic voter registration should be adopted nationwide",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81db-a616-f0d7fb693124"
+      },
+      {
+        "geo_id": "ee10adaee90ec20951f15a031fce2d06",
+        "claim": "Centrism fuels political extremism",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8153-a1cb-e5c5fd9b86d8"
+      },
+      {
+        "geo_id": "ef2486d5994cf382dc92b57b1315c64f",
+        "claim": "Animals deserve rights, not just protection",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-815f-9b77-d24b26b4cbf9"
+      },
+      {
+        "geo_id": "f68dbae15824464c831a5bb09426f304",
+        "claim": "Forcing a woman to give birth is a breach of human autonomy",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8143-b23f-fec0fdb5d6bb"
+      },
+      {
+        "geo_id": "f97f86d49b4e47b4822995726c860df4",
+        "claim": "Operating systems should restrict AI agents' access to user data by default",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-818c-bbd4-f044539d1b61"
+      },
+      {
+        "geo_id": "f9b7d175ce8e156924fba4456b584133",
+        "claim": "Large language models are further from AGI than is being predicted",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81c7-94f9-f7593dbc5a6c"
+      },
+      {
+        "geo_id": "f9f831ac11470f5a7ca6e14936f58c5b",
+        "claim": "AI will force humans to raise their creative standards",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8168-ad3d-db7ca663f0bf"
+      },
+      {
+        "geo_id": "fae931ae36ba4d64a273199ca43ddbbf",
+        "claim": "NATO expansion was a primary cause of Russia's invasion of Ukraine",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81ce-bab4-ca085020d554"
+      },
+      {
+        "geo_id": "326380b8aecb53d7a25b779d743df033",
+        "claim": "It is unlikely that laws will be changed to classify the deletion of a conscious AGI as murder",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8166-83aa-c2bb6905dfec"
+      },
+      {
+        "geo_id": "3c57d190ae2e50fa911e124c409865d2",
+        "claim": "Censoring political opinions on social media platforms violates the principle of freedom of speech",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e6-838d-ece716616df1"
+      },
+      {
+        "geo_id": "b400b8e716f85a36abf38c438d9ba50c",
+        "claim": "In the workplace, AI can make work easier and help get tasks done",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81c4-bec6-cdeaac8c5a05"
+      },
+      {
+        "geo_id": "000931e053b6f81745f3e3894012293d",
+        "claim": "Persistent US inflation above the Federal Reserve’s 2% target justifies another interest-rate increase despite the risk of slower economic growth",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81bd-8fff-d4d9ebdb9c47"
+      },
+      {
+        "geo_id": "00e49c82ba4e4443a471180095d4a4a0",
+        "claim": "Christians should openly try to convert their friends",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8103-bd8e-d5f19c9d8ae6"
+      },
+      {
+        "geo_id": "0155cb6563ec3ac1164a7c1b7fb5ab05",
+        "claim": "A US president should not unilaterally rename an internationally shared body of water such as Lake Ontario",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-810a-9e0f-e0d1c9f745b3"
+      },
+      {
+        "geo_id": "0254282d7d5d0d3cb4bc3a197e6f33c5",
+        "claim": "AI companies should protect the welfare of their AI models",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-819a-aa93-d35fce77961f"
+      },
+      {
+        "geo_id": "079d07a77a4249b58c498db29c68994d",
+        "claim": "The United States should stop policing the world",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-810e-89a5-f7d962cd125d"
+      },
+      {
+        "geo_id": "0f62d8ab206f413a90e567bd069a92a4",
+        "claim": "Large-scale retraining programs can successfully mitigate AI-driven job displacement",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81d0-a5b6-e520b7778bba"
+      },
+      {
+        "geo_id": "127149e06e3ba3124d3546851dd39f89",
+        "claim": "Fears of AI extinction are Silicon Valley narcissism",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-812c-98e4-fd92654a8fb6"
+      },
+      {
+        "geo_id": "1ab2234e06191b0b8b32a0d3b301fbfe",
+        "claim": "Publishing detailed information about US munitions shortages threatens national security",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8151-852a-efcca1ac14be"
+      },
+      {
+        "geo_id": "1bf238bac9472bb85f3d0a02068eeee5",
+        "claim": "Exams should be redesigned because AI has changed how students learn",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8114-9539-f8410ee8375d"
+      },
+      {
+        "geo_id": "2955dd8bd0c44f2285d4ca0da21014e0",
+        "claim": "There should be a basic knowledge bar to participate in elections",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8195-9dd9-f9e9caa24247"
+      },
+      {
+        "geo_id": "29889f32708e4002b43a70c8b221daac",
+        "claim": "Israel is intentionally blocking and restricting essential humanitarian aid from entering the Gaza Strip",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-813f-9d59-ddbcc1a744e7"
+      },
+      {
+        "geo_id": "2c5f9d879442b62cb9a72f7dbbc3293d",
+        "claim": "The public should receive a share of the wealth created by AI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81b5-b6be-da460c0a60b1"
+      },
+      {
+        "geo_id": "389bf10852b84d16a67765dc79adb88b",
+        "claim": "Atheism ultimately provides no objective meaning to life",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8157-ac10-db054c81f0bc"
+      },
+      {
+        "geo_id": "44e813295df24ed2a065c8077afc27c9",
+        "claim": "Mocking Christianity is more socially acceptable than mocking other religions",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81fe-a1f5-d37e127e31a3"
+      },
+      {
+        "geo_id": "4727b3392c3a48b3871cb6a92b909148",
+        "claim": "Tokenized stocks need traditional exchanges",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-811e-b62c-cab6a8d79924"
+      },
+      {
+        "geo_id": "4830e2b907c71b3cae7f160a573b6079",
+        "claim": "The US should end its war with Iran even if Iran's current government stays in power",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-813f-95c7-e5b7b9b3f756"
+      },
+      {
+        "geo_id": "4f36d6abd3e0502da58107f73c606d7a",
+        "claim": "Crypto bug bounties should require a non-refundable fee to submit reports",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-81d5-8f9b-e39d50fef428"
+      },
+      {
+        "geo_id": "4f40eabbd2633a68f7cdc4000b81063b",
+        "claim": "Capitalism is one of the best systems humanity has ever created",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8117-8a24-e0a47a647ac5"
+      },
+      {
+        "geo_id": "5555c3d169e5431bb1235e6f8d530eea",
+        "claim": "Romania should intercept threatening drones over international Black Sea waters before they enter its airspace",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81cd-b802-c32abf214c28"
+      },
+      {
+        "geo_id": "571e6a16be81d3f4277fe3f90dbc8707",
+        "claim": "Normalising US–Cuba relations would advance political and economic reform in Cuba",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8196-ab9f-d147929ed625"
+      },
+      {
+        "geo_id": "627bc074decf42f7b7bbf42822c68a3b",
+        "claim": "Corporate boards should automate executive roles to the same extent as lower-level jobs",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8141-9630-e02e3f8266cd"
+      },
+      {
+        "geo_id": "64c523de7f31868cc4ecc834c85a886f",
+        "claim": "AI chatbots are as harmful to teenagers as social media",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81f7-bf37-df015918aa9a"
+      },
+      {
+        "geo_id": "661aa390fa3748509d282e36193648d7",
+        "claim": "Factors within a person's country of origin are the primary driver for migration",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8167-821a-d1f791f18699"
+      },
+      {
+        "geo_id": "67da877cea0d42a798043486b847fbe6",
+        "claim": "The Supreme Court is no longer providing sufficient checks on executive power",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816f-829a-ec80d586c4c7"
+      },
+      {
+        "geo_id": "6b9c33e6b11487ee745b4835b305af14",
+        "claim": "The US should let China distill American AI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81ae-83b2-cf27ea8c2219"
+      },
+      {
+        "geo_id": "6daa321101c4ad5de8fb6b6cca1f4133",
+        "claim": "European states should deploy forces to enforce any future ceasefire between Russia and Ukraine",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8134-9724-c93503839fe0"
+      },
+      {
+        "geo_id": "71e3be59c9694191b81ea0be70c78f11",
+        "claim": "The US president lacked constitutional authority to initiate war with Iran",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81fb-9da3-f71f6ed5bf9c"
+      },
+      {
+        "geo_id": "7468174755311fbb096ea9319d41e9c8",
+        "claim": "Meritocracy is a myth",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8138-a4f3-d5118faf439e"
+      },
+      {
+        "geo_id": "77a69a9b34aff36a6d4d282af37b4cbc",
+        "claim": "Primaries make better presidential candidates",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-817d-965e-c18dbd9bb2c2"
+      },
+      {
+        "geo_id": "803dfb91ad1a0b4240d5da1463df6086",
+        "claim": "Federal courts should order access restored to barred reporters",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-811f-ba06-d92bc0ce52a5"
+      },
+      {
+        "geo_id": "8271598b04824a4088775686c1e4cea1",
+        "claim": "The United States should reduce foreign aid spending",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-819b-902e-e1be182df138"
+      },
+      {
+        "geo_id": "85d840fce393314d984f82f7dd8ccc7e",
+        "claim": "Islamophobia is a form of racism",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-816f-aa61-dbb4a64bb6c4"
+      },
+      {
+        "geo_id": "88b525b62513782be60d3f03b19a1feb",
+        "claim": "As people become more educated, their opinions will actually diverge more, not converge",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81d8-9776-c3d5a3b3dbe8"
+      },
+      {
+        "geo_id": "93227664fed54f489e4622bd7293d665",
+        "claim": "The SCO's expanding and politically diverse membership prevents it from turning declarations into meaningful collective action",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81b9-94da-dcc3ae9e5a6d"
+      },
+      {
+        "geo_id": "93b2c0f8df5441d8b760df8bbd0d6c40",
+        "claim": "Childcare should be publicly funded",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ef-9f39-fd76e767348c"
+      },
+      {
+        "geo_id": "957714e2a50a28e31f6c5254721d6872",
+        "claim": "Palestinian refugees should have the right to return to their former homes in Israel",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8121-bd87-f773d46445a8"
+      },
+      {
+        "geo_id": "97fdfead23a240f483555ff48b8ece5b",
+        "claim": "Ordering abortion pills should be illegal",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8176-a69a-ee305e1c3caa"
+      },
+      {
+        "geo_id": "9a969922ff4e4b97aa9f74e82e3640d8",
+        "claim": "AI agents should be permitted to execute financial transactions without human oversight",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-8184-9cb5-f7d4b003c0b4"
+      },
+      {
+        "geo_id": "9acc3686f5a74bd78c692d85ea70a1c5",
+        "claim": "Misconfigurations that allow AI agents to escape can be addressed with better testing and security hardening",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-812c-aae0-d03ab9315697"
+      },
+      {
+        "geo_id": "9ba0f11f6c13cae891cb7c3aba509653",
+        "claim": "Statues of controversial historical figures should be taken down",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e4-a54c-f0d4d0c9919f"
+      },
+      {
+        "geo_id": "9bc5587caab68f2ade059941c8d0ecf4",
+        "claim": "AI should be allowed to diagnose patients without a doctor's approval",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8189-a287-ff3ec6fc7c05"
+      },
+      {
+        "geo_id": "a09937661e60c793db936222f3c4b10f",
+        "claim": "Voters blame Trump too much for prices presidents cannot fully control",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-817f-ae63-dbe7781eb4d4"
+      },
+      {
+        "geo_id": "a5e3f714445e4c779d88ad352207a626",
+        "claim": "Most people are safer keeping crypto with a regulated custodian than holding their own keys",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-81e9-9ade-fe55e20a5bfa"
+      },
+      {
+        "geo_id": "ad398d441b0e1930e6003121126a4688",
+        "claim": "Everyone should receive a universal basic income",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81f7-a33f-c9837381d3d0"
+      },
+      {
+        "geo_id": "b4cb61e5dde9f88db58244479e7d41b4",
+        "claim": "Society is failing young men more than young women",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8119-b0d3-f3e43639f2ef"
+      },
+      {
+        "geo_id": "b8c2ad1d2c0646adb086cafcc671af40",
+        "claim": "There is a limit to consumption, so production cannot keep increasing indefinitely",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8177-a4d5-c5fd4a210304"
+      },
+      {
+        "geo_id": "befe099575f80bbb0bb71324a78f7806",
+        "claim": "Competent adults should be allowed to sell a kidney",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81b5-b6e4-ee7a7b954fed"
+      },
+      {
+        "geo_id": "c287deb5fee1cb52aa7becaf8f317b9b",
+        "claim": "The scale and conduct of Israel's military campaign in Gaza cannot be justified as self-defence",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8140-bdf4-cb69946de74f"
+      },
+      {
+        "geo_id": "c3d5c129f940cf58a3c42e2d5fd09be1",
+        "claim": "Countries should renounce nuclear first use",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-811e-b4ea-f2d5342e67df"
+      },
+      {
+        "geo_id": "c4fe7ef0d57f4e948411a9523c1789a6",
+        "claim": "Abortion should be legal",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81db-8737-d167ac4ef0ce"
+      },
+      {
+        "geo_id": "d6f662ab6686d1b68ce5005868089b52",
+        "claim": "You should never keep your crypto on an exchange",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-8145-8e9c-f1140a9084e7"
+      },
+      {
+        "geo_id": "d8af2f37c5f017e59796c8bad28c9944",
+        "claim": "Severe mental illness should reduce punishment, never eliminate criminal responsibility",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-813b-8149-fcca71a91331"
+      },
+      {
+        "geo_id": "e125afd175825e5c88bb90c61790cd7e",
+        "claim": "While European alliances for self-defense are understandable, U.S. and Canadian involvement is questionable as they are not on the same continent",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8110-b642-cb546e5cb277"
+      },
+      {
+        "geo_id": "e42d58bf48942eae6214b5032812be2b",
+        "claim": "Import tariffs are necessary to defend domestic workers",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-815a-ab76-e293266d3218"
+      },
+      {
+        "geo_id": "e4fe1a62d3614a098c4bc2a733e31898",
+        "claim": "States should have no say over contracts listed on federally regulated exchanges",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-818d-8eaf-e9f20379d2b2"
+      },
+      {
+        "geo_id": "e7f500ca25064015b3e4e6b0a1ba3c52",
+        "claim": "Benjamin Netanyahu should remain Israel's prime minister after the 2026 election",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81fe-ae42-ec62eb9a2f32"
+      },
+      {
+        "geo_id": "e835c2cfef02b2788cd63ecbabe55a71",
+        "claim": "Voting should be compulsory",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8118-822d-f179a5f9615c"
+      },
+      {
+        "geo_id": "eabe39fd147f46a2a123723515b39ecd",
+        "claim": "Christianity is more rational than atheism",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81dd-bd7e-c56723415896"
+      },
+      {
+        "geo_id": "ef57dda750be4bf08264eca89981ec3d",
+        "claim": "In the long term, humans may not need jobs to survive due to an abundance created by AI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-816d-a404-ed1df703d58b"
+      },
+      {
+        "geo_id": "f008a200d5dac7ab55fc637b36f3bbcb",
+        "claim": "Deconstruction of expertise is happening, and it is positive",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ce-a263-de423eb8d625"
+      },
+      {
+        "geo_id": "f6daf8f9adf374d85b1f88bac315dfcf",
+        "claim": "Western governments owe reparations to the countries they colonized",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8149-a3a4-db4f2b66131a"
+      },
+      {
+        "geo_id": "fa67087e3b4437961d0c56a6f7c3cec6",
+        "claim": "Undocumented immigrants should have a path to citizenship",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8151-83f6-c47a454dbbf2"
+      },
+      {
+        "geo_id": "fa765264855443c6acf7f3e526e1b86f",
+        "claim": "Parents should be financially liable for damage caused by their minor children during riots",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81dc-8221-e7e3009d7bff"
+      },
+      {
+        "geo_id": "fc197bab5e39cb0cf4f7d76e45f50727",
+        "claim": "Restricting Chinese AI models would weaken American innovation",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8197-b33c-f4dc7ce17734"
+      },
+      {
+        "geo_id": "2f82b607208b4098a5d62692654978cf",
+        "claim": "The asylum system is being abused by economic migrants",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8129-b8b0-d4c10305d44e"
+      },
+      {
+        "geo_id": "d82373a59578452eb1d146c843f10471",
+        "claim": "Current AI models like GPT-6 Astra lack independent agency and their intelligence is reactive rather than autonomous because they require human prompting",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81ab-bf96-ef90de3f8081"
+      },
+      {
+        "geo_id": "01118db527c46157c38f92f07d9f52bb",
+        "claim": "Countries have a moral obligation to accept refugees",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8180-b9c9-fb10df9a1732"
+      },
+      {
+        "geo_id": "0130b6db5b9d39fcfb82d301092d2f9c",
+        "claim": "The current AI investment boom is financially unsustainable",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8154-a81d-fb3d8809ceb7"
+      },
+      {
+        "geo_id": "071eb642b4f8437aa68f1f4b24f77ebe",
+        "claim": "Palestinian elections should include Hamas rather than exclude it",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-8153-964e-c850ac546ab7"
+      },
+      {
+        "geo_id": "0c5f0b22f30b1dd388722d7c8d322808",
+        "claim": "Military interventions justified on humanitarian grounds cause more civilian harm than they prevent",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81c2-8c5f-d1749d49c5cc"
+      },
+      {
+        "geo_id": "0cdda86f93bd8931ab21d987f45c44e6",
+        "claim": "Rural health-care costs are more electorally important than national cultural disputes in 2026",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8152-918f-e6065d3b8591"
+      },
+      {
+        "geo_id": "11db03465436f5d5b54d856b273d6591",
+        "claim": "The US needs a cabinet-level Department of Artificial Intelligence",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-815c-ba72-e249dc81a639"
+      },
+      {
+        "geo_id": "1558e86131484c24b256b5af4f798241",
+        "claim": "European strategic autonomy requires Germany to prioritise European defence companies over deeper industrial integration with the United States",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81d7-b0fd-e7830220e5e1"
+      },
+      {
+        "geo_id": "192bde2594f78101d61aa60b6134cb6f",
+        "claim": "AI companions make it too easy to avoid the demands of human relationships",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8179-8436-d87107e2a2c8"
+      },
+      {
+        "geo_id": "1d4db97ef7a489dc4b72dc35ad6cc097",
+        "claim": "Trump should pursue a ceasefire with Iran to stabilize Treasury markets",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8108-bc15-e95ca50d7e9b"
+      },
+      {
+        "geo_id": "1e24cdbd6cd6d044941bc06656813085",
+        "claim": "AI poses a greater threat to human relationships than to jobs",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81b8-807b-dd97aa4674b6"
+      },
+      {
+        "geo_id": "2149f80eaa2234f108a0fc96bbf70864",
+        "claim": "Federal prison employees should not have collective bargaining rights",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-818d-8549-c9d052424f98"
+      },
+      {
+        "geo_id": "2772057e8317451a8a8c95637f156946",
+        "claim": "Graduates receiving federally funded education from the United States Space Academy should be required to complete a period of military or civilian public service",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8101-bc4c-d54b84214321"
+      },
+      {
+        "geo_id": "27733984bd744f4e91b70b12c5e76cc7",
+        "claim": "AI models that are good at finding critical software vulnerabilities should be heavily restricted from the public",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-814a-960e-d99b7c110872"
+      },
+      {
+        "geo_id": "2a5fdc205949419aa7fa667f2be8a30b",
+        "claim": "Demons are real and can influence people's lives",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e5-a963-f843394c3f7f"
+      },
+      {
+        "geo_id": "2da703b8aeda4cafa9e7a3be2dbd75f2",
+        "claim": "AI recommendations can be less affected by human cognitive biases",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-818d-ab2b-ffc31ac7e4f6"
+      },
+      {
+        "geo_id": "2f800124adc8546fab65ef7e0e8982da",
+        "claim": "Most capable adults are able to use AI chatbots in a healthy manner",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-817d-b989-c9744be5e284"
+      },
+      {
+        "geo_id": "30feb1fa9cbb408bacaa86f6ace1d1e9",
+        "claim": "Strength training matters more for longevity than any amount of cardio",
+        "space": "Health",
+        "page_id": "40d273e2-14eb-81e2-9e5d-c17cd651f4ee"
+      },
+      {
+        "geo_id": "330e7987a9b4fb30fcf050a042a48845",
+        "claim": "Diesel-export restrictions would shift fuel costs from American drivers to foreign consumers",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8192-a23d-e6e09bbe7a91"
+      },
+      {
+        "geo_id": "37decf3113ddb3b5af9c52fa2e3291c5",
+        "claim": "AI data centers only benefit the richest Americans",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-81b0-9f60-c2e7d22da615"
+      },
+      {
+        "geo_id": "3d994385b8d349e9a9d74403269202ff",
+        "claim": "Utah Valley University should close every September 10 to commemorate Charlie Kirk’s assassination",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e3-b58c-f36c79b428a6"
+      },
+      {
+        "geo_id": "3efcb60633d643ab88c0845bcd6c6140",
+        "claim": "OpenAI solved the Navier-Stokes Millennium Prize Problem",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8103-8ded-ddb9e8cd9417"
+      },
+      {
+        "geo_id": "41428209291e4beb31054c07a3c7ee4a",
+        "claim": "Europe should loosen its AI rules",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-8108-8c02-e097649c33b9"
+      },
+      {
+        "geo_id": "48548a0be2940a1a9ab1d929c025def2",
+        "claim": "Health insurers should be banned from using AI to deny care",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-816e-9c5c-e40ef5869497"
+      },
+      {
+        "geo_id": "491268d605734fe4ba8a6bfcd0d03b8d",
+        "claim": "USAID should be restored as an independent agency",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8104-b7e3-e86fea96e289"
+      },
+      {
+        "geo_id": "49bf3cda541746628dcc38abfa4f628e",
+        "claim": "Trump’s $5,000 payout shows he expects a Republican defeat in the 2026 midterms",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81c9-8ba9-ce617b07335a"
+      },
+      {
+        "geo_id": "4dd9e3898fb2578e8b3ef38aef7233b0",
+        "claim": "Addressing online harms through legal prosecution and civil lawsuits does not require restricting speech",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81e4-96f2-d1ba8d9f988b"
+      },
+      {
+        "geo_id": "4efcc039338d16c4a08ab51da8dcd40a",
+        "claim": "A failed execution calls for a safer procedure rather than cancellation of the sentence",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ec-982f-ef7a4e42473c"
+      },
+      {
+        "geo_id": "4fc01b3f4859833fb50b8a99806564ba",
+        "claim": "Face veils like the burqa should be banned in public",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ee-96b7-c9ea54919156"
+      },
+      {
+        "geo_id": "50e591e5c4634e3d807657d4ca727725",
+        "claim": "Diversity, equity, and inclusion programs make organizations stronger",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8104-ba63-c3ec3b5ea041"
+      },
+      {
+        "geo_id": "56626da72145424152ee41283c4c5b08",
+        "claim": "The conflict between men and women is manufactured for profit and political control",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-81ee-bc05-d72032205ed4"
+      },
+      {
+        "geo_id": "57d659a8a7f180501cee2be0cc4a216e",
+        "claim": "The war against Iran is illegal under international law",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-81dc-a5f9-c95a6af6e2af"
+      },
+      {
+        "geo_id": "5a9d2c4526a322edec4cb778ef3fd9b8",
+        "claim": "America’s celebration of democracy rings hollow when it ignores its racist past and present",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-813c-893d-fe4bb2b47203"
+      },
+      {
+        "geo_id": "5f2611a5d24e5926c7f433ecd586152d",
+        "claim": "Local governments should be able to seek climate damages under state law",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8120-8ffb-cd7a614efa68"
+      },
+      {
+        "geo_id": "623fa164fab64d29bc2452a365b3c57d",
+        "claim": "Crypto exchanges can offer insurance and inform users about measures in place after a theft occurs",
+        "space": "Crypto",
+        "page_id": "40d273e2-14eb-8158-9d7c-c801df4a0d92"
+      },
+      {
+        "geo_id": "63ae48a3fcec768aa9ad1ece4fbe63d0",
+        "claim": "Megachurches do more harm than good",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8168-b8d4-c812ab83de19"
+      },
+      {
+        "geo_id": "6734eee9b11f3d4f887ce247a5947d44",
+        "claim": "Search engines should link to websites, not answer with AI",
+        "space": "AI",
+        "page_id": "40d273e2-14eb-811e-8300-dbc7e593e19d"
+      },
+      {
+        "geo_id": "679ce6f23c6d10ccd5720cf2d75899fe",
+        "claim": "Iran's blockade of the Strait of Hormuz is an unlawful attack on international navigation",
+        "space": "World affairs",
+        "page_id": "40d273e2-14eb-815f-b4ae-d74c63682138"
+      },
+      {
+        "geo_id": "696b428642d0438bad73e0d8844e9429",
+        "claim": "Separation of church and state must be strictly upheld",
+        "space": "U.S. Politics",
+        "page_id": "40d273e2-14eb-8123-a8dc-ce1431ab49ee"
+      }
+    ],
+    "not_added": [
+      {
+        "item": "acaf35fd8549e3b02904378ae840de8c",
+        "geo_id": "acaf35fd8549e3b02904378ae840de8c",
+        "reason": "already",
+        "claim": "AI will replace most jobs soon"
+      },
+      {
+        "item": "269127878f5d5367f4de9601be12346b",
+        "geo_id": "269127878f5d5367f4de9601be12346b",
+        "reason": "already",
+        "claim": "We should slow down AI development"
+      },
+      {
+        "item": "4c5da0e82518ba5c859e468180eadf80",
+        "geo_id": "4c5da0e82518ba5c859e468180eadf80",
+        "reason": "already",
+        "claim": "AI will create more jobs than it eliminates"
+      },
+      {
+        "item": "bf7af1834f5a46d192e61215a589127f",
+        "geo_id": "bf7af1834f5a46d192e61215a589127f",
+        "reason": "already",
+        "claim": "A flawed CLARITY Act this year is better than no CLARITY Act"
+      },
+      {
+        "item": "7020096448f7d03f88ef135fe9636d4b",
+        "geo_id": "7020096448f7d03f88ef135fe9636d4b",
+        "reason": "already",
+        "claim": "AI companions can never replace human relationships"
+      },
+      {
+        "item": "77a0d6b518fbbde37d17dd415df7648b",
+        "geo_id": "77a0d6b518fbbde37d17dd415df7648b",
+        "reason": "already",
+        "claim": "Training AI on copyrighted works should be considered fair use"
+      },
+      {
+        "item": "20f362509e0614da0b5bf358afe28084",
+        "geo_id": "20f362509e0614da0b5bf358afe28084",
+        "reason": "already",
+        "claim": "An AI partner is better than no partner at all"
+      },
+      {
+        "item": "e41f6a1f3afeb5dd7db8e997796fd9ad",
+        "geo_id": "e41f6a1f3afeb5dd7db8e997796fd9ad",
+        "reason": "already",
+        "claim": "AI “end of the world” narrative is a complete overreaction"
+      },
+      {
+        "item": "06f9d2d750e48aac6dd0461c694b2377",
+        "geo_id": "06f9d2d750e48aac6dd0461c694b2377",
+        "reason": "already",
+        "claim": "Tougher border enforcement stops people from migrating"
+      },
+      {
+        "item": "97b524e247650dda24e4dab564132da5",
+        "geo_id": "97b524e247650dda24e4dab564132da5",
+        "reason": "already",
+        "claim": "Frontier AI models should never be released as open weight"
+      },
+      {
+        "item": "389e425a5cea4ad49da688ccf96f345c",
+        "geo_id": "389e425a5cea4ad49da688ccf96f345c",
+        "reason": "already",
+        "claim": "Bitcoin should freeze the coins that quantum computers could steal"
+      },
+      {
+        "item": "97a7652f54434cf6bbbff52f2021de92",
+        "geo_id": "97a7652f54434cf6bbbff52f2021de92",
+        "reason": "already",
+        "claim": "Stocks should trade 24/7"
+      },
+      {
+        "item": "002f8e4ba6274856b55d4226b01bc9c8",
+        "geo_id": "002f8e4ba6274856b55d4226b01bc9c8",
+        "reason": "already",
+        "claim": "Hate speech should be illegal"
+      },
+      {
+        "item": "69727edb0a7848f1ad833ce6a99012db",
+        "geo_id": "69727edb0a7848f1ad833ce6a99012db",
+        "reason": "already",
+        "claim": "Israel is committing a genocide against the Palestinian population in the Gaza Strip"
+      },
+      {
+        "item": "5b7419af345226ee4842f815dd25df7d",
+        "geo_id": "5b7419af345226ee4842f815dd25df7d",
+        "reason": "already",
+        "claim": "US needs more data centers not less"
+      },
+      {
+        "item": "34d515d0812b52ce98abe6d0884293ff",
+        "geo_id": "34d515d0812b52ce98abe6d0884293ff",
+        "reason": "already",
+        "claim": "Genetically enhancing an embryo through genetic modification should not be allowed"
+      },
+      {
+        "item": "4cb960bdae604f3cb6b0a6f54e77996e",
+        "geo_id": "4cb960bdae604f3cb6b0a6f54e77996e",
+        "reason": "already",
+        "claim": "Dollar stablecoins strengthen the US dollar's global position"
+      },
+      {
+        "item": "920e1b8441f34cdfac2196ad28b9ddd0",
+        "geo_id": "920e1b8441f34cdfac2196ad28b9ddd0",
+        "reason": "already",
+        "claim": "Crypto firms becoming banks defeats the point of crypto"
+      },
+      {
+        "item": "affdcfaf93eb45009d113c7cc458ee6b",
+        "geo_id": "affdcfaf93eb45009d113c7cc458ee6b",
+        "reason": "already",
+        "claim": "The routine childhood vaccination schedule should be reduced"
+      },
+      {
+        "item": "0e30637ba50afa699bb17a70236a297b",
+        "geo_id": "0e30637ba50afa699bb17a70236a297b",
+        "reason": "already",
+        "claim": "The United States should commit to defending Taiwan against a Chinese invasion"
+      },
+      {
+        "item": "c51bb8e34ff8349cf88af7a04f8c2bdf",
+        "geo_id": "c51bb8e34ff8349cf88af7a04f8c2bdf",
+        "reason": "already",
+        "claim": "The biggest threat to free speech isn’t censorship. It’s a country that no longer agrees truth matters"
+      },
+      {
+        "item": "0b6de41f13dfa82a6b371db3112d99c9",
+        "geo_id": "0b6de41f13dfa82a6b371db3112d99c9",
+        "reason": "already",
+        "claim": "People who refuse to use AI will become economically irrelevant"
+      },
+      {
+        "item": "6f9968519df018dfb73cc6608b5cb4af",
+        "geo_id": "6f9968519df018dfb73cc6608b5cb4af",
+        "reason": "already",
+        "claim": "Parents should be allowed to genetically enhance their children"
+      },
+      {
+        "item": "778a36c4396a46cba93e6252d378ad07",
+        "geo_id": "778a36c4396a46cba93e6252d378ad07",
+        "reason": "already",
+        "claim": "AI chatbots should be required to detect and escalate self-harm risks"
+      },
+      {
+        "item": "8415b303b0fc8b96fd4366150b202eee",
+        "geo_id": "8415b303b0fc8b96fd4366150b202eee",
+        "reason": "already",
+        "claim": "Institutional religion traps people more often than it liberates them"
+      },
+      {
+        "item": "d2713be5920848518d409eaef1dd3758",
+        "geo_id": "d2713be5920848518d409eaef1dd3758",
+        "reason": "already",
+        "claim": "Caffeine should be delayed after waking"
+      },
+      {
+        "item": "a2f9970eed724d1e84df04fd16bf52f7",
+        "geo_id": "a2f9970eed724d1e84df04fd16bf52f7",
+        "reason": "already",
+        "claim": "It is not fair or safe for a country to have to deal with illegal migration"
+      },
+      {
+        "item": "5d3a4241bf495e7a975a6aa76d25557d",
+        "geo_id": "5d3a4241bf495e7a975a6aa76d25557d",
+        "reason": "already",
+        "claim": "With AI, people can go more profoundly into their work"
+      },
+      {
+        "item": "07736de6dc19428f9b35004b9edbd92c",
+        "geo_id": "07736de6dc19428f9b35004b9edbd92c",
+        "reason": "already",
+        "claim": "Assault weapons should be banned"
+      },
+      {
+        "item": "0e8b0f33a6c54edf9d2cb05fb9f592e7",
+        "geo_id": "0e8b0f33a6c54edf9d2cb05fb9f592e7",
+        "reason": "already",
+        "claim": "Germany should maintain direct diplomatic contact with Russia despite the war in Ukraine"
+      },
+      {
+        "item": "29c4ec7c990b6d9b201f37bb830e92ff",
+        "geo_id": "29c4ec7c990b6d9b201f37bb830e92ff",
+        "reason": "already",
+        "claim": "AI helps cyber defenders more than it helps attackers"
+      },
+      {
+        "item": "5a6357795a76bd7b17f772f514782a12",
+        "geo_id": "5a6357795a76bd7b17f772f514782a12",
+        "reason": "already",
+        "claim": "Prediction markets are just gambling"
+      },
+      {
+        "item": "afb25451bce17eb04a7ebdb27f48b35c",
+        "geo_id": "afb25451bce17eb04a7ebdb27f48b35c",
+        "reason": "already",
+        "claim": "Commercial vessels should accept transit fees through the Strait of Hormuz"
+      },
+      {
+        "item": "c69fda5397dbb3ef7922e7f46edf1b28",
+        "geo_id": "c69fda5397dbb3ef7922e7f46edf1b28",
+        "reason": "already",
+        "claim": "Tech companies are forcing AI on people who don't want it"
+      },
+      {
+        "item": "5b20e1fb41a1465aa4191de4da7fd75f",
+        "geo_id": "5b20e1fb41a1465aa4191de4da7fd75f",
+        "reason": "already",
+        "claim": "An otherwise identical case involving a poor Black mother would receive less public sympathy"
+      },
+      {
+        "item": "653b7f04e847829a402d0242b144d4cc",
+        "geo_id": "653b7f04e847829a402d0242b144d4cc",
+        "reason": "already",
+        "claim": "AI bubble is already bursting in China"
+      },
+      {
+        "item": "00ad164f52d4146eb7d3a332489fd052",
+        "geo_id": "00ad164f52d4146eb7d3a332489fd052",
+        "reason": "already",
+        "claim": "Sex work should be treated like any other profession"
+      },
+      {
+        "item": "94852d9abfe0087409f9d52134ca9d62",
+        "geo_id": "94852d9abfe0087409f9d52134ca9d62",
+        "reason": "already",
+        "claim": "Experts disagree more than ever before, and that is a good thing"
+      },
+      {
+        "item": "e9c1072561c44aceab10b70d168a6450",
+        "geo_id": "e9c1072561c44aceab10b70d168a6450",
+        "reason": "already",
+        "claim": "Humans are currently in charge of the world because they are the most intelligent species on the planet"
+      },
+      {
+        "item": "1c0201f776d94c83817e2510d9aa253a",
+        "geo_id": "1c0201f776d94c83817e2510d9aa253a",
+        "reason": "already",
+        "claim": "The evidence base for puberty blockers in minors is too weak to support clinical use"
+      },
+      {
+        "item": "21f8df80c714db43e849241a753b8fb7",
+        "geo_id": "21f8df80c714db43e849241a753b8fb7",
+        "reason": "already",
+        "claim": "Parents should not post identifiable images of their children for an audience without the child's meaningful agreement"
+      },
+      {
+        "item": "3662b744173d6bf37be62feb786ad818",
+        "geo_id": "3662b744173d6bf37be62feb786ad818",
+        "reason": "already",
+        "claim": "President Trump’s public opposition to higher interest rates threatens the Federal Reserve’s independence and weakens its inflation-fighting credibility"
+      },
+      {
+        "item": "36a4408e4cbd4c6cabc15be45171a0c3",
+        "geo_id": "36a4408e4cbd4c6cabc15be45171a0c3",
+        "reason": "already",
+        "claim": "Stablecoins that pay interest are a threat to banks"
+      },
+      {
+        "item": "5a984d90655916258f1638e2e3db3990",
+        "geo_id": "5a984d90655916258f1638e2e3db3990",
+        "reason": "already",
+        "claim": "Schools should stop using AI detection tools"
+      },
+      {
+        "item": "6f7112fe2239cecdbc59d7df2d0f2315",
+        "geo_id": "6f7112fe2239cecdbc59d7df2d0f2315",
+        "reason": "already",
+        "claim": "Congress should combine Federal Reserve rate increases with deficit reduction because monetary policy alone cannot contain inflation while federal borrowing remains elevated"
+      },
+      {
+        "item": "8d0937d1544ab460c99acafce48661e7",
+        "geo_id": "8d0937d1544ab460c99acafce48661e7",
+        "reason": "already",
+        "claim": "US defence commitments to NATO should depend on each NATO ally meeting its spending obligations"
+      },
+      {
+        "item": "a0dc06fa58b544d98080ba5a5ce95120",
+        "geo_id": "a0dc06fa58b544d98080ba5a5ce95120",
+        "reason": "already",
+        "claim": "President Volodymyr Zelenskyy is corrupt"
+      },
+      {
+        "item": "d93135c85a7c414e8bb8919b359d9754",
+        "geo_id": "d93135c85a7c414e8bb8919b359d9754",
+        "reason": "already",
+        "claim": "Bitcoin is a better store of value than gold"
+      },
+      {
+        "item": "dbe21d0b4c1a4a6e9fe16fa3a32a8c77",
+        "geo_id": "dbe21d0b4c1a4a6e9fe16fa3a32a8c77",
+        "reason": "already",
+        "claim": "The FDA should require full clinical trials for updated COVID-19 vaccines"
+      },
+      {
+        "item": "f92dfa5019204b97aba5bc59781243db",
+        "geo_id": "f92dfa5019204b97aba5bc59781243db",
+        "reason": "already",
+        "claim": "Banning prediction markets only makes them more popular"
+      },
+      {
+        "item": "fe0a4d8330c2505fb57fa09996940436",
+        "geo_id": "fe0a4d8330c2505fb57fa09996940436",
+        "reason": "already",
+        "claim": "Individuals, rather than society, should have the authority to decide how to handle their own families regarding the social messaging and use of embryo selection"
+      },
+      {
+        "item": "a0ead60cc4e34fb9847f0d6402185712",
+        "geo_id": "a0ead60cc4e34fb9847f0d6402185712",
+        "reason": "already",
+        "claim": "French authorities have relied too heavily on arrests to respond to the student movement"
+      },
+      {
+        "item": "e28fc3c60e8b0e4e5c0a0ab813356ed8",
+        "geo_id": "e28fc3c60e8b0e4e5c0a0ab813356ed8",
+        "reason": "already",
+        "claim": "The US must keep its AI lead over China to make pacing safe"
+      },
+      {
+        "item": "075e717d37ab9e80c69f02243ef28d02",
+        "geo_id": "075e717d37ab9e80c69f02243ef28d02",
+        "reason": "already",
+        "claim": "Simulating a mind is equivalent to creating a mind"
+      },
+      {
+        "item": "1574df1e9a3bc4e514a90e574693fca9",
+        "geo_id": "1574df1e9a3bc4e514a90e574693fca9",
+        "reason": "already",
+        "claim": "Gaza should be governed by an independent Palestinian administration after the Israel–Hamas war"
+      },
+      {
+        "item": "40d42f6e39bc4c4c9edf6940db6d3254",
+        "geo_id": "40d42f6e39bc4c4c9edf6940db6d3254",
+        "reason": "already",
+        "claim": "The federal government should conduct workplace immigration-enforcement raids"
+      },
+      {
+        "item": "4833cd02660aab63cf97f561da88263a",
+        "geo_id": "4833cd02660aab63cf97f561da88263a",
+        "reason": "already",
+        "claim": "Iran's regional conduct is primarily defensive rather than aggressive"
+      },
+      {
+        "item": "592396e7360ec9fd9becb0463c8422b1",
+        "geo_id": "592396e7360ec9fd9becb0463c8422b1",
+        "reason": "already",
+        "claim": "Admission to the United States Space Academy should remain open to civilian students without prior military service, security clearances, or federal employment"
+      }
+    ],
+    "geo_tags_left_out": [
+      {
+        "geo_id": "e2e566638400c5ca3b809040084ec791",
+        "tags": [
+          "AI",
+          "Art & creativity",
+          "Culture",
+          "Culture & Meaning",
+          "debate claim"
+        ]
+      },
+      {
+        "geo_id": "40bcaad3c86cbaa8e6523ade99b933c4",
+        "tags": [
+          "Weekly debate"
+        ]
+      },
+      {
+        "geo_id": "4b02454608e1b84121fbb5a8ace7dfa6",
+        "tags": [
+          "Governance and repression in Gaza"
+        ]
+      },
+      {
+        "geo_id": "3c57d190ae2e50fa911e124c409865d2",
+        "tags": [
+          "Potential debate"
+        ]
+      },
+      {
+        "geo_id": "fa67087e3b4437961d0c56a6f7c3cec6",
+        "tags": [
+          "Immigration",
+          "debate claim"
+        ]
+      }
+    ]
+  },
+  "plan": {
+    "creates": 341,
+    "updates": 0
+  },
+  "apply": {
+    "done": 341,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0
+  },
+  "counts": {
+    "added": 341,
+    "already": 58,
+    "not_found": 0,
+    "not_claim": 0,
+    "not_in_spaces": 0,
+    "same_text": 0,
+    "bad_input": 0,
+    "no_name": 0,
+    "source_link": 0
+  }
+}

@@ -1,0 +1,136 @@
+{"id":"67da877cea0d42a798043486b847fbe6","tags":[],"confidence":0.8,"bucket":"near_miss","why":"Supreme Court: named institution, the one US court"}
+{"id":"68c03107f53ce33df2684898a44a294c","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the Anthropic IPO' names its company; one event"}
+{"id":"696b428642d0438bad73e0d8844e9429","tags":[],"confidence":0.5,"bucket":"near_miss","why":"generic 'church and state', abstract"}
+{"id":"6a151998be7b72d5506846f2ec6d2bb3","tags":[],"confidence":0.65,"bucket":"clean","why":"plain generic statement, indefinite subject"}
+{"id":"6aafc0e61598bd1699a4dbfbdccca3fd","tags":[],"confidence":0.8,"bucket":"clean","why":"self-contained, well-formed"}
+{"id":"6adfde907fd24dcc8392f11218305cfa","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named country; 'its' resolved inside claim"}
+{"id":"6b9c33e6b11487ee745b4835b305af14","tags":[],"confidence":0.75,"bucket":"clean","why":"plain self-contained recommendation"}
+{"id":"6bcb7138969c483faa46a922c046207e","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"6e2b4c5dcad48359a486283d74c200c0","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'they' resolved by 'migrants' inside claim"}
+{"id":"6f1ff57772b24f20b5d03abaf9b737f8","tags":[],"confidence":0.55,"bucket":"clean","why":"hedged but clear; abstract nouns only"}
+{"id":"702ab7fdaed8448ca35f03f51c7fb919","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"703e04592c455fbba2284dea3e38c4a0","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'The Iran war' bare event name; borderline definite"}
+{"id":"71e3be59c9694191b81ea0be70c78f11","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'The US president' office, resolved by the war described"}
+{"id":"72724ac66aba4695a0cca8b747b2394d","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic 'the younger generation'; 'they' resolved; 'previously'"}
+{"id":"73aef60360f4465ba5238f45c806aaa5","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"7468174755311fbb096ea9319d41e9c8","tags":[],"confidence":0.85,"bucket":"clean","why":"plain abstract statement"}
+{"id":"759520a92f324dd0936996b24dbd989b","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite 'an illegal person'; clear"}
+{"id":"774731b2c3f6afbc7ffbccb82df60879","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"783a28c1c6c9fcee537f20643457afd1","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"783fbb3f7ce5d834199b333f683de5cd","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'there' resolved by 'Countries' inside claim"}
+{"id":"797ca0ba983d49c6a2733b94e6e25973","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'Current' time expression; mass noun"}
+{"id":"7985d6d45177d78b4b5c34c5ee141425","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'Modern' time word; generic subject"}
+{"id":"79bac2500d8b678e9029444575992b12","tags":[],"confidence":0.7,"bucket":"near_miss","why":"Congress: named institution"}
+{"id":"7a0e5d4170535b76b3f42241363d8646","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'which in turn would drive up the prices of goods' shortenable"}
+{"id":"7a88c58d9f54e0c6fd9981cf9d3b71ee","tags":[],"confidence":0.7,"bucket":"clean","why":"two related effects; clear"}
+{"id":"7b7e6b6023fa6c2809dec80eb88fb4a5","tags":[],"confidence":0.75,"bucket":"clean","why":"plain self-contained position"}
+{"id":"7beaa30516cb40e180e17525dbe0af42","tags":[],"confidence":0.75,"bucket":"clean","why":"abstract nouns, clear"}
+{"id":"7ef5b6bf629847c57c86c65c8991826b","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"801ff85b66504df5ac92be9801fcf8d4","tags":[],"confidence":0.7,"bucket":"clean","why":"indefinite subject, clear"}
+{"id":"806ab70b9a824d492b5d021722f40194","tags":[],"confidence":0.5,"bucket":"near_miss","why":"generic superlative definite 'The most powerful AI models'"}
+{"id":"81b67f5dcd2afe27d96f6ac341d032be","tags":[],"confidence":0.5,"bucket":"near_miss","why":"abstract 'slowdown'; borderline definite, not a countable thing"}
+{"id":"8271598b04824a4088775686c1e4cea1","tags":[],"confidence":0.75,"bucket":"clean","why":"named country; plain position"}
+{"id":"83beff98aac0ee9c17e67bce7c53f491","tags":[],"confidence":0.75,"bucket":"clean","why":"clear causal claim"}
+{"id":"83d223358b9ca5febfee4ce6069c1f1d","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"8487e11e088e40cab1aaa7b9e89f6b2f","tags":[],"confidence":0.7,"bucket":"clean","why":"named countries; clear"}
+{"id":"85493cbc0550410f972181b2099a5fce","tags":["Improper capitalization","Incorrect grammar"],"confidence":0.8,"bucket":"issue","why":"'Economy' capitalized mid-sentence; 'U.S' lacks period and article"}
+{"id":"85d840fce393314d984f82f7dd8ccc7e","tags":[],"confidence":0.85,"bucket":"clean","why":"plain definitional claim"}
+{"id":"87613eb66c0bb70fd344e093e7da536a","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite subject, clear"}
+{"id":"883db780d3c6e7e7ef37104d1c29cb0e","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'their users' resolved inside claim"}
+{"id":"88b525b62513782be60d3f03b19a1feb","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'their' resolved; 'actually' mild filler"}
+{"id":"89c317259bc24d27889975c2035726c8","tags":[],"confidence":0.75,"bucket":"clean","why":"named country; clear"}
+{"id":"8a427316d0f2541997db576860173691","tags":["Context-dependent"],"confidence":0.65,"bucket":"issue","why":"'Jacob Coxon's post' does not say which post"}
+{"id":"8a5239d388d6dcb6aa66de0230d9f707","tags":[],"confidence":0.8,"bucket":"clean","why":"indefinite, clear"}
+{"id":"8ad5bd8547a548a4a6d675e1dd91c242","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the world' generic; long but not shortenable"}
+{"id":"8e56340e040f412cbb88765a530b6123","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the AI lead' abstract definite resolved by claim"}
+{"id":"918fb0bddf76b7ec50487e3ff9d194a4","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym GOP; named payout described in claim"}
+{"id":"92f7d4d6b6fc48183d2f13be4ca6e953","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'recent' time word; collapse described by the claim"}
+{"id":"93227664fed54f489e4622bd7293d665","tags":[],"confidence":0.7,"bucket":"near_miss","why":"acronym SCO; 'it' resolved inside claim"}
+{"id":"93873f20b23a4de9a52eb68d6b50d279","tags":[],"confidence":0.85,"bucket":"clean","why":"plain definitional claim"}
+{"id":"943a94e2d6e010e6d0d4173ff28b1817","tags":[],"confidence":0.7,"bucket":"clean","why":"clear; acronym U.S. inside modifier"}
+{"id":"94833ecd8d20483e8a51184af5cdb998","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the climate crisis' abstract definite"}
+{"id":"94ffd13291dae639c91440dee20ff5e5","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'they' resolved by 'claims' inside claim"}
+{"id":"957714e2a50a28e31f6c5254721d6872","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'their' resolved; abstract 'the right to return'"}
+{"id":"971a6948ff790490b644f0ac926f9014","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named people; discussions fully described in claim"}
+{"id":"97fdfead23a240f483555ff48b8ece5b","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"98cc888e12884d4582583bb281f8f5b0","tags":[],"confidence":0.7,"bucket":"clean","why":"capitalized 'Black' is accepted convention"}
+{"id":"9ba0f11f6c13cae891cb7c3aba509653","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"9bc5587caab68f2ade059941c8d0ecf4","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"9bf3c85e4d1798234cac92a4e3b99d24","tags":[],"confidence":0.6,"bucket":"near_miss","why":"acronym AGI in capitals"}
+{"id":"9d4d714affa0e70de3b40886b7df79bc","tags":[],"confidence":0.5,"bucket":"near_miss","why":"bare 'National law' generic/mass use"}
+{"id":"9e46d07baa57c223e8f0dc20c28912e1","tags":[],"confidence":0.7,"bucket":"clean","why":"named countries; clear prediction"}
+{"id":"9e9f1c80017fceaeb1993cb62ea1d48e","tags":[],"confidence":0.65,"bucket":"near_miss","why":"generic 'the president' in policy recommendation"}
+{"id":"9f04c703d3673253db0486dc09c06444","tags":[],"confidence":0.7,"bucket":"clean","why":"abstract nouns; clear"}
+{"id":"a0ade225f0c09dbac144730f6c123f23","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"a19e7869bc121ed0d40aa5020bc330c8","tags":[],"confidence":0.6,"bucket":"clean","why":"elliptical 'fewer' parses; clear"}
+{"id":"a1f93f0425063b9da30a42cfdcfadc6f","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"a341f38e6dfdf20298bc7c7c8149ba14","tags":[],"confidence":0.55,"bucket":"near_miss","why":"'it' resolved by 'The US' inside claim"}
+{"id":"a6f33c827371ed32b6e54d4654b99058","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"a849f9295103464086e6d56f756dddaf","tags":[],"confidence":0.8,"bucket":"clean","why":"mass noun; clear"}
+{"id":"a85121fee4876530b01a9a84f518e7c2","tags":[],"confidence":0.7,"bucket":"near_miss","why":"time expression 'within a decade'"}
+{"id":"a9300ab91ac24f488d9140b2822b08cb","tags":[],"confidence":0.7,"bucket":"clean","why":"named country; clear"}
+{"id":"ac7ddbc5e4b344a8a29f2ebb6880026f","tags":[],"confidence":0.65,"bucket":"clean","why":"assets described inside claim"}
+{"id":"aca018eed0bc21de7af9e7ac27976087","tags":[],"confidence":0.6,"bucket":"clean","why":"indefinite; clear"}
+{"id":"ad398d441b0e1930e6003121126a4688","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"ae86e42c892f1e3b518645f79766d074","tags":[],"confidence":0.7,"bucket":"clean","why":"compact comparison; clear"}
+{"id":"aff4a901e6854f9e94465a0c08e06da0","tags":[],"confidence":0.75,"bucket":"clean","why":"clear recommendation"}
+{"id":"b2a8cf72b02f4baaab817fb7a5cc7b67","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'The Bible' names one specific book"}
+{"id":"b2d43328d77d4f72a9e332a134b36bc1","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'The US voting age' one specific thing; acronym"}
+{"id":"b37d42ebc30e9f333852d2b678fb02e1","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"b400b8e716f85a36abf38c438d9ba50c","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'make work easier and help get tasks done' redundant"}
+{"id":"b853a9f1adb34b868358f7e708c22161","tags":[],"confidence":0.8,"bucket":"near_miss","why":"Electoral College: proper name of one US institution"}
+{"id":"b89ecbbcc0f1a503220a8a10cb7d530f","tags":[],"confidence":0.55,"bucket":"near_miss","why":"named payout promise; '2026 midterms' resolved by year"}
+{"id":"b8acf3193a344add969da3d0b4ccad40","tags":[],"confidence":0.65,"bucket":"clean","why":"mass noun; clear"}
+{"id":"b8b0bd4e1a9646388c09249b1d584ea8","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the Ground Zero commemoration' named by place; borderline"}
+{"id":"ba6a7d4ab5c65cd087428944f8c23c3c","tags":[],"confidence":0.5,"bucket":"near_miss","why":"generic 'the workplace'; slightly odd but parseable"}
+{"id":"bc4d43aa4c5b75e7922cf75aebbf883f","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"bc75aef54bcbd613faf370bf4b98bbdd","tags":[],"confidence":0.8,"bucket":"near_miss","why":"UN Security Council: named institution, acronym"}
+{"id":"be94ec0d55071a367fee57ca8d68fab0","tags":[],"confidence":0.5,"bucket":"near_miss","why":"acronym COVID; elliptical comparison but parseable"}
+{"id":"c165562f6e6c4cc3bed576fe9b22da51","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the Russia-Ukraine war' named by its parties"}
+{"id":"c18ab01a76c41eca50f1fbda2742b851","tags":[],"confidence":0.75,"bucket":"clean","why":"'their' resolved; clear"}
+{"id":"c37929990d354024b22c709c266f9a0a","tags":[],"confidence":0.6,"bucket":"near_miss","why":"generic 'The mainstream media'; singular 'media' accepted"}
+{"id":"c3d5c129f940cf58a3c42e2d5fd09be1","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"c4fe7ef0d57f4e948411a9523c1789a6","tags":[],"confidence":0.9,"bucket":"clean","why":"plain self-contained position"}
+{"id":"c5efd65e648507a16f75aae4d717b46a","tags":[],"confidence":0.6,"bucket":"clean","why":"abstract nouns; clear"}
+{"id":"c85b71a579ba465e9a8334f48a047421","tags":[],"confidence":0.7,"bucket":"clean","why":"'their' resolved; clear"}
+{"id":"c8fe4cd16bc0787504ad85642d6859b2","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'the war with Russia' resolved by Ukraine"}
+{"id":"c91c2b92cdd43485506155b5b678c2aa","tags":[],"confidence":0.65,"bucket":"near_miss","why":"named person, '2026' date, 'him' resolved"}
+{"id":"cb0e79775ea52103b9a7e80891d24a36","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"cfa368639b42d031f38fad7539d0d18c","tags":[],"confidence":0.6,"bucket":"near_miss","why":"'Current' time expression"}
+{"id":"cffc30333710426684f33a3b7fec1b82","tags":[],"confidence":0.8,"bucket":"clean","why":"clear technical claim"}
+{"id":"d1ce798fab7ce134c357604cf3d5dc08","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained claim"}
+{"id":"d41c31977ade3d133f28e974bd2efa01","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"'have the power to ... when they choose to use it' shortenable"}
+{"id":"d4c6ecf8c9c9d707432ff27e1d350806","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"d5f3510a800d96c578e778868a532533","tags":[],"confidence":0.5,"bucket":"near_miss","why":"long, dense; cannot be cut without losing meaning"}
+{"id":"d6f662ab6686d1b68ce5005868089b52","tags":["Context-dependent"],"confidence":0.45,"bucket":"issue","why":"generic 'You/your' with no antecedent; boundary like generic 'we'"}
+{"id":"d724e70c2894854d47f8adf1d585c033","tags":[],"confidence":0.55,"bucket":"near_miss","why":"named company and White House; 'one AI company' resolved"}
+{"id":"d7f6345025bb6adc2650c43a57bc5967","tags":[],"confidence":0.55,"bucket":"near_miss","why":"named capitals Washington and Beijing as institutions"}
+{"id":"d8af2f37c5f017e59796c8bad28c9944","tags":[],"confidence":0.65,"bucket":"clean","why":"compact but clear"}
+{"id":"d9b8f465afc84a6495ca734e95813f3b","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained claim"}
+{"id":"db5e5676f5c4a6b741e5cc18a5f15737","tags":[],"confidence":0.8,"bucket":"clean","why":"named parties; clear"}
+{"id":"dbf2c8daae4a4607bbadf09f5f3527de","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"dfbd6b5e7978f230c287dbe7fe57b6a9","tags":[],"confidence":0.45,"bucket":"near_miss","why":"'its' resolved by 'America'; gerund with nominative accepted"}
+{"id":"e196d9975b1d4c1091cabcb8ce78e6a6","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'doing so' and 'them' resolved inside claim"}
+{"id":"e21bc14b1ccfc1203be77af0e41736fe","tags":["Poor wording"],"confidence":0.4,"bucket":"issue","why":"heavy gerund subject; cause and fixability fused"}
+{"id":"e2de5f52458f5e9f390733d1d018ba82","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"e2e566638400c5ca3b809040084ec791","tags":[],"confidence":0.9,"bucket":"clean","why":"plain self-contained claim"}
+{"id":"e2eb54c69870404fbc641dc0d7bc5808","tags":[],"confidence":0.6,"bucket":"clean","why":"'homogenous' is an accepted variant; clear"}
+{"id":"e6bad07bc446106d797310cd69587be5","tags":[],"confidence":0.6,"bucket":"near_miss","why":"named person; 'second term' resolved by name"}
+{"id":"e835c2cfef02b2788cd63ecbabe55a71","tags":[],"confidence":0.9,"bucket":"clean","why":"plain self-contained position"}
+{"id":"e90e0c22c713466e11af239620222911","tags":[],"confidence":0.5,"bucket":"near_miss","why":"'the planet' unique definite"}
+{"id":"eabe39fd147f46a2a123723515b39ecd","tags":[],"confidence":0.85,"bucket":"clean","why":"plain comparative claim"}
+{"id":"ed35b4ce4857efd7baf7d7e4daeba67f","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic 'The death penalty'; vague 'certain crimes'"}
+{"id":"ee10adaee90ec20951f15a031fce2d06","tags":[],"confidence":0.85,"bucket":"clean","why":"abstract nouns; clear"}
+{"id":"ef2486d5994cf382dc92b57b1315c64f","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained position"}
+{"id":"ef57dda750be4bf08264eca89981ec3d","tags":[],"confidence":0.6,"bucket":"near_miss","why":"time expression 'In the long term'"}
+{"id":"efb3f1d395eb476284483f2f962c3053","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained claim"}
+{"id":"f02956ca4898ef640447bea21cd2a3b8","tags":[],"confidence":0.85,"bucket":"clean","why":"plain comparative claim"}
+{"id":"f4f642452e819dde95487b19a989264f","tags":[],"confidence":0.65,"bucket":"near_miss","why":"acronym DEI"}
+{"id":"f68dbae15824464c831a5bb09426f304","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained claim"}
+{"id":"f7bdffdd5f06e4b760247767b6989a32","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic 'The death penalty'"}
+{"id":"f85387c570a246359a74e6e929262800","tags":[],"confidence":0.55,"bucket":"clean","why":"indefinite 'a better AI model'; clear"}
+{"id":"f97f86d49b4e47b4822995726c860df4","tags":[],"confidence":0.8,"bucket":"clean","why":"plain self-contained position"}
+{"id":"fa67087e3b4437961d0c56a6f7c3cec6","tags":[],"confidence":0.9,"bucket":"clean","why":"plain self-contained position"}
+{"id":"fa68cb1ac4929920f26099812eafcae9","tags":[],"confidence":0.85,"bucket":"clean","why":"plain self-contained claim"}
+{"id":"fac8c752fccf4bdbb5d38277ba5e2f0a","tags":[],"confidence":0.5,"bucket":"near_miss","why":"abstract 'The global nature of generative AI'"}
+{"id":"fc1829fcd1ed73cfe0d02eb7fdbb406a","tags":[],"confidence":0.7,"bucket":"clean","why":"clear; percentage and nationality modifiers"}

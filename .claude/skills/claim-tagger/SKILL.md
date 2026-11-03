@@ -48,12 +48,14 @@ For `tag`, the report to relay is the one `propose.mjs` prints; what `pull.mjs` 
 
 ## Importing claims
 
-`/claim-tagger import [count]` (decisions P38 to P41) is for the owners of the rulebook. Claude chooses a batch of Geo claims, 400 unless the owner gives a count, and adds them after the owner's yes. Follow `references/import.md` step by step:
+`/claim-tagger import [count]` (decisions P38 to P41, P52) is for the owners of the rulebook. Claude chooses a batch of Geo claims, 400 unless the owner gives a count, and adds them after the owner's yes. Follow `references/import.md` step by step:
 - the Debate claims of Claims' spaces, leaving out the Geo bot's claims, the claims already in Claims and repeated texts;
 - leaning toward claims likely to break the rulebook;
 - spread over the spaces and the months.
 
 Read Geo only with `geo-query.mjs`. The selection criteria you write are for choosing only: they never go into the rulebook or the judge prompt. Show the owner the summary of the selection and wait for a yes before `add.mjs --claims-file`. Then relay the report of `add.mjs`, as for add. Do not tag unless asked. Production only: there is no `demo import`.
+
+When the owner asks to replace the set rather than add to it, follow "Replacing the set" in `references/import.md`: add first, then `remove.mjs plan` and `apply`, which trash the claims that left the set with their Tag decisions rows (P51). `remove.mjs` asks every time and never trashes a claim an editor decided or a rule change cites; show the owner its counts before `apply`.
 
 ## Practice pages
 

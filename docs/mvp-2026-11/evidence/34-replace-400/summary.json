@@ -1,0 +1,85 @@
+{
+ "pool": 547,
+ "twins_of_v2": [
+  {
+   "geo_id": "2b59691d6b804952a2da2b203cf3f5b8",
+   "name": "RFK Jr.'s vaccine rhetoric is directly responsible for the Pennsylvania measles deaths",
+   "v2_geo_id": "c6f4b830d98d43aaab0ac97ec113ff5a",
+   "picked": true
+  }
+ ],
+ "picked": 400,
+ "dropped": 147,
+ "in_selection_json": 399,
+ "in_selection_after_remove": [
+  "2b59691d6b804952a2da2b203cf3f5b8"
+ ],
+ "last_pick": {
+  "votes": 2,
+  "balance": 1
+ },
+ "picks_split_worse_than_3to1": 0,
+ "overlap_with_v2": 58,
+ "new_claims": 342,
+ "pool_in_v2_dropped": 16,
+ "month_swaps": [],
+ "by_space": {
+  "U.S. Politics": 148,
+  "AI": 124,
+  "World affairs": 73,
+  "Crypto": 24,
+  "Health": 30,
+  "Technology": 1
+ },
+ "pool_by_space": {
+  "U.S. Politics": 203,
+  "Crypto": 38,
+  "World affairs": 102,
+  "AI": 156,
+  "Health": 46,
+  "Technology": 2
+ },
+ "by_month": {
+  "2026-09": 178,
+  "2026-07": 9,
+  "2026-08": 116,
+  "2026-10": 95,
+  "2026-11": 2
+ },
+ "pool_by_month": {
+  "2026-09": 236,
+  "2026-10": 135,
+  "2026-08": 163,
+  "2026-07": 11,
+  "2026-11": 2
+ },
+ "by_votes": {
+  "10+ votes": 75,
+  "5-9 votes": 127,
+  "3-4 votes": 150,
+  "2 votes": 48
+ },
+ "by_balance": {
+  "fair (0.5-0.8)": 200,
+  "even (0.8-1)": 121,
+  "lopsided (<0.5)": 79
+ },
+ "by_bucket": {
+  "near_miss": 144,
+  "control": 228,
+  "issue": 28
+ },
+ "by_tag": {
+  "Poor wording": 7,
+  "Incorrect grammar": 3,
+  "Wordy": 9,
+  "Context-dependent": 9,
+  "Multi-sentence": 1,
+  "Improper capitalization": 1
+ },
+ "dropped_by_bucket": {
+  "control": 93,
+  "near_miss": 53,
+  "issue": 1
+ }
+}

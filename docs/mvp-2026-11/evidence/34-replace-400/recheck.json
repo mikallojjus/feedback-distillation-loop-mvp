@@ -1,0 +1,139 @@
+{
+ "ok": true,
+ "requests": {
+  "total": 40,
+  "nonQuery": 0
+ },
+ "rows": [
+  {
+   "geo_id": "491268d605734fe4ba8a6bfcd0d03b8d",
+   "space": "U.S. Politics",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "8b7e1476ab4e5f0d98d7ac179cad4d7e",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 1,
+   "disagrees": 1,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "0254282d7d5d0d3cb4bc3a197e6f33c5",
+   "space": "AI",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "cc31e40f74231d530f1b5d0fc1cd94d8",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 2,
+   "disagrees": 1,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "0c5f0b22f30b1dd388722d7c8d322808",
+   "space": "World affairs",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "fcf1ddb14f461bf747bbf148254935ed",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 1,
+   "disagrees": 1,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "66dac9c59985c94476748a1efe544317",
+   "space": "U.S. Politics",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "8a4955bcd9d0fc0d8613f17f01de3b9f",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 7,
+   "disagrees": 11,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "fcd54299d3839d9ac42a52b6557d4380",
+   "space": "Health",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "cc31e40f74231d530f1b5d0fc1cd94d8",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 6,
+   "disagrees": 2,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "0e8b0f33a6c54edf9d2cb05fb9f592e7",
+   "space": "World affairs",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "fcf1ddb14f461bf747bbf148254935ed",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 2,
+   "disagrees": 2,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "ba7ebc4f88614e1789aa46c3fd344f1d",
+   "space": "Health",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "8b7e1476ab4e5f0d98d7ac179cad4d7e",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 3,
+   "disagrees": 3,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "77a0d6b518fbbde37d17dd415df7648b",
+   "space": "AI",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "5093b6ab1b48f1111dd31275b5413ddb",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 7,
+   "disagrees": 9,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "612bcdd835ca453d91941ee7e0e1db24",
+   "space": "World affairs",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "cc31e40f74231d530f1b5d0fc1cd94d8",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 2,
+   "disagrees": 3,
+   "votes_ok": true
+  },
+  {
+   "geo_id": "5555c3d169e5431bb1235e6f8d530eea",
+   "space": "World affairs",
+   "debate_edge": true,
+   "claim_type": true,
+   "in_space": true,
+   "author": "fcf1ddb14f461bf747bbf148254935ed",
+   "bot": false,
+   "name_matches": true,
+   "agrees": 2,
+   "disagrees": 1,
+   "votes_ok": true
+  }
+ ]
+}

@@ -1,0 +1,136 @@
+{"id":"0e30637ba50afa699bb17a70236a297b","tags":[],"confidence":0.8,"bucket":"near_miss","why":"indefinite \"a Chinese invasion\"; named country"}
+{"id":"11b3517437f7d188a555ca94560511d7","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained; only acronyms US and AI"}
+{"id":"1574df1e9a3bc4e514a90e574693fca9","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"the Israel-Hamas war\" is a named event"}
+{"id":"1c0201f776d94c83817e2510d9aa253a","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"the evidence base\" resolved by its own modifiers"}
+{"id":"20f362509e0614da0b5bf358afe28084","tags":[],"confidence":0.75,"bucket":"near_miss","why":"indefinite \"An AI partner\""}
+{"id":"21f8df80c714db43e849241a753b8fb7","tags":[],"confidence":0.65,"bucket":"near_miss","why":"\"the child's\" resolved by \"their children\""}
+{"id":"29c4ec7c990b6d9b201f37bb830e92ff","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"it\" resolves to AI inside the claim"}
+{"id":"3662b744173d6bf37be62feb786ad818","tags":[],"confidence":0.8,"bucket":"near_miss","why":"named institution and person; \"its\" resolved inside"}
+{"id":"36a4408e4cbd4c6cabc15be45171a0c3","tags":[],"confidence":0.9,"bucket":"clean","why":"generic plural; self-contained"}
+{"id":"389e425a5cea4ad49da688ccf96f345c","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"the coins that quantum computers could steal\" self-resolved"}
+{"id":"4833cd02660aab63cf97f561da88263a","tags":[],"confidence":0.9,"bucket":"clean","why":"named country; one clear sentence"}
+{"id":"4c5da0e82518ba5c859e468180eadf80","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"it\" resolves to AI inside the claim"}
+{"id":"4cb960bdae604f3cb6b0a6f54e77996e","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"592396e7360ec9fd9becb0463c8422b1","tags":[],"confidence":0.7,"bucket":"near_miss","why":"named institution; long but not shortenable"}
+{"id":"5a984d90655916258f1638e2e3db3990","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"5c1432e381c74f5e9a7e92db29b875f2","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"69727edb0a7848f1ad833ce6a99012db","tags":[],"confidence":0.75,"bucket":"near_miss","why":"indefinite \"a genocide\"; \"the Gaza Strip\" is named"}
+{"id":"6f7112fe2239cecdbc59d7df2d0f2315","tags":[],"confidence":0.75,"bucket":"near_miss","why":"long (22 words) but not shortenable; named institution"}
+{"id":"6f9968519df018dfb73cc6608b5cb4af","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"their\" resolved to Parents inside"}
+{"id":"7020096448f7d03f88ef135fe9636d4b","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"778a36c4396a46cba93e6252d378ad07","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"77a0d6b518fbbde37d17dd415df7648b","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"7d4b41682f4447898bee854ac199d7ba","tags":[],"confidence":0.85,"bucket":"clean","why":"indefinite \"a first-line treatment\"; self-contained"}
+{"id":"8415b303b0fc8b96fd4366150b202eee","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"it\" resolves to institutional religion"}
+{"id":"851620a47b8c4e7d938e11f9ea887f9a","tags":[],"confidence":0.85,"bucket":"clean","why":"\"recommended vaccines\" is not a definite reference"}
+{"id":"8d0937d1544ab460c99acafce48661e7","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym NATO; \"its\" resolved to each ally"}
+{"id":"920e1b8441f34cdfac2196ad28b9ddd0","tags":[],"confidence":0.85,"bucket":"clean","why":"gerund subject is acceptable usage"}
+{"id":"94852d9abfe0087409f9d52134ca9d62","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"that\" resolved by the first clause"}
+{"id":"97b524e247650dda24e4dab564132da5","tags":[],"confidence":0.85,"bucket":"clean","why":"generic; self-contained"}
+{"id":"a0dc06fa58b544d98080ba5a5ce95120","tags":[],"confidence":0.9,"bucket":"clean","why":"named person; self-contained"}
+{"id":"acaf35fd8549e3b02904378ae840de8c","tags":[],"confidence":0.8,"bucket":"near_miss","why":"time expression \"soon\""}
+{"id":"ad1e95cd2f794a87a1c7dd7fae91d612","tags":[],"confidence":0.9,"bucket":"clean","why":"named person; self-contained"}
+{"id":"afb25451bce17eb04a7ebdb27f48b35c","tags":[],"confidence":0.7,"bucket":"near_miss","why":"\"the Strait of Hormuz\" is a named place"}
+{"id":"b47cf719fb7f86b1b022cb7c084aec32","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"the two countries\" resolved by US-China"}
+{"id":"b64adccd29da48ef974ceaff209716ab","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"b72a948f22f149648bd77965a0437e9c","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"The Russian military invasion of Ukraine\" names one event"}
+{"id":"c69fda5397dbb3ef7922e7f46edf1b28","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"it\" resolves to AI inside the claim"}
+{"id":"c6f1124decc347a99d90da11ebb04729","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"d2713be5920848518d409eaef1dd3758","tags":[],"confidence":0.65,"bucket":"near_miss","why":"mass noun \"Caffeine\"; terse but parseable"}
+{"id":"d564b19687374d04b8db8d1039d645e9","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"d93135c85a7c414e8bb8919b359d9754","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained comparison"}
+{"id":"e28fc3c60e8b0e4e5c0a0ab813356ed8","tags":["Poor wording"],"confidence":0.5,"bucket":"issue","why":"\"make pacing safe\" is jargon, unclear on first read"}
+{"id":"e9c1072561c44aceab10b70d168a6450","tags":[],"confidence":0.6,"bucket":"near_miss","why":"time expression \"currently\"; long but near-minimal"}
+{"id":"000931e053b6f81745f3e3894012293d","tags":[],"confidence":0.75,"bucket":"near_miss","why":"named institution; 21 words, hard to shorten"}
+{"id":"01118db527c46157c38f92f07d9f52bb","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"0130b6db5b9d39fcfb82d301092d2f9c","tags":[],"confidence":0.6,"bucket":"near_miss","why":"\"The current AI investment boom\": time word, self-resolved description"}
+{"id":"01c0081c7a17e4e9ae087359a6158fa7","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"024eda17a14c9ffa7643edf89df0892a","tags":[],"confidence":0.85,"bucket":"clean","why":"generic right; self-contained"}
+{"id":"079d07a77a4249b58c498db29c68994d","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"the world\" generic; idiom"}
+{"id":"07e97799a82ee6ffd2a4c4f91e8ba788","tags":[],"confidence":0.9,"bucket":"clean","why":"generic; self-contained"}
+{"id":"094d5549908e328cd172efeef4e32a9e","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym ICE"}
+{"id":"0abccb5806c34f6694f1283320979b8a","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"0adce0ad4a972f2494072a3f5eb03d5c","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"0af30a95f81e4632a452ecd6aefdfc65","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"0c85b1ceaef4b9079868b6b8fdfe6c2e","tags":[],"confidence":0.75,"bucket":"near_miss","why":"acronym ICE; 17 words, not shortenable"}
+{"id":"0f62d8ab206f413a90e567bd069a92a4","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"0f9f4ea420eb84e3ce53f19931ea0a61","tags":[],"confidence":0.6,"bucket":"near_miss","why":"trailing emoji; named person"}
+{"id":"11108a970c8effc51ae0a961378ad5f1","tags":[],"confidence":0.9,"bucket":"clean","why":"generic comparison; self-contained"}
+{"id":"127149e06e3ba3124d3546851dd39f89","tags":[],"confidence":0.65,"bucket":"clean","why":"metaphor, parseable; \"AI extinction\" slightly loose"}
+{"id":"182e2844fcb748d39ca28178adcebae1","tags":[],"confidence":0.7,"bucket":"near_miss","why":"bare surname \"Hegseth\"; a name identifies itself"}
+{"id":"18470dbafa226fa3c94b4eda9b2c5b40","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"18cd98dc09c527d6a9634e9343049ac2","tags":[],"confidence":0.55,"bucket":"near_miss","why":"generic \"Parliament\" in a policy recommendation; boundary"}
+{"id":"192bde2594f78101d61aa60b6134cb6f","tags":[],"confidence":0.75,"bucket":"near_miss","why":"expletive \"it\"; generic \"the demands\""}
+{"id":"1952fb5aa95244e9a813988c24a6ed46","tags":[],"confidence":0.55,"bucket":"near_miss","why":"\"the 7 October 2023 attack\" is dated, works as a name"}
+{"id":"1be23939e831aec8bfc222346371b482","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"the West\" is a generic term"}
+{"id":"1bf238bac9472bb85f3d0a02068eeee5","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"1d4264e853ecc24552667a0c0867759b","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained; mild non-parallelism accepted"}
+{"id":"1df9543f0ea4444597b5fd1f99bad110","tags":[],"confidence":0.75,"bucket":"near_miss","why":"time expression \"to date\""}
+{"id":"1e0dfe54463249db9be63689efc0a787","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"The US military intervention that removed ...\" self-resolved"}
+{"id":"1e24cdbd6cd6d044941bc06656813085","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"2149f80eaa2234f108a0fc96bbf70864","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"22436fe2eaf44e29a2fd69454f45384f","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained"}
+{"id":"22912f72aa0dfb75055a02b5c13cf4a1","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym ICE"}
+{"id":"26a0abb2baa0c27ddfd1f48b01ffd1c2","tags":["Poor wording"],"confidence":0.5,"bucket":"issue","why":"\"taking judgments into their own hands\": fused ideas, odd idiom"}
+{"id":"27477d2bb46944b7813c8369ed7d9705","tags":[],"confidence":0.9,"bucket":"clean","why":"named person; self-contained"}
+{"id":"2772057e8317451a8a8c95637f156946","tags":[],"confidence":0.7,"bucket":"near_miss","why":"named institution; 24 words, not shortenable"}
+{"id":"286fa3286f6143cd9a30f8d7ef9a17df","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"2955dd8bd0c44f2285d4ca0da21014e0","tags":[],"confidence":0.7,"bucket":"clean","why":"\"knowledge bar\" terse but clear"}
+{"id":"2a5fdc205949419aa7fa667f2be8a30b","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"2b59691d6b804952a2da2b203cf3f5b8","tags":["Context-dependent"],"confidence":0.55,"bucket":"issue","why":"\"the Pennsylvania measles deaths\" needs an outside antecedent"}
+{"id":"2b80ea7f3d09183fd7ca84dc8bd227ab","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym NATO"}
+{"id":"2c5f9d879442b62cb9a72f7dbbc3293d","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"the wealth created by AI\" self-resolved; generic \"the public\""}
+{"id":"2c61cb63c07d654b9b81ae00038befb2","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"2c8a6fea9bed3a1cf8c0202545ec635f","tags":[],"confidence":0.85,"bucket":"clean","why":"abstract nouns; self-contained"}
+{"id":"2d7363ca387271fa53582809f42cd840","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"2f048e3273d8aa3d56af8430c20ab45e","tags":[],"confidence":0.75,"bucket":"near_miss","why":"indefinite \"A leader\"; time word \"once\""}
+{"id":"2f6dce22184547e486bcec5e8c68b206","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained"}
+{"id":"2f82b607208b4098a5d62692654978cf","tags":[],"confidence":0.55,"bucket":"near_miss","why":"\"The asylum system\" is a generic institution noun; boundary"}
+{"id":"306aebc91cc84d58b91894cfdb8f4a63","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"326380b8aecb53d7a25b779d743df033","tags":["Wordy"],"confidence":0.5,"bucket":"issue","why":"\"It is unlikely that ... will be changed\" is filler; shorter rewrite exists"}
+{"id":"32e3e33246234194b87471c6537b7c68","tags":[],"confidence":0.8,"bucket":"clean","why":"self-contained"}
+{"id":"34b4c381e56848cbb263113c8e602d4c","tags":[],"confidence":0.6,"bucket":"near_miss","why":"odd token-style name \"0xALPHA\""}
+{"id":"3540aec42a769a4e4af54f7592d7f328","tags":[],"confidence":0.7,"bucket":"near_miss","why":"generic \"the military\""}
+{"id":"36c1e82733f9d259fa4fa589d2e96142","tags":[],"confidence":0.7,"bucket":"near_miss","why":"generic \"The government\"; \"the Epstein files\" works as a name"}
+{"id":"37bb3d0233ed43efa475cc734ba601f1","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"37decf3113ddb3b5af9c52fa2e3291c5","tags":[],"confidence":0.6,"bucket":"near_miss","why":"\"only benefit\" scope; \"the richest Americans\" generic"}
+{"id":"389bf10852b84d16a67765dc79adb88b","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained"}
+{"id":"3a86111db36a2b369f22aa997691a652","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"3b1146769f5e41098c9eb8b604176a25","tags":[],"confidence":0.7,"bucket":"clean","why":"\"the quality of\" mildly redundant but idiomatic"}
+{"id":"3bf9b841187f8c71b74f892ba4e83b75","tags":["Poor wording"],"confidence":0.35,"bucket":"issue","why":"\"AI democracies\" is compressed, hard to parse on first read"}
+{"id":"3c57d190ae2e50fa911e124c409865d2","tags":["Wordy"],"confidence":0.4,"bucket":"issue","why":"\"the principle of\" is filler; \"violates free speech\" suffices"}
+{"id":"3d994385b8d349e9a9d74403269202ff","tags":[],"confidence":0.7,"bucket":"near_miss","why":"named institution; time expression \"every September 10\""}
+{"id":"3dbd71f416082e5f27910c0e4023a750","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"3e19c383a9c3b5cebb6a9ca376d62e81","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"their own identities\" resolved to Students"}
+{"id":"3efcb60633d643ab88c0845bcd6c6140","tags":[],"confidence":0.75,"bucket":"near_miss","why":"named problem with \"the\""}
+{"id":"3fde09c407004106b5d02eea9d1a4303","tags":[],"confidence":0.6,"bucket":"near_miss","why":"\"the 25th anniversary September 11 commemoration\" self-resolved"}
+{"id":"404cbc81e34d2c9e3e5ea641e52b9dec","tags":[],"confidence":0.7,"bucket":"near_miss","why":"generic \"the death penalty\"; named person"}
+{"id":"406b669021604795ac693cdb0e54890f","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"40874580ccc2466999fa1dc0ed12621c","tags":[],"confidence":0.8,"bucket":"near_miss","why":"named institution"}
+{"id":"42830d0a2f4c45969d86c6338ddff6c5","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"44df919dd1b8096dab90b3e5338b6c3a","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"its\" resolved to OpenAI"}
+{"id":"46c55899e868e66b794efd84a67ade8e","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym UN"}
+{"id":"4830e2b907c71b3cae7f160a573b6079","tags":[],"confidence":0.65,"bucket":"near_miss","why":"\"current\" time word; \"its war with Iran\" self-resolved"}
+{"id":"48548a0be2940a1a9ab1d929c025def2","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"491268d605734fe4ba8a6bfcd0d03b8d","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym USAID"}
+{"id":"49bf3cda541746628dcc38abfa4f628e","tags":[],"confidence":0.55,"bucket":"near_miss","why":"\"he\" resolved to Trump; \"the 2026 midterms\" dated"}
+{"id":"4e2c8ece98faab575a2f6e79aa34b624","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"it\" resolves to immigration law"}
+{"id":"4e5435c4509381ad48be21a50dc0df4a","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"4efcc039338d16c4a08ab51da8dcd40a","tags":[],"confidence":0.7,"bucket":"near_miss","why":"\"the sentence\" resolved by \"A failed execution\""}
+{"id":"4f40eabbd2633a68f7cdc4000b81063b","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained"}
+{"id":"50bed8d94c5854b6a13772faaffd5fa7","tags":[],"confidence":0.55,"bucket":"near_miss","why":"\"The AI bubble\" works as a name; \"starting\" is a time word"}
+{"id":"523b37838b1541b2a0aea531ca89ae30","tags":[],"confidence":0.8,"bucket":"clean","why":"named place; self-contained"}
+{"id":"56626da72145424152ee41283c4c5b08","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"The conflict between men and women\" self-resolved"}
+{"id":"571e6a16be81d3f4277fe3f90dbc8707","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained"}
+{"id":"57a5fb0b80b38a933a2a989588ec6d82","tags":[],"confidence":0.85,"bucket":"clean","why":"self-contained"}
+{"id":"5a8bf0b831834202b5d93cbccdaf1217","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"his\" resolved to Donald Trump"}
+{"id":"5e20071e031e98001f9bc45b98505e82","tags":[],"confidence":0.7,"bucket":"near_miss","why":"19 words; \"its\" resolved; mass noun"}
+{"id":"5f2611a5d24e5926c7f433ecd586152d","tags":[],"confidence":0.7,"bucket":"near_miss","why":"bare \"state law\" is generic"}
+{"id":"5fc63bcb522c43b494871f7fdab31cb0","tags":[],"confidence":0.7,"bucket":"near_miss","why":"generic \"the death penalty\""}
+{"id":"60e34b2f28dc2c10608205b2d5f9cb9d","tags":[],"confidence":0.75,"bucket":"near_miss","why":"\"its expanding ... conflict with Iran\" self-resolved"}
+{"id":"612bcdd835ca453d91941ee7e0e1db24","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"627ac3abc8b9f11d0b1f2a6d3334ea61","tags":[],"confidence":0.8,"bucket":"near_miss","why":"\"The world population\" is a unique definite"}
+{"id":"627bc074decf42f7b7bbf42822c68a3b","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"63ae48a3fcec768aa9ad1ece4fbe63d0","tags":[],"confidence":0.9,"bucket":"clean","why":"self-contained"}
+{"id":"646ef2ed5d4734d45d60a80272f7849b","tags":[],"confidence":0.8,"bucket":"near_miss","why":"acronym NATO"}
+{"id":"6734eee9b11f3d4f887ce247a5947d44","tags":[],"confidence":0.85,"bucket":"clean","why":"mild non-parallelism, accepted usage"}

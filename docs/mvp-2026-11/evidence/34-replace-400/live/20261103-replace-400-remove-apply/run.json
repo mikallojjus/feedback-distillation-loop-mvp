@@ -1,0 +1,34 @@
+{
+  "run_id": "20261103-replace-400-remove-apply",
+  "script": "remove",
+  "args": {
+    "command": "apply",
+    "keep_waiting": false,
+    "plan": "agents/claim-tagger-mvp/runs/20261103-replace-400-remove/plan.jsonl"
+  },
+  "started_at": "2026-11-03T14:34:32.847Z",
+  "finished_at": "2026-11-03T15:02:22.402Z",
+  "exit_code": 0,
+  "rubric_edition": "2026-11-03.1",
+  "pull_id": "20261103T143432Z-pull",
+  "resume": "node agents/claim-tagger-mvp/scripts/remove.mjs apply --plan agents/claim-tagger-mvp/runs/20261103-replace-400-remove/plan.jsonl",
+  "status": "done",
+  "apply": {
+    "done": 1014,
+    "failed": 0,
+    "skipped": 0,
+    "mismatches": 0,
+    "uncertain": 0,
+    "unchecked": 0,
+    "pending": 0,
+    "stopped": null
+  },
+  "counts": {
+    "claims_trashed": 507,
+    "tag_decisions_trashed": 507,
+    "planned": {
+      "claims": 507,
+      "tag_decisions": 507
+    }
+  }
+}
