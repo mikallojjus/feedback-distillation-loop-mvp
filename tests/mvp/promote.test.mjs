@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readFileSync, readdirSync, utimesSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { candidateTextOf, evaluate, main, promote } from '../../agents/claim-tagger-mvp/scripts/promote.mjs';
+import { followup } from '../../agents/claim-tagger-mvp/scripts/followup.mjs';
 import { runClaude } from '../../agents/claim-tagger-mvp/scripts/lib/claude.mjs';
 import { readJson, readJsonl } from '../../agents/claim-tagger-mvp/scripts/lib/jsonl.mjs';
 import { lintReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
@@ -49,6 +50,96 @@ const young = (w, body) => {
 
 const ans = (pairs) => new Map(Object.entries(pairs).map(([id, decision]) => [id, { decision }]));
 const item = (id, expected, extra = {}) => ({ id, claim: `claim ${id}`, expected, ...extra });
+
+test('a Judged toggle in the pull promote starts from is taken over once, before the safety check; the promoted rule stays in force after the check and the follow-up judge (H1)', async () => {
+  const w = await promoteWorld({ open: 1 });
+  // an editor ticks a text tag (with rules) just before promote
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim that repeats itself is Wordy.\n2. A claim with filler words is Wordy.', Judged: true });
+  const h = w.hooks();
+  const r = await promote(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const log = readFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), 'utf8').trim().split('\n');
+  const rubric = readJson(join(w.root, 'rubric', 'rubric.json'));
+  assert.equal(rubric.tags.find((t) => t.name === 'Context-dependent').rules[3].text, NEW_TEXT, 'the promoted rule is the rule in force: no later judge wrote the old text back');
+  assert.equal(rubric.tags.find((t) => t.name === 'Wordy').judged, true, 'and the toggle that was taken over is still in it');
+  assert.equal(rubric.edition, '2026-10-16.3', 'the toggle is edition .2, the promoted rule edition .3, and nothing after them');
+  assert.deepEqual(log.slice(-3).map((l) => l.split(' · ').slice(1).join(' · ')), [
+    'edition 2026-10-16.2 · adopted from Notion: Wordy When to use',
+    'edition 2026-10-16.2 · Judged on: Wordy',
+    `edition 2026-10-16.3 · lesson ${TITLE} PASS`,
+  ]);
+  assert.match(w.row('rulebook', 'Context-dependent')['When to use'], new RegExp(NEW_TEXT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')), 'Notion has the promoted rule too');
+  // the next pull agrees with the lock: nothing to take over, nothing that stops
+  const drift = readJson(join(w.root, 'runs', 'pull', (await w.pull()).pullId, 'drift.json'));
+  assert.deepEqual([drift.judged, drift.toggled, drift.adopted], [[], [], []]);
+  assert.deepEqual(drift.against, { edition: '2026-10-16.3', rubric_hash: rubric.rubric_hash }, 'the drift says which lock it was computed against');
+});
+
+test('promote: the judges it starts take no Judged change over, and none does while its lock runs/PROMOTING.json is live', async () => {
+  const { judge } = await import('../../agents/claim-tagger-mvp/scripts/judge.mjs');
+  const w = await promoteWorld({ open: 1 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim that repeats itself is Wordy.', Judged: true });
+  await w.pull(); // the newest pull shows the toggle
+  const hooks = w.hooks();
+  const run = (extra) => judge({ root: w.root, driver: 'fake', io: hooks.io, env: hooks.env, fakeState: w.fakeState, fakeScript: w.FAKE_SCRIPT, sleep: hooks.sleep, now: hooks.now, runsMax: 1, items: 'eval', tags: ['Context-dependent'], ...extra });
+  // a judge that a loop command started
+  const child = await run({ takeOver: false, runId: 'child' });
+  assert.equal(child.exit, 0);
+  assert.equal(readJson(join(w.root, 'rubric', 'rubric.json')).edition, '2026-10-16.1', 'no edition was written');
+  assert.match(readJson(join(child.runDir, 'run.json')).warnings.join(' '), /Judged on: Wordy.*taken over by the next command/);
+  // a safety check is running
+  writeFileSync(lockFile(w), `${JSON.stringify({ run_id: 'x', lesson: TITLE, phase: 'judging', since: NOW.toISOString() })}\n`);
+  const during = await run({ runId: 'during' });
+  assert.equal(during.exit, 0);
+  assert.equal(readJson(join(w.root, 'rubric', 'rubric.json')).edition, '2026-10-16.1', 'a judge during a safety check takes nothing over');
+  // an old lock is stale and holds nothing back; a plain judge takes the toggle over
+  writeFileSync(lockFile(w), `${JSON.stringify({ run_id: 'x', lesson: TITLE, phase: 'judging', since: new Date(NOW.getTime() - 3 * 3600 * 1000).toISOString() })}\n`);
+  const after = await run({ runId: 'after' });
+  assert.equal(after.exit, 0);
+  assert.equal(readJson(join(w.root, 'rubric', 'rubric.json')).edition, '2026-10-16.2', 'the edit and the tick of that pull are one edition');
+  assert.match(readJson(join(after.runDir, 'run.json')).warnings.join(' '), /it was taken over into edition 2026-10-16\.2 before this run/);
+});
+
+test('the judge that runs on the pull promote started from (older than the edition promote wrote) takes nothing over: the pull says it was compared with the older lock, and the promoted rule stays in force (H1, a)', async () => {
+  const { judge } = await import('../../agents/claim-tagger-mvp/scripts/judge.mjs');
+  const w = await promoteWorld({ open: 1 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim that repeats itself is Wordy.', Judged: true });
+  const p = await promote(w.hooks());
+  assert.equal(p.exit, 0);
+  const afterPromote = readJson(join(w.root, 'rubric', 'rubric.json'));
+  assert.equal(afterPromote.edition, '2026-10-16.3');
+  // the newest pull is the one promote took at its start: its drift shows the toggle, compared with edition .1
+  const newest = readJson(join(w.root, 'runs', 'pull', readFileSync(join(w.root, 'runs', 'pull', 'LATEST'), 'utf8').trim(), 'drift.json'));
+  assert.deepEqual(newest.toggled, [{ tag: 'Wordy', judged: true }]);
+  assert.equal(newest.against.edition, '2026-10-16.1');
+  const hooks = w.hooks();
+  const j = await judge({ root: w.root, driver: 'fake', io: hooks.io, env: hooks.env, fakeState: w.fakeState, fakeScript: w.FAKE_SCRIPT, sleep: hooks.sleep, now: hooks.now, runsMax: 1, items: 'eval', tags: ['Context-dependent'], runId: 'after-promote' });
+  assert.equal(j.exit, 0, hooks.io.errs.join('\n'));
+  const rubric = readJson(join(w.root, 'rubric', 'rubric.json'));
+  assert.equal(rubric.edition, '2026-10-16.3', 'no edition was written by the judge');
+  assert.equal(rubric.tags.find((t) => t.name === 'Context-dependent').rules[3].text, NEW_TEXT, 'the promoted rule is still the rule in force');
+  assert.match(readJson(join(j.runDir, 'run.json')).warnings.join(' '), /the pull is older than the rulebook edition in force \(it was compared with edition 2026-10-16\.1, edition 2026-10-16\.3 is in force\)/);
+});
+
+test('a follow-up started after a PASS takes a new Judged change over once, in its own preflight; its judge adds no edition and the promoted rule stays (H1)', async () => {
+  const w = await promoteWorld({ open: 1 });
+  assert.equal((await promote(w.hooks())).exit, 0);
+  assert.equal(readJson(join(w.root, 'rubric', 'rubric.json')).edition, '2026-10-16.2');
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim that repeats itself is Wordy.', Judged: true });
+  const h = w.hooks();
+  const r = await followup(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const rubric = readJson(join(w.root, 'rubric', 'rubric.json'));
+  assert.equal(rubric.edition, '2026-10-16.3', 'one edition for the edit and the tick, taken over by the follow-up\'s own preflight');
+  assert.equal(rubric.tags.find((t) => t.name === 'Context-dependent').rules[3].text, NEW_TEXT);
+  assert.equal(rubric.tags.find((t) => t.name === 'Wordy').judged, true);
+  assert.deepEqual(readFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), 'utf8').trim().split('\n').slice(-2).map((l) => l.split(' · ').slice(1).join(' · ')), [
+    'edition 2026-10-16.3 · adopted from Notion: Wordy When to use', 'edition 2026-10-16.3 · Judged on: Wordy',
+  ]);
+  for (const dir of readdirSync(join(w.root, 'runs')).filter((d) => d.endsWith('-judge'))) {
+    assert.doesNotMatch((readJson(join(w.root, 'runs', dir, 'run.json')).warnings ?? []).join(' '), /taken over into edition/, `${dir}: the judge of a loop command takes nothing over`);
+  }
+});
 
 test('evaluate: PASS when every example is right, no earlier decision that was right broke, and every supporting row is right', () => {
   const r = evaluate({

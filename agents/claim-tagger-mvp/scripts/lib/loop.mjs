@@ -757,6 +757,7 @@ export async function runJudge(ctx, judgeOpts) {
     runClaude: ctx.opts.runClaude,
     bin: ctx.opts.bin,
     cliVersion: ctx.opts.cliVersion,
+    takeOver: false, // a loop command ran preflight on its own pull; its judge never takes a Judged change over on its own
     ...judgeOpts,
   });
   if (res.exit === EXIT.OK) return res;

@@ -482,7 +482,10 @@ test('drift.json: no difference while the copy equals the lock, the tag and colu
 
   const same = await run(w, ['--tables', 'rulebook', '--pull-id', 'p1']);
   assert.equal(same.code, EXIT.OK);
-  assert.deepEqual(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'drift.json'), 'utf8')), { judged: [], adopted: [], toggled: [], missing: [], added: [] });
+  // the drift says which lock it was computed against (edition and rubric hash), so that a command takes it over only while that lock is the one in force
+  assert.deepEqual(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'drift.json'), 'utf8')), {
+    judged: [], adopted: [], toggled: [], missing: [], added: [], against: { edition: '2026-10-16.1', rubric_hash: rubric.rubric_hash },
+  });
   assert.match(same.out[0], /drift 0 difference\(s\)/);
 
   w.notion.editRow(w.ids['tag:Context-dependent'], { 'When to use': '1. A different first rule.' });

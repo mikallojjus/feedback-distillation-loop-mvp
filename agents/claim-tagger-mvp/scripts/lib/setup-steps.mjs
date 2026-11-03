@@ -43,7 +43,7 @@ import { decodePage, normId, sameValue } from './notion-values.mjs';
 import { codeRoot } from './paths.mjs';
 import { AUDIT_PREFIX, PlanError, applyPlan, checkPlan, firstPageIds, newPlan, readLedger } from './plan.mjs';
 import { readRemoved } from './removed.mjs';
-import { buildRubric, lockOf, nextEdition, parseExamples, readRubric, writeEdition } from './rubric.mjs';
+import { buildRubric, nextEdition, parseExamples, readLock, readRubric, writeEdition } from './rubric.mjs';
 import { validate } from './validate.mjs';
 import { verifyArchive } from './archive.mjs';
 import { builderPaths, readJsonOr, writeJsonPretty } from './builder-registry.mjs';
@@ -1012,7 +1012,7 @@ export function stepRubric(ctx, { from } = {}) {
   const existing = readRubric(root);
   const now = ctx.now();
   // the taxonomy rows have no Judged box (the editors' column of the Rulebook): the ticks of the edition in force stand, so running this step again un-judges nothing
-  const judgedFrom = existing ? lockOf(existing) : null;
+  const judgedFrom = existing ? readLock(root) : null; // the lock itself, not the flags of the edition on file: a lock from before the box has no map, and says so
   let rubric = buildRubric(rows, { config, edition: existing ? existing.edition : nextEdition(null, now), source, now: existing ? existing.built_at : now, judgedFrom });
   let reason = FIRST_EDITION_REASON;
   let verb = 'written';

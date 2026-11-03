@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { preflight, refusedReport } from '../../agents/claim-tagger-mvp/scripts/lib/preflight.mjs';
 import { lintReport, renderReport } from '../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
@@ -233,6 +233,123 @@ test('the judge leaves a toggle to the next command when it cannot take it over:
   assert.equal(r.exit, 0);
   assert.equal(w.rubric().edition, '2026-10-16.1', 'a candidate file is judged as it is: no edition was written');
   assert.equal(readJson(join(r.runDir, 'run.json')).groups.length, 1);
+});
+
+test('preflight: a pull compared with an older lock than the one in force takes nothing over: it says so and asks for a new pull; a drift without the stamp is older too (H1, a)', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. First.', Judged: true });
+  const p = await w.pull();
+  const drift = readJson(join(w.root, 'runs', 'pull', p.pullId, 'drift.json'));
+  assert.deepEqual(drift.against, { edition: '2026-10-16.1', rubric_hash: w.rubric().rubric_hash });
+  // another command writes an edition (a rule promoted, say) before this one looks at the pull
+  const { buildRubric, writeEdition } = await import('../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs');
+  const { rowFromTag } = await import('../../agents/claim-tagger-mvp/scripts/lib/rulebook-edit.mjs');
+  const current = w.rubric();
+  writeEdition(w.root, buildRubric(current.tags.map(rowFromTag), { config: w.config, edition: '2026-10-16.2', now: NOW }), { reason: 'another command' });
+  const pre = preflight({ root: w.root, config: w.config, pullId: p.pullId, now: () => NOW });
+  assert.equal(pre.ok, true);
+  assert.deepEqual([pre.edition, pre.toggled, pre.adopted], ['2026-10-16.2', [], []]);
+  assert.ok(pre.warnings.some((x) => /the pull is older than the rulebook edition in force \(it was compared with edition 2026-10-16\.1, edition 2026-10-16\.2 is in force\).*pull again/.test(x)), pre.warnings.join('|'));
+  assert.equal(changelog(w).length, 2, 'no edition was written');
+  // a drift file with no stamp (a pull of the code before the stamp) is treated the same way
+  const unstamped = { ...drift };
+  delete unstamped.against;
+  writeFileSync(join(w.root, 'runs', 'pull', p.pullId, 'drift.json'), `${JSON.stringify(unstamped)}\n`);
+  const again = preflight({ root: w.root, config: w.config, pullId: p.pullId, now: () => NOW });
+  assert.ok(again.warnings.some((x) => /compared with an unknown edition/.test(x)), again.warnings.join('|'));
+  assert.equal(changelog(w).length, 2);
+  // a fresh pull is believed again
+  const fresh = await check(w);
+  assert.deepEqual([fresh.ok, fresh.edition, fresh.toggled], [true, '2026-10-16.3', [{ tag: 'Wordy', judged: true }]]);
+});
+
+test('preflight: while a builder session is open (runs/SETUP) a tick is not taken over, and the first command after it is closed takes it over (M2)', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. First.', Judged: true });
+  w.write('runs/SETUP', '{}\n');
+  const held = await check(w);
+  assert.deepEqual([held.ok, held.edition, held.toggled, held.adopted], [true, '2026-10-16.1', [], []]);
+  assert.ok(held.warnings.some((x) => /Judged on: Wordy in Notion; a builder session is open, so they are taken over by the first command after it is closed/.test(x)), held.warnings.join('|'));
+  assert.equal(w.rubric().edition, '2026-10-16.1');
+  // an edit alone, with no tick, is still taken over in a builder session, as before
+  const edit = await makeWorld({ claims: 2 });
+  edit.fake.editRow(edit.ids.tag.Wordy, { Description: 'A description.' });
+  edit.write('runs/SETUP', '{}\n');
+  assert.deepEqual((await check(edit)).adopted, [{ tag: 'Wordy', columns: ['Description'] }]);
+  // the session is closed: the next command takes the tick over
+  rmSync(join(w.root, 'runs', 'SETUP'));
+  const after = await check(w);
+  assert.deepEqual([after.edition, after.toggled], ['2026-10-16.2', [{ tag: 'Wordy', judged: true }]]);
+});
+
+test('the run order of the live steps: build adds the column, the seed pulls (nothing ticked yet), then ticks, and the first command after a new pull takes the toggles over as one edition, with Context-dependent still protected (M2)', async () => {
+  const taxonomy = JSON.parse(readFileSync(join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'taxonomy-issue.json'), 'utf8'));
+  const withRules = taxonomy.rows.map((row) => (['Wordy', 'Trailing period', 'Poor wording'].includes(row.Name) ? { ...row, 'When to use': '1. A rule.\n2. Another rule.' } : row));
+  // the state of the repository: an edition from before the box (a lock with no judged map) and the Rulebook rows, none ticked yet
+  const w = await makeWorld({ claims: 2, rulebook: withRules.map((row) => ({ ...row, Judged: false })) });
+  const lockFile = join(w.root, 'rubric', 'rubric.lock');
+  const lock = lockOf(w);
+  delete lock.judged;
+  writeFileSync(lockFile, `${JSON.stringify(lock, null, 2)}\n`);
+  assert.deepEqual(w.rubric().tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent'], 'what the edition says is judged: the lock\'s reading');
+
+  // the seed's own pre-pull is the newest pull: nothing is ticked, and that is not an untick of Context-dependent
+  w.write('runs/SETUP', '{}\n');
+  const prePull = await check(w);
+  assert.deepEqual([prePull.ok, prePull.edition, prePull.toggled], [true, '2026-10-16.1', []]);
+  assert.ok(prePull.warnings.some((x) => /no box is ticked in Judged/.test(x)), prePull.warnings.join('|'));
+  rmSync(join(w.root, 'runs', 'SETUP'));
+  const lazy = await check(w);
+  assert.deepEqual([lazy.edition, lazy.toggled, lazy.adopted], ['2026-10-16.1', [], []], 'a command in the window between build and a successful seed un-judges nothing');
+  assert.deepEqual(readJson(lockFile).judged, undefined);
+
+  // an edit taken over in that state keeps Context-dependent judged
+  w.fake.editRow(w.ids.tag['Exact duplicate'], { Description: 'Two claims with the same text.' });
+  const edit = await check(w);
+  assert.deepEqual([edit.edition, edit.adopted.length, edit.toggled], ['2026-10-16.2', 1, []]);
+  assert.equal(lockOf(w).judged['Context-dependent'], true);
+  assert.deepEqual(Object.entries(lockOf(w).judged).filter(([, v]) => v).map(([k]) => k), ['Context-dependent']);
+  const again = lockOf(w);
+  delete again.judged;
+  writeFileSync(lockFile, `${JSON.stringify(again, null, 2)}\n`); // back to the lock from before the box for the rest of the run
+
+  // the seed ticks the boxes; pull --all; the first command takes the toggles over, in one edition
+  for (const name of ['Context-dependent', 'Wordy', 'Trailing period', 'Poor wording']) w.fake.editRow(w.ids.tag[name], { Judged: true });
+  const first = await check(w);
+  assert.deepEqual(first.toggled, [{ tag: 'Poor wording', judged: true }, { tag: 'Trailing period', judged: true }, { tag: 'Wordy', judged: true }]);
+  assert.equal(first.edition, '2026-10-16.3');
+  assert.deepEqual(changelog(w).slice(-3), ['- 2026-10-16 · edition 2026-10-16.3 · Judged on: Poor wording', '- 2026-10-16 · edition 2026-10-16.3 · Judged on: Trailing period', '- 2026-10-16 · edition 2026-10-16.3 · Judged on: Wordy']);
+  assert.deepEqual(Object.entries(lockOf(w).judged).filter(([, v]) => v).map(([k]) => k), ['Context-dependent', 'Poor wording', 'Trailing period', 'Wordy']);
+});
+
+test('the judge in the window before the first adoption judges what the lock says (Context-dependent), not the seven flags an edition from before the box carries (M3)', async () => {
+  const taxonomy = JSON.parse(readFileSync(join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'taxonomy-issue.json'), 'utf8'));
+  const seeded = taxonomy.rows.map((row) => (['Wordy', 'Trailing period'].includes(row.Name) ? { ...row, 'When to use': '1. A rule.', Judged: true } : row));
+  const w = await makeWorld({ claims: 3, rulebook: seeded });
+  assert.deepEqual(readJson(join(w.root, 'rubric', 'rubric.json')).tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent', 'Trailing period', 'Wordy'], 'the file says three');
+  const lock = lockOf(w);
+  delete lock.judged;
+  writeFileSync(join(w.root, 'rubric', 'rubric.lock'), `${JSON.stringify(lock, null, 2)}\n`);
+  await w.pull();
+  const { judge } = await import('../../agents/claim-tagger-mvp/scripts/judge.mjs');
+  const h = w.hooks();
+  const r = await judge({ root: w.root, driver: 'fake', io: h.io, env: h.env, fakeState: w.fakeState, fakeScript: w.FAKE_SCRIPT, sleep: h.sleep, now: h.now, runsMax: 1, takeOver: false });
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.deepEqual(readJson(join(r.runDir, 'run.json')).groups.map((g) => [g.name, g.tags]), [['G1', ['Context-dependent']]], 'no group for the two tags nobody has ticked as far as the lock knows');
+  assert.equal(w.rubric().edition, '2026-10-16.1');
+});
+
+test('the judge keeps what preflight said when a Judged change could not be taken over: the failure is in the run record (L6)', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. First.', Judged: true });
+  // the edition the adoption would write is on file already with other rules, so writeEdition refuses
+  writeFileSync(join(w.root, 'rubric', 'history', '2026-10-16.2.json'), `${JSON.stringify({ rubric_hash: 'sha256:0000000000000000' })}\n`);
+  const r = await w.judge({ runsMax: 1 });
+  assert.equal(r.exit, 0, JSON.stringify(r.report));
+  const warnings = readJson(join(r.runDir, 'run.json')).warnings.join(' | ');
+  assert.match(warnings, /could not be taken over \(writeEdition: edition 2026-10-16\.2 exists already with other rules/);
+  assert.match(warnings, /Judged box of Wordy/);
+  assert.equal(w.rubric().edition, '2026-10-16.1');
 });
 
 test('preflight: with adopt: false (status) a toggle waits and is said in words, and no file is written', async () => {

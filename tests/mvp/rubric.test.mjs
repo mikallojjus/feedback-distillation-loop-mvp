@@ -6,8 +6,8 @@ import { join } from 'node:path';
 import { h16 } from '../../agents/claim-tagger-mvp/scripts/lib/hash.mjs';
 import { compareCodePoints, pyJson } from '../../agents/claim-tagger-mvp/scripts/lib/pyjson.mjs';
 import {
-  DRIFT_COLUMNS, LEGACY_JUDGED_TAGS, buildRubric, checkLock, computeDrift, lockOf, lockedJudged, nextEdition, parseExamples, parseRules, readEdition, readLock, readRubric, tagFromRow, toggleClauses,
-  verifyRubric, writeEdition,
+  DRIFT_COLUMNS, LEGACY_JUDGED_TAGS, buildRubric, checkLock, computeDrift, judgedReading, lockOf, lockedJudged, nextEdition, parseExamples, parseRules, readEdition, readLock, readRubric, tagFromRow, toggleClauses,
+  verifyRubric, withLockedJudged, writeEdition,
 } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { validate } from '../../agents/claim-tagger-mvp/scripts/lib/validate.mjs';
 import { placeholderConfig } from './helpers/config-fixture.mjs';
@@ -556,6 +556,99 @@ test('writeEdition takes a list of reasons: one changelog line for each, all of 
   writeEdition(root, rubric, { reason: ['Judged on: Wordy', 'Judged off: Context-dependent'] });
   assert.equal(readFileSync(join(root, 'rubric', 'CHANGELOG.md'), 'utf8'), lines, 'run again for the same edition: no further line');
   for (const bad of [[], [''], ['ok', '   '], [null], 7, undefined]) assert.throws(() => writeEdition(tmp(), rubric, { reason: bad }), /a reason is required/, JSON.stringify(bad));
+});
+
+test('writeEdition never rewrites an edition on file with other ticks, other text or other columns; the same lock again is fine (L1)', () => {
+  const root = tmp();
+  const list = rows();
+  rowOf(list, 'Wordy')['When to use'] = '1. First.\n2. Second.';
+  const unticked = build(list);
+  writeEdition(root, unticked, { reason: 'First.' });
+  // another writer of the same edition number, with a box ticked: the rules and so the hash are the same, the lock is not
+  const ticked = structuredClone(list);
+  rowOf(ticked, 'Wordy').Judged = true;
+  assert.equal(build(ticked).rubric_hash, unticked.rubric_hash);
+  assert.throws(() => writeEdition(root, build(ticked), { reason: 'Second.' }), /edition 2026-10-16\.1 exists already with other text, columns or Judged ticks/);
+  const described = structuredClone(list);
+  rowOf(described, 'Wordy').Description = 'Another description.';
+  assert.throws(() => writeEdition(root, build(described), { reason: 'Second.' }), /exists already with other text, columns or Judged ticks/);
+  assert.equal(readRubric(root).tags.find((t) => t.name === 'Wordy').judged, false, 'the edition on file is as it was');
+  // the same edition again, a clock a moment later: only locked_at moves, and that is fine
+  writeEdition(root, build(list, { now: new Date('2026-10-16T09:00:05.000Z') }), { reason: 'First.' });
+  // an edition from before the Judged box (a lock without the map) is not held to its flags
+  const legacy = tmp();
+  writeEdition(legacy, build(list), { reason: 'First.' });
+  const lockFile = join(legacy, 'rubric', 'rubric.lock');
+  const lock = JSON.parse(readFileSync(lockFile, 'utf8'));
+  delete lock.judged;
+  writeFileSync(lockFile, JSON.stringify(lock));
+  writeEdition(legacy, build(ticked), { reason: 'First.' });
+});
+
+test('judgedReading: the ticks are believed unless no row has the column, or a lock from before the box meets a column where nothing is ticked yet (M2)', () => {
+  const lock = locked();
+  const legacy = structuredClone(lock);
+  delete legacy.judged;
+  const none = rows().map((r) => ({ ...r, Judged: false }));
+  const bare = rows().map(({ Judged: _gone, ...row }) => row);
+  const some = rows(); // Context-dependent ticked
+  assert.equal(judgedReading(lock, some), null);
+  assert.equal(judgedReading(lock, none), null, 'a lock with the map believes a column where everything was unticked: that is an editor\'s doing');
+  assert.equal(judgedReading(lock, bare), 'no_column');
+  assert.equal(judgedReading(legacy, none), 'nothing_ticked', 'a lock from before the box does not');
+  assert.equal(judgedReading(legacy, some), null, 'once a box is ticked the column is read');
+  assert.equal(judgedReading(legacy, bare), 'no_column');
+  assert.equal(judgedReading(null, none), null);
+  assert.equal(judgedReading(legacy, []), 'no_column');
+});
+
+test('computeDrift and buildRubric: on a lock from before the box, a column where nothing is ticked is the state after build and before the seed, not an untick of everything (M2)', () => {
+  const legacy = structuredClone(locked());
+  delete legacy.judged;
+  const none = rows().map((r) => ({ ...r, Judged: false }));
+  assert.deepEqual(computeDrift(legacy, none, { config }), { ...none_(), nothing_ticked: true }, 'no "Judged off: Context-dependent"');
+  // an edit adopted in that state keeps Context-dependent judged
+  const edited = structuredClone(none);
+  rowOf(edited, 'Wordy').Description = 'Edited.';
+  assert.deepEqual(computeDrift(legacy, edited, { config }).toggled, []);
+  assert.deepEqual(build(edited, { judgedFrom: legacy }).tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent']);
+  assert.deepEqual(build(edited).tags.filter((t) => t.judged), [], 'without the lock the ticks are what the rows say');
+  // one box ticked anywhere: the column is read, and Context-dependent unticked is a toggle off
+  const seeded = structuredClone(none);
+  rowOf(seeded, 'Wordy')['When to use'] = '1. A rule.';
+  rowOf(seeded, 'Wordy').Judged = true;
+  assert.deepEqual(computeDrift(legacy, seeded, { config }).toggled, [{ tag: 'Context-dependent', judged: false }, { tag: 'Wordy', judged: true }]);
+  assert.equal(Object.hasOwn(computeDrift(legacy, seeded, { config }), 'nothing_ticked'), false);
+  assert.deepEqual(build(seeded, { judgedFrom: legacy }).tags.filter((t) => t.judged).map((t) => t.name), ['Wordy']);
+});
+const none_ = () => ({ judged: [], adopted: [], toggled: [], missing: [], added: [] });
+
+test('readRubric: for a lock without the judged map the flags are the lock\'s (Context-dependent only), not the file\'s; with the map, or with a lock that cannot be read, the file stands (M3)', () => {
+  const root = tmp();
+  const list = rows();
+  for (const name of ['Wordy']) {
+    rowOf(list, name)['When to use'] = '1. First.\n2. Second.';
+    rowOf(list, name).Judged = true;
+  }
+  const rubric = build(list);
+  writeEdition(root, rubric, { reason: 'First.' });
+  assert.deepEqual(readRubric(root).tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent', 'Wordy'], 'the map says both');
+  const lockFile = join(root, 'rubric', 'rubric.lock');
+  const lock = JSON.parse(readFileSync(lockFile, 'utf8'));
+  delete lock.judged;
+  writeFileSync(lockFile, JSON.stringify(lock));
+  const legacy = readRubric(root);
+  assert.deepEqual(legacy.tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent'], 'a lock from before the box: Wordy was never judged by the agent, whatever the file says');
+  assert.equal(legacy.rubric_hash, rubric.rubric_hash);
+  assert.deepEqual(verifyRubric(legacy), { ok: true, errors: [] });
+  assert.deepEqual(checkLock(legacy, lock), { ok: true, errors: [] });
+  assert.deepEqual(JSON.parse(readFileSync(join(root, 'rubric', 'rubric.json'), 'utf8')).tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent', 'Wordy'], 'the file itself is not touched');
+  assert.deepEqual(withLockedJudged(rubric, lock).tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent']);
+  assert.equal(withLockedJudged(rubric, null), rubric);
+  assert.equal(withLockedJudged(rubric, { ...lock, judged: { Wordy: true } }), rubric);
+  writeFileSync(lockFile, '{"edition": "x"}');
+  assert.deepEqual(readRubric(root).tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent', 'Wordy'], 'a lock that is not valid is for the readers of the lock to report');
+  assert.equal(readRubric(tmp()), null);
 });
 
 test('writeEdition adds a missing newline to a changelog that has none, and keeps earlier lines', () => {

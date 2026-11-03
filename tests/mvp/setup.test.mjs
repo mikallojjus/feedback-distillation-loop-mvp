@@ -942,6 +942,24 @@ test('rubric needs the Rulebook copy first; then it writes edition <today>.1 wit
   assert.equal(w.fake.requests.length, w.fake.requests.length);
 });
 
+test('rubric run again on a lock from before the Judged box reads that lock (not the flags of the edition on file) and makes the lock with its judged map (L2)', async () => {
+  const w = await built();
+  await w.run(['rulebook', '--from', w.inputs.taxonomy]);
+  await w.run(['rubric', '--from', w.inputs.taxonomy]);
+  const lockFile = join(w.root, 'rubric', 'rubric.lock');
+  const lock = readJson(lockFile);
+  assert.deepEqual(lock.judged, { 'Context-dependent': false, 'Trailing period': false }, 'the step ticks nothing');
+  delete lock.judged;
+  writeFileSync(lockFile, `${JSON.stringify(lock, null, 2)}\n`);
+  const again = await w.run(['rubric', '--from', w.inputs.taxonomy]);
+  assert.equal(again.code, 0, again.text);
+  assert.match(again.out[0], /is in force already \(files checked\)/);
+  assert.deepEqual(readJson(lockFile).judged, { 'Context-dependent': true, 'Trailing period': false }, 'the lock from before the box judged Context-dependent, and the new lock says so');
+  const src = readFileSync(join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'scripts', 'lib', 'setup-steps.mjs'), 'utf8');
+  assert.match(src, /judgedFrom = existing \? readLock\(root\) : null/, 'the lock itself is read');
+  assert.doesNotMatch(src, /judgedFrom = existing \? lockOf\(existing\)/);
+});
+
 test('rubric run again changes nothing and adds no second changelog line; other rules in the file are refused', async () => {
   const w = await built();
   await w.run(['rulebook', '--from', w.inputs.taxonomy]);

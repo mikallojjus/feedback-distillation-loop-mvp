@@ -622,12 +622,14 @@ export async function pull({
   else {
     try {
       const lock = readLock(root);
-      drift = lock === null ? { skipped: 'no lock' } : computeDrift(lock, rulebookRows, { config });
+      // the drift says which lock it was computed against: a command that takes it over does so only while that lock is still the one in force (lib/preflight.mjs)
+      drift = lock === null ? { skipped: 'no lock' } : { ...computeDrift(lock, rulebookRows, { config }), against: { edition: lock.edition, rubric_hash: lock.rubric_hash } };
     } catch (e) {
       drift = { skipped: 'the check could not run', error: e.message };
       warnings.push(`drift: the check could not run (${e.message})`);
     }
   }
+  if (drift.nothing_ticked === true) warnings.push('rulebook: no box is ticked in Judged yet and the saved edition is from before the box, so the ticks were not read and the saved ones stand (run setup.mjs seed-judged)');
   if (drift.no_judged_column === true) warnings.push('rulebook: there is no Judged column in the table, so the ticks were not read and the saved ones stand (run setup.mjs build to add it)');
   writeJsonAtomic(join(dir, 'drift.json'), drift);
 
@@ -642,7 +644,7 @@ export async function pull({
   const code = duplicates.length > 0 || problems.length > 0 ? EXIT.INVALID : EXIT.OK;
   const parts = pulledTables.map((t) => `${t} ${counts[t]}`);
   const toggles = 'skipped' in drift ? [] : toggleClauses(drift.toggled ?? []);
-  const driftWord = 'skipped' in drift ? `not checked (${drift.skipped})` : `${(drift.judged?.length ?? 0) + (drift.adopted?.length ?? 0) + (drift.toggled?.length ?? 0) + (drift.missing?.length ?? 0) + (drift.added?.length ?? 0)} difference(s)${toggles.length ? ` (${toggles.join('; ')})` : ''}${drift.no_judged_column ? ' (the Rulebook has no Judged column)' : ''}`;
+  const driftWord = 'skipped' in drift ? `not checked (${drift.skipped})` : `${(drift.judged?.length ?? 0) + (drift.adopted?.length ?? 0) + (drift.toggled?.length ?? 0) + (drift.missing?.length ?? 0) + (drift.added?.length ?? 0)} difference(s)${toggles.length ? ` (${toggles.join('; ')})` : ''}${drift.no_judged_column ? ' (the Rulebook has no Judged column)' : ''}${drift.nothing_ticked ? ' (no Judged box is ticked yet)' : ''}`;
   const line = `pull ${id}: ${parts.length ? parts.join(', ') : 'no table read'}${skipped.length ? `; skipped ${skipped.map((s) => s.table).join(', ')} (not created yet)` : ''}; drift ${driftWord}; duplicates ${duplicates.length}; paused ${paused ? 'yes' : 'no'}`;
   return { code, pullId: id, dir, tables: pulledTables, skipped, counts, duplicates: duplicateLines, problems, paused, warnings, drift, cases, line };
 }

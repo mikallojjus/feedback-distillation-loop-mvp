@@ -10,15 +10,17 @@
 //   verifyRubric(rubric)             -> { ok, errors }: the schema and every hash, judged flag and rule number recomputed
 //   writeEdition(root, rubric, { reason }) -> writes rubric/rubric.json, rubric/rubric.lock, rubric/history/<edition>.json and one line of
 //                                      rubric/CHANGELOG.md; returns { edition, rubric_hash, lock }
-//   readRubric(root)                 -> the current rubric (verified), or null before the first edition
+//   readRubric(root)                 -> the current rubric (verified), or null before the first edition; for a lock without the judged map the judged flags are the lock's (withLockedJudged)
 //   readLock(root)                   -> the current lock (validated), or null
 //   readEdition(root, edition)       -> the rubric of one earlier edition from rubric/history (verified), or null
 //   lockOf(rubric)                   -> the lock object writeEdition writes for a rubric (no file is touched)
 //   checkLock(rubric, lock)          -> { ok, errors }: the lock says what the rubric says (edition, hashes, locked text and columns, and the judged state when the lock has one)
-//   lockedJudged(lock, name)         -> whether the lock says the tag is judged (a lock without the judged state reads as LEGACY_JUDGED_TAGS, see below)
+//   lockedJudged(lock, name)         -> whether the lock says the tag is judged (a lock without the judged state reads as LEGACY_JUDGED_TAGS, see below); hasJudgedMap(lock)
+//   judgedReading(lock, rows)        -> null when the Judged ticks of the rows can be believed against the lock, else 'no_column' or 'nothing_ticked' (a lock from before the box and no row ticked yet)
+//   withLockedJudged(rubric, lock)   -> the rubric with the judged flags of a lock that has no judged map (Context-dependent only); the rubric as it is otherwise
 //   toggleClauses(toggled)           -> ["Judged on: A", "Judged off: B"]: the words for the toggles of a drift, by tag name
 //   computeDrift(lock, rows, { config }) -> { judged: [{ tag, column }], adopted: [{ tag, columns }], toggled: [{ tag, judged }], missing: [name], added: [name] }
-//                                      (plus `no_judged_column: true` when no row has the Judged column)
+//                                      (plus `no_judged_column: true` when no row has the Judged column, `nothing_ticked: true` when the lock predates the box and no row is ticked)
 //   constants: DRIFT_COLUMNS, LEGACY_JUDGED_TAGS
 //
 // A row is the plain shape of a Rulebook copy row: { Name, Category, Counterpart, Description, 'Example Claims', 'When to use', Polarity,
@@ -221,8 +223,7 @@ export function buildRubric(rows, { config, edition, source, now, judgedFrom = n
   if (!Array.isArray(rows)) throw new TypeError('buildRubric: rows must be an array');
   if (!config) throw new TypeError('buildRubric: a config is required');
   const at = isoOf(now);
-  const columnThere = rows.some((row) => row !== null && typeof row === 'object' && Object.hasOwn(row, JUDGED_COLUMN));
-  const fromLock = judgedFrom !== null && !columnThere;
+  const fromLock = judgedFrom !== null && judgedReading(judgedFrom, rows) !== null;
   const tags = rows.filter((row) => textOrNull(row?.Name) !== null)
     .map((row) => tagFromRow(row, config, fromLock ? { ticked: lockedJudged(judgedFrom, textOrNull(row.Name)) } : {}));
   if (tags.length === 0) throw new Error('buildRubric: no row has a Name, so there is no rulebook to build');
@@ -288,8 +289,35 @@ export function lockOf(rubric) {
  * says what the map says, and a tag it does not name is not judged.
  */
 export function lockedJudged(lock, name) {
-  if (lock?.judged !== null && typeof lock?.judged === 'object' && !Array.isArray(lock.judged)) return lock.judged[name] === true;
+  if (hasJudgedMap(lock)) return lock.judged[name] === true;
   return LEGACY_JUDGED_TAGS.includes(name) && parseRules(lock?.text?.[name] ?? '').rules.length > 0;
+}
+
+/** Whether the lock has the judged map (a lock made before the Judged box does not). */
+export function hasJudgedMap(lock) {
+  return lock?.judged !== null && typeof lock?.judged === 'object' && !Array.isArray(lock.judged);
+}
+
+/**
+ * Whether the Judged ticks of the Rulebook rows can be believed against this lock: null when they can, 'no_column' when no row has the Judged column at all (the table has lost it, or never
+ * had it), 'nothing_ticked' when the lock is from before the Judged box (no judged map) and the column exists but no row is ticked: that is a table `build` has just added the column to and
+ * `seed-judged` has not ticked yet, not an editor who unticked everything, so the lock's own reading stands until a tick is seen.
+ */
+export function judgedReading(lock, rows) {
+  const list = (Array.isArray(rows) ? rows : []).filter((row) => row !== null && typeof row === 'object' && textOrNull(row.Name) !== null);
+  if (!list.some((row) => Object.hasOwn(row, JUDGED_COLUMN))) return 'no_column';
+  if (lock && !hasJudgedMap(lock) && !list.some((row) => row[JUDGED_COLUMN] === true)) return 'nothing_ticked';
+  return null;
+}
+
+/**
+ * The rubric with the judged flags the lock gives: for a lock without the judged map (the edition on disk was made before the Judged box, with the flags "has rules and is a text tag"),
+ * judged is lockedJudged, which reads such a lock as judging Context-dependent only. A lock with the map, or no lock, leaves the rubric as it is. Returns a new object; the rubric hash
+ * does not depend on the flags. Readers of the edition in force use it, so that nothing is judged for a tick nobody has seen taken over.
+ */
+export function withLockedJudged(rubric, lock) {
+  if (!rubric || !lock || hasJudgedMap(lock)) return rubric;
+  return { ...rubric, tags: rubric.tags.map((t) => ({ ...t, judged: lockedJudged(lock, t.name) && t.rules.length > 0 && t.capability === 'text' })) };
 }
 
 /**
@@ -325,8 +353,24 @@ export function writeEdition(root, rubric, { reason } = {}) {
   if (!check.ok) throw new Error(`writeEdition: the rubric is not valid:\n- ${check.errors.join('\n- ')}`);
   const dir = rubricDir(root);
   const historyFile = join(dir, 'history', `${rubric.edition}.json`);
-  if (existsSync(historyFile) && readJson(historyFile).rubric_hash !== rubric.rubric_hash) {
-    throw new Error(`writeEdition: edition ${rubric.edition} exists already with other rules; an edition is never rewritten, use the next one`);
+  if (existsSync(historyFile)) {
+    const earlier = readJson(historyFile);
+    if (earlier.rubric_hash !== rubric.rubric_hash) {
+      throw new Error(`writeEdition: edition ${rubric.edition} exists already with other rules; an edition is never rewritten, use the next one`);
+    }
+    // the same rules are not enough: the whole lock (tag hashes, locked text, the other columns and the judged state) of an edition on file stays what it was, so that two writers of one edition
+    // number with other ticks or other columns are caught. The judged state of an edition from before the Judged box is not compared: its flags are not the lock's.
+    const lockFile = join(dir, 'rubric.lock');
+    const inForce = existsSync(lockFile) ? readJson(lockFile) : null;
+    const { locked_at: _then, ...before } = lockOf(earlier);
+    const { locked_at: _now, ...after } = lockOf(rubric);
+    if (inForce?.edition === rubric.edition && !hasJudgedMap(inForce)) {
+      delete before.judged;
+      delete after.judged;
+    }
+    if (!isDeepStrictEqual(before, after)) {
+      throw new Error(`writeEdition: edition ${rubric.edition} exists already with other text, columns or Judged ticks; an edition is never rewritten, use the next one`);
+    }
   }
   const currentFile = join(dir, 'rubric.json');
   const current = existsSync(currentFile) ? readJson(currentFile)?.edition : null;
@@ -358,7 +402,16 @@ function readVerified(file) {
 
 /** rubric/rubric.json of a state folder, schema and hashes verified; null before the first edition exists. */
 export function readRubric(root) {
-  return readVerified(join(rubricDir(root), 'rubric.json'));
+  const rubric = readVerified(join(rubricDir(root), 'rubric.json'));
+  if (rubric === null) return null;
+  // an edition made before the Judged box has flags that mean "has rules and is a text tag": until the first edition with a judged map exists, the lock says what is judged
+  let lock = null;
+  try {
+    lock = readLock(root);
+  } catch {
+    lock = null; // a lock that is not valid is for checkLock and the callers that read it to say; the flags stay as the file has them
+  }
+  return withLockedJudged(rubric, lock);
 }
 
 /** rubric/rubric.lock of a state folder, validated; null before the first edition exists. */
@@ -410,9 +463,11 @@ export function computeDrift(lock, rows, { config } = {}) {
     if (byName.has(name)) throw new Error(`computeDrift: two rows are named "${name}"`);
     byName.set(name, row);
   }
-  const tickColumn = [...byName.values()].some((row) => Object.hasOwn(row, JUDGED_COLUMN));
+  const reading = byName.size > 0 ? judgedReading(lock, [...byName.values()]) : null;
+  const tickColumn = byName.size > 0 && reading === null;
   const drift = { judged: [], adopted: [], toggled: [], missing: [], added: [] };
-  if (!tickColumn && byName.size > 0) drift.no_judged_column = true;
+  if (reading === 'no_column') drift.no_judged_column = true;
+  if (reading === 'nothing_ticked') drift.nothing_ticked = true;
   for (const name of Object.keys(lock.tags ?? {}).sort(compareCodePoints)) {
     const row = byName.get(name);
     if (!row) {

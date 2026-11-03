@@ -65,7 +65,7 @@ import { compareCodePoints } from './lib/pyjson.mjs';
 import { RESERVED_RUN_IDS, isReservedRunId } from './lib/reserved-run-ids.mjs';
 import { writeReport } from './lib/report.mjs';
 import { resumeFor } from './lib/resume.mjs';
-import { checkLock, readLock, toggleClauses, verifyRubric } from './lib/rubric.mjs';
+import { checkLock, readLock, toggleClauses, verifyRubric, withLockedJudged } from './lib/rubric.mjs';
 import { validate } from './lib/validate.mjs';
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/judge.mjs [--tags a,b] [--items claims|eval] [--pull <pull-id>] [--ids a,b] [--limit N] [--runs-max N] [--rubric <file>] [--refresh] [--run-id <id>] [--driver cli|fake]\n'
@@ -316,6 +316,9 @@ export function loadRubric(root, rubricFile, warnings = []) {
           next: RULEBOOK_FILE_NEXT,
         });
       }
+      // an edition from before the Judged box has the flags "has rules and is a text tag": until the first edition with a judged map exists, the lock says what is judged (Context-dependent only),
+      // so that nothing is judged for a tick that no command has taken over yet
+      rubric = withLockedJudged(rubric, lock);
     }
   }
   return { rubric, path, candidate };
@@ -851,6 +854,18 @@ function checkPaused(ctx) {
   }
 }
 
+/** A safety check is running when runs/PROMOTING.json is younger than two hours (the same rule as status.mjs and promote.mjs; this file cannot import them). */
+function promotingNow(root, now) {
+  const file = join(root, 'runs', 'PROMOTING.json');
+  if (!existsSync(file)) return false;
+  try {
+    const born = Date.parse(readJson(file).since);
+    return now().getTime() - (Number.isFinite(born) ? born : statSync(file).mtimeMs) < 2 * 60 * 60 * 1000;
+  } catch {
+    return true; // a lock that cannot be read is taken for a live one
+  }
+}
+
 /**
  * A tick or untick of the Judged box that the newest pull saw is taken over into a new edition BEFORE the run reads the rulebook, so that this run judges the tags as the box says
  * (lib/preflight.mjs takes the same change over at the start of every other command, and writes the same edition and changelog line: the tag command runs this script ahead of
@@ -859,7 +874,9 @@ function checkPaused(ctx) {
  * preflight (a drift stop, a bad rulebook file) is left to the checks below, which raise it themselves.
  */
 async function takeOverToggles(ctx) {
-  if (ctx.args.rubric || ctx.prev) return;
+  // not on a candidate rulebook, a resumed run, a judge that a loop command started (opts.takeOver false: the parent ran preflight on its own fresh pull, and a second look at an older pull
+  // could write the text of Notion over an edition the parent has written since) and not while a safety check holds the rulebook (runs/PROMOTING.json)
+  if (ctx.args.rubric || ctx.prev || ctx.opts.takeOver === false || promotingNow(ctx.root, ctx.now)) return;
   const pullDir = newestPullDir(ctx.root);
   if (!pullDir) return;
   const drift = readOptionalJson(join(pullDir, 'drift.json'));
@@ -872,6 +889,7 @@ async function takeOverToggles(ctx) {
   }
   const { preflight } = await import('./lib/preflight.mjs'); // not at the top: preflight imports this file
   const pre = preflight({ root: ctx.root, config, pullId: basename(pullDir), now: ctx.now });
+  for (const w of pre.warnings) if (!ctx.warnings.includes(w)) ctx.warnings.push(w); // what preflight said stays in the run record, an adoption that failed included
   if (pre.toggled.length) {
     ctx.takenOver = pre.toggled;
     ctx.warnings.push(`the Judged box changed in Notion (${toggleClauses(pre.toggled).join('; ')}); it was taken over into edition ${pre.edition} before this run`);

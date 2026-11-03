@@ -76,6 +76,7 @@ export function preflight({ root, config, pullId = null, now = () => new Date(),
     if (drift === null) warnings.push('the pull has no drift check, so the rulebook text in Notion was not compared with the saved edition');
     else if (typeof drift.skipped === 'string') warnings.push(`the drift check was skipped in the pull (${drift.skipped}), so the rulebook text in Notion was not compared with the saved edition`);
     else {
+      if (drift.nothing_ticked === true) warnings.push('no box is ticked in Judged in the Rulebook yet and the saved edition is from before the box, so the ticks were not read and the saved ones stand');
       if (drift.no_judged_column === true) warnings.push('the Rulebook in Notion has no Judged column, so the ticks could not be read and the saved ones stand; ask the engineer to run the setup build');
       const judgedNames = new Set(rubric.tags.filter((t) => isJudgedTag(config, t)).map((t) => t.name));
       const stops = driftStops(drift, judgedNames);
@@ -86,7 +87,15 @@ export function preflight({ root, config, pullId = null, now = () => new Date(),
       }
       const changed = (Array.isArray(drift.adopted) ? drift.adopted : []).filter((a) => a && typeof a.tag === 'string');
       const toggled = (Array.isArray(drift.toggled) ? drift.toggled : []).filter((t) => t && typeof t.tag === 'string' && typeof t.judged === 'boolean');
-      if ((changed.length || toggled.length) && adopt) {
+      // the drift was computed against one lock (pull.mjs stamps it): it is taken over only while that lock is the one in force. A pull older than the edition in force (a second command on
+      // the same pull, or a pull from before another command wrote an edition) would write the text of Notion over what that edition says, a rule just promoted included.
+      const against = drift.against;
+      const stale = lock !== null && (!against || against.edition !== lock.edition || against.rubric_hash !== lock.rubric_hash);
+      // while a builder session is open (build and seed-judged are running) a tick is not taken over: the seed is half done, and an edition made now would carry whatever the boxes say at this moment
+      const holdsTicks = toggled.length > 0 && existsSync(join(root, 'runs', 'SETUP'));
+      if ((changed.length || toggled.length) && stale) {
+        warnings.push(`the pull is older than the rulebook edition in force (it was compared with ${against?.edition ? `edition ${against.edition}` : 'an unknown edition'}, edition ${rubric.edition} is in force), so the changes it shows in Notion were not taken over; pull again`);
+      } else if ((changed.length || toggled.length) && adopt && !holdsTicks) {
         try {
           const next = buildRubric(pull.rulebook() ?? [], { config, edition: nextEdition(rubric.edition, now()), now, judgedFrom: lock });
           // the pull's drift can be older than the edition in force (a second command on the same pull): an edition whose lock would say what the lock in force says is not written again.
@@ -105,8 +114,9 @@ export function preflight({ root, config, pullId = null, now = () => new Date(),
           warnings.push(`the ${[changed.length ? `edit${changed.length === 1 ? '' : 's'} to ${listNames(changed.map((a) => a.tag))}` : null, toggled.length ? `Judged box of ${listNames(toggled.map((t) => t.tag))}` : null].filter(Boolean).join(' and the ')} in Notion could not be taken over (${e.message.split('\n')[0]})`);
         }
       } else {
+        if (holdsTicks && adopt) warnings.push(`${toggleClauses(toggled).join('; ')} in Notion; a builder session is open, so they are taken over by the first command after it is closed`);
+        else if (toggled.length) warnings.push(`${toggleClauses(toggled).join('; ')} in Notion; the next command takes ${toggled.length === 1 ? 'it' : 'them'} over`);
         if (changed.length) warnings.push(`${plural(changed.length, 'tag')} that ${changed.length === 1 ? 'is' : 'are'} not judged ${changed.length === 1 ? 'has' : 'have'} been edited in Notion; the next command takes the edit over`);
-        if (toggled.length) warnings.push(`${toggleClauses(toggled).join('; ')} in Notion; the next command takes ${toggled.length === 1 ? 'it' : 'them'} over`);
       }
     }
   }
