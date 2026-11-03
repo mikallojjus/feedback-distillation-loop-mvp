@@ -6,3 +6,4 @@
 - 2026-10-28 · edition 2026-10-28.3 · rolled back Named institutions resolve; a bare 'the ruling' does not
 - 2026-10-29 · edition 2026-10-29.1 · lesson Bare 'the ruling' needs an antecedent; named bodies don't PASS
 - 2026-10-30 · edition 2026-10-30.1 · Claim tagger v2 (P48): the v2 Rulebook, same rules, new page ids
+- 2026-11-03 · edition 2026-11-03.1 · adopted from Notion: Exact duplicate When to use; Improper capitalization When to use; Incorrect grammar When to use; Multi-sentence When to use; Poor wording When to use; Semantically duplicated When to use; Trailing period When to use; Wordy When to use

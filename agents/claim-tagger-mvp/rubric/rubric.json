@@ -1,11 +1,11 @@
 {
-  "edition": "2026-10-30.1",
-  "built_at": "2026-10-30T01:18:34.043Z",
+  "edition": "2026-11-03.1",
+  "built_at": "2026-11-03T14:04:56.231Z",
   "source": {
     "database_id": "12aa438db42c4d5b8b6752b2a26680f1",
     "data_source_id": "ad02bfbd4408492fb843256fc5002eed",
     "read_via": "rest",
-    "read_at": "2026-10-30T01:18:34.043Z"
+    "read_at": "2026-11-03T14:04:56.231Z"
   },
   "tags": [
     {
@@ -67,8 +67,25 @@
       "status": null,
       "counterpart": null,
       "description": "Exactly the same claim already exists in one of the canonical spaces",
-      "when_to_use": "",
-      "rules": [],
+      "when_to_use": "1. Use when a different claim entity with the same claim text is verified in at least one canonical Geo space.\n2. Compare the text exactly, ignoring only leading, trailing or repeated whitespace. Differences in wording, capitalization, punctuation or numbers are not exact matches under this rule.\n3. The same Geo entity appearing in multiple spaces is not a duplicate. The matching claim must have a different Geo ID; ignore the claim being checked itself.\n4. Identify the matching claim by its Geo ID or URL and canonical space. If lookup is unavailable or inconclusive, report Can’t tell rather than asserting a duplicate or a clean result.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when a different claim entity with the same claim text is verified in at least one canonical Geo space."
+        },
+        {
+          "n": 2,
+          "text": "Compare the text exactly, ignoring only leading, trailing or repeated whitespace. Differences in wording, capitalization, punctuation or numbers are not exact matches under this rule."
+        },
+        {
+          "n": 3,
+          "text": "The same Geo entity appearing in multiple spaces is not a duplicate. The matching claim must have a different Geo ID; ignore the claim being checked itself."
+        },
+        {
+          "n": 4,
+          "text": "Identify the matching claim by its Geo ID or URL and canonical space. If lookup is unavailable or inconclusive, report Can’t tell rather than asserting a duplicate or a clean result."
+        }
+      ],
       "example_claims": [],
       "geo_status": null,
       "geo_tag_id": null,
@@ -79,7 +96,7 @@
       ],
       "capability": "corpus",
       "judged": false,
-      "tag_hash": "sha256:33f5bfb52a305685"
+      "tag_hash": "sha256:24eaa0e7485d8137"
     },
     {
       "name": "Factually challenged",
@@ -128,8 +145,25 @@
       "status": "Proposed",
       "counterpart": null,
       "description": "A claim whose text breaks sentence casing: mid-sentence capitals on words that are not proper nouns, proper nouns left lowercase, or all-caps emphasis.",
-      "when_to_use": "",
-      "rules": [],
+      "when_to_use": "1. Use when the first word is lowercase where normal sentence casing requires a capital.\n2. Use when ordinary words are capitalized mid-sentence without a grammatical or naming reason, including title-style capitalization or all-caps emphasis.\n3. Use when a proper name is miscapitalized, such as “microsoft” instead of “Microsoft”.\n4. Preserve established capitalization in names, acronyms and technical notation, such as “iPhone”, “NASA” and “pH”. Apply the tag only when the capitalization is clearly incorrect.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when the first word is lowercase where normal sentence casing requires a capital."
+        },
+        {
+          "n": 2,
+          "text": "Use when ordinary words are capitalized mid-sentence without a grammatical or naming reason, including title-style capitalization or all-caps emphasis."
+        },
+        {
+          "n": 3,
+          "text": "Use when a proper name is miscapitalized, such as “microsoft” instead of “Microsoft”."
+        },
+        {
+          "n": 4,
+          "text": "Preserve established capitalization in names, acronyms and technical notation, such as “iPhone”, “NASA” and “pH”. Apply the tag only when the capitalization is clearly incorrect."
+        }
+      ],
       "example_claims": [
         "peace Is Better than War.",
         "The Company Announced Record Profits In The Third Quarter.",
@@ -143,8 +177,8 @@
         "Issue"
       ],
       "capability": "text",
-      "judged": false,
-      "tag_hash": "sha256:6e5514d1f3545011"
+      "judged": true,
+      "tag_hash": "sha256:e2ac4bbe3343a3e3"
     },
     {
       "name": "Improperly sourced",
@@ -197,8 +231,25 @@
       "status": "Proposed",
       "counterpart": null,
       "description": "Does not follow proper punctuation and grammar.",
-      "when_to_use": "",
-      "rules": [],
+      "when_to_use": "1. Use when the claim contains a clear grammatical error, such as incorrect subject–verb agreement, an incorrect verb form, or a missing word required for a grammatical sentence.\n2. Use when punctuation is incorrect, such as a comma joining two independent sentences without a conjunction, a misused apostrophe, or unmatched quotation marks or brackets.\n3. A missing final period or multiple grammatically correct sentences does not trigger this tag; those formatting conventions are assessed separately.\n4. Apply only for a specific grammatical or punctuation defect. Accepted English variants, stylistic preferences and awkward wording alone do not qualify.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when the claim contains a clear grammatical error, such as incorrect subject–verb agreement, an incorrect verb form, or a missing word required for a grammatical sentence."
+        },
+        {
+          "n": 2,
+          "text": "Use when punctuation is incorrect, such as a comma joining two independent sentences without a conjunction, a misused apostrophe, or unmatched quotation marks or brackets."
+        },
+        {
+          "n": 3,
+          "text": "A missing final period or multiple grammatically correct sentences does not trigger this tag; those formatting conventions are assessed separately."
+        },
+        {
+          "n": 4,
+          "text": "Apply only for a specific grammatical or punctuation defect. Accepted English variants, stylistic preferences and awkward wording alone do not qualify."
+        }
+      ],
       "example_claims": [],
       "geo_status": null,
       "geo_tag_id": null,
@@ -208,8 +259,8 @@
         "Issue"
       ],
       "capability": "text",
-      "judged": false,
-      "tag_hash": "sha256:7137976617fdbe2e"
+      "judged": true,
+      "tag_hash": "sha256:6946c207878a4eb2"
     },
     {
       "name": "Multi-sentence",
@@ -219,8 +270,21 @@
       "status": "Proposed",
       "counterpart": "One sentence",
       "description": "A claim written as two sentences.",
-      "when_to_use": "",
-      "rules": [],
+      "when_to_use": "1. Use when the claim text contains two or more separate sentences.\n2. Count actual sentence boundaries. Periods within abbreviations, initials, decimal numbers or URLs do not create additional sentences.\n3. A single sentence with several clauses, a colon or a semicolon does not trigger this tag. A final period alone also does not trigger it.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when the claim text contains two or more separate sentences."
+        },
+        {
+          "n": 2,
+          "text": "Count actual sentence boundaries. Periods within abbreviations, initials, decimal numbers or URLs do not create additional sentences."
+        },
+        {
+          "n": 3,
+          "text": "A single sentence with several clauses, a colon or a semicolon does not trigger this tag. A final period alone also does not trigger it."
+        }
+      ],
       "example_claims": [
         "Anthropic released Claude Fable 5. It is the company's most capable model.",
         "Inflation fell across the eurozone in 2024. The European Central Bank cut rates in response.",
@@ -234,8 +298,8 @@
         "Issue"
       ],
       "capability": "text",
-      "judged": false,
-      "tag_hash": "sha256:05f37de75c72c933"
+      "judged": true,
+      "tag_hash": "sha256:a4967b8a3f810192"
     },
     {
       "name": "Poor wording",
@@ -245,8 +309,25 @@
       "status": "Proposed",
       "counterpart": null,
       "description": "The claim is poorly articulated and difficult to understand",
-      "when_to_use": "",
-      "rules": [],
+      "when_to_use": "1. Use when confusing word choices, awkward sentence construction or unclear connections between ideas make the claim difficult to understand.\n2. Use when the wording permits materially different interpretations and the intended assertion cannot be identified clearly.\n3. Identify the wording that causes difficulty. Suggest a clearer rewrite only when the intended meaning is evident; otherwise explain the ambiguity rather than guessing.\n4. Technical language, length or an unfamiliar subject alone does not trigger this tag. If the only issue is missing outside context, use Context-dependent; if the meaning is clear but unnecessarily lengthy, use Wordy. Apply multiple tags only when each issue is independently present.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when confusing word choices, awkward sentence construction or unclear connections between ideas make the claim difficult to understand."
+        },
+        {
+          "n": 2,
+          "text": "Use when the wording permits materially different interpretations and the intended assertion cannot be identified clearly."
+        },
+        {
+          "n": 3,
+          "text": "Identify the wording that causes difficulty. Suggest a clearer rewrite only when the intended meaning is evident; otherwise explain the ambiguity rather than guessing."
+        },
+        {
+          "n": 4,
+          "text": "Technical language, length or an unfamiliar subject alone does not trigger this tag. If the only issue is missing outside context, use Context-dependent; if the meaning is clear but unnecessarily lengthy, use Wordy. Apply multiple tags only when each issue is independently present."
+        }
+      ],
       "example_claims": [],
       "geo_status": null,
       "geo_tag_id": null,
@@ -256,8 +337,8 @@
         "Issue"
       ],
       "capability": "text",
-      "judged": false,
-      "tag_hash": "sha256:98cbd43770b3614f"
+      "judged": true,
+      "tag_hash": "sha256:d648dbf9fa676a1b"
     },
     {
       "name": "Semantically duplicated",
@@ -267,8 +348,29 @@
       "status": null,
       "counterpart": null,
       "description": "A claim that states exactly the same thing already exists in one of the canonical spaces, even if worded differently",
-      "when_to_use": "",
-      "rules": [],
+      "when_to_use": "1. Use when another claim entity in a canonical Geo space expresses the same assertion despite different wording.\n2. The claims must preserve the same entities, scope, time period, quantities, polarity, certainty, attribution and material conditions. A difference that changes the assertion prevents a duplicate verdict.\n3. Sharing a topic, supporting or opposing another claim, or making a broader or narrower assertion is not enough. Neither claim should add material information absent from the other.\n4. The matching claim must have a different Geo ID. The same entity appearing in multiple spaces is not a duplicate. For identical text under the Exact duplicate rules, use Exact duplicate instead.\n5. Identify the matching claim by its Geo ID or URL and canonical space, and briefly explain the equivalence. If lookup or comparison is unavailable or inconclusive, report Can’t tell.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when another claim entity in a canonical Geo space expresses the same assertion despite different wording."
+        },
+        {
+          "n": 2,
+          "text": "The claims must preserve the same entities, scope, time period, quantities, polarity, certainty, attribution and material conditions. A difference that changes the assertion prevents a duplicate verdict."
+        },
+        {
+          "n": 3,
+          "text": "Sharing a topic, supporting or opposing another claim, or making a broader or narrower assertion is not enough. Neither claim should add material information absent from the other."
+        },
+        {
+          "n": 4,
+          "text": "The matching claim must have a different Geo ID. The same entity appearing in multiple spaces is not a duplicate. For identical text under the Exact duplicate rules, use Exact duplicate instead."
+        },
+        {
+          "n": 5,
+          "text": "Identify the matching claim by its Geo ID or URL and canonical space, and briefly explain the equivalence. If lookup or comparison is unavailable or inconclusive, report Can’t tell."
+        }
+      ],
       "example_claims": [],
       "geo_status": null,
       "geo_tag_id": null,
@@ -279,7 +381,7 @@
       ],
       "capability": "corpus",
       "judged": false,
-      "tag_hash": "sha256:a257f5ba8dcaea50"
+      "tag_hash": "sha256:94b66e5adc6e309b"
     },
     {
       "name": "Source inaccessible",
@@ -337,8 +439,21 @@
       "status": "Proposed",
       "counterpart": null,
       "description": "A single-sentence claim whose title ends with a period, contrary to Geo’s claim-title formatting convention. The issue concerns the final punctuation, not the claim’s meaning or factual accuracy.",
-      "when_to_use": "",
-      "rules": [],
+      "when_to_use": "1. Use when a single-sentence claim title ends with a full stop used to close the sentence. Ignore trailing whitespace when checking.\n2. Do not flag a period that belongs to an abbreviation, initial or URL rather than serving as sentence-ending punctuation.\n3. This is a formatting flag only. It does not imply that the claim is unclear, ungrammatical or factually incorrect. Assess claims containing multiple sentences under Multi-sentence.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when a single-sentence claim title ends with a full stop used to close the sentence. Ignore trailing whitespace when checking."
+        },
+        {
+          "n": 2,
+          "text": "Do not flag a period that belongs to an abbreviation, initial or URL rather than serving as sentence-ending punctuation."
+        },
+        {
+          "n": 3,
+          "text": "This is a formatting flag only. It does not imply that the claim is unclear, ungrammatical or factually incorrect. Assess claims containing multiple sentences under Multi-sentence."
+        }
+      ],
       "example_claims": [],
       "geo_status": null,
       "geo_tag_id": null,
@@ -348,8 +463,8 @@
         "Issue"
       ],
       "capability": "text",
-      "judged": false,
-      "tag_hash": "sha256:efbb2ac4a39ffeeb"
+      "judged": true,
+      "tag_hash": "sha256:a55224589f5eb0df"
     },
     {
       "name": "Unsourced",
@@ -398,8 +513,25 @@
       "status": "Proposed",
       "counterpart": "Word-efficient",
       "description": "A claim containing unnecessary words, redundant qualifiers, or drawn-out constructions. The same meaning would survive a clearly shorter rewrite.",
-      "when_to_use": "",
-      "rules": [],
+      "when_to_use": "1. Use when unnecessary words, repetition, redundant qualifiers or drawn-out constructions can be removed without changing the claim’s meaning.\n2. Test with a clearly shorter rewrite. Preserve the same entities, quantities, dates, attribution, scope, uncertainty and conditions; shortening must not strengthen or weaken the assertion.\n3. Length alone does not trigger this tag. Do not flag a long claim when its words are needed to state the assertion precisely, and do not apply an arbitrary word-count limit.\n4. If the meaning is difficult to understand, assess Poor wording separately. Apply both tags only when the claim independently has unnecessary wording and a clarity problem.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when unnecessary words, repetition, redundant qualifiers or drawn-out constructions can be removed without changing the claim’s meaning."
+        },
+        {
+          "n": 2,
+          "text": "Test with a clearly shorter rewrite. Preserve the same entities, quantities, dates, attribution, scope, uncertainty and conditions; shortening must not strengthen or weaken the assertion."
+        },
+        {
+          "n": 3,
+          "text": "Length alone does not trigger this tag. Do not flag a long claim when its words are needed to state the assertion precisely, and do not apply an arbitrary word-count limit."
+        },
+        {
+          "n": 4,
+          "text": "If the meaning is difficult to understand, assess Poor wording separately. Apply both tags only when the claim independently has unnecessary wording and a clarity problem."
+        }
+      ],
       "example_claims": [
         "It is generally the case that Anthropic can be considered to be a company in the AI industry.",
         "In terms of its overall effect, sleep deprivation is something that has a tendency to negatively impact the process of making decisions.",
@@ -413,9 +545,9 @@
         "Issue"
       ],
       "capability": "text",
-      "judged": false,
-      "tag_hash": "sha256:b53ab3bd92a2dbaf"
+      "judged": true,
+      "tag_hash": "sha256:7683005c39124b24"
     }
   ],
-  "rubric_hash": "sha256:61109fe20e32d23d"
+  "rubric_hash": "sha256:fe8aa256658efca4"
 }
