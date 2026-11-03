@@ -15,6 +15,7 @@
 //   isTicked(row), parseDecidedUnder(v), decidedUnderText(edition, agreed)    the tick, and Decided under as { edition, agreed } and back
 //   rowDecision(row)                          { key, tag, geo_id, outcome, by ('outcome' | 'tick' | null), note, decided_under, first_sight, tick_ignored, waits }
 //   isDecided(row), rowDisagrees(row)         decided / decided against the agent's proposal (Can't tell differs from both outcomes)
+//   hasEditorValue(row)                       true when any of the three editor columns has a value (the wider test remove.mjs keeps rows by, P51)
 //   inYourQueue(row), countYourQueue(rows)    the filter of the view Your queue, and how many rows it shows
 //   recordChanges(row), recordDecisions(rows) the Decided under writes that record decisions, for one row / for the ledger (the shape of the old syncDecisions)
 //   rowStatus({ outcome, proposal, unreadable })   the Agent status of one row
@@ -95,6 +96,12 @@ export function rowDecision(row) {
 
 /** True when the row is decided: by Tag outcome, or by a tick on a sure proposal. */
 export const isDecided = (row) => rowDecision(row).outcome !== null;
+
+/**
+ * True when an editor has written anything on the row: Tag outcome (any value), a Your note that is not blank, or Agent is right ticked, whatever the proposal was. This is wider than isDecided
+ * on purpose (a note alone, or a tick on Can't tell, decides nothing for the loop, but it is an editor's word): remove.mjs never trashes a row that has one (P51).
+ */
+export const hasEditorValue = (row) => trim(row?.[TD.outcome]) !== '' || trim(row?.[TD.note]) !== '' || isTicked(row);
 
 /** True for a decided row whose decision differs from the agent's proposal. Can't tell differs from both outcomes. */
 export function rowDisagrees(row) {

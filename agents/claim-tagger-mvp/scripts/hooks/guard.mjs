@@ -5,8 +5,8 @@
 //   { "hookSpecificOutput": { "hookEventName": "PreToolUse", "permissionDecision": "allow" | "ask" | "deny", "permissionDecisionReason": "..." } }
 // then exits 0. It never throws: input it cannot read is denied with a reason. A tool it does not guard gets {} (no opinion).
 //
-// Always denied: delete-pages, delete-databases, delete-comment, move-pages, duplicate-page, restore-pages (hard rule 8: nothing is
-// deleted, archived or moved); any call that mentions a protected database or page id anywhere in its input (hard rule 10); any
+// Always denied: delete-pages, delete-databases, delete-comment, move-pages, duplicate-page, restore-pages (P51: only remove.mjs trashes, and only Claims
+// and Tag decisions rows; nothing is deleted, archived or moved through the connector); any call that mentions a protected database or page id anywhere in its input (hard rule 10); any
 // page write that names an editor-owned property or sets Status to Approved or Rejected (hard rule 1).
 // One exception to the editor-column rule (decisions P18 to P20, 114 and P42 to P46): an editor's Claude may decide rows of Tag decisions. A notion-update-page call is allowed when
 //   - command is update_properties, and the input holds only page_id, command, properties and allow_async (no icon, cover, content or skill field);
@@ -197,7 +197,7 @@ export function decide(input, root = AGENT_ROOT, options = {}) {
   const names = editorNames.length ? editorNames : DEFAULT_EDITOR_NAMES;
   const statusValues = config.editor_columns?.rule_changes_status_editor_values ?? DEFAULT_EDITOR_STATUS;
 
-  if (ALWAYS_DENIED.has(tool)) return deny(`notion-${tool} is never allowed: nothing is deleted, archived, moved or duplicated (hard rule 8)`);
+  if (ALWAYS_DENIED.has(tool)) return deny(`notion-${tool} is never allowed: nothing is deleted, archived, moved or duplicated (P51: only remove.mjs trashes, and only Claims and Tag decisions rows)`);
   const hit = protectedMention(toolInput, protectedIds);
   if (hit) return deny(`the call mentions the protected id ${hit}; real tables and the old trial are never written (hard rule 10)`);
   const editor = editorWrite(tool, toolInput, names, statusValues);
@@ -231,14 +231,14 @@ export function decide(input, root = AGENT_ROOT, options = {}) {
     if (!registered.has(pageId)) return deny(`the page ${pageId} is not a registered setup page`);
     const command = String(toolInput.command ?? '');
     if (!['insert_content', 'update_content', 'replace_content'].includes(command)) return deny(`only content commands are allowed on a setup page; got "${command || 'none'}"`);
-    if (toolInput.allow_deleting_content === true) return deny('a content replace may not delete child pages or databases (hard rule 8)');
+    if (toolInput.allow_deleting_content === true) return deny('a content replace may not delete child pages or databases (P51: only remove.mjs trashes, and only Claims and Tag decisions rows)');
     return ask(`${command} on a registered setup page while runs/SETUP exists`);
   }
   if (SCHEMA_TOOLS.has(tool)) {
     const target = normId(toolInput.parent?.page_id ?? toolInput.parent_page_id ?? toolInput.database_id ?? toolInput.data_source_id ?? toolInput.view_id ?? '');
     const dataSource = normId(toolInput.data_source_id ?? '');
     if (!(registered.has(target) || registered.has(dataSource))) return deny(`the target ${target || dataSource || '(none)'} is not a registered setup page or table`);
-    if (tool === 'update-data-source' && (toolInput.in_trash === true || 'in_trash' in toolInput)) return deny('a table is never trashed (hard rule 8)');
+    if (tool === 'update-data-source' && (toolInput.in_trash === true || 'in_trash' in toolInput)) return deny('a table is never trashed (P51: only remove.mjs trashes, and only Claims and Tag decisions rows)');
     return ask(`notion-${tool} on a registered setup target while runs/SETUP exists`);
   }
   return deny(`notion-${tool} is not something the session may do`);

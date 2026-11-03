@@ -31,7 +31,8 @@
           "required": ["creates", "updates"],
           "properties": {
             "creates": { "type": "integer", "minimum": 0 },
-            "updates": { "type": "integer", "minimum": 0 }
+            "updates": { "type": "integer", "minimum": 0 },
+            "trashes": { "type": "integer", "minimum": 1, "description": "Present only in a plan of the remove script that trashes rows (P51)." }
           }
         }
       }
@@ -39,7 +40,8 @@
     "op": {
       "oneOf": [
         { "$ref": "#/definitions/createOp" },
-        { "$ref": "#/definitions/updateOp" }
+        { "$ref": "#/definitions/updateOp" },
+        { "$ref": "#/definitions/trashOp" }
       ]
     },
     "createOp": {
@@ -53,6 +55,18 @@
         "properties": { "$ref": "#/definitions/plainValues" },
         "expect": { "$ref": "#/definitions/plainValues" },
         "children": { "$ref": "#/definitions/blocks" }
+      }
+    },
+    "trashOp": {
+      "type": "object",
+      "description": "P51: move one row to Notion's trash. Only a plan of the remove script may hold it, and only on claims and tag_decisions (lib/plan.mjs checkPlan). It carries no properties.",
+      "additionalProperties": false,
+      "required": ["op", "table", "key", "page_id"],
+      "properties": {
+        "op": { "type": "string", "const": "trash" },
+        "table": { "$ref": "#/definitions/table" },
+        "key": { "type": "string", "minLength": 1 },
+        "page_id": { "type": "string", "minLength": 1 }
       }
     },
     "updateOp": {

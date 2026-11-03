@@ -2,8 +2,8 @@
 // root page to "Claim tagger", makes the page "Feedback Distillation MVP (archive, to 27 Oct 2026)" under it, and moves the eight old objects into that page:
 // the three sub-pages (Structure proposal, Demos, Demo tests) and the five old tables (Rulebook copy, Claims copy, Tag decisions, Rule changes, Agent settings).
 //
-// Hard rule 8 as amended by P9: nothing is ever deleted or trashed, and only setup, in a builder session, may move the agent's own pages and tables within
-// the hub. This file is the only place that calls movePage and moveDatabase, and it moves nothing but the eight objects that config.json names, only when
+// The archive step, P9: this file never deletes or trashes anything (P51: only remove.mjs trashes, and only Claims and Tag decisions rows), and only setup, in a
+// builder session, may move the agent's own pages and tables within the hub. This file is the only place that calls movePage and moveDatabase, and it moves nothing but the eight objects that config.json names, only when
 // they sit directly on the hub page, only into the Archive page. Everything it moves becomes protected (archiveConfigChange).
 //
 //   knownObjects(config)                  -> [{ key, kind: 'page' | 'database', id, data_source_id }]  the eight old objects, read from config.json (id null for a placeholder)

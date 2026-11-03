@@ -44,7 +44,7 @@
 //   setup.mjs root [--title <name>]                       find or make the v2 page under the live hub (notion.root_parent_page_id) and write it into config.json as notion.parent_page_id
 //                                                         and notion.setup_page_parents; the title is the structure's hub title, else --title; run again it adopts and changes nothing
 //
-//   The archive (needs the session; NOT part of "all"; decision P9, hard rule 8 as amended: nothing is deleted, only setup moves the agent's own pages and tables)
+//   The archive (needs the session; NOT part of "all"; decision P9, the archive step: nothing is deleted, only setup moves the agent's own pages and tables)
 //   setup.mjs archive [--plan-only]                       rename the root page to "Claim tagger", make the page "Feedback Distillation MVP (archive, to 27 Oct 2026)" under it with a
 //                                                         first line that links back to the hub, move the eight old objects into it (the pages Structure proposal, Demos and Demo
 //                                                         tests, and the five old tables), read every new parent back, then walk the old tree and write setup/archive.json (state

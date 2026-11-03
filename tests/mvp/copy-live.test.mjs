@@ -410,6 +410,65 @@ test('a re-run sends no write: the second plan has nothing to create or update, 
   assert.deepEqual(rows, EXPECTED, 'no row was created twice');
 });
 
+test('removed claims (P51): the Geo IDs in setup/removed-claims.json are skipped with their Tag decisions rows, the plan says how many, and a re-sync does not bring them back', async () => {
+  const w = makeWorld();
+  const list = (ids) => writeFileSync(join(w.root, 'setup', 'removed-claims.json'), `${JSON.stringify({ removed: ids.map((geo_id) => ({ geo_id, run_id: 'remove-run-1', date: '2026-11-03' })) }, null, 2)}\n`);
+  // g2 and g3 were removed from v2 (g2 in capitals: the Geo IDs are compared in one form), and so was a claim the first page does not have
+  list(['G2', 'g3', 'g-not-on-the-first-page']);
+  const planned = await w.run(['plan', '--run-id', RUN]);
+  assert.equal(planned.code, 0, planned.err);
+  assert.match(planned.out, /claims\s+source\s+3\s+create\s+3/, 'g1, g4 and g5');
+  assert.match(planned.out, /tag_decisions\s+source\s+6\s+create\s+6/, 'the four rows of g2 and g3 are left out; the orphan row zz stays');
+  assert.match(planned.out, /skipped \(removed claims, P51\): 2 Claims row\(s\) and 4 Tag decisions row\(s\) of the first page, because their Geo IDs are in setup\/removed-claims\.json \(3 listed;/);
+  const ops = w.planOps(RUN);
+  const keys = ops.filter((o) => o.table === 'claims').map((o) => o.key).sort();
+  assert.deepEqual(keys, ['g1', 'g4', 'g5']);
+  assert.deepEqual(ops.filter((o) => o.table === 'tag_decisions').map((o) => o.key).sort(), ['g1::Context-dependent', 'g1::Wordy', 'g4::Context-dependent', 'g4::Wordy', 'g5::Context-dependent', 'zz::Wordy']);
+  const summary = JSON.parse(readFileSync(join(w.root, 'runs', 'copy-live', RUN, 'summary.json'), 'utf8'));
+  assert.deepEqual(summary.removed, { listed: 3, claims: 2, tag_decisions: 4 });
+  // the decisions read from the first page are those of the claims that stay
+  assert.equal(summary.decided.claims, 1, 'g1 only: g2 was Reviewed but is gone');
+
+  const applied = await w.run(['apply', '--run', RUN]);
+  assert.equal(applied.code, 0, applied.err + applied.out);
+  assert.deepEqual(w.rows('tgt', 'claims').map((r) => r['Geo ID']).sort(), ['g1', 'g4', 'g5']);
+  assert.equal(w.rows('tgt', 'tag_decisions').length, 6);
+  assert.equal((await w.run(['check', '--run', RUN])).code, 0);
+
+  // a re-sync later: still nothing for them
+  const writes = w.fake.writes().length;
+  const again = await w.run(['plan', '--run-id', 'run-b']);
+  assert.equal(again.code, 0, again.err);
+  assert.match(again.out, /claims\s+source\s+3\s+create\s+0\s+update\s+0\s+same\s+3/);
+  assert.equal(w.planOps('run-b').length, 0, 'nothing to create: the removed claims are not brought back');
+  assert.equal((await w.run(['apply', '--run', 'run-b'])).code, 0);
+  assert.equal(w.fake.writes().length, writes);
+
+  // restore takes the Geo IDs out of the list: the next plan creates them again
+  list([]);
+  const back = await w.run(['plan', '--run-id', 'run-c']);
+  assert.equal(back.code, 0, back.err);
+  assert.match(back.out, /claims\s+source\s+5\s+create\s+2/);
+  assert.doesNotMatch(back.out, /skipped \(removed claims/, 'an empty list says nothing');
+});
+
+test('removed claims (P51): a list that cannot be read stops the plan (exit 2) before it writes; without the file nothing is skipped and the plan says nothing about it', async () => {
+  const w = makeWorld();
+  writeFileSync(join(w.root, 'setup', 'removed-claims.json'), '{ "removed": "g1" }');
+  const writes = w.fake.writes().length;
+  const bad = await w.run(['plan', '--run-id', RUN]);
+  assert.equal(bad.code, 2);
+  assert.match(bad.err, /removed-claims\.json is not valid/);
+  assert.equal(w.fake.writes().length, writes);
+  assert.equal(existsSync(join(w.root, 'runs', 'copy-live', RUN, 'plan.jsonl')), false);
+  rmSync(join(w.root, 'setup', 'removed-claims.json'));
+  const fine = await w.run(['plan', '--run-id', 'run-b']);
+  assert.equal(fine.code, 0, fine.err);
+  assert.match(fine.out, /claims\s+source\s+5\s+create\s+5/);
+  assert.doesNotMatch(fine.out, /skipped \(removed claims/);
+  assert.deepEqual(JSON.parse(readFileSync(join(w.root, 'runs', 'copy-live', 'run-b', 'summary.json'), 'utf8')).removed, { listed: 0, claims: 0, tag_decisions: 0 });
+});
+
 test('a re-run after the loop changed agent columns plans nothing for them; a new first-page row is still created', async () => {
   const w = makeWorld();
   await copyAll(w);

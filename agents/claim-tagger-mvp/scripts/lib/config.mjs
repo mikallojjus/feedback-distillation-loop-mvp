@@ -15,6 +15,7 @@
 //                                                  setup: true also what a create made by the one-time setup may fill
 //   addableProperties(config)                   -> Set of the columns a plan of the add script (ADD_SCRIPT) may write to a NEW claims row: the key and CLAIMS_GEO_COLUMNS (P35)
 //   copyLiveProperties(config, table)           -> Set of the columns a plan of the copy-live script (COPY_LIVE_SCRIPT, v2 only) may write to a table, editor columns included (P47)
+//   REMOVE_SCRIPT, TRASHABLE_TABLES             -> the one script whose plans may trash rows (remove.mjs, P51) and the two tables it may trash (claims, tag_decisions)
 //   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the exceptions of hard rule 1):
 //                                                  Agent is right, Tag outcome and Your note on tag_decisions (TD_EDITOR), Editor wording on rule_changes,
 //                                                  Paused on agent_settings; [] for the others (claims has none on v2)
@@ -462,6 +463,15 @@ export function addableProperties(config) {
  * gives a plan with this script name (and only that) the columns of copyLiveProperties, and only on a config with "profile": "v2". It never writes Agent is right, a protected table or id, and a plan has no way to delete.
  */
 export const COPY_LIVE_SCRIPT = 'copy-live';
+
+/**
+ * The script whose plans may TRASH rows (decision P51): scripts/remove.mjs. checkPlan gives a plan with this script name (and only that) the op "trash", only on a config with "profile": "v2",
+ * only on the rows of TRASHABLE_TABLES, never on a protected id or an id of setup/first-page.json. A plan of this script holds nothing but trash ops.
+ */
+export const REMOVE_SCRIPT = 'remove';
+
+/** The tables whose rows a plan of the remove script may trash (P51): Claims and Tag decisions. Nothing else is ever trashed by a script. */
+export const TRASHABLE_TABLES = Object.freeze(['claims', 'tag_decisions']);
 
 /** The name of the column that holds the agent's view of a decision on v2 (STRUCTURE-V2.md, P45): "Agent reading" on the first page. */
 export const V2_VIEW_COLUMN = TD.view;

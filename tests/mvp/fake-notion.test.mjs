@@ -538,6 +538,40 @@ test('nothing is ever archived or trashed through the fake', async () => {
   assert.equal(fake.rows(db).length, 1);
 });
 
+test('allowTrash (P51): a row goes to the trash and comes back; a trashed row leaves every query, still answers GET, and refuses edits; the flag follows the version', async () => {
+  const { fake, db, ds } = world({ allowTrash: true });
+  const a = fake.addRow(db, row(1));
+  const b = fake.addRow(db, row(2));
+  // the old version: either name of the flag
+  assert.equal((await patch(fake, `/pages/${a}`, { archived: true })).status, 200);
+  const trashed = await get(fake, `/pages/${a}`);
+  assert.equal(trashed.body.in_trash, true);
+  assert.equal(trashed.body.archived, true);
+  assert.deepEqual(fake.trashed(db), [a]);
+  assert.equal(fake.rows(db).length, 1, 'rows() and plainRows() show the live rows');
+  assert.deepEqual((await post(fake, `/databases/${db}/query`, {})).body.results.map((p) => p.id), [b]);
+  assert.deepEqual((await post(fake, `/data_sources/${ds}/query`, {}, { version: DS })).body.results.map((p) => p.id), [b]);
+  const edit = await patch(fake, `/pages/${a}`, { properties: { Claim: { title: text('Changed') } } });
+  assert.equal(edit.status, 400, 'a trashed row cannot be edited');
+  assert.match(edit.body.message, /in the trash/);
+  // back out with in_trash
+  assert.equal((await patch(fake, `/pages/${a}`, { in_trash: false })).status, 200);
+  assert.equal(fake.page(a).in_trash, false);
+  assert.deepEqual(fake.trashed(db), []);
+  assert.equal(fake.rows(db).length, 2);
+  // the builder version has in_trash only: archived is refused, and the page object has no archived field
+  assert.equal((await patch(fake, `/pages/${a}`, { archived: true }, { version: VIEWS })).status, 400);
+  assert.equal((await patch(fake, `/pages/${a}`, { in_trash: true }, { version: VIEWS })).status, 200);
+  const seen = await get(fake, `/pages/${a}`, { version: VIEWS });
+  assert.equal(seen.body.in_trash, true);
+  assert.equal('archived' in seen.body, false);
+  // both names that disagree, and a flag that is not a boolean, are refused; a page that is not a row of a table cannot be trashed
+  assert.equal((await patch(fake, `/pages/${b}`, { archived: true, in_trash: false })).status, 400);
+  assert.equal((await patch(fake, `/pages/${b}`, { in_trash: 'yes' })).status, 400);
+  assert.equal((await patch(fake, `/pages/${fake.addPage({ title: 'Loose' })}`, { in_trash: true })).status, 400);
+  assert.equal((await call(fake, 'DELETE', `/pages/${b}`)).status, 404, 'there is still no DELETE');
+});
+
 // ---- queries ---------------------------------------------------------------------------------------------------------------------------
 
 test('a query pages with start_cursor as an offset and page_size, in creation order', async () => {

@@ -31,8 +31,8 @@ const posts = (fake, path) => fake.requests.filter((r) => r.method === 'POST' &&
  * A world with the fresh structure file written (full-page tables, the hub block), the options of the Geo columns set from the pick (setup.mjs structure --options-from), a builder session
  * open and the tables built (with the hub page's link lines). `old: true` takes the structure of the first build instead (inline tables, no hub, Claims copy) and sets no options.
  */
-async function built({ pick, taxonomy, audit, old = false } = {}) {
-  const w = newWorld({ structure: old ? true : 'fresh' });
+async function built({ pick, taxonomy, audit, old = false, fakeOptions } = {}) {
+  const w = newWorld({ structure: old ? true : 'fresh', ...(fakeOptions ? { fakeOptions } : {}) });
   assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
   const inputs = writeInputs(join(w.root, 'inputs'), { ...(pick ? { pick } : {}), ...(taxonomy ? { taxonomy } : {}), ...(audit ? { audit } : {}) });
   mkdirSync(join(w.root, 'setup'), { recursive: true });
@@ -1169,6 +1169,72 @@ for (const applied of [false, true]) {
     assert.deepEqual(readJson(join(w.root, 'runs', 'builder', 'verify.json')).differences, []);
   });
 }
+
+test('verify with removed claims (P51): the Geo IDs of setup/removed-claims.json are expected to be absent, a pick claim that was removed is no missing row, and one that is still there is a difference', async () => {
+  const w = await filled({ fakeOptions: { allowTrash: true } });
+  const listFile = join(w.root, 'setup', 'removed-claims.json');
+  const list = (ids) => writeFileSync(listFile, `${JSON.stringify({ removed: ids.map((geo_id) => ({ geo_id, run_id: 'remove-run-1', date: '2026-11-03' })) }, null, 2)}\n`);
+  const rest = restClient(w.fake);
+  const ids = rowsOf(w, 'claims').map((x) => x['Geo ID']);
+  assert.equal(ids.length, 13);
+  const [a, b, c] = [rowsOf(w, 'claims')[2], rowsOf(w, 'claims')[3], rowsOf(w, 'claims')[4]];
+  const verify = async () => w.run(verifyArgs(w));
+
+  // two pick claims go to the trash (what remove.mjs does)
+  await rest.trashPage(a.page_id);
+  await rest.trashPage(b.page_id);
+  // no list yet: the pick claims are missing rows, and the count is off
+  const unlisted = await verify();
+  assert.equal(unlisted.code, 2);
+  const unlistedText = unlisted.err.join('\n');
+  assert.match(unlistedText, /claims: row count - 11 rows in the Claims table, 13 in the pick/);
+  assert.match(unlistedText, new RegExp(`claims: missing row - the claim ${a['Geo ID']} is not in the Claims table`));
+  assert.match(unlistedText, new RegExp(`claims: missing row - the claim ${b['Geo ID']} is not in the Claims table`));
+
+  // with the list: expected absent, the row count expectation drops them, nothing else changes
+  list([b['Geo ID'], a['Geo ID'].toUpperCase()]);
+  const clean = await verify();
+  assert.equal(clean.code, 0, clean.text);
+  assert.match(clean.out.join('\n'), /verify: no differences/);
+  assert.match(clean.out[0], /verify: rows rulebook 2, claims 11, /);
+  assert.match(clean.out.join('\n'), /verify: removed on purpose and absent, as expected \(setup\/removed-claims\.json\): 2/);
+  const report = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
+  assert.equal(report.ok, true);
+  assert.equal(report.removed_absent, 2);
+  assert.equal(report.requests.writes, 0, 'verify only read');
+
+  // a list entry for a Geo ID that is not a pick claim and not in Claims is absent too (a claim that was added later and removed)
+  list([a['Geo ID'], b['Geo ID'], 'f'.repeat(32)]);
+  const later = await verify();
+  assert.equal(later.code, 0, later.text);
+  assert.equal(readJson(join(w.root, 'runs', 'builder', 'verify.json')).removed_absent, 3);
+
+  // a removed claim that is still in Claims is a difference, and only that one: not an extra row, not a missing one, not an added one
+  list([a['Geo ID'], b['Geo ID'], c['Geo ID']]);
+  const still = await verify();
+  assert.equal(still.code, 2);
+  const stillText = still.err.join('\n');
+  assert.match(stillText, new RegExp(`claims: removed row - the claim ${c['Geo ID']} was removed \\(setup/removed-claims\\.json\\) but is still in the Claims table`));
+  assert.match(stillText, /verify: 1 difference\(s\)/);
+  assert.equal(readJson(join(w.root, 'runs', 'builder', 'verify.json')).removed_absent, 2);
+
+  // the count of a table that has other differences names the removals; a row added after setup is still counted as before
+  list([a['Geo ID'], b['Geo ID']]);
+  w.fake.addRow(tableEntries(w.root).claims.database_id, { 'Geo Name': 'An extra claim', 'Geo ID': 'extra-1' });
+  w.fake.addRow(tableEntries(w.root).claims.database_id, { 'Geo Name': 'Added later', 'Geo ID': 'e'.repeat(32) });
+  const extra = await verify();
+  assert.equal(extra.code, 2);
+  const extraText = extra.err.join('\n');
+  assert.match(extraText, /claims: row count - 12 rows in the Claims table besides the 1 added after setup, 11 expected \(13 in the pick, 2 of them removed on purpose\)/);
+  assert.match(extraText, /claims: extra row - the claim extra-1 is in the Claims table but not in the pick/);
+  assert.equal(readJson(join(w.root, 'runs', 'builder', 'verify.json')).added_after_setup, 1);
+
+  // a list that cannot be read is a difference of its own, not silence
+  writeFileSync(listFile, '{ "removed": "no" }');
+  const broken = await verify();
+  assert.equal(broken.code, 2);
+  assert.match(broken.err.join('\n'), /claims: input - setup\/removed-claims\.json: .*removed-claims\.json is not valid/);
+});
 
 test('verify finds an edited Rulebook row, an edited claim, an edited settings row and an extra row', async () => {
   const w = await filled();

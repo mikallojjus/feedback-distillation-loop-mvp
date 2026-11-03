@@ -1,10 +1,11 @@
 // Plans: the only thing that may become a Notion write (CONTRACTS section 8, hard rule 1).
 //
-//   newPlan({ runId, script, rubricEdition, config?, now? })    -> a builder: create(), update(), ops, header(), write(dir), readPlan
+//   newPlan({ runId, script, rubricEdition, config?, now? })    -> a builder: create(), update(), trash() (P51), ops, header(), write(dir), readPlan
 //   readPlan(dir)                                                -> { header, ops, dir, file } read from <dir>/plan.jsonl, every line validated
 //   checkPlan(plan, config, { setup, root })                     -> { ok, problems, counts } before any request is made
 //   applyPlan({ plan, dir, client, config, schemas, pulled,      -> { code, done, failed, skipped, mismatches, uncertain, unchecked,
-//              log, setup, root, now })                              created, created_by_table, already_done, stopped, ledger, lists }
+//              log, setup, root, now })                              created, created_by_table, trashed_by_table, already_done, stopped, ledger, lists }
+//   firstPageIds(root)                                           -> Set of the normalised table ids in setup/first-page.json (the ids no trash op may name)
 //   isDemoRoot(root)                                             -> true for a state folder directly under .../runs/demos/ (a practice page)
 //   readLedger(dir)                                              -> Map of op_index -> the last ledger line of that op
 //   compareWritten(planned, props, schema)                       -> the columns whose value read back differs from what was written
@@ -13,6 +14,12 @@
 // op per line { op, table, key, page_id (update only), properties, expect, children } (schemas/plan.schema.json). Values are plain:
 // strings, numbers, booleans, null, lists of strings. The tables are rulebook, claims, tag_decisions, rule_changes and
 // agent_settings, and a create carries its key column in its properties (the builder adds it when it is given the config).
+//
+// Trash (decision P51). A third op, { op: "trash", table, key, page_id }, moves one row to Notion's trash. checkPlan allows it only in a plan whose header names the script "remove",
+// only on a v2 config, only on the tables claims and tag_decisions, and never on a protected id, an id of setup/first-page.json or the id of a table or page of the agent. A trash op carries
+// no properties. applyPlan trashes a page only when the pull it was given holds that page under that key (or the page is in the trash already, which counts as done), looks at a row of Tag
+// decisions first (a person who filled Tag outcome, Your note or Agent is right since the plan was made stops the run: stopped.reason "person_set"), reads every page back with
+// retrievePage (in the trash by in_trash or archived), and writes the same ledger line as for a create or an update, so a stopped run goes on without sending a done step again.
 //
 // applyPlan is the only code that turns a plan into requests. It checks the plan again, makes sure the plan file on disk is the plan
 // it is about to send, encodes every value with the table's schema before the first request, then sends the ops in order through the
@@ -27,10 +34,12 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import {
-  ADD_SCRIPT, COPY_LIVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, TD_EDITOR, addableProperties, copyLiveProperties, editorColumns, isV2, tableEntry, writableProperties,
+  ADD_SCRIPT, COPY_LIVE_SCRIPT, REMOVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, TD_EDITOR, TRASHABLE_TABLES, addableProperties, copyLiveProperties, editorColumns, isProtected, isV2, tableEntry,
+  writableProperties,
 } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { appendJsonl, readJson, readJsonl, writeTextAtomic } from './jsonl.mjs';
+import { isInTrash } from './notion-rest.mjs';
 import { decodePage, encodeProperties, normId, sameValue } from './notion-values.mjs';
 import { agentRoot, codeFile } from './paths.mjs';
 import { validate } from './validate.mjs';
@@ -108,7 +117,7 @@ const headerProblems = (line) => validate(branch('headerLine'), line).errors;
 
 /** Messages for one op line. */
 function opProblems(op) {
-  const ref = op?.op === 'create' ? 'createOp' : op?.op === 'update' ? 'updateOp' : 'op';
+  const ref = op?.op === 'create' ? 'createOp' : op?.op === 'update' ? 'updateOp' : op?.op === 'trash' ? 'trashOp' : 'op';
   return validate(branch(ref), op).errors;
 }
 
@@ -118,7 +127,13 @@ function planParts(plan) {
   return { header, ops: plan.ops };
 }
 
-const countOps = (ops) => ({ creates: ops.filter((o) => o?.op === 'create').length, updates: ops.filter((o) => o?.op === 'update').length });
+// `trashes` is in the counts only when the plan trashes something (P51), so the header of every other plan reads as it always did
+function countOps(ops) {
+  const counts = { creates: ops.filter((o) => o?.op === 'create').length, updates: ops.filter((o) => o?.op === 'update').length };
+  const trashes = ops.filter((o) => o?.op === 'trash').length;
+  if (trashes > 0) counts.trashes = trashes;
+  return counts;
+}
 
 function* stringsIn(value) {
   if (typeof value === 'string') yield value;
@@ -184,6 +199,16 @@ export function newPlan({ runId, script, rubricEdition = null, config = null, no
     return op;
   }
 
+  // P51: one row to Notion's trash. It carries no properties; checkPlan allows it only in a plan of the remove script, on claims and tag_decisions
+  function trash(table, key, pageId) {
+    if (!nonEmpty(table)) throw new TypeError('plan: the table must be a name');
+    if (!nonEmpty(key)) throw new TypeError(`plan: ${table}: the key must be a non-empty string`);
+    if (!nonEmpty(pageId)) throw new TypeError(`plan: ${table} "${key}": a trash op needs the page_id of the row`);
+    const op = { op: 'trash', table, key, page_id: pageId };
+    ops.push(op);
+    return op;
+  }
+
   const header = () => ({ plan: { run_id: runId, script, created_at: createdAt, rubric_edition: rubricEdition ?? null, counts: countOps(ops) } });
 
   function write(dir) {
@@ -200,7 +225,27 @@ export function newPlan({ runId, script, rubricEdition = null, config = null, no
     return file;
   }
 
-  return { create, update, ops, header, write, readPlan };
+  return { create, update, trash, ops, header, write, readPlan };
+}
+
+/**
+ * The ids of the first page's tables (setup/first-page.json: database_id and data_source_id of its five tables), normalised: the ids no trash op may name (P51). The file is the root's own copy,
+ * else the agent folder's. Throws when it cannot be read or holds no id, so that a check never passes for want of a list.
+ */
+export function firstPageIds(root = agentRoot()) {
+  const file = codeFile(root, 'setup', 'first-page.json');
+  let tables;
+  try {
+    tables = readJson(file).tables;
+  } catch (e) {
+    throw new PlanError(`setup/first-page.json cannot be read (${e.message}), so the ids of the first page cannot be ruled out`);
+  }
+  const ids = new Set();
+  for (const entry of Object.values(isPlain(tables) ? tables : {})) {
+    for (const field of ['database_id', 'data_source_id']) if (nonEmpty(entry?.[field])) ids.add(normId(entry[field]));
+  }
+  if (ids.size === 0) throw new PlanError('setup/first-page.json holds no table id, so the ids of the first page cannot be ruled out');
+  return ids;
 }
 
 /** Read <dir>/plan.jsonl: { header (the first line), ops, dir, file }. Throws PlanError when the file is missing, torn or has a line that fails the schema. */
@@ -228,6 +273,12 @@ export function readPlan(dir) {
 const SCHEMA_WORDS = new Map([
   ['$.page_id: missing required property', 'an update needs the page_id of the row'],
   ['$.page_id: unexpected property', 'a create must not carry a page_id'],
+]);
+const TRASH_WORDS = new Map([
+  ['$.page_id: missing required property', 'a trash op needs the page_id of the row'],
+  ['$.properties: unexpected property', 'a trash op carries no properties'],
+  ['$.expect: unexpected property', 'a trash op carries no expect'],
+  ['$.children: unexpected property', 'a trash op carries no page content (children)'],
 ]);
 
 /**
@@ -260,6 +311,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
   }
   const addPlan = header?.plan?.script === ADD_SCRIPT;
   const copyPlan = header?.plan?.script === COPY_LIVE_SCRIPT;
+  const removePlan = header?.plan?.script === REMOVE_SCRIPT;
   const needles = protectedNeedles(config);
   const seen = new Set();
   const named = (i, op) => `op ${i + 1} (${typeof op?.table === 'string' ? op.table : 'no table'}${nonEmpty(op?.key) ? ` "${short(op.key, 40)}"` : ''})`;
@@ -268,12 +320,52 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
   else {
     problems.push(...headerProblems(header).map((p) => `header: ${p}`));
     if (copyPlan && !isV2(config)) problems.push('header: a plan of the copy-live script may only be checked against the v2 profile (config.json has no "profile": "v2")');
+    if (removePlan && !isV2(config)) problems.push('header: a plan of the remove script may only be checked against the v2 profile (config.json has no "profile": "v2")');
     const counts = header.plan?.counts;
     if (isPlain(counts) && Number.isInteger(counts.creates) && Number.isInteger(counts.updates) && !isDeepStrictEqual(counts, countOps(ops))) {
       const real = countOps(ops);
-      problems.push(`header: the counts say ${counts.creates} creates and ${counts.updates} updates, but the ops hold ${real.creates} and ${real.updates}`);
+      const trashes = (c) => (c.trashes ? ` and ${c.trashes} trashes` : '');
+      problems.push(`header: the counts say ${counts.creates} creates and ${counts.updates} updates${trashes(counts)}, but the ops hold ${real.creates} and ${real.updates}${trashes(real)}`);
     }
   }
+
+  // What is wrong with one trash op (P51): not in a plan of the remove script, not on claims or tag_decisions, not a page id, a protected id, an id of the first page, or the id of a table or of
+  // a page the tables hang under. (The ops of a plan on disk are also checked against the pull when they are sent: applyPlan trashes only a page the pull holds under that key.)
+  let firstIds;
+  let ownIds;
+  const trashProblems = (op) => {
+    const out = [];
+    if (!removePlan) out.push('a trash op is only allowed in a plan of the remove script (P51)');
+    if (!TRASHABLE_TABLES.includes(op.table)) out.push(`only rows of ${TRASHABLE_TABLES.join(' and ')} can be trashed, not rows of ${op.table}`);
+    const flat = normId(op.page_id);
+    if (!/^[0-9a-f]{32}$/.test(flat)) {
+      out.push('page_id is not a Notion page id');
+      return out;
+    }
+    if (isProtected(config, op.page_id) || needles.includes(flat)) out.push('this page is in the protected lists of config.json, so it is never trashed');
+    try {
+      firstIds ??= firstPageIds(root);
+      if (firstIds.has(flat)) out.push('this id belongs to the first page (setup/first-page.json), which is never written');
+    } catch (e) {
+      out.push(e.message);
+    }
+    if (ownIds === undefined) {
+      const n = config?.notion ?? {};
+      ownIds = new Set([
+        ...TABLES.flatMap((t) => {
+          const e = tableEntryOrNull(config, t);
+          return e ? [e.database_id, e.data_source_id] : [];
+        }),
+        n.parent_page_id, n.root_parent_page_id, ...(Array.isArray(n.setup_page_parents) ? n.setup_page_parents : []),
+      ].filter((x) => nonEmpty(x) && !isPlaceholder(x)).map((x) => normId(x)));
+    }
+    if (ownIds.has(flat)) out.push('this id is a table or a page of the agent, not a row: only rows are trashed');
+    const entry = tableEntryOrNull(config, op.table);
+    if (entry && [entry.database_id, entry.data_source_id].some((x) => typeof x === 'string' && needles.includes(normId(x)))) {
+      out.push('this table is in the protected lists of config.json, so it is never written');
+    }
+    return out;
+  };
 
   ops.forEach((op, i) => {
     const add = (msg) => problems.push(`${named(i, op)}: ${msg}`);
@@ -281,8 +373,12 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
       problems.push(`op ${i + 1}: expected an object`);
       return;
     }
-    if (op.op !== 'create' && op.op !== 'update') {
-      add('op must be "create" or "update"');
+    if (op.op !== 'create' && op.op !== 'update' && op.op !== 'trash') {
+      add('op must be "create" or "update" (or "trash", in a plan of the remove script)');
+      return;
+    }
+    if (removePlan && op.op !== 'trash') {
+      add('a plan of the remove script may only trash rows of the claims and tag_decisions tables (it never creates or updates a row)');
       return;
     }
     if (!TABLES.includes(op.table)) {
@@ -291,7 +387,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     }
     const shape = opProblems(op);
     if (shape.length) {
-      for (const p of shape) add(SCHEMA_WORDS.get(p) ?? `not a valid op line: ${p}`);
+      for (const p of shape) add((op.op === 'trash' ? TRASH_WORDS : SCHEMA_WORDS).get(p) ?? `not a valid op line: ${p}`);
       return;
     }
 
@@ -299,6 +395,12 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     const id = `${op.table}\u0000${op.key}`;
     if (seen.has(id)) add('the key appears twice in this plan (one op per row)');
     seen.add(id);
+
+    // the one allowance of decision P51: a plan of the remove script (the header names the script) may TRASH rows of the claims and tag_decisions tables, and nothing else
+    if (op.op === 'trash') {
+      for (const p of trashProblems(op)) add(p);
+      return;
+    }
     if (op.op === 'update' && op.children !== undefined) add('page content (children) can only go with a create');
 
     // the one narrow allowance of decision P35: a plan of the add script (the header names the script) may CREATE rows of the claims table with the key and the Geo columns,
@@ -480,6 +582,7 @@ export async function applyPlan({
   }
   if (!nonEmpty(dir)) throw new TypeError('applyPlan: dir, the run folder, is required');
   const { ops } = planParts(plan);
+  if (ops.some((o) => o?.op === 'trash') && typeof client.trashPage !== 'function') throw new TypeError('applyPlan: the plan trashes rows, so the Notion client must have trashPage');
 
   // 1. the plan is checked again here: nothing the check refuses is ever sent
   const checked = checkPlan(plan, config, { setup, root });
@@ -501,7 +604,7 @@ export async function applyPlan({
   }
   ops.forEach((op, i) => {
     const schema = schemas?.[op.table];
-    if (!schema?.properties) return;
+    if (!schema?.properties || op.op === 'trash') return; // a trash op carries no values to encode
     try {
       encodeProperties(op.properties, schema);
       for (const c of Object.keys(op.expect ?? {})) if (!schema.properties[c]) throw new Error(`expect names "${c}", which is not a column of the table`);
@@ -539,6 +642,10 @@ export async function applyPlan({
   // reads a page back and compares what the plan holds for it; never throws
   async function readBack(op, pageId) {
     try {
+      if (op.op === 'trash') {
+        // P51: the page must say it is in the trash, by either flag (a version that has only one of them answers with that one)
+        return isInTrash(await client.retrievePage(pageId)) ? { read_back: 'ok', error: null } : { read_back: 'mismatch', error: 'read-back mismatch: the page is not in the trash' };
+      }
       const found = decodePage(await client.retrievePage(pageId), schemas[op.table]);
       const diffs = compareWritten(op.properties, found.props, schemas[op.table]);
       if (!diffs.length) return { read_back: 'ok', error: null };
@@ -566,6 +673,53 @@ export async function applyPlan({
         // written on an earlier start but never confirmed: look again, do not write again
         record(i, { page_id: prev.page_id, status: 'done', sent: prev.sent ?? null, ...(await readBack(op, prev.page_id)) });
       }
+      continue;
+    }
+
+    if (op.op === 'trash') {
+      // P51. The page is trashed only when the pull of this run holds it under this key (so it is a row of the table named in the plan, never a page of the first page or any other),
+      // and a row of Tag decisions only while no person has filled one of its three editor columns. A page that is in the trash already counts as done and is not sent again.
+      let failure = null;
+      let refused = false;
+      let taken = null;
+      let wasTrashed = false;
+      let sent = null;
+      try {
+        const row = rowFor(pulled, op.table, op.key);
+        const inPull = row !== null && normId(row.page_id) === normId(op.page_id);
+        const refuse = (why) => Object.assign(new Error(`refused: ${why}`), { refused: true });
+        if (!pulledHas(pulled, op.table)) throw refuse(`the pull of ${op.table} was not given, so the page cannot be matched to a row`);
+        if (row !== null && !inPull) throw refuse(`the pull holds a different page for this key (${row.page_id ?? 'no page id'}), not the one in the plan`);
+        if (!inPull || op.table === 'tag_decisions') {
+          const fresh = await client.retrievePage(op.page_id); // not in the pull: it may be in the trash already; a row of Tag decisions: the last look at the editor columns
+          if (isInTrash(fresh)) wasTrashed = true;
+          else if (!inPull) throw refuse(`this page is not a row of ${op.table} in the pull, so it is not trashed`);
+          else taken = TD_EDITOR.find((c) => filled(decodePage(fresh, schema).props[c])) ?? null;
+        }
+        if (!wasTrashed && !taken) {
+          await client.trashPage(op.page_id);
+          sent = 'trash';
+        }
+      } catch (e) {
+        failure = e;
+        refused = e?.refused === true;
+      }
+      if (failure) {
+        consecutive += 1;
+        record(i, { page_id: op.page_id, status: 'failed', sent: refused ? null : 'trash', error: short(failure.message ?? String(failure), 400) });
+        if (refused) stopped = { op_index: i, key: op.key, reason: 'refused' };
+        else if (failure.status === 401 || failure.status === 403) stopped = { op_index: i, key: op.key, reason: 'notion_refused' };
+        else if (consecutive >= MAX_CONSECUTIVE_FAILURES) stopped = { op_index: i, key: op.key, reason: 'failures_in_a_row' };
+        continue;
+      }
+      consecutive = 0;
+      if (taken) {
+        // a person decided this row since the plan was made: nothing more is trashed, and the plan has to be made again
+        record(i, { page_id: op.page_id, status: 'skipped', error: `skipped: a person set "${taken}"` });
+        stopped = { op_index: i, key: op.key, reason: 'person_set' };
+        continue;
+      }
+      record(i, { page_id: op.page_id, status: 'done', sent, ...(await readBack(op, op.page_id)) });
       continue;
     }
 
@@ -637,7 +791,7 @@ export async function applyPlan({
   // 6. the state of the plan, from the ledger
   const result = {
     code: EXIT.OK, ok: true, done: 0, failed: 0, skipped: 0, mismatches: 0, uncertain: 0, unchecked: 0, pending: 0, already_done: already,
-    created: {}, created_by_table: {}, stopped, ledger: ledgerFile,
+    created: {}, created_by_table: {}, trashed_by_table: {}, stopped, ledger: ledgerFile,
     lists: { failed: [], skipped: [], mismatches: [], unchecked: [], uncertain: [] },
   };
   ops.forEach((op, i) => {
@@ -661,6 +815,7 @@ export async function applyPlan({
           result.created[op.key] = line.page_id;
           (result.created_by_table[op.table] ??= {})[op.key] = line.page_id;
         }
+        if (op.op === 'trash' && line.page_id && line.read_back === 'ok') (result.trashed_by_table[op.table] ??= {})[op.key] = line.page_id;
         break;
       case 'failed':
         result.failed += 1;

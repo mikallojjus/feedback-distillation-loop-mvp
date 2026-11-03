@@ -57,14 +57,27 @@ test('plan: a create op and an update op', () => {
   ok(op, update());
   ok(op, update({ expect: undefined, children: [] }));
   for (const table of ['tag_decisions', 'rule_changes', 'agent_settings', 'rulebook', 'claims']) ok(op, create({ table }), table);
-  bad(op, create({ table: 'runs' }), /does not match any of the 2 allowed schemas/);
-  bad(op, update({ page_id: undefined }), /does not match any of the 2 allowed schemas/, 'an update needs the page');
-  bad(op, create({ page_id: '0a9e0000-0000-4000-8000-000000000001' }), /does not match any of the 2 allowed schemas/, 'a create has no page yet');
-  bad(op, { ...create(), op: 'delete' }, /does not match any of the 2 allowed schemas/);
+  bad(op, create({ table: 'runs' }), /does not match any of the 3 allowed schemas/);
+  bad(op, update({ page_id: undefined }), /does not match any of the 3 allowed schemas/, 'an update needs the page');
+  bad(op, create({ page_id: '0a9e0000-0000-4000-8000-000000000001' }), /does not match any of the 3 allowed schemas/, 'a create has no page yet');
+  bad(op, { ...create(), op: 'delete' }, /does not match any of the 3 allowed schemas/);
   bad(op, { ...create(), op: 'upsert' }, /does not match/);
   bad(op, create({ key: '' }), /does not match/);
   bad(op, { ...create(), properties: undefined }, /does not match/);
   bad(op, create({ note: 'extra' }), /does not match/, 'a typo in a field name is an error');
+});
+
+test('plan: a trash op (P51) names the row and carries nothing else', () => {
+  const trash = (extra = {}) => ({ op: 'trash', table: 'claims', key: 'geo-a', page_id: '0a9e0000-0000-4000-8000-000000000001', ...extra });
+  ok(op, trash());
+  ok(op, trash({ table: 'tag_decisions', key: 'geo-a::Debate' }));
+  bad(op, trash({ page_id: undefined }), /does not match any of the 3 allowed schemas/, 'a trash op needs the page');
+  bad(op, trash({ properties: {} }), /does not match/, 'a trash op carries no properties');
+  bad(op, trash({ expect: {} }), /does not match/);
+  bad(op, trash({ children: [] }), /does not match/);
+  bad(op, trash({ key: '' }), /does not match/);
+  ok(header, { plan: { ...headerLine().plan, counts: { creates: 0, updates: 0, trashes: 3 } } }, 'the header counts the trashes when there are any');
+  bad(header, { plan: { ...headerLine().plan, counts: { creates: 0, updates: 0, trashes: 0 } } }, /counts.trashes: must be >= 1/);
 });
 
 test('plan: property values are plain values', () => {

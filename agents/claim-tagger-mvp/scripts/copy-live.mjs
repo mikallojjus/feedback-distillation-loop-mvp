@@ -20,6 +20,8 @@
 // under only when it sets a decision the v2 row does not have yet; Rule changes: Editor wording, and Status when the first page says Approved or Rejected; Agent settings: Paused. Existing Rulebook and
 // Claims rows, and every agent column, are never updated. A non-empty editor value of v2 that differs from what the source would write is a conflict: it is kept, reported, and written only when `plan` is given --overwrite-editor-values.
 // Agent is right is never written. Nothing is deleted: rows of the target that the source does not have are left alone.
+// Removed claims (P51). setup/removed-claims.json lists the Geo IDs that remove.mjs trashed from v2. The plan leaves out every first-page Claims row with such a Geo ID and every first-page Tag decisions row
+// whose Key starts with one, so a re-sync cannot bring them back; it prints how many it skipped, and summary.json holds the counts (removed).
 //
 // Mapping (the task of 30 Oct). Rulebook: the columns of the Rulebook copy. Claims: the nine Geo columns and the agent's eight (Agent tags and Tags waiting as relations to the v2 Rulebook pages with the
 // same Name; Agent reading becomes Agent's view of your decision); never Verified tags, Review status, Challenged tags notes or the columns editors added. Tag decisions: one row per row of the first
@@ -47,6 +49,7 @@ import { clientFromConfig, countRequests, requestLogger } from './lib/notion-res
 import { decodePage, normId } from './lib/notion-values.mjs';
 import { agentRoot, codeFile, isMain, runId as makeRunId } from './lib/paths.mjs';
 import { PlanError, applyPlan, checkPlan, compareWritten, newPlan, readPlan } from './lib/plan.mjs';
+import { RemovedError, geoKey, readRemoved } from './lib/removed.mjs';
 import { richTextFromPieces, withLinkedSources } from './lib/setup-steps.mjs';
 import { richTextPieces } from './pull.mjs';
 
@@ -182,7 +185,7 @@ function plainOf(props, column, type) {
  * Everything the plan is made of. source and target are { [table]: { entry, schema, rows } } as readTable gives them. Returns { plan (the builder of lib/plan.mjs), summary }. Pure apart from the
  * plan builder: nothing is read or written.
  */
-export function buildPlan({ config, firstPage, source, target, overwrite = false, runId, now = () => new Date() }) {
+export function buildPlan({ config, firstPage, source, target, overwrite = false, removed = new Set(), runId, now = () => new Date() }) {
   const src = firstPage.tables;
   const cols = src.claims.columns;
   const wc = src.claims.write_columns;
@@ -213,6 +216,19 @@ export function buildPlan({ config, firstPage, source, target, overwrite = false
   const srcRulebook = indexRows(source.rulebook, src.rulebook.key, 'the first page\'s Rulebook', warnings);
   const srcClaims = indexRows(source.claims, src.claims.key, 'the first page\'s Claims', warnings);
   const srcLedger = indexRows(source.tag_decisions, src.tag_decisions.key, 'the first page\'s Tag decisions', warnings);
+  // P51: a claim that remove.mjs trashed (setup/removed-claims.json) is not brought back: its first-page Claims row and its first-page Tag decisions rows are left out of the copy
+  const skipped = { claims: [], tag_decisions: [] };
+  for (const geoId of [...srcClaims.keys()]) {
+    if (!removed.has(geoKey(geoId))) continue;
+    skipped.claims.push(geoId);
+    srcClaims.delete(geoId);
+  }
+  for (const key of [...srcLedger.keys()]) {
+    const geoId = keyGeoId(key);
+    if (geoId === null || !removed.has(geoKey(geoId))) continue;
+    skipped.tag_decisions.push(key);
+    srcLedger.delete(key);
+  }
   const srcChanges = indexRows(source.rule_changes, src.rule_changes.key, 'the first page\'s Rule changes', warnings);
   const srcSettings = indexRows(source.agent_settings, src.agent_settings.key, 'the first page\'s Agent settings', warnings);
   const tgt = {
@@ -382,6 +398,7 @@ export function buildPlan({ config, firstPage, source, target, overwrite = false
     tables: stats,
     decided: { rows: decided.size, claims: new Set([...decided.values()].map((d) => keyGeoId(d.key))).size },
     row_status: statusCounts,
+    removed: { listed: removed.size, claims: skipped.claims.length, tag_decisions: skipped.tag_decisions.length },
     conflicts,
     warnings,
   };
@@ -479,7 +496,14 @@ export async function plan(opts = {}) {
   const target = await readTargets(ctx, client);
   pausedInNotion(target.agent_settings);
   const source = await readSources(ctx, client);
-  const { plan: built, summary } = buildPlan({ config: ctx.config, firstPage: ctx.firstPage, source, target, overwrite: opts.overwriteEditorValues === true, runId: id, now: ctx.now });
+  let removed;
+  try {
+    removed = readRemoved(ctx.root).ids;
+  } catch (e) {
+    if (e instanceof RemovedError) throw new Stop(EXIT.INVALID, e.message);
+    throw e;
+  }
+  const { plan: built, summary } = buildPlan({ config: ctx.config, firstPage: ctx.firstPage, source, target, overwrite: opts.overwriteEditorValues === true, removed, runId: id, now: ctx.now });
 
   const checked = checkPlan(built, ctx.config, { root: ctx.root });
   if (!checked.ok) throw new Stop(EXIT.INVALID, `the plan is refused by the check and was not written:\n- ${checked.problems.slice(0, 10).join('\n- ')}${checked.problems.length > 10 ? `\n- ... and ${checked.problems.length - 10} more` : ''}`);
@@ -492,6 +516,9 @@ export async function plan(opts = {}) {
   for (const t of ORDER) {
     const s = summary.tables[t];
     lines.push(`  ${t.padEnd(14)} source ${String(s.source).padStart(4)}  create ${String(s.create).padStart(4)}  update ${String(s.update).padStart(4)}  same ${String(s.same).padStart(4)}${s.conflicts ? `  conflicts ${s.conflicts}` : ''}`);
+  }
+  if (summary.removed.listed > 0) {
+    lines.push(`  skipped (removed claims, P51): ${summary.removed.claims} Claims row(s) and ${summary.removed.tag_decisions} Tag decisions row(s) of the first page, because their Geo IDs are in setup/removed-claims.json (${summary.removed.listed} listed; remove.mjs trashed them from v2)`);
   }
   lines.push(`  decisions read from the first page: ${summary.decided.rows} row(s) of ${summary.decided.claims} claim(s); row status ${Object.entries(summary.row_status).map(([k, v]) => `${k} ${v}`).join(', ') || 'none'}`);
   if (summary.conflicts.length) {

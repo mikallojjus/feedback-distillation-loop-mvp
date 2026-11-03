@@ -123,9 +123,10 @@ const jsonl = (rows) => `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`;
  *   demoId      a practice page's state folder: the root is <temporary folder>/runs/demos/<demoId> (the way the walkthrough makes it), and the config is that demo's
  *   tableSpecs  { <table>: spec } to build a table with other columns than helpers/tables.mjs gives it (a Claims copy of the first build, say)
  *   configure   (config) => void, to change the config before it is written
+ *   fakeOptions options of createFakeNotion for this world, e.g. { allowTrash: true } for the tests of remove.mjs (P51)
  */
 export async function makeWorld({
-  claims = 12, rulebook, queue = [], audit = false, lessons = [], settings = {}, canaries = true, edition = '2026-10-16.1', demo = false, demoId = null, configure, claimRows = {}, tableSpecs = {},
+  claims = 12, rulebook, queue = [], audit = false, lessons = [], settings = {}, canaries = true, edition = '2026-10-16.1', demo = false, demoId = null, configure, claimRows = {}, tableSpecs = {}, fakeOptions = {},
 } = {}) {
   const base = mkdtempSync(join(tmpdir(), 'geo-agents-mvp-loop-'));
   dirs.push(base);
@@ -149,7 +150,7 @@ export async function makeWorld({
   configure?.(config);
   write(join(root, 'config.json'), config);
 
-  const fake = createFakeNotion({ protected: [...config.notion.protected_database_ids, ...config.notion.protected_page_ids] });
+  const fake = createFakeNotion({ protected: [...config.notion.protected_database_ids, ...config.notion.protected_page_ids], ...fakeOptions });
   for (const table of Object.keys(DB)) {
     fake.addDatabase({ id: DB[table], dataSourceId: entries[table].data_source_id, title: table, properties: restProps(tableSpecs[table] ?? TABLE_SPECS[table], entries.rulebook.data_source_id, { claims: entries.claims.data_source_id }) });
   }

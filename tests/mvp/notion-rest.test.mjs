@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   API_BASE, BACKOFF_MS, BUILDER_API_VERSION, DEFAULT_API_VERSION, MAX_RATE_LIMIT_RETRIES, MAX_SERVER_RETRIES, NotionError,
-  clientFromConfig, countRequests, createClient, loadToken, requestLogger, splitRichText,
+  clientFromConfig, countRequests, createClient, isInTrash, loadToken, requestLogger, splitRichText,
 } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
 
 const MODULE = fileURLToPath(new URL('../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs', import.meta.url));
@@ -81,13 +81,16 @@ test('clientFromConfig: opts.apiVersion beats the version in config.json, which 
   assert.equal(clientFromConfig(config, { repoRoot: tmp(), apiVersion: BUILDER_API_VERSION }), null, 'a folder without .env has no token');
 });
 
-test('the client offers exactly the old calls and the new ones, and nothing that takes anything away', () => {
+test('the client offers exactly the old calls and the new ones, and nothing that takes anything away but the trash pair of P51', () => {
   const client = createClient({ token: TOKEN, fetchImpl: async () => json({}) });
   assert.deepEqual(Object.keys(client).sort(), [
     'appendBlocks', 'createDatabase', 'createPage', 'createPageUnderPage', 'createView', 'listViews', 'moveDatabase', 'movePage', 'queryAll', 'queryDataSource', 'queryDataSourceAll',
-    'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'updateDataSource', 'updateDatabase', 'updatePage', 'updateParagraph', 'updateView',
+    'queryDatabase', 'retrieveBlockChildren', 'retrieveDataSource', 'retrieveDatabase', 'retrievePage', 'retrievePropertyItem', 'retrieveView', 'trashPage', 'untrashPage', 'updateDataSource',
+    'updateDatabase', 'updatePage', 'updateParagraph', 'updateView',
   ]);
-  for (const name of Object.keys(client)) assert.doesNotMatch(name, /delete|remove|archive|trash|restore/i, name);
+  // the only calls whose names speak of taking something away are the two of remove.mjs (P51)
+  const awayNames = Object.keys(client).filter((name) => /delete|remove|archive|trash|restore/i.test(name));
+  assert.deepEqual(awayNames.sort(), ['trashPage', 'untrashPage']);
 });
 
 // ---- createDatabase ------------------------------------------------------------------------------------------------------------
@@ -169,7 +172,7 @@ test('createDatabase is never sent twice: a 5xx, a 409, a network failure or an 
       (e) => e instanceof NotionError && e.name === 'NotionError' && e.code === 'create_uncertain' && e.retryable === true && e.status === status
         && /^Notion POST \/databases: /.test(e.message) && why.test(e.message)
         && /The database may exist in Notion already, so the create was not sent again/.test(e.message)
-        && /no script can remove a duplicate database \(hard rule 8\)/.test(e.message)
+        && /no script can remove a duplicate database \(P51: only remove\.mjs trashes, and only Claims and Tag decisions rows\)/.test(e.message)
         && !e.message.includes(TOKEN) && !String(e.stack).includes(TOKEN),
       label,
     );
@@ -464,7 +467,7 @@ test('updateDataSource: PATCH /data_sources/{id} with only what is given; string
 
 test('updateDataSource refuses to drop a column (a null property config), an empty update and a bad properties value, before any request', async () => {
   const r = rig([json({ object: 'data_source', id: 'ds-1' })]);
-  await assert.rejects(() => r.client.updateDataSource('ds-1', { properties: { Keep: { rich_text: {} }, Gone: null } }), (e) => e instanceof TypeError && /"Gone"/.test(e.message) && /hard rule 8/.test(e.message));
+  await assert.rejects(() => r.client.updateDataSource('ds-1', { properties: { Keep: { rich_text: {} }, Gone: null } }), (e) => e instanceof TypeError && /"Gone"/.test(e.message) && /P51: this client never takes a column or setting away/.test(e.message));
   await assert.rejects(() => r.client.updateDataSource('ds-1', {}), (e) => e instanceof TypeError && /give properties/.test(e.message));
   await assert.rejects(() => r.client.updateDataSource('ds-1'), TypeError);
   await assert.rejects(() => r.client.updateDataSource('ds-1', { properties: null }), TypeError);
@@ -497,7 +500,7 @@ test('updateView: PATCH /views/{id} with only what is given (the name, a filter,
 
 test('updateView refuses a null (it would clear the filter), an empty update, an empty name and a missing id, before any request', async () => {
   const r = rig([json({ object: 'view', id: 'v-1' })], { apiVersion: BUILDER_API_VERSION });
-  await assert.rejects(() => r.client.updateView('v-1', { filter: null }), (e) => e instanceof TypeError && /filter is null/.test(e.message) && /hard rule 8/.test(e.message));
+  await assert.rejects(() => r.client.updateView('v-1', { filter: null }), (e) => e instanceof TypeError && /filter is null/.test(e.message) && /P51: this client never takes a column or setting away/.test(e.message));
   await assert.rejects(() => r.client.updateView('v-1', { sorts: null }), TypeError);
   await assert.rejects(() => r.client.updateView('v-1', {}), (e) => e instanceof TypeError && /give a name/.test(e.message));
   await assert.rejects(() => r.client.updateView('v-1'), TypeError);
@@ -658,6 +661,67 @@ test('countRequests: no file is no requests; a line cut short or a line that is 
   const empty = join(dir, 'empty.jsonl');
   writeFileSync(empty, '');
   assert.equal(countRequests(empty).total, 0);
+});
+
+// ---- the trash (P51, remove.mjs) ---------------------------------------------------------------------------------------------------------
+
+test('trashPage and untrashPage: PATCH /pages/{id} with the one flag the version documents and nothing else (archived before 2026-03-11, in_trash from it on)', async () => {
+  for (const [apiVersion, flag] of [[undefined, 'archived'], ['2025-09-03', 'archived'], [BUILDER_API_VERSION, 'in_trash']]) {
+    const r = rig([json({ object: 'page', id: 'page-1', [flag]: true, in_trash: true })], { apiVersion });
+    const page = await r.client.trashPage('page-1');
+    assert.equal(page.id, 'page-1');
+    assert.equal(r.calls.length, 1);
+    assert.equal(r.calls[0].method, 'PATCH');
+    assert.equal(r.calls[0].url, `${API_BASE}/pages/page-1`);
+    assert.deepEqual(r.calls[0].body, { [flag]: true }, `${apiVersion ?? 'default'}: exactly the flag`);
+    await r.client.untrashPage('page-1');
+    assert.deepEqual(r.calls[1].body, { [flag]: false });
+    assert.equal(r.calls[1].method, 'PATCH');
+  }
+});
+
+test('trashPage: a page that is in the trash already counts as done; any other refusal is the error it was', async () => {
+  const inTrash = { object: 'page', id: 'page-1', in_trash: true, archived: true };
+  const refused = json({ object: 'error', status: 400, code: 'validation_error', message: "Can't edit block that is archived." }, { status: 400 });
+  // Notion refuses a second PATCH: the page is looked at (one GET) and is as asked
+  const a = rig([refused, json(inTrash)]);
+  assert.equal((await a.client.trashPage('page-1')).in_trash, true);
+  assert.deepEqual(a.calls.map((c) => c.method), ['PATCH', 'GET']);
+  // the same refusal of a page that is NOT in the trash is an error
+  const b = rig([refused, json({ object: 'page', id: 'page-1', in_trash: false, archived: false })]);
+  await assert.rejects(() => b.client.trashPage('page-1'), (e) => e instanceof NotionError && e.status === 400 && /archived/.test(e.message));
+  // a page that cannot be read afterwards keeps the first error; a 404 is not retried or hidden
+  const c = rig([refused, json({ object: 'error', status: 404, code: 'object_not_found', message: 'gone' }, { status: 404 })]);
+  await assert.rejects(() => c.client.trashPage('page-1'), (e) => e instanceof NotionError && e.status === 400);
+  const d = rig([json({ object: 'error', status: 404, code: 'object_not_found', message: 'gone' }, { status: 404 })]);
+  await assert.rejects(() => d.client.trashPage('page-1'), (e) => e instanceof NotionError && e.status === 404 && e.code === 'object_not_found');
+  assert.equal(d.calls.length, 1);
+  // restoring a page that is live already counts as done too
+  const live = { object: 'page', id: 'page-1', in_trash: false, archived: false };
+  const e = rig([refused, json(live)]);
+  assert.equal((await e.client.untrashPage('page-1')).in_trash, false);
+  // the id is required, and the token never shows up in an error
+  await assert.rejects(() => a.client.trashPage(''), TypeError);
+  await assert.rejects(() => a.client.untrashPage(undefined), TypeError);
+});
+
+test('trashPage: a server error is retried like any PATCH (the same flag asked twice does what asking once does), and a rate limit waits', async () => {
+  const r = rig([json({ object: 'error', status: 503, code: 'service_unavailable', message: 'busy' }, { status: 503 }), json({ object: 'error', status: 429, code: 'rate_limited', message: 'slow' }, { status: 429, headers: { 'retry-after': '2' } }), json({ object: 'page', id: 'page-1', archived: true, in_trash: true })]);
+  const page = await r.client.trashPage('page-1');
+  assert.equal(page.id, 'page-1');
+  assert.equal(r.calls.length, 3);
+  assert.ok(r.calls.every((c) => c.method === 'PATCH' && JSON.stringify(c.body) === '{"archived":true}'));
+  assert.deepEqual(r.sleeps.slice(-2), [BACKOFF_MS[0], 2000]);
+});
+
+test('isInTrash reads either flag', () => {
+  assert.equal(isInTrash({ in_trash: true }), true);
+  assert.equal(isInTrash({ archived: true }), true);
+  assert.equal(isInTrash({ in_trash: true, archived: false }), true);
+  assert.equal(isInTrash({ in_trash: false, archived: false }), false);
+  assert.equal(isInTrash({}), false);
+  assert.equal(isInTrash(null), false);
+  assert.equal(isInTrash(undefined), false);
 });
 
 // ---- moves (the archive step, P9) and positions ------------------------------------------------------------------------------------------
@@ -833,9 +897,16 @@ test('appendBlocks with more than 100 blocks keeps the order: every request afte
 
 // ---- nothing takes anything away ------------------------------------------------------------------------------------------------------
 
-test('the module source has no way to remove, hide or restore anything: no in_trash, no archived, no DELETE, only GET, POST and PATCH', () => {
-  const source = readFileSync(MODULE, 'utf8');
-  // The header may say "archive step" (the only reason a move exists, P9) and "trashes" (there is none); what must never appear is a field or a method that does it.
+test('the module source has no way to remove, hide or restore anything but the two marked trash blocks of P51: no in_trash, no archived, no DELETE, only GET, POST and PATCH', () => {
+  const whole = readFileSync(MODULE, 'utf8');
+  // P51: the trash flag (in_trash, or archived on the versions before the builder one) is written in exactly two marked places, setTrash and isInTrash; nothing else may mention it
+  const blocks = [...whole.matchAll(/\/\/ trash:begin[\s\S]*?\/\/ trash:end/g)];
+  assert.equal(blocks.length, 2, 'two marked trash blocks: setTrash/trashPage/untrashPage, and isInTrash');
+  assert.equal([...whole.matchAll(/\/\/ trash:begin/g)].length, 2);
+  assert.match(blocks[0][0], /request\('PATCH', path, usesPosition \? \{ in_trash: trashed \} : \{ archived: trashed \}\)/, 'the one write is a PATCH of the flag and nothing else');
+  assert.doesNotMatch(blocks[0][0], /request\(\s*['"`](?:POST|PUT)/);
+  const source = whole.replace(/\/\/ trash:begin[\s\S]*?\/\/ trash:end/g, '');
+  // The header may say "archive step" (the only reason a move exists, P9) and "trashes" (remove.mjs, P51); what must never appear is a field or a method that does it.
   const forbidden = [
     ['in_trash', /in_trash/i],
     ['archived', /archived/i],

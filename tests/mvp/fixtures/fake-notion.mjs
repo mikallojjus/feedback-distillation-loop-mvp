@@ -15,7 +15,7 @@
 //   fake.failNext(method, pathRegex, status, times = 1, { code, message, headers, applied })   answer the next matching requests with an error
 //   fake.protect(id) / fake.pendingFailures() / fake.createdOptions
 //
-// Routes (GET, POST and PATCH only; nothing is ever deleted or archived, an attempt is a 400, any other method a 404):
+// Routes (GET, POST and PATCH only; nothing is ever deleted, and nothing is archived or trashed unless createFakeNotion({ allowTrash: true }) says so (P51); an attempt is a 400, any other method a 404):
 //   GET /pages/{id}  POST /pages  PATCH /pages/{id}  GET /pages/{id}/properties/{property}
 //   GET /databases/{id}  POST /databases  POST /databases/{id}/query  GET /databases/{id}/views
 //   GET /data_sources/{id}  POST /data_sources/{id}/query  PATCH /data_sources/{id}
@@ -127,7 +127,12 @@ function chunk(s) {
 // filter that is sent keeps the new claims, whichever way Notion answers.
 // `ownView` is the name of the view that a table made by POST /databases starts with (Notion makes one: "Default view" through the API, "Table" in the app); null (the default) makes none, so the
 // views of a table are only the ones a test or a build creates. The views of a database are kept in tab order (position start, end or after_view), and GET /views lists them in that order.
-export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedIds = [], now = null, emptySelectIsNot = true, ownView = null } = {}) {
+// `allowTrash` (default false, P51) lets PATCH /pages/{id} move a row into the trash and out again, the way remove.mjs does: { in_trash: true|false } on any version, { archived: true|false }
+// on the versions before 2026-03-11 (that one removed the field). A trashed row is left out of every query (and of rows() / plainRows()), still answers GET /pages/{id} with the flag set, and
+// refuses a property update until it is restored. Without the option an attempt to trash is a 400, as it always was. fake.trashed(databaseId) lists the page ids in the trash.
+export function createFakeNotion({
+  token = DEFAULT_TOKEN, protected: protectedIds = [], now = null, emptySelectIsNot = true, ownView = null, allowTrash = false,
+} = {}) {
   let counter = 0;
   let clock = 0;
   const KIND = { page: '0a9e', database: '0db0', data_source: '0d50', block: '0b10', view: '0e10' };
@@ -412,8 +417,9 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
     const base = {
       object: 'page', id: rec.id, created_time: rec.created_time, last_edited_time: rec.last_edited_time,
       created_by: { object: 'user', id: rec.created_by }, last_edited_by: { object: 'user', id: rec.last_edited_by },
-      cover: null, icon: rec.icon ?? null, parent: null, archived: false, in_trash: false, is_locked: false, properties: null, url: urlOf(rec.id), public_url: null,
+      cover: null, icon: rec.icon ?? null, parent: null, archived: rec.in_trash === true, in_trash: rec.in_trash === true, is_locked: false, properties: null, url: urlOf(rec.id), public_url: null,
     };
+    if (versionAtLeast(version, VIEW_VERSION)) delete base.archived; // 2026-03-11 dropped the old name
     if (rec.dsId) {
       const ds = dataSources.get(normId(rec.dsId));
       base.parent = versionAtLeast(version, DATA_SOURCE_VERSION)
@@ -685,7 +691,8 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
     if (!versionAtLeast(version, min)) throw validation(`${what} needs Notion-Version ${min} or later, this request used ${version}.`);
   };
   const list = (kind, results, extra = {}) => ({ object: 'list', results, next_cursor: extra.next_cursor ?? null, has_more: extra.has_more ?? false, type: kind, [kind]: {} });
-  const rowsOf = (ds) => ds.rows.map((id) => pages.get(normId(id)));
+  const allRowsOf = (ds) => ds.rows.map((id) => pages.get(normId(id)));
+  const rowsOf = (ds) => allRowsOf(ds).filter((rec) => rec.in_trash !== true); // a query never shows a row in the trash
   const parentFor = (body) => {
     const parent = body.parent;
     if (!isPlain(parent)) throw validation('body.parent should be defined.');
@@ -725,7 +732,20 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
 
   function updatePageRoute(id, body) {
     const rec = getPage(id);
-    if (body.archived === true || body.in_trash === true) throw validation('This fake never archives or deletes anything; archived and in_trash may not be set to true.');
+    if (!allowTrash && (body.archived === true || body.in_trash === true)) throw validation('This fake never archives or deletes anything; archived and in_trash may not be set to true.');
+    let flag;
+    for (const field of ['archived', 'in_trash']) {
+      if (body[field] === undefined) continue;
+      if (typeof body[field] !== 'boolean') throw validation(`body.${field} should be a boolean, instead was ${JSON.stringify(body[field])}.`);
+      if (field === 'archived' && versionAtLeast(version, VIEW_VERSION)) throw validation('body.archived should not be present: the field is removed from Notion-Version 2026-03-11, use in_trash.');
+      if (flag !== undefined && flag !== body[field]) throw validation('archived and in_trash disagree.');
+      flag = body[field];
+    }
+    if (rec.in_trash === true && flag !== false && (body.properties !== undefined || body.icon !== undefined)) throw validation("Can't edit page properties because the page is in the trash; restore it first.");
+    if (flag !== undefined) {
+      if (flag && !rec.dsId) throw validation('This fake trashes the rows of a table only.');
+      rec.in_trash = flag;
+    }
     if (body.properties !== undefined) {
       if (rec.dsId) writeProperties(rec, dataSources.get(normId(rec.dsId)), body.properties);
       else {
@@ -838,7 +858,7 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
     }
     ds.properties = Object.fromEntries(defs.map((d) => [d.name, d]));
     for (const [from, to] of renames) {
-      for (const rec of rowsOf(ds)) {
+      for (const rec of allRowsOf(ds)) {
         if (from in rec.props) {
           rec.props[to] = rec.props[from];
           delete rec.props[from];
@@ -1175,6 +1195,11 @@ export function createFakeNotion({ token = DEFAULT_TOKEN, protected: protectedId
 
     rows(databaseId) {
       return rowsOf(dataSourceOfDatabase(databaseId)).map(pageObject);
+    },
+
+    /** The page ids of the rows of a table that are in the trash (allowTrash), in creation order. */
+    trashed(databaseId) {
+      return allRowsOf(dataSourceOfDatabase(databaseId)).filter((rec) => rec.in_trash === true).map((rec) => rec.id);
     },
 
     plainRows(databaseId) {

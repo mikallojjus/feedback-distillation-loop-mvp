@@ -17,13 +17,16 @@
 //            listViews (new), queryDatabase / queryAll, queryDataSource / queryDataSourceAll (new; all pages of a query, following the cursor)
 //   writes   createPage (a row), createPageUnderPage (new), createDatabase (new), createView (new), updatePage, updateDataSource (new), updateView (new:
 //            rename a view, or change its filter, sorts or configuration), appendBlocks (new: with a position), movePage (new), moveDatabase (new),
-//            updateDatabase (new: a table's description only)
+//            updateDatabase (new: a table's description only), trashPage and untrashPage (new, P51: for remove.mjs only; isInTrash(page) reads the answer)
 //
 // Moves. movePage (POST /pages/{id}/move) and moveDatabase (PATCH /databases/{id}) change the parent page of a page or a table that exists; each sends
 // the new parent and nothing else, and both need the builder API version. They exist for one job only: the archive step of setup (setup.mjs archive,
-// lib/archive.mjs), by hard rule 8 as amended by decision P9. Nothing is ever removed; only setup, in a builder session, may move the agent's own pages
-// and tables within the hub, and every move is read back. There is still no call or field in this file that deletes, trashes or archives anything: no
-// method but GET, POST and PATCH can be sent, and a test reads this file's source to keep it so.
+// lib/archive.mjs), decision P9. Only setup, in a builder session, may move the agent's own pages and tables within the hub, and every move is read back.
+//
+// Trash (decision P51). trashPage and untrashPage exist for scripts/remove.mjs only: a PATCH of one page with the trash flag, which sends nothing else; remove.mjs trashes rows of
+// Claims and Tag decisions through a plan that lib/plan.mjs checks (op "trash", script "remove"), reads every page back, and restores a run's rows with untrashPage. A page that is
+// in the state asked for counts as done. No other script calls them, and a test reads this file's source to keep the flag inside the two functions. There is no call in this file
+// that removes anything for good (Notion's API has none): no method but GET, POST and PATCH can be sent, and a test reads this file's source to keep it so.
 //
 // API versions. DEFAULT_API_VERSION is what every old call runs on. The data source calls need 2025-09-03 or later, and the database
 // and view calls need BUILDER_API_VERSION (the reference allows only that value for them): build a second client for those,
@@ -148,10 +151,10 @@ function queryString(params) {
 
 // What a create whose answer was lost may have made, and where to look for it: the second half of the create_uncertain message.
 function lostCreate(path, body) {
-  if (path === '/databases') return ['database', 'look for it under its parent page in Notion before creating it again; no script can remove a duplicate database (hard rule 8)'];
-  if (path === '/views') return ['view', 'list the views of the database (listViews) before creating it again; no script can remove a duplicate view (hard rule 8)'];
+  if (path === '/databases') return ['database', 'look for it under its parent page in Notion before creating it again; no script can remove a duplicate database (P51: only remove.mjs trashes, and only Claims and Tag decisions rows)'];
+  if (path === '/views') return ['view', 'list the views of the database (listViews) before creating it again; no script can remove a duplicate view (P51: only remove.mjs trashes, and only Claims and Tag decisions rows)'];
   if (body?.parent?.database_id !== undefined) return ['row', 'apply.mjs --run <id> --retry reads Notion again before it sends anything, and a row that did land is updated, not created twice'];
-  return ['page', 'look for it under its parent page in Notion before creating it again; no script can remove a duplicate page (hard rule 8)'];
+  return ['page', 'look for it under its parent page in Notion before creating it again; no script can remove a duplicate page (P51: only remove.mjs trashes, and only Claims and Tag decisions rows)'];
 }
 
 function brokenCursor(path, why) {
@@ -455,6 +458,33 @@ export function createClient({
 
   const updatePage = (pageId, { properties }) => request('PATCH', `/pages/${enc(pageId)}`, { properties });
 
+  // trash:begin
+  // P51. The trash flag is the one field the API version documents: `archived` before BUILDER_API_VERSION (the field those versions know; Notion calls it a deprecated alias of the
+  // newer name), `in_trash` from it on (2026-03-11 accepts only that one). The body holds that flag and nothing else. A page that already is in the state asked for counts as done.
+  async function setTrash(pageId, trashed, call) {
+    requireId(`${call}: pageId`, pageId);
+    const path = `/pages/${enc(pageId)}`;
+    try {
+      return await request('PATCH', path, usesPosition ? { in_trash: trashed } : { archived: trashed });
+    } catch (e) {
+      if (!(e instanceof NotionError) || e.status !== 400) throw e;
+      // Notion may refuse a second PATCH of a page that is in the state asked for: look at the page, and only that answer decides
+      let page;
+      try {
+        page = await request('GET', path);
+      } catch {
+        throw e;
+      }
+      if (isInTrash(page) === trashed) return page;
+      throw e;
+    }
+  }
+  /** New (P51, remove.mjs only). PATCH /pages/{id}: move one page to Notion's trash. Answers the page. */
+  const trashPage = (pageId) => setTrash(pageId, true, 'trashPage');
+  /** New (P51, remove.mjs restore only). PATCH /pages/{id}: take one page out of the trash again. Answers the page. */
+  const untrashPage = (pageId) => setTrash(pageId, false, 'untrashPage');
+  // trash:end
+
   /**
    * New. PATCH /data_sources/{id}: add or change properties, the title or the description; only what is given is sent. A property whose
    * config is null is refused here: the API takes that to mean "drop this column", and nothing in this client takes anything away.
@@ -466,7 +496,7 @@ export function createClient({
     if (properties !== undefined) {
       if (properties === null || typeof properties !== 'object' || Array.isArray(properties)) throw new TypeError('updateDataSource: properties must be an object of property configs');
       for (const [name, config] of Object.entries(properties)) {
-        if (config === null) throw new TypeError(`updateDataSource: the config of property "${name}" is null, which would drop that column; this client never takes anything away (hard rule 8)`);
+        if (config === null) throw new TypeError(`updateDataSource: the config of property "${name}" is null, which would drop that column; this client never takes anything away (P51: this client never takes a column or setting away)`);
       }
       body.properties = properties;
     }
@@ -486,7 +516,7 @@ export function createClient({
     const given = { name, filter, sorts, configuration };
     for (const [key, value] of Object.entries(given)) {
       if (value === undefined) continue;
-      if (value === null) throw new TypeError(`updateView: ${key} is null, which would clear it; this client never takes anything away (hard rule 8)`);
+      if (value === null) throw new TypeError(`updateView: ${key} is null, which would clear it; this client never takes anything away (P51: this client never takes a column or setting away)`);
       body[key] = value;
     }
     if (Object.keys(body).length === 0) throw new TypeError('updateView: give a name, a filter, sorts or a configuration');
@@ -496,7 +526,7 @@ export function createClient({
 
   /**
    * New. Move a page under another page: POST /pages/{id}/move with exactly { parent: { type: 'page_id', page_id } } (the page's sub-pages and tables go with
-   * it). Used by the archive step of setup only (hard rule 8 as amended by P9). A move names a fixed parent, so it is safe to send again: it is retried
+   * it). Used by the archive step of setup only (the archive step, P9). A move names a fixed parent, so it is safe to send again: it is retried
    * like a read. Needs BUILDER_API_VERSION; on another client it throws before anything is sent.
    */
   async function movePage(pageId, { parentPageId } = {}) {
@@ -540,9 +570,16 @@ export function createClient({
   return {
     queryDatabase, queryAll, retrieveDatabase, retrievePage, retrievePropertyItem, createPage, updatePage, appendBlocks,
     createDatabase, createPageUnderPage, createView, retrieveView, listViews, retrieveDataSource, queryDataSource, queryDataSourceAll,
-    updateDataSource, updateDatabase, updateParagraph, updateView, retrieveBlockChildren, movePage, moveDatabase,
+    updateDataSource, updateDatabase, updateParagraph, updateView, retrieveBlockChildren, movePage, moveDatabase, trashPage, untrashPage,
   };
 }
+
+// trash:begin
+/** True when a page object says it is in Notion's trash: `in_trash`, or `archived` (the older name; a version that has only one of them is read through that one). */
+export function isInTrash(page) {
+  return page?.in_trash === true || page?.archived === true;
+}
+// trash:end
 
 /**
  * NOTION_TOKEN from <repoRoot>/.env via process.loadEnvFile, or null when the file, the variable or a real value is

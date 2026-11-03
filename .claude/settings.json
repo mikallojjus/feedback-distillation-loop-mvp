@@ -41,6 +41,7 @@
       "Bash(node agents/claim-tagger-mvp/scripts/geo-pick.mjs:*)",
       "Bash(node agents/claim-tagger-mvp/scripts/rollback.mjs:*)",
       "Bash(node agents/claim-tagger-mvp/scripts/restore.mjs:*)",
+      "Bash(node agents/claim-tagger-mvp/scripts/remove.mjs:*)",
       "mcp__claude_ai_notion__notion-create-pages",
       "mcp__claude_ai_notion__notion-create-database",
       "mcp__claude_ai_notion__notion-update-data-source",

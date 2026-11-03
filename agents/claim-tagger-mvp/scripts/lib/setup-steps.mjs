@@ -42,6 +42,7 @@ import { splitRichText, countRequests } from './notion-rest.mjs';
 import { decodePage, normId, sameValue } from './notion-values.mjs';
 import { codeRoot } from './paths.mjs';
 import { AUDIT_PREFIX, PlanError, applyPlan, checkPlan, newPlan } from './plan.mjs';
+import { readRemoved } from './removed.mjs';
 import { buildRubric, nextEdition, parseExamples, readRubric, writeEdition } from './rubric.mjs';
 import { validate } from './validate.mjs';
 import { verifyArchive } from './archive.mjs';
@@ -986,6 +987,8 @@ function loadChecked(add, table, what, fn) {
 /**
  * Read everything back and compare: the structure, the row counts, the Rulebook against the taxonomy file field by field and against rubric/rubric.json by page id (one per tag), the claims
  * against the pick (Geo IDs, Geo columns, the links of Geo Sources), the seeded decisions, the Agent settings row. Writes runs/builder/verify.json.
+ * The Geo IDs of setup/removed-claims.json (remove.mjs, P51) are expected to be absent: a pick claim that was removed is not a missing row, the row-count expectation leaves it out, and a removed
+ * claim that is still in Claims is a difference ("removed row").
  */
 export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFile, audit: auditFile } = {}) {
   const { root, config } = ctx;
@@ -1018,6 +1021,7 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
   const data = {};
   const counts = {};
   let addedLater = 0; // Claims rows that are not in the pick: added after setup by /claim-tagger add
+  let removedAbsent = 0; // Geo IDs of setup/removed-claims.json that are absent from Claims, as they should be (P51)
   for (const key of TABLES) {
     const entry = tableEntry(config, key);
     if (!normId(entry.data_source_id).match(/^[0-9a-f]{32}$/)) continue; // verifyStructure said "missing table"
@@ -1072,6 +1076,8 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
     }
   }
 
+  // P51: the Geo IDs in setup/removed-claims.json (remove.mjs) are expected to be absent from Claims; one that is still there is a difference
+  const removed = loadChecked(add, 'claims', 'setup/removed-claims.json', () => readRemoved(root)) ?? { ids: new Set() };
   const pick = loadChecked(add, 'claims', 'the claims pick', () => readPick(claimsFile ?? defaultPath(root, PICK_FILE)));
   if (pick && data.claims) {
     const { ds, rows } = data.claims;
@@ -1080,15 +1086,25 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
     const wantIds = pick.rows.map((r) => r[entry.key]);
     // a row whose key is a Geo ID (32 hex characters) that is not in the pick was added after setup (/claim-tagger add, P35): it is not a difference, it is counted (verify.json
     // "added_after_setup", an information line). Any other row that is not in the pick is still an extra row. The Geo columns of an added row are not checked: they were read from Geo, not picked.
-    const addedAfterSetup = [...byId.keys()].filter((id) => !wantIds.includes(id) && /^[0-9a-f]{32}$/.test(id));
-    if (rows.length - addedAfterSetup.length !== pick.rows.length) {
+    // A claim of setup/removed-claims.json is in neither group: it is expected absent (a pick claim that was removed is not a missing row and is not counted in the pick), and a removed claim
+    // that is still in the table is a difference of its own, not an extra row or an added one.
+    const isRemoved = (id) => removed.ids.has(geoKey(id));
+    const removedPick = wantIds.filter(isRemoved);
+    const stillThere = [...byId.keys()].filter(isRemoved);
+    const addedAfterSetup = [...byId.keys()].filter((id) => !wantIds.includes(id) && /^[0-9a-f]{32}$/.test(id) && !isRemoved(id));
+    const expectedRows = pick.rows.length - removedPick.length;
+    if (rows.length - addedAfterSetup.length - stillThere.length !== expectedRows) {
+      const want = removedPick.length === 0 ? `${pick.rows.length} in the pick` : `${expectedRows} expected (${pick.rows.length} in the pick, ${removedPick.length} of them removed on purpose)`;
+      const have = rows.length - stillThere.length;
       add('claims', 'row count', addedAfterSetup.length === 0
-        ? `${rows.length} rows in the Claims table, ${pick.rows.length} in the pick`
-        : `${rows.length - addedAfterSetup.length} rows in the Claims table besides the ${addedAfterSetup.length} added after setup, ${pick.rows.length} in the pick`);
+        ? `${have} rows in the Claims table, ${want}`
+        : `${have - addedAfterSetup.length} rows in the Claims table besides the ${addedAfterSetup.length} added after setup, ${want}`);
     }
-    for (const id of wantIds) if (!byId.has(id)) add('claims', 'missing row', `the claim ${id} is not in the Claims table`);
-    for (const id of byId.keys()) if (!wantIds.includes(id) && !addedAfterSetup.includes(id)) add('claims', 'extra row', `the claim ${id} is in the Claims table but not in the pick`);
+    for (const id of stillThere) add('claims', 'removed row', `the claim ${id} was removed (setup/removed-claims.json) but is still in the Claims table`);
+    for (const id of wantIds) if (!byId.has(id) && !isRemoved(id)) add('claims', 'missing row', `the claim ${id} is not in the Claims table`);
+    for (const id of byId.keys()) if (!wantIds.includes(id) && !addedAfterSetup.includes(id) && !isRemoved(id)) add('claims', 'extra row', `the claim ${id} is in the Claims table but not in the pick`);
     addedLater = addedAfterSetup.length;
+    removedAbsent = removed.ids.size - stillThere.length;
     const notGeo = [...Object.values(entry.write_columns ?? {}), ...editorColumns(config, 'claims')];
     const geoColumns = columnsOf(root, 'claims').filter((c) => !notGeo.includes(c) && c !== entry.key);
     for (const want of pick.rows) {
@@ -1122,6 +1138,7 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
     for (const d of decisions) {
       const key = `${d.geo_id}::${TAG}`;
       const got = byKey.get(key);
+      if (!got && removed.ids.has(geoKey(d.geo_id))) continue; // removed on purpose (P51)
       if (!got) {
         add('tag_decisions', 'seeded row', `"${key}" is not in Tag decisions`);
         continue;
@@ -1133,7 +1150,8 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
       }
       if (!v2 && !text(got.props['Your reasoning']).startsWith(AUDIT_PREFIX)) add('tag_decisions', 'seeded row', `${key}: Your reasoning does not start with "${AUDIT_PREFIX}"`);
     }
-    if (rows.length < decisions.length) add('tag_decisions', 'row count', `${rows.length} rows in Tag decisions, at least ${decisions.length} seeded decisions expected`);
+    const expectedSeeded = decisions.filter((d) => !removed.ids.has(geoKey(d.geo_id))).length;
+    if (rows.length < expectedSeeded) add('tag_decisions', 'row count', `${rows.length} rows in Tag decisions, at least ${expectedSeeded} seeded decisions expected`);
   }
 
   // the audit's decisions on the claims themselves (migrate-decisions): Reviewed, the Applies tags in the relation, the audit prefix in the notes
@@ -1180,11 +1198,12 @@ export async function stepVerify(ctx, { taxonomy: taxonomyFile, claims: claimsFi
   if (requests.writes !== 0) add('requests', 'requests', `verify sent ${requests.writes} write request(s); it must only read`);
 
   const report = {
-    at: ctx.now().toISOString(), ok: differences.length === 0, differences, counts, ...(addedLater > 0 ? { added_after_setup: addedLater } : {}), requests: { total: requests.total, writes: requests.writes },
+    at: ctx.now().toISOString(), ok: differences.length === 0, differences, counts, ...(addedLater > 0 ? { added_after_setup: addedLater } : {}), ...(removedAbsent > 0 ? { removed_absent: removedAbsent } : {}), requests: { total: requests.total, writes: requests.writes },
   };
   writeJsonPretty(join(builderPaths(root).dir, 'verify.json'), report);
   const lines = [`verify: rows ${TABLES.filter((k) => k in counts).map((k) => `${k} ${counts[k]}`).join(', ')}; ${requests.total} request(s), ${requests.writes} write(s)`];
   if (addedLater > 0) lines.push(`verify: added after setup: ${addedLater}`);
+  if (removedAbsent > 0) lines.push(`verify: removed on purpose and absent, as expected (setup/removed-claims.json): ${removedAbsent}`);
   if (differences.length === 0) lines.push('verify: no differences');
   const errors = [];
   if (differences.length) {
