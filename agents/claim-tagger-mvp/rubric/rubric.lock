@@ -1,7 +1,7 @@
 {
-  "edition": "2026-11-03.1",
+  "edition": "2026-11-03.2",
   "rubric_hash": "sha256:fe8aa256658efca4",
-  "locked_at": "2026-11-03T14:04:56.231Z",
+  "locked_at": "2026-11-03T17:19:26.151Z",
   "tags": {
     "Context-dependent": "sha256:825d9e0cc540f37c",
     "Exact duplicate": "sha256:24eaa0e7485d8137",
@@ -98,5 +98,20 @@
       "Example Claims": "It is generally the case that Anthropic can be considered to be a company in the AI industry.\nIn terms of its overall effect, sleep deprivation is something that has a tendency to negatively impact the process of making decisions.\nAt the end of the day, the phenomenon of inflation basically works to reduce, over time, the purchasing power that money has.",
       "Counterpart": "Word-efficient"
     }
+  },
+  "judged": {
+    "Context-dependent": true,
+    "Exact duplicate": false,
+    "Factually challenged": false,
+    "Improper capitalization": true,
+    "Improperly sourced": false,
+    "Incorrect grammar": true,
+    "Multi-sentence": true,
+    "Poor wording": true,
+    "Semantically duplicated": false,
+    "Source inaccessible": false,
+    "Trailing period": true,
+    "Unsourced": false,
+    "Wordy": true
   }
 }

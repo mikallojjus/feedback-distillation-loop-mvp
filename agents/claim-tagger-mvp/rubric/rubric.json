@@ -1,11 +1,11 @@
 {
-  "edition": "2026-11-03.1",
-  "built_at": "2026-11-03T14:04:56.231Z",
+  "edition": "2026-11-03.2",
+  "built_at": "2026-11-03T17:19:26.151Z",
   "source": {
     "database_id": "12aa438db42c4d5b8b6752b2a26680f1",
     "data_source_id": "ad02bfbd4408492fb843256fc5002eed",
     "read_via": "rest",
-    "read_at": "2026-11-03T14:04:56.231Z"
+    "read_at": "2026-11-03T17:19:26.151Z"
   },
   "tags": [
     {

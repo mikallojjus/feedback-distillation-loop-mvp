@@ -1,0 +1,553 @@
+{
+  "edition": "2026-11-03.2",
+  "built_at": "2026-11-03T17:19:26.151Z",
+  "source": {
+    "database_id": "12aa438db42c4d5b8b6752b2a26680f1",
+    "data_source_id": "ad02bfbd4408492fb843256fc5002eed",
+    "read_via": "rest",
+    "read_at": "2026-11-03T17:19:26.151Z"
+  },
+  "tags": [
+    {
+      "name": "Context-dependent",
+      "page_id": "409273e2-14eb-81d5-8749-d5306bc4cf18",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": "Self-contained",
+      "description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
+      "when_to_use": "1. A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent.\n2. A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\", or a bare \"the ruling\" or \"the state\" that the claim does not specify) makes the claim Context-dependent, even when other entities in the claim are named; a bare reference to a particular event, decision or place is not a generic. The proper name of one specific institution, agency or court (a central bank, a commission) identifies itself and does not count. A bare 'the government' or 'the state' used generically for whoever governs, as in a general policy recommendation, is not an outside antecedent and does not count.\n3. A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\").\n4. Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent.\n5. Do not use for indefinites, time expressions, generics, or definites the claim itself resolves.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "A pronoun with no antecedent inside the claim (\"He said ...\", \"its predecessor\", \"they announced\") makes the claim Context-dependent."
+        },
+        {
+          "n": 2,
+          "text": "A definite reference that needs an outside antecedent to identify it (\"the vulnerabilities\", \"the discussions\", \"the recording\", \"the settlement terms\", \"the legal dispute\", \"recent actions\", or a bare \"the ruling\" or \"the state\" that the claim does not specify) makes the claim Context-dependent, even when other entities in the claim are named; a bare reference to a particular event, decision or place is not a generic. The proper name of one specific institution, agency or court (a central bank, a commission) identifies itself and does not count. A bare 'the government' or 'the state' used generically for whoever governs, as in a general policy recommendation, is not an outside antecedent and does not count."
+        },
+        {
+          "n": 3,
+          "text": "A descriptive definite that names a kind of thing but not which one (\"the Bitcoin ETF\", \"the major-bank stablecoin consortium\", \"the open-access version\", \"the infrastructure\", \"the new model\") makes the claim Context-dependent: the reader must already know which ETF, consortium, version or product is meant. A description that works as the name of one specific program, law or rule, so that only one thing fits it, already says which one and does not count; a description that more than one thing could fit (more than one campaign, more than one convention in the same city) still counts. Applies to countable things, not to abstract or mass nouns (\"the regulatory clearance\", \"the market\")."
+        },
+        {
+          "n": 4,
+          "text": "Test: could a reader who sees only this sentence say which specific thing each definite reference points at? If any answer is no, tag Context-dependent."
+        },
+        {
+          "n": 5,
+          "text": "Do not use for indefinites, time expressions, generics, or definites the claim itself resolves."
+        }
+      ],
+      "example_claims": [
+        "Open AI's initiative went well with the target group.",
+        "He said the new model outperforms its predecessor.",
+        "The company's revenue grew 40% after the launch.",
+        "Core Lightning developers are keeping the technical details of the vulnerabilities under embargo for two weeks.",
+        "The Commodity Futures Trading Commission did not comment specifically on the discussions.",
+        "The Bitcoin ETF successfully integrated Bitcoin into traditional brokerage accounts."
+      ],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-09-10",
+      "evidence": "https://app.notion.com/3cf273e214eb81f2a815e7a751512a07",
+      "work_tags": [
+        "Pipeline benchmark check",
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:825d9e0cc540f37c"
+    },
+    {
+      "name": "Exact duplicate",
+      "page_id": "409273e2-14eb-81ae-a343-fc7164623f68",
+      "category": null,
+      "polarity": null,
+      "status": null,
+      "counterpart": null,
+      "description": "Exactly the same claim already exists in one of the canonical spaces",
+      "when_to_use": "1. Use when a different claim entity with the same claim text is verified in at least one canonical Geo space.\n2. Compare the text exactly, ignoring only leading, trailing or repeated whitespace. Differences in wording, capitalization, punctuation or numbers are not exact matches under this rule.\n3. The same Geo entity appearing in multiple spaces is not a duplicate. The matching claim must have a different Geo ID; ignore the claim being checked itself.\n4. Identify the matching claim by its Geo ID or URL and canonical space. If lookup is unavailable or inconclusive, report Can’t tell rather than asserting a duplicate or a clean result.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when a different claim entity with the same claim text is verified in at least one canonical Geo space."
+        },
+        {
+          "n": 2,
+          "text": "Compare the text exactly, ignoring only leading, trailing or repeated whitespace. Differences in wording, capitalization, punctuation or numbers are not exact matches under this rule."
+        },
+        {
+          "n": 3,
+          "text": "The same Geo entity appearing in multiple spaces is not a duplicate. The matching claim must have a different Geo ID; ignore the claim being checked itself."
+        },
+        {
+          "n": 4,
+          "text": "Identify the matching claim by its Geo ID or URL and canonical space. If lookup is unavailable or inconclusive, report Can’t tell rather than asserting a duplicate or a clean result."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "corpus",
+      "judged": false,
+      "tag_hash": "sha256:24eaa0e7485d8137"
+    },
+    {
+      "name": "Factually challenged",
+      "page_id": "409273e2-14eb-8128-9e11-c0194585cd21",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "A claim that is contradicted or disputed by the evidence — its own attached source, or another source in the space, asserts the opposite of or materially undercuts the claim. Distinct from Improperly sourced (source simply does not cover the claim) — here the evidence actively pushes against it.",
+      "when_to_use": "Requires reading the source and, ideally, the wider record (source-reading tag); coverage-limited.\n1. Fires when evidence contradicts or materially disputes the claim's assertion.\n2. Does not fire merely because a source fails to support the claim (that is Improperly sourced).\n3. NOT-CHECKABLE where no source is attached or the host blocks fetching.\n4. STILL PROPOSED: on the 10 Sep fresh sample this tag fired on zero factual claims (curated claims are rarely contradicted by their own sources), so the definition is not yet exercised on a real positive case. Keep; validate on a claim that is genuinely contradicted before marking Verified.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Fires when evidence contradicts or materially disputes the claim's assertion."
+        },
+        {
+          "n": 2,
+          "text": "Does not fire merely because a source fails to support the claim (that is Improperly sourced)."
+        },
+        {
+          "n": 3,
+          "text": "NOT-CHECKABLE where no source is attached or the host blocks fetching."
+        },
+        {
+          "n": 4,
+          "text": "STILL PROPOSED: on the 10 Sep fresh sample this tag fired on zero factual claims (curated claims are rarely contradicted by their own sources), so the definition is not yet exercised on a real positive case. Keep; validate on a claim that is genuinely contradicted before marking Verified."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "source",
+      "judged": false,
+      "tag_hash": "sha256:a71dc3170b63686b"
+    },
+    {
+      "name": "Improper capitalization",
+      "page_id": "409273e2-14eb-81d8-af8c-fa42ec7b1005",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "A claim whose text breaks sentence casing: mid-sentence capitals on words that are not proper nouns, proper nouns left lowercase, or all-caps emphasis.",
+      "when_to_use": "1. Use when the first word is lowercase where normal sentence casing requires a capital.\n2. Use when ordinary words are capitalized mid-sentence without a grammatical or naming reason, including title-style capitalization or all-caps emphasis.\n3. Use when a proper name is miscapitalized, such as “microsoft” instead of “Microsoft”.\n4. Preserve established capitalization in names, acronyms and technical notation, such as “iPhone”, “NASA” and “pH”. Apply the tag only when the capitalization is clearly incorrect.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when the first word is lowercase where normal sentence casing requires a capital."
+        },
+        {
+          "n": 2,
+          "text": "Use when ordinary words are capitalized mid-sentence without a grammatical or naming reason, including title-style capitalization or all-caps emphasis."
+        },
+        {
+          "n": 3,
+          "text": "Use when a proper name is miscapitalized, such as “microsoft” instead of “Microsoft”."
+        },
+        {
+          "n": 4,
+          "text": "Preserve established capitalization in names, acronyms and technical notation, such as “iPhone”, “NASA” and “pH”. Apply the tag only when the capitalization is clearly incorrect."
+        }
+      ],
+      "example_claims": [
+        "peace Is Better than War.",
+        "The Company Announced Record Profits In The Third Quarter.",
+        "bitcoin's supply is CAPPED at 21 million coins."
+      ],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:e2ac4bbe3343a3e3"
+    },
+    {
+      "name": "Improperly sourced",
+      "page_id": "409273e2-14eb-8110-a091-db72577124ce",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": null,
+      "description": "A claim whose attached source, when read, does not actually support the claim's assertion — the source is present but the specific figure, event, or statement the claim makes is absent from or not established by it. Distinct from Unsourced, where no source is attached at all.",
+      "when_to_use": "Requires reading the source (source-reading tag), so it is coverage-limited, not a text-only judgment.\n1. Fires when the source is fetched and read and does not carry the claim's specific assertion (\"the price points the claim cites are not in the article\", \"the country coverage the claim states is not mentioned\").\n2. Does not fire when the source supports the claim's core assertion even if a minor secondary detail is unstated (treat that as supported).\n3. No attached source is Unsourced. An attached source that cannot be read is . Access failure alone never justifies Improperly sourced, Factually challenged, Unverified, or a contradiction verdict; never report unread content as a pass.\n4. Applies to factual claims; an opinion has no supporting source in the ordinary sense.\n5. Validated 10 Sep on a source-reading pass over the fresh sample: 71% of sourced claims were checkable; the tag fired correctly on every checkable mismatch.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Fires when the source is fetched and read and does not carry the claim's specific assertion (\"the price points the claim cites are not in the article\", \"the country coverage the claim states is not mentioned\")."
+        },
+        {
+          "n": 2,
+          "text": "Does not fire when the source supports the claim's core assertion even if a minor secondary detail is unstated (treat that as supported)."
+        },
+        {
+          "n": 3,
+          "text": "No attached source is Unsourced. An attached source that cannot be read is . Access failure alone never justifies Improperly sourced, Factually challenged, Unverified, or a contradiction verdict; never report unread content as a pass."
+        },
+        {
+          "n": 4,
+          "text": "Applies to factual claims; an opinion has no supporting source in the ordinary sense."
+        },
+        {
+          "n": 5,
+          "text": "Validated 10 Sep on a source-reading pass over the fresh sample: 71% of sourced claims were checkable; the tag fired correctly on every checkable mismatch."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-09-10",
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "source",
+      "judged": false,
+      "tag_hash": "sha256:cb55c30e4c69d570"
+    },
+    {
+      "name": "Incorrect grammar",
+      "page_id": "409273e2-14eb-81c8-93b0-edde69352345",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "Does not follow proper punctuation and grammar.",
+      "when_to_use": "1. Use when the claim contains a clear grammatical error, such as incorrect subject–verb agreement, an incorrect verb form, or a missing word required for a grammatical sentence.\n2. Use when punctuation is incorrect, such as a comma joining two independent sentences without a conjunction, a misused apostrophe, or unmatched quotation marks or brackets.\n3. A missing final period or multiple grammatically correct sentences does not trigger this tag; those formatting conventions are assessed separately.\n4. Apply only for a specific grammatical or punctuation defect. Accepted English variants, stylistic preferences and awkward wording alone do not qualify.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when the claim contains a clear grammatical error, such as incorrect subject–verb agreement, an incorrect verb form, or a missing word required for a grammatical sentence."
+        },
+        {
+          "n": 2,
+          "text": "Use when punctuation is incorrect, such as a comma joining two independent sentences without a conjunction, a misused apostrophe, or unmatched quotation marks or brackets."
+        },
+        {
+          "n": 3,
+          "text": "A missing final period or multiple grammatically correct sentences does not trigger this tag; those formatting conventions are assessed separately."
+        },
+        {
+          "n": 4,
+          "text": "Apply only for a specific grammatical or punctuation defect. Accepted English variants, stylistic preferences and awkward wording alone do not qualify."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:6946c207878a4eb2"
+    },
+    {
+      "name": "Multi-sentence",
+      "page_id": "409273e2-14eb-810c-907c-fab28aa2d876",
+      "category": "Format",
+      "polarity": "Classification",
+      "status": "Proposed",
+      "counterpart": "One sentence",
+      "description": "A claim written as two sentences.",
+      "when_to_use": "1. Use when the claim text contains two or more separate sentences.\n2. Count actual sentence boundaries. Periods within abbreviations, initials, decimal numbers or URLs do not create additional sentences.\n3. A single sentence with several clauses, a colon or a semicolon does not trigger this tag. A final period alone also does not trigger it.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when the claim text contains two or more separate sentences."
+        },
+        {
+          "n": 2,
+          "text": "Count actual sentence boundaries. Periods within abbreviations, initials, decimal numbers or URLs do not create additional sentences."
+        },
+        {
+          "n": 3,
+          "text": "A single sentence with several clauses, a colon or a semicolon does not trigger this tag. A final period alone also does not trigger it."
+        }
+      ],
+      "example_claims": [
+        "Anthropic released Claude Fable 5. It is the company's most capable model.",
+        "Inflation fell across the eurozone in 2024. The European Central Bank cut rates in response.",
+        "Geo stores claims as entities. Each claim can be debated."
+      ],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:a4967b8a3f810192"
+    },
+    {
+      "name": "Poor wording",
+      "page_id": "409273e2-14eb-81a2-819a-f32d65c4a599",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "The claim is poorly articulated and difficult to understand",
+      "when_to_use": "1. Use when confusing word choices, awkward sentence construction or unclear connections between ideas make the claim difficult to understand.\n2. Use when the wording permits materially different interpretations and the intended assertion cannot be identified clearly.\n3. Identify the wording that causes difficulty. Suggest a clearer rewrite only when the intended meaning is evident; otherwise explain the ambiguity rather than guessing.\n4. Technical language, length or an unfamiliar subject alone does not trigger this tag. If the only issue is missing outside context, use Context-dependent; if the meaning is clear but unnecessarily lengthy, use Wordy. Apply multiple tags only when each issue is independently present.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when confusing word choices, awkward sentence construction or unclear connections between ideas make the claim difficult to understand."
+        },
+        {
+          "n": 2,
+          "text": "Use when the wording permits materially different interpretations and the intended assertion cannot be identified clearly."
+        },
+        {
+          "n": 3,
+          "text": "Identify the wording that causes difficulty. Suggest a clearer rewrite only when the intended meaning is evident; otherwise explain the ambiguity rather than guessing."
+        },
+        {
+          "n": 4,
+          "text": "Technical language, length or an unfamiliar subject alone does not trigger this tag. If the only issue is missing outside context, use Context-dependent; if the meaning is clear but unnecessarily lengthy, use Wordy. Apply multiple tags only when each issue is independently present."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:d648dbf9fa676a1b"
+    },
+    {
+      "name": "Semantically duplicated",
+      "page_id": "409273e2-14eb-816b-adbd-ce0c4bc24393",
+      "category": null,
+      "polarity": null,
+      "status": null,
+      "counterpart": null,
+      "description": "A claim that states exactly the same thing already exists in one of the canonical spaces, even if worded differently",
+      "when_to_use": "1. Use when another claim entity in a canonical Geo space expresses the same assertion despite different wording.\n2. The claims must preserve the same entities, scope, time period, quantities, polarity, certainty, attribution and material conditions. A difference that changes the assertion prevents a duplicate verdict.\n3. Sharing a topic, supporting or opposing another claim, or making a broader or narrower assertion is not enough. Neither claim should add material information absent from the other.\n4. The matching claim must have a different Geo ID. The same entity appearing in multiple spaces is not a duplicate. For identical text under the Exact duplicate rules, use Exact duplicate instead.\n5. Identify the matching claim by its Geo ID or URL and canonical space, and briefly explain the equivalence. If lookup or comparison is unavailable or inconclusive, report Can’t tell.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when another claim entity in a canonical Geo space expresses the same assertion despite different wording."
+        },
+        {
+          "n": 2,
+          "text": "The claims must preserve the same entities, scope, time period, quantities, polarity, certainty, attribution and material conditions. A difference that changes the assertion prevents a duplicate verdict."
+        },
+        {
+          "n": 3,
+          "text": "Sharing a topic, supporting or opposing another claim, or making a broader or narrower assertion is not enough. Neither claim should add material information absent from the other."
+        },
+        {
+          "n": 4,
+          "text": "The matching claim must have a different Geo ID. The same entity appearing in multiple spaces is not a duplicate. For identical text under the Exact duplicate rules, use Exact duplicate instead."
+        },
+        {
+          "n": 5,
+          "text": "Identify the matching claim by its Geo ID or URL and canonical space, and briefly explain the equivalence. If lookup or comparison is unavailable or inconclusive, report Can’t tell."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "corpus",
+      "judged": false,
+      "tag_hash": "sha256:94b66e5adc6e309b"
+    },
+    {
+      "name": "Source inaccessible",
+      "page_id": "409273e2-14eb-812c-8cb4-cb526a026a50",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": null,
+      "description": "One or more attached sources cannot be accessed for review, so their contents cannot be assessed. This records an access problem without judging the claim’s truth, support, or contradiction.",
+      "when_to_use": "1. Use when an attached source cannot be read after reasonable access attempts, such as a blocked host, paywall, login requirement, dead link, or unreadable document.\n2. Identify the inaccessible source and any accessible sources separately; one blocked source does not mean all sources are blocked.\n3. If no source is attached, use Unsourced instead.\n4. Inaccessibility alone does not justify Improperly sourced, Factually challenged, Unverified, or a contradiction verdict. A separate readable source may independently justify another tag.\n5. Remove this access flag when the source becomes readable, then assess its support separately.\nEditorial rule confirmed by Mohammed on 11 October 2026; not an accuracy benchmark.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when an attached source cannot be read after reasonable access attempts, such as a blocked host, paywall, login requirement, dead link, or unreadable document."
+        },
+        {
+          "n": 2,
+          "text": "Identify the inaccessible source and any accessible sources separately; one blocked source does not mean all sources are blocked."
+        },
+        {
+          "n": 3,
+          "text": "If no source is attached, use Unsourced instead."
+        },
+        {
+          "n": 4,
+          "text": "Inaccessibility alone does not justify Improperly sourced, Factually challenged, Unverified, or a contradiction verdict. A separate readable source may independently justify another tag."
+        },
+        {
+          "n": 5,
+          "text": "Remove this access flag when the source becomes readable, then assess its support separately."
+        }
+      ],
+      "example_claims": [
+        "Access-limited examples from the audit, without a support verdict:",
+        "— attached source content could not be read.",
+        "— attached source content could not be read.",
+        "— one attached source remained unread; another was accessible."
+      ],
+      "geo_status": "To be created",
+      "geo_tag_id": null,
+      "verified_on": "2026-10-11",
+      "evidence": "https://app.notion.com/p/3f4273e214eb81ae9272c6f1e48bbd6c",
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "source",
+      "judged": false,
+      "tag_hash": "sha256:c85f324dd58c4321"
+    },
+    {
+      "name": "Trailing period",
+      "page_id": "409273e2-14eb-81f4-96e1-e62223fb472e",
+      "category": "Format",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": null,
+      "description": "A single-sentence claim whose title ends with a period, contrary to Geo’s claim-title formatting convention. The issue concerns the final punctuation, not the claim’s meaning or factual accuracy.",
+      "when_to_use": "1. Use when a single-sentence claim title ends with a full stop used to close the sentence. Ignore trailing whitespace when checking.\n2. Do not flag a period that belongs to an abbreviation, initial or URL rather than serving as sentence-ending punctuation.\n3. This is a formatting flag only. It does not imply that the claim is unclear, ungrammatical or factually incorrect. Assess claims containing multiple sentences under Multi-sentence.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when a single-sentence claim title ends with a full stop used to close the sentence. Ignore trailing whitespace when checking."
+        },
+        {
+          "n": 2,
+          "text": "Do not flag a period that belongs to an abbreviation, initial or URL rather than serving as sentence-ending punctuation."
+        },
+        {
+          "n": 3,
+          "text": "This is a formatting flag only. It does not imply that the claim is unclear, ungrammatical or factually incorrect. Assess claims containing multiple sentences under Multi-sentence."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:a55224589f5eb0df"
+    },
+    {
+      "name": "Unsourced",
+      "page_id": "409273e2-14eb-8172-bf48-ee1639198093",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Verified",
+      "counterpart": null,
+      "description": "A claim that has no Source relation attached on Geo. It is a completeness flag on the claim's provenance, independent of whether the claim is Factual or Opinion and of whether the content is correct; it only records that nothing backs the claim yet.",
+      "when_to_use": "Deterministic, not a language judgment: read the Claim's Sources relation on Geo, do not read the text.\n1. Fires when the Sources relation is empty.\n2. Does not fire when at least one Source is attached, regardless of whether that source actually supports the claim (that is Improperly sourced).\n3. Nature-agnostic: a claim can be Factual and Unsourced, or Opinion and Unsourced.\n4. Verified 10 Sep on a fresh 100-claim crypto sample: 9/100 unsourced; 91 carried a Source with a resolvable Web URL.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Fires when the Sources relation is empty."
+        },
+        {
+          "n": 2,
+          "text": "Does not fire when at least one Source is attached, regardless of whether that source actually supports the claim (that is Improperly sourced)."
+        },
+        {
+          "n": 3,
+          "text": "Nature-agnostic: a claim can be Factual and Unsourced, or Opinion and Unsourced."
+        },
+        {
+          "n": 4,
+          "text": "Verified 10 Sep on a fresh 100-claim crypto sample: 9/100 unsourced; 91 carried a Source with a resolvable Web URL."
+        }
+      ],
+      "example_claims": [],
+      "geo_status": "Implemented differently",
+      "geo_tag_id": "Not a tag on Geo: derived from the Claim having no Sources relation attached.",
+      "verified_on": "2026-09-10",
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "deterministic",
+      "judged": false,
+      "tag_hash": "sha256:cec26b68385b0a80"
+    },
+    {
+      "name": "Wordy",
+      "page_id": "409273e2-14eb-81ba-b07e-f10262c19158",
+      "category": "Quality",
+      "polarity": "Issue",
+      "status": "Proposed",
+      "counterpart": "Word-efficient",
+      "description": "A claim containing unnecessary words, redundant qualifiers, or drawn-out constructions. The same meaning would survive a clearly shorter rewrite.",
+      "when_to_use": "1. Use when unnecessary words, repetition, redundant qualifiers or drawn-out constructions can be removed without changing the claim’s meaning.\n2. Test with a clearly shorter rewrite. Preserve the same entities, quantities, dates, attribution, scope, uncertainty and conditions; shortening must not strengthen or weaken the assertion.\n3. Length alone does not trigger this tag. Do not flag a long claim when its words are needed to state the assertion precisely, and do not apply an arbitrary word-count limit.\n4. If the meaning is difficult to understand, assess Poor wording separately. Apply both tags only when the claim independently has unnecessary wording and a clarity problem.",
+      "rules": [
+        {
+          "n": 1,
+          "text": "Use when unnecessary words, repetition, redundant qualifiers or drawn-out constructions can be removed without changing the claim’s meaning."
+        },
+        {
+          "n": 2,
+          "text": "Test with a clearly shorter rewrite. Preserve the same entities, quantities, dates, attribution, scope, uncertainty and conditions; shortening must not strengthen or weaken the assertion."
+        },
+        {
+          "n": 3,
+          "text": "Length alone does not trigger this tag. Do not flag a long claim when its words are needed to state the assertion precisely, and do not apply an arbitrary word-count limit."
+        },
+        {
+          "n": 4,
+          "text": "If the meaning is difficult to understand, assess Poor wording separately. Apply both tags only when the claim independently has unnecessary wording and a clarity problem."
+        }
+      ],
+      "example_claims": [
+        "It is generally the case that Anthropic can be considered to be a company in the AI industry.",
+        "In terms of its overall effect, sleep deprivation is something that has a tendency to negatively impact the process of making decisions.",
+        "At the end of the day, the phenomenon of inflation basically works to reduce, over time, the purchasing power that money has."
+      ],
+      "geo_status": null,
+      "geo_tag_id": null,
+      "verified_on": null,
+      "evidence": null,
+      "work_tags": [
+        "Issue"
+      ],
+      "capability": "text",
+      "judged": true,
+      "tag_hash": "sha256:7683005c39124b24"
+    }
+  ],
+  "rubric_hash": "sha256:fe8aa256658efca4"
+}
