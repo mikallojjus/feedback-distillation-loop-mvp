@@ -9,7 +9,7 @@
 //             takes); a file that does not fit the schema, or lists a Geo ID twice, is exit 2 before anything is read. A Claims row is listed for the trash when
 //               - its Geo ID is NOT in the selection, and
 //               - none of its Tag decisions rows has an editor value (Tag outcome set, Your note not blank, or Agent is right ticked), and
-//               - no Rule changes row cites it in Supporting rows (the "<Geo ID>::<tag>" at the end of a line),
+//               - no Rule changes row cites it in Supporting rows (the "<Geo ID>::<tag>" at the end of a line; when a cell ends in "+ n more in the page" the keys in the page body count too),
 //               - and, with --keep-waiting, none of its Tag decisions rows still waits for an editor (Agent status is "Waits for you"; the owner's rule of 3 Nov, P51),
 //             and so is every Tag decisions row whose Key starts with the Geo ID of a listed claim. A kept claim's rows are never listed. The demo rows (Geo IDs that start with de0000) and any row
 //             without a Geo ID are never listed. The plan (script "remove", one "trash" op per row, the Tag decisions rows first and the Claims rows after them) goes to runs/<run-id>/plan.jsonl,
@@ -28,8 +28,13 @@
 // Production only: a practice page, a config that is not the v2 profile and a root whose tables are the first page's are refused (exit 2). The pause and drift checks of every loop script run first (exit 3, 4).
 // remove.mjs asks for permission every time it is typed (.claude/settings.json).
 //
-// A long run: Notion allows about 3 requests a second, and the client keeps to that. A row costs two requests (a Tag decisions row three: one to look at it first), so about 1,050 rows take
-// about 15 minutes. The apply stops after 3 failed rows in a row (and at once on a 401 or 403, or on a refusal); run it again to continue.
+// A claim goes second: the Claims rows are trashed only after the Tag decisions rows, and a claim only when every row of it in the plan is done and read back as trashed and its page (the relation
+// "Tag decisions") shows no live row. A claim that fails this is left alone, is named in the message, and ends the run with exit 1; the same command finishes it. runs/PAUSED is looked at
+// between two rows: when it appears the run stops there (exit 3) and the same command goes on once a person clears it.
+// The record next to the plan is written before the plan (the snapshots, then summary.json, then plan.jsonl), and apply refuses (exit 2) a plan whose record is missing or is not its own.
+//
+// A long run: Notion allows about 3 requests a second, and the client keeps to that. A row costs three requests (look at the page, trash it, read it back), so about 1,050 rows take
+// about 17 minutes. The apply stops after 3 failed rows in a row (and at once on a 401 or 403, or on a refusal); run it again to continue.
 //
 // Exit codes: 0 ok, 1 Notion could not be read or a write did not finish (run the same command again), 2 invalid (a selection that is not valid or matches nothing, a plan the check refuses or that is out of
 // date, a row that does not read back as trashed, a root that is not the v2 page), 3 paused, 4 drift or a changed rulebook file.
@@ -46,7 +51,7 @@ import { hasEditorValue } from './lib/decisions.mjs';
 import { keyGeoId } from './lib/first-page.mjs';
 import { appendJsonl, readJson, readJsonl, writeJsonAtomic, writeTextAtomic } from './lib/jsonl.mjs';
 import {
-  LoopExit, needClaimColumns, needTables, notionClient, parseCli, resumeLine, runPreflight, takePull, withRun,
+  LoopExit, needClaimColumns, needTables, notionClient, parseCli, resumeLine, runPreflight, supportingKeysOf, takePull, withRun,
 } from './lib/loop.mjs';
 import { isInTrash } from './lib/notion-rest.mjs';
 import { normId } from './lib/notion-values.mjs';
@@ -228,6 +233,25 @@ function writeSnapshot(ctx, table, pageIds) {
   return file;
 }
 
+/**
+ * The rows of Rule changes with every key they cite: a Supporting rows cell that ends in "+ n more in the page" has the rest in the page body, so the keys are read from there too
+ * (loop.mjs supportingKeysOf). A page that cannot be read ends the run (exit 1): a claim that is cited must never be listed for want of a read.
+ */
+async function lessonsWithBody(ctx) {
+  const out = [];
+  for (const lesson of ctx.pull.lessons() ?? []) {
+    try {
+      out.push({ ...lesson, supporting_keys: await supportingKeysOf(ctx, lesson) });
+    } catch (e) {
+      throw new LoopExit(EXIT.ERROR, `the page of the rule change "${lesson.Lesson}" could not be read, so the claims it cites are not known: ${e?.message ?? e}`, {
+        sentence: 'Remove: nothing was done, because the page of a rule change could not be read, and the claims it cites are not known.',
+        next: 'Next: run the same command again in a while.',
+      });
+    }
+  }
+  return out;
+}
+
 // ---- plan -----------------------------------------------------------------------------------------------------------------------------
 
 async function planBody(ctx, keepFile, keepWaiting) {
@@ -245,7 +269,7 @@ async function planBody(ctx, keepFile, keepWaiting) {
 
   const claims = ctx.pull.claims() ?? [];
   const queue = ctx.pull.queue() ?? [];
-  const lessons = ctx.pull.lessons() ?? [];
+  const lessons = await lessonsWithBody(ctx);
   const inClaims = claims.filter((c) => selected.has(geoKey(c.geo_id))).length;
   if (inClaims === 0) {
     throw new LoopExit(EXIT.INVALID, `none of the ${selected.size} claims of the selection is in Claims, so the selection cannot tell what to keep`, {
@@ -301,9 +325,10 @@ async function planBody(ctx, keepFile, keepWaiting) {
     ctx.record.plan_problems = checked.problems.slice(0, 10);
     throw new LoopExit(EXIT.INVALID, `the plan was refused and nothing was written: ${checked.problems.slice(0, 5).join('; ')}`, { sentence: 'Remove: nothing was planned, because the plan breaks a rule about what may be trashed.', next: ENGINEER });
   }
-  const planFile = plan.write(ctx.runDir);
+  // the snapshot and the summary first, the plan last: a plan.jsonl is never there without the record next to it (apply refuses one that has no record)
   const files = [writeSnapshot(ctx, 'tag_decisions', orderedRows.map((r) => r.page_id)), writeSnapshot(ctx, 'claims', orderedClaims.map((c) => c.page_id))];
   writeJsonAtomic(join(ctx.runDir, 'summary.json'), summary);
+  const planFile = plan.write(ctx.runDir);
   ctx.record.plan = { creates: 0, updates: 0, trashes: plan.ops.length };
 
   const sentence = `Remove: ${plural(trashClaims.length, 'Claims row')} and ${plural(trashRows.length, 'Tag decisions row')} would go to the trash; ${plural(keptCount, 'claim')} stay${keptCount === 1 ? 's' : ''} for a reason, and ${remaining} Claims rows remain.`;
@@ -371,6 +396,45 @@ function readRemovePlan(ctx, dir) {
   return plan;
 }
 
+/**
+ * The record `plan` writes next to plan.jsonl: summary.json (with keep_waiting as a boolean) and one snapshot file for each table the plan trashes, whose page ids are exactly the page ids of the
+ * plan's ops. Returns { problems, keepWaiting }; apply sends nothing unless problems is empty. A summary that is missing is a problem, never a flag that is quietly off.
+ */
+function recordProblems(dir, plan) {
+  const problems = [];
+  let keepWaiting = false;
+  const summaryFile = join(dir, 'summary.json');
+  if (!existsSync(summaryFile)) problems.push('summary.json is missing');
+  else {
+    try {
+      const summary = readJson(summaryFile);
+      if (typeof summary?.keep_waiting !== 'boolean') problems.push('summary.json does not say whether the plan was made with --keep-waiting');
+      else keepWaiting = summary.keep_waiting;
+    } catch (e) {
+      problems.push(`summary.json cannot be read (${e.message})`);
+    }
+  }
+  for (const table of TRASH_TABLES) {
+    const want = plan.ops.filter((o) => o.table === table).map((o) => normId(o.page_id));
+    if (want.length === 0) continue;
+    const file = join(dir, SNAPSHOT[table]);
+    if (!existsSync(file)) {
+      problems.push(`${SNAPSHOT[table]} is missing`);
+      continue;
+    }
+    let have;
+    try {
+      have = readJsonl(file).rows.map((p) => normId(p?.id));
+    } catch (e) {
+      problems.push(`${SNAPSHOT[table]} cannot be read (${e.message})`);
+      continue;
+    }
+    const same = have.length === want.length && new Set(have).size === have.length && have.every((id) => want.includes(id));
+    if (!same) problems.push(`${SNAPSHOT[table]} holds ${have.length} page(s) and the plan trashes ${want.length} ${TABLE_WORDS[table]} row(s): they are not the same pages`);
+  }
+  return { problems, keepWaiting };
+}
+
 const ledgerDone = (dir, ops) => {
   const done = new Set();
   const lines = readJsonl(join(dir, 'ledger.jsonl')).rows;
@@ -388,22 +452,23 @@ async function applyBody(ctx, planArg, verbose) {
   const plan = readRemovePlan(ctx, dir);
   const planRunId = plan.header.plan.run_id;
   needV2Root(ctx);
+  // the record next to the plan (the snapshot and the summary) must be there and must be the plan's own: nothing is read from Notion or sent otherwise
+  const kept = recordProblems(dir, plan);
+  if (kept.problems.length) {
+    ctx.record.record_problems = kept.problems;
+    throw new LoopExit(EXIT.INVALID, `the record next to the plan is not whole: ${kept.problems.join('; ')}`, {
+      sentence: 'Remove: nothing was done, because the snapshot or the summary next to the plan is missing or is not the plan\x27s own.',
+      next: 'Next: make a new plan.',
+    });
+  }
 
   await takePull(ctx, { pullId: null }); // always fresh
   needTables(ctx, 'claims', 'tag_decisions', 'rule_changes');
   runPreflight(ctx);
   needClaimColumns(ctx);
 
-  // is the plan still true? (nothing is sent when it is not). The summary next to the plan says whether it was made with --keep-waiting
-  let keepWaiting = false;
-  if (existsSync(join(dir, 'summary.json'))) {
-    try {
-      keepWaiting = readJson(join(dir, 'summary.json')).keep_waiting === true;
-    } catch (e) {
-      throw new LoopExit(EXIT.INVALID, `summary.json next to the plan cannot be read: ${e.message}`, { sentence: 'Remove: nothing was done, because the summary next to the plan cannot be read.', next: ENGINEER });
-    }
-  }
-  const stale = staleProblems({ ops: plan.ops, done: ledgerDone(dir, plan.ops), claims: ctx.pull.claims() ?? [], queue: ctx.pull.queue() ?? [], lessons: ctx.pull.lessons() ?? [], keepWaiting });
+  // is the plan still true? (nothing is sent when it is not). The summary next to the plan says whether it was made with --keep-waiting; the rule changes are read with their page bodies
+  const stale = staleProblems({ ops: plan.ops, done: ledgerDone(dir, plan.ops), claims: ctx.pull.claims() ?? [], queue: ctx.pull.queue() ?? [], lessons: await lessonsWithBody(ctx), keepWaiting: kept.keepWaiting });
   if (stale.length) {
     ctx.record.stale = stale.slice(0, 20);
     throw new LoopExit(EXIT.INVALID, `the plan is out of date: ${stale.length} problem(s): ${stale.slice(0, 5).join('; ')}`, {
@@ -426,6 +491,7 @@ async function applyBody(ctx, planArg, verbose) {
       root: ctx.root,
       now: ctx.now,
       log: verbose ? (line) => ctx.io.err(`${ctx.script}: ${line}`) : null,
+      interrupt: () => (existsSync(join(ctx.root, 'runs', 'PAUSED')) ? 'paused' : null), // a person pauses the agent while the run goes: it stops between two rows, and the same command goes on later
     });
   } catch (e) {
     if (e?.name === 'PlanError') {
@@ -459,6 +525,12 @@ async function applyBody(ctx, planArg, verbose) {
       next: 'Next: make a new plan.',
     });
   }
+  if (result.stopped?.reason === 'paused') {
+    throw new LoopExit(EXIT.PAUSED, 'runs/PAUSED appeared while the plan ran; the run stopped between two rows', {
+      sentence: `Remove: stopped, because the agent was paused; ${plural(trashedClaims.length, 'Claims row')} and ${plural(trashedRows.length, 'Tag decisions row')} are in the trash so far.`,
+      next: 'Next: a person clears the pause, then run the same apply command again; it continues where it stopped.',
+    });
+  }
   if (result.stopped?.reason === 'refused') {
     const refusal = result.lists.failed.find((f) => f.key === result.stopped.key);
     throw new LoopExit(EXIT.INVALID, `${result.stopped.key}: ${refusal?.detail ?? 'refused'}`, { sentence: 'Remove: stopped, because a row in the plan is not what the pull holds.', next: 'Next: make a new plan.' });
@@ -471,8 +543,13 @@ async function applyBody(ctx, planArg, verbose) {
   }
   if (result.code !== EXIT.OK) {
     const left = result.failed + result.uncertain + result.unchecked + result.pending + result.skipped;
-    throw new LoopExit(EXIT.ERROR, `${left} row(s) are not done: ${[...result.lists.failed, ...result.lists.unchecked].slice(0, SHOWN).map((m) => `${m.table} "${m.key}" ${m.detail ?? ''}`).join('; ') || 'not reached'}`, {
-      sentence: `Remove stopped before every row was trashed: ${plural(trashedClaims.length, 'Claims row')} and ${plural(trashedRows.length, 'Tag decisions row')} are in the trash so far.`,
+    // a claim is never trashed while a row of it is live: such a claim is named first, and the run ends with exit 1 so that the same command finishes it
+    const blocked = result.lists.failed.filter((f) => f.table === 'claims' && /^not trashed:/.test(f.detail ?? ''));
+    ctx.record.apply.blocked_claims = blocked.map((f) => f.key);
+    const named = [...blocked, ...result.lists.failed.filter((f) => !blocked.includes(f)), ...result.lists.unchecked].slice(0, SHOWN);
+    const why = blocked.length ? `; ${plural(blocked.length, 'claim')} left alone because a Tag decisions row of ${blocked.length === 1 ? 'it is' : 'them is'} not in the trash (${blocked.slice(0, SHOWN).map((f) => f.key).join(', ')})` : '';
+    throw new LoopExit(EXIT.ERROR, `${left} row(s) are not done${why}: ${named.map((m) => `${m.table} "${m.key}" ${m.detail ?? ''}`).join('; ') || 'not reached'}`, {
+      sentence: `Remove stopped before every row was trashed: ${plural(trashedClaims.length, 'Claims row')} and ${plural(trashedRows.length, 'Tag decisions row')} are in the trash so far${blocked.length ? `; ${plural(blocked.length, 'claim')} stay${blocked.length === 1 ? 's' : ''} until ${blocked.length === 1 ? 'its' : 'their'} rows are trashed` : ''}.`,
       next: 'Next: run the same apply command again; it continues where it stopped.',
     });
   }

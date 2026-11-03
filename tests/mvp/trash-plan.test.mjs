@@ -4,6 +4,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, sep } from 'node:path';
 import { EXIT } from '../../agents/claim-tagger-mvp/scripts/lib/exit-codes.mjs';
+import { applyStep } from '../../agents/claim-tagger-mvp/scripts/lib/loop.mjs';
 import { createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import {
@@ -44,7 +45,7 @@ const GEO = ['aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa01', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 const clientOver = (notion, fetchImpl = notion.fetchImpl) => createClient({ token: notion.token, fetchImpl, requestsPerSecond: 1000, sleep: async () => {} });
 
 /** A config whose five tables have ids, a Notion with the five tables (allowTrash), three claims with a Tag decisions row each, a client and the schemas the client reads. */
-async function world() {
+async function world({ relation = false } = {}) {
   const config = builtConfig();
   config.notion.requests_per_second = 1000;
   const set = (entry, table, n) => {
@@ -57,7 +58,9 @@ async function world() {
   set(config.notion.databases.rule_changes, 'rule_changes', 4);
   set(config.notion.databases.agent_settings, 'agent_settings', 5);
   const notion = createFakeNotion({ allowTrash: true });
-  for (const [table, spec] of Object.entries(TABLE_SPECS)) {
+  // with `relation` the Claims table has the column "Tag decisions", which lists the rows of the claim (STRUCTURE-V2.md); it points at the Rulebook here, as the other relations of these tables do
+  const specs = relation ? { ...TABLE_SPECS, claims: { ...TABLE_SPECS.claims, 'Tag decisions': { type: 'relation' } } } : TABLE_SPECS;
+  for (const [table, spec] of Object.entries(specs)) {
     notion.addDatabase({ id: DB[table], title: table, properties: restProps(spec, table === 'rulebook' ? null : notion.dataSource(DB.rulebook).id) });
   }
   const client = clientOver(notion);
@@ -67,6 +70,7 @@ async function world() {
   for (const [i, geo] of GEO.entries()) {
     ids.claim[geo] = notion.addRow(DB.claims, { 'Geo Name': `Claim ${i + 1}`, 'Geo ID': geo, 'Geo Is factual': false });
     ids.decision[geo] = notion.addRow(DB.tag_decisions, { Claim: `Claim ${i + 1}`, Key: `${geo}::Context-dependent`, Tag: 'Context-dependent', 'Agent proposal': 'Applies' });
+    if (relation) notion.editRow(ids.claim[geo], { 'Tag decisions': [ids.decision[geo]] });
   }
   const root = tmp();
   return { config, notion, client, schemas, ids, root, dir: join(tmp(), 'run-1') };
@@ -286,14 +290,16 @@ test('applyPlan reads back with retrievePage: a page that does not say it is in 
   const plan = removePlan(w, GEO.slice(0, 1));
   const bad = await apply(w, plan, { client: idle });
   assert.equal(bad.code, EXIT.INVALID);
-  assert.equal(bad.mismatches, 2);
+  assert.equal(bad.mismatches, 1, 'the Tag decisions row does not read back as trashed');
   assert.match(bad.lists.mismatches[0].detail, /read-back mismatch: the page is not in the trash/);
   assert.deepEqual(readLedger(w.dir).get(0).read_back, 'mismatch');
+  assert.equal(bad.failed, 1, 'and its claim is not even tried: a claim waits for the rows of it');
+  assert.match(bad.lists.failed[0].detail, /^not trashed: the Tag decisions row .* of this claim is not in the trash yet$/);
   assert.deepEqual(w.notion.trashed(DB.claims), []);
   // the next run looks again and sends nothing for a mismatch, then trashes nothing either: the ledger says it was sent
   const sentBefore = patches(w).length;
   const looked = await apply(w, plan, { client: idle, pulled: pullFrom(w) });
-  assert.equal(looked.mismatches, 2);
+  assert.equal(looked.mismatches, 1);
   assert.equal(patches(w).length, sentBefore);
 
   // a server that answers with only one of the two flags is read through that flag
@@ -413,6 +419,153 @@ test('applyPlan: a 401 from Notion stops the run at once', async () => {
   assert.equal(result.pending, 5);
 });
 
+// ---- a claim goes second -----------------------------------------------------------------------------------------------------------------
+
+test('a claim is not trashed while a row of it is live: a row whose trash fails leaves its claim untouched, the run ends with exit 1 naming the claim, and a re-run finishes both', async () => {
+  const w = await world();
+  const plan = removePlan(w);
+  // the row of the second claim cannot be trashed the first time (the client tries a PATCH four times)
+  w.notion.failNext('PATCH', new RegExp(w.ids.decision[GEO[1]]), 500, 4);
+  const first = await apply(w, plan);
+  assert.equal(first.code, EXIT.ERROR);
+  assert.equal(first.stopped, null, 'one failure is not a stop');
+  assert.equal(first.done, 4, 'two rows and the two claims whose rows are in the trash');
+  assert.equal(first.failed, 2, 'the row, and the claim that waits for it');
+  assert.deepEqual(w.notion.trashed(DB.claims).sort(), [w.ids.claim[GEO[0]], w.ids.claim[GEO[2]]].sort());
+  assert.deepEqual(w.notion.trashed(DB.tag_decisions).sort(), [w.ids.decision[GEO[0]], w.ids.decision[GEO[2]]].sort());
+  const blocked = first.lists.failed.find((f) => f.table === 'claims');
+  assert.equal(blocked.key, GEO[1], 'the claim is named');
+  assert.match(blocked.detail, /^not trashed: the Tag decisions row .*02::Context-dependent of this claim is not in the trash yet$/);
+  assert.equal(w.notion.requests.some((r) => r.method !== 'GET' && r.path.includes(w.ids.claim[GEO[1]])), false, 'not one write went to the claim');
+  assert.equal(readLedger(w.dir).get(4).sent, null, 'and the ledger says nothing was sent for it');
+
+  const second = await apply(w, plan, { pulled: pullFrom(w) });
+  assert.equal(second.code, EXIT.OK, JSON.stringify(second.lists));
+  assert.equal(second.done, 6);
+  assert.equal(w.notion.trashed(DB.claims).length, 3);
+  assert.equal(w.notion.trashed(DB.tag_decisions).length, 3);
+  const ok = patches(w).filter((p) => p.status === 200);
+  assert.equal(ok.length, 6, 'six successful PATCHes: no page was sent twice');
+  assert.equal(new Set(ok.map((p) => p.path)).size, 6);
+});
+
+test('a claim with a row that stays live because a person decided it is not trashed either: the run stopped at the row, so the claims were not reached', async () => {
+  const w = await world();
+  const pulled = pullFrom(w);
+  w.notion.editRow(w.ids.decision[GEO[0]], { 'Your note': 'decided' });
+  const r = await apply(w, removePlan(w), { pulled });
+  assert.equal(r.stopped.reason, 'person_set');
+  assert.deepEqual(w.notion.trashed(DB.claims), []);
+  assert.equal(r.pending, 5);
+});
+
+test('before a claim is trashed its page is read, and its relation "Tag decisions" must list nothing that is live: a row created after the pull keeps the claim, and a re-run finishes it once the row is gone', async () => {
+  const w = await world({ relation: true });
+  const plan = removePlan(w);
+  const before = w.notion.requests.length;
+  const happy = await apply(w, plan);
+  assert.equal(happy.code, EXIT.OK, JSON.stringify(happy.lists));
+  assert.equal(w.notion.requests.length - before, 18, 'a row: look, PATCH, read back; a claim: look, PATCH, read back; the rows the ledger shows trashed are not read again');
+
+  // another world: a row of the second claim appears after the pull (the plan does not list it)
+  const v = await world({ relation: true });
+  const pulled = pullFrom(v);
+  const late = v.notion.addRow(DB.tag_decisions, { Claim: 'Late', Key: `${GEO[1]}::Other`, Tag: 'Other', 'Agent proposal': 'Applies' });
+  v.notion.editRow(v.ids.claim[GEO[1]], { 'Tag decisions': [v.ids.decision[GEO[1]], late] });
+  const planV = removePlan(v);
+  const first = await apply(v, planV, { pulled });
+  assert.equal(first.code, EXIT.ERROR);
+  assert.equal(first.done, 5);
+  const named = first.lists.failed.find((f) => f.table === 'claims');
+  assert.equal(named.key, GEO[1]);
+  assert.equal(named.detail, `not trashed: the Tag decisions row ${late} of this claim is not in the trash`);
+  assert.deepEqual(v.notion.trashed(DB.claims).sort(), [v.ids.claim[GEO[0]], v.ids.claim[GEO[2]]].sort());
+  assert.equal(v.notion.requests.some((r) => r.method !== 'GET' && r.path.includes(v.ids.claim[GEO[1]])), false, 'nothing was written to the claim');
+  assert.equal(first.stopped, null, 'a live row is no failure of Notion: it does not count toward the stop');
+
+  // the row is trashed (by a new plan, an editor or the owner); the same plan then finishes the claim
+  await v.client.trashPage(late);
+  const second = await apply(v, planV, { pulled: pullFrom(v) });
+  assert.equal(second.code, EXIT.OK, JSON.stringify(second.lists));
+  assert.equal(v.notion.trashed(DB.claims).length, 3);
+
+  // a row in the relation that is in the trash already (an old one) is no reason to wait; a relation Notion cut at 25 is read whole
+  const x = await world({ relation: true });
+  const old = x.notion.addRow(DB.tag_decisions, { Claim: 'Old', Key: `${GEO[0]}::Old`, Tag: 'Old' });
+  await x.client.trashPage(old);
+  x.notion.editRow(x.ids.claim[GEO[0]], { 'Tag decisions': [x.ids.decision[GEO[0]], old] });
+  const cut = { ...x.client };
+  cut.retrievePage = async (id) => {
+    const page = await x.client.retrievePage(id);
+    if (id === x.ids.claim[GEO[0]]) page.properties['Tag decisions'] = { ...page.properties['Tag decisions'], relation: page.properties['Tag decisions'].relation.slice(0, 1), has_more: true };
+    return page;
+  };
+  let wholeRead = 0;
+  cut.retrievePropertyItem = async (...args) => {
+    wholeRead += 1;
+    return x.client.retrievePropertyItem(...args);
+  };
+  const planX = removePlan(x, GEO.slice(0, 1));
+  const done = await apply(x, planX, { client: cut });
+  assert.equal(done.code, EXIT.OK, JSON.stringify(done.lists));
+  assert.equal(wholeRead, 1, 'the whole relation was read');
+  assert.deepEqual(x.notion.trashed(DB.claims), [x.ids.claim[GEO[0]]]);
+});
+
+test('a related page that cannot be read leaves the claim alone and counts as a failure (the claim is not trashed on a guess)', async () => {
+  const w = await world({ relation: true });
+  const pulled = pullFrom(w);
+  const late = w.notion.addRow(DB.tag_decisions, { Claim: 'Late', Key: `${GEO[0]}::Other`, Tag: 'Other' });
+  w.notion.editRow(w.ids.claim[GEO[0]], { 'Tag decisions': [w.ids.decision[GEO[0]], late] });
+  w.notion.failNext('GET', new RegExp(`/pages/${late}$`), 404, 1);
+  const r = await apply(w, removePlan(w, GEO.slice(0, 1)), { pulled });
+  assert.equal(r.code, EXIT.ERROR);
+  assert.equal(r.lists.failed[0].table, 'claims');
+  assert.match(r.lists.failed[0].detail, /404/);
+  assert.deepEqual(w.notion.trashed(DB.claims), []);
+});
+
+// ---- stopping between two ops --------------------------------------------------------------------------------------------------------------
+
+test('applyPlan asks interrupt() before every op that is not done, and a reason ends the run there as stopped; the next run goes on without sending a done step again', async () => {
+  const w = await world();
+  const plan = removePlan(w);
+  let asked = 0;
+  const first = await apply(w, plan, { interrupt: () => (asked++ >= 2 ? 'paused' : null) });
+  assert.equal(first.code, EXIT.ERROR);
+  assert.deepEqual(first.stopped, { op_index: 2, key: `${GEO[2]}::Context-dependent`, reason: 'paused' });
+  assert.equal(first.done, 2);
+  assert.equal(first.pending, 4);
+  assert.equal(asked, 3);
+  assert.equal(patches(w).length, 2);
+
+  // done ops are not asked about again
+  let askedAgain = 0;
+  const second = await apply(w, plan, { pulled: pullFrom(w), interrupt: () => { askedAgain += 1; return null; } });
+  assert.equal(second.code, EXIT.OK, JSON.stringify(second.lists));
+  assert.equal(askedAgain, 4);
+  assert.equal(patches(w).filter((p) => p.status === 200).length, 6);
+  assert.equal(new Set(patches(w).map((p) => p.path)).size, 6, 'no page was sent twice');
+});
+
+// ---- a plan of the remove script belongs to remove.mjs -------------------------------------------------------------------------------------
+
+test('loop.mjs applyStep hands a plan of the remove script to the remove script and to no other, as it does for the add script', async () => {
+  const w = await world();
+  const plan = removePlan(w, GEO.slice(0, 1));
+  for (const script of ['propose', 'add', 'copy-live', 'distill', 'promote']) {
+    await assert.rejects(
+      () => applyStep({ script, label: script }, plan),
+      (e) => e.name === 'LoopExit' && e.code === EXIT.INVALID && new RegExp(`a plan of the remove script was handed to the ${script} script and nothing was sent`).test(e.message),
+      script,
+    );
+  }
+  // the add script's plan is still bound to add.mjs
+  const add = newPlan({ runId: 'r', script: 'add', config: w.config, now: NOW });
+  await assert.rejects(() => applyStep({ script: 'remove', label: 'Remove' }, add), (e) => e.name === 'LoopExit' && /plan of the add script was handed to the remove script/.test(e.message));
+  assert.equal(w.notion.writes().length, 0);
+});
+
 // ---- who may trash ---------------------------------------------------------------------------------------------------------------------
 
 test('only remove.mjs, plan.mjs (the op) and the client call trashPage or untrashPage, and the trash flag is written in no other script', async () => {
@@ -432,6 +585,11 @@ test('only remove.mjs, plan.mjs (the op) and the client call trashPage or untras
   assert.deepEqual(callers, ['lib/notion-rest.mjs', 'lib/plan.mjs', 'remove.mjs']);
   const writers = files.filter((f) => /\bin_trash\s*:|\barchived\s*:/.test(readFileSync(f, 'utf8'))).map(rel).sort();
   assert.deepEqual(writers, ['lib/notion-rest.mjs'], 'the flag itself is written in the client and nowhere else');
+  // the op is built in remove.mjs only, and the name of its script is used by the files that bind or check it: its definition, the harness that binds it, the check and the script
+  const builders = files.filter((f) => /\.trash\(/.test(readFileSync(f, 'utf8'))).map(rel).sort();
+  assert.deepEqual(builders, ['remove.mjs'], 'only remove.mjs builds a trash op');
+  const named = files.filter((f) => /\bREMOVE_SCRIPT\b/.test(readFileSync(f, 'utf8'))).map(rel).sort();
+  assert.deepEqual(named, ['lib/config.mjs', 'lib/loop.mjs', 'lib/plan.mjs', 'remove.mjs'], 'REMOVE_SCRIPT is used by its definition, the harness binding, the plan check and remove.mjs');
 });
 
 test('.claude/settings.json asks for permission every time remove.mjs is typed, and never waves it through', () => {

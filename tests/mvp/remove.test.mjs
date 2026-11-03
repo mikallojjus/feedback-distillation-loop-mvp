@@ -1,9 +1,10 @@
 import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { EXIT } from '../../agents/claim-tagger-mvp/scripts/lib/exit-codes.mjs';
+import { createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { readLedger, readPlan } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
 import {
@@ -13,6 +14,7 @@ import {
   USAGE, hasEditorValue, main, planRemoval, remove, staleProblems,
 } from '../../agents/claim-tagger-mvp/scripts/remove.mjs';
 import { DB, makeWorld, quietIo } from './helpers/loop-world.mjs';
+import { TABLE_SPECS } from './helpers/tables.mjs';
 
 // remove.mjs (decision P51) on the in-memory Notion: the plan keeps what it must keep and lists the rest with a snapshot, the apply trashes and reads back and can be run again after a stop, the
 // restore brings the rows back, and setup/removed-claims.json follows. Nothing here touches the repository's own setup folder: every run has a throw-away state folder.
@@ -30,17 +32,25 @@ const key = (geo) => `${geo}::${TAG}`;
  *   g06 waits for you     g07 g08 done                 g09 two rows (done)        g10 no row at all               DEMO1 a demo claim with a row            DEMO2 only a row, no claim
  * The selection is g01 and g99 (g99 is not in Claims).
  */
-async function setup(extra = {}) {
+async function setup({ relation = false, ...extra } = {}) {
+  // with `relation` the Claims table has the column "Tag decisions" (STRUCTURE-V2.md), which lists the rows of each claim
+  const tableSpecs = relation ? { claims: { ...TABLE_SPECS.claims, 'Tag decisions': { type: 'relation' } } } : {};
   const w = await makeWorld({
+    tableSpecs,
     claims: [...Array.from({ length: 10 }, (_, i) => ({ id: G(i + 1), text: `Claim number ${i + 1} says something about the budget.` })), { id: DEMO1, text: 'A demo claim.' }],
     fakeOptions: { allowTrash: true },
     ...extra,
   });
+  const related = {};
   const td = (geo, over = {}, tag = TAG) => {
     const k = `${geo}::${tag}`;
     w.ids.queue[k] = w.fake.addRow(DB.tag_decisions, {
       Claim: `Claim of ${geo.slice(-2)}`, Key: k, Tag: tag, 'Agent proposal': 'Applies', 'Agent status': 'Done', ...(w.ids.claim[geo] ? { 'Open claim': [w.ids.claim[geo]] } : {}), ...over,
     });
+    if (relation && w.ids.claim[geo]) {
+      related[geo] = [...(related[geo] ?? []), w.ids.queue[k]];
+      w.fake.editRow(w.ids.claim[geo], { 'Tag decisions': related[geo] });
+    }
     return k;
   };
   td(G(1));
@@ -596,6 +606,190 @@ test('apply: a Notion that does not show a row as trashed after the PATCH is exi
   assert.match(a.report.sentence, /^Remove stopped: Notion does not show one row as trashed after it was sent\.$/);
   assert.equal(removedIds(w).includes(G(9)), false);
   assert.ok(removedIds(w).includes(G(10)));
+});
+
+test('apply: a claim waits for its rows: a row that cannot be trashed leaves its claim, the run ends with exit 1 naming the claim, and the same command finishes it; the list of removed claims has only the claims that are in the trash', async () => {
+  const w = await setup({ relation: true });
+  const p = await planOf(w);
+  w.fake.failNext('PATCH', new RegExp(w.ids.queue[key(G(6))]), 500, 4);
+  const h = w.hooks();
+  const a = await remove({ ...h, command: 'apply', plan: join(p.runDir, 'plan.jsonl') });
+  assert.equal(a.exit, EXIT.ERROR);
+  assert.match(a.report.sentence, /^Remove stopped before every row was trashed: 4 Claims rows and 4 Tag decisions rows are in the trash so far; 1 claim stays until its rows are trashed\.$/);
+  assert.equal(a.report.next, 'Next: run the same apply command again; it continues where it stopped.');
+  assert.match(h.io.errs.join('\n'), new RegExp(`1 claim left alone because a Tag decisions row of it is not in the trash \\(${G(6)}\\)`));
+  assert.deepEqual(readJson(join(a.runDir, 'run.json')).apply.blocked_claims, [G(6)]);
+  assert.deepEqual(w.fake.trashed(DB.claims).sort(), [G(7), G(8), G(9), G(10)].map((g) => w.ids.claim[g]).sort());
+  assert.equal(w.fake.trashed(DB.claims).includes(w.ids.claim[G(6)]), false);
+  assert.equal(w.fake.requests.some((r) => r.method !== 'GET' && r.path.includes(w.ids.claim[G(6)])), false, 'nothing was sent to the claim');
+  assert.deepEqual(removedIds(w), [G(7), G(8), G(9), G(10)], 'the claim that is not in the trash is not on the list');
+
+  const b = await applyOf(w, p);
+  assert.equal(b.exit, EXIT.OK, w.hooks().io.errs.join('\n'));
+  assert.deepEqual(removedIds(w), CLAIMS_TRASHED);
+  const ok = patches(w).filter((q) => q.status === 200);
+  assert.equal(ok.length, 10);
+  assert.equal(new Set(ok.map((q) => q.path)).size, 10, 'no page was sent twice');
+});
+
+test('apply reads a claim\'s page before it trashes it: a row of the claim that was created after the pull and is live keeps the claim (exit 1), and the same command finishes it once the row is in the trash', async () => {
+  const w = await setup({ relation: true });
+  const p = await planOf(w);
+  let late = null;
+  const real = w.fake.fetchImpl;
+  const fetchImpl = async (url, init) => {
+    if (late === null && init.method === 'GET' && String(url).endsWith(`/pages/${w.ids.claim[G(7)]}`)) {
+      late = w.fake.addRow(DB.tag_decisions, { Claim: 'Late', Key: `${G(7)}::Late`, Tag: 'Late', 'Open claim': [w.ids.claim[G(7)]] });
+      w.fake.editRow(w.ids.claim[G(7)], { 'Tag decisions': [w.ids.queue[key(G(7))], late] });
+    }
+    return real(url, init);
+  };
+  const h = w.hooks({ fetchImpl });
+  const a = await remove({ ...h, command: 'apply', plan: join(p.runDir, 'plan.jsonl') });
+  assert.ok(late);
+  assert.equal(a.exit, EXIT.ERROR);
+  assert.match(h.io.errs.join('\n'), new RegExp(`1 claim left alone because a Tag decisions row of it is not in the trash \\(${G(7)}\\)`));
+  assert.match(h.io.errs.join('\n'), new RegExp(`not trashed: the Tag decisions row ${late} of this claim is not in the trash`));
+  assert.equal(w.fake.trashed(DB.claims).includes(w.ids.claim[G(7)]), false);
+  assert.equal(w.fake.trashed(DB.claims).length, 4);
+  assert.equal(removedIds(w).includes(G(7)), false);
+  // the late row is a row of a claim the plan lists but not a row the plan lists: a new apply of this plan is out of date until the row is gone
+  const stale = await applyOf(w, p);
+  assert.equal(stale.exit, EXIT.INVALID);
+  assert.match(readJson(join(stale.runDir, 'run.json')).stale.join(' | '), /Claims "a+07" has 1 Tag decisions row that the plan does not list/);
+  const client = createClient({ token: w.fake.token, fetchImpl: w.fake.fetchImpl, requestsPerSecond: 1000, sleep: async () => {} });
+  await client.trashPage(late);
+  const done = await applyOf(w, p);
+  assert.equal(done.exit, EXIT.OK, w.hooks().io.errs.join('\n'));
+  assert.deepEqual(removedIds(w), CLAIMS_TRASHED);
+});
+
+test('apply stops between two rows when runs/PAUSED appears (exit 3), keeps what is done, and goes on when the pause is cleared', async () => {
+  const w = await setup();
+  const p = await planOf(w);
+  const real = w.fake.fetchImpl;
+  let sent = 0;
+  const fetchImpl = async (url, init) => {
+    const res = await real(url, init);
+    if (init.method === 'PATCH' && /\/pages\//.test(String(url))) {
+      sent += 1;
+      if (sent === 4) writeFileSync(join(w.root, 'runs', 'PAUSED'), 'a person paused the agent');
+    }
+    return res;
+  };
+  const a = await run(w, 'apply', { plan: join(p.runDir, 'plan.jsonl') }, { fetchImpl });
+  assert.equal(a.exit, EXIT.PAUSED);
+  assert.equal(a.report.sentence, 'Remove: stopped, because the agent was paused; 0 Claims rows and 4 Tag decisions rows are in the trash so far.');
+  assert.equal(a.report.next, 'Next: a person clears the pause, then run the same apply command again; it continues where it stopped.');
+  assert.equal(sent, 4, 'not one PATCH after the pause appeared');
+  assert.equal(w.fake.trashed(DB.tag_decisions).length, 4);
+  assert.deepEqual(w.fake.trashed(DB.claims), []);
+  assert.equal(existsSync(join(w.root, 'setup', 'removed-claims.json')), false, 'no claim is in the trash yet');
+  assert.equal(readJson(join(a.runDir, 'run.json')).apply.stopped.reason, 'paused');
+
+  // while the pause stands, the command stops before it reads anything
+  const requests = w.fake.requests.length;
+  assert.equal((await applyOf(w, p)).exit, EXIT.PAUSED);
+  assert.equal(w.fake.requests.length - requests > 0 && patches(w).length === 4, true, 'it may read (the pull), it sends nothing');
+
+  rmSync(join(w.root, 'runs', 'PAUSED'));
+  const b = await applyOf(w, p);
+  assert.equal(b.exit, EXIT.OK, w.hooks().io.errs.join('\n'));
+  const ok = patches(w).filter((q) => q.status === 200);
+  assert.equal(ok.length, 10);
+  assert.equal(new Set(ok.map((q) => q.path)).size, 10, 'no page was sent twice');
+  assert.deepEqual(removedIds(w), CLAIMS_TRASHED);
+});
+
+test('cited: Supporting rows that overflow into the page of a rule change are read too, in the plan and again in the apply; a page that cannot be read ends the plan', async () => {
+  const w = await setup();
+  const client = createClient({ token: w.fake.token, fetchImpl: w.fake.fetchImpl, requestsPerSecond: 1000, sleep: async () => {} });
+  const paragraph = (content) => ({ object: 'block', type: 'paragraph', paragraph: { rich_text: [{ type: 'text', text: { content } }] } });
+  // a rule change whose cell keeps one row and says the rest is in the page, where G(8) and G(10) are
+  const lesson = w.fake.addRow(DB.rule_changes, { Lesson: 'Rule two', Tag: TAG, Status: 'Proposed', 'Supporting rows': `Claim number 7 says something · ${key(G(7))}\n+ 2 more in the page` });
+  await client.appendBlocks(lesson, [paragraph(`Claim number 8 says something about the budget. · ${key(G(8))}`), paragraph(`Claim number 10 says something about the budget. · ${key(G(10))}`), paragraph('A note without a key.')]);
+  const writes = w.fake.writes().length;
+  const p = await planOf(w);
+  assert.equal(p.exit, EXIT.OK, w.hooks().io.errs.join('\n'));
+  assert.equal(w.fake.writes().length, writes, 'the plan only read');
+  assert.ok(w.fake.requests.some((r) => r.method === 'GET' && r.path.startsWith(`/blocks/${lesson}/children`)), 'the page body was read');
+  const plan = readPlan(p.runDir);
+  const listed = new Set(plan.ops.map((o) => o.key));
+  for (const cited of [G(7), G(8), G(10)]) {
+    assert.equal(listed.has(cited), false, `${cited} is cited and stays`);
+    assert.equal(listed.has(key(cited)), false);
+  }
+  assert.deepEqual(plan.ops.filter((o) => o.table === 'claims').map((o) => o.key), [G(6), G(9)]);
+  const summary = readJson(join(p.runDir, 'summary.json'));
+  assert.deepEqual(summary.kept, { selected: 1, decided: 3, cited: 4, waiting: 0, demo: 1 });
+  assert.deepEqual(summary.kept_claims.find((c) => c.geo_id === G(10)).reasons, ['cited']);
+
+  // the apply asks again: a rule change that cites G(9) only in its page, after the plan was made, makes the plan out of date
+  const later = w.fake.addRow(DB.rule_changes, { Lesson: 'Rule three', Tag: TAG, Status: 'Proposed', 'Supporting rows': '+ 1 more in the page' });
+  await client.appendBlocks(later, [paragraph(`Claim number 9 says something about the budget. · ${key(G(9))}`)]);
+  const a = await applyOf(w, p);
+  assert.equal(a.exit, EXIT.INVALID);
+  assert.match(readJson(join(a.runDir, 'run.json')).stale.join(' | '), /Claims "a+09" is cited by a rule change/);
+  assert.deepEqual(patches(w).filter((q) => q.path.startsWith('/pages/')), [], 'no page was trashed (the two PATCHes there are the test\'s own blocks)');
+
+  // a page that cannot be read: nothing is planned, exit 1, and the claims it might cite are not guessed
+  const w2 = await setup();
+  const c2 = createClient({ token: w2.fake.token, fetchImpl: w2.fake.fetchImpl, requestsPerSecond: 1000, sleep: async () => {} });
+  const l2 = w2.fake.addRow(DB.rule_changes, { Lesson: 'Rule two', Tag: TAG, Status: 'Proposed', 'Supporting rows': '+ 1 more in the page' });
+  await c2.appendBlocks(l2, [paragraph(`Claim number 10 says something. · ${key(G(10))}`)]);
+  w2.fake.failNext('GET', /\/blocks\//, 500, 4);
+  const h = w2.hooks();
+  const failed = await remove({ ...h, command: 'plan', keep: selectionFile(w2) });
+  assert.equal(failed.exit, EXIT.ERROR);
+  assert.equal(failed.report.sentence, 'Remove: nothing was done, because the page of a rule change could not be read, and the claims it cites are not known.');
+  assert.match(h.io.errs.join('\n'), /the page of the rule change "Rule two" could not be read/);
+  assert.equal(existsSync(join(failed.runDir, 'plan.jsonl')), false);
+  assert.equal(existsSync(join(failed.runDir, 'snapshot-claims.jsonl')), false);
+});
+
+test('plan writes the snapshots and the summary before plan.jsonl, and apply refuses a plan whose record is missing or is not its own, before it reads Notion', async () => {
+  const w = await setup();
+  const p = await planOf(w);
+  const mtime = (name) => statSync(join(p.runDir, name)).mtimeMs;
+  assert.ok(mtime('plan.jsonl') >= mtime('summary.json'), 'the plan is written after the summary');
+  assert.ok(mtime('summary.json') >= mtime('snapshot-claims.jsonl'), 'and the summary after the snapshots');
+  assert.ok(mtime('snapshot-claims.jsonl') >= mtime('snapshot-tag_decisions.jsonl'));
+
+  let forks = 0;
+  /** A copy of the plan's folder with something wrong in the record next to the plan; `change(dir)` makes it wrong. */
+  const fork = (change) => {
+    const dir = join(w.root, 'runs', `fork-${++forks}`);
+    mkdirSync(dir, { recursive: true });
+    for (const name of ['plan.jsonl', 'summary.json', 'snapshot-claims.jsonl', 'snapshot-tag_decisions.jsonl']) copyFileSync(join(p.runDir, name), join(dir, name));
+    change(dir);
+    return join(dir, 'plan.jsonl');
+  };
+  const lines = (file) => readFileSync(file, 'utf8').split('\n').filter(Boolean);
+  const cases = [
+    ['no summary', (d) => rmSync(join(d, 'summary.json')), /summary\.json is missing/],
+    ['a summary that is not JSON', (d) => writeFileSync(join(d, 'summary.json'), '{ not json'), /summary\.json cannot be read/],
+    ['a summary without keep_waiting', (d) => writeFileSync(join(d, 'summary.json'), JSON.stringify({ run_id: 'x' })), /does not say whether the plan was made with --keep-waiting/],
+    ['keep_waiting that is not a boolean', (d) => writeFileSync(join(d, 'summary.json'), JSON.stringify({ keep_waiting: 'yes' })), /does not say whether/],
+    ['no claims snapshot', (d) => rmSync(join(d, 'snapshot-claims.jsonl')), /snapshot-claims\.jsonl is missing/],
+    ['no Tag decisions snapshot', (d) => rmSync(join(d, 'snapshot-tag_decisions.jsonl')), /snapshot-tag_decisions\.jsonl is missing/],
+    ['a snapshot with a page less', (d) => writeFileSync(join(d, 'snapshot-claims.jsonl'), `${lines(join(d, 'snapshot-claims.jsonl')).slice(1).join('\n')}\n`), /snapshot-claims\.jsonl holds 4 page\(s\) and the plan trashes 5 Claims row\(s\)/],
+    ['a snapshot with a page more', (d) => writeFileSync(join(d, 'snapshot-claims.jsonl'), `${[...lines(join(d, 'snapshot-claims.jsonl')), lines(join(d, 'snapshot-tag_decisions.jsonl'))[0]].join('\n')}\n`), /snapshot-claims\.jsonl holds 6 page\(s\)/],
+    ['a snapshot of other pages', (d) => writeFileSync(join(d, 'snapshot-claims.jsonl'), `${[...lines(join(d, 'snapshot-claims.jsonl')).slice(1), lines(join(d, 'snapshot-tag_decisions.jsonl'))[0]].join('\n')}\n`), /snapshot-claims\.jsonl holds 5 page\(s\) and the plan trashes 5 Claims row\(s\): they are not the same pages/],
+    ['a snapshot with a page twice', (d) => writeFileSync(join(d, 'snapshot-claims.jsonl'), `${[...lines(join(d, 'snapshot-claims.jsonl')).slice(1), lines(join(d, 'snapshot-claims.jsonl'))[1]].join('\n')}\n`), /they are not the same pages/],
+  ];
+  const before = w.fake.requests.length;
+  for (const [label, change, re] of cases) {
+    const file = fork(change);
+    const a = await run(w, 'apply', { plan: file });
+    assert.equal(a.exit, EXIT.INVALID, label);
+    assert.equal(a.report.sentence, "Remove: nothing was done, because the snapshot or the summary next to the plan is missing or is not the plan's own.", label);
+    assert.equal(a.report.next, 'Next: make a new plan.');
+    assert.match(readJson(join(a.runDir, 'run.json')).record_problems.join(' | '), re, label);
+  }
+  assert.equal(w.fake.requests.length, before, 'not one request, for any of them');
+  assert.deepEqual(patches(w), []);
+  // the plan's own record is whole: the apply goes through
+  assert.equal((await applyOf(w, p)).exit, EXIT.OK);
 });
 
 // ---- restore --------------------------------------------------------------------------------------------------------------------------

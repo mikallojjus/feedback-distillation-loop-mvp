@@ -4,7 +4,7 @@
 //   readPlan(dir)                                                -> { header, ops, dir, file } read from <dir>/plan.jsonl, every line validated
 //   checkPlan(plan, config, { setup, root })                     -> { ok, problems, counts } before any request is made
 //   applyPlan({ plan, dir, client, config, schemas, pulled,      -> { code, done, failed, skipped, mismatches, uncertain, unchecked,
-//              log, setup, root, now })                              created, created_by_table, trashed_by_table, already_done, stopped, ledger, lists }
+//              log, setup, root, now, interrupt })                   created, created_by_table, trashed_by_table, already_done, stopped, ledger, lists }
 //   firstPageIds(root)                                           -> Set of the normalised table ids in setup/first-page.json (the ids no trash op may name)
 //   isDemoRoot(root)                                             -> true for a state folder directly under .../runs/demos/ (a practice page)
 //   readLedger(dir)                                              -> Map of op_index -> the last ledger line of that op
@@ -20,6 +20,9 @@
 // no properties. applyPlan trashes a page only when the pull it was given holds that page under that key (or the page is in the trash already, which counts as done), looks at a row of Tag
 // decisions first (a person who filled Tag outcome, Your note or Agent is right since the plan was made stops the run: stopped.reason "person_set"), reads every page back with
 // retrievePage (in the trash by in_trash or archived), and writes the same ledger line as for a create or an update, so a stopped run goes on without sending a done step again.
+// A Claims row is trashed second: only when every Tag decisions trash op of its claim (the Key's Geo ID) is done and read back as trashed in the ledger, and when its page's relation "Tag decisions"
+// (CLAIMS_TD_RELATION) lists no page that is not in the trash. A claim that fails this is left alone and its op is a failed one that names the row (exit 1 in remove.mjs); the next run finishes it.
+// `interrupt` (a function that returns a reason, or null) is asked before each op that is not done; a reason ends the run there as stopped.reason (remove.mjs: runs/PAUSED).
 //
 // applyPlan is the only code that turns a plan into requests. It checks the plan again, makes sure the plan file on disk is the plan
 // it is about to send, encodes every value with the table's schema before the first request, then sends the ops in order through the
@@ -34,7 +37,7 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import {
-  ADD_SCRIPT, COPY_LIVE_SCRIPT, REMOVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, TD_EDITOR, TRASHABLE_TABLES, addableProperties, copyLiveProperties, editorColumns, isProtected, isV2, tableEntry,
+  ADD_SCRIPT, CLAIMS_TD_RELATION, COPY_LIVE_SCRIPT, REMOVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, TD_EDITOR, TRASHABLE_TABLES, addableProperties, copyLiveProperties, editorColumns, isProtected, isV2, tableEntry,
   writableProperties,
 } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
@@ -575,7 +578,7 @@ function settlePlanFile(plan, dir) {
  * was left uncertain, could not be read back, or was never reached: run the same command again) or 2 (a read-back differed).
  */
 export async function applyPlan({
-  plan, dir, client, config, schemas, pulled = {}, log = null, setup = false, root = agentRoot(), now = () => new Date(),
+  plan, dir, client, config, schemas, pulled = {}, log = null, setup = false, root = agentRoot(), now = () => new Date(), interrupt = null,
 } = {}) {
   if (!client || typeof client.createPage !== 'function' || typeof client.updatePage !== 'function' || typeof client.retrievePage !== 'function') {
     throw new TypeError('applyPlan: a Notion client is required (a script without a token must stop before this)');
@@ -657,6 +660,34 @@ export async function applyPlan({
     }
   }
 
+  // The Claims rows of a trash plan go second (P51): the indexes of the trash ops of each claim's Tag decisions rows, by the Geo ID in front of the "::" of their Key
+  const rowsOfClaim = new Map();
+  ops.forEach((o, j) => {
+    if (o?.op !== 'trash' || o.table !== 'tag_decisions') return;
+    const at = String(o.key).lastIndexOf('::');
+    if (at < 0) return;
+    const geo = normId(String(o.key).slice(0, at));
+    rowsOfClaim.set(geo, [...(rowsOfClaim.get(geo) ?? []), j]);
+  });
+  const trashedInLedger = (j) => last.get(j)?.status === 'done' && last.get(j)?.read_back === 'ok';
+
+  // The first Tag decisions row of a claim that is not in the trash: the Claims page's relation "Tag decisions", read at the moment before the claim is trashed. The rows of this plan that the ledger
+  // shows trashed are not looked at again; any other page it lists (a row created after the pull, one the plan does not list) is read, and one that is not in the trash is returned. Null when
+  // there is none, and when the Claims table has no such column (nothing to look at).
+  async function liveRowOfClaim(op, fresh, schema) {
+    const def = schema?.properties?.[CLAIMS_TD_RELATION];
+    if (def?.type !== 'relation') return null;
+    const decoded = decodePage(fresh, schema);
+    let ids = decoded.props[CLAIMS_TD_RELATION] ?? [];
+    if ((decoded.relation_has_more ?? []).includes(CLAIMS_TD_RELATION)) ids = (await client.retrievePropertyItem(op.page_id, def.id)).map((x) => x?.relation?.id).filter(Boolean);
+    const known = new Set((rowsOfClaim.get(normId(op.key)) ?? []).filter(trashedInLedger).map((j) => normId(last.get(j).page_id ?? ops[j].page_id)));
+    for (const id of ids) {
+      if (known.has(normId(id))) continue;
+      if (!isInTrash(await client.retrievePage(id))) return id;
+    }
+    return null;
+  }
+
   // 5. the ops, in order
   let already = 0;
   let consecutive = 0;
@@ -676,11 +707,31 @@ export async function applyPlan({
       continue;
     }
 
+    // the caller may stop the run between two ops (remove.mjs: runs/PAUSED); the ledger lets the next run go on from here
+    const interrupted = interrupt?.() ?? null;
+    if (interrupted) {
+      stopped = { op_index: i, key: op.key, reason: interrupted };
+      break;
+    }
+
     if (op.op === 'trash') {
       // P51. The page is trashed only when the pull of this run holds it under this key (so it is a row of the table named in the plan, never a page of the first page or any other),
       // and a row of Tag decisions only while no person has filled one of its three editor columns. A page that is in the trash already counts as done and is not sent again.
+      // A Claims row goes second: only when every Tag decisions row of the claim that the plan lists is done and read back as trashed in the ledger, and when the Claims page itself
+      // shows no Tag decisions row (its relation) that is still live. A claim whose row is not in the trash is left alone, ends the run with exit 1 (a failed op, named), and the next run finishes it.
+      if (op.table === 'claims') {
+        const blockers = (rowsOfClaim.get(normId(op.key)) ?? []).filter((j) => !trashedInLedger(j));
+        if (blockers.length) {
+          record(i, {
+            page_id: op.page_id, status: 'failed', sent: null,
+            error: `not trashed: the Tag decisions row ${short(ops[blockers[0]].key, 60)} of this claim is not in the trash yet${blockers.length > 1 ? ` (and ${blockers.length - 1} more)` : ''}`,
+          });
+          continue;
+        }
+      }
       let failure = null;
       let refused = false;
+      let blocked = false;
       let taken = null;
       let wasTrashed = false;
       let sent = null;
@@ -690,11 +741,16 @@ export async function applyPlan({
         const refuse = (why) => Object.assign(new Error(`refused: ${why}`), { refused: true });
         if (!pulledHas(pulled, op.table)) throw refuse(`the pull of ${op.table} was not given, so the page cannot be matched to a row`);
         if (row !== null && !inPull) throw refuse(`the pull holds a different page for this key (${row.page_id ?? 'no page id'}), not the one in the plan`);
-        if (!inPull || op.table === 'tag_decisions') {
-          const fresh = await client.retrievePage(op.page_id); // not in the pull: it may be in the trash already; a row of Tag decisions: the last look at the editor columns
+        if (!inPull || op.table === 'tag_decisions' || op.table === 'claims') {
+          // not in the pull: it may be in the trash already; a row of Tag decisions: the last look at the editor columns; a Claims row: the last look at its Tag decisions rows
+          const fresh = await client.retrievePage(op.page_id);
           if (isInTrash(fresh)) wasTrashed = true;
           else if (!inPull) throw refuse(`this page is not a row of ${op.table} in the pull, so it is not trashed`);
-          else taken = TD_EDITOR.find((c) => filled(decodePage(fresh, schema).props[c])) ?? null;
+          else if (op.table === 'tag_decisions') taken = TD_EDITOR.find((c) => filled(decodePage(fresh, schema).props[c])) ?? null;
+          else {
+            const live = await liveRowOfClaim(op, fresh, schema);
+            if (live) throw Object.assign(new Error(`not trashed: the Tag decisions row ${live} of this claim is not in the trash`), { blocked: true });
+          }
         }
         if (!wasTrashed && !taken) {
           await client.trashPage(op.page_id);
@@ -703,6 +759,12 @@ export async function applyPlan({
       } catch (e) {
         failure = e;
         refused = e?.refused === true;
+        blocked = e?.blocked === true;
+      }
+      if (failure && blocked) {
+        // a live row of the claim: the claim stays, nothing was sent, and it is no failure of Notion (it does not count toward the stop)
+        record(i, { page_id: op.page_id, status: 'failed', sent: null, error: short(failure.message, 400) });
+        continue;
       }
       if (failure) {
         consecutive += 1;

@@ -473,6 +473,9 @@ export const REMOVE_SCRIPT = 'remove';
 /** The tables whose rows a plan of the remove script may trash (P51): Claims and Tag decisions. Nothing else is ever trashed by a script. */
 export const TRASHABLE_TABLES = Object.freeze(['claims', 'tag_decisions']);
 
+/** The column of Claims that lists the claim's rows in Tag decisions (STRUCTURE-V2.md): remove.mjs reads it before it trashes a claim (P51). */
+export const CLAIMS_TD_RELATION = 'Tag decisions';
+
 /** The name of the column that holds the agent's view of a decision on v2 (STRUCTURE-V2.md, P45): "Agent reading" on the first page. */
 export const V2_VIEW_COLUMN = TD.view;
 
