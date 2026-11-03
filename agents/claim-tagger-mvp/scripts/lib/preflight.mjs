@@ -7,26 +7,29 @@
 //   exit 3  runs/PAUSED exists, or Paused is ticked in Agent settings in the pull (hard rule 7: a person clears it, never the agent)
 //   exit 4  the rulebook file on disk does not verify or does not match its lock, or the pull's drift.json has a `judged` entry (a judged tag
 //           whose Notion text differs from the lock) or a judged tag is `missing` from the Rulebook copy: the reason names the tag and the column
-//   adopt   drift.json entries under `adopted` are tags without rules in force that someone edited in Notion; with adopt (the default) they make a
-//           new edition ("adopted from Notion: <tag> <columns>") through writeEdition, and the command goes on. status passes adopt: false.
+//   adopt   drift.json entries under `adopted` are tags that are not judged that someone edited in Notion, and entries under `toggled` are tags whose Judged box was
+//           ticked or unticked; with adopt (the default) they make one new edition through writeEdition, with the changelog line "adopted from Notion: <tag> <columns>; ..." for the
+//           edits and one line "Judged on: <tag>" / "Judged off: <tag>" for each toggle, and the command goes on. A toggle never stops a command. status passes adopt: false.
 //   warning runs/SETUP exists (a builder session is open); a check that could not run (no pull yet, no Agent settings, no drift.json, a drift check
 //           that was skipped) is a warning, never silence
-// `kind` is paused_file, paused_notion, rubric_file or drift for a refusal, null otherwise. `edition` is the edition in force when the check ends.
+// `kind` is paused_file, paused_notion, rubric_file or drift for a refusal, null otherwise. `edition` is the edition in force when the check ends. `toggled` lists the Judged
+// ticks taken over ({ tag, judged }).
 
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { groupOf } from './config.mjs';
+import { isDeepStrictEqual } from 'node:util';
+import { isJudgedTag } from './config.mjs';
 import { plural, listNames, tableLink, viewLink } from './editor-words.mjs';
 import { driftStops } from '../judge.mjs';
 import { latestPullId, loadPull } from '../pull.mjs';
-import { buildRubric, checkLock, nextEdition, readLock, readRubric, writeEdition } from './rubric.mjs';
+import { buildRubric, checkLock, lockOf, nextEdition, readLock, readRubric, toggleClauses, writeEdition } from './rubric.mjs';
 
-const refuse = (code, kind, reason, extra = {}) => ({ ok: false, code, kind, reason, tag: null, column: null, stops: [], warnings: [], adopted: [], edition: null, ...extra });
+const refuse = (code, kind, reason, extra = {}) => ({ ok: false, code, kind, reason, tag: null, column: null, stops: [], warnings: [], adopted: [], toggled: [], edition: null, ...extra });
 
 /** Run the checks. Never throws for a refusal: read `ok`, `code` and `reason`. */
 export function preflight({ root, config, pullId = null, now = () => new Date(), adopt = true } = {}) {
   const warnings = [];
-  const done = (extra = {}) => ({ ok: true, code: 0, kind: null, reason: null, tag: null, column: null, stops: [], warnings, adopted: [], edition: null, ...extra });
+  const done = (extra = {}) => ({ ok: true, code: 0, kind: null, reason: null, tag: null, column: null, stops: [], warnings, adopted: [], toggled: [], edition: null, ...extra });
 
   if (existsSync(join(root, 'runs', 'PAUSED'))) {
     return refuse(3, 'paused_file', 'the PAUSED file exists, so a person has to remove it', { warnings });
@@ -51,9 +54,10 @@ export function preflight({ root, config, pullId = null, now = () => new Date(),
 
   // the rulebook file on disk must be a real edition that agrees with its lock
   let rubric = null;
+  let lock = null;
   try {
     rubric = readRubric(root);
-    const lock = rubric ? readLock(root) : null;
+    lock = rubric ? readLock(root) : null;
     if (rubric && lock === null) warnings.push('the rulebook has no lock file, so the saved edition was not compared with one');
     else if (rubric) {
       const same = checkLock(rubric, lock);
@@ -66,12 +70,14 @@ export function preflight({ root, config, pullId = null, now = () => new Date(),
 
   let edition = rubric?.edition ?? null;
   const adopted = [];
+  const toggledIn = [];
   if (pull && rubric) {
     const drift = pull.drift();
     if (drift === null) warnings.push('the pull has no drift check, so the rulebook text in Notion was not compared with the saved edition');
     else if (typeof drift.skipped === 'string') warnings.push(`the drift check was skipped in the pull (${drift.skipped}), so the rulebook text in Notion was not compared with the saved edition`);
     else {
-      const judgedNames = new Set(rubric.tags.filter((t) => t.judged && groupOf(config, t.name) !== null).map((t) => t.name));
+      if (drift.no_judged_column === true) warnings.push('the Rulebook in Notion has no Judged column, so the ticks could not be read and the saved ones stand; ask the engineer to run the setup build');
+      const judgedNames = new Set(rubric.tags.filter((t) => isJudgedTag(config, t)).map((t) => t.name));
       const stops = driftStops(drift, judgedNames);
       if (stops.length) {
         const first = stops[0];
@@ -79,24 +85,34 @@ export function preflight({ root, config, pullId = null, now = () => new Date(),
         return refuse(4, 'drift', `the rulebook text in Notion no longer matches the saved edition (${what})`, { tag: first.tag, column: first.column, stops, warnings });
       }
       const changed = (Array.isArray(drift.adopted) ? drift.adopted : []).filter((a) => a && typeof a.tag === 'string');
-      if (changed.length && adopt) {
+      const toggled = (Array.isArray(drift.toggled) ? drift.toggled : []).filter((t) => t && typeof t.tag === 'string' && typeof t.judged === 'boolean');
+      if ((changed.length || toggled.length) && adopt) {
         try {
-          const next = buildRubric(pull.rulebook() ?? [], { config, edition: nextEdition(rubric.edition, now()), now });
-          const reason = `adopted from Notion: ${changed.map((a) => `${a.tag} ${(a.columns ?? []).join(', ')}`.trim()).join('; ')}`;
-          writeEdition(root, next, { reason });
-          edition = next.edition;
-          adopted.push(...changed);
+          const next = buildRubric(pull.rulebook() ?? [], { config, edition: nextEdition(rubric.edition, now()), now, judgedFrom: lock });
+          // the pull's drift can be older than the edition in force (a second command on the same pull): an edition whose lock would say what the lock in force says is not written again.
+          // (A lock made before the Judged box has no judged map, so the first edition after it is always written, even when every flag comes out the same.)
+          const { edition: _e, locked_at: _l, ...wanted } = lockOf(next);
+          const { edition: _e2, locked_at: _l2, ...held } = lock ?? {};
+          if (lock === null || !isDeepStrictEqual(wanted, held)) {
+            // one line for the edits (as always), then one line per tag whose Judged box changed: "Judged on: <tag>", "Judged off: <tag>"
+            const edits = changed.map((a) => `${a.tag} ${(a.columns ?? []).join(', ')}`.trim());
+            writeEdition(root, next, { reason: [...(edits.length ? [`adopted from Notion: ${edits.join('; ')}`] : []), ...toggleClauses(toggled)] });
+            edition = next.edition;
+            adopted.push(...changed);
+            toggledIn.push(...toggled);
+          }
         } catch (e) {
-          warnings.push(`the edit${changed.length === 1 ? '' : 's'} to ${listNames(changed.map((a) => a.tag))} in Notion could not be taken over (${e.message.split('\n')[0]})`);
+          warnings.push(`the ${[changed.length ? `edit${changed.length === 1 ? '' : 's'} to ${listNames(changed.map((a) => a.tag))}` : null, toggled.length ? `Judged box of ${listNames(toggled.map((t) => t.tag))}` : null].filter(Boolean).join(' and the ')} in Notion could not be taken over (${e.message.split('\n')[0]})`);
         }
-      } else if (changed.length) {
-        warnings.push(`${plural(changed.length, 'tag')} without rules ${changed.length === 1 ? 'has' : 'have'} been edited in Notion; the next command takes the edit over`);
+      } else {
+        if (changed.length) warnings.push(`${plural(changed.length, 'tag')} that ${changed.length === 1 ? 'is' : 'are'} not judged ${changed.length === 1 ? 'has' : 'have'} been edited in Notion; the next command takes the edit over`);
+        if (toggled.length) warnings.push(`${toggleClauses(toggled).join('; ')} in Notion; the next command takes ${toggled.length === 1 ? 'it' : 'them'} over`);
       }
     }
   }
 
   if (existsSync(join(root, 'runs', 'SETUP'))) warnings.push('a builder session is open (the SETUP marker exists)');
-  return done({ warnings, adopted, edition });
+  return done({ warnings, adopted, toggled: toggledIn, edition });
 }
 
 /**

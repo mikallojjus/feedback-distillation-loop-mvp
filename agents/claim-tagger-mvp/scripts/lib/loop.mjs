@@ -382,6 +382,7 @@ export function runPreflight(ctx, { adopt = true, allowDrift = false } = {}) {
   const pre = preflight({ root: ctx.root, config: ctx.config, pullId: ctx.pull?.id ?? null, now: ctx.now, adopt });
   ctx.warnings.push(...pre.warnings);
   if (pre.adopted.length) ctx.record.adopted = pre.adopted;
+  if (pre.toggled.length) ctx.record.toggled = pre.toggled;
   if (!pre.ok && allowDrift && pre.kind === 'drift') {
     ctx.edition = readRubric(ctx.root)?.edition ?? null; // restore answers a drift: it goes on, and says what it saw
     return pre;

@@ -10,6 +10,12 @@
           "description": "The tag's name; one row per tag."
         },
         {
+          "name": "Judged",
+          "type": "checkbox",
+          "options": [],
+          "description": "Ticked: the agent judges this tag on every claim. Untick to stop judging it; its rules then change freely until it is ticked again."
+        },
+        {
           "name": "Category",
           "type": "select",
           "options": [
@@ -135,6 +141,7 @@
         "name": "Rulebook",
         "columns": [
           "Name",
+          "Judged",
           "Category",
           "Status",
           "When to use",

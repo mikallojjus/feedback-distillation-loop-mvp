@@ -12,7 +12,7 @@ import { readEdition, readLock, readRubric } from '../../agents/claim-tagger-mvp
 import { openBuilder } from '../../agents/claim-tagger-mvp/scripts/setup.mjs';
 import {
   AUDIT_NOTE, InputError, NO_REASONING, auditForPick, auditOps, auditProperties, buildCanaries, claimLink, claimOps, formatWhen, readAudit, readPick, readTaxonomy, richTextFromPieces,
-  migrationOps, protectedInLinks, rulebookOps, settingsProperties, unknownOptions, withLinkedSources,
+  migrationOps, parseTagNames, protectedInLinks, rulebookOps, settingsProperties, stepSeedJudged, unknownOptions, withLinkedSources,
 } from '../../agents/claim-tagger-mvp/scripts/lib/setup-steps.mjs';
 import {
   AUDIT_FILE, CONTEXT_DEPENDENT_EXAMPLES, EDITION, NOW, REAL_TAXONOMY, SELF_CONTAINED_EXAMPLES, SPACE_NAMES, ALLOWED_SPACE_NAMES, builderClient, cleanTmp, forFake, freshStructure, freshStructureBeforeOptions, fullTaxonomy, makePick, newWorld, readAuditFile,
@@ -113,7 +113,7 @@ test('builder open, close and status and register keep their behaviour', async (
 
 test('every command that writes refuses with exit 2 unless runs/SETUP exists, and touches nothing', async () => {
   const w = newWorld({ structure: true });
-  for (const name of ['pages', 'databases', 'views', 'build', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'all']) {
+  for (const name of ['pages', 'databases', 'views', 'build', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'seed-judged', 'all']) {
     const r = await w.run([name]);
     assert.equal(r.code, 2, name);
     assert.match(r.err[0], new RegExp(`setup ${name}: no builder session is open \\(runs/SETUP is missing\\)`), name);
@@ -135,7 +135,7 @@ test('structure, preview, api-check and verify need no session; the others stop 
   mkdirSync(join(w.root, 'runs'), { recursive: true });
   writeFileSync(join(w.root, 'runs', 'PAUSED'), 'paused\n');
   const before = w.fake.requests.length;
-  for (const name of ['pages', 'build', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'all']) {
+  for (const name of ['pages', 'build', 'rulebook', 'claims', 'rubric', 'canaries', 'settings', 'seed-judged', 'all']) {
     const r = await w.run([name]);
     assert.equal(r.code, 3, name);
     assert.match(r.err[0], /runs\/PAUSED exists/);
@@ -933,7 +933,8 @@ test('rubric needs the Rulebook copy first; then it writes edition <today>.1 wit
   assert.equal(changelog, `- ${EDITION.slice(0, 10)} · edition ${EDITION} · setup: copied from the taxonomy\n`);
   const pages = readJson(join(w.root, 'setup', 'rulebook-pages.json'));
   assert.deepEqual(rubric.tags.map((t) => [t.name, t.page_id]), [['Context-dependent', pages['Context-dependent']], ['Trailing period', pages['Trailing period']]]);
-  assert.deepEqual(rubric.tags.map((t) => t.judged), [true, false]);
+  assert.deepEqual(rubric.tags.map((t) => t.judged), [false, false], 'the rubric step ticks nothing: the Judged box belongs to the editors (seed-judged ticks it once), so a tag with rules is not judged until it is ticked');
+  assert.deepEqual(rubric.tags.map((t) => t.rules.length > 0), [true, false]);
   assert.equal(rubric.tags[0].rules.length, 5);
   assert.deepEqual(rubric.tags[0].example_claims, CONTEXT_DEPENDENT_EXAMPLES);
   assert.deepEqual(rubric.source, { database_id: 'f05273e214eb8353b0a981544507de32', data_source_id: 'b65273e2-14eb-8362-86a6-870ea8d632f4', read_via: 'connector', read_at: '2026-10-15T11:40:00.000Z' });
@@ -1424,7 +1425,8 @@ test('the real inputs (13 taxonomy rows, the committed Geo pick, the audit) buil
   const canaries = readLines(join(w.root, 'evals', 'canaries.jsonl'));
   assert.deepEqual([canaries.filter((x) => x.expected === 'apply').length, canaries.filter((x) => x.expected === 'do_not_apply').length], [6, 5]);
   const rubric = readRubric(w.root);
-  assert.deepEqual(rubric.tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent']);
+  assert.deepEqual(rubric.tags.filter((t) => t.judged).map((t) => t.name), [], 'no box is ticked by the setup: the rubric step ticks nothing');
+  assert.deepEqual(rubric.tags.filter((t) => t.rules.length > 0 && t.capability === 'text').map((t) => t.name), ['Context-dependent']);
   assert.equal(rubric.tags.length, 13);
   const verify = readJson(join(w.root, 'runs', 'builder', 'verify.json'));
   assert.deepEqual(verify.differences, []);
@@ -1505,6 +1507,186 @@ test('the input readers say what is wrong with a file', () => {
     [{ key: 'g', properties: { 'Geo Name': 'n', 'Geo ID': 'g', 'Geo Space': 'AI', 'Geo Created': '2026-09-14', 'Geo Tags': ['Debate'] } }], 'null and empty values are left unset, a box that is false stays written');
   assert.deepEqual(claimOps({ rows: [{ 'Geo ID': 'g', 'Geo Name': 'n', 'Geo Is factual': false }] }, ['Geo Name', 'Geo ID', 'Geo Is factual'])[0].properties, { 'Geo Name': 'n', 'Geo ID': 'g', 'Geo Is factual': false });
   assert.throws(() => auditOps(readAudit(AUDIT_FILE), {}), (e) => e instanceof InputError && /10 audited claim\(s\) have no row/.test(e.message));
+});
+
+// ---- the Judged box: the column in the structure, and seed-judged (decision P53) ---------------------------------------------------------------
+
+const judgedOf = (w) => Object.fromEntries(rowsOf(w, 'rulebook').map((r) => [r.Name, r.Judged]));
+const patches = (w) => w.fake.requests.filter((r) => r.method === 'PATCH' && /^\/pages\//.test(r.path));
+
+/** A world built from the structure without the Judged column (the Rulebook as it was before the box), filled by `all`; the committed structure (with the box) is put back afterwards by `restoreStructure`. */
+async function builtWithoutJudged() {
+  const w = newWorld({ structure: 'fresh' });
+  assert.equal(openBuilder({ root: w.root, reason: 'test' }).ok, true);
+  const inputs = writeInputs(join(w.root, 'inputs'), { taxonomy: smallTaxonomy() });
+  mkdirSync(join(w.root, 'setup'), { recursive: true });
+  copyFileSync(inputs.claims, join(w.root, 'setup', 'geo-claims-pick.json'));
+  const file = join(w.root, 'setup', 'structure.json');
+  const structure = readJson(file);
+  structure.tables.rulebook.columns = structure.tables.rulebook.columns.filter((c) => c.name !== 'Judged');
+  structure.tables.rulebook.default_view.columns = structure.tables.rulebook.default_view.columns.filter((c) => c !== 'Judged');
+  writeFileSync(file, `${JSON.stringify(structure, null, 2)}\n`);
+  assert.equal((await w.run(['structure', '--options-from', inputs.claims])).code, 0);
+  assert.equal((await w.run(['build'])).code, 0);
+  const all = await w.run(allArgs({ ...w, inputs }));
+  assert.equal(all.code, 0, all.text);
+  const restoreStructure = async () => {
+    const full = readJson(file);
+    full.tables.rulebook.columns.splice(1, 0, freshStructure().tables.rulebook.columns.find((c) => c.name === 'Judged'));
+    full.tables.rulebook.default_view.columns.splice(1, 0, 'Judged');
+    writeFileSync(file, `${JSON.stringify(full, null, 2)}\n`);
+  };
+  return { ...w, inputs, restoreStructure };
+}
+
+test('the structure has the Judged checkbox on the Rulebook, right after Name in its own view, with the description the editors read', () => {
+  const structure = freshStructure();
+  const rulebook = structure.tables.rulebook;
+  const column = rulebook.columns.find((c) => c.name === 'Judged');
+  assert.deepEqual(column, {
+    name: 'Judged', type: 'checkbox', options: [],
+    description: 'Ticked: the agent judges this tag on every claim. Untick to stop judging it; its rules then change freely until it is ticked again.',
+  });
+  assert.equal(rulebook.columns[1].name, 'Judged', 'right after Name in the table');
+  assert.deepEqual(rulebook.default_view.columns.slice(0, 3), ['Name', 'Judged', 'Category'], 'and in the Rulebook\'s own view');
+  assert.equal(rulebook.columns.some((c) => c.name === 'Priority'), false, 'Priority is a column people added: it is not in the structure');
+});
+
+test('build adds the Judged column to a Rulebook that lacks it and leaves the rows unticked; verify expects the column before and finds it after', async () => {
+  const w = await builtWithoutJudged();
+  const table = tableEntries(w.root).rulebook;
+  assert.equal((await restClient(w.fake).retrieveDatabase(table.database_id)).properties.Judged, undefined, 'the table of the older build has no such column');
+  assert.equal((await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', w.inputs.claims])).code, 0, 'verify is clean against the structure without the column');
+
+  await w.restoreStructure();
+  const before = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', w.inputs.claims]);
+  assert.equal(before.code, 2, before.text);
+  assert.match(before.text, /rulebook: missing column - "Judged" \(checkbox\) is not in the table/);
+
+  const build = await w.run(['build']);
+  assert.equal(build.code, 0, build.text);
+  assert.match(build.text, /table "rulebook": 1 column\(s\) added \(Judged\)/);
+  assert.equal((await restClient(w.fake).retrieveDatabase(table.database_id)).properties.Judged.type, 'checkbox');
+  assert.deepEqual(judgedOf(w), { 'Context-dependent': false, 'Trailing period': false }, 'the existing rows come out unticked: building ticks nothing');
+  const after = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', w.inputs.claims]);
+  assert.equal(after.code, 0, after.text);
+  assert.deepEqual(readJson(join(w.root, 'runs', 'builder', 'verify.json')).differences, []);
+  const again = await w.run(['build']);
+  assert.doesNotMatch(again.text, /column\(s\) added/, 'a second build adds nothing');
+  // a column that people added (Priority) is reported as before, not as a difference of the structure
+  await builderClient(w.fake).updateDataSource(table.data_source_id, { properties: { Priority: { number: {} } } });
+  const extra = await w.run(['verify', '--taxonomy', w.inputs.taxonomy, '--claims', w.inputs.claims]);
+  assert.match(extra.text, /rulebook: extra column - "Priority" \(number\) is in the table but not in the structure/);
+  assert.doesNotMatch(extra.text, /Judged/);
+});
+
+test('seed-judged ticks the named Rulebook rows, reads them back, logs the plan and the ledger in the run folder, and leaves every other row alone', async () => {
+  const w = await filled({ taxonomy: smallTaxonomy() });
+  assert.deepEqual(judgedOf(w), { 'Context-dependent': false, 'Trailing period': false });
+  const r = await w.run(['seed-judged', '--tags', 'Context-dependent']);
+  assert.equal(r.code, 0, r.text);
+  assert.deepEqual(r.out, ['seed-judged: Judged ticked and read back on Context-dependent']);
+  assert.deepEqual(judgedOf(w), { 'Context-dependent': true, 'Trailing period': false });
+  const dir = lastRun(w.root, 'seed-judged');
+  const plan = readPlan(dir);
+  assert.equal(plan.header.plan.script, 'seed-judged');
+  assert.deepEqual(plan.ops.map((o) => [o.op, o.table, o.key, o.properties, o.expect]), [['update', 'rulebook', 'Context-dependent', { Judged: true }, { Judged: false }]]);
+  const ledger = readLines(join(dir, 'ledger.jsonl'));
+  assert.deepEqual(ledger.map((l) => [l.status, l.read_back, l.sent]), [['done', 'ok', 'update']]);
+  const record = readJson(join(dir, 'run.json'));
+  assert.deepEqual(record.seed_judged, { ticked: ['Context-dependent'], already: [] });
+  assert.equal(record.exit_code, 0);
+  assert.deepEqual(record.args, ['seed-judged', '--tags', 'Context-dependent']);
+  assert.equal(checkPlan(plan, readJson(join(w.root, 'config.json'))).ok, true);
+});
+
+test('seed-judged skips a row that is ticked already and says so, runs again to nothing, and never unticks a row it is not given', async () => {
+  const w = await filled({ taxonomy: smallTaxonomy() });
+  assert.equal((await w.run(['seed-judged', '--tags', 'Context-dependent'])).code, 0);
+  const sent = patches(w).length;
+  const again = await w.run(['seed-judged', '--tags', 'Context-dependent']);
+  assert.deepEqual([again.code, again.out], [0, ['seed-judged: Context-dependent is ticked already; nothing was written']]);
+  assert.equal(patches(w).length, sent, 'nothing was sent');
+  // an editor unticks one by hand: the seed does not touch a row it is not asked about, and never writes false
+  const cd = rowsOf(w, 'rulebook').find((r) => r.Name === 'Context-dependent');
+  w.fake.editRow(cd.page_id, { Judged: false });
+  const both = await w.run(['seed-judged', '--tags', 'Trailing period, Context-dependent , Trailing period']);
+  assert.equal(both.code, 0, both.text);
+  assert.deepEqual(judgedOf(w), { 'Context-dependent': true, 'Trailing period': true }, 'named twice, ticked once');
+  const third = await w.run(['seed-judged', '--tags', 'Trailing period']);
+  assert.deepEqual(third.out, ['seed-judged: Trailing period is ticked already; nothing was written']);
+  w.fake.editRow(cd.page_id, { Judged: false });
+  assert.equal((await w.run(['seed-judged', '--tags', 'Trailing period'])).code, 0);
+  assert.deepEqual(judgedOf(w), { 'Context-dependent': false, 'Trailing period': true }, 'a box an editor cleared stays cleared unless the seed is asked for that tag');
+  const planned = runDirs(w.root, 'seed-judged').filter((d) => existsSync(join(d, 'plan.jsonl'))).flatMap((d) => readPlan(d).ops);
+  assert.ok(planned.length >= 3);
+  assert.equal(planned.every((o) => o.properties.Judged === true), true, 'no plan of the seed ever holds a false');
+  // mixed: one ticked, one not: the line names both
+  w.fake.editRow(rowsOf(w, 'rulebook').find((r) => r.Name === 'Trailing period').page_id, { Judged: false });
+  const mixed = await w.run(['seed-judged', '--tags', 'Context-dependent,Trailing period']);
+  assert.deepEqual(mixed.out, ['seed-judged: Judged ticked and read back on Context-dependent and Trailing period']);
+  w.fake.editRow(cd.page_id, { Judged: true });
+  w.fake.editRow(rowsOf(w, 'rulebook').find((r) => r.Name === 'Trailing period').page_id, { Judged: false });
+  const half = await w.run(['seed-judged', '--tags', 'Context-dependent,Trailing period']);
+  assert.deepEqual(half.out, ['seed-judged: Judged ticked and read back on Trailing period; Context-dependent was ticked already']);
+});
+
+test('seed-judged refuses an unknown name and writes nothing, also when other names are fine; it needs --tags, the session, a Judged column and an unpaused agent', async () => {
+  const w = await filled({ taxonomy: smallTaxonomy() });
+  const before = patches(w).length;
+  const unknown = await w.run(['seed-judged', '--tags', 'Context-dependent,Context dependent']);
+  assert.equal(unknown.code, 2);
+  assert.match(unknown.err[0], /nothing was written: "Context dependent" is not a row of the Rulebook \(it has Context-dependent, Trailing period\)/);
+  assert.deepEqual(judgedOf(w), { 'Context-dependent': false, 'Trailing period': false }, 'the known name was not ticked either');
+  assert.equal(patches(w).length, before);
+  const none = await w.run(['seed-judged']);
+  assert.equal(none.code, 2);
+  assert.match(none.err[0], /seed-judged needs --tags/);
+  assert.equal((await w.run(['seed-judged', '--tags', ' , '])).code, 2);
+  // Paused is ticked in Agent settings: exit 3, nothing is written
+  const settings = rowsOf(w, 'agent_settings')[0];
+  w.fake.editRow(settings.page_id, { Paused: true });
+  const paused = await w.run(['seed-judged', '--tags', 'Context-dependent']);
+  assert.equal(paused.code, 3, paused.text);
+  assert.deepEqual(judgedOf(w), { 'Context-dependent': false, 'Trailing period': false });
+  w.fake.editRow(settings.page_id, { Paused: false });
+  // the builder session is closed: the gate stops it
+  assert.equal((await w.run(['builder', 'close'])).code, 0);
+  const closed = await w.run(['seed-judged', '--tags', 'Context-dependent']);
+  assert.equal(closed.code, 2);
+  assert.match(closed.err[0], /no builder session is open/);
+  assert.equal(patches(w).length, before);
+});
+
+test('seed-judged on a Rulebook without the Judged column says to run build first and writes nothing', async () => {
+  const w = await builtWithoutJudged();
+  const r = await w.run(['seed-judged', '--tags', 'Context-dependent']);
+  assert.equal(r.code, 2);
+  assert.match(r.err.join('\n'), /the Rulebook has no Judged checkbox yet: run "setup\.mjs build" first/);
+  assert.equal(patches(w).length, 0);
+});
+
+test('seed-judged refuses a config that is not the v2 profile, a protected Rulebook and a Rulebook of the first page, before any request', async () => {
+  const w = await filled({ taxonomy: smallTaxonomy() });
+  const config = readJson(join(w.root, 'config.json'));
+  const run = { id: 'r', dir: w.root, update() {} };
+  const ctx = (c) => ({ root: w.root, config: c, now: NOW, run, log() {}, warn() {}, restClient: () => { throw new Error('no request may be made'); } });
+  const notV2 = structuredClone(config);
+  delete notV2.profile;
+  await assert.rejects(stepSeedJudged(ctx(notV2), { tags: 'Context-dependent' }), (e) => e instanceof InputError && /for the v2 profile only/.test(e.message));
+  const protectedRulebook = structuredClone(config);
+  protectedRulebook.notion.protected_database_ids.push(config.notion.rulebook.database_id);
+  await assert.rejects(stepSeedJudged(ctx(protectedRulebook), { tags: 'Context-dependent' }), (e) => e instanceof InputError && /Rulebook is on the protected lists/.test(e.message));
+  const first = readJson(join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'first-page.json')).tables.rulebook;
+  const ids = new Set([first.database_id, first.data_source_id].map(normId));
+  const onFirstPage = structuredClone(config);
+  onFirstPage.notion.protected_database_ids = onFirstPage.notion.protected_database_ids.filter((x) => !ids.has(normId(x)));
+  onFirstPage.notion.rulebook.database_id = first.database_id;
+  onFirstPage.notion.rulebook.data_source_id = first.data_source_id;
+  await assert.rejects(stepSeedJudged(ctx(onFirstPage), { tags: 'Context-dependent' }), (e) => e instanceof InputError && /table of the first page \(setup\/first-page\.json\)/.test(e.message));
+  assert.equal(patches(w).length, 0);
+  // and the command line refuses the same config at the door
+  assert.deepEqual(parseTagNames(' a, b ,,a '), ['a', 'b']);
 });
 
 test('the builder and the steps reach Notion only through the client: no direct fetch, no .env read, no delete, none of the flags the rules forbid', () => {

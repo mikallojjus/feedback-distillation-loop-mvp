@@ -82,22 +82,26 @@ export function cellVerdict(runLines, tagName, { rerun, reasonMaxWords = 40 } = 
 // ---- the columns of a claim ---------------------------------------------------------------------------------------------------
 
 /**
- * "not checked" for a rulebook, as the text after "not checked: " and the count: tags that no judge group covers, by kind. Source tags (and Unsourced,
- * which is worked out from the sources and not yet) are "source tags", the two duplicate tags "duplicate tags", the rest "tags without rules".
+ * "not checked" for a rulebook, as the text after "not checked: " and the count: the tags that are not judged, by kind. Source tags (and Unsourced,
+ * which is worked out from the sources and not yet) are "source tags", the two duplicate tags "duplicate tags", a text tag with rules whose Judged box is not ticked "tags not judged",
+ * the rest "tags without rules".
  */
 export function notCheckedParts(rubric, judgedNames) {
   let source = 0;
   let duplicate = 0;
+  let unticked = 0;
   let without = 0;
   for (const t of rubric.tags) {
     if (judgedNames.has(t.name)) continue;
     if (t.capability === 'source' || t.capability === 'deterministic') source += 1;
     else if (t.capability === 'corpus') duplicate += 1;
+    else if (Array.isArray(t.rules) && t.rules.length > 0) unticked += 1;
     else without += 1;
   }
   return [
     source ? plural(source, 'source tag') : null,
     duplicate ? plural(duplicate, 'duplicate tag') : null,
+    unticked ? plural(unticked, 'tag not judged', 'tags not judged') : null,
     without ? plural(without, 'tag without rules', 'tags without rules') : null,
   ].filter(Boolean).join(', ');
 }
@@ -173,7 +177,7 @@ export async function propose(opts = {}) {
 
     const groups = groupsFor(jc, rubric, null);
     if (!groups.length) {
-      throw new LoopExit(EXIT.INVALID, 'the rulebook has no tag with rules in force in any judge group', {
+      throw new LoopExit(EXIT.INVALID, 'the rulebook has no judged tag (a tag with its Judged box ticked and rules in force)', {
         sentence: 'Tag: nothing was proposed, because no tag has rules to judge by.',
         next: 'Next: ask the engineer to look at the message the script printed.',
       });

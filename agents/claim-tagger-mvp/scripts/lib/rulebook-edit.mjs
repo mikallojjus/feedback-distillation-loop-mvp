@@ -86,7 +86,7 @@ export function replaceRule(whenToUse, n, newText) {
   return result;
 }
 
-/** The plain Rulebook copy row of a rubric tag: what buildRubric (tagFromRow) reads, so that a tag survives a round trip unchanged. */
+/** The plain Rulebook copy row of a rubric tag: what buildRubric (tagFromRow) reads, so that a tag survives a round trip unchanged (Judged carries the tag's judged state: a rule change never ticks or unticks a box). */
 export function rowFromTag(tag) {
   return {
     Name: tag.name,
@@ -102,6 +102,7 @@ export function rowFromTag(tag) {
     'Work tags': tag.work_tags,
     'Verified on': tag.verified_on,
     Evidence: tag.evidence,
+    Judged: tag.judged === true,
     page_id: tag.page_id,
   };
 }

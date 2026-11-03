@@ -67,6 +67,19 @@ test('every tag of the real taxonomy survives rowFromTag and tagFromRow unchange
   for (const tag of rubric.tags) assert.ok(isDeepStrictEqual(tagFromRow(rowFromTag(tag), config), tag), tag.name);
 });
 
+test('rowFromTag carries the judged state: a ticked tag survives the round trip, and a rule change never ticks or unticks a box', () => {
+  const ticked = buildRubric(taxonomy.rows.map((row) => ({ ...row, Judged: row.Name === 'Context-dependent' })), { config, edition: '2026-10-16.1', now: NOW });
+  assert.deepEqual(ticked.tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent']);
+  for (const tag of ticked.tags) assert.ok(isDeepStrictEqual(tagFromRow(rowFromTag(tag), config), tag), tag.name);
+  assert.equal(rowFromTag(ticked.tags.find((t) => t.name === 'Context-dependent')).Judged, true);
+  assert.equal(rowFromTag(ticked.tags.find((t) => t.name === 'Wordy')).Judged, false);
+  const next = rubricWithRule(ticked, 'Context-dependent', 4, '4. A reference that reads as general needs no answer.', { config, edition: '2026-10-16.2', now: NOW });
+  assert.deepEqual(next.rubric.tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent'], 'the tag stays judged and no other becomes judged');
+  assert.notEqual(next.rubric.rubric_hash, ticked.rubric_hash);
+  const off = { ...ticked, tags: ticked.tags.map((t) => (t.name === 'Context-dependent' ? { ...t, judged: false } : t)) };
+  assert.deepEqual(rubricWithRule(off, 'Context-dependent', 4, '4. Another wording.', { config, edition: '2026-10-16.2', now: NOW }).rubric.tags.filter((t) => t.judged), [], 'an unticked tag stays unticked');
+});
+
 test('rubricWithRule changes one rule of one tag: its tag hash and the rubric hash move, every other tag is as it was, and the result verifies', () => {
   const next = rubricWithRule(rubric, 'Context-dependent', 4, '4. A reference that reads as general needs no answer.', { config, edition: '2026-10-16.2', now: NOW });
   assert.equal(next.before, ruleText(rubric, 'Context-dependent', 4));

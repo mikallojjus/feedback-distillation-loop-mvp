@@ -46,7 +46,7 @@
 import { mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
-import { groupOf } from './lib/config.mjs';
+import { isJudgedTag } from './lib/config.mjs';
 import { answerWord, cutText, plural, practiceLink, quoted, recantedNext, stampOf, suggestionPart, viewLink, yourRows } from './lib/editor-words.mjs';
 import { ledgerAsRead, recantedAmong, recantedPhrase } from './lib/readings.mjs';
 import { extractJson } from './lib/claude.mjs';
@@ -349,7 +349,7 @@ export async function promote(opts = {}) {
         sentence: `Promote: nothing was checked, because ${quoted(title)} is not a change to one numbered rule.`, next: ENGINEER,
       });
     }
-    if (!tagInfo || !tagInfo.judged || groupOf(ctx.config, tag) === null || !tagInfo.rules.some((r) => r.n === n)) {
+    if (!tagInfo || !isJudgedTag(ctx.config, tagInfo) || !tagInfo.rules.some((r) => r.n === n)) {
       throw new LoopExit(EXIT.INVALID, `${tag} rule ${n} is not a rule that is judged`, {
         sentence: `Promote: nothing was checked, because ${tag} rule ${n} is not a rule the agent judges by.`, next: ENGINEER,
       });
@@ -484,7 +484,7 @@ export async function promote(opts = {}) {
       ctx.record.verdict = verdict;
       ctx.record.card = { examples: checks.canaries, earlier: checks.cases.total, yours: checks.supporting.total };
 
-      const several = live.tags.filter((t) => t.judged && groupOf(ctx.config, t.name) !== null).length > 1;
+      const several = live.tags.filter((t) => isJudgedTag(ctx.config, t)).length > 1;
       const ruleLabel = several ? `${tag} rule ${n}` : `rule ${n}`; // one judged tag: "rule 4" is clear
       const wrongBefore = checks.canaries.already_wrong.length; // examples that are wrong under both rulebooks: shown, not counted (decision P33); "Example claims" counts the ones the rulebook in force gets right
       const rowsFor = (yoursNote) => [

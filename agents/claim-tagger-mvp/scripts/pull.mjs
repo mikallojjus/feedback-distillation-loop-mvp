@@ -19,7 +19,8 @@
 //                         Claims has no editor column on v2: the decisions are on Tag decisions rows (queue.jsonl).
 //                         The two relations (Agent tags, Tags waiting) are resolved to names through the page ids of the Rulebook's rows (this pull's, else the
 //                         ones in rubric/rubric.json); an id that names no tag of the rulebook is left out and said in a warning.
-//   norm/rulebook.json    [ { <every column by its Notion name>, page_id } ] for the rows that carry the work tag (config notion.rulebook.work_tag)
+//   norm/rulebook.json    [ { <every column by its Notion name>, page_id } ] for the rows that carry the work tag (config notion.rulebook.work_tag); Judged is a checkbox and reads as
+//                         true or false (absent only when the table has no such column, which the drift check reports as no_judged_column)
 //   norm/queue.jsonl      the eighteen columns of Tag decisions (TD: Open claim, the three editor columns, Agent status, the agent's reading) by their Notion names + page_id, last_edited, decided (rowDecision: Tag outcome, or a tick on a sure proposal)
 //   norm/lessons.jsonl    the ten columns of Rule changes + page_id, created, supporting_keys (the trailing <geo_id>::<tag> of each Supporting rows line)
 //   norm/settings.json    { page_id, name, paused, rulebook_edition, last_run_summary }
@@ -44,7 +45,7 @@ import { BUILDER_API_VERSION, clientFromConfig, countRequests, requestLogger } f
 import { decodePage, normId } from './lib/notion-values.mjs';
 import { agentRoot, codeFile, isMain, repoRoot as defaultRepoRoot, runId as makeRunId, safeName } from './lib/paths.mjs';
 import { compareCodePoints } from './lib/pyjson.mjs';
-import { computeDrift, readLock, readRubric } from './lib/rubric.mjs';
+import { computeDrift, readLock, readRubric, toggleClauses } from './lib/rubric.mjs';
 import { READINGS, isDecided, rowDecision } from './lib/decisions.mjs';
 import { validate } from './lib/validate.mjs';
 
@@ -627,19 +628,21 @@ export async function pull({
       warnings.push(`drift: the check could not run (${e.message})`);
     }
   }
+  if (drift.no_judged_column === true) warnings.push('rulebook: there is no Judged column in the table, so the ticks were not read and the saved ones stand (run setup.mjs build to add it)');
   writeJsonAtomic(join(dir, 'drift.json'), drift);
 
   const duplicateLines = duplicates.map((d) => ({ table: d.table, key: d.key, page_ids: d.page_ids }));
   writeJsonAtomic(join(dir, 'pull.json'), {
     pull_id: id, taken_at: takenAt, tables: pulledTables, table_ids: tableIds, skipped, counts, cases, duplicates: duplicateLines, problems, paused, warnings,
-    drift: 'skipped' in drift ? { checked: false, ...drift } : { checked: true, judged: drift.judged?.length ?? 0, adopted: drift.adopted?.length ?? 0, missing: drift.missing?.length ?? 0, added: drift.added?.length ?? 0 },
+    drift: 'skipped' in drift ? { checked: false, ...drift } : { checked: true, judged: drift.judged?.length ?? 0, adopted: drift.adopted?.length ?? 0, toggled: drift.toggled?.length ?? 0, missing: drift.missing?.length ?? 0, added: drift.added?.length ?? 0 },
     request_log: existsSync(join(dir, 'requests.jsonl')) ? 'requests.jsonl' : null,
   });
   if (pulledTables.length > 0) writeTextAtomic(join(pullBase(root), 'LATEST'), id);
 
   const code = duplicates.length > 0 || problems.length > 0 ? EXIT.INVALID : EXIT.OK;
   const parts = pulledTables.map((t) => `${t} ${counts[t]}`);
-  const driftWord = 'skipped' in drift ? `not checked (${drift.skipped})` : `${(drift.judged?.length ?? 0) + (drift.adopted?.length ?? 0) + (drift.missing?.length ?? 0) + (drift.added?.length ?? 0)} difference(s)`;
+  const toggles = 'skipped' in drift ? [] : toggleClauses(drift.toggled ?? []);
+  const driftWord = 'skipped' in drift ? `not checked (${drift.skipped})` : `${(drift.judged?.length ?? 0) + (drift.adopted?.length ?? 0) + (drift.toggled?.length ?? 0) + (drift.missing?.length ?? 0) + (drift.added?.length ?? 0)} difference(s)${toggles.length ? ` (${toggles.join('; ')})` : ''}${drift.no_judged_column ? ' (the Rulebook has no Judged column)' : ''}`;
   const line = `pull ${id}: ${parts.length ? parts.join(', ') : 'no table read'}${skipped.length ? `; skipped ${skipped.map((s) => s.table).join(', ')} (not created yet)` : ''}; drift ${driftWord}; duplicates ${duplicates.length}; paused ${paused ? 'yes' : 'no'}`;
   return { code, pullId: id, dir, tables: pulledTables, skipped, counts, duplicates: duplicateLines, problems, paused, warnings, drift, cases, line };
 }

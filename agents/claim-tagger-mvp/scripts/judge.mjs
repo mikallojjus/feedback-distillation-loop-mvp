@@ -8,7 +8,8 @@
 //
 // Flags
 //   --tags a,b     the tags to judge; each one stands for its whole group (judge.groups), because a group is always judged whole. Default: every
-//                  group that has a judged tag. A tag with no rules in force is never judged.
+//                  group that has a judged tag. A tag is judged only when its Judged box is ticked in the Rulebook and it has rules in force; a ticked
+//                  text tag that no group names is judged in a group of its own, named after the tag.
 //   --items        claims (default): norm/claims.jsonl of the newest pull that has one, or of --pull. eval: evals/canaries.jsonl and
 //                  evals/cases.jsonl, items named canary-<n> and case-<key>; an item is judged only by the group that holds its tag.
 //   --ids, --limit keep the named items / the first N of them (file order, so a repeated --limit N is a cache hit, and a larger N adds claims).
@@ -54,7 +55,7 @@ import { basename, join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import { claudeVersion, extractJson, findClaudeBin, runClaude, usageResetHint, withTransientRetry } from './lib/claude.mjs';
 import { STORE_LOCKED, archiveStore, openStore } from './lib/cells.mjs';
-import { capabilityOf, isDemo } from './lib/config.mjs';
+import { groupOf, isDemo, isJudgedTag, judgeGroupOf, loadConfig } from './lib/config.mjs';
 import { demoCommands, namePracticePage } from './lib/editor-words.mjs';
 import { EXIT } from './lib/exit-codes.mjs';
 import { h16 } from './lib/hash.mjs';
@@ -64,7 +65,7 @@ import { compareCodePoints } from './lib/pyjson.mjs';
 import { RESERVED_RUN_IDS, isReservedRunId } from './lib/reserved-run-ids.mjs';
 import { writeReport } from './lib/report.mjs';
 import { resumeFor } from './lib/resume.mjs';
-import { checkLock, readLock, verifyRubric } from './lib/rubric.mjs';
+import { checkLock, readLock, toggleClauses, verifyRubric } from './lib/rubric.mjs';
 import { validate } from './lib/validate.mjs';
 
 export const USAGE = 'usage: node agents/claim-tagger-mvp/scripts/judge.mjs [--tags a,b] [--items claims|eval] [--pull <pull-id>] [--ids a,b] [--limit N] [--runs-max N] [--rubric <file>] [--refresh] [--run-id <id>] [--driver cli|fake]\n'
@@ -320,30 +321,39 @@ export function loadRubric(root, rubricFile, warnings = []) {
   return { rubric, path, candidate };
 }
 
-/** A tag is judged when it has rules and its capability is text (CONTRACTS section 3); the rulebook's own `judged: false` also wins. */
+/**
+ * A tag is judged when its Judged box is ticked in the Rulebook, it has rules in force and its capability is text (CONTRACTS section 3): lib/config.mjs isJudgedTag, the one answer every
+ * check of "is this tag judged" gives. The tag's own `judged` flag in the rulebook file carries the tick.
+ */
 function isJudged(tag, cfg) {
-  if (!isPlain(tag) || !Array.isArray(tag.rules) || tag.rules.length === 0 || tag.judged === false) return false;
-  const capability = tag.capability ?? capabilityOf({ tags: cfg.tags }, tag.name);
-  return capability === 'text';
+  return isJudgedTag(cfg, tag);
 }
 
 /**
- * The groups to judge: [{ name, tags: [rulebook tag], skipped: [names without rules] }]. `only` (from --tags) expands to the groups that
- * hold the named tags. A group without a judged tag is skipped. Exit 2 for a tag that is in no group.
+ * The groups to judge: [{ name, tags: [rulebook tag], skipped: [names that are not judged] }]. A configured group (judge.groups) is judged with its judged tags only: the ones whose
+ * Judged box is ticked, with rules in force. A judged tag that no configured group names is judged in a group of its own, named after the tag (lib/config.mjs judgeGroupOf), so ticking a new
+ * text tag in the Rulebook needs no config edit. `only` (from --tags) expands to the groups that hold the named tags. A group without a judged tag is skipped. Exit 2 for a tag that is in
+ * no group and is not judged on its own. The configured groups come first, in the order of the config, then the groups of one tag, by tag name.
  */
 export function groupsFor(cfg, rubric, only = null) {
   const groups = cfg.judge.groups;
   const byName = new Map(rubric.tags.map((t) => [t.name, t]));
-  let names = Object.keys(groups);
+  const members = new Map(Object.entries(groups).map(([name, names]) => [name, [...names]]));
+  for (const tag of rubric.tags) {
+    if (!isPlain(tag) || groupOf(cfg, tag.name) !== null) continue;
+    const own = judgeGroupOf(cfg, tag);
+    if (own !== null) members.set(own, [tag.name]);
+  }
+  let names = [...members.keys()];
   if (only) {
-    const missing = only.filter((t) => !names.some((g) => groups[g].includes(t)));
-    if (missing.length) throw new ExitError(EXIT.INVALID, `--tags names ${missing.join(', ')}, which is in no group of judge.groups`);
-    names = names.filter((g) => groups[g].some((t) => only.includes(t)));
+    const missing = only.filter((t) => !names.some((g) => members.get(g).includes(t)));
+    if (missing.length) throw new ExitError(EXIT.INVALID, `--tags names ${missing.join(', ')}, which is in no group of judge.groups and is not judged on its own (its Judged box ticked, rules in force)`);
+    names = names.filter((g) => members.get(g).some((t) => only.includes(t)));
   }
   const out = [];
   for (const name of names) {
-    const tags = groups[name].map((t) => byName.get(t)).filter((t) => isJudged(t, cfg));
-    if (tags.length) out.push({ name, tags, skipped: groups[name].filter((t) => !tags.some((x) => x.name === t)) });
+    const tags = members.get(name).map((t) => byName.get(t)).filter((t) => isJudged(t, cfg));
+    if (tags.length) out.push({ name, tags, skipped: members.get(name).filter((t) => !tags.some((x) => x.name === t)) });
   }
   return out;
 }
@@ -841,6 +851,33 @@ function checkPaused(ctx) {
   }
 }
 
+/**
+ * A tick or untick of the Judged box that the newest pull saw is taken over into a new edition BEFORE the run reads the rulebook, so that this run judges the tags as the box says
+ * (lib/preflight.mjs takes the same change over at the start of every other command, and writes the same edition and changelog line: the tag command runs this script ahead of
+ * propose, so without this the first run after a toggle would judge the old set of tags and propose would find no answers for the new one). Only a toggle starts it, never on a candidate
+ * rulebook (--rubric) or a resumed run, and only where the folder has a config that loads; otherwise the run goes on with the edition in force and checkDrift says so. A refusal of
+ * preflight (a drift stop, a bad rulebook file) is left to the checks below, which raise it themselves.
+ */
+async function takeOverToggles(ctx) {
+  if (ctx.args.rubric || ctx.prev) return;
+  const pullDir = newestPullDir(ctx.root);
+  if (!pullDir) return;
+  const drift = readOptionalJson(join(pullDir, 'drift.json'));
+  if (!isPlain(drift) || !Array.isArray(drift.toggled) || drift.toggled.length === 0) return;
+  let config;
+  try {
+    config = loadConfig(ctx.root);
+  } catch {
+    return;
+  }
+  const { preflight } = await import('./lib/preflight.mjs'); // not at the top: preflight imports this file
+  const pre = preflight({ root: ctx.root, config, pullId: basename(pullDir), now: ctx.now });
+  if (pre.toggled.length) {
+    ctx.takenOver = pre.toggled;
+    ctx.warnings.push(`the Judged box changed in Notion (${toggleClauses(pre.toggled).join('; ')}); it was taken over into edition ${pre.edition} before this run`);
+  }
+}
+
 // Exit 4 when the newest pull's drift.json lists a judged tag whose text in Notion no longer matches the lock.
 function checkDrift(ctx, rubric) {
   const pullDir = newestPullDir(ctx.root);
@@ -853,6 +890,10 @@ function checkDrift(ctx, rubric) {
   if (typeof drift.skipped === 'string') { // the pull could not run the check (no lock yet, the rulebook was not pulled): say so, do not pass it off as "no drift"
     ctx.warnings.push(`the drift check was skipped in the newest pull (${drift.skipped}), so the rulebook in Notion was not compared with the lock`);
     return;
+  }
+  // a tick or untick of the Judged box is never a stop: the run judges with the edition in force, and the next command that reads the pull takes the change over (lib/preflight.mjs)
+  if (!ctx.takenOver && Array.isArray(drift.toggled) && drift.toggled.length) {
+    ctx.warnings.push(`the Judged box changed in Notion (${toggleClauses(drift.toggled).join('; ')}); this run judges with the saved rulebook edition, and the change is taken over by the next command`);
   }
   const judgedNames = new Set(rubric.tags.filter((t) => isJudged(t, ctx.cfg)).map((t) => t.name));
   const stops = driftStops(drift, judgedNames);
@@ -871,6 +912,7 @@ async function execute(ctx) {
   checkPaused(ctx);
   ctx.cfg = loadJudgeConfig(root);
   const cfg = ctx.cfg.judge;
+  await takeOverToggles(ctx);
   const { rubric, path: rubricPath, candidate } = loadRubric(root, args.rubric, ctx.warnings);
   record.rubric_edition = rubric.edition ?? null;
   ctx.rubricTags = rubric.tags.filter((t) => isPlain(t) && typeof t.name === 'string' && Array.isArray(t.rules));
@@ -878,13 +920,13 @@ async function execute(ctx) {
 
   const groups = groupsFor(ctx.cfg, rubric, args.tags);
   if (!groups.length) {
-    throw new ExitError(EXIT.INVALID, args.tags ? `none of the tags ${args.tags.join(', ')} has rules in force, so there is nothing to judge` : 'the rulebook has no tag with rules in force in any group of judge.groups, so there is nothing to judge', {
+    throw new ExitError(EXIT.INVALID, args.tags ? `none of the tags ${args.tags.join(', ')} is judged (its Judged box ticked in the Rulebook, rules in force), so there is nothing to judge` : 'the rulebook has no judged tag (a tag with its Judged box ticked and rules in force), so there is nothing to judge', {
       sentence: 'Judge: nothing was read, because no tag has rules to judge by.',
       next: 'Next: ask an engineer to look at the message the script printed.',
     });
   }
   for (const g of groups) {
-    if (g.skipped.length) ctx.warnings.push(`${g.skipped.join(', ')} ${g.skipped.length === 1 ? 'has' : 'have'} no rules in force and ${g.skipped.length === 1 ? 'is' : 'are'} not judged`);
+    if (g.skipped.length) ctx.warnings.push(`${g.skipped.join(', ')} ${g.skipped.length === 1 ? 'is' : 'are'} not judged (the Judged box is not ticked, or no rules are in force)`);
   }
 
   // the prompt, one rendering per group

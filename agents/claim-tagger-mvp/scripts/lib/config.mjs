@@ -18,11 +18,17 @@
 //   REMOVE_SCRIPT, TRASHABLE_TABLES             -> the one script whose plans may trash rows (remove.mjs, P51) and the two tables it may trash (claims, tag_decisions)
 //   editorColumns(config, table)                -> the columns only an editor writes (no script ever does, bar the exceptions of hard rule 1):
 //                                                  Agent is right, Tag outcome and Your note on tag_decisions (TD_EDITOR), Editor wording on rule_changes,
-//                                                  Paused on agent_settings; [] for the others (claims has none on v2)
+//                                                  Paused on agent_settings, Judged on the rulebook (JUDGED_COLUMN; the one-time seed-judged step is the exception); [] for the others
+//                                                  (claims has none on v2)
 //   capabilityOf(config, tag)                   -> text, deterministic, source or corpus (config.tags, with its default)
 //   groupOf(config, tag)                        -> the judge group the tag belongs to (config.judge.groups), or null
+//   judgeGroupOf(config, rubricTag)             -> the judge group a tag of the rulebook is judged in, or null when it is not judged: the one answer every check of "is this tag judged" uses.
+//                                                  A tag is judged when its Judged box is ticked in the Rulebook (the tag's `judged` flag in rubric.json), it has rules in force and its capability
+//                                                  is text; its group is the configured one (config.judge.groups), else a group of its own named after the tag, so ticking a new text tag needs no config edit
+//   isJudgedTag(config, rubricTag)              -> judgeGroupOf(...) !== null
 //   readingSettings(config)                     -> { reading_prompt, reading_batch, reading_effort }: config.distill's three reading settings, with READING_DEFAULTS for a missing one
-//   constants: AGENT_NAME, TABLES, CAPABILITIES, RULEBOOK_COLUMNS, CLAIMS_GEO_COLUMNS, CLAIMS_WRITE_KEYS, AGENT_STATUS, READING_DEFAULTS, TD, TD_EDITOR, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
+//   SEED_JUDGED_SCRIPT, seedJudgedProperties(config) -> the one step whose plans may tick Judged on the Rulebook (setup.mjs seed-judged), and the columns such a plan may write
+//   constants: AGENT_NAME, TABLES, CAPABILITIES, JUDGED_COLUMN, RULEBOOK_COLUMNS, CLAIMS_GEO_COLUMNS, CLAIMS_WRITE_KEYS, AGENT_STATUS, READING_DEFAULTS, TD, TD_EDITOR, TAG_DECISIONS_WRITABLE, RULE_CHANGES_WRITABLE,
 //              RULE_CHANGES_AGENT_STATUS (the Status values a script may write; Approved and Rejected belong to the editor,
 //              see config.editor_columns.rule_changes_status_editor_values)
 //
@@ -56,6 +62,12 @@ export const RULEBOOK_COLUMNS = Object.freeze([
 export const CLAIMS_GEO_COLUMNS = Object.freeze([
   'Geo Name', 'Geo ID', 'Geo URL', 'Geo Space', 'Geo Created', 'Geo Sources', 'Geo Is factual', 'Geo Tags', 'Geo Topics',
 ]);
+
+/**
+ * The Rulebook's checkbox that decides which tags the agent judges: ticked by a person, never by a loop script. It is not one of RULEBOOK_COLUMNS (the thirteen columns of the taxonomy that
+ * setup and the copy fill); the structure has it (setup/structure.json) and `setup.mjs seed-judged` ticks it once, for the tags it is given.
+ */
+export const JUDGED_COLUMN = 'Judged';
 
 /** The keys the per-claim version had in notion.claims.columns for its three editor columns; v2 has none on Claims, so a config that names one is refused. */
 const CLAIMS_RETIRED_COLUMN_KEYS = Object.freeze(['verified', 'review_status', 'notes']);
@@ -261,8 +273,11 @@ export function validateConfig(config) {
     }
   }
 
-  // editor_columns: none on Claims, the three of TD_EDITOR on Tag decisions, Editor wording and the two Status values on Rule changes, Paused on Agent settings
+  // editor_columns: none on Claims, the three of TD_EDITOR on Tag decisions, Editor wording and the two Status values on Rule changes, Paused on Agent settings, Judged on the Rulebook
   if (obj('editor_columns', config.editor_columns)) {
+    const rb = config.editor_columns.rulebook;
+    if (!Array.isArray(rb)) bad('editor_columns.rulebook', `expected the one editor column of the Rulebook (${JUDGED_COLUMN})`);
+    else if (rb.length !== 1 || rb[0] !== JUDGED_COLUMN) bad('editor_columns.rulebook', `expected exactly ${JUDGED_COLUMN}`);
     for (const k of ['claims', 'rule_changes', 'rule_changes_status_editor_values', 'agent_settings']) {
       list(`editor_columns.${k}`, config.editor_columns[k], (path, v) => text(path, v));
     }
@@ -473,6 +488,18 @@ export const REMOVE_SCRIPT = 'remove';
 /** The tables whose rows a plan of the remove script may trash (P51): Claims and Tag decisions. Nothing else is ever trashed by a script. */
 export const TRASHABLE_TABLES = Object.freeze(['claims', 'tag_decisions']);
 
+/**
+ * The step whose plans may tick Judged on the Rulebook: `setup.mjs seed-judged` (header script "seed-judged"). checkPlan gives a plan with this script name (and only that) the one op
+ * "update" on rulebook rows with the property Judged set to true (plus the key column, unchanged), only on a config with "profile": "v2", never on a protected id. It never unticks, and no other
+ * script may write Judged at all: it is an editor column of the Rulebook (config.editor_columns.rulebook).
+ */
+export const SEED_JUDGED_SCRIPT = 'seed-judged';
+
+/** The columns a plan of the seed-judged script may write to a Rulebook row: Judged, and the key column (an update may carry it, unchanged). */
+export function seedJudgedProperties(config) {
+  return new Set([JUDGED_COLUMN, tableEntry(config, 'rulebook').key]);
+}
+
 /** The column of Claims that lists the claim's rows in Tag decisions (STRUCTURE-V2.md): remove.mjs reads it before it trashes a claim (P51). */
 export const CLAIMS_TD_RELATION = 'Tag decisions';
 
@@ -530,4 +557,30 @@ export function capabilityOf(config, tag) {
 export function groupOf(config, tag) {
   for (const [group, names] of Object.entries(config?.judge?.groups ?? {})) if (names.includes(tag)) return group;
   return null;
+}
+
+/**
+ * The name of the group a judged tag that no configured group names is judged in: the tag's own name. A tag that happens to be called like a configured group (a tag named "G1") gets
+ * "<name> (own group)" instead, so the two never share a store.
+ */
+export function ownGroupName(config, tag) {
+  return Object.hasOwn(config?.judge?.groups ?? {}, tag) ? `${tag} (own group)` : tag;
+}
+
+/**
+ * The one answer to "is this tag judged, and in which group". `tag` is a tag of the rulebook (rubric.json): { name, judged, rules, capability }. It is judged only when all three hold:
+ * its Judged box is ticked in the Rulebook (the tag's `judged` flag is true: lib/rubric.mjs sets it from the tick, rules and capability), it has rules in force, and its capability is
+ * text. The group is the configured one (config.judge.groups), else a group of its own named after the tag (ownGroupName), so an editor can tick a new text tag without a config edit.
+ * Returns the group name, or null when the tag is not judged. `config` may be the judge settings of judge.mjs (loadJudgeConfig): it needs only `judge.groups` and `tags`.
+ */
+export function judgeGroupOf(config, tag) {
+  if (!isPlain(tag) || typeof tag.name !== 'string' || tag.judged !== true) return null;
+  if (!Array.isArray(tag.rules) || tag.rules.length === 0) return null;
+  if ((tag.capability ?? capabilityOf(config, tag.name)) !== 'text') return null;
+  return groupOf(config, tag.name) ?? ownGroupName(config, tag.name);
+}
+
+/** True when judgeGroupOf says the tag is judged. */
+export function isJudgedTag(config, tag) {
+  return judgeGroupOf(config, tag) !== null;
 }

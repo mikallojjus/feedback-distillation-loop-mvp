@@ -24,7 +24,7 @@ function rootWith(config) {
 }
 const update = (properties, extra = {}) => ({ tool_name: 'mcp__notion__notion-update-page', tool_input: { page_id: '0a9e0000-0000-4000-8000-000000000001', command: 'update_properties', properties, ...extra } });
 const create = (properties) => ({ tool_name: 'mcp__notion__notion-create-pages', tool_input: { parent: { page_id: '0a9e0000-0000-4000-8000-000000000001' }, pages: [{ properties }] } });
-const EDITOR = ['Agent is right', 'Tag outcome', 'Your note', 'Editor wording', 'Paused'];
+const EDITOR = ['Agent is right', 'Tag outcome', 'Your note', 'Editor wording', 'Paused', 'Judged']; // Judged: the box of the Rulebook (P53), an editor column the connector never writes either
 
 test('every editor column of the shipped config is refused in a page write, in the plain name and in the connector\'s date form, in any letter case', () => {
   const root = rootWith(placeholderConfig());

@@ -11,7 +11,7 @@
 //   richTextFromPieces(pieces), withLinkedSources(client, byGeoId)   -> Geo Sources with its links (plans carry plain text only)
 //   stepRoot(ctx, { title }) -> the v2 profile only: finds or makes the v2 page under the live hub (notion.root_parent_page_id) and records it as notion.parent_page_id
 //   stepStructure(ctx, parts), stepApiCheck(ctx), stepRulebook(ctx, { from }), stepClaims(ctx, { from }), stepSeedAudit(ctx, { from, claims }),
-//   stepMigrateDecisions(ctx, { claims }), stepSettings(ctx), stepRubric(ctx, { from }), stepCanaries(ctx, { from }), stepVerify(ctx, { taxonomy, claims, audit })
+//   stepMigrateDecisions(ctx, { claims }), stepSettings(ctx), stepSeedJudged(ctx, { tags }), stepRubric(ctx, { from }), stepCanaries(ctx, { from }), stepVerify(ctx, { taxonomy, claims, audit })
 //                                                            -> { code, lines, errors?, ... }; the caller prints and records the run
 //   migrationOps(claims, ledger, tagPages, columns, { only })  -> the plan of migrate-decisions, pure: { claimOps, ledgerOps, summary }
 //
@@ -30,7 +30,7 @@
 
 import { copyFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { CLAIMS_GEO_COLUMNS, RULEBOOK_COLUMNS, TABLES, editorColumns, isProtected, isV2, tableEntry, validateConfig } from './config.mjs';
+import { CLAIMS_GEO_COLUMNS, JUDGED_COLUMN, RULEBOOK_COLUMNS, SEED_JUDGED_SCRIPT, TABLES, editorColumns, isProtected, isV2, tableEntry, validateConfig } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { fileSha256 } from './hash.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './jsonl.mjs';
@@ -41,13 +41,13 @@ import { allowedSpaces } from './geo-read.mjs';
 import { splitRichText, countRequests } from './notion-rest.mjs';
 import { decodePage, normId, sameValue } from './notion-values.mjs';
 import { codeRoot } from './paths.mjs';
-import { AUDIT_PREFIX, PlanError, applyPlan, checkPlan, newPlan } from './plan.mjs';
+import { AUDIT_PREFIX, PlanError, applyPlan, checkPlan, firstPageIds, newPlan, readLedger } from './plan.mjs';
 import { readRemoved } from './removed.mjs';
-import { buildRubric, nextEdition, parseExamples, readRubric, writeEdition } from './rubric.mjs';
+import { buildRubric, lockOf, nextEdition, parseExamples, readRubric, writeEdition } from './rubric.mjs';
 import { validate } from './validate.mjs';
 import { verifyArchive } from './archive.mjs';
 import { builderPaths, readJsonOr, writeJsonPretty } from './builder-registry.mjs';
-import { notionUrl, stampOf } from './editor-words.mjs';
+import { listNames, notionUrl, stampOf } from './editor-words.mjs';
 import { loadPull, pull, richTextPieces } from '../pull.mjs';
 
 /** An input file or an earlier step that is missing or wrong. Scripts answer it with exit code 2. */
@@ -895,6 +895,90 @@ export async function stepSettings(ctx) {
   return createRows(ctx, { table: 'agent_settings', label: 'settings', ops, rubricEdition: rubric.edition });
 }
 
+/** The names of a --tags value: separated by commas, trimmed, each once, in the order given. */
+export function parseTagNames(value) {
+  return [...new Set(String(value ?? '').split(',').map((s) => s.trim()).filter(Boolean))];
+}
+
+/**
+ * seed-judged (decision P53): tick the Judged box on the Rulebook rows of the tags named in `tags` (a comma-separated list), once, so that the agent judges them. The editors own the box
+ * (config.editor_columns.rulebook); this step is the one exception, and only for the v2 Rulebook, through a plan of the script "seed-judged" that lib/plan.mjs checkPlan allows to update
+ * Judged to true and nothing else. It refuses (exit 2, nothing written): a config that is not v2, a Rulebook that is protected or belongs to the first page, a name that is not a row of
+ * the Rulebook, a table without a Judged checkbox (run `setup.mjs build` first), and a stop of the pull (Paused, a duplicate key). A row that is ticked already is left alone and said, and
+ * a box is never unticked. The plan is applied and every row read back; plan.jsonl and ledger.jsonl stay in the run folder. Run again it does nothing.
+ */
+export async function stepSeedJudged(ctx, { tags } = {}) {
+  const { root, config } = ctx;
+  if (!isV2(config)) throw new InputError('seed-judged is for the v2 profile only (config.json has no "profile": "v2")');
+  const names = parseTagNames(tags);
+  if (names.length === 0) throw new InputError('seed-judged needs --tags "<tag names separated by commas>"');
+  const entry = tableEntry(config, 'rulebook');
+  if (isProtected(config, entry.database_id) || isProtected(config, entry.data_source_id)) throw new InputError('the Rulebook is on the protected lists of config.json; nothing is written to it');
+  let firstIds;
+  try {
+    firstIds = firstPageIds(root);
+  } catch (e) {
+    throw new InputError(e.message);
+  }
+  if ([entry.database_id, entry.data_source_id].some((x) => typeof x === 'string' && firstIds.has(normId(x)))) throw new InputError('the Rulebook of config.json is a table of the first page (setup/first-page.json), which is never written');
+
+  const ready = await readyPull(ctx, ['rulebook']);
+  if (ready.stop) return { code: ready.stop.code, lines: [], errors: ready.stop.lines };
+  const have = ready.pulled.rulebook ?? {};
+  const unknown = names.filter((n) => !have[n]);
+  if (unknown.length) {
+    throw new InputError(`nothing was written: ${unknown.map((n) => `"${n}"`).join(', ')} ${unknown.length === 1 ? 'is' : 'are'} not a row of the Rulebook (it has ${Object.keys(have).sort().join(', ') || 'no rows'})`);
+  }
+  const judgedColumn = ready.schemas.rulebook?.properties?.[JUDGED_COLUMN];
+  if (judgedColumn?.type !== 'checkbox') throw new InputError(`the Rulebook has no ${JUDGED_COLUMN} checkbox yet: run "setup.mjs build" first`);
+
+  const already = names.filter((n) => have[n][JUDGED_COLUMN] === true);
+  const todo = names.filter((n) => have[n][JUDGED_COLUMN] !== true);
+  if (todo.length === 0) {
+    ctx.run.update({ seed_judged: { ticked: [], already } });
+    return { code: EXIT.OK, lines: [`seed-judged: ${listNames(names)} ${names.length === 1 ? 'is' : 'are'} ticked already; nothing was written`], ticked: [], already };
+  }
+  let edition = null;
+  try {
+    edition = readRubric(root)?.edition ?? null;
+  } catch {
+    edition = null;
+  }
+  const plan = newPlan({ runId: ctx.run.id, script: SEED_JUDGED_SCRIPT, rubricEdition: edition, config, now: ctx.now });
+  for (const name of todo) plan.update('rulebook', name, have[name].page_id, { [JUDGED_COLUMN]: true }, { expect: { [JUDGED_COLUMN]: false } });
+  const checked = checkPlan(plan, config, { root });
+  if (!checked.ok) return { code: EXIT.INVALID, lines: [], errors: ['the plan was refused and nothing was sent:', ...checked.problems.map((p) => `  ${p}`)] };
+  let result;
+  try {
+    const log = (line) => {
+      if (!/: done \(read-back ok\)$/.test(line)) ctx.log(line);
+    };
+    result = await applyPlan({ plan, dir: ctx.run.dir, client: ctx.restClient(), config, schemas: ready.schemas, pulled: ready.pulled, root, now: ctx.now, log });
+  } catch (e) {
+    if (e instanceof PlanError) return { code: EXIT.INVALID, lines: [], errors: [e.message, ...e.problems.map((p) => `  ${p}`)] };
+    throw e;
+  }
+  const ledger = readLedger(ctx.run.dir);
+  const ticked = todo.filter((_, i) => ledger.get(i)?.status === 'done' && ledger.get(i)?.read_back === 'ok');
+  ctx.run.update({ seed_judged: { ticked, already } });
+  if (result.code === EXIT.OK) {
+    return {
+      code: EXIT.OK,
+      lines: [`seed-judged: ${JUDGED_COLUMN} ticked and read back on ${listNames(ticked)}${already.length ? `; ${listNames(already)} ${already.length === 1 ? 'was' : 'were'} ticked already` : ''}`],
+      ticked,
+      already,
+    };
+  }
+  return {
+    code: result.code,
+    lines: [],
+    errors: [`seed-judged: ${ticked.length} of ${todo.length} tag(s) ticked${ticked.length ? ` (${ticked.join(', ')})` : ''}; ${result.code === EXIT.INVALID ? 'a read-back differed' : 'the run stopped'}`, ...describeFailures(result).map((l) => `  ${l}`),
+      'run the same command again: it pulls first and ticks only what is not ticked'],
+    ticked,
+    already,
+  };
+}
+
 export const FIRST_EDITION_REASON = 'setup: copied from the taxonomy';
 export const FRESH_EDITION_REASON = 'setup: fresh tables under the hub (P9), copied from the taxonomy';
 
@@ -927,7 +1011,9 @@ export function stepRubric(ctx, { from } = {}) {
   };
   const existing = readRubric(root);
   const now = ctx.now();
-  let rubric = buildRubric(rows, { config, edition: existing ? existing.edition : nextEdition(null, now), source, now: existing ? existing.built_at : now });
+  // the taxonomy rows have no Judged box (the editors' column of the Rulebook): the ticks of the edition in force stand, so running this step again un-judges nothing
+  const judgedFrom = existing ? lockOf(existing) : null;
+  let rubric = buildRubric(rows, { config, edition: existing ? existing.edition : nextEdition(null, now), source, now: existing ? existing.built_at : now, judgedFrom });
   let reason = FIRST_EDITION_REASON;
   let verb = 'written';
   if (existing) {
@@ -937,15 +1023,15 @@ export function stepRubric(ctx, { from } = {}) {
     const theirs = new Map(existing.tags.map((t) => [t.name, t.page_id ? normId(t.page_id) : null]));
     const fresh = rubric.tags.some((t) => (t.page_id ? normId(t.page_id) : null) !== (theirs.get(t.name) ?? null));
     if (fresh) {
-      rubric = buildRubric(rows, { config, edition: nextEdition(existing.edition, now), source, now });
+      rubric = buildRubric(rows, { config, edition: nextEdition(existing.edition, now), source, now, judgedFrom });
       reason = FRESH_EDITION_REASON;
       verb = `written (the Rulebook is a fresh table, so its page ids are new; the rules are those of edition ${existing.edition})`;
     } else verb = 'is in force already (files checked)';
   }
   const written = writeEdition(root, rubric, { reason });
   ctx.run.update({ rubric_edition: written.edition });
-  const judged = rubric.tags.filter((t) => t.judged).map((t) => t.name);
-  return { code: EXIT.OK, lines: [`rubric: edition ${written.edition} ${verb}; ${rubric.tags.length} tags, ${judged.length} with rules (${judged.join(', ') || 'none'})`], edition: written.edition };
+  const withRules = rubric.tags.filter((t) => t.rules.length > 0 && t.capability === 'text').map((t) => t.name); // the Judged boxes are the editors': this step ticks nothing
+  return { code: EXIT.OK, lines: [`rubric: edition ${written.edition} ${verb}; ${rubric.tags.length} tags, ${withRules.length} with rules (${withRules.join(', ') || 'none'})`], edition: written.edition };
 }
 
 /** evals/canaries.jsonl from the taxonomy file. Frozen afterwards: a file that differs is not overwritten. */

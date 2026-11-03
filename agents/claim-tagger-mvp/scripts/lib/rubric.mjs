@@ -3,8 +3,9 @@
 //
 //   parseRules(whenToUse)            -> { preamble, rules: [{ n, text }], note }
 //   parseExamples(text)              -> string[]  (the Example Claims column, one claim per line)
-//   tagFromRow(row, config)          -> the tag object of rubric.json (rules, examples, capability, judged, tag_hash)
-//   buildRubric(rows, { config, edition, source, now }) -> the rubric object (tags sorted by name, rubric_hash); throws when it is not valid
+//   tagFromRow(row, config, { ticked }) -> the tag object of rubric.json (rules, examples, capability, judged, tag_hash); `ticked` replaces the row's Judged box
+//   buildRubric(rows, { config, edition, source, now, judgedFrom }) -> the rubric object (tags sorted by name, rubric_hash); throws when it is not valid. judgedFrom is a lock: when no row has a
+//                                      Judged column at all (the column is missing in Notion), the ticks of that lock stand, so a missing column never un-judges the rulebook
 //   nextEdition(previous, today)     -> 'YYYY-MM-DD.n'
 //   verifyRubric(rubric)             -> { ok, errors }: the schema and every hash, judged flag and rule number recomputed
 //   writeEdition(root, rubric, { reason }) -> writes rubric/rubric.json, rubric/rubric.lock, rubric/history/<edition>.json and one line of
@@ -13,9 +14,12 @@
 //   readLock(root)                   -> the current lock (validated), or null
 //   readEdition(root, edition)       -> the rubric of one earlier edition from rubric/history (verified), or null
 //   lockOf(rubric)                   -> the lock object writeEdition writes for a rubric (no file is touched)
-//   checkLock(rubric, lock)          -> { ok, errors }: the lock says what the rubric says (edition, hashes, locked text and columns)
-//   computeDrift(lock, rows, { config }) -> { judged: [{ tag, column }], adopted: [{ tag, columns }], missing: [name], added: [name] }
-//   constants: DRIFT_COLUMNS
+//   checkLock(rubric, lock)          -> { ok, errors }: the lock says what the rubric says (edition, hashes, locked text and columns, and the judged state when the lock has one)
+//   lockedJudged(lock, name)         -> whether the lock says the tag is judged (a lock without the judged state reads as LEGACY_JUDGED_TAGS, see below)
+//   toggleClauses(toggled)           -> ["Judged on: A", "Judged off: B"]: the words for the toggles of a drift, by tag name
+//   computeDrift(lock, rows, { config }) -> { judged: [{ tag, column }], adopted: [{ tag, columns }], toggled: [{ tag, judged }], missing: [name], added: [name] }
+//                                      (plus `no_judged_column: true` when no row has the Judged column)
+//   constants: DRIFT_COLUMNS, LEGACY_JUDGED_TAGS
 //
 // A row is the plain shape of a Rulebook copy row: { Name, Category, Counterpart, Description, 'Example Claims', 'When to use', Polarity,
 // Status, 'Geo Status', 'Geo Tag ID', 'Work tags': [..], 'Verified on', Evidence, page_id }; a missing key is the same as null. buildRubric and
@@ -31,16 +35,22 @@
 // The tag hash covers the tag's name and the text of its rules, nothing else: a changed description or example claim does not change it, which
 // is why the lock also keeps the other columns. The rubric hash covers the sorted tag hashes of all tags, judged or not.
 //
+// Judged. A tag is judged (tag.judged) only when its Judged box is ticked in the Rulebook, it has rules in force and its capability is text. The tick is the editors'
+// (config.editor_columns.rulebook); the tag hash does not cover it, so ticking a tag does not change its hash or the store of any group. The lock records each tag's judged state
+// (lock.judged) so that drift can compare it with Notion.
+//
 // Drift. computeDrift compares, for every tag that is in the lock, four columns of the copy (When to use, Description, Example Claims,
-// Counterpart; the examples as parsed) with what the lock holds, after normaliseText. A tag whose locked When to use holds rules is judged:
-// any difference goes to `judged` (the command stops with exit 4 and names the tag and the column). With `config` a tag counts as judged only
-// when its capability is text and it belongs to a judge group, because only then can its rules change a verdict. Every other tag goes to
-// `adopted` with the columns that differ (the caller writes a new edition; if the new text holds rules the tag becomes judged from then on).
+// Counterpart; the examples as parsed) with what the lock holds, after normaliseText. A tag the lock says is judged (lockedJudged) is protected:
+// any difference goes to `judged` (the command stops with exit 4 and names the tag and the column). Every other tag goes to
+// `adopted` with the columns that differ (the caller writes a new edition; if the new text holds rules and the box is ticked the tag becomes judged from then on).
+// A change of the tick is not a stop: `toggled` lists { tag, judged } for a tag whose box was ticked since the lock (it has rules and is a text tag) or unticked since, and the caller
+// adopts it into a new edition with the line "Judged on: <tag>" or "Judged off: <tag>". A tag toggled in the same pull as its text changed is adopted too (the toggle is free), as one
+// edition; a tag whose rules vanish while its box stays ticked is still a stop.
 
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { capabilityOf, groupOf, tableEntry } from './config.mjs';
+import { JUDGED_COLUMN, capabilityOf, tableEntry } from './config.mjs';
 import { h16 } from './hash.mjs';
 import { readJson, writeJsonAtomic, writeTextAtomic } from './jsonl.mjs';
 import { normaliseText } from './notion-values.mjs';
@@ -49,6 +59,12 @@ import { compareCodePoints, pyJson } from './pyjson.mjs';
 import { validate } from './validate.mjs';
 
 export const DRIFT_COLUMNS = Object.freeze(['When to use', 'Description', 'Example Claims', 'Counterpart']);
+
+/**
+ * A lock written before the Judged tick has no `judged` map. What the agent judged then was one tag, Context-dependent (group G1; every other tag with rules was only listed), so a
+ * lock without the map reads as judging exactly these tags (when they have rules in the locked text). The first edition written after the tick makes the map; from then on this is not used.
+ */
+export const LEGACY_JUDGED_TAGS = Object.freeze(['Context-dependent']);
 
 let schemaCache = null;
 const rubricSchema = () => (schemaCache ??= readJson(join(codeRoot(), 'schemas', 'rubric.schema.json')));
@@ -129,14 +145,18 @@ const textOrNull = (v) => {
 const tagHashOf = (name, rules) => h16(pyJson({ name, rules: rules.map((r) => r.text) }));
 const rubricHashOf = (tags) => h16(pyJson(tags.map((t) => t.tag_hash).sort(compareCodePoints)));
 
-/** One Rulebook copy row as a tag of the rubric. The capability comes from config.tags; a tag is judged when it has rules and its capability is text. */
-export function tagFromRow(row, config) {
+/**
+ * One Rulebook copy row as a tag of the rubric. The capability comes from config.tags; a tag is judged when its Judged box is ticked (`row.Judged === true`, or `ticked` when given),
+ * it has rules and its capability is text. The tag hash does not cover the tick.
+ */
+export function tagFromRow(row, config, { ticked } = {}) {
   if (row === null || typeof row !== 'object') throw new TypeError('tagFromRow: a row must be an object');
   const name = textOrNull(row.Name);
   if (name === null) throw new Error('tagFromRow: the row has no Name');
   const whenToUse = row['When to use'] === null || row['When to use'] === undefined ? '' : String(row['When to use']);
   const { rules } = parseRules(whenToUse);
   const capability = capabilityOf(config, name);
+  const tick = ticked ?? row[JUDGED_COLUMN] === true;
   return {
     name,
     page_id: textOrNull(row.page_id),
@@ -154,7 +174,7 @@ export function tagFromRow(row, config) {
     evidence: textOrNull(row.Evidence),
     work_tags: Array.isArray(row['Work tags']) ? row['Work tags'].map(String) : [],
     capability,
-    judged: rules.length > 0 && capability === 'text',
+    judged: tick && rules.length > 0 && capability === 'text',
     tag_hash: tagHashOf(name, rules),
   };
 }
@@ -194,13 +214,17 @@ function isoOf(now) {
 /**
  * The rubric object for a set of Rulebook copy rows. `edition` defaults to the first edition of today, `source` to the copy's ids read
  * through REST just now, `now` is a Date or a function that returns one. Tags are sorted by name; rubric_hash covers the sorted tag
- * hashes. Throws when two rows share a name, when there is no row with a name, or when the result does not verify.
+ * hashes. Throws when two rows share a name, when there is no row with a name, or when the result does not verify. `judgedFrom` (a lock) is used only when
+ * no row has a Judged column at all: the Rulebook in Notion has lost the column, and the ticks of the lock stand instead of every tag turning unjudged.
  */
-export function buildRubric(rows, { config, edition, source, now } = {}) {
+export function buildRubric(rows, { config, edition, source, now, judgedFrom = null } = {}) {
   if (!Array.isArray(rows)) throw new TypeError('buildRubric: rows must be an array');
   if (!config) throw new TypeError('buildRubric: a config is required');
   const at = isoOf(now);
-  const tags = rows.filter((row) => textOrNull(row?.Name) !== null).map((row) => tagFromRow(row, config));
+  const columnThere = rows.some((row) => row !== null && typeof row === 'object' && Object.hasOwn(row, JUDGED_COLUMN));
+  const fromLock = judgedFrom !== null && !columnThere;
+  const tags = rows.filter((row) => textOrNull(row?.Name) !== null)
+    .map((row) => tagFromRow(row, config, fromLock ? { ticked: lockedJudged(judgedFrom, textOrNull(row.Name)) } : {}));
   if (tags.length === 0) throw new Error('buildRubric: no row has a Name, so there is no rulebook to build');
   tags.sort((a, b) => compareCodePoints(a.name, b.name));
   for (let i = 1; i < tags.length; i++) if (tags[i].name === tags[i - 1].name) throw new Error(`buildRubric: two rows are named "${tags[i].name}"`);
@@ -228,7 +252,8 @@ export function verifyRubric(rubric) {
     names.add(tag.name);
     if (i > 0 && compareCodePoints(rubric.tags[i - 1].name, tag.name) > 0) problems.push(`"${tag.name}" is out of order: tags are sorted by name`);
     if (tag.tag_hash !== tagHashOf(tag.name, tag.rules)) problems.push(`${tag.name}: tag_hash does not match the name and rules`);
-    if (tag.judged !== (tag.rules.length > 0 && tag.capability === 'text')) problems.push(`${tag.name}: judged must be true exactly when the tag has rules and its capability is text`);
+    // judged is the tick of the Rulebook on top of rules and a text capability; the file does not keep the tick itself, so a tag with rules that is not judged is a tag whose box is not ticked
+    if (tag.judged && !(tag.rules.length > 0 && tag.capability === 'text')) problems.push(`${tag.name}: judged can be true only when the tag has rules and its capability is text`);
     const numbers = tag.rules.map((r) => r.n);
     if (new Set(numbers).size !== numbers.length) problems.push(`${tag.name}: two rules have the same number (${numbers.join(', ')})`);
   });
@@ -240,28 +265,45 @@ export function verifyRubric(rubric) {
 
 const rubricDir = (root) => join(root, 'rubric');
 
-/** The lock that writeEdition writes for a rubric, as an object and without touching any file: { edition, rubric_hash, locked_at, tags, text, columns }. */
+/**
+ * The lock that writeEdition writes for a rubric, as an object and without touching any file: { edition, rubric_hash, locked_at, tags, text, columns, judged }. judged holds, per tag name,
+ * whether the tag is judged in this edition (its box ticked, rules in force, a text tag): what computeDrift compares with the Rulebook in Notion.
+ */
 export function lockOf(rubric) {
   const tags = {};
   const text = {};
   const columns = {};
+  const judged = {};
   for (const tag of rubric.tags) {
     tags[tag.name] = tag.tag_hash;
     text[tag.name] = tag.when_to_use;
     columns[tag.name] = { Description: tag.description, 'Example Claims': tag.example_claims.join('\n'), Counterpart: tag.counterpart ?? '' };
+    judged[tag.name] = tag.judged === true;
   }
-  return { edition: rubric.edition, rubric_hash: rubric.rubric_hash, locked_at: rubric.built_at, tags, text, columns };
+  return { edition: rubric.edition, rubric_hash: rubric.rubric_hash, locked_at: rubric.built_at, tags, text, columns, judged };
 }
 
 /**
- * Whether a lock was made from this rubric: the same edition and rubric hash, and for every tag the same tag hash, locked When to use and
- * locked columns. A stop between the two writes of writeEdition (or a hand edit) shows up here as a list of what differs.
+ * Whether the lock says this tag is judged. A lock written before the Judged tick has no `judged` map and reads as LEGACY_JUDGED_TAGS (those with rules in the locked text); a lock with the map
+ * says what the map says, and a tag it does not name is not judged.
+ */
+export function lockedJudged(lock, name) {
+  if (lock?.judged !== null && typeof lock?.judged === 'object' && !Array.isArray(lock.judged)) return lock.judged[name] === true;
+  return LEGACY_JUDGED_TAGS.includes(name) && parseRules(lock?.text?.[name] ?? '').rules.length > 0;
+}
+
+/**
+ * Whether a lock was made from this rubric: the same edition and rubric hash, and for every tag the same tag hash, locked When to use,
+ * locked columns and judged state. A stop between the two writes of writeEdition (or a hand edit) shows up here as a list of what differs.
+ * A lock without the judged state (made before the Judged tick) is not compared on it: its rubric file was made by the same older code.
  */
 export function checkLock(rubric, lock) {
   const errors = [];
   const expected = lockOf(rubric);
   for (const key of ['edition', 'rubric_hash']) if (lock?.[key] !== expected[key]) errors.push(`${key}: the lock says ${lock?.[key]}, the rubric says ${expected[key]}`);
-  for (const [part, label, verb] of [['tags', 'tag hash', 'differs'], ['text', 'When to use text', 'differs'], ['columns', 'other columns', 'differ']]) {
+  const parts = [['tags', 'tag hash', 'differs'], ['text', 'When to use text', 'differs'], ['columns', 'other columns', 'differ']];
+  if (lock !== null && typeof lock === 'object' && Object.hasOwn(lock, 'judged')) parts.push(['judged', 'judged state', 'differs']);
+  for (const [part, label, verb] of parts) {
     const names = [...new Set([...Object.keys(expected[part]), ...Object.keys(lock?.[part] ?? {})])].sort(compareCodePoints);
     for (const name of names) {
       if (!isDeepStrictEqual(lock?.[part]?.[name], expected[part][name])) errors.push(`${name}: the lock's ${label} ${verb} from the rubric`);
@@ -272,11 +314,13 @@ export function checkLock(rubric, lock) {
 
 /**
  * Make `rubric` the current edition of the state folder `root`: history/<edition>.json (never rewritten with different rules), rubric.json,
- * rubric.lock, and one line in CHANGELOG.md: "- <date> · edition <edition> · <reason>". Nothing is written when the rubric does not verify.
+ * rubric.lock, and one line in CHANGELOG.md: "- <date> · edition <edition> · <reason>". Nothing is written when the rubric does not verify. `reason` may also be a list of reasons
+ * (one per change the edition takes over: the adoption of several Judged boxes writes "Judged on: <tag>" for each tag): the edition then has one line per reason, all written at once.
  * Running it again for the same edition and rules (after a stop halfway) finishes the job and adds no second changelog line.
  */
 export function writeEdition(root, rubric, { reason } = {}) {
-  if (typeof reason !== 'string' || reason.trim() === '') throw new TypeError('writeEdition: a reason is required (it becomes the changelog line)');
+  const reasons = (Array.isArray(reason) ? reason : [reason]).map((r) => (typeof r === 'string' ? r.replace(/\s+/g, ' ').trim() : ''));
+  if (reasons.length === 0 || reasons.some((r) => r === '')) throw new TypeError('writeEdition: a reason is required (it becomes the changelog line)');
   const check = verifyRubric(rubric);
   if (!check.ok) throw new Error(`writeEdition: the rubric is not valid:\n- ${check.errors.join('\n- ')}`);
   const dir = rubricDir(root);
@@ -299,7 +343,7 @@ export function writeEdition(root, rubric, { reason } = {}) {
   let text = existsSync(changelog) ? readFileSync(changelog, 'utf8') : '';
   if (!text.split('\n').some((line) => line.startsWith(prefix))) {
     if (text !== '' && !text.endsWith('\n')) text += '\n';
-    writeTextAtomic(changelog, `${text}${prefix}${reason.replace(/\s+/g, ' ').trim()}\n`);
+    writeTextAtomic(changelog, `${text}${reasons.map((r) => `${prefix}${r}\n`).join('')}`);
   }
   return { edition: rubric.edition, rubric_hash: rubric.rubric_hash, lock };
 }
@@ -345,9 +389,16 @@ function rowColumn(row, column) {
   return row[column] ?? '';
 }
 
+/** "Judged on: A", "Judged off: B": the plain words for each change of the Judged box, one clause per tag, by tag name (the pull line, status and the changelog line all use them). */
+export function toggleClauses(toggled) {
+  return [...toggled].sort((a, b) => compareCodePoints(a.tag, b.tag)).map((t) => `Judged ${t.judged ? 'on' : 'off'}: ${t.tag}`);
+}
+
 /**
- * What the Rulebook copy holds now against what the lock says. See the header for the buckets. Both lists are sorted by tag name; a
- * column the lock never recorded is not compared; two rows with the same name throw.
+ * What the Rulebook copy holds now against what the lock says. See the header for the buckets. All lists are sorted by tag name; a
+ * column the lock never recorded is not compared; two rows with the same name throw. `toggled` is { tag, judged } with judged true for a tag that became judged (its box is ticked, it has
+ * rules now and `config` says its capability is text) and false for one whose box was unticked. When no row has the Judged column the ticks cannot be read: nothing is toggled and
+ * `no_judged_column: true` says so (the caller reports it; it does not take the missing column for "unticked").
  */
 export function computeDrift(lock, rows, { config } = {}) {
   if (lock === null || typeof lock !== 'object') throw new TypeError('computeDrift: the lock is missing');
@@ -359,21 +410,31 @@ export function computeDrift(lock, rows, { config } = {}) {
     if (byName.has(name)) throw new Error(`computeDrift: two rows are named "${name}"`);
     byName.set(name, row);
   }
-  const drift = { judged: [], adopted: [], missing: [], added: [] };
+  const tickColumn = [...byName.values()].some((row) => Object.hasOwn(row, JUDGED_COLUMN));
+  const drift = { judged: [], adopted: [], toggled: [], missing: [], added: [] };
+  if (!tickColumn && byName.size > 0) drift.no_judged_column = true;
   for (const name of Object.keys(lock.tags ?? {}).sort(compareCodePoints)) {
     const row = byName.get(name);
     if (!row) {
       drift.missing.push(name);
       continue;
     }
+    const wasJudged = lockedJudged(lock, name);
+    let toggle = null;
+    if (tickColumn) {
+      const ticked = row[JUDGED_COLUMN] === true;
+      const judgedNow = ticked && parseRules(row['When to use'] ?? '').rules.length > 0 && (!config || capabilityOf(config, name) === 'text');
+      if (!wasJudged && judgedNow) toggle = true;
+      else if (wasJudged && !ticked) toggle = false;
+    }
+    if (toggle !== null) drift.toggled.push({ tag: name, judged: toggle });
     const differing = DRIFT_COLUMNS.filter((column) => {
       const locked = lockedColumn(lock, name, column);
       return locked !== undefined && !sameText(locked, rowColumn(row, column));
     });
     if (differing.length === 0) continue;
-    const hasRules = parseRules(lock.text?.[name] ?? '').rules.length > 0;
-    const judgedNow = hasRules && (!config || (capabilityOf(config, name) === 'text' && groupOf(config, name) !== null));
-    if (judgedNow) for (const column of differing) drift.judged.push({ tag: name, column });
+    // a tag the lock says is judged is protected, unless its box was unticked in this very pull (the toggle is free, and the edit goes with it as one edition)
+    if (wasJudged && toggle !== false) for (const column of differing) drift.judged.push({ tag: name, column });
     else drift.adopted.push({ tag: name, columns: differing });
   }
   for (const name of [...byName.keys()].sort(compareCodePoints)) if (!Object.hasOwn(lock.tags ?? {}, name)) drift.added.push(name);

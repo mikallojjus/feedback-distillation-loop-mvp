@@ -93,15 +93,21 @@ test('preflight: an edit to a tag without rules is taken over as a new edition "
   assert.deepEqual([again.ok, again.adopted.length, again.edition], [true, 0, '2026-10-16.2']);
 });
 
-test('preflight: when the adopted text holds numbered rules the tag is judged from the new edition (it still needs a judge group to be judged)', async () => {
+test('preflight: rules adopted on a tag whose Judged box is not ticked leave it unjudged; ticking the box later makes it judged from the next edition', async () => {
   const w = await makeWorld({ claims: 2 });
   w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim that repeats itself is Wordy.\n2. A claim with filler words is Wordy.' });
   const pre = await check(w);
   assert.equal(pre.ok, true);
   const wordy = w.rubric().tags.find((t) => t.name === 'Wordy');
-  assert.deepEqual([wordy.rules.length, wordy.judged], [2, true]);
+  assert.deepEqual([wordy.rules.length, wordy.judged], [2, false], 'rules without a tick: not judged');
   const log = readFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), 'utf8');
   assert.match(log, /adopted from Notion: Wordy When to use/);
+  assert.deepEqual(pre.toggled, []);
+  // the box is ticked: one more edition, judged on
+  w.fake.editRow(w.ids.tag.Wordy, { Judged: true });
+  const on = await check(w);
+  assert.deepEqual([on.ok, on.edition, on.toggled], [true, '2026-10-16.3', [{ tag: 'Wordy', judged: true }]]);
+  assert.equal(w.rubric().tags.find((t) => t.name === 'Wordy').judged, true);
 });
 
 test('preflight with adopt: false (status) leaves the rulebook files alone and says an edit waits to be taken over', async () => {
@@ -110,7 +116,184 @@ test('preflight with adopt: false (status) leaves the rulebook files alone and s
   const pre = await check(w, { adopt: false });
   assert.equal(pre.ok, true);
   assert.equal(w.rubric().edition, '2026-10-16.1');
-  assert.ok(pre.warnings.some((x) => /without rules has been edited in Notion/.test(x)), pre.warnings.join('|'));
+  assert.ok(pre.warnings.some((x) => /tag that is not judged has been edited in Notion/.test(x)), pre.warnings.join('|'));
+});
+
+const changelog = (w) => readFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), 'utf8').trim().split('\n');
+const lockOf = (w) => readJson(join(w.root, 'rubric', 'rubric.lock'));
+
+test('preflight: ticking and unticking the Judged box are taken over as editions with a changelog line each ("Judged on: <tag>", "Judged off: <tag>"), and neither stops the command', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim that repeats itself is Wordy.\n2. A claim with filler words is Wordy.' });
+  assert.equal((await check(w)).edition, '2026-10-16.2', 'the rules come in as an edition of their own, unjudged: the box is not ticked');
+  assert.equal(lockOf(w).judged.Wordy, false);
+
+  w.fake.editRow(w.ids.tag.Wordy, { Judged: true });
+  const on = await check(w);
+  assert.deepEqual([on.ok, on.code, on.edition, on.toggled, on.adopted], [true, 0, '2026-10-16.3', [{ tag: 'Wordy', judged: true }], []]);
+  assert.equal(changelog(w).at(-1), '- 2026-10-16 · edition 2026-10-16.3 · Judged on: Wordy');
+  assert.equal(w.rubric().tags.find((t) => t.name === 'Wordy').judged, true);
+  assert.equal(lockOf(w).judged.Wordy, true);
+  assert.equal(readJson(join(w.root, 'rubric', 'history', '2026-10-16.3.json')).tags.find((t) => t.name === 'Wordy').judged, true);
+  // the same box seen again is nothing new
+  const quiet = await check(w);
+  assert.deepEqual([quiet.edition, quiet.toggled, quiet.warnings], ['2026-10-16.3', [], []]);
+
+  w.fake.editRow(w.ids.tag.Wordy, { Judged: false });
+  const off = await check(w);
+  assert.deepEqual([off.ok, off.edition, off.toggled], [true, '2026-10-16.4', [{ tag: 'Wordy', judged: false }]]);
+  assert.equal(changelog(w).at(-1), '- 2026-10-16 · edition 2026-10-16.4 · Judged off: Wordy');
+  assert.equal(w.rubric().tags.find((t) => t.name === 'Wordy').judged, false);
+  assert.equal(w.rubric().tags.find((t) => t.name === 'Wordy').rules.length, 2, 'the rules stay, unjudged');
+  assert.equal(changelog(w).length, 4);
+  // after the untick its rules change freely again
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. Another first rule.' });
+  const free = await check(w);
+  assert.deepEqual([free.ok, free.edition, free.adopted], [true, '2026-10-16.5', [{ tag: 'Wordy', columns: ['When to use'] }]]);
+});
+
+test('preflight: several toggles of one pull are one edition with one clause per tag, in tag order, next to the edits of the same pull', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. First.\n2. Second.', Judged: true });
+  w.fake.editRow(w.ids.tag['Trailing period'], { 'When to use': '1. A claim that ends with a full stop.', Judged: true });
+  w.fake.editRow(w.ids.tag['Context-dependent'], { Judged: false });
+  w.fake.editRow(w.ids.tag['Poor wording'], { Description: 'An awkward phrase.' });
+  const pre = await check(w);
+  assert.equal(pre.ok, true);
+  assert.equal(pre.edition, '2026-10-16.2', 'one edition for all of it');
+  assert.deepEqual(pre.toggled, [{ tag: 'Context-dependent', judged: false }, { tag: 'Trailing period', judged: true }, { tag: 'Wordy', judged: true }]);
+  assert.deepEqual(changelog(w).slice(1), [
+    '- 2026-10-16 · edition 2026-10-16.2 · adopted from Notion: Poor wording Description; Trailing period When to use; Wordy When to use',
+    '- 2026-10-16 · edition 2026-10-16.2 · Judged off: Context-dependent',
+    '- 2026-10-16 · edition 2026-10-16.2 · Judged on: Trailing period',
+    '- 2026-10-16 · edition 2026-10-16.2 · Judged on: Wordy',
+  ], 'the edits on one line as ever, then one line for each tag whose box changed');
+  assert.deepEqual(w.rubric().tags.filter((t) => t.judged).map((t) => t.name), ['Trailing period', 'Wordy']);
+  assert.deepEqual(Object.entries(lockOf(w).judged).filter(([, v]) => v).map(([k]) => k), ['Trailing period', 'Wordy']);
+});
+
+test('preflight: a tag unticked and edited in the same pull is adopted as one edition; a tag edited while its box stays ticked still stops, also when the rules are deleted', async () => {
+  const w = await makeWorld({ claims: 2 });
+  const cd = w.rubric().tags.find((t) => t.name === 'Context-dependent');
+  assert.equal(cd.judged, true);
+  w.fake.editRow(w.ids.tag['Context-dependent'], { 'When to use': cd.when_to_use.replace('Test: could', 'Test: would'), Judged: false });
+  const both = await check(w);
+  assert.deepEqual([both.ok, both.edition, both.toggled], [true, '2026-10-16.2', [{ tag: 'Context-dependent', judged: false }]]);
+  assert.deepEqual(changelog(w).slice(1), ['- 2026-10-16 · edition 2026-10-16.2 · adopted from Notion: Context-dependent When to use', '- 2026-10-16 · edition 2026-10-16.2 · Judged off: Context-dependent']);
+  assert.equal(w.rubric().tags.find((t) => t.name === 'Context-dependent').judged, false);
+
+  const stays = await makeWorld({ claims: 2 });
+  stays.fake.editRow(stays.ids.tag['Context-dependent'], { 'When to use': '' });
+  const stop = await check(stays);
+  assert.deepEqual([stop.ok, stop.code, stop.kind, stop.tag, stop.column], [false, 4, 'drift', 'Context-dependent', 'When to use'], 'the rules of a ticked tag are not deleted without the stop');
+  assert.equal(stays.rubric().edition, '2026-10-16.1');
+});
+
+test('preflight: a second command on a pull that was already taken over writes no second edition', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. First.', Judged: true });
+  const p = await w.pull();
+  const first = preflight({ root: w.root, config: w.config, pullId: p.pullId, now: () => NOW });
+  assert.deepEqual([first.edition, first.toggled.length], ['2026-10-16.2', 1]);
+  const again = preflight({ root: w.root, config: w.config, pullId: p.pullId, now: () => NOW });
+  assert.equal(again.ok, true);
+  assert.deepEqual([again.edition, again.toggled, again.adopted], ['2026-10-16.2', [], []], 'the drift of that pull is older than the edition in force: nothing is written again');
+  assert.deepEqual(changelog(w).slice(1), ['- 2026-10-16 · edition 2026-10-16.2 · adopted from Notion: Wordy When to use', '- 2026-10-16 · edition 2026-10-16.2 · Judged on: Wordy'], 'the one edition has its two lines, and no third');
+});
+
+test('the judge takes a toggle over before it reads the rulebook: one run judges the tag that was just ticked, stops judging the one just unticked, and the command after it finds nothing left to take over', async () => {
+  const w = await makeWorld({ claims: 3 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim that repeats itself is Wordy.\n2. A claim with filler words is Wordy.' });
+  assert.equal((await check(w)).edition, '2026-10-16.2');
+
+  w.fake.editRow(w.ids.tag.Wordy, { Judged: true });
+  const on = await w.judge({ runsMax: 1 });
+  assert.equal(on.exit, 0, JSON.stringify(on.report));
+  const record = readJson(join(on.runDir, 'run.json'));
+  assert.equal(record.rubric_edition, '2026-10-16.3', 'the run judged with the edition that holds the tick');
+  assert.deepEqual(record.groups.map((g) => [g.name, g.tags]), [['G1', ['Context-dependent']], ['Wordy', ['Wordy']]], 'the tick made a group of its own: no config edit');
+  assert.match(record.warnings.join(' '), /Judged on: Wordy\); it was taken over into edition 2026-10-16\.3 before this run/);
+  assert.equal(changelog(w).at(-1), '- 2026-10-16 · edition 2026-10-16.3 · Judged on: Wordy');
+  const after = await check(w);
+  assert.deepEqual([after.edition, after.toggled, after.adopted], ['2026-10-16.3', [], []]);
+
+  w.fake.editRow(w.ids.tag.Wordy, { Judged: false });
+  const off = await w.judge({ runsMax: 1 });
+  assert.equal(off.exit, 0);
+  const second = readJson(join(off.runDir, 'run.json'));
+  assert.equal(second.rubric_edition, '2026-10-16.4');
+  assert.deepEqual(second.groups.map((g) => g.name), ['G1']);
+  assert.equal(changelog(w).at(-1), '- 2026-10-16 · edition 2026-10-16.4 · Judged off: Wordy');
+});
+
+test('the judge leaves a toggle to the next command when it cannot take it over: a candidate rulebook (--rubric), and it never stops for one', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. First.', Judged: true });
+  const r = await w.judge({ runsMax: 1, rubric: join(w.root, 'rubric', 'rubric.json') });
+  assert.equal(r.exit, 0);
+  assert.equal(w.rubric().edition, '2026-10-16.1', 'a candidate file is judged as it is: no edition was written');
+  assert.equal(readJson(join(r.runDir, 'run.json')).groups.length, 1);
+});
+
+test('preflight: with adopt: false (status) a toggle waits and is said in words, and no file is written', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. First.', Judged: true });
+  const pre = await check(w, { adopt: false });
+  assert.equal(pre.ok, true);
+  assert.equal(w.rubric().edition, '2026-10-16.1');
+  assert.ok(pre.warnings.some((x) => /Judged on: Wordy in Notion; the next command takes it over/.test(x)), pre.warnings.join('|'));
+  assert.deepEqual(pre.toggled, []);
+});
+
+test('preflight: a lock from before the Judged box judges Context-dependent only, so the first command takes the other ticks over as toggles and the one judged tag stays protected', async () => {
+  const { readFileSync: read } = await import('node:fs');
+  const taxonomy = JSON.parse(read(join(import.meta.dirname, '..', '..', 'agents', 'claim-tagger-mvp', 'setup', 'taxonomy-issue.json'), 'utf8'));
+  const seeded = taxonomy.rows.map((row) => (['Wordy', 'Trailing period'].includes(row.Name) ? { ...row, 'When to use': '1. A rule.\n2. Another rule.', Judged: true } : row));
+  const w = await makeWorld({ claims: 2, rulebook: seeded });
+  assert.deepEqual(w.rubric().tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent', 'Trailing period', 'Wordy']);
+  // the state of the repository before the Judged box: a lock with no judged map, and an edition whose flags are "has rules and is a text tag"
+  const lock = lockOf(w);
+  delete lock.judged;
+  writeFileSync(join(w.root, 'rubric', 'rubric.lock'), `${JSON.stringify(lock, null, 2)}\n`);
+  const stale = await check(w, { adopt: false });
+  assert.equal(stale.ok, true, 'the file and its old lock still agree');
+  assert.ok(stale.warnings.some((x) => /Judged on: Trailing period; Judged on: Wordy in Notion/.test(x)), stale.warnings.join('|'));
+  const first = await check(w);
+  assert.deepEqual([first.ok, first.edition, first.toggled], [true, '2026-10-16.2', [{ tag: 'Trailing period', judged: true }, { tag: 'Wordy', judged: true }]], 'Context-dependent was judged and is: it is no toggle');
+  assert.deepEqual(changelog(w).slice(1), ['- 2026-10-16 · edition 2026-10-16.2 · Judged on: Trailing period', '- 2026-10-16 · edition 2026-10-16.2 · Judged on: Wordy'], 'a line for each tag, and none for Context-dependent');
+  assert.deepEqual(Object.entries(lockOf(w).judged).filter(([, v]) => v).map(([k]) => k), ['Context-dependent', 'Trailing period', 'Wordy'], 'the new lock has the map');
+  assert.deepEqual((await check(w)).toggled, [], 'and the next pull is quiet');
+
+  // the same migration, but somebody edited the rules of Context-dependent before the first pull: that is a stop, not an adoption
+  const guarded = await makeWorld({ claims: 2, rulebook: seeded });
+  const old = lockOf(guarded);
+  delete old.judged;
+  writeFileSync(join(guarded.root, 'rubric', 'rubric.lock'), `${JSON.stringify(old, null, 2)}\n`);
+  guarded.fake.editRow(guarded.ids.tag['Context-dependent'], { 'When to use': '1. Somebody rewrote the rules.' });
+  const stop = await check(guarded);
+  assert.deepEqual([stop.ok, stop.code, stop.tag, stop.column], [false, 4, 'Context-dependent', 'When to use']);
+  assert.equal(guarded.rubric().edition, '2026-10-16.1');
+});
+
+test('preflight: a Rulebook that has lost the Judged column keeps the saved ticks: a warning, no toggle, and an edit taken over in that state does not un-judge anything', async () => {
+  const { TABLE_SPECS } = await import('./helpers/tables.mjs');
+  const { Judged: _box, ...withoutBox } = TABLE_SPECS.rulebook;
+  const w = await makeWorld({ claims: 2, tableSpecs: { rulebook: withoutBox } });
+  // the world made its first edition from rows that had no box: nothing is judged. Make the edition of a Rulebook that had it.
+  const { buildRubric, writeEdition } = await import('../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs');
+  const { loadPull, latestPullId } = await import('../../agents/claim-tagger-mvp/scripts/pull.mjs');
+  const rows = loadPull(w.root, latestPullId(w.root), { config: w.config }).rulebook().map((r) => ({ ...r, Judged: r.Name === 'Context-dependent' }));
+  writeEdition(w.root, buildRubric(rows, { config: w.config, edition: '2026-10-16.2', now: NOW }), { reason: 'the Rulebook as it was with the box' });
+  assert.equal(w.rubric().tags.find((t) => t.name === 'Context-dependent').judged, true);
+
+  w.fake.editRow(w.ids.tag.Wordy, { Description: 'Edited while the column was gone.' });
+  const pre = await check(w);
+  assert.equal(pre.ok, true);
+  assert.deepEqual(pre.toggled, []);
+  assert.ok(pre.warnings.some((x) => /has no Judged column/.test(x)), pre.warnings.join('|'));
+  assert.equal(pre.edition, '2026-10-16.3', 'the edit is taken over');
+  assert.equal(w.rubric().tags.find((t) => t.name === 'Context-dependent').judged, true, 'but Context-dependent is still judged: a missing column is not an untick');
+  assert.deepEqual(lockOf(w).judged['Context-dependent'], true);
 });
 
 test('preflight: a builder session (runs/SETUP) is a warning, not a stop', async () => {

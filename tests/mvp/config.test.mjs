@@ -5,7 +5,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
   CAPABILITIES, CLAIMS_GEO_COLUMNS, READING_DEFAULTS, RULE_CHANGES_AGENT_STATUS, RULEBOOK_COLUMNS, TABLES, TAG_DECISIONS_WRITABLE, TD, TD_EDITOR,
-  capabilityOf, editorColumns, groupOf, isDemo, isProtected, loadConfig, readingSettings, tableEntry, validateConfig, writableProperties,
+  JUDGED_COLUMN, SEED_JUDGED_SCRIPT, capabilityOf, editorColumns, groupOf, isDemo, isJudgedTag, isProtected, judgeGroupOf, loadConfig, ownGroupName, readingSettings, seedJudgedProperties, tableEntry, validateConfig,
+  writableProperties,
 } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { builtConfig, fillIds, placeholderConfig } from './helpers/config-fixture.mjs';
@@ -44,7 +45,9 @@ test('the config.json in the agent folder is valid, before and after setup has f
   assert.equal(config.notion.rulebook.key, 'Name');
   assert.ok(!Array.isArray(config.notion.claims), 'one claims table (P5): notion.claims is one object');
   assert.equal(config.notion.claims.key, 'Geo ID');
-  assert.equal(groupOf(config, 'Context-dependent'), 'G1', 'only Context-dependent has rules and is judged');
+  assert.equal(groupOf(config, 'Context-dependent'), 'G1');
+  assert.deepEqual(config.judge.groups, { G1: ['Context-dependent'], G2: ['Trailing period', 'Multi-sentence', 'Improper capitalization', 'Incorrect grammar', 'Poor wording', 'Wordy'] }, 'G1 is as it was; G2 holds the other six Priority 1 tags');
+  assert.deepEqual(config.editor_columns.rulebook, ['Judged'], 'the box that says which tags are judged is the editors');
   assert.deepEqual(validateConfig(config), { ok: true, errors: [] });
   for (const table of TABLES) {
     const entry = tableEntry(config, table);
@@ -470,7 +473,7 @@ test('editorColumns lists what only an editor writes', () => {
   assert.deepEqual(editorColumns(config, 'tag_decisions'), [...TD_EDITOR]);
   assert.deepEqual(editorColumns(config, 'rule_changes'), ['Editor wording']);
   assert.deepEqual(editorColumns(config, 'agent_settings'), ['Paused']);
-  assert.deepEqual(editorColumns(config, 'rulebook'), []);
+  assert.deepEqual(editorColumns(config, 'rulebook'), ['Judged'], 'the box that says which tags the agent judges is the editors');
   editorColumns(config, 'rule_changes').push('Status');
   assert.deepEqual(editorColumns(config, 'rule_changes'), ['Editor wording'], 'a copy, not the config array');
   assert.throws(() => editorColumns(config, 'runs'), /unknown table "runs"/);
@@ -500,6 +503,66 @@ test('groupOf finds the judge group of a tag', () => {
   config.judge.groups.G2 = ['Wordy', 'Poor wording'];
   assert.equal(groupOf(config, 'Poor wording'), 'G2');
   assert.equal(groupOf({}, 'Wordy'), null);
+});
+
+test('the Judged box is the one editor column of the Rulebook: the config names exactly it, and the seed script may write it and nothing else', () => {
+  assert.equal(JUDGED_COLUMN, 'Judged');
+  assert.equal(SEED_JUDGED_SCRIPT, 'seed-judged');
+  assert.deepEqual(editorColumns(shipped(), 'rulebook'), ['Judged']);
+  const missing = shipped();
+  delete missing.editor_columns.rulebook;
+  assert.ok(mentions(missing, 'editor_columns.rulebook: expected the one editor column of the Rulebook (Judged)'));
+  for (const wrong of [[], ['Judged', 'When to use'], ['When to use'], 'Judged']) {
+    const config = shipped();
+    config.editor_columns.rulebook = wrong;
+    assert.ok(mentions(config, 'editor_columns.rulebook'), JSON.stringify(wrong));
+  }
+  assert.equal(validateConfig(shipped()).ok, true);
+  const config = builtConfig();
+  assert.deepEqual([...seedJudgedProperties(config)].sort(), ['Judged', 'Name']);
+  assert.equal(writableProperties(config, 'rulebook').has('Judged'), false, 'no plan may write it, with setup or without');
+  assert.equal(writableProperties(config, 'rulebook', { setup: true }).has('Judged'), false);
+  assert.equal(RULEBOOK_COLUMNS.includes('Judged'), false, 'the thirteen columns of the taxonomy are the copy\'s; the box is not one of them');
+});
+
+test('judgeGroupOf: a tag is judged only when its Judged box is ticked, it has rules in force and it is a text tag; its group is the configured one or its own', () => {
+  const config = shipped();
+  config.judge.groups.G2 = ['Wordy', 'Poor wording'];
+  const tag = (name, over = {}) => ({ name, judged: true, rules: [{ n: 1, text: 'A rule.' }], capability: capabilityOf(config, name), ...over });
+  assert.equal(judgeGroupOf(config, tag('Context-dependent')), 'G1');
+  assert.equal(judgeGroupOf(config, tag('Wordy')), 'G2');
+  assert.equal(judgeGroupOf(config, tag('Brand new tag')), 'Brand new tag', 'a ticked text tag that no group names is judged in a group of its own, named after the tag');
+  assert.equal(isJudgedTag(config, tag('Brand new tag')), true);
+  // each of the three conditions alone
+  assert.equal(judgeGroupOf(config, tag('Wordy', { judged: false })), null, 'the box is not ticked');
+  assert.equal(judgeGroupOf(config, tag('Wordy', { judged: undefined })), null, 'no flag at all is not ticked');
+  assert.equal(judgeGroupOf(config, tag('Wordy', { rules: [] })), null, 'no rules in force');
+  assert.equal(judgeGroupOf(config, tag('Wordy', { rules: undefined })), null);
+  assert.equal(judgeGroupOf(config, tag('Unsourced')), null, 'deterministic');
+  assert.equal(judgeGroupOf(config, tag('Improperly sourced')), null, 'source');
+  assert.equal(judgeGroupOf(config, tag('Exact duplicate')), null, 'corpus');
+  assert.equal(judgeGroupOf(config, tag('Wordy', { capability: undefined })), 'G2', 'the capability comes from the config when the tag does not carry it');
+  assert.equal(judgeGroupOf(config, tag('Unsourced', { capability: undefined })), null);
+  for (const nothing of [null, undefined, 'Wordy', {}, { name: 'Wordy' }, { judged: true, rules: [{ n: 1, text: 'x' }] }]) assert.equal(judgeGroupOf(config, nothing), null, JSON.stringify(nothing));
+  assert.equal(isJudgedTag(config, null), false);
+  // a tag called like a configured group does not share its group
+  assert.equal(ownGroupName(config, 'G2'), 'G2 (own group)');
+  assert.equal(ownGroupName(config, 'Wordy'), 'Wordy');
+  assert.equal(judgeGroupOf(config, tag('G2')), 'G2 (own group)');
+  // the judge settings of judge.mjs (judge and tags only) answer too
+  assert.equal(judgeGroupOf({ judge: { groups: { G1: ['A'] } }, tags: { default: 'text', B: 'source' } }, { name: 'A', judged: true, rules: [{ n: 1, text: 'x' }] }), 'G1');
+  assert.equal(judgeGroupOf({ judge: { groups: {} }, tags: { default: 'text', B: 'source' } }, { name: 'B', judged: true, rules: [{ n: 1, text: 'x' }] }), null);
+});
+
+test('only text tags may be named in a judge group: the check holds for the six tags of G2 as for any other', () => {
+  const config = shipped();
+  config.judge.groups.G2 = ['Trailing period', 'Multi-sentence', 'Improper capitalization', 'Incorrect grammar', 'Poor wording', 'Wordy'];
+  assert.equal(validateConfig(config).ok, true, problems(config).join('; '));
+  config.judge.groups.G2.push('Unsourced');
+  assert.ok(mentions(config, 'judge.groups.G2: "Unsourced" is a deterministic tag, and only text tags are judged'));
+  config.judge.groups.G2.pop();
+  config.judge.groups.G3 = ['Wordy'];
+  assert.ok(mentions(config, 'judge.groups.G3: "Wordy" is already in group G2'));
 });
 
 // ---- the Claims table's own columns and the editor columns of Tag decisions ------------------------------------------------------------

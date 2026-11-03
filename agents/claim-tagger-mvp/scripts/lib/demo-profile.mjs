@@ -487,6 +487,7 @@ export function rulebookRow(manifest) {
   const tag = { ...manifest.tag };
   tag['Example Claims'] = Array.isArray(tag['Example Claims']) ? tag['Example Claims'].join('\n') : tag['Example Claims'];
   delete tag.copied_from;
+  tag.Judged = true; // a practice page judges its one tag: the box of the Rulebook is ticked (the practice pages are parked, P48; the row keeps them whole)
   return tag;
 }
 

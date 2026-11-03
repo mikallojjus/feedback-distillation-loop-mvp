@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { EXIT } from '../../agents/claim-tagger-mvp/scripts/lib/exit-codes.mjs';
 import { TD_EDITOR, editorColumns as editorColumnsOf } from '../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { createClient } from '../../agents/claim-tagger-mvp/scripts/lib/notion-rest.mjs';
+import { codeRoot } from '../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import {
   MAX_CONSECUTIVE_FAILURES, PlanError, applyPlan, checkPlan, compareWritten, newPlan, readLedger, readPlan,
 } from '../../agents/claim-tagger-mvp/scripts/lib/plan.mjs';
@@ -248,6 +249,106 @@ test('checkPlan: an editor column is refused on every table, in every form (Agen
   assert.equal(problems.filter((p) => /only an editor writes/.test(p)).length, 5, 'one problem per column, no more');
   assert.deepEqual(editorColumnsOf(w.config, 'tag_decisions'), [...TD_EDITOR]);
   assert.deepEqual(editorColumnsOf(w.config, 'claims'), [], 'Claims has no editor column on v2');
+});
+
+test('checkPlan: Judged on the Rulebook is an editor column: every script but seed-judged is refused, with setup or without, on a create or an update, and the copy cannot write it either', async () => {
+  const w = await world();
+  assert.deepEqual(editorColumnsOf(w.config, 'rulebook'), ['Judged']);
+  const scripts = ['propose', 'tag', 'distill', 'promote', 'followup', 'rollback', 'restore', 'status', 'decide', 'setup', 'setup.mjs', 'copy-live', 'add', 'remove', 'whatever'];
+  for (const script of scripts) {
+    for (const opts of [{}, { setup: true }]) {
+      const update = newP(w, { script });
+      update.update('rulebook', 'Wordy', 'p', { Judged: true });
+      const create = newP(w, { script });
+      create.create('rulebook', 'Wordy', { Name: 'Wordy', Judged: true });
+      for (const [plan, what] of [[update, 'update'], [create, 'create']]) {
+        const problems = problemsOf(plan, w, opts);
+        assert.ok(problems.length > 0, `${script} / ${what} / ${JSON.stringify(opts)} must be refused`);
+        assert.ok(mentions(problems, /"Judged" is (a column only an editor writes|not a column this plan may write to rulebook)/) || mentions(problems, /may only|only be checked|not one of/), `${script} / ${what}: ${problems.join(' | ')}`);
+        assert.equal(checkPlan(plan, w.config, { root: w.root, ...opts }).ok, false);
+      }
+    }
+  }
+  // the editor-column message itself, for a script that is allowed to write the table (propose writes nothing to the Rulebook, but its plan is checked like any other)
+  const plain = newP(w, { script: 'propose' });
+  plain.update('rulebook', 'Wordy', 'p', { Judged: true });
+  assert.ok(mentions(problemsOf(plain, w), /"Judged" is a column only an editor writes/));
+  // and the copy of the first page, which writes the thirteen columns of the Rulebook, does not write this one
+  const copy = newPlan({ runId: 'r', script: 'copy-live', config: w.config, now: NOW });
+  copy.update('rulebook', 'Wordy', 'p', { Judged: true });
+  assert.ok(mentions(problemsOf(copy, w), /"Judged" is not a column this plan may write to rulebook/));
+  const copyOk = newPlan({ runId: 'r', script: 'copy-live', config: w.config, now: NOW });
+  copyOk.update('rulebook', 'Wordy', 'p', { 'When to use': '1. A rule.' });
+  assert.deepEqual(problemsOf(copyOk, w), [], 'the copy still writes the columns it always wrote');
+});
+
+test('checkPlan: a plan of the seed-judged script may tick Judged on rows of the Rulebook, and nothing else', async () => {
+  const w = await world();
+  const seed = (extra = {}) => newPlan({ runId: 'r', script: 'seed-judged', rubricEdition: EDITION, config: w.config, now: NOW, ...extra });
+  const ok = seed();
+  ok.update('rulebook', 'Wordy', 'p1', { Judged: true }, { expect: { Judged: false } });
+  ok.update('rulebook', 'Trailing period', 'p2', { Judged: true });
+  ok.update('rulebook', 'Poor wording', 'p3', { Name: 'Poor wording', Judged: true });
+  assert.deepEqual(problemsOf(ok, w), []);
+  assert.deepEqual(problemsOf(ok, w, { setup: true }), [], 'with the builder session flag too');
+  assert.equal(checkPlan(ok, w.config, { root: w.root }).counts.updates, 3);
+
+  const refused = [
+    ['an untick', (p) => p.update('rulebook', 'Wordy', 'p', { Judged: false }), /ticks Judged \(true\) and never unticks it/],
+    ['an update without Judged', (p) => p.update('rulebook', 'Wordy', 'p', { Name: 'Wordy' }), /ticks Judged \(true\)/],
+    ['another column of the Rulebook', (p) => p.update('rulebook', 'Wordy', 'p', { Judged: true, 'When to use': '1. x' }), /"When to use" is not a column this plan may write to rulebook/],
+    ['a create', (p) => p.create('rulebook', 'Wordy', { Name: 'Wordy', Judged: true }), /may only update rows of the rulebook table/],
+    ['another table', (p) => p.update('agent_settings', 'claim-tagger-mvp', 'p', { Paused: true }), /may only update rows of the rulebook table/],
+    ['an editor column of another table', (p) => p.update('tag_decisions', 'geo-a::Context-dependent', w.ids.decision, { 'Agent is right': true }), /may only update rows of the rulebook table/],
+  ];
+  for (const [what, build, re] of refused) {
+    const plan = seed();
+    build(plan);
+    const problems = problemsOf(plan, w);
+    assert.ok(mentions(problems, re), `${what}: ${problems.join(' | ')}`);
+    assert.equal(checkPlan(plan, w.config, { root: w.root }).ok, false, what);
+  }
+});
+
+test('checkPlan: the seed-judged script writes the v2 Rulebook only: not a config without the v2 profile, not a protected table, not a table of the first page', async () => {
+  const w = await world();
+  const plan = (config) => {
+    const p = newPlan({ runId: 'r', script: 'seed-judged', config, now: NOW });
+    p.update('rulebook', 'Wordy', 'p', { Judged: true });
+    return p;
+  };
+  const notV2 = structuredClone(w.config);
+  delete notV2.profile;
+  assert.ok(mentions(checkPlan(plan(notV2), notV2, { root: w.root }).problems, /seed-judged script may only be checked against the v2 profile/));
+  const protectedRulebook = structuredClone(w.config);
+  protectedRulebook.notion.protected_database_ids.push(w.config.notion.rulebook.database_id);
+  assert.ok(mentions(checkPlan(plan(protectedRulebook), protectedRulebook, { root: w.root }).problems, /protected lists/));
+  // a table of the first page that is not protected as well is refused for being the first page's
+  const first = JSON.parse(readFileSync(join(codeRoot(), 'setup', 'first-page.json'), 'utf8')).tables.rulebook;
+  const onFirstPage = structuredClone(w.config);
+  const ids = new Set([first.database_id, first.data_source_id].map((x) => x.replace(/-/g, '').toLowerCase()));
+  onFirstPage.notion.protected_database_ids = onFirstPage.notion.protected_database_ids.filter((x) => !ids.has(x.replace(/-/g, '').toLowerCase()));
+  onFirstPage.notion.rulebook.database_id = first.database_id;
+  onFirstPage.notion.rulebook.data_source_id = first.data_source_id;
+  assert.ok(mentions(checkPlan(plan(onFirstPage), onFirstPage, { root: w.root }).problems, /belongs to the first page \(setup\/first-page\.json\)/));
+  assert.deepEqual(checkPlan(plan(w.config), w.config, { root: w.root }).problems, []);
+});
+
+test('applyPlan: a seed-judged plan ticks the boxes and reads every row back; a row that is ticked already is skipped by its expect, and nothing is ever unticked', async () => {
+  const w = await world();
+  const wordy = w.notion.addRow(DB.rulebook, { Name: 'Wordy', Judged: false });
+  const poor = w.notion.addRow(DB.rulebook, { Name: 'Poor wording', Judged: true });
+  const other = w.notion.addRow(DB.rulebook, { Name: 'Multi-sentence', Judged: false });
+  const plan = newPlan({ runId: 'run-1', script: 'seed-judged', rubricEdition: EDITION, config: w.config, now: NOW });
+  plan.update('rulebook', 'Wordy', wordy, { Judged: true }, { expect: { Judged: false } });
+  plan.update('rulebook', 'Poor wording', poor, { Judged: true }, { expect: { Judged: false } }); // someone ticked it since the plan was made
+  const r = await apply(w, plan, { pulled: pullFrom(w, ['rulebook']) });
+  assert.equal(r.code, EXIT.OK, JSON.stringify(r.lists));
+  assert.deepEqual([r.done, r.skipped], [1, 1]);
+  const rows = Object.fromEntries(w.notion.plainRows(DB.rulebook).map((row) => [row.Name, row.Judged]));
+  assert.deepEqual(rows, { Wordy: true, 'Poor wording': true, 'Multi-sentence': false }, 'only the named rows, and none unticked');
+  assert.equal(readLedger(w.dir).get(0).read_back, 'ok');
+  assert.ok(other, 'an unnamed row is never touched');
 });
 
 test('checkPlan: the first page\'s editor columns of Claims are not columns of Claims any more', async () => {

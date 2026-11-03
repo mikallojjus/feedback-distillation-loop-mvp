@@ -194,6 +194,31 @@ test('status leaves the rulebook files alone: an edit to a tag without rules is 
   assert.equal(w.rubric().edition, '2026-10-16.1');
 });
 
+test('status names a tick or an untick of the Judged box plainly, is no stop, and leaves the rulebook files to the next command', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim with filler words is Wordy.', Judged: true });
+  w.fake.editRow(w.ids.tag['Context-dependent'], { Judged: false });
+  w.fake.editRow(w.ids.tag['Poor wording'], { Description: 'An awkward phrase.' });
+  const h = w.hooks();
+  const r = await status(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(r.report.rows[0][1], '13 tags, edition 2026-10-16.1, Notion differs on Poor wording and Wordy (taken over at the next run); Notion changed the Judged box (Judged on: Wordy; Judged off: Context-dependent), taken over at the next run');
+  assert.deepEqual(lintReport(r.markdown), []);
+  assert.equal(w.rubric().edition, '2026-10-16.1', 'status writes no edition');
+});
+
+test('status --json lists the tags the agent judges and the toggles waiting, from the saved edition and the pull', async () => {
+  const w = await makeWorld({ claims: 2 });
+  w.fake.editRow(w.ids.tag.Wordy, { 'When to use': '1. A claim with filler words is Wordy.', Judged: true });
+  const h = w.hooks({ json: true });
+  const r = await status(h);
+  assert.equal(r.exit, 0);
+  const json = JSON.parse(h.io.outs[0]);
+  assert.deepEqual(json.judged_tags, ['Context-dependent']);
+  assert.deepEqual(json.judged_toggles, [{ tag: 'Wordy', judged: true }]);
+  assert.equal(json.same_as_notion, false);
+});
+
 test('status says plainly when Notion has other tag rows than the saved edition, without claiming the next run takes them over', async () => {
   const w = await makeWorld({ claims: 2 });
   w.fake.addRow(w.DB.rulebook, { Name: 'Hedged', 'Work tags': ['Issue'], 'When to use': '' });
@@ -431,9 +456,13 @@ test('readingCounts: every combination at once, counted in rows (a claim with tw
   // a tag the agent does not judge (no rules, or outside the judge groups of the config) is not read, so it is not counted
   assert.deepEqual(readingCounts({ claims: [claim('w')], queue: [row('w', {}, 'Wordy')], rubric }), { to_read: 0, pending_rule_decisions: 0, needs_note: 0 });
   assert.deepEqual(readingCounts({ claims: [claim('s')], queue: [row('s')], rubric, config: base.config }), { to_read: 1, pending_rule_decisions: 0, needs_note: 0 });
+  // a ticked tag that no judge group names is judged in a group of its own, so its rows are read all the same
   const elsewhere = structuredClone(base.config);
   elsewhere.judge.groups = { G1: ['Wordy'] };
-  assert.deepEqual(readingCounts({ claims: [claim('s')], queue: [row('s')], rubric, config: elsewhere }), { to_read: 0, pending_rule_decisions: 0, needs_note: 0 }, 'a tag outside the judge groups is not judged');
+  assert.deepEqual(readingCounts({ claims: [claim('s')], queue: [row('s')], rubric, config: elsewhere }), { to_read: 1, pending_rule_decisions: 0, needs_note: 0 }, 'a ticked tag outside the judge groups is judged on its own');
+  // a tag whose Judged box is not ticked is not judged, so it is not read
+  const unticked = { ...rubric, tags: rubric.tags.map((t) => (t.name === TAG ? { ...t, judged: false } : t)) };
+  assert.deepEqual(readingCounts({ claims: [claim('s')], queue: [row('s')], rubric: unticked, config: base.config }), { to_read: 0, pending_rule_decisions: 0, needs_note: 0 }, 'an unticked tag is not judged');
 });
 
 test('decisionsCell: the parts that are not zero, in the order to read, points at a rule, without a note; singular and plural; nothing when all three are zero', () => {

@@ -39,7 +39,7 @@ export function groupInfo(ctx, rubric, tag) {
   const jc = judgeSettings(ctx);
   const group = groupsFor(jc, rubric, [tag])[0];
   if (!group) {
-    throw new LoopExit(EXIT.INVALID, `${tag} has no rules in force in any judge group`, { sentence: `${ctx.label}: nothing was checked, because ${tag} is not judged by any rule yet.`, next: ENGINEER });
+    throw new LoopExit(EXIT.INVALID, `${tag} is not judged (its Judged box is not ticked in the Rulebook, or it has no rules in force)`, { sentence: `${ctx.label}: nothing was checked, because ${tag} is not judged by any rule yet.`, next: ENGINEER });
   }
   const { version, body } = readPromptVersion(readFileSync(codeFile(ctx.root, jc.judge.prompt), 'utf8'));
   return { jc, group, version, body, inputs: storeInputsFor({ driver: ctx.driver, model: jc.model, effort: jc.judge.effort, promptVersion: version, group }) };

@@ -55,8 +55,9 @@ const baseConfig = placeholderConfig(); // the shipped config's tags and groups,
 const NOW = new Date('2026-10-16T09:00:00.000Z');
 const SOURCE = { database_id: 'db-1', data_source_id: 'ds-1', read_via: 'connector', read_at: '2026-10-16T09:00:00.000Z' };
 
-function rowOf(name, { rules = RULES, counterpart = null } = {}) {
+function rowOf(name, { rules = RULES, counterpart = null, judged = true } = {}) {
   return {
+    Judged: judged, // the box of the Rulebook: a tag is judged only when it is ticked (the fixtures tick every tag unless a test says otherwise)
     Name: name, Category: 'Quality', Counterpart: counterpart, Description: `The claim has the quality ${name}.`, 'Example Claims': '',
     'When to use': rules.map((t, i) => `${i + 1}. ${t}`).join('\n'), Polarity: 'Issue', Status: 'Verified', 'Geo Status': 'To be created', 'Geo Tag ID': null,
     'Work tags': ['Issue'], 'Verified on': '2026-09-10', Evidence: 'https://example.org/evidence', page_id: `page-${name}`,
@@ -546,6 +547,111 @@ test('groupsFor: a group is judged whole, a tag name stands for its group, and o
   assert.equal(storeKey(inputs), storeKey({ ...inputs, tags: [...inputs.tags].reverse() }));
 });
 
+const G2_TAGS = ['Trailing period', 'Multi-sentence', 'Improper capitalization', 'Incorrect grammar', 'Poor wording', 'Wordy'];
+const SEVEN = [CONTEXT_SPEC(), ...G2_TAGS.map((name) => ({ name, rules: [`The rule of ${name}.`] }))];
+const namesOf = (groups) => groups.map((g) => [g.name, g.tags.map((t) => t.name)]);
+
+test('groupsFor: the Judged box decides: G2 is judged with its ticked tags only, G1 stays as it is, and a group with no ticked tag is left out', () => {
+  const groups = { G1: ['Context-dependent'], G2: G2_TAGS };
+  const all = makeRoot({ tags: SEVEN, groups });
+  const cfg = loadJudgeConfig(all.root);
+  assert.deepEqual(namesOf(groupsFor(cfg, all.rubric)), [['G1', ['Context-dependent']], ['G2', G2_TAGS]], 'seven ticked tags: G1 and G2 whole');
+
+  const some = makeRoot({ tags: SEVEN.map((s) => (['Wordy', 'Poor wording'].includes(s.name) ? { ...s, judged: false } : s)), groups });
+  const four = groupsFor(loadJudgeConfig(some.root), some.rubric);
+  assert.deepEqual(namesOf(four), [['G1', ['Context-dependent']], ['G2', ['Trailing period', 'Multi-sentence', 'Improper capitalization', 'Incorrect grammar']]]);
+  assert.deepEqual(four[1].skipped, ['Poor wording', 'Wordy'], 'the unticked ones are said, not judged');
+  assert.ok(some.rubric.tags.filter((t) => ['Wordy', 'Poor wording'].includes(t.name)).every((t) => t.rules.length > 0 && t.judged === false), 'they have rules, and are not judged only because the box is not ticked');
+  // the tag hashes do not know about the box: the same tag has the same hash ticked or not, so G1 and the others keep their stores
+  assert.deepEqual(some.rubric.tags.map((t) => t.tag_hash), all.rubric.tags.map((t) => t.tag_hash));
+
+  const g1Only = makeRoot({ tags: SEVEN.map((s) => (s.name === 'Context-dependent' ? s : { ...s, judged: false })), groups });
+  assert.deepEqual(namesOf(groupsFor(loadJudgeConfig(g1Only.root), g1Only.rubric)), [['G1', ['Context-dependent']]], 'G2 has no ticked tag: no G2 at all');
+  const none = makeRoot({ tags: SEVEN.map((s) => ({ ...s, judged: false })), groups });
+  assert.deepEqual(groupsFor(loadJudgeConfig(none.root), none.rubric), [], 'nothing ticked, nothing judged');
+  assert.deepEqual(groupsFor(loadJudgeConfig(all.root), all.rubric, ['Wordy']).map((g) => g.name), ['G2'], '--tags names a tag and gets its group');
+});
+
+test('groupsFor: a ticked text tag that no group names is judged in a group of its own, named after the tag; one that is not ticked, or is not a text tag, is not', () => {
+  const groups = { G1: ['Context-dependent'], G2: ['Wordy'] };
+  const specs = [CONTEXT_SPEC(), { name: 'Wordy', rules: ['W.'] }, { name: 'Fresh tag', rules: ['F.'] }, { name: 'Another new tag', rules: ['A.'] }, { name: 'Quiet tag', rules: ['Q.'], judged: false },
+    { name: 'Improperly sourced', rules: ['S.'] }, { name: 'No rules tag', rules: [] }];
+  const { root, rubric } = makeRoot({ tags: specs, groups });
+  const cfg = loadJudgeConfig(root);
+  assert.deepEqual(namesOf(groupsFor(cfg, rubric)), [['G1', ['Context-dependent']], ['G2', ['Wordy']], ['Another new tag', ['Another new tag']], ['Fresh tag', ['Fresh tag']]],
+    'configured groups first, then one group per ticked tag that none names (by tag name); not judged: unticked, a source tag, a tag without rules');
+  assert.deepEqual(groupsFor(cfg, rubric).filter((g) => g.name === 'Fresh tag').map((g) => g.skipped), [[]]);
+  assert.deepEqual(namesOf(groupsFor(cfg, rubric, ['Fresh tag'])), [['Fresh tag', ['Fresh tag']]], '--tags reaches it');
+  for (const name of ['Quiet tag', 'Improperly sourced', 'No rules tag']) {
+    assert.throws(() => groupsFor(cfg, rubric, [name]), (e) => e instanceof ExitError && e.code === 2 && new RegExp(`${name}.*no group.*not judged on its own`).test(e.message), name);
+  }
+  // a tag that is called like a configured group does not share its store
+  const clash = makeRoot({ tags: [CONTEXT_SPEC(), { name: 'G2', rules: ['Same name as a group.'] }], groups: { G1: ['Context-dependent'], G2: ['Wordy'] } });
+  assert.deepEqual(namesOf(groupsFor(loadJudgeConfig(clash.root), clash.rubric)), [['G1', ['Context-dependent']], ['G2 (own group)', ['G2']]]);
+});
+
+test('the store key of G1 (Context-dependent) is the key of today: it does not change with the Judged box of any other tag or the groups beside it', () => {
+  // pinned: the key of the store that holds the judgments already made for Context-dependent (rules of edition 2026-11-03.1, model claude-sonnet-5-5, effort medium, prompt version 1)
+  const pinned = { name: 'G1', tags: [{ name: 'Context-dependent', tag_hash: 'sha256:825d9e0cc540f37c' }] };
+  const key = (group, over = {}) => storeKey(storeInputsFor({ driver: 'cli', model: 'claude-sonnet-5-5', effort: 'medium', promptVersion: 1, group, ...over }));
+  assert.equal(key(pinned), 'sha256:04c9114c423fd858');
+  // with the box ticked on seven tags and G2 beside it, G1 yields the very same inputs as when it stood alone
+  const groups = { G1: ['Context-dependent'], G2: G2_TAGS };
+  const alone = makeRoot({ tags: [CONTEXT_SPEC()], groups: { G1: ['Context-dependent'] } });
+  const seven = makeRoot({ tags: SEVEN, groups });
+  const g1Alone = groupsFor(loadJudgeConfig(alone.root), alone.rubric)[0];
+  const g1Seven = groupsFor(loadJudgeConfig(seven.root), seven.rubric)[0];
+  const inputsOf = (group) => storeInputsFor({ driver: 'cli', model: 'claude-sonnet-5-5', effort: 'medium', promptVersion: 1, group });
+  assert.deepEqual(inputsOf(g1Seven), inputsOf(g1Alone));
+  assert.equal(JSON.stringify(inputsOf(g1Seven)), JSON.stringify(inputsOf(g1Alone)), 'byte for byte');
+  assert.equal(storeKey(inputsOf(g1Seven)), storeKey(inputsOf(g1Alone)));
+  assert.deepEqual(Object.keys(inputsOf(g1Seven)), ['driver', 'model', 'effort', 'pass', 'prompt_version', 'group', 'tags']);
+  // G2 has a key of its own, and a tag unticked changes it (the prompt names the tags) but not G1's
+  const g2All = groupsFor(loadJudgeConfig(seven.root), seven.rubric)[1];
+  const fewer = makeRoot({ tags: SEVEN.map((s) => (s.name === 'Wordy' ? { ...s, judged: false } : s)), groups });
+  const g2Five = groupsFor(loadJudgeConfig(fewer.root), fewer.rubric)[1];
+  assert.notEqual(storeKey(inputsOf(g2All)), storeKey(inputsOf(g2Five)));
+  assert.equal(storeKey(inputsOf(groupsFor(loadJudgeConfig(fewer.root), fewer.rubric)[0])), storeKey(inputsOf(g1Seven)));
+});
+
+test('the shipped config.json names G1 (Context-dependent) and G2 (the six other Priority 1 tags), all of them text tags', () => {
+  const cfg = loadJudgeConfig(codeRoot());
+  assert.deepEqual(cfg.judge.groups, { G1: ['Context-dependent'], G2: G2_TAGS });
+  for (const name of [...cfg.judge.groups.G1, ...G2_TAGS]) assert.equal(cfg.tags[name] ?? cfg.tags.default, 'text', name);
+});
+
+test('a ticked tag in no group is judged in a run of its own: its own store, its own prompt, and G1 is not asked again when the box of another tag changes', async () => {
+  const groups = { G1: ['Context-dependent'] };
+  const specs = [CONTEXT_SPEC(), { name: 'Fresh tag', rules: ['A claim that is fresh.'] }];
+  const { root } = makeRoot({ n: 4, tags: specs, groups });
+  const fakeState = {};
+  const first = await go(root, { fakeState, runsMax: 1 });
+  assert.equal(first.exit, 0, first.io.errs.join('\n'));
+  assert.deepEqual(runJson(first).groups.map((g) => g.name), ['G1', 'Fresh tag']);
+  assert.equal(storeDirs(root).length, 2);
+  const prompt = fakeState.log.map((c) => readFileSync(c.systemPromptFile, 'utf8')).find((p) => p.includes('### Tag: Fresh tag'));
+  assert.match(prompt, /# The tags \(group Fresh tag\)/);
+  assert.ok(prompt.includes('### Tag: Fresh tag') && !prompt.includes('### Tag: Context-dependent'));
+  assert.equal(fakeState.calls, 2);
+  // its box is unticked and the edition adopts that: only G1 is judged, from its store, with no model call
+  writeEdition(root, makeRubric([CONTEXT_SPEC(), { name: 'Fresh tag', rules: ['A claim that is fresh.'], judged: false }], '2026-10-16.2'), { reason: 'Judged off: Fresh tag' });
+  const second = await go(root, { fakeState, runsMax: 1 });
+  assert.equal(second.exit, 0, second.io.errs.join('\n'));
+  assert.deepEqual(runJson(second).groups.map((g) => g.name), ['G1']);
+  assert.equal(fakeState.calls, 2, 'G1 came from its store');
+  assert.equal(storeDirs(root).length, 2, 'the store of the unticked tag stays as history');
+});
+
+test('a toggle of the Judged box in drift.json is no stop; the run judges with the edition in force and says that the change is taken over later', async () => {
+  const toggled = [{ tag: 'Fresh tag', judged: true }, { tag: 'Wordy', judged: false }];
+  const { root } = makeRoot({ n: 3, tags: [CONTEXT_SPEC()], drift: { judged: [], adopted: [], toggled, missing: [], added: [] } });
+  const r = await go(root, { runsMax: 1 });
+  assert.equal(r.exit, 0, r.io.errs.join('\n'));
+  const warnings = runJson(r).warnings.join(' ');
+  assert.match(warnings, /Judged on: Fresh tag; Judged off: Wordy/);
+  assert.match(warnings, /taken over by the next command/);
+});
+
 test('driftStops reads what computeDrift writes to drift.json: judged entries stop a run, a missing judged tag too, adopted and added tags do not', () => {
   const judged = new Set(['Context-dependent']);
   const none = { judged: [], adopted: [], missing: [], added: [] };
@@ -849,7 +955,8 @@ test('groups: --tags expands to the whole group, every group has its own store a
   assert.equal(g2.exit, 0, g2.io.errs.join('\n'));
   const record = runJson(g2);
   assert.deepEqual(record.groups.map((g) => [g.name, g.tags, g.items]), [['G2', ['Wordy', 'Poor wording'], 6]]);
-  assert.match(record.warnings.join(' '), /Trailing period has no rules in force and is not judged/);
+  // a tag that is not judged (no rules in force here, or its box not ticked) is said with both reasons since the Judged box exists
+  assert.match(record.warnings.join(' '), /Trailing period is not judged \(the Judged box is not ticked, or no rules are in force\)/);
   const lines = cellRows(root, key16Of(g2, 'G2'), 1);
   assert.equal(lines.length, 6);
   assert.deepEqual(lines[0].tags.map((t) => t.name), ['Wordy', 'Poor wording'], 'one cell per tag of the group, in the group\'s order');

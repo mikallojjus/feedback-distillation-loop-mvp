@@ -1,6 +1,7 @@
 [
   {
     "Name": "Context-dependent",
+    "Judged": true,
     "Category": "Quality",
     "Counterpart": "Self-contained",
     "Description": "A claim whose meaning depends on something introduced outside it: a pronoun or a definite reference (\"the initiative\", \"the vulnerabilities\", \"recent actions\") that no name inside the claim resolves, so a reader cannot tell what it points at.",
@@ -20,6 +21,7 @@
   },
   {
     "Name": "Improperly sourced",
+    "Judged": false,
     "Category": "Quality",
     "Counterpart": null,
     "Description": "A claim whose attached source, when read, does not actually support the claim's assertion — the source is present but the specific figure, event, or statement the claim makes is absent from or not established by it. Distinct from Unsourced, where no source is attached at all.",
@@ -38,6 +40,7 @@
   },
   {
     "Name": "Source inaccessible",
+    "Judged": false,
     "Category": "Quality",
     "Counterpart": null,
     "Description": "One or more attached sources cannot be accessed for review, so their contents cannot be assessed. This records an access problem without judging the claim's truth, support, or contradiction.",
@@ -56,6 +59,7 @@
   },
   {
     "Name": "Unsourced",
+    "Judged": false,
     "Category": "Quality",
     "Counterpart": null,
     "Description": "A claim that has no Source relation attached on Geo. It is a completeness flag on the claim's provenance, independent of whether the claim is Factual or Opinion and of whether the content is correct; it only records that nothing backs the claim yet.",
@@ -74,6 +78,7 @@
   },
   {
     "Name": "Wordy",
+    "Judged": false,
     "Category": "Quality",
     "Counterpart": null,
     "Description": "A claim that uses more words than its meaning needs.",
@@ -92,6 +97,7 @@
   },
   {
     "Name": "Exact duplicate",
+    "Judged": false,
     "Category": null,
     "Counterpart": null,
     "Description": null,

@@ -53,7 +53,7 @@ const richText = (...pieces) => ({ rich_text: pieces.map((p) => (typeof p === 's
 const titleOf = (s) => ({ title: [rt(s)] });
 
 /** A state folder with a config whose tables have ids (the ones named in `placeholders` keep "<setup>"), and the fake Notion behind them. The config starts as it was before setup, not as the live file holds it now. */
-async function world({ placeholders = [], populate = true, textAgentTags = false } = {}) {
+async function world({ placeholders = [], populate = true, textAgentTags = false, noJudged = false } = {}) {
   const root = tmp();
   const config = placeholderConfig();
   config.notion.requests_per_second = 1000;
@@ -65,13 +65,14 @@ async function world({ placeholders = [], populate = true, textAgentTags = false
     entry.data_source_id = `c200000000000000000000000000000${Object.keys(DB).indexOf(table) + 1}`;
     const spec = { ...TABLE_SPECS[table] };
     if (table === 'claims' && textAgentTags) spec['Agent tags'] = 'rich_text'; // a table the setup build has not rebuilt yet
+    if (table === 'rulebook' && noJudged) delete spec.Judged; // a Rulebook of before the Judged box
     if (table === 'claims' && placeholders.includes('rulebook')) for (const relation of ['Agent tags', 'Tags waiting']) delete spec[relation]; // no Rulebook for the relations to point at
     if (table === 'tag_decisions' && placeholders.includes('claims')) delete spec['Open claim']; // no Claims for the relation to point at
     notion.addDatabase({ id: entry.database_id, dataSourceId: entry.data_source_id, title: table, properties: restProps(spec, config.notion.rulebook.data_source_id, { claims: config.notion.claims.data_source_id }) });
   }
   writeFileSync(join(root, 'config.json'), `${JSON.stringify(config, null, 2)}\n`);
   const client = createClient({ token: notion.token, fetchImpl: notion.fetchImpl, requestsPerSecond: 1000, sleep: noSleep });
-  const w = { root, config, notion, client, ids: {}, textAgentTags };
+  const w = { root, config, notion, client, ids: {}, textAgentTags, noJudged };
   if (populate) await fill(w);
   return w;
 }
@@ -89,6 +90,7 @@ async function fill(w) {
   if (hasRulebook) {
     for (const row of FIXTURE_RULEBOOK) {
       const { page_id: _ignored, ...plain } = row;
+      if (w.noJudged) delete plain.Judged;
       ids[`tag:${row.Name}`] = notion.addRow(DB.rulebook, plain);
     }
     ids.otherTag = notion.addRow(DB.rulebook, { Name: 'Not an issue tag', 'Work tags': ['Pipeline benchmark check'], 'When to use': '1. Nothing.' });
@@ -271,6 +273,12 @@ test('the norm files: claims with their links, the rulebook copy as plain rows, 
   assert.equal(cd['When to use'], FIXTURE_RULEBOOK[0]['When to use']);
   assert.equal(cd['Verified on'], '2026-09-10');
   assert.equal(cd.page_id, w.ids['tag:Context-dependent']);
+  // the Judged box is a checkbox: true or false on every row, never null or text (the drift check and the rubric build read it as a boolean)
+  assert.deepEqual(rulebook.map((r) => [r.Name, r.Judged]), [['Context-dependent', true], ['Exact duplicate', false], ['Improperly sourced', false], ['Source inaccessible', false], ['Unsourced', false], ['Wordy', false]]);
+  w.notion.editRow(w.ids['tag:Wordy'], { Judged: true });
+  assert.equal((await run(w, ['--tables', 'rulebook', '--pull-id', 'p1b'])).code, EXIT.OK);
+  assert.equal(loadPull(w.root, 'p1b', { config: w.config }).rulebook().find((r) => r.Name === 'Wordy').Judged, true, 'a ticked box is true');
+  assert.equal(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1b', 'norm', 'rulebook.json'), 'utf8')).find((r) => r.Name === 'Wordy').Judged, true, 'and so it is in the file');
 
   // the queue
   const queue = p.queue();
@@ -474,7 +482,7 @@ test('drift.json: no difference while the copy equals the lock, the tag and colu
 
   const same = await run(w, ['--tables', 'rulebook', '--pull-id', 'p1']);
   assert.equal(same.code, EXIT.OK);
-  assert.deepEqual(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'drift.json'), 'utf8')), { judged: [], adopted: [], missing: [], added: [] });
+  assert.deepEqual(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'drift.json'), 'utf8')), { judged: [], adopted: [], toggled: [], missing: [], added: [] });
   assert.match(same.out[0], /drift 0 difference\(s\)/);
 
   w.notion.editRow(w.ids['tag:Context-dependent'], { 'When to use': '1. A different first rule.' });
@@ -486,7 +494,7 @@ test('drift.json: no difference while the copy equals the lock, the tag and colu
   assert.deepEqual(drift.adopted, [{ tag: 'Improperly sourced', columns: ['Description'] }]);
   assert.match(changed.out[0], /drift 2 difference\(s\)/);
   const manifest = JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p2', 'pull.json'), 'utf8'));
-  assert.deepEqual(manifest.drift, { checked: true, judged: 1, adopted: 1, missing: 0, added: 0 });
+  assert.deepEqual(manifest.drift, { checked: true, judged: 1, adopted: 1, toggled: 0, missing: 0, added: 0 });
 
   // a lock that cannot be read is reported, never skipped silently
   writeFileSync(join(w.root, 'rubric', 'rubric.lock'), '{"edition": "x"}\n');
@@ -501,6 +509,39 @@ test('drift.json: no difference while the copy equals the lock, the tag and colu
   const noRulebook = await run(w, ['--tables', 'claims', '--pull-id', 'p4']);
   assert.deepEqual(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p4', 'drift.json'), 'utf8')), { skipped: 'the rulebook was not pulled' });
   assert.equal(noRulebook.code, EXIT.OK);
+});
+
+test('drift.json: a tick or an untick of the Judged box is a toggle that the pull line and the manifest name; it is no judged entry, so no stop', async () => {
+  const w = await world();
+  assert.equal((await run(w, ['--tables', 'rulebook', '--pull-id', 'p0'])).code, EXIT.OK);
+  writeEdition(w.root, buildRubric(loadPull(w.root, 'p0', { config: w.config }).rulebook(), { config: w.config, edition: '2026-10-16.1', now: new Date('2026-10-16T09:00:00.000Z') }), { reason: 'test edition' });
+  assert.equal(JSON.parse(readFileSync(join(w.root, 'rubric', 'rubric.lock'), 'utf8')).judged['Context-dependent'], true, 'the lock records the judged state of the edition');
+
+  // Wordy gets rules and its box ticked, Context-dependent has its box cleared: one toggle each way
+  w.notion.editRow(w.ids['tag:Wordy'], { 'When to use': '1. A claim with filler words is Wordy.', Judged: true });
+  w.notion.editRow(w.ids['tag:Context-dependent'], { Judged: false });
+  const r = await run(w, ['--tables', 'rulebook', '--pull-id', 'p1']);
+  assert.equal(r.code, EXIT.OK);
+  const drift = JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'drift.json'), 'utf8'));
+  assert.deepEqual(drift.toggled, [{ tag: 'Context-dependent', judged: false }, { tag: 'Wordy', judged: true }]);
+  assert.deepEqual(drift.judged, [], 'a toggle does not stop a command');
+  assert.deepEqual(drift.adopted, [{ tag: 'Wordy', columns: ['When to use'] }]);
+  assert.match(r.out[0], /drift 3 difference\(s\) \(Judged off: Context-dependent; Judged on: Wordy\)/, r.out[0]);
+  assert.deepEqual(JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'pull.json'), 'utf8')).drift, { checked: true, judged: 0, adopted: 1, toggled: 2, missing: 0, added: 0 });
+});
+
+test('a Rulebook without the Judged column is said in the pull: nothing is toggled, the drift names the missing column and the line says so', async () => {
+  const w = await world({ noJudged: true });
+  assert.equal((await run(w, ['--tables', 'rulebook', '--pull-id', 'p0'])).code, EXIT.OK);
+  assert.equal(loadPull(w.root, 'p0', { config: w.config }).rulebook().every((row) => !('Judged' in row)), true, 'the rows have no such key');
+  writeEdition(w.root, buildRubric(loadPull(w.root, 'p0', { config: w.config }).rulebook(), { config: w.config, edition: '2026-10-16.1', now: new Date('2026-10-16T09:00:00.000Z') }), { reason: 'test edition' });
+  const r = await run(w, ['--tables', 'rulebook', '--pull-id', 'p1']);
+  assert.equal(r.code, EXIT.OK);
+  const drift = JSON.parse(readFileSync(join(w.root, 'runs', 'pull', 'p1', 'drift.json'), 'utf8'));
+  assert.equal(drift.no_judged_column, true);
+  assert.deepEqual(drift.toggled, []);
+  assert.match(r.out[0], /\(the Rulebook has no Judged column\)/);
+  assert.match(r.err.join('\n'), /warning: rulebook: there is no Judged column in the table/);
 });
 
 // ---- what a pull hands to applyPlan ---------------------------------------------------------------------------------------------

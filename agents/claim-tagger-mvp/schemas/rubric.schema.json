@@ -57,7 +57,7 @@
         "evidence": { "type": ["string", "null"] },
         "work_tags": { "type": "array", "items": { "type": "string" } },
         "capability": { "type": "string", "enum": ["text", "deterministic", "source", "corpus"] },
-        "judged": { "type": "boolean", "description": "True when rules.length > 0 and the capability is text." },
+        "judged": { "type": "boolean", "description": "True when the tag's Judged box is ticked in the Rulebook, rules.length > 0 and the capability is text. False for any other tag, with rules or not; the file does not keep the box itself." },
         "tag_hash": { "$ref": "#/definitions/hash" }
       }
     },
@@ -65,12 +65,13 @@
       "type": "object",
       "additionalProperties": false,
       "required": ["edition", "rubric_hash", "locked_at", "tags", "text", "columns"],
-      "description": "rubric/rubric.lock. tags: the tag hash per name. text: the locked When to use per name (what a restore writes back). columns: the other columns the drift check compares, per name.",
+      "description": "rubric/rubric.lock. tags: the tag hash per name. text: the locked When to use per name (what a restore writes back). columns: the other columns the drift check compares, per name. judged: whether each tag is judged in this edition (box ticked, rules in force, text capability), what the drift check compares with the Judged box in Notion; absent in a lock made before the Judged box existed (lockedJudged in scripts/lib/rubric.mjs reads such a lock as LEGACY_JUDGED_TAGS).",
       "properties": {
         "edition": { "$ref": "#/definitions/edition" },
         "rubric_hash": { "$ref": "#/definitions/hash" },
         "locked_at": { "$ref": "#/definitions/timestamp" },
         "tags": { "type": "object", "additionalProperties": { "$ref": "#/definitions/hash" } },
+        "judged": { "type": "object", "additionalProperties": { "type": "boolean" } },
         "text": { "type": "object", "additionalProperties": { "type": "string" } },
         "columns": {
           "type": "object",

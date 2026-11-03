@@ -68,7 +68,7 @@ import { agentRoot, isMain } from './lib/paths.mjs';
 import { lintReport, lintWords, splitExtra } from './lib/report.mjs';
 
 export const DEFAULT_ALLOWED_SCRIPTS = Object.freeze(['pull', 'judge', 'propose', 'distill', 'promote', 'followup', 'status', 'decide', 'walkthrough', 'add']);
-export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Editor wording', 'Paused', 'Agent is right', 'Tag outcome', 'Your note']);
+export const DEFAULT_EDITOR_COLUMNS = Object.freeze(['Editor wording', 'Paused', 'Agent is right', 'Tag outcome', 'Your note', 'Judged']);
 /** The three columns of Tag decisions that a decide step may write through the connector (decision 115, v2); the CLI reads config.json editor_columns.tag_decisions. */
 export const DEFAULT_DECIDE_COLUMNS = Object.freeze(['Agent is right', 'Tag outcome', 'Your note']);
 export const MAX_TABLE_ROWS = 5;

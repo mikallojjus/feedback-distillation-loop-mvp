@@ -458,6 +458,9 @@
       "Agent is right",
       "Tag outcome",
       "Your note"
+    ],
+    "rulebook": [
+      "Judged"
     ]
   },
   "models": {
@@ -486,6 +489,14 @@
     "groups": {
       "G1": [
         "Context-dependent"
+      ],
+      "G2": [
+        "Trailing period",
+        "Multi-sentence",
+        "Improper capitalization",
+        "Incorrect grammar",
+        "Poor wording",
+        "Wordy"
       ]
     },
     "batch_size": 8,

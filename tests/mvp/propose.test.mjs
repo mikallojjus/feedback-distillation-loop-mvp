@@ -109,6 +109,16 @@ test('notCheckedParts counts the tags no group judges by kind: source tags (Unso
   assert.equal(notCheckedParts({ tags: [{ name: 'A', capability: 'source' }, { name: 'B', capability: 'corpus' }] }, new Set()), '1 source tag, 1 duplicate tag');
 });
 
+test('notCheckedParts names a text tag with rules whose Judged box is not ticked as "not judged", apart from the tags without rules', () => {
+  const rubric = { tags: [
+    { name: 'A', capability: 'text', rules: [{ n: 1, text: 'x' }] }, { name: 'B', capability: 'text', rules: [{ n: 1, text: 'x' }] }, { name: 'C', capability: 'text', rules: [{ n: 1, text: 'x' }] },
+    { name: 'D', capability: 'text', rules: [] }, { name: 'E', capability: 'source', rules: [{ n: 1, text: 'x' }] },
+  ] };
+  assert.equal(notCheckedParts(rubric, new Set(['A'])), '1 source tag, 2 tags not judged, 1 tag without rules');
+  assert.equal(notCheckedParts(rubric, new Set(['A', 'B', 'C'])), '1 source tag, 1 tag without rules');
+  assert.equal(notCheckedParts({ tags: [{ name: 'A', capability: 'text', rules: [{ n: 1, text: 'x' }] }] }, new Set()), '1 tag not judged');
+});
+
 test('claimProps: only the columns that differ from the pulled claim, the two relations as page ids of the Rulebook copy', () => {
   const rows = [
     { Key: key('c01'), Tag: CD, 'Agent proposal': "Can't tell", 'Agent status': 'Waits for you', 'Agent reason': 'R. · 1 of 1 runs agree', 'Agent confidence': 0.5 },

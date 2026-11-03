@@ -37,8 +37,8 @@ import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import {
-  ADD_SCRIPT, CLAIMS_TD_RELATION, COPY_LIVE_SCRIPT, REMOVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, TABLES, TD_EDITOR, TRASHABLE_TABLES, addableProperties, copyLiveProperties, editorColumns, isProtected, isV2, tableEntry,
-  writableProperties,
+  ADD_SCRIPT, CLAIMS_TD_RELATION, COPY_LIVE_SCRIPT, JUDGED_COLUMN, REMOVE_SCRIPT, RULE_CHANGES_AGENT_STATUS, SEED_JUDGED_SCRIPT, TABLES, TD_EDITOR, TRASHABLE_TABLES, addableProperties, copyLiveProperties,
+  editorColumns, isProtected, isV2, seedJudgedProperties, tableEntry, writableProperties,
 } from './config.mjs';
 import { EXIT } from './exit-codes.mjs';
 import { appendJsonl, readJson, readJsonl, writeTextAtomic } from './jsonl.mjs';
@@ -299,6 +299,9 @@ const TRASH_WORDS = new Map([
  *   The copy-live script (header script "copy-live", decision P47, checkpoint 2 of the v2 page) has the other narrow allowance: on a config with "profile": "v2" its plan may CREATE and UPDATE rows of
  *   any of the five tables with the columns of copyLiveProperties, the editor columns Tag outcome, Your note, Editor wording and Paused included (it copies the decisions made on the first page), and
  *   Status values of any kind on rule_changes. Agent is right, any other column, page content, a protected table or id and, as for every plan, a delete or archive (a plan has no such op) stay refused.
+ *   The seed-judged step (header script "seed-judged", `setup.mjs seed-judged`, decision P53) has the third narrow allowance: on a config with "profile": "v2" its plan may only UPDATE rows of the
+ *   rulebook table, with the one property Judged set to true (the key column may go with it, unchanged) and no page content. Judged is an editor column of the Rulebook (config.editor_columns.rulebook), so
+ *   every other plan that names it is refused, a copy-live plan and a setup plan included; the step never unticks.
  *
  * No loop plan ever writes an editor column (decision P7: no agent acts as the editor). The copy's updates are also guarded when they are sent (applyPlan): an update of a Tag decisions
  * row that holds Agent is right, Tag outcome or Your note is skipped when a person has set a different value in Notion since the plan was made (PORT-V2.md 2.4).
@@ -315,6 +318,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
   const addPlan = header?.plan?.script === ADD_SCRIPT;
   const copyPlan = header?.plan?.script === COPY_LIVE_SCRIPT;
   const removePlan = header?.plan?.script === REMOVE_SCRIPT;
+  const seedPlan = header?.plan?.script === SEED_JUDGED_SCRIPT;
   const needles = protectedNeedles(config);
   const seen = new Set();
   const named = (i, op) => `op ${i + 1} (${typeof op?.table === 'string' ? op.table : 'no table'}${nonEmpty(op?.key) ? ` "${short(op.key, 40)}"` : ''})`;
@@ -324,6 +328,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     problems.push(...headerProblems(header).map((p) => `header: ${p}`));
     if (copyPlan && !isV2(config)) problems.push('header: a plan of the copy-live script may only be checked against the v2 profile (config.json has no "profile": "v2")');
     if (removePlan && !isV2(config)) problems.push('header: a plan of the remove script may only be checked against the v2 profile (config.json has no "profile": "v2")');
+    if (seedPlan && !isV2(config)) problems.push('header: a plan of the seed-judged script may only be checked against the v2 profile (config.json has no "profile": "v2")');
     const counts = header.plan?.counts;
     if (isPlain(counts) && Number.isInteger(counts.creates) && Number.isInteger(counts.updates) && !isDeepStrictEqual(counts, countOps(ops))) {
       const real = countOps(ops);
@@ -413,6 +418,15 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
       return;
     }
     if (addPlan && op.children !== undefined) add('a plan of the add script writes no page content (children): a new claims row carries its Geo columns only');
+    // the third narrow allowance (P53): a plan of the seed-judged script (the header names the script) may only UPDATE rows of the rulebook with Judged set to true
+    if (seedPlan) {
+      if (!(op.op === 'update' && op.table === 'rulebook')) {
+        add('a plan of the seed-judged script may only update rows of the rulebook table (it never creates a row and never writes another table)');
+        return;
+      }
+      if (op.children !== undefined) add('a plan of the seed-judged script writes no page content (children)');
+      if (op.properties[JUDGED_COLUMN] !== true) add(`a plan of the seed-judged script ticks ${JUDGED_COLUMN} (true) and never unticks it`);
+    }
     if (!addPlan && !copyPlan && !setup && op.op === 'create' && op.table === 'claims') {
       add('a row of the claims table is created only by setup or by the add script, from claims read from Geo'); // the checks below say more about the columns
     }
@@ -421,7 +435,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     // which columns, which values
     let writable;
     try {
-      writable = addPlan ? addableProperties(config) : copyPlan ? copyLiveProperties(config, op.table) : writableProperties(config, op.table, { setup: setup && op.op === 'create' });
+      writable = addPlan ? addableProperties(config) : copyPlan ? copyLiveProperties(config, op.table) : seedPlan ? seedJudgedProperties(config) : writableProperties(config, op.table, { setup: setup && op.op === 'create' });
     } catch (e) {
       add(`the writable columns cannot be worked out (${e.message})`);
       return;
@@ -430,7 +444,7 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     for (const name of Object.keys(op.properties)) {
       const base = name.endsWith(':end') ? name.slice(0, -4) : name; // the end of a date goes with its start
       // a copy-live plan has its own list (copyLiveProperties), which names the editor columns it may write; Agent is right is not on it
-      if (!copyPlan && editor.has(base)) {
+      if (!copyPlan && !(seedPlan && op.table === 'rulebook' && base === JUDGED_COLUMN) && editor.has(base)) {
         add(`"${name}" is a column only an editor writes; no script may (the copy of the first page, P47, is the one exception)`);
         continue;
       }
@@ -452,6 +466,15 @@ export function checkPlan(plan, config, { setup = false, root = agentRoot() } = 
     }
     if (entry && [entry.database_id, entry.data_source_id].some((x) => typeof x === 'string' && needles.includes(normId(x)))) {
       add('this table is in the protected lists of config.json, so it is never written');
+    }
+    // the seed of the Judged boxes writes the v2 Rulebook and no other: never a table of the first page
+    if (seedPlan && entry) {
+      try {
+        firstIds ??= firstPageIds(root);
+        if ([entry.database_id, entry.data_source_id].some((x) => typeof x === 'string' && firstIds.has(normId(x)))) add('this table belongs to the first page (setup/first-page.json), which is never written');
+      } catch (e) {
+        add(e.message);
+      }
     }
   });
 

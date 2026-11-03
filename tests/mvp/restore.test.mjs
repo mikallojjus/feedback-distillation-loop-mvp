@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { appendFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { listEditions, main, restore } from '../../agents/claim-tagger-mvp/scripts/restore.mjs';
 import { promote } from '../../agents/claim-tagger-mvp/scripts/promote.mjs';
@@ -47,6 +47,13 @@ test('restore --list prints the editions with their changelog line and marks the
   assert.equal(readJson(join(r.runDir, 'run.json')).script, 'restore');
 });
 
+test('restore --list shows every line of an edition that took several Judged boxes over, joined on one row', async () => {
+  const w = await afterPass();
+  appendFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), '- 2026-10-16 · edition 2026-10-16.2 · Judged on: Wordy\n- 2026-10-16 · edition 2026-10-16.2 · Judged off: Context-dependent\n');
+  const second = listEditions(w.root).find((e) => e.edition === '2026-10-16.2');
+  assert.equal(second.reason, `lesson ${TITLE} PASS; Judged on: Wordy; Judged off: Context-dependent`);
+});
+
 test('restore --edition without --confirm changes nothing and says what it would do (exit 2)', async () => {
   const w = await afterPass();
   const writes = w.writes().length;
@@ -70,6 +77,8 @@ test('restore --edition <earlier> --confirm writes that edition\'s text back, re
   const rubric = readJson(join(w.root, 'rubric', 'rubric.json'));
   assert.equal(rubric.edition, '2026-10-16.3');
   assert.equal(rubric.rubric_hash, readJson(join(w.root, 'rubric', 'history', '2026-10-16.1.json')).rubric_hash, 'the rules are those of the earlier edition');
+  assert.deepEqual(rubric.tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent'], 'a restore puts text back and leaves the Judged state as it was: Context-dependent stays judged');
+  assert.equal(readJson(join(w.root, 'rubric', 'rubric.lock')).judged['Context-dependent'], true);
   assert.equal(readFileSync(join(w.root, 'rubric', 'CHANGELOG.md'), 'utf8').trim().split('\n').at(-1), '- 2026-10-16 · edition 2026-10-16.3 · restored from 2026-10-16.1');
   const settings = w.row('agent_settings', 'Claim tagger');
   assert.deepEqual([settings['Rulebook edition'], settings['Last run summary']], ['2026-10-16.3', `Restore · ${stampOf(NOW)} · 2026-10-16.1`]);

@@ -21,6 +21,7 @@ export const TABLE_SPECS = Object.freeze({
   rulebook: {
     Name: 'title', Category: 'select', Counterpart: 'rich_text', Description: 'rich_text', Evidence: 'url', 'Example Claims': 'rich_text',
     'Geo Status': 'select', 'Geo Tag ID': 'rich_text', Polarity: 'select', Status: 'select', 'Verified on': 'date', 'When to use': 'rich_text', 'Work tags': 'multi_select',
+    Judged: 'checkbox',
   },
   claims: {
     'Geo Name': 'title', 'Geo ID': 'rich_text', 'Geo URL': 'url', 'Geo Sources': 'rich_text', 'Geo Tags': 'multi_select', 'Geo Topics': 'rich_text',

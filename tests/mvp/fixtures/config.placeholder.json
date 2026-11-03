@@ -124,6 +124,9 @@
       "Agent is right",
       "Tag outcome",
       "Your note"
+    ],
+    "rulebook": [
+      "Judged"
     ]
   },
   "models": {

@@ -6,7 +6,8 @@ import { join } from 'node:path';
 import { h16 } from '../../agents/claim-tagger-mvp/scripts/lib/hash.mjs';
 import { compareCodePoints, pyJson } from '../../agents/claim-tagger-mvp/scripts/lib/pyjson.mjs';
 import {
-  DRIFT_COLUMNS, buildRubric, checkLock, computeDrift, lockOf, nextEdition, parseExamples, parseRules, readEdition, readLock, readRubric, tagFromRow, verifyRubric, writeEdition,
+  DRIFT_COLUMNS, LEGACY_JUDGED_TAGS, buildRubric, checkLock, computeDrift, lockOf, lockedJudged, nextEdition, parseExamples, parseRules, readEdition, readLock, readRubric, tagFromRow, toggleClauses,
+  verifyRubric, writeEdition,
 } from '../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
 import { validate } from '../../agents/claim-tagger-mvp/scripts/lib/validate.mjs';
 import { placeholderConfig } from './helpers/config-fixture.mjs';
@@ -202,15 +203,34 @@ test('tagFromRow: a tag without rules is not judged, whatever else its row says'
   assert.equal(withText.when_to_use, 'Judge by feel. No numbered rules here.');
 });
 
-test('tagFromRow: a tag with rules is judged only when its capability is text', () => {
+test('tagFromRow: a tag with rules is judged only when its capability is text, even with its Judged box ticked', () => {
   const list = rows();
   for (const [name, capability] of [['Unsourced', 'deterministic'], ['Improperly sourced', 'source'], ['Source inaccessible', 'source']]) {
-    const tag = tagFromRow(rowOf(list, name), config);
+    const tag = tagFromRow({ ...rowOf(list, name), Judged: true }, config);
     assert.ok(tag.rules.length >= 4, name);
     assert.equal(tag.capability, capability);
     assert.equal(tag.judged, false, name);
   }
-  assert.equal(tagFromRow(rowOf(list, 'Exact duplicate'), config).capability, 'corpus');
+  assert.equal(tagFromRow({ ...rowOf(list, 'Exact duplicate'), Judged: true }, config).capability, 'corpus');
+});
+
+test('tagFromRow: the Judged box derives judged (ticked, rules in force and a text tag); an unticked tag with rules is not judged', () => {
+  const row = rowOf(rows(), 'Context-dependent');
+  assert.equal(row.Judged, true, 'the fixture ticks Context-dependent');
+  assert.equal(tagFromRow(row, config).judged, true);
+  for (const unticked of [{ Judged: false }, { Judged: null }, { Judged: 'true' }, { Judged: 1 }]) {
+    const tag = tagFromRow({ ...row, ...unticked }, config);
+    assert.equal(tag.judged, false, JSON.stringify(unticked));
+    assert.equal(tag.rules.length, 5, 'the rules are read all the same');
+  }
+  const absent = { ...row };
+  delete absent.Judged;
+  assert.equal(tagFromRow(absent, config).judged, false, 'a row with no Judged column is not ticked');
+  // ticked, but nothing to judge by: no rules in force
+  assert.equal(tagFromRow({ ...rowOf(rows(), 'Wordy'), Judged: true }, config).judged, false);
+  // the option `ticked` stands in for the row's box
+  assert.equal(tagFromRow({ ...row, Judged: false }, config, { ticked: true }).judged, true);
+  assert.equal(tagFromRow(row, config, { ticked: false }).judged, false);
 });
 
 test('tagFromRow: missing keys are null, empty text is null, and a text without letters in Name is still a name', () => {
@@ -238,7 +258,8 @@ test('tag_hash covers the name and the rule texts only, and does not depend on t
   assert.notDeepEqual(Object.keys(reordered), Object.keys(row));
   const hash = tagFromRow(row, config).tag_hash;
   assert.equal(tagFromRow(reordered, config).tag_hash, hash);
-  for (const change of [{ Description: 'Another description.' }, { 'Example Claims': 'Only one claim.' }, { Counterpart: null }, { Polarity: 'Positive' }, { page_id: 'x' }, { Status: 'Proposed' }]) {
+  // ticking or unticking a tag changes nothing about its hash (nor the rubric's), so no store of any group is lost to a toggle
+  for (const change of [{ Description: 'Another description.' }, { 'Example Claims': 'Only one claim.' }, { Counterpart: null }, { Polarity: 'Positive' }, { page_id: 'x' }, { Status: 'Proposed' }, { Judged: false }, { Judged: true }]) {
     assert.equal(tagFromRow({ ...row, ...change }, config).tag_hash, hash, JSON.stringify(Object.keys(change)));
   }
   assert.equal(tagFromRow({ ...row, 'When to use': `Note first.\n${row['When to use']}\nNote: last.` }, config).tag_hash, hash, 'a preamble and a note are not rules');
@@ -286,7 +307,31 @@ test('buildRubric: a changed rule changes the rubric hash, a changed description
   rowOf(gained, 'Wordy')['When to use'] = '1. A claim with filler words is Wordy.';
   const rubric = build(gained);
   assert.notEqual(rubric.rubric_hash, before);
-  assert.equal(tagOf(rubric, 'Wordy').judged, true, 'rules on a text tag make it judged');
+  assert.equal(tagOf(rubric, 'Wordy').judged, false, 'rules on a text tag do not make it judged: its box is not ticked');
+  rowOf(gained, 'Wordy').Judged = true;
+  assert.equal(tagOf(build(gained), 'Wordy').judged, true, 'rules and a tick on a text tag do');
+  assert.equal(build(gained).rubric_hash, rubric.rubric_hash, 'the tick is not part of the hash of the rubric');
+});
+
+test('buildRubric: a tick changes judged and nothing else; the rubric hash is the same ticked or not', () => {
+  const ticked = build();
+  const list = rows();
+  rowOf(list, 'Context-dependent').Judged = false;
+  const unticked = build(list);
+  assert.equal(unticked.rubric_hash, ticked.rubric_hash);
+  assert.deepEqual(unticked.tags.map((t) => t.tag_hash), ticked.tags.map((t) => t.tag_hash));
+  assert.deepEqual(unticked.tags.filter((t) => t.judged), []);
+  assert.deepEqual(verifyRubric(unticked), { ok: true, errors: [] });
+});
+
+test('buildRubric: judgedFrom (a lock) stands in for the ticks only when no row has a Judged column at all', () => {
+  const lock = locked(); // Context-dependent judged
+  const bare = rows().map(({ Judged: _gone, ...row }) => row);
+  assert.deepEqual(build(bare).tags.filter((t) => t.judged), [], 'without judgedFrom nothing is ticked');
+  assert.deepEqual(build(bare, { judgedFrom: lock }).tags.filter((t) => t.judged).map((t) => t.name), ['Context-dependent'], 'the lock\'s ticks stand');
+  const list = rows();
+  rowOf(list, 'Context-dependent').Judged = false;
+  assert.deepEqual(build(list, { judgedFrom: lock }).tags.filter((t) => t.judged), [], 'a table that has the column is believed, ticked or not');
 });
 
 test('buildRubric: defaults for the edition, the source and the clock', () => {
@@ -341,9 +386,16 @@ test('verifyRubric finds a tampered hash, flag, order or number, and reports sch
   total.rubric_hash = 'sha256:0000000000000000';
   assert.deepEqual(verifyRubric(total).errors, ['rubric_hash does not match the tag hashes']);
 
+  // judged says the box is ticked on top of rules and a text capability; the file keeps no tick, so only an impossible "judged" is an error
   const flag = structuredClone(ok);
   tagOf(flag, 'Wordy').judged = true;
-  assert.match(verifyRubric(flag).errors[0], /Wordy: judged must be true exactly when/);
+  assert.match(verifyRubric(flag).errors[0], /Wordy: judged can be true only when the tag has rules and its capability is text/);
+  const sourced = structuredClone(ok);
+  tagOf(sourced, 'Improperly sourced').judged = true;
+  assert.match(verifyRubric(sourced).errors[0], /Improperly sourced: judged can be true only when/, 'a source tag is never judged');
+  const unticked = structuredClone(ok);
+  tagOf(unticked, 'Context-dependent').judged = false;
+  assert.deepEqual(verifyRubric(unticked), { ok: true, errors: [] }, 'a tag with rules and judged false is a tag whose box is not ticked');
 
   const order = structuredClone(ok);
   order.tags.reverse();
@@ -495,6 +547,17 @@ test('writeEdition needs a reason, collapses it to one line, and writes nothing 
   assert.equal(readFileSync(join(root, 'rubric', 'CHANGELOG.md'), 'utf8'), '- 2026-10-16 · edition 2026-10-16.1 · Line one line two and three.\n');
 });
 
+test('writeEdition takes a list of reasons: one changelog line for each, all of the same edition, written once', () => {
+  const root = tmp();
+  const rubric = build();
+  writeEdition(root, rubric, { reason: ['Judged on: Wordy', '  Judged   off: Context-dependent ', 'adopted from Notion: Wordy When to use'] });
+  const lines = readFileSync(join(root, 'rubric', 'CHANGELOG.md'), 'utf8');
+  assert.equal(lines, '- 2026-10-16 · edition 2026-10-16.1 · Judged on: Wordy\n- 2026-10-16 · edition 2026-10-16.1 · Judged off: Context-dependent\n- 2026-10-16 · edition 2026-10-16.1 · adopted from Notion: Wordy When to use\n');
+  writeEdition(root, rubric, { reason: ['Judged on: Wordy', 'Judged off: Context-dependent'] });
+  assert.equal(readFileSync(join(root, 'rubric', 'CHANGELOG.md'), 'utf8'), lines, 'run again for the same edition: no further line');
+  for (const bad of [[], [''], ['ok', '   '], [null], 7, undefined]) assert.throws(() => writeEdition(tmp(), rubric, { reason: bad }), /a reason is required/, JSON.stringify(bad));
+});
+
 test('writeEdition adds a missing newline to a changelog that has none, and keeps earlier lines', () => {
   const root = tmp();
   mkdirSync(join(root, 'rubric'), { recursive: true });
@@ -523,8 +586,9 @@ test('readRubric and readLock refuse files that were damaged by hand', () => {
 test('lockOf is the lock that writeEdition writes, built without any file', () => {
   const rubric = build();
   const lock = lockOf(rubric);
-  assert.deepEqual(Object.keys(lock), ['edition', 'rubric_hash', 'locked_at', 'tags', 'text', 'columns']);
+  assert.deepEqual(Object.keys(lock), ['edition', 'rubric_hash', 'locked_at', 'tags', 'text', 'columns', 'judged']);
   assert.equal(lock.locked_at, rubric.built_at);
+  assert.deepEqual(lock.judged, { 'Context-dependent': true, 'Exact duplicate': false, 'Improperly sourced': false, 'Source inaccessible': false, Unsourced: false, Wordy: false }, 'the lock records every tag\'s judged state');
   assert.deepEqual(validate({ definitions: schema.definitions, $ref: '#/definitions/lock' }, lock).errors, []);
   assert.deepEqual(writeEdition(tmp(), rubric, { reason: 'First.' }).lock, lock);
   lock.tags['Context-dependent'] = 'changed';
@@ -560,6 +624,37 @@ test('checkLock: the lock written with a rubric agrees with it, and any differen
   assert.equal(checkLock(rubric, {}).ok, false);
 });
 
+test('checkLock compares the judged state, but not for a lock made before the Judged box existed', () => {
+  const rubric = build();
+  const { lock } = writeEdition(tmp(), rubric, { reason: 'First.' });
+  const tampered = structuredClone(lock);
+  tampered.judged.Wordy = true;
+  assert.deepEqual(checkLock(rubric, tampered).errors, ["Wordy: the lock's judged state differs from the rubric"]);
+  delete tampered.judged.Wordy;
+  assert.deepEqual(checkLock(rubric, tampered).errors, ["Wordy: the lock's judged state differs from the rubric"], 'a tag the map does not name');
+  // the rubric file of an edition made by the older code says judged for every tag with rules in a text tag; its lock has no map, and the pair still agrees
+  const legacy = structuredClone(lock);
+  delete legacy.judged;
+  assert.deepEqual(checkLock(rubric, legacy), { ok: true, errors: [] });
+  assert.deepEqual(validate({ definitions: schema.definitions, $ref: '#/definitions/lock' }, legacy).errors, [], 'the schema lets the map be absent');
+  assert.equal(validate({ definitions: schema.definitions, $ref: '#/definitions/lock' }, { ...lock, judged: { Wordy: 'yes' } }).errors.length > 0, true, 'but a map must hold booleans');
+});
+
+test('lockedJudged: the map says it; a lock without the map reads as Context-dependent only (the one tag the agent judged before the box)', () => {
+  const lock = locked();
+  assert.equal(lockedJudged(lock, 'Context-dependent'), true);
+  assert.equal(lockedJudged(lock, 'Wordy'), false);
+  assert.equal(lockedJudged(lock, 'Nobody'), false, 'a tag the map does not name is not judged');
+  const legacy = structuredClone(lock);
+  delete legacy.judged;
+  assert.deepEqual([...LEGACY_JUDGED_TAGS], ['Context-dependent']);
+  assert.equal(lockedJudged(legacy, 'Context-dependent'), true);
+  assert.equal(lockedJudged(legacy, 'Wordy'), false);
+  legacy.text['Context-dependent'] = 'No numbered rules here.';
+  assert.equal(lockedJudged(legacy, 'Context-dependent'), false, 'it needs rules in the locked text');
+  assert.equal(lockedJudged(null, 'Context-dependent'), false);
+});
+
 // ---- computeDrift --------------------------------------------------------------------------------------------------------------
 
 /** A lock made from the fixture rows, and a function that gives fresh copies of those rows. */
@@ -568,7 +663,7 @@ function locked() {
   const { lock } = writeEdition(root, build(), { reason: 'First.' });
   return lock;
 }
-const none = { judged: [], adopted: [], missing: [], added: [] };
+const none = { judged: [], adopted: [], toggled: [], missing: [], added: [] };
 
 test('computeDrift: the copy as it was locked has no drift', () => {
   assert.deepEqual(computeDrift(locked(), rows()), none);
@@ -648,33 +743,121 @@ test('computeDrift: a changed tag without rules in force is adopted, with the co
   assert.deepEqual(computeDrift(lock, list).judged, []);
 });
 
-test('computeDrift: new rules on a tag that had none are adopted too, and the caller decides what that means', () => {
+test('computeDrift: new rules on a tag that had none are adopted too; the tag stays unjudged until its box is ticked, and then the next change to it is drift', () => {
   const lock = locked();
   const list = rows();
   rowOf(list, 'Wordy')['When to use'] = '1. A claim with filler words is Wordy.\n2. Hedges count as filler.';
   const drift = computeDrift(lock, list, { config });
-  assert.deepEqual(drift, { ...none, adopted: [{ tag: 'Wordy', columns: ['When to use'] }] });
+  assert.deepEqual(drift, { ...none, adopted: [{ tag: 'Wordy', columns: ['When to use'] }] }, 'its box is not ticked: no toggle');
   assert.deepEqual(computeDrift(lock, list), drift, 'with or without the config');
-  // after the caller adopted them, the tag is judged as far as the rules go, and the next change to it is drift
+  // the caller adopts them; the tag has rules now but its box is not ticked, so it is not judged and its rules still change freely
   const root = tmp();
   const adopted = writeEdition(root, build(list, { edition: '2026-10-16.2' }), { reason: 'Adopted from Notion.' }).lock;
+  assert.equal(adopted.judged.Wordy, false);
   rowOf(list, 'Wordy')['When to use'] += '\n3. Repetition counts as filler.';
-  assert.deepEqual(computeDrift(adopted, list).judged, [{ tag: 'Wordy', column: 'When to use' }]);
-  assert.deepEqual(computeDrift(adopted, list, { config }).judged, [], 'but Wordy is in no judge group, so with the config nothing it says can change a verdict');
-  assert.deepEqual(computeDrift(adopted, list, { config }).adopted, [{ tag: 'Wordy', columns: ['When to use'] }]);
+  assert.deepEqual(computeDrift(adopted, list, { config }), { ...none, adopted: [{ tag: 'Wordy', columns: ['When to use'] }] });
+  assert.deepEqual(computeDrift(adopted, list), { ...none, adopted: [{ tag: 'Wordy', columns: ['When to use'] }] });
+  // once the box is ticked and the edition adopts that, the next change to its rules is drift
+  rowOf(list, 'Wordy').Judged = true;
+  assert.deepEqual(computeDrift(adopted, list, { config }).toggled, [{ tag: 'Wordy', judged: true }]);
+  const ticked = writeEdition(tmp(), build(list, { edition: '2026-10-16.3' }), { reason: 'Judged on: Wordy' }).lock;
+  assert.equal(ticked.judged.Wordy, true);
+  rowOf(list, 'Wordy')['When to use'] += '\n4. Padding counts as filler.';
+  assert.deepEqual(computeDrift(ticked, list, { config }), { ...none, judged: [{ tag: 'Wordy', column: 'When to use' }] });
 });
 
-test('computeDrift: a tag with rules that is not judged (Unsourced is deterministic) is judged without a config and adopted with one', () => {
+test('computeDrift: a tag with rules whose box is not ticked is adopted, ticked or not a deterministic tag is never judged', () => {
   const lock = locked();
   const list = rows();
   rowOf(list, 'Unsourced')['When to use'] += '\n5. A fifth rule nobody judges.';
-  assert.deepEqual(computeDrift(lock, list).judged, [{ tag: 'Unsourced', column: 'When to use' }], 'the lock holds rules');
-  const withConfig = computeDrift(lock, list, { config });
-  assert.deepEqual(withConfig.judged, []);
-  assert.deepEqual(withConfig.adopted, [{ tag: 'Unsourced', columns: ['When to use'] }]);
+  for (const options of [{}, { config }]) {
+    assert.deepEqual(computeDrift(lock, list, options), { ...none, adopted: [{ tag: 'Unsourced', columns: ['When to use'] }] }, JSON.stringify(Object.keys(options)));
+  }
   const source = rows();
   rowOf(source, 'Improperly sourced').Description = 'Changed.';
   assert.deepEqual(computeDrift(lock, source, { config }).adopted, [{ tag: 'Improperly sourced', columns: ['Description'] }]);
+  // a deterministic tag ticked in Notion is not judged all the same: its lock says false, the config says deterministic, so no toggle and no stop
+  const ticked = rows();
+  rowOf(ticked, 'Unsourced').Judged = true;
+  const tickedLock = writeEdition(tmp(), build(ticked), { reason: 'First.' }).lock;
+  assert.equal(tickedLock.judged.Unsourced, false);
+  rowOf(ticked, 'Unsourced')['When to use'] += '\n5. A fifth rule nobody judges.';
+  assert.deepEqual(computeDrift(tickedLock, ticked, { config }), { ...none, adopted: [{ tag: 'Unsourced', columns: ['When to use'] }] });
+  assert.deepEqual(computeDrift(lock, ticked, { config }).toggled, [], 'a ticked deterministic tag is no toggle');
+});
+
+test('computeDrift: ticking a box is a toggle (judged on), unticking one is a toggle (judged off); neither is a stop', () => {
+  const lock = locked();
+  const list = rows();
+  rowOf(list, 'Context-dependent').Judged = false;
+  assert.deepEqual(computeDrift(lock, list, { config }), { ...none, toggled: [{ tag: 'Context-dependent', judged: false }] });
+  // a tag with no rules in force cannot become judged by a tick
+  const wordy = rows();
+  rowOf(wordy, 'Wordy').Judged = true;
+  assert.deepEqual(computeDrift(lock, wordy, { config }), none);
+  // a tag with rules ticked: judged on, listed by tag name
+  const withRules = rows();
+  rowOf(withRules, 'Wordy')['When to use'] = '1. A claim with filler words is Wordy.';
+  rowOf(withRules, 'Wordy').Judged = true;
+  rowOf(withRules, 'Context-dependent').Judged = false;
+  assert.deepEqual(computeDrift(lock, withRules, { config }), {
+    ...none, adopted: [{ tag: 'Wordy', columns: ['When to use'] }], toggled: [{ tag: 'Context-dependent', judged: false }, { tag: 'Wordy', judged: true }],
+  });
+  assert.deepEqual(toggleClauses(computeDrift(lock, withRules, { config }).toggled), ['Judged off: Context-dependent', 'Judged on: Wordy']);
+  assert.deepEqual(toggleClauses([]), []);
+  // a tick that nobody changed is no toggle, in either direction
+  assert.deepEqual(computeDrift(lock, rows(), { config }).toggled, []);
+});
+
+test('computeDrift: a tag unticked and edited in the same pull is adopted (one toggle, no stop); a tag edited while its box stays ticked still stops', () => {
+  const lock = locked();
+  const list = rows();
+  const row = rowOf(list, 'Context-dependent');
+  row['When to use'] = row['When to use'].replace('Test: could', 'Test: would');
+  row.Judged = false;
+  assert.deepEqual(computeDrift(lock, list, { config }), {
+    ...none, adopted: [{ tag: 'Context-dependent', columns: ['When to use'] }], toggled: [{ tag: 'Context-dependent', judged: false }],
+  });
+  // ticked in the same pull as its rules changed: the owner chose free toggles, so that is adopted too
+  const wordyLock = writeEdition(tmp(), build(rows()), { reason: 'First.' }).lock;
+  const gained = rows();
+  rowOf(gained, 'Wordy')['When to use'] = '1. First.\n2. Second.';
+  rowOf(gained, 'Wordy').Judged = true;
+  assert.deepEqual(computeDrift(wordyLock, gained, { config }), { ...none, adopted: [{ tag: 'Wordy', columns: ['When to use'] }], toggled: [{ tag: 'Wordy', judged: true }] });
+  // the rules of a ticked tag deleted, the box left ticked: that is no toggle, it is the stop of today
+  const emptied = rows();
+  rowOf(emptied, 'Context-dependent')['When to use'] = '';
+  assert.deepEqual(computeDrift(lock, emptied, { config }), { ...none, judged: [{ tag: 'Context-dependent', column: 'When to use' }] });
+});
+
+test('computeDrift: a table without the Judged column cannot be read for ticks: nothing is toggled and the drift says so', () => {
+  const lock = locked();
+  const bare = rows().map(({ Judged: _gone, ...row }) => row);
+  assert.deepEqual(computeDrift(lock, bare, { config }), { ...none, no_judged_column: true });
+  const edited = structuredClone(bare);
+  rowOf(edited, 'Wordy').Description = 'Edited.';
+  assert.deepEqual(computeDrift(lock, edited, { config }), { ...none, adopted: [{ tag: 'Wordy', columns: ['Description'] }], no_judged_column: true });
+  assert.equal(Object.hasOwn(computeDrift(lock, rows(), { config }), 'no_judged_column'), false);
+  assert.equal(Object.hasOwn(computeDrift(lock, [], { config }), 'no_judged_column'), false, 'no rows at all is no sign of a missing column');
+});
+
+test('computeDrift: a lock from before the Judged box reads as judging Context-dependent only, so the first pull adopts the other ticks as toggles', () => {
+  // the rows of the Rulebook as the seed leaves them: seven tags ticked (here Context-dependent and Wordy with rules)
+  const seeded = rows();
+  rowOf(seeded, 'Wordy')['When to use'] = '1. First.\n2. Second.';
+  rowOf(seeded, 'Wordy').Judged = true;
+  const legacy = structuredClone(writeEdition(tmp(), build(rows()), { reason: 'Before the box.' }).lock);
+  delete legacy.judged;
+  assert.deepEqual(computeDrift(legacy, seeded, { config }), {
+    ...none, adopted: [{ tag: 'Wordy', columns: ['When to use'] }], toggled: [{ tag: 'Wordy', judged: true }],
+  }, 'Context-dependent was judged and still is: no toggle for it');
+  // the protection of the one judged tag holds across the migration: an edit to its rules is a stop, not an adoption
+  const edited = structuredClone(seeded);
+  rowOf(edited, 'Context-dependent')['When to use'] = rowOf(edited, 'Context-dependent')['When to use'].replace('Test: could', 'Test: would');
+  assert.deepEqual(computeDrift(legacy, edited, { config }).judged, [{ tag: 'Context-dependent', column: 'When to use' }]);
+  // and if its box is not ticked in Notion, that is a toggle off
+  rowOf(seeded, 'Context-dependent').Judged = false;
+  assert.deepEqual(computeDrift(legacy, seeded, { config }).toggled, [{ tag: 'Context-dependent', judged: false }, { tag: 'Wordy', judged: true }]);
 });
 
 test('computeDrift: a tag that left the copy is missing and a tag that is new is added', () => {

@@ -57,7 +57,7 @@
 
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
-import { TD, groupOf } from './config.mjs';
+import { TD, isJudgedTag } from './config.mjs';
 import { RULE_WHY, READINGS, isDecided, isFollowedUp, recordDecisions, rowDecision, rowDisagrees } from './decisions.mjs';
 import { readJson } from './jsonl.mjs';
 import { codeRoot } from './paths.mjs';
@@ -186,7 +186,7 @@ export function classifyRows({ claims, ledgerRows, rubric, config }) {
       noteLine,
       citedRule: tag ? ruleOfItem(row, noteLine, tag) : null,
     };
-    if (!tag || !tag.judged || (config && groupOf(config, tag.name) === null)) {
+    if (!tag || !(config ? isJudgedTag(config, tag) : tag.judged)) {
       out.orphans.push(item);
       continue;
     }

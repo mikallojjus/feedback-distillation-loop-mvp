@@ -25,6 +25,7 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { after } from 'node:test';
 import { judge } from '../../../agents/claim-tagger-mvp/scripts/judge.mjs';
+import { groupOf } from '../../../agents/claim-tagger-mvp/scripts/lib/config.mjs';
 import { codeRoot } from '../../../agents/claim-tagger-mvp/scripts/lib/paths.mjs';
 import { lintReport } from '../../../agents/claim-tagger-mvp/scripts/lib/report.mjs';
 import { buildRubric, readRubric, writeEdition } from '../../../agents/claim-tagger-mvp/scripts/lib/rubric.mjs';
@@ -112,7 +113,7 @@ const jsonl = (rows) => `${rows.map((r) => JSON.stringify(r)).join('\n')}\n`;
 /**
  * Build a world. Options:
  *   claims      a number n (claims c01.. with claimText), a list of { id, text }, or 'pick' (the 50 claims of fixtures/claims-pick.50.json)
- *   rulebook    rows of the Rulebook copy (default: the 13 Issue rows of setup/taxonomy-issue.json); false: no rows and no edition
+ *   rulebook    rows of the Rulebook copy (default: the 13 Issue rows of setup/taxonomy-issue.json; a row may carry Judged, else the box is ticked for the tags of the config's judge groups); false: no rows and no edition
  *   queue       rows of Tag decisions as plain values;  audit: true seeds the 10 audit decisions as decided rows (Tag outcome, Your note opening with the audit's words,
  *               Decided under and Rulebook edition the world's edition, Open claim, Agent status Done or Disagrees with your decision)
  *   claimRows   { geoId: plain values } added to the claims after they are made (see w.editClaim)
@@ -157,9 +158,12 @@ export async function makeWorld({
   const ids = { tag: {}, claim: {}, queue: {}, lesson: {}, settings: null };
 
   const rulebookRows = rulebook === undefined ? TAXONOMY.rows : (rulebook || []);
+  // The Judged box of the Rulebook: a row says its own; else it is ticked for the tags of the fixture config's judge groups (G1: Context-dependent), as the one judged tag of the world before the box existed
   for (const row of rulebookRows) {
     const { page_id: _ignored, ...plain } = row;
-    ids.tag[row.Name] = fake.addRow(DB.rulebook, plain);
+    const hasBox = Object.hasOwn(tableSpecs.rulebook ?? TABLE_SPECS.rulebook, 'Judged'); // a world can build the Rulebook of before the box (tableSpecs)
+    const { Judged: _tick, ...rest } = plain;
+    ids.tag[row.Name] = fake.addRow(DB.rulebook, hasBox ? { ...rest, Judged: plain.Judged ?? groupOf(config, row.Name) !== null } : rest);
   }
 
   const claimList = claims === 'pick'

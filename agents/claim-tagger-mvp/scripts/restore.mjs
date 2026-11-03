@@ -52,7 +52,7 @@ export function listEditions(root) {
   if (existsSync(log)) {
     for (const line of readFileSync(log, 'utf8').split('\n')) {
       const m = /^- \d{4}-\d{2}-\d{2} · edition (\d{4}-\d{2}-\d{2}\.\d+) · (.*)$/.exec(line.trim());
-      if (m) reasons.set(m[1], m[2]);
+      if (m) reasons.set(m[1], reasons.has(m[1]) ? `${reasons.get(m[1])}; ${m[2]}` : m[2]); // an edition that took several changes over has a line for each
     }
   }
   let current = null;
@@ -162,7 +162,9 @@ export async function restore(opts = {}) {
       }
     }
     if (records) {
-      const rubric = buildRubric(target.tags.map(rowFromTag), { config: ctx.config, edition: newEdition, now: ctx.now });
+      // a restore puts the text of an edition back, not its Judged boxes: those stay as the edition in force has them (the boxes in Notion are not touched)
+      const judgedNow = new Map(current.tags.map((t) => [t.name, t.judged === true]));
+      const rubric = buildRubric(target.tags.map((t) => ({ ...rowFromTag(t), Judged: judgedNow.get(t.name) ?? false })), { config: ctx.config, edition: newEdition, now: ctx.now });
       writeEdition(ctx.root, rubric, { reason: `restored from ${wanted}` });
       ctx.record.rubric_edition = newEdition;
       commitRubric(ctx, `rulebook edition ${newEdition}: restored from ${wanted}`);

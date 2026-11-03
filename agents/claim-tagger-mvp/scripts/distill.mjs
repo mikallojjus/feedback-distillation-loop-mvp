@@ -59,7 +59,7 @@
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
-import { TD, groupOf, readingSettings, tableEntry } from './lib/config.mjs';
+import { TD, isJudgedTag, readingSettings, tableEntry } from './lib/config.mjs';
 import { READINGS, RULE_WHY, isDecided, isFollowedUp, keyParts, recordDecisions, rowDecision } from './lib/decisions.mjs';
 import { approveNext, cutText, listNames, plural, quoted, recantedNext, stampOf, viewLink } from './lib/editor-words.mjs';
 import { extractJson } from './lib/claude.mjs';
@@ -157,7 +157,7 @@ export function buildGroups({ queue, rubric, config, minClaims = 2, rowCap = DEF
       continue;
     }
     const tag = rubric.tags.find((t) => t.name === r.tag);
-    if (!tag || !tag.judged || groupOf(config, tag.name) === null || tag.rules.length === 0) {
+    if (!tag || !isJudgedTag(config, tag)) {
       counts.ruleRowsNotJudged += 1;
       continue;
     }
@@ -667,7 +667,7 @@ export async function distill(opts = {}) {
       else if (counts.ruleRows === 0 && unreadN > 0) why = 'none of the decisions read so far names a rule problem';
       else if (counts.ruleRows === 0) why = counts.decided === 0 ? 'no row is decided yet' : `${plural(counts.decided, 'decided row')} ${counts.decided === 1 ? 'names' : 'name'} no rule problem`;
       else if (counts.ruleRowsFollowed === counts.ruleRows) why = 'a rule change was already made for every decided row that names a rule problem';
-      else if (counts.groupsOpen > 0 && groups.length === 0) why = openRuleReason(waiting, { named: rubric.tags.filter((t) => t.judged && groupOf(ctx.config, t.name) !== null).length > 1 });
+      else if (counts.groupsOpen > 0 && groups.length === 0) why = openRuleReason(waiting, { named: rubric.tags.filter((t) => isJudgedTag(ctx.config, t)).length > 1 });
       else if (counts.ruleRowsNotJudged === counts.ruleRows - counts.ruleRowsFollowed) why = 'the rows that name a rule problem are about tags the agent does not judge yet';
       else if (groups.length === 0) why = `no rule has ${cfg.min_claims} decided rows pointing at it yet`;
       else why = 'the rows do not point at a change that is safe to make';

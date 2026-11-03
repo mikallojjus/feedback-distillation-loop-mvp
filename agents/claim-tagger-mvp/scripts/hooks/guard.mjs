@@ -46,8 +46,8 @@ const GUARDED = /notion-(create-pages|update-page|create-database|update-data-so
 const ALWAYS_DENIED = new Set(['move-pages', 'duplicate-page', 'delete-pages', 'delete-databases', 'delete-comment', 'restore-pages', 'update-folder', 'create-folder']);
 const SCHEMA_TOOLS = new Set(['create-database', 'update-data-source', 'create-view', 'update-view']);
 const UUID = /[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}/gi;
-// used when the config names none: the editor's three columns of Tag decisions, Editor wording and Paused (the list of the shipped config.json)
-const DEFAULT_EDITOR_NAMES = ['Agent is right', 'Tag outcome', 'Your note', 'Editor wording', 'Paused'];
+// used when the config names none: the editor's three columns of Tag decisions, Editor wording, Paused and the Rulebook's Judged box (the lists of the shipped config.json)
+const DEFAULT_EDITOR_NAMES = ['Agent is right', 'Tag outcome', 'Your note', 'Editor wording', 'Paused', 'Judged'];
 const DEFAULT_EDITOR_STATUS = ['Approved', 'Rejected'];
 // the decide step (P18 to P20, v2): the three columns of Tag decisions that an editor's Claude may write, the keys a decision write may carry, the values it may set (the
 // connector takes a checkbox as "__YES__" or "__NO__"; only "__YES__" is a decision), and how long a runs/DECIDING marker counts (the same two hours as the other markers of the loop)

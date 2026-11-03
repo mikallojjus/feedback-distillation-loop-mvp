@@ -709,7 +709,8 @@ test('expectStyle confirms the output style from the init event', () => {
 
 test('the editor columns come from config.json without the Status values', () => {
   const config = JSON.parse(readFileSync(join(REPO, 'agents', 'claim-tagger-mvp', 'config.json'), 'utf8'));
-  assert.deepEqual(editorColumnsFromConfig(config), ['Editor wording', 'Paused', 'Agent is right', 'Tag outcome', 'Your note']);
+  // Judged is the Rulebook's box (P53): an editor column like the others, so the built-in default holds it too
+  assert.deepEqual(editorColumnsFromConfig(config), ['Editor wording', 'Paused', 'Agent is right', 'Tag outcome', 'Your note', 'Judged']);
   assert.deepEqual(editorColumnsFromConfig(config), [...DEFAULT_EDITOR_COLUMNS]);
   assert.deepEqual(editorColumnsFromConfig({ editor_columns: { a: ['X', 'Y'], b: ['Y', 'Z'], c_status_editor_values: ['Approved'] } }), ['X', 'Y', 'Z']);
   assert.deepEqual(editorColumnsFromConfig({}), [...DEFAULT_EDITOR_COLUMNS]);

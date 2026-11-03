@@ -53,7 +53,7 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { EXIT } from './lib/exit-codes.mjs';
-import { AGENT_STATUS, TD } from './lib/config.mjs';
+import { AGENT_STATUS, TD, isJudgedTag } from './lib/config.mjs';
 import { countYourQueue, isDecided, recordDecisions } from './lib/decisions.mjs';
 import { approveNext, listNames, plural, quoted, recantedNext, tableLink, viewLink, yourRows } from './lib/editor-words.mjs';
 import { LOCK_STALE_MS, LoopExit, needClaimColumns, parseCli, resumeLine, supportingKeysOf, takePull, withRun } from './lib/loop.mjs';
@@ -180,12 +180,18 @@ export async function status(opts = {}) {
     const m = counts.waiting_lessons;
 
     const drift = ctx.pull.drift();
-    const edited = [...new Set((drift?.adopted ?? []).map((x) => x.tag))]; // tags without rules that somebody edited: the next command takes the edit over
+    const edited = [...new Set((drift?.adopted ?? []).map((x) => x.tag))]; // tags that are not judged that somebody edited: the next command takes the edit over
+    const toggled = drift?.toggled ?? []; // a Judged box ticked or unticked since the saved edition: the next command takes it over (it never stops a command)
+    const toggledSays = [
+      toggled.some((t) => t.judged) ? `Judged on: ${listNames(toggled.filter((t) => t.judged).map((t) => t.tag))}` : null,
+      toggled.some((t) => !t.judged) ? `Judged off: ${listNames(toggled.filter((t) => !t.judged).map((t) => t.tag))}` : null,
+    ].filter(Boolean).join('; ');
     const added = drift?.added ?? [];
     const missing = drift?.missing ?? [];
-    const differs = [...edited, ...added, ...missing];
+    const differs = [...edited, ...toggled.map((t) => t.tag), ...added, ...missing];
     const notionSays = [
       edited.length ? `Notion differs on ${listNames(edited)} (taken over at the next run)` : null,
+      toggledSays ? `Notion changed the Judged box (${toggledSays}), taken over at the next run` : null,
       added.length ? `Notion has other tag rows: ${listNames(added)}` : null,
       missing.length ? `Notion lacks tag rows: ${listNames(missing)}` : null,
       drift && typeof drift.skipped === 'string' ? 'not compared with Notion' : null,
@@ -256,6 +262,8 @@ export async function status(opts = {}) {
       paused: false,
       edition: rubric?.edition ?? null,
       tags: rubric?.tags.length ?? 0,
+      judged_tags: (rubric?.tags ?? []).filter((t) => isJudgedTag(ctx.config, t)).map((t) => t.name),
+      judged_toggles: toggled,
       same_as_notion: differs.length === 0,
       queue: counts.queue,
       lessons: counts.lessons,

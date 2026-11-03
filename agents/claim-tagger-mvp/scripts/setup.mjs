@@ -44,6 +44,11 @@
 //   setup.mjs root [--title <name>]                       find or make the v2 page under the live hub (notion.root_parent_page_id) and write it into config.json as notion.parent_page_id
 //                                                         and notion.setup_page_parents; the title is the structure's hub title, else --title; run again it adopts and changes nothing
 //
+//   setup.mjs seed-judged --tags "<tag names separated by commas>"   (the v2 profile only; needs the session; NOT part of "all"; decision P53) tick the Judged box on the Rulebook rows of the named tags,
+//                                                         once: a plan of the script seed-judged (the one script that may write Judged, an editor column), applied and read back page by page, logged in the run
+//                                                         folder. It refuses an unknown tag name (nothing is written), a protected or first-page Rulebook and a table without the Judged column (run build first); a row
+//                                                         that is ticked already is left alone and said; it never unticks. After this only people change Judged
+//
 //   The archive (needs the session; NOT part of "all"; decision P9, the archive step: nothing is deleted, only setup moves the agent's own pages and tables)
 //   setup.mjs archive [--plan-only]                       rename the root page to "Claim tagger", make the page "Feedback Distillation MVP (archive, to 27 Oct 2026)" under it with a
 //                                                         first line that links back to the hub, move the eight old objects into it (the pages Structure proposal, Demos and Demo
@@ -97,6 +102,7 @@ export const USAGE = [
   '       setup.mjs rulebook [--from f] | claims [--from f] | seed-audit [--from f] [--claims pick] | migrate-decisions [--claims pick] | rubric [--from f] | canaries [--from f] | settings',
   '       setup.mjs all --taxonomy <f> --claims <f> --audit <f>',
   '       setup.mjs root [--title <name>]                         (the v2 profile only; needs a builder session; not part of "all"; run it first)',
+  '       setup.mjs seed-judged --tags "<tag names separated by commas>"   (the v2 profile only; needs a builder session; not part of "all"; ticks Judged on the named Rulebook rows, once)',
   '       setup.mjs archive [--plan-only]                        (needs a builder session; not part of "all"; run it before build)',
 ].join('\n');
 
@@ -159,6 +165,8 @@ const COMMANDS = {
   archive: { setup: true, options: { 'plan-only': { type: 'boolean' } } },
   // the v2 profile only (profiles/v2): finds or makes the v2 page under the live hub and records it in config.json; not part of "all" (it runs first, once)
   root: { setup: true, options: { title: { type: 'string' } } },
+  // the v2 profile only; ticks the Judged box of the named Rulebook rows once (P53); not part of "all"
+  'seed-judged': { setup: true, options: { tags: { type: 'string' } } },
 };
 
 const PER_CLAIM_STEPS = ['seed-audit', 'migrate-decisions', 'archive'];
@@ -300,6 +308,8 @@ async function dispatch(name, values, ctx) {
       return steps.stepSettings(ctx);
     case 'root':
       return steps.stepRoot(ctx, { title: values.title });
+    case 'seed-judged':
+      return steps.stepSeedJudged(ctx, { tags: values.tags });
     case 'archive':
       return stepArchive(ctx, { planOnly: values['plan-only'] === true });
     case 'verify':
