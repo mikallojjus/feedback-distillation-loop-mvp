@@ -940,3 +940,71 @@ The owner's answers:
 **Also today.** People wrote When to use in the v2 Rulebook for eight tags without rules. The first pull of the day adopted them (hard rule 5) as edition 2026-11-03.1 (commit 7a8dd0a). Judged tags are now Context-dependent plus Trailing period, Multi-sentence, Improper capitalization, Incorrect grammar, Poor wording and Wordy, so the next `tag` reads seven tags per claim.
 
 **Not done.** Nothing is tagged: the 342 new claims wait for `/claim-tagger tag`, now 7 judged tags per claim. Nothing is pushed.
+
+### 61. A Judged box on the Rulebook decides which tags are judged; the seven Priority 1 tags ticked (P53, P54; 2026-11-03)
+
+**Context.** The owners wrote When to use for the text tags and added a Priority column (1 to 3) to the v2 Rulebook. The pull adopted the rules as edition 2026-11-03.1 (commit 7a8dd0a). They want Priority 1 judged. They chose an explicit checkbox **Judged** over Priority: a tag is judged only when it is ticked. Their answers:
+- toggles are free in both directions, each one an edition with a changelog line (P54);
+- no hand-picked canaries.
+
+On the second point the owner was right: the safety check reads a change against the rows it rests on and every earlier editor decision on that tag. So it never HOLDs a real rule change, and tagging never waits on it.
+
+Plan: `~/.claude/plans/i-want-to-import-prancy-muffin.md`. Branch `judged-tick` (a Sonnet coder in a worktree), fast-forwarded into `replace-claims`.
+
+**Before.**
+- The judge ran only the tags in `config.json` `judge.groups` (G1 = Context-dependent).
+- `rubric.json`'s `judged` meant "has rules and is a text tag".
+- Drift locked a tag's rules once the tag was in a group.
+
+**Code** (6be41c4 and 1f649e9):
+- `judged` = ticked, with rules in force, a text tag. The tick is not in the tag hash.
+- `rubric.lock` gains a `judged` map. A lock without it is read as Context-dependent only (`LEGACY_JUDGED_TAGS`, `withLockedJudged`).
+- `judgeGroupOf` / `isJudgedTag` (lib/config.mjs) replace every "judged and in a group" check.
+- G2 = Trailing period, Multi-sentence, Improper capitalization, Incorrect grammar, Poor wording, Wordy. A ticked tag no group names gets a group of its own.
+- The G1 store key is unchanged (`sha256:04c9114c423fd858`, pinned).
+- A changed box is a drift kind of its own (`toggled`). It is taken over by the next loop command, or by `judge.mjs` when it runs on its own, as one edition with one changelog line per tag. It never stops the loop.
+- Pulls stamp their drift with the lock they compared against (`against`). Preflight takes a change over only while that lock is in force, never while a builder session is open, and never from a loop child's judge or during a live promote.
+- `setup.mjs seed-judged --tags` is the only script that may write Judged, and only to tick. Judged is an editor column of the Rulebook, and the guard and transcript-check deny connector writes to it.
+- `writeEdition` refuses a second writer of the same edition with a different lock.
+- Tests: 2,415 → 2,475, all passing.
+
+**Reviewed by Opus.** The first review was GO with fixes. It reproduced a high finding: a toggle pending at a promote let the follow-up's judge re-adopt from the older pull, putting back the old rule text. Also:
+- a promote baseline adopting mid-promote;
+- Context-dependent un-judged between the build and the seed;
+- readers judging seven tags before the first adoption;
+- three low findings.
+
+All were fixed in 1f649e9. The re-check was GO. The reviewer re-ran the reproduction and walked the live order on a copy of the real rubric files: six "Judged on" lines in one edition, G1 key unchanged, Context-dependent judged throughout.
+
+**Rules and docs.**
+- CLAUDE.md:
+  - rule 1: Judged is editor-owned, seeded once;
+  - rule 4: the owners' untick, edit, re-tick exception;
+  - rule 5: judged only when ticked with rules in force; toggles adopted as editions;
+  - rule 10: the Rulebook accepts Judged only from `seed-judged`.
+- DECISIONS P53 and P54.
+- AGENT.md, STRUCTURE-V2.md (the Judged column, after the section's tag list, which the spec parser reads), and the skill description ("the tags ticked Judged").
+
+**Live.**
+- `setup.mjs builder open`, then `setup.mjs databases`: 1 column added, Rulebook Judged. Only `databases`, not `build`: the views step would have reset the Tag decisions view the team widened.
+- `setup.mjs seed-judged --tags "<the seven>"`: exit 0, all seven ticked and read back. Its own pre-pull warned that no box was ticked yet; that pull un-judged nothing. Then `builder close`.
+- `pull --all` (20261103T170627Z-pull):
+  - drift: six "Judged on" lines (Context-dependent was judged already), stamp `against` 2026-11-03.1, no stops;
+  - rulebook norm: Judged true on exactly the seven.
+- `status`: edition 2026-11-03.1 with "Notion changed the Judged box (Judged on: …), taken over at the next run"; 29 rows in Your queue; 342 new claims not read yet.
+- `setup.mjs verify`: 0 writes and 20 differences, all expected:
+  - Priority (people's column);
+  - the Rulebook's own view does not show Judged (the views step was skipped);
+  - the Tag decisions view the team widened;
+  - the Rulebook rows against the 27 Oct taxonomy file: the adopted When to use and the new Judged values;
+  - the settings edition label.
+
+**Not done.**
+- The first adopting command, normally `/claim-tagger tag`, takes the six ticks over as edition 2026-11-03.2 (or 2026-11-04.1 after midnight UTC), then judges 435 claims on seven tags. G1 is mostly from the store; G2 is about 55 new model calls and about 2,600 new Tag decisions rows. Not run: nothing is tagged until the owner asks.
+- Judged is not shown in the Rulebook's own view. Show it from the view's properties menu in Notion, or run the views step, which would also reset the Tag decisions view.
+- From the re-check (low, not on the live path):
+  - preflight has no PROMOTING check of its own, so another session's command can adopt a toggle during a promote. This was so before this branch too.
+  - If `seed-judged` stops partway and the builder session is closed before it is run again, Context-dependent can be read as unticked.
+  - `setup.mjs rubric` with a rubric file but no lock builds with no ticks.
+  - A cosmetic double warning.
+- Nothing is pushed.

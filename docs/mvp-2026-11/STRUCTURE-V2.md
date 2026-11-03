@@ -31,6 +31,8 @@ Sub-pages:
 
 The rows of the taxonomy table "Claim Tags — verified" whose Work tags contain Issue, with the same column names and types: Context-dependent, Exact duplicate, Factually challenged, Improper capitalization, Improperly sourced, Incorrect grammar, Multi-sentence, Poor wording, Semantically duplicated, Source inaccessible, Trailing period, Unsourced, Wordy. Identical to the live Rulebook.
 
+**Judged** (checkbox, added 3 Nov 2026, P53), right after Name: ticked, the agent judges this tag on every claim (when it has rules in force and is a text tag). People tick and untick it; `setup.mjs seed-judged` ticked the seven Priority 1 tags once. Priority is a column people added; nothing reads it.
+
 **Who fills what:** as live. Setup copies the rows; the team may edit any column by hand; the agent writes only When to use, after a safety check PASS or a confirmed restore.
 
 ### Columns
