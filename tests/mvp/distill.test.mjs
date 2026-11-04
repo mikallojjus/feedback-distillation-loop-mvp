@@ -1029,8 +1029,8 @@ test('a rule change whose row is no longer a disagreement, or whose reading cann
   const quiet = await distill(w2.hooks());
   assert.equal(readJson(join(quiet.runDir, 'run.json')).recanted, undefined, 'the unread row is not named');
   assert.doesNotMatch(quiet.report.sentence, /rests on/);
-  assert.equal(quiet.report.sentence, 'Distill: no decision could be read this time; no rule change to draft; the 2 decisions that point at rule 3 already have a rule change waiting for you.');
-  assert.match(quiet.report.next, /^Next: approve or reject the rule change in Lessons waiting \(/, 'the draft stands: it is still to be approved or rejected');
+  assert.equal(quiet.report.sentence, 'Distill: the agent could not read 1 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft.', 'no reason clause: it would be worked out from the other rows and say nothing about the one that was not read');
+  assert.match(quiet.report.next, /^Next: approve or reject the rule change in Lessons waiting \(/, 'the draft stands: it is still to be approved or rejected, which comes before reading the decision again');
 });
 
 test('a row that stopped being a disagreement loses its reading: the four ledger columns are cleared and the claim says the agent agreed', async () => {
@@ -1062,7 +1062,8 @@ test('a batch that fails twice leaves its rows unread, keeps the refused replies
   assert.equal(w.claim(claimId(5))["Agent's view of your decision"], '', 'and so does its claim');
   assert.equal(w.rows('rule_changes').length, 2, 'the lesson is drafted again from the earlier readings (the first was rejected)');
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: drafted one rule change from 2 of your decisions; 1 could not be read this time.');
+  assert.equal(report.sentence, 'Distill: drafted one rule change from 2 of your decisions; the agent could not read 1 more this time.');
+  assert.match(report.next, /^Next: read it in Lessons waiting \(/, 'a rule change drafted now comes before reading the decision again');
   const kept = readdirSync(join(r.runDir, 'rejected')).sort();
   assert.deepEqual(kept, ['reading-batch-1-attempt-1.md', 'reading-batch-1-attempt-2.md'], 'each refused reply is kept');
   const text = readFileSync(join(r.runDir, 'rejected', kept[0]), 'utf8');
@@ -1087,7 +1088,9 @@ test('exit 2 only when something was to read, nothing at all could be read, and 
   const h = none.hooks();
   const r = await distill(h);
   assert.equal(r.exit, 2);
-  assert.equal(assertReport(h, r).sentence, 'Distill: no decision could be read this time; no rule change to draft; none of the decisions read so far names a rule problem.');
+  const noneReport = assertReport(h, r);
+  assert.equal(noneReport.sentence, 'Distill: the agent could not read 3 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft.');
+  assert.equal(noneReport.next, 'Next: type /claim-tagger distill again to read the 3 decisions once more; if it fails again, ask the engineer.');
   assert.ok(none.rows('tag_decisions').every((x) => x["Agent's view of your decision"] === null), 'no row holds a reading');
   assert.deepEqual(none.rows('claims').filter((c) => c["Agent's view of your decision"] !== '').map((c) => c['Geo ID']), [claimId(GEORGIA)], 'only the claim the agent agreed on has its line: "Nothing to read"');
   assert.deepEqual(readJson(join(r.runDir, 'run.json')).readings.could_not_read.sort(), [keyOf(PRESS), keyOf(AI), keyOf(USPS)].sort());
@@ -1096,6 +1099,7 @@ test('exit 2 only when something was to read, nothing at all could be read, and 
   const planned = await distill(none.hooks({ planOnly: true }));
   assert.equal(planned.exit, 2);
   assert.equal(planned.report.sentence, 'Distill: the plan is ready (0 rule changes, 3 not read) and nothing was written to Notion.');
+  assert.equal(planned.report.next, 'Next: type /claim-tagger distill to write it.', 'the --plan-only branch is unchanged');
 
   // with readings from an earlier run a rule change is drafted although this run read nothing: exit 0, and the sentence still says how many could not be read
   const earlier = await story({ claims: 5 });
@@ -1110,7 +1114,7 @@ test('exit 2 only when something was to read, nothing at all could be read, and 
   assert.equal(planOnly.report.sentence, 'Distill: the plan is ready (1 rule change, 1 not read) and nothing was written to Notion.');
   const live = await distill(earlier.hooks());
   assert.equal(live.exit, 0);
-  assert.equal(live.report.sentence, 'Distill: drafted one rule change from 2 of your decisions; 1 could not be read this time.');
+  assert.equal(live.report.sentence, 'Distill: drafted one rule change from 2 of your decisions; the agent could not read 1 more this time.');
   assert.equal(readJson(join(live.runDir, 'run.json')).exit_code, 0);
 });
 
@@ -1126,7 +1130,8 @@ test('when only some of the batches fail the run is not an error: the rows of th
   assert.deepEqual(w.rows('tag_decisions').filter((x) => x["Agent's view of your decision"]).map((x) => x.Key), [keyOf(PRESS)], 'the first batch only');
   assert.equal(w.rows('rule_changes').length, 0, 'one Rule unclear row is no group');
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: read 1 of your decisions; no rule change to draft; no rule has 2 decided rows pointing at it yet; 2 could not be read this time.');
+  assert.equal(report.sentence, 'Distill: read 1 of your decisions and could not read 2 more this time; no rule change to draft; no rule has 2 decided rows pointing at it yet.');
+  assert.equal(report.next, 'Next: type /claim-tagger distill again to read the 2 decisions once more; if it fails again, ask the engineer.', 'some read and some not, no rule change open, no note missing: read the rest');
   assert.equal(w.claim(claimId(AI))["Agent's view of your decision"], '', 'a claim whose disagreement is unread has no cell yet');
   assert.equal(w.claim(claimId(PRESS))["Agent's view of your decision"].startsWith('Context-dependent: Rule unclear'), true);
   assert.deepEqual(callLines(r).map((c) => c.status), ['ok', 'ok', 'ok', 'ok', 'ok'], 'an unusable answer is still an answered call');
@@ -1214,7 +1219,8 @@ test('a reply that names a rule the tag does not have is refused whole and kept:
   assert.match(readFileSync(join(r.runDir, 'rejected', kept[0]), 'utf8'), /- the row "c01::Context-dependent" points at "Context-dependent rule 9", which is not a rule of Context-dependent/);
   assert.deepEqual(w.rows('tag_decisions').filter((x) => x["Agent's view of your decision"]).map((x) => x.Key), [], 'nothing of the refused reply was used, not even the rows that were fine');
   const report = assertReport(h, r);
-  assert.equal(report.sentence, 'Distill: no decision could be read this time; no rule change to draft; none of the decisions read so far names a rule problem.');
+  assert.equal(report.sentence, 'Distill: the agent could not read 3 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft.');
+  assert.equal(report.next, 'Next: type /claim-tagger distill again to read the 3 decisions once more; if it fails again, ask the engineer.');
   assert.equal(w.rows('rule_changes').length, 0);
 
   // the second attempt is used when it is good: the first reply is words, the second is the reading
@@ -1239,4 +1245,171 @@ test('a usage window during the reading stops the run with exit 75 and writes no
   assert.equal(w.writes().length, 0);
   const lines = readJsonl(join(r.runDir, 'readings.jsonl')).rows;
   assert.deepEqual(lines.map((l) => l.source), ['model'], 'the batch that was answered');
+});
+
+// ---- the length of a note is not checked; the report when decisions could not be read ---------------------------------------------
+
+/** A note of n words: w1 w2 ... wn. */
+const noteOf = (n) => Array.from({ length: n }, (_, i) => `w${i + 1}`).join(' ');
+const wordCount = (s) => s.split(' ').filter(Boolean).length;
+const RETRY_NEXT = 'Next: type /claim-tagger distill again to read that decision once more; if it fails again, ask the engineer.';
+const refuseReadings = (w) => {
+  w.setEnv('FAKE_CLAUDE_MODE', 'invalid-always');
+  w.setEnv('FAKE_CLAUDE_ONLY', 'reading');
+};
+
+test('the editors\' case: one batch of five where four notes run to 26 or 27 words is taken whole: five rows are read from one call, nothing is refused, and every note stays as it was written', async () => {
+  const w = await makeWorld({ claims: 5, queue: [1, 2, 3, 4, 5].map((i) => openRow(i)) });
+  const lengths = [26, 27, 26, 27, 12];
+  w.readings(Object.fromEntries([1, 2, 3, 4, 5].map((i) => [keyOf(i), { reading: 'Rule unclear', rule: 'Context-dependent rule 3', note: noteOf(lengths[i - 1]) }])));
+  for (const i of [1, 2, 3, 4, 5]) w.decideRow(keyOf(i), { outcome: 'Does not apply', note: `The editor's note on row ${i}.` });
+  const h = w.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(readingCalls(w).length, 1, 'the first reply is used: no second attempt');
+  assert.deepEqual([...readingCalls(w)[0].stdin.matchAll(/<row key="([^"]*)"/g)].map((m) => m[1]), [1, 2, 3, 4, 5].map((i) => keyOf(i)), 'one batch of five');
+  assert.equal(existsSync(join(r.runDir, 'rejected')), false, 'no reply was refused');
+  for (const i of [1, 2, 3, 4, 5]) {
+    const x = w.row('tag_decisions', keyOf(i));
+    assert.deepEqual([x["Agent's view of your decision"], x.Rule, x['Why the agent thinks so']], ['Rule unclear', 'Context-dependent rule 3', noteOf(lengths[i - 1])], `row ${i} is read, its note is kept as it was written`);
+  }
+  assert.equal(readJsonl(join(r.runDir, 'readings.jsonl')).rows.length, 5);
+  const report = assertReport(h, r);
+  assert.match(report.sentence, /^Distill: read 5 of your decisions/);
+  assert.doesNotMatch(report.sentence, /could not read/);
+});
+
+test('a long note (60 words, and 200) is kept in full, word for word: the row is read, the cell, the claim line and readings.jsonl hold it, and a --readings run reuses it without asking again', async () => {
+  const sixty = noteOf(60);
+  const twoHundred = noteOf(200);
+  const readings = { [keyOf(PRESS)]: { ...READ_PRESS, note: sixty }, [keyOf(AI)]: { ...READ_AI, note: twoHundred }, [keyOf(USPS)]: READ_USPS };
+
+  const w = await story();
+  w.readings(readings);
+  const h = w.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  assert.equal(readingCalls(w).length, 1, 'the reply is not refused for the long notes');
+  assert.equal(existsSync(join(r.runDir, 'rejected')), false);
+  const press = w.row('tag_decisions', keyOf(PRESS));
+  assert.deepEqual([press["Agent's view of your decision"], press.Rule, press['Why the agent thinks so']], ['Rule unclear', 'Context-dependent rule 3', sixty], 'the note is not cut and nothing is added to it');
+  assert.equal(wordCount(press['Why the agent thinks so']), 60);
+  assert.equal(w.row('tag_decisions', keyOf(AI))['Why the agent thinks so'], twoHundred, 'any length');
+  assert.equal(w.claim(claimId(PRESS))["Agent's view of your decision"], `Context-dependent: Rule unclear, rule 3 · ${sixty}`);
+  const lines = readJsonl(join(r.runDir, 'readings.jsonl')).rows;
+  assert.equal(lines.find((l) => l.key === keyOf(PRESS)).note, sixty, 'the line of readings.jsonl holds the whole note');
+  assert.equal(lines.find((l) => l.key === keyOf(AI)).note, twoHundred);
+  assertReport(h, r);
+
+  // the plan-only step and the live step after it: the long note is a note the live step takes back, with no reading call
+  const p = await story();
+  p.readings(readings);
+  const planned = await distill(p.hooks({ planOnly: true }));
+  assert.equal(planned.exit, 0);
+  assert.equal(readingCalls(p).length, 1);
+  assert.equal(readJsonl(join(planned.runDir, 'readings.jsonl')).rows.find((l) => l.key === keyOf(PRESS)).note, sixty);
+  const live = await distill(p.hooks({ readings: planned.runId }));
+  assert.equal(live.exit, 0);
+  assert.equal(readingCalls(p).length, 1, 'the long note is reused: the model is not asked again');
+  assert.equal(p.row('tag_decisions', keyOf(PRESS))['Why the agent thinks so'], sixty);
+  assert.equal(p.row('tag_decisions', keyOf(AI))['Why the agent thinks so'], twoHundred);
+});
+
+test('nothing could be read: the sentence counts the decisions that could not be read and gives no reason, the exit is 2, and the Next line says to type distill again, a missing note or not', async () => {
+  // one decision with a note
+  const one = await makeWorld({ claims: 1, queue: [openRow(1)] });
+  one.decideRow(keyOf(1), { outcome: 'Does not apply', note: PRESS_NOTE });
+  refuseReadings(one);
+  const h1 = one.hooks();
+  const r1 = await distill(h1);
+  assert.equal(r1.exit, 2);
+  assert.equal(readingCalls(one).length, 2, 'two attempts');
+  const report1 = assertReport(h1, r1);
+  assert.equal(report1.sentence, 'Distill: the agent could not read 1 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft.');
+  assert.equal(report1.next, RETRY_NEXT);
+  assert.equal(readJson(join(r1.runDir, 'run.json')).exit_code, 2);
+
+  // the editors' case: the decision has no note. The sentence still says first that it could not be read, and the Next line is still to read it again: a note cannot mend a refused reply
+  const bare = await makeWorld({ claims: 1, queue: [openRow(1)] });
+  bare.decideRow(keyOf(1), { outcome: 'Does not apply' });
+  refuseReadings(bare);
+  const h2 = bare.hooks();
+  const r2 = await distill(h2);
+  assert.equal(r2.exit, 2);
+  const report2 = assertReport(h2, r2);
+  assert.equal(report2.sentence, 'Distill: the agent could not read 1 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft; 1 of your decisions has no note and waits in Needs your note.');
+  assert.equal(report2.next, `Next: add a note on 1 row in Needs your note (${NEEDS_YOUR_NOTE(bare)}), then type /claim-tagger distill again; if the agent cannot read a decision again, ask the engineer.`, 'the note is still what the editor can do, and the retry follows it');
+
+  // the model answers on the next try: the decision is read, and now the note is what is missing
+  bare.setEnv('FAKE_CLAUDE_MODE', 'ok');
+  const h3 = bare.hooks();
+  const r3 = await distill(h3);
+  assert.equal(r3.exit, 0, h3.io.errs.join('\n'));
+  assert.equal(assertReport(h3, r3).next, `Next: add a note on 1 row in Needs your note (${NEEDS_YOUR_NOTE(bare)}), then type /claim-tagger distill again.`);
+});
+
+test('a sentence that drafted a rule change from some readings ends with the clause naming the agent, whether this run read some decisions or none', async () => {
+  // two of the three decisions are read (the first two batches are answered), the third is not: the clause ends the sentence, after the read count and the draft
+  const w = await story({ configure: (c) => { c.distill.reading_batch = 1; } });
+  refuseReadings(w);
+  w.setEnv('FAKE_CLAUDE_AFTER', '2');
+  const h = w.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 0, h.io.errs.join('\n'));
+  const report = assertReport(h, r);
+  assert.equal(report.sentence, 'Distill: read 2 of your decisions and drafted one rule change from 2 of them; the agent could not read 1 more this time.');
+  assert.match(report.next, /^Next: read it in Lessons waiting \(/);
+});
+
+test('the Next line when decisions could not be read: with notes missing it sends the editor to Needs your note and adds the retry; with every note there it says to type distill again, with the count', async () => {
+  const w = await makeWorld({ claims: 3, queue: [1, 2, 3].map((i) => openRow(i)) });
+  w.decideRow(keyOf(1), { outcome: 'Does not apply', note: PRESS_NOTE });
+  w.decideRow(keyOf(2), { outcome: 'Does not apply' });
+  w.decideRow(keyOf(3), { outcome: 'Does not apply' });
+  refuseReadings(w);
+  const h = w.hooks();
+  const r = await distill(h);
+  assert.equal(r.exit, 2);
+  const missing = assertReport(h, r);
+  assert.equal(missing.sentence, 'Distill: the agent could not read 3 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft; 2 of your decisions have no note and wait in Needs your note.');
+  assert.equal(missing.next, `Next: add a note on 2 rows in Needs your note (${NEEDS_YOUR_NOTE(w)}), then type /claim-tagger distill again; if the agent cannot read a decision again, ask the engineer.`, 'no count of the unread decisions in this variant');
+
+  // the notes are written but the model still cannot be used: no note is missing any more, so the Next line is the plain retry, with the count
+  w.decideRow(keyOf(2), { note: 'Row two has its note now.' });
+  w.decideRow(keyOf(3), { note: 'Row three has its note now.' });
+  const h2 = w.hooks();
+  const r2 = await distill(h2);
+  assert.equal(r2.exit, 2);
+  const noted = assertReport(h2, r2);
+  assert.equal(noted.sentence, 'Distill: the agent could not read 3 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft.');
+  assert.equal(noted.next, 'Next: type /claim-tagger distill again to read the 3 decisions once more; if it fails again, ask the engineer.');
+});
+
+test('some decisions read and some not: a Proposed rule change keeps approve or reject, an Approved one keeps promote (with none open the Next line is to type distill again, see the tests above)', async () => {
+  const w = await story({ claims: 5, configure: (c) => { c.distill.reading_batch = 1; } });
+  assert.equal((await distill(w.hooks())).exit, 0);
+  assert.equal(w.rows('rule_changes').length, 1, 'a rule change is Proposed');
+  const lesson0 = w.rows('rule_changes')[0];
+
+  // two decisions to read, one batch each: the first is answered, the second is refused twice
+  w.decideRow(keyOf(5), { outcome: 'Does not apply', note: 'A fifth row that nobody has read yet.' });
+  w.decideRow(keyOf(USPS), { note: 'USPS names which portal, said another way.' });
+  refuseReadings(w);
+  w.setEnv('FAKE_CLAUDE_AFTER', '1'); // the fake counts the reading calls from here on (FAKE_CLAUDE_ONLY): the first is answered, the rest are not
+  const h = w.hooks();
+  const proposed = await distill(h);
+  assert.equal(proposed.exit, 0, h.io.errs.join('\n'));
+  const proposedReport = assertReport(h, proposed);
+  assert.match(proposedReport.sentence, /^Distill: read 1 of your decisions and could not read 1 more this time; no rule change to draft; [^;]+\.$/, 'the unread count is in the lead, next to the read count');
+  assert.equal(proposedReport.next, `Next: approve or reject the rule change in Lessons waiting (https://www.notion.so/${w.DB.rule_changes}?v=e3000000000000000000000000000003).`, 'a rule change that is Proposed: status\'s words, before reading again');
+
+  // Approved: promote comes before reading again too (the row that could not be read is still to read)
+  w.fake.editRow(lesson0.page_id, { Status: 'Approved' });
+  w.setEnv('FAKE_CLAUDE_AFTER', '3'); // the three reading calls counted so far (one answered, two refused): every further one is refused
+  const h2 = w.hooks();
+  const approved = await distill(h2);
+  assert.equal(approved.exit, 2, 'something was to read, nothing could be read and nothing was drafted');
+  const approvedReport = assertReport(h2, approved);
+  assert.equal(approvedReport.sentence, 'Distill: the agent could not read 1 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft.');
+  assert.equal(approvedReport.next, 'Next: type /claim-tagger promote to check the approved rule change.');
 });

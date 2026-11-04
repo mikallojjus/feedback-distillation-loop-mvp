@@ -1040,3 +1040,47 @@ All were fixed in 1f649e9. The re-check was GO. The reviewer re-ran the reproduc
 - The two demo rows (the owner's manual step, entry 58).
 - The open items of entry 61.
 - Nothing is pushed.
+
+### 63. Distill: no length limit on a reading's note; the report says when the agent could not read decisions (P55; 2026-11-04)
+
+**Context.** An editor decided four of the lowest-confidence Context-dependent rows (Applies over Can't tell at 0.5, each with a note) and a fifth without a note, then typed `/claim-tagger distill` on their own machine.
+- That run (20261104T122627Z-distill, on the editors' machine, exit 2) read none of the five. The report said "no decision could be read this time; …; a rule change was already made for every decided row that names a rule problem", and its Next line sent the editor to Needs your note.
+- Five minutes later the owner's run here (20261104T123126Z-distill, exit 0) read all five in one call: 11 writes, read back, 0 mismatches.
+  - Readings: Agent slip on Fairford (rule 2), "The military" (rule 2) and the Anthropic settlement (rule 3); Rule unclear on "The AI Force" (rule 2); and on the US–Iran row (no note), Rule unclear, rule 3.
+  - No rule change: slips never draft one (P45), the AI Force row is alone on rule 2 (`min_claims` 2), and a reading without a note supports no draft (decision 78).
+  - The five decisions are in `evals/cases.jsonl` (uncommitted).
+
+**Cause** (the editors' run folder, sent by the editor).
+- Both reading calls answered (`status ok`), but `checkReadings` refused each reply whole for note length. Attempt 1 had four notes of 26 and 27 words; attempt 2 had one of 26. `MAX_NOTE_WORDS` was 25, and one long note refused all five rows.
+- The report's reason clause came from `buildGroups` over the other decided rows (the unread rows are blanked first, `distill.mjs` ~502). It said nothing true about the five.
+- The two runs read the same rows differently: the editors' read the US–Iran row as Rule should change, rule 5, in both attempts; ours as Rule unclear, rule 3. Readings are not stable from run to run. Not acted on.
+
+**Code** (a Sonnet coder in this checkout, three passes; reviewed here).
+- `lib/readings.mjs`:
+  - The code no longer checks a note's length; `MAX_NOTE_WORDS` is removed. The 25-word target lives only in `prompts/reading.md`, which is unchanged.
+  - A note of any length is kept as written (spaces folded). Only an empty note refuses the reply, and every other check (schema, keys, rule) still refuses the whole reply.
+  - `reusableReading` reuses a note of any length that is not empty. `schemas/reading-reply.schema.json` descriptions updated.
+  - Why there is no ceiling: nothing needs one. Notion writes split long text into 2,000-character pieces (`splitRichText`), and a note's length is a matter of style, which the prompt sets.
+  - The first pass kept up to 40 words and cut beyond (the judge's ceiling). The owner then chose to drop the code limit entirely.
+- `distill.mjs`, the report:
+  - Nothing read and nothing drafted: "Distill: the agent could not read 5 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft; …". It has no reason clause.
+  - Some read: "Distill: read 1 of your decisions and could not read 2 more this time; no rule change to draft; <why>."
+  - Drafted: "…; the agent could not read 1 more this time".
+  - Next order: recanted, drafted now, Proposed, Approved, unread, Needs your note, status. With unread decisions and a note missing: "Next: add a note on 1 row in Needs your note (link), then type /claim-tagger distill again; if the agent cannot read a decision again, ask the engineer." Without a missing note: "Next: type /claim-tagger distill again to read the 2 decisions once more; if it fails again, ask the engineer." Exit codes unchanged.
+- Docs: READ-DECISIONS.md, CONTRACTS.md, AGENT.md, DECISIONS P55, and a new example in the skill's `report-examples.md` ("distill, decisions the agent could not read"). `guide.md` is unchanged: its Needs your note row still matches the new line by prefix.
+- Tests: 2,477 → 2,485, all passing. They include:
+  - the editors' case: five rows, four notes of 26–27 words, read whole in one call;
+  - notes of 60 and 200 words kept word for word in the cell, on the claim line and in `readings.jsonl`, and reused by `--readings`;
+  - empty and whitespace-only notes still refusing the reply.
+
+**Verified.**
+- The two replies the editors' run refused, replayed through the final `checkReadings` against the live rubric: 0 problems, 5 readings each, every note kept word for word.
+- `node --test tests/` run here after each of the three passes: 2,483, 2,485 and 2,485, all with 0 failures.
+- No `MAX_NOTE_WORDS`, `NOTE_KEEP_WORDS` or `keepNote` is left in the scripts, schemas, tests or the contract docs.
+
+**Reviewed.** Editor-persona (Opus) on the report text: ED-1 (the agent, not "your decisions", is the subject), ED-2 (Needs your note link kept, with the retry), ED-3 (no "read … could not be read"), ED-5 (the unread count in the lead), and ED-6 (a skill example) were taken. ED-4 ("ask the engineer") and ED-7 (no table, the ", so" sentence) were fine as they were. The count-free wording of the combined Next line is mine: a singular "that decision" after "add a note on 1 row" would point at the wrong row.
+
+**Not done.**
+- Nothing is committed or pushed.
+- The editors' machine needs this code before their next distill. Its next run should find the five rows already read here (their Read under is current). But a note added to the US–Iran row makes that row read again, and on the old code a 26-word note would refuse it again.
+- `CONTRACTS.md` still writes the plain Needs your note Next as "<n> claims"; the code says rows. Older than this entry; left.

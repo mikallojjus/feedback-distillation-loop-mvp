@@ -45,8 +45,12 @@
 // A rule change that is Proposed or Approved and rests on a decision whose reading no longer points at a rule (the editor opened the note with Agent slip., or took the agent's side) is recanted
 // (decision 79): nothing new is drafted for its tag and rule, the sentence says "the rule change "<title>" rests on a decision you now call the agent's slip" and the Next line asks the editor to
 // reject it in Lessons waiting and type distill again; run.json names the rows (recanted). The agent never rewrites or withdraws a draft. The sentence counts decisions: "read N of your decisions and
-// drafted one rule change from M of them", and ends "; K of your decisions have no note and wait in Needs your note" while some decision has none. Next, the first that applies: reject a recanted rule
-// change / Lessons waiting for the one drafted now / approve or reject one that is Proposed (status's words) / promote for one that is Approved / Needs your note / status.
+// drafted one rule change from M of them", and ends "; K of your decisions have no note and wait in Needs your note" while some decision has none. Decisions that could not be read name the agent as the one that
+// failed: a sentence that drafted a rule change ends "; the agent could not read M more this time"; one that drafted none says "read N of your decisions and could not read M more this time; no rule
+// change to draft; <why>"; and when nothing at all was read, "the agent could not read M of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft" with no
+// reason clause (that is worked out from the other decided rows). Next, the first that applies: reject a recanted rule change / Lessons waiting for the one drafted now / approve or reject one that is
+// Proposed (status's words) / promote for one that is Approved / while any decision could not be read: Needs your note with "; if the agent cannot read a decision again, ask the engineer" when a note
+// is missing too, else "type /claim-tagger distill again to read the M decisions once more; if it fails again, ask the engineer" / Needs your note / status.
 //
 // Run files: plan.jsonl, ledger.jsonl, report.md, run.json, calls.jsonl (one line per model call, purpose reading or distill), readings.jsonl ({ key, hash, edition, source: "model",
 // reading, rule, note, no_note } per reading made or reused this run) and rejected/reading-batch-<n>-attempt-<k>.md (a reply the checks refused, as it came, with the problems).
@@ -641,14 +645,16 @@ export async function distill(opts = {}) {
 
     // the clauses that end the sentence, in this order: what could not be read, the rule changes that rest on a decision the editor has since called the agent's slip (decision 79), and the
     // decisions that have no note and wait in Needs your note (decision 78); one sentence all the same
-    const unreadClause = unreadN > 0 ? `; ${unreadN} could not be read this time` : '';
+    // (the unread clause ends a sentence that drafted a rule change; where none was drafted the count moves into the lead of the sentence: "read N of your decisions and could not read M more this time")
+    const unreadClause = unreadN > 0 ? `; the agent could not read ${unreadN} more this time` : '';
     const clauses = [];
     if (recanted.length === 1) clauses.push(`the rule change ${quoted(recanted[0].lesson.Lesson)} rests on ${recantedPhrase(recanted[0].keys, recanted[0].why)}`);
     else if (recanted.length > 1) clauses.push(`${recanted.length} rule changes rest on ${recantedPhrase(recanted.flatMap((x) => x.keys), recanted.every((x) => x.why === 'slip') ? 'slip' : 'other')}`);
     if (noNoteDecisions > 0) clauses.push(`${noNoteDecisions} of your decisions ${noNoteDecisions === 1 ? 'has no note and waits' : 'have no note and wait'} in Needs your note`);
     const rest = clauses.map((c) => `; ${c}`).join('');
     const tail = `${unreadClause}${rest}`;
-    // the Next line: a rule change to reject comes before everything else (decision 79); then the one drafted now, the one that already waits, the notes that are missing, and status
+    // the Next line: a rule change to reject comes before everything else (decision 79); then the one drafted now, the one that already waits, the decisions that could not be read (typing distill
+    // again is the fix; a note cannot mend a refused reply, but when one is missing the line still sends the editor to Needs your note and adds the retry), the notes that are missing, and status
     const proposedOpen = lessons.filter((l) => l.Status === 'Proposed').length;
     const approvedOpen = lessons.filter((l) => l.Status === 'Approved').length;
     const nextLine = (drafted) => {
@@ -656,6 +662,10 @@ export async function distill(opts = {}) {
       if (drafted) return `Next: read ${kept.length === 1 ? 'it' : 'them'} in Lessons waiting (${link}), where the current and the proposed text sit side by side, and approve ${kept.length === 1 ? 'it' : 'each one'} or write your own wording.`;
       if (proposedOpen > 0) return approveNext(ctx.config, proposedOpen);
       if (approvedOpen > 0) return `Next: type /claim-tagger promote to check the approved ${approvedOpen === 1 ? 'rule change' : 'rule changes'}.`;
+      if (unreadN > 0) {
+        if (needNote > 0) return needNoteNext(needNote, noteLink, 'if the agent cannot read a decision again, ask the engineer');
+        return `Next: type /claim-tagger distill again to read ${unreadN === 1 ? 'that decision' : `the ${unreadN} decisions`} once more; if it fails again, ask the engineer.`;
+      }
       if (needNote > 0) return needNoteNext(needNote, noteLink);
       return 'Next: type /claim-tagger status to see what is open.';
     };
@@ -672,8 +682,8 @@ export async function distill(opts = {}) {
       else if (groups.length === 0) why = `no rule has ${cfg.min_claims} decided rows pointing at it yet`;
       else why = 'the rows do not point at a change that is safe to make';
       let sentence;
-      if (readN > 0) sentence = `Distill: read ${readN} of your decisions; no rule change to draft; ${why}${tail}.`;
-      else if (unreadN > 0) sentence = `Distill: no decision could be read this time; no rule change to draft; ${why}${rest}.`;
+      if (readN > 0) sentence = `Distill: read ${readN} of your decisions${unreadN > 0 ? ` and could not read ${unreadN} more this time` : ''}; no rule change to draft; ${why}${rest}.`;
+      else if (unreadN > 0) sentence = `Distill: the agent could not read ${unreadN} of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft${rest}.`; // no `why`: it is worked out from the other decided rows, and says nothing about the ones that were not read
       else sentence = `Distill: nothing new to read; no rule change to draft; ${why}${rest}.`;
       return {
         exit: unreadable > 0 ? EXIT.INVALID : exit,
@@ -703,7 +713,7 @@ export async function distill(opts = {}) {
 }
 
 const ruleChangeCell = (kept) => (kept.length === 0 ? 'none' : kept.length === 1 ? `${quoted(kept[0].title)}, ${kept[0].rule}` : `${kept.length} drafted`);
-const needNoteNext = (n, link) => `Next: add a note on ${plural(n, 'row')} in Needs your note (${link}), then type /claim-tagger distill again.`;
+const needNoteNext = (n, link, retry = '') => `Next: add a note on ${plural(n, 'row')} in Needs your note (${link}), then type /claim-tagger distill again${retry ? `; ${retry}` : ''}.`;
 
 // ---- the command line -----------------------------------------------------------------------------------------------------------------
 

@@ -23,7 +23,8 @@
 //   batchesOf(items, size)                 the items in lists of at most `size`, in order
 //   buildReadingMessage(batch, rubric)     the user message of one model call: a <tag> block per tag, then <rows> with a <row> per item (claim, agent_reason, note), every text escaped
 //   checkReadings(reply, batch, rubric)    { readings: Map(key -> { reading, rule, note }), problems }: the reply must fit the schema, read every key of the batch exactly once and no other,
-//                                          point at a rule that exists for the row's tag (or null) and keep the note to 25 words. A reply with a problem is refused as a whole (readings is empty)
+//                                          point at a rule that exists for the row's tag (or null) and hold a note that is not empty. The prompt asks for a note of at most 25 words; the code does not check
+//                                          the length, so a note of any length is kept as written (spaces folded) and only an empty note refuses. A reply with a problem is refused as a whole (readings is empty)
 //   readingCells(item, reading, edition)   the four row values of a reading; "without your note · " opens the note when the editor wrote none (set here, never by the model)
 //   readingOfRow(row)                      the reading a row holds, { reading, rule, note, noNote }, or null
 //   pointsAtRule(row)                      true when the row's reading blames the rule (Rule unclear or Rule should change) and the editor wrote a note: a reading whose note opens "without your note"
@@ -40,7 +41,7 @@
 //                                          the text of the claim's Agent's view of your decision, or null when it cannot be written yet (a disagreement has no reading); see the rules below
 //   readingRecord(item, reading, source), reusableReading(line, item, rubric)   a line of readings.jsonl, and the reading a line gives back for an item whose hash it matches (or null)
 //   xmlText(s), xmlAttr(s), renderTag(tag) the escaping and the tag block that distill.mjs uses for its own message too
-//   constants: WITHOUT_NOTE, MAX_NOTE_WORDS
+//   constants: WITHOUT_NOTE (the length of a note is not a constant here: the 25 words live in prompts/reading.md only, and the code checks that a note is not empty, nothing more)
 //
 // The rules.
 //  - A reading is made for a row (one claim and one tag), only where the decision (Tag outcome, or a tick on a sure proposal) differs from the proposal, and not where the row is marked Fixed.
@@ -69,7 +70,6 @@ export { READINGS };
 
 export const READING_COLUMNS = Object.freeze([TD.view, TD.rule, TD.why, TD.readUnder]);
 export const WITHOUT_NOTE = 'without your note';
-export const MAX_NOTE_WORDS = 25;
 const SEP = ' · ';
 const NO_READING_CELLS = Object.freeze(Object.fromEntries(READING_COLUMNS.map((c) => [c, null])));
 
@@ -235,7 +235,6 @@ const shown = (s, n = 60) => {
   const t = squash(s);
   return t.length > n ? `${t.slice(0, n - 3)}...` : t;
 };
-const wordsIn = (s) => squash(s).split(' ').filter(Boolean).length;
 
 // "<Tag> rule <n>" (or "rule <n>") as the number n of a rule the tag has; null when it names none, undefined when it names another tag or a rule that does not exist
 function ruleNumberFor(label, tag) {
@@ -249,7 +248,8 @@ function ruleNumberFor(label, tag) {
 /**
  * Check the model's reply for a batch. `reply` is the parsed JSON, `batch` the items it was asked about. Returns { readings: Map(key -> { reading, rule, note }), problems }. The reply must be
  * {"readings": [...]} that fits schemas/reading-reply.schema.json, read every key of the batch exactly once and no other key, point at "<Tag> rule <n>" for a rule the row's tag has (or
- * null) and keep the note to MAX_NOTE_WORDS words. One problem refuses the whole reply: `readings` is then empty.
+ * null) and hold a note that is not empty. The prompt (prompts/reading.md) asks for a note of at most 25 words; the code does not check the length, so a note of any length is kept as written (spaces
+ * folded) and only an empty note refuses. One problem refuses the whole reply: `readings` is then empty.
  */
 export function checkReadings(reply, batch, rubric) {
   const problems = [];
@@ -277,7 +277,6 @@ export function checkReadings(reply, batch, rubric) {
     }
     const note = squash(r.note);
     if (note === '') problems.push(`the row "${at}" has an empty note`);
-    else if (wordsIn(note) > MAX_NOTE_WORDS) problems.push(`the note of the row "${at}" has ${wordsIn(note)} words, more than ${MAX_NOTE_WORDS}`);
     readings.set(r.key, { reading: r.reading, rule, note });
   }
   for (const key of byKey.keys()) if (!readings.has(key)) problems.push(`the reply has no reading for the row "${shown(key)}"`);
@@ -440,11 +439,11 @@ export function readingRecord(item, reading, source) {
 
 /**
  * The reading a line of an earlier run's readings.jsonl gives back for an item, or null: only a line the model made, for the same key, with the same hash, that still checks (a reading
- * of the three, a note, a rule the tag has now) is reused. Anything else is asked again.
+ * of the three, a note that is not empty (of any length: the code does not check it), a rule the tag has now) is reused. Anything else is asked again.
  */
 export function reusableReading(line, item, rubric) {
   if (!line || typeof line !== 'object' || line.source !== 'model' || line.key !== item.key || line.hash !== item.hash) return null;
-  if (!READINGS.includes(line.reading) || typeof line.note !== 'string' || squash(line.note) === '' || wordsIn(line.note) > MAX_NOTE_WORDS) return null;
+  if (!READINGS.includes(line.reading) || typeof line.note !== 'string' || squash(line.note) === '') return null;
   const tag = rubric.tags.find((t) => t.name === item.tag);
   if (!tag) return null;
   let rule = null;

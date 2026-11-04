@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  MAX_NOTE_WORDS, READINGS, READING_COLUMNS, WITHOUT_NOTE, agentCitedRule, batchesOf, buildReadingMessage, checkReadings, citedRule, claimReadingCell, classifyRows,
+  READINGS, READING_COLUMNS, WITHOUT_NOTE, agentCitedRule, batchesOf, buildReadingMessage, checkReadings, citedRule, claimReadingCell, classifyRows,
   clearedReadingCells, isDisagreement, ledgerAsRead, parseReadUnder, pointsAtRule, readUnder, readingCells, readingHash, readingOfRow, readingRecord, recantedAmong, recantedKeys, recantedLessons,
   recantedPhrase, renderTag, reusableReading, xmlAttr, xmlText,
 } from '../../agents/claim-tagger-mvp/scripts/lib/readings.mjs';
@@ -255,7 +255,7 @@ test('checkReadings: a reply that reads every key once, with a reading of the th
   assert.equal(checkReadings({ readings: [{ key: `c1::${CD}`, reading: 'Rule unclear', rule: 'rule 3', note: 'Open.' }] }, batch.slice(0, 1), rubric).readings.get(`c1::${CD}`).rule, `${CD} rule 3`, 'a bare "rule 3" is the tag\'s rule 3');
 });
 
-test('checkReadings refuses a reply as a whole: a missing key, an extra key, a repeated key, a bad reading, a rule that does not exist, another tag\'s rule, a long note, an empty note', () => {
+test('checkReadings refuses a reply as a whole: a missing key, an extra key, a repeated key, a bad reading, a rule that does not exist, another tag\'s rule, an empty note (never a long note)', () => {
   const batch = batchOf(['c1', 'Words.'], ['c2', 'More words.']);
   const ok = (key, over = {}) => ({ key, reading: 'Rule unclear', rule: `${CD} rule 3`, note: 'The rule leaves this kind of case open.', ...over });
   const k1 = `c1::${CD}`;
@@ -272,14 +272,52 @@ test('checkReadings refuses a reply as a whole: a missing key, an extra key, a r
   refused({ readings: [ok(k1, { rule: `${CD} rule 9` }), ok(k2)] }, /points at "Context-dependent rule 9", which is not a rule of Context-dependent/, 'a rule that does not exist');
   refused({ readings: [ok(k1, { rule: 'Wordy rule 1' }), ok(k2)] }, /not a rule of Context-dependent/, 'another tag\'s rule');
   refused({ readings: [ok(k1, { rule: 'the third one' }), ok(k2)] }, /not a rule of Context-dependent/, 'a rule that is not written as one');
-  refused({ readings: [ok(k1, { note: Array.from({ length: MAX_NOTE_WORDS + 1 }, (_, i) => `w${i}`).join(' ') }), ok(k2)] }, /has 26 words, more than 25/, 'a note over 25 words');
   refused({ readings: [ok(k1, { note: '   ' }), ok(k2)] }, /empty note/, 'a note of spaces');
   refused({ readings: [ok(k1, { note: '' }), ok(k2)] }, /note: must be at least 1 characters/, 'an empty note fails the schema');
   refused({ items: [] }, /readings: missing required property/, 'not the shape');
   refused([ok(k1), ok(k2)], /expected object/, 'a list instead of an object');
   refused(null, /expected object/, 'no reply');
-  const exactly = Array.from({ length: MAX_NOTE_WORDS }, (_, i) => `w${i}`).join(' ');
-  assert.deepEqual(checkReadings({ readings: [ok(k1, { note: exactly }), ok(k2)] }, batch, rubric).problems, [], 'exactly 25 words is fine');
+});
+
+/** A note of n words: w1 w2 ... wn. */
+const noteOf = (n) => Array.from({ length: n }, (_, i) => `w${i + 1}`).join(' ');
+const wordCount = (s) => s.split(' ').filter(Boolean).length;
+
+test('checkReadings: the length of a note is not checked: notes of 26, 27, 45 and 200 words are kept exactly as written, with whitespace folded; the reply is taken whole', () => {
+  const batch = batchOf(['c1', 'Words.'], ['c2', 'More words.'], ['c3', 'Even more.'], ['c4', 'And more.'], ['c5', 'The last.']);
+  const keys = batch.map((i) => i.key);
+  const ask = (...lengths) => checkReadings({ readings: keys.map((key, i) => ({ key, reading: 'Rule unclear', rule: `${CD} rule 3`, note: noteOf(lengths[i]) })) }, batch, rubric);
+
+  // the editors' case: four notes of 26 and 27 words, one of 12: the reply is taken whole, every note as it was written
+  const got = ask(26, 27, 26, 27, 12);
+  assert.deepEqual(got.problems, []);
+  assert.deepEqual(keys.map((k) => got.readings.get(k).note), [noteOf(26), noteOf(27), noteOf(26), noteOf(27), noteOf(12)]);
+
+  // any length: no ceiling, nothing cut, no "..." added
+  const long = ask(26, 27, 45, 200, 1000);
+  assert.deepEqual(long.problems, []);
+  assert.deepEqual(keys.map((k) => wordCount(long.readings.get(k).note)), [26, 27, 45, 200, 1000]);
+  assert.deepEqual(keys.map((k) => long.readings.get(k).note), [noteOf(26), noteOf(27), noteOf(45), noteOf(200), noteOf(1000)]);
+  assert.ok(keys.every((k) => !long.readings.get(k).note.endsWith('...')));
+
+  // spaces, tabs and line ends in a long note are folded to single spaces, like in a short one, and nothing else is changed
+  const folded = checkReadings({ readings: [{ key: keys[0], reading: 'Rule unclear', rule: null, note: `  ${noteOf(60).replace(/ /g, '\n  ')}\t ` }] }, batch.slice(0, 1), rubric);
+  assert.deepEqual(folded.problems, []);
+  assert.equal(folded.readings.get(keys[0]).note, noteOf(60));
+
+  // an empty note, or one made only of whitespace, still refuses the whole reply, a long note beside it or not
+  for (const empty of ['', '   ', '\n\t  \n']) {
+    const bare = checkReadings({ readings: keys.map((key, i) => ({ key, reading: 'Rule unclear', rule: `${CD} rule 3`, note: i === 2 ? empty : noteOf(200) })) }, batch, rubric);
+    assert.equal(bare.readings.size, 0, JSON.stringify(empty));
+    assert.equal(bare.problems.length, 1, bare.problems.join(' | '));
+    assert.match(bare.problems[0], empty === '' ? /note: must be at least 1 characters/ : /the row "c3::Context-dependent" has an empty note/);
+  }
+
+  // a bad rule still refuses the whole reply, and it is the only problem named: the 200 words are none
+  const bad = checkReadings({ readings: keys.map((key, i) => ({ key, reading: 'Rule unclear', rule: i === 0 ? `${CD} rule 9` : `${CD} rule 3`, note: noteOf(200) })) }, batch, rubric);
+  assert.equal(bad.readings.size, 0);
+  assert.equal(bad.problems.length, 1, 'only the rule is a problem');
+  assert.match(bad.problems[0], /not a rule of Context-dependent/);
 });
 
 // ---- cells ----------------------------------------------------------------------------------------------------------------------------
@@ -374,6 +412,17 @@ test('readingRecord is a line of readings.jsonl; reusableReading gives a model r
   assert.deepEqual(reusableReading({ ...line, rule: null }, one, rubric), { ...reading, rule: null });
   assert.equal(reusableReading(undefined, one, rubric), null);
   assert.equal(reusableReading('x', one, rubric), null);
+});
+
+test('reusableReading: a line with a non-empty note of any length is reused (30 words, 200 words), and a line with an empty note is not', () => {
+  const [one] = batchOf(['c1', 'Words.']);
+  const line = (note) => readingRecord(one, { reading: 'Rule unclear', rule: `${CD} rule 3`, note }, 'model');
+  for (const n of [1, 25, 30, 200, 1000]) assert.equal(reusableReading(line(noteOf(n)), one, rubric).note, noteOf(n), `a note of ${n} words`);
+  assert.deepEqual(reusableReading(line(noteOf(200)), one, rubric), { reading: 'Rule unclear', rule: `${CD} rule 3`, note: noteOf(200) });
+  assert.equal(reusableReading(line(''), one, rubric), null, 'an empty note');
+  assert.equal(reusableReading(line('   \n '), one, rubric), null, 'a note of spaces');
+  assert.equal(reusableReading({ ...line(noteOf(30)), note: null }, one, rubric), null, 'no note');
+  assert.equal(reusableReading({ ...line(noteOf(200)), rule: `${CD} rule 9` }, one, rubric), null, 'the other conditions still apply to a long note');
 });
 
 // ---- a reading that points at a rule, and a draft that rests on one that no longer does (decisions 78 and 79) ---------------------------------

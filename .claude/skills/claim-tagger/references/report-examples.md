@@ -120,6 +120,30 @@ Distill: read 1 of your decisions; no rule change to draft; 6 decided rows name 
 
 Next: add a note on 1 row in Needs your note (link), then type /claim-tagger distill again.
 
+### distill, decisions the agent could not read
+
+The agent asks Claude to read each disagreement between the editor's decision and its own proposal. When a reply cannot be used twice, those decisions stay unread this run, and nothing the editor wrote is at fault. A long note no longer causes this; what is left is a timeout, or a reply that names a rule the tag does not have. Typing distill again reads only those decisions; if it fails again, the engineer has the run record. The sentence names the agent as the one that failed. With nothing read and nothing drafted there is no table.
+
+The full case: five decisions, one of them without a note, and none could be read. The editor can still write the missing note, so the Next line opens Needs your note and adds the retry; typing distill again reads all five.
+
+Distill: the agent could not read 5 of your decisions this time (a fault on its side, not in your rows), so there is no rule change to draft; 1 of your decisions has no note and waits in Needs your note.
+
+Next: add a note on 1 row in Needs your note (link), then type /claim-tagger distill again; if the agent cannot read a decision again, ask the engineer.
+
+The partial case: one decision was read and two could not be, no rule change is drafted and no note is missing. The count of the unread decisions stands in the lead, next to the read count, and the Next line is only the command to type again.
+
+Distill: read 1 of your decisions and could not read 2 more this time; no rule change to draft; no rule has 2 decided rows pointing at it yet.
+
+| What | Result |
+|---|---|
+| Read | 1 decision |
+| Point at a rule | 1 decision |
+| Agent slips | none |
+| Without a note | none |
+| Rule change | none |
+
+Next: type /claim-tagger distill again to read the 2 decisions once more; if it fails again, ask the engineer.
+
 ### distill, a rule change that rests on a decision the agent now reads as its own slip
 
 The editor changed the note of a decision after the draft was made, and the agent now reads it as its own slip. The draft's text was written with that decision in mind, so the sentence says so and the Next line asks the editor to reject the draft before anything else. Nothing new is drafted for that rule while the old draft is open; after the rejection, typing distill again drafts from the decisions that remain.
